@@ -1,0 +1,85 @@
+# AGENTS.md / Project Architecture & AI Guidelines
+
+## 1. Project Overview
+Proyek ini adalah sistem Enterprise Resource Planning (ERP) Monolitik yang dibangun untuk tujuan pembelajaran dan MVP. Aplikasi dirender sepenuhnya di sisi server (Server-Side Rendering/SSR) tanpa memisahkan frontend sebagai Single Page Application (SPA).
+
+## 2. Tech Stack & Versions (Strictly Enforced)
+AI Assistant WAJIB mematuhi versi dan teknologi berikut berdasarkan `pom.xml` utama. DILARANG menyarankan alternatif di luar *stack* ini:
+* **Language:** Java 21 (LTS)
+* **Framework:** Spring Boot 4.0.3 (Gunakan sintaks dan standar terbaru yang relevan dengan versi 4.x)
+* **Build Tool:** Maven
+* **Database:** MariaDB (`mariadb-java-client`)
+* **ORM:** Spring Data JPA (Hibernate)
+* **Database Migration:** Flyway (`flyway-mysql`). DILARANG keras menggunakan `spring.jpa.hibernate.ddl-auto=update` di *production*.
+* **Security:** Spring Security 6+ (Stateful / Session-based). DILARANG menggunakan JWT.
+* **Frontend Template Engine:** Thymeleaf (Gunakan **Native Thymeleaf Fragments** `th:fragment`, `th:replace`). DILARANG menggunakan `thymeleaf-layout-dialect` karena masalah stabilitas dengan Spring Boot 4.
+* **UI/CSS Framework:** Bootstrap 5
+* **Admin Template:** Tabler (MIT License) - Gunakan kelas dan struktur HTML bawaan Tabler.
+* **Boilerplate Reduction:** Lombok (aktif dan dikonfigurasi di `maven-compiler-plugin`).
+* **Mapping:** MapStruct (untuk konversi Entity ke DTO).
+* **Validation:** Hibernate Validator (`spring-boot-starter-validation`).
+* **Reporting:** Apache POI (Excel) & JasperReports (PDF).
+
+## 3. Architecture & Coding Standards
+* **Package Structure:** Gunakan **Package by Feature/Module** (Contoh: `com.solusi.erp.inventory`, `com.solusi.erp.sales`, `com.solusi.erp.security`). Di dalam setiap modul tersebut baru terdapat `controller`, `service`, `repository`, `entity`, dan `dto`.
+* **Data Transfer Object (DTO):** 
+    * JANGAN PERNAH mengirimkan JPA Entity secara langsung ke Thymeleaf (Controller to View).
+    * JANGAN PERNAH menerima form submission langsung ke JPA Entity.
+    * Selalu gunakan DTO untuk *request* (form) dan *response* (view), dan gunakan MapStruct untuk *mapping*.
+* **UI Performance Standards:**
+    * **CDN usage:** Gunakan JSDelivr (@latest) untuk semua library eksternal (Tabler Core, Icons, ApexCharts) untuk memaksimalkan caching.
+    * **Compression:** Pastikan Gzip compression aktif di `application.yaml` untuk tipe file text, css, js, json, dan woff2.
+    * **Optimization:** Gunakan `<link rel="dns-prefetch">` dan `preconnect` untuk `cdn.jsdelivr.net` dan `rsms.me`.
+* **UI/UX Design Patterns:**
+    * **Grouping & Collapsible:** Untuk daftar yang sangat panjang (seperti Permission pada Role Form atau List Permission), WAJIB dikelompokkan berdasarkan modul/fitur menggunakan kartu yang dapat ditutup-buka (*collapsible*).
+    * **Visual Feedback:** Gunakan perubahan warna header (misal: biru solid saat aktif) dan counter real-time (misal: 2/4 selected) untuk memberikan konteks pada user.
+* **Frontend Approach:**
+    * Gunakan **Native Thymeleaf Fragments**. Buat satu file master (misal: `layout/master.html`) yang mendefinisikan fragmen kerangka utama.
+    * Halaman spesifik memanggil fragmen tersebut menggunakan `th:replace="~{layout/master :: layout(~{:: .content})}"`.
+    * Pastikan setiap halaman modular dan hanya mengirimkan fragmen konten ke dalam master.
+
+## 4. Data Modeling & Auditing (BaseModel)
+* **BaseModel:** Semua entitas bisnis WAJIB *extends* sebuah kelas abstrak `BaseModel` (menggunakan `@MappedSuperclass`).
+* **Audit Fields:** `BaseModel` harus memiliki field:
+    * `createdBy` (String/Long) dengan anotasi `@CreatedBy`
+    * `createdDate` (LocalDateTime) dengan anotasi `@CreatedDate`
+    * `updatedBy` (String/Long) dengan anotasi `@LastModifiedBy`
+    * `updatedDate` (LocalDateTime) dengan anotasi `@LastModifiedDate`
+    * `version` (Integer/Long) dengan anotasi `@Version` untuk *optimistic locking* (default 1).
+* AI WAJIB memastikan Spring Data JPA Auditing aktif (`@EnableJpaAuditing` dan bean `AuditorAware` terkonfigurasi).
+
+## 5. Security & RBAC (Role-Based Access Control)
+Sistem otorisasi menggunakan model **Fine-Grained Authority (Privilege-Based)**.
+* **Database Entities:** Harus terdiri dari `User`, `Role`, dan `Permission` (Authority).
+* **Mapping:** 1 User memiliki 1 Role. 1 Role memiliki banyak Permission (Many-to-Many).
+* **Naming Convention:** 
+    * Nama modul multi-kata menggunakan **Dash** (`-`). Contoh: `SALES-ORDER`.
+    * Pemisah Modul dan Aksi menggunakan **Underscore** (`_`). Contoh: `READ`, `CREATE`, `UPDATE`, `DELETE`.
+    * Format Lengkap: `[MODUL-NAME]_[ACTION]`. Contoh: `SALES-ORDER_READ`.
+* **Smart Sidebar Logic:** Menu induk (parent) DILARANG menggunakan permission tunggal (seperti `SECURITY_READ`). Gunakan `sec:authorize="hasAnyAuthority('CHILD_1_READ', 'CHILD_2_READ')"` agar menu induk otomatis muncul jika user punya akses ke salah satu anaknya.
+* **Backend Guard:** Gunakan anotasi `@PreAuthorize("hasAuthority('NAMA_PERMISSION')")` di setiap *method* Controller. DILARANG menggunakan `hasRole()`.
+* **Frontend Guard:** Gunakan `sec:authorize="hasAuthority('...')"` dari library `thymeleaf-extras-springsecurity6`.
+* **SecurityUser Implementation:** Gunakan class `SecurityUser` yang mengimplementasikan `UserDetails` dan **WAJIB** melakukan *pre-calculate* authorities di constructor untuk menghindari `LazyInitializationException` atau *detachment* saat UI merender izin.
+* **Permission Batching:** Gunakan fitur generator untuk mempercepat pembuatan set standar (READ, CREATE, UPDATE, DELETE) untuk setiap modul baru.
+
+## 6. Internationalization (i18n)
+Sistem ini menggunakan mekanisme internasionalisasi dinamis untuk mendukung multi-bahasa (default: `id`, `en`).
+* **Source of Truth:** Saat pengguna login, locale session **WAJIB** disinkronkan dengan `UserProfile.languageCode` melalui `CustomAuthenticationSuccessHandler`.
+* **Thymeleaf Implementation:** DILARANG melakukan hardcoding teks statis. Selalu gunakan operator `#{key.pesan}`.
+* **Naming Convention:** Ikuti panduan penamaan kunci di [docs/spec/i18n-guide.md](spec/i18n-guide.md) untuk menjaga konsistensi.
+
+## 7. Exception Handling & Error Pages
+* **Global Handler:** Gunakan `@ControllerAdvice` untuk menangkap *exception* (seperti 403 Forbidden, 404 Not Found, 500 Internal Server Error, dan `MethodArgumentNotValidException` untuk validasi form).
+* **Custom Error Views:** Arahkan *error* tersebut ke halaman khusus Thymeleaf (misal: `error/404.html`, `error/403.html`) yang sudah di-styling menggunakan UI Tabler agar menyatu dengan tema ERP. Jangan gunakan *Whitelabel Error Page* bawaan Spring Boot.
+
+## 7. Agent Instructions (How to Assist)
+Saat menghasilkan kode:
+1.  **Fokus pada Backend & Integrasi Thymeleaf:** Tulis kode Java yang bersih dan berikan contoh HTML Thymeleaf yang mengimplementasikan class Bootstrap/Tabler secara langsung.
+2.  **Berikan Kode Lengkap:** Jika membuat sebuah DTO atau Controller, sertakan seluruh import, anotasi, dan field yang diperlukan secara utuh.
+3.  **Strategic replace Tool Usage:** The replace tool requires an exact literal match for `old_string` and is highly sensitive to whitespace. Avoid replacing large, complex blocks of code. Prefer smaller, more targeted replacements. Always re-read the target file immediately before executing a replace command to ensure the `old_string` is based on the file's current content.
+
+## 8. Cold Start Strategy (Initial Setup)
+Untuk menjamin keamanan dan sinkronisasi enkripsi:
+*   **Seeder SQL**: Menggunakan placeholder `INITIAL_PASSWORD_SETUP` untuk password admin pertama.
+*   **SystemInitializer (Java)**: Sebuah `CommandLineRunner` yang mendeteksi placeholder tersebut dan menggantinya dengan hash BCrypt yang valid untuk password **`admin123`** saat aplikasi pertama kali dijalankan.
+*   **Force Reset**: Semua user baru (termasuk admin) wajib memiliki flag `password_change_required = true` di database.

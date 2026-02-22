@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/master :: head('Manajemen Role')}"></head>
+<body th:replace="~{layout/master :: layout(~{:: .role-list-content})}">
+    <div class="role-list-content">
+        <!-- Page Header -->
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title">Manajemen Role</h2>
+                        <div class="text-secondary mt-1">Daftar role dan hak akses (permissions) dalam sistem.</div>
+                    </div>
+                    <!-- Page title actions -->
+                    <div class="col-auto ms-auto d-print-none" sec:authorize="hasAuthority('ROLES_CREATE')">
+                        <div class="btn-list">
+                            <a th:href="@{/security/roles/create}" class="btn btn-primary d-none d-sm-inline-block">
+                                <i class="ti ti-plus"></i>
+                                Tambah Role Baru
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Body -->
+        <div class="page-body">
+            <div class="container-xl">
+                <!-- Alerts -->
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-check icon alert-icon"></i></div>
+                        <div th:text="${successMessage}">Success!</div>
+                    </div>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                </div>
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
+                        <div th:text="${errorMessage}">Error!</div>
+                    </div>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                </div>
+
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th>Nama Role</th>
+                                    <th>Deskripsi</th>
+                                    <th>Permissions</th>
+                                    <th class="w-1">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="role : ${roles}">
+                                    <td class="fw-bold" th:text="${role.name}">ROLE_NAME</td>
+                                    <td class="text-secondary" th:text="${role.description ?: '-'}">Description</td>
+                                    <td>
+                                        <div class="flex-wrap gap-1 d-flex">
+                                            <span th:each="perm : ${role.permissions}" 
+                                                  class="badge badge-outline text-blue" 
+                                                  th:text="${perm.name}">PERM_NAME</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="btn-list flex-nowrap">
+                                            <a th:href="@{/security/roles/edit/{id}(id=${role.id})}" 
+                                               class="btn btn-white btn-sm"
+                                               sec:authorize="hasAuthority('ROLES_UPDATE')">
+                                                Edit
+                                            </a>
+                                            <button th:if="${role.name != 'ROLE_ADMIN'}" 
+                                                    class="btn btn-danger btn-sm"
+                                                    data-bs-toggle="modal" 
+                                                    th:data-bs-target="'#modal-delete-' + ${role.id}"
+                                                    sec:authorize="hasAuthority('ROLES_DELETE')">
+                                                Hapus
+                                            </button>
+                                        </div>
+
+                                        <!-- Delete Modal -->
+                                        <div th:if="${role.name != 'ROLE_ADMIN'}" class="modal modal-blur fade" th:id="'modal-delete-' + ${role.id}" tabindex="-1" role="dialog" aria-hidden="true">
+                                            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+                                                <div class="modal-content">
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    <div class="modal-status bg-danger"></div>
+                                                    <div class="modal-body text-center py-4">
+                                                        <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
+                                                        <h3>Konfirmasi Hapus</h3>
+                                                        <div class="text-secondary">Apakah Anda yakin ingin menghapus role <strong th:text="${role.name}"></strong>? Tindakan ini tidak dapat dibatalkan.</div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <div class="w-100">
+                                                            <div class="row">
+                                                                <div class="col"><a href="#" class="btn w-100" data-bs-dismiss="modal">Batal</a></div>
+                                                                <div class="col">
+                                                                    <form th:action="@{/security/roles/delete/{id}(id=${role.id})}" method="post">
+                                                                        <button type="submit" class="btn btn-danger w-100">Hapus</button>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(roles)}">
+                                    <td colspan="4" class="text-center text-secondary py-4">Tidak ada data role.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

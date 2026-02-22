@@ -1,0 +1,76 @@
+package com.solusi.erp.security.controller;
+
+import com.solusi.erp.security.dto.PermissionRequest;
+import com.solusi.erp.security.service.PermissionService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
+
+@Controller
+@RequestMapping("/security/permissions")
+@RequiredArgsConstructor
+public class PermissionController {
+
+    private final PermissionService permissionService;
+
+    @GetMapping
+    @PreAuthorize("hasAuthority('PERMISSIONS_READ')")
+    public String list(Model model) {
+        java.util.Map<String, List<com.solusi.erp.security.dto.PermissionResponse>> groupedPermissions = 
+            permissionService.findAll().stream()
+                .collect(java.util.stream.Collectors.groupingBy(p -> {
+                    String name = p.getName();
+                    int underscoreIndex = name.indexOf('_');
+                    return underscoreIndex != -1 ? name.substring(0, underscoreIndex) : "OTHER";
+                }, java.util.TreeMap::new, java.util.stream.Collectors.toList()));
+
+        model.addAttribute("groupedPermissions", groupedPermissions);
+        model.addAttribute("permissionRequest", new PermissionRequest());
+        return "security/permissions/list";
+    }
+
+    @PostMapping("/batch")
+    @PreAuthorize("hasAuthority('PERMISSIONS_CREATE')")
+    public String createBatch(@ModelAttribute("permissionRequest") PermissionRequest request,
+                              @RequestParam(value = "actions", required = false) List<String> actions,
+                              RedirectAttributes redirectAttributes) {
+        try {
+            request.setBatchActions(actions);
+            permissionService.createBatch(request);
+            redirectAttributes.addFlashAttribute("successMessage", "Batch permission untuk modul " + request.getName() + " berhasil dibuat");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/security/permissions";
+    }
+
+    @PostMapping("/create")
+    @PreAuthorize("hasAuthority('PERMISSIONS_CREATE')")
+    public String create(@ModelAttribute("permissionRequest") PermissionRequest request,
+                         RedirectAttributes redirectAttributes) {
+        try {
+            permissionService.create(request);
+            redirectAttributes.addFlashAttribute("successMessage", "Permission " + request.getName() + " berhasil dibuat secara manual");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/security/permissions";
+    }
+
+    @PostMapping("/delete/{id}")
+    @PreAuthorize("hasAuthority('PERMISSIONS_DELETE')")
+    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            permissionService.delete(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Permission berhasil dihapus");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/security/permissions";
+    }
+}

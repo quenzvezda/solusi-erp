@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/master :: head('Manajemen Pengguna')}"></head>
+<body th:replace="~{layout/master :: layout(~{:: .user-list-content})}">
+    <div class="user-list-content">
+        <!-- Page Header -->
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title">Manajemen Pengguna</h2>
+                        <div class="text-secondary mt-1">Kelola akun pengguna dan hak akses mereka.</div>
+                    </div>
+                    <!-- Page title actions -->
+                    <div class="col-auto ms-auto d-print-none" sec:authorize="hasAuthority('USERS_CREATE')">
+                        <div class="btn-list">
+                            <a th:href="@{/security/users/create}" class="btn btn-primary d-none d-sm-inline-block">
+                                <i class="ti ti-plus"></i>
+                                Tambah Pengguna Baru
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Body -->
+        <div class="page-body">
+            <div class="container-xl">
+                <!-- Alerts -->
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-check icon alert-icon"></i></div>
+                        <div th:text="${successMessage}">Success!</div>
+                    </div>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                </div>
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
+                        <div th:text="${errorMessage}">Error!</div>
+                    </div>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                </div>
+
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th>Pengguna</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Tgl Dibuat</th>
+                                    <th class="w-1">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="user : ${users}">
+                                    <td>
+                                        <div class="d-flex py-1 align-items-center">
+                                            <span class="avatar me-2" th:text="${#strings.substring(user.fullName, 0, 1)}">U</span>
+                                            <div class="flex-fill">
+                                                <div class="font-weight-medium" th:text="${user.fullName}">Full Name</div>
+                                                <div class="text-secondary small">
+                                                    <span th:text="${user.username}">username</span> | <span th:text="${user.email}">email</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-blue-lt" th:text="${user.roleName}">ROLE</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${user.enabled}" class="status status-green">
+                                            <span class="status-dot"></span> Aktif
+                                        </span>
+                                        <span th:unless="${user.enabled}" class="status status-red">
+                                            <span class="status-dot"></span> Nonaktif
+                                        </span>
+                                        <div th:if="${user.passwordChangeRequired}" class="mt-1">
+                                            <span class="badge bg-warning-lt small">Wajib Reset Pass</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-secondary" th:text="${#temporals.format(user.createdDate, 'dd MMM yyyy HH:mm')}">
+                                        Date
+                                    </td>
+                                    <td>
+                                        <div class="btn-list flex-nowrap">
+                                            <a th:href="@{/security/users/edit/{id}(id=${user.id})}" 
+                                               class="btn btn-white btn-sm"
+                                               sec:authorize="hasAuthority('USERS_UPDATE')">
+                                                Edit
+                                            </a>
+                                            
+                                            <!-- Toggle Status Button -->
+                                            <form th:if="${user.username != 'admin'}" 
+                                                  th:action="@{/security/users/toggle/{id}(id=${user.id})}" 
+                                                  method="post" style="display:inline;"
+                                                  sec:authorize="hasAuthority('USERS_UPDATE')">
+                                                <button type="submit" class="btn btn-sm" 
+                                                        th:classappend="${user.enabled} ? 'btn-outline-warning' : 'btn-outline-success'"
+                                                        th:text="${user.enabled} ? 'Nonaktifkan' : 'Aktifkan'">
+                                                    Toggle
+                                                </button>
+                                            </form>
+
+                                            <button th:if="${user.username != 'admin'}" 
+                                                    class="btn btn-danger btn-sm"
+                                                    data-bs-toggle="modal" 
+                                                    th:data-bs-target="'#modal-delete-' + ${user.id}"
+                                                    sec:authorize="hasAuthority('USERS_DELETE')">
+                                                Hapus
+                                            </button>
+                                        </div>
+
+                                        <!-- Delete Modal -->
+                                        <div th:if="${user.username != 'admin'}" class="modal modal-blur fade" th:id="'modal-delete-' + ${user.id}" tabindex="-1" role="dialog" aria-hidden="true">
+                                            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+                                                <div class="modal-content">
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    <div class="modal-status bg-danger"></div>
+                                                    <div class="modal-body text-center py-4">
+                                                        <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
+                                                        <h3>Konfirmasi Hapus</h3>
+                                                        <div class="text-secondary">Apakah Anda yakin ingin menghapus user <strong th:text="${user.username}"></strong>? Tindakan ini akan menghapus data profil juga.</div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <div class="w-100">
+                                                            <div class="row">
+                                                                <div class="col"><a href="#" class="btn w-100" data-bs-dismiss="modal">Batal</a></div>
+                                                                <div class="col">
+                                                                    <form th:action="@{/security/users/delete/{id}(id=${user.id})}" method="post">
+                                                                        <button type="submit" class="btn btn-danger w-100">Hapus</button>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(users)}">
+                                    <td colspan="5" class="text-center text-secondary py-4">Tidak ada data pengguna.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

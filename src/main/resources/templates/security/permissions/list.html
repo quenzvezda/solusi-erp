@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/master :: head('Manajemen Permission')}"></head>
+<body th:replace="~{layout/master :: layout(~{:: .perm-list-content})}">
+    <div class="perm-list-content">
+        <!-- Page Header -->
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title">Manajemen Permission</h2>
+                        <div class="text-secondary mt-1">Daftar otoritas akses sistem dan generator batch.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Body -->
+        <div class="page-body">
+            <div class="container-xl">
+                <!-- Alerts -->
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible" role="alert">
+                    <div th:text="${successMessage}">Success!</div>
+                    <a class="btn-close" data-bs-dismiss="alert"></a>
+                </div>
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
+                    <div th:text="${errorMessage}">Error!</div>
+                    <a class="btn-close" data-bs-dismiss="alert"></a>
+                </div>
+
+                <div class="row row-cards">
+                    <!-- Permission Creation Tabs -->
+                    <div class="col-12" sec:authorize="hasAuthority('PERMISSIONS_CREATE')">
+                        <div class="card border-primary border-top-wide shadow-sm mb-3">
+                            <div class="card-header p-0">
+                                <ul class="nav nav-tabs card-header-tabs m-0" data-bs-toggle="tabs">
+                                    <li class="nav-item">
+                                        <a href="#tabs-batch" class="nav-link active" data-bs-toggle="tab">
+                                            <i class="ti ti-layers-plus me-1"></i> Batch Generator
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="#tabs-manual" class="nav-link" data-bs-toggle="tab">
+                                            <i class="ti ti-plus me-1"></i> Input Manual
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="card-body">
+                                <div class="tab-content">
+                                    <!-- Tab 1: Batch Generator -->
+                                    <div class="tab-pane active show" id="tabs-batch">
+                                        <form th:action="@{/security/permissions/batch}" th:object="${permissionRequest}" method="post">
+                                            <div class="row g-3">
+                                                <div class="col-md-4">
+                                                    <label class="form-label required">Nama Modul / Fitur</label>
+                                                    <input type="text" th:field="*{name}" class="form-control" placeholder="Contoh: SALES-ORDER" required>
+                                                    <small class="form-hint">Akan men-generate aksi standar (READ, CREATE, dll).</small>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Aksi yang akan di-generate</label>
+                                                    <div class="mt-2">
+                                                        <label class="form-check form-check-inline" th:each="action : ${ {'READ', 'CREATE', 'UPDATE', 'DELETE', 'PRINT'} }">
+                                                            <input class="form-check-input" type="checkbox" name="actions" th:value="${action}" th:checked="${action != 'PRINT'}">
+                                                            <span class="form-check-label" th:text="${action}">ACTION</span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2 align-self-end text-end">
+                                                    <button type="submit" class="btn btn-primary w-100">Generate</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <!-- Tab 2: Manual Entry -->
+                                    <div class="tab-pane" id="tabs-manual">
+                                        <form th:action="@{/security/permissions/create}" th:object="${permissionRequest}" method="post">
+                                            <div class="row g-3">
+                                                <div class="col-md-4">
+                                                    <label class="form-label required">Nama Permission Lengkap</label>
+                                                    <input type="text" th:field="*{name}" class="form-control" placeholder="Contoh: SALES-ORDER_POPUP" required>
+                                                    <small class="form-hint">Gunakan format NAMA-MODUL_AKSI.</small>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Deskripsi</label>
+                                                    <input type="text" th:field="*{description}" class="form-control" placeholder="Tujuan permission ini...">
+                                                </div>
+                                                <div class="col-md-2 align-self-end text-end">
+                                                    <button type="submit" class="btn btn-outline-primary w-100">Simpan</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Permission Table Card (Grouped) -->
+                    <div class="col-12" th:each="entry, stat : ${groupedPermissions}">
+                        <div class="card shadow-sm border-0 mb-3">
+                            <div class="card-header py-2 px-3 bg-light cursor-pointer" 
+                                 data-bs-toggle="collapse" 
+                                 th:attr="data-bs-target='#collapse-perm-' + ${stat.index}" 
+                                 style="cursor: pointer;">
+                                <div class="d-flex justify-content-between align-items-center w-100">
+                                    <h3 class="card-title m-0 text-dark">
+                                        <i class="ti ti-folder me-1 text-primary"></i>
+                                        <span th:text="${entry.key}">FEATURE_NAME</span>
+                                        <small class="text-secondary ms-2" th:text="'(' + ${#lists.size(entry.value)} + ')'">(0)</small>
+                                    </h3>
+                                    <i class="ti ti-chevron-down text-secondary transition-transform"></i>
+                                </div>
+                            </div>
+                            <div th:id="'collapse-perm-' + ${stat.index}" class="collapse show">
+                                <div class="table-responsive">
+                                    <table class="table table-vcenter card-table">
+                                        <thead>
+                                            <tr>
+                                                <th class="ps-3">Aksi / Suffix</th>
+                                                <th>Nama Lengkap</th>
+                                                <th>Deskripsi</th>
+                                                <th class="w-1 pe-3 text-end">Hapus</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="p : ${entry.value}">
+                                                <td class="ps-3">
+                                                    <span class="badge badge-outline text-blue" 
+                                                          th:text="${#strings.contains(p.name, '_') ? #strings.substringAfter(p.name, '_') : p.name}">ACTION</span>
+                                                </td>
+                                                <td>
+                                                    <code class="text-secondary small" th:text="${p.name}">NAME</code>
+                                                </td>
+                                                <td class="text-secondary" th:text="${p.description}">Description</td>
+                                                <td class="pe-3 text-end">
+                                                    <!-- Delete only for non-system permissions -->
+                                                    <form th:if="${!#strings.startsWith(p.name, 'USERS_') && !#strings.startsWith(p.name, 'ROLES_') && !#strings.startsWith(p.name, 'DASHBOARD_') && !#strings.startsWith(p.name, 'PERMISSIONS_')}"
+                                                          th:action="@{/security/permissions/delete/{id}(id=${p.id})}" method="post"
+                                                          sec:authorize="hasAuthority('PERMISSIONS_DELETE')">
+                                                        <button type="submit" class="btn btn-link text-danger p-0" onclick="return confirm('Hapus permission ini?')">
+                                                            <i class="ti ti-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-12" th:if="${#maps.isEmpty(groupedPermissions)}">
+                        <div class="card card-body text-center py-5">
+                            <p class="text-secondary mb-0">Tidak ada data permission.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle chevron rotations
+            document.querySelectorAll('.collapse').forEach(el => {
+                el.addEventListener('show.bs.collapse', function() {
+                    const icon = this.previousElementSibling.querySelector('.ti-chevron-down');
+                    if (icon) icon.style.transform = 'rotate(180deg)';
+                });
+                el.addEventListener('hide.bs.collapse', function() {
+                    const icon = this.previousElementSibling.querySelector('.ti-chevron-down');
+                    if (icon) icon.style.transform = 'rotate(0deg)';
+                });
+            });
+        });
+    </script>
+    <style>
+        .transition-transform {
+            transition: transform 0.3s ease;
+        }
+    </style>
+</body>
+</html>

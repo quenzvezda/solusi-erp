@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/master :: head(${roleRequest.id == null ? 'Tambah Role' : 'Edit Role'})}"></head>
+<body th:replace="~{layout/master :: layout(~{:: .role-form-content})}">
+    <div class="role-form-content">
+        <!-- Page Header -->
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="${roleRequest.id == null ? 'Tambah Role Baru' : 'Edit Role: ' + roleRequest.name}">Role Form</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Body -->
+        <div class="page-body">
+            <div class="container-xl">
+                <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}">Error message</div>
+
+                <form th:action="${roleRequest.id == null ? '/security/roles/create' : '/security/roles/edit/' + roleRequest.id}" 
+                      th:object="${roleRequest}" method="post" class="card">
+                    <div class="card-body">
+                        <div class="row row-cards">
+                            <!-- Role Info -->
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label required">Nama Role</label>
+                                    <input type="text" th:field="*{name}" class="form-control" 
+                                           th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'"
+                                           placeholder="Contoh: ROLE_STAFF" 
+                                           th:readonly="${roleRequest.name == 'ROLE_ADMIN'}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Error</div>
+                                    <small class="form-hint">Gunakan awalan ROLE_ (misal: ROLE_MANAGER)</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Deskripsi</label>
+                                    <textarea th:field="*{description}" class="form-control" 
+                                              th:classappend="${#fields.hasErrors('description')} ? 'is-invalid'"
+                                              rows="2" placeholder="Tuliskan kegunaan role ini..."></textarea>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">Error</div>
+                                </div>
+                            </div>
+
+                            <!-- Grouped Permissions Checklist (Collapsible) -->
+                            <div class="col-md-12 mt-3">
+                                <label class="form-label required mb-3">Hak Akses (Klik pada nama fitur untuk melihat aksi)</label>
+                                <div th:classappend="${#fields.hasErrors('permissionIds')} ? 'is-invalid'">
+                                    <div class="row row-cards">
+                                        <!-- Iterate over groups (e.g., USERS, ROLES, DASHBOARD) -->
+                                        <div class="col-md-6 col-lg-4" th:each="entry, stat : ${groupedPermissions}">
+                                            <div class="card shadow-sm border-0 mb-3 feature-card">
+                                                <!-- Card Header as Toggle -->
+                                                <div class="card-header py-2 px-3 bg-primary-lt cursor-pointer" 
+                                                     data-bs-toggle="collapse" 
+                                                     th:attr="data-bs-target='#collapse-' + ${stat.index}" 
+                                                     aria-expanded="false"
+                                                     style="cursor: pointer;">
+                                                    <div class="d-flex justify-content-between align-items-center w-100">
+                                                        <h4 class="card-title m-0 text-primary">
+                                                            <i class="ti ti-folder me-1"></i>
+                                                            <span th:text="${entry.key}">FEATURE_NAME</span>
+                                                        </h4>
+                                                        <div class="d-flex align-items-center">
+                                                            <!-- Initial counter: Will be populated by JS to avoid Thymeleaf SpEL errors -->
+                                                            <span class="badge bg-primary-lt text-primary me-2 group-counter">0/0</span>
+                                                            <i class="ti ti-chevron-down text-primary transition-transform"></i>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!-- Collapsible Content -->
+                                                <div th:id="'collapse-' + ${stat.index}" class="collapse">
+                                                    <div class="card-body p-3 bg-white border-top">
+                                                        <div class="space-y-2">
+                                                            <label class="form-check mb-2" th:each="perm : ${entry.value}">
+                                                                <input type="checkbox" name="permissionIds" th:value="${perm.id}" 
+                                                                       th:checked="${roleRequest.permissionIds != null && roleRequest.permissionIds.contains(perm.id)}"
+                                                                       class="form-check-input perm-checkbox"
+                                                                       th:disabled="${roleRequest.name == 'ROLE_ADMIN'}">
+                                                                <span class="form-check-label">
+                                                                    <span th:text="${#strings.substringAfter(perm.name, '_')}" class="fw-bold text-dark">ACTION</span><br>
+                                                                    <small class="text-secondary" th:text="${perm.description}">Description</small>
+                                                                </span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="invalid-feedback d-block mt-3" th:if="${#fields.hasErrors('permissionIds')}" th:errors="*{permissionIds}">Error</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-end">
+                        <div class="d-flex">
+                            <a th:href="@{/security/roles}" class="btn btn-link">Batal</a>
+                            <button type="submit" class="btn btn-primary ms-auto" th:if="${roleRequest.name != 'ROLE_ADMIN'}">Simpan Role</button>
+                            <span class="text-secondary small ms-auto align-self-center" th:if="${roleRequest.name == 'ROLE_ADMIN'}">Role Admin tidak dapat diubah</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Script inside the fragment -->
+        <script>
+            (function() {
+                const updateCounters = () => {
+                    document.querySelectorAll('.feature-card').forEach(card => {
+                        const checkboxes = card.querySelectorAll('.perm-checkbox');
+                        const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+                        const counter = card.querySelector('.group-counter');
+                        const header = card.querySelector('.card-header');
+                        const h4 = card.querySelector('h4');
+                        const chevron = card.querySelector('.ti-chevron-down');
+                        
+                        if (counter) {
+                            counter.textContent = `${checkedCount}/${checkboxes.length}`;
+                        }
+                        
+                        if (header && h4 && counter && chevron) {
+                            if (checkedCount > 0) {
+                                // Selected state: Dark blue background, white text
+                                header.classList.remove('bg-primary-lt');
+                                header.classList.add('bg-primary');
+                                h4.classList.replace('text-primary', 'text-white');
+                                // Badge: White background, blue text for contrast
+                                counter.classList.remove('bg-primary-lt', 'text-primary');
+                                counter.classList.add('bg-white', 'text-primary');
+                                chevron.classList.replace('text-primary', 'text-white');
+                            } else {
+                                // Unselected state: Light blue background, blue text
+                                header.classList.add('bg-primary-lt');
+                                header.classList.remove('bg-primary');
+                                h4.classList.replace('text-white', 'text-primary');
+                                // Badge: Light blue background, blue text
+                                counter.classList.remove('bg-white', 'text-primary');
+                                counter.classList.add('bg-primary-lt', 'text-primary');
+                                chevron.classList.replace('text-white', 'text-primary');
+                            }
+                        }
+                    });
+                };
+
+                // Run immediately and also on DOMContentLoaded
+                updateCounters();
+                document.addEventListener('DOMContentLoaded', updateCounters);
+
+                // Update on change using event delegation for efficiency
+                document.addEventListener('change', function(e) {
+                    if (e.target.classList.contains('perm-checkbox')) {
+                        updateCounters();
+                    }
+                });
+
+                // Handle chevrons
+                document.addEventListener('show.bs.collapse', function(e) {
+                    const header = e.target.previousElementSibling;
+                    if (header) {
+                        const icon = header.querySelector('.ti-chevron-down');
+                        if (icon) icon.style.transform = 'rotate(180deg)';
+                    }
+                }, true);
+                document.addEventListener('hide.bs.collapse', function(e) {
+                    const header = e.target.previousElementSibling;
+                    if (header) {
+                        const icon = header.querySelector('.ti-chevron-down');
+                        if (icon) icon.style.transform = 'rotate(0deg)';
+                    }
+                }, true);
+            })();
+        </script>
+        <style>
+            .transition-transform {
+                transition: transform 0.3s ease;
+            }
+        </style>
+    </div>
+</body>
+</html>

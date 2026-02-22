@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+    <aside th:fragment="sidebar" class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu" aria-controls="sidebar-menu" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <h1 class="navbar-brand navbar-brand-autodark">
+                <a th:href="@{/}">
+                    <img th:src="@{/img/logo.png}" width="110" height="32" alt="Solusi ERP" class="navbar-brand-image">
+                </a>
+            </h1>
+            <div class="collapse navbar-collapse" id="sidebar-menu">
+                <ul class="navbar-nav pt-lg-3">
+                    <li class="nav-item" sec:authorize="hasAuthority('DASHBOARD_READ')">
+                        <a class="nav-link" th:href="@{/dashboard}">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <i class="ti ti-home"></i>
+                            </span>
+                            <span class="nav-link-title" th:text="#{label.dashboard}">Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-hr"></li>
+                    <!-- Use a broader check for the dropdown to ensure visibility if any sub-menu is accessible -->
+                    <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('USERS_READ', 'ROLES_READ', 'PERMISSIONS_READ')">
+                        <a class="nav-link dropdown-toggle" href="#navbar-security" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <i class="ti ti-shield-lock"></i>
+                            </span>
+                            <span class="nav-link-title" th:text="#{label.security}">Security</span>
+                        </a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" th:href="@{/security/users}" sec:authorize="hasAuthority('USERS_READ')" th:text="#{label.users}">Users</a>
+                            <a class="dropdown-item" th:href="@{/security/roles}" sec:authorize="hasAuthority('ROLES_READ')" th:text="#{label.roles}">Roles</a>
+                            <a class="dropdown-item" th:href="@{/security/permissions}" sec:authorize="hasAuthority('PERMISSIONS_READ')" th:text="#{label.permissions}">Permissions</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </aside>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+    <title th:text="#{login.title} + ' - Solusi ERP'">Login - Solusi ERP</title>
+    <!-- Tabler Core CSS (CDN Latest) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/css/tabler.min.css">
+    <!-- Tabler Icons CSS (CDN Latest) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+    <!-- Inter Font (CDN) -->
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    
+    <style>
+        :root {
+            --tblr-font-sans-serif: 'Inter var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
+        }
+    </style>
+</head>
+<body class="d-flex flex-column">
+    <div class="page page-center">
+        <div class="container container-tight py-4">
+            <div class="card card-md">
+                <div class="card-body">
+                    <h2 class="h2 text-center mb-4" th:text="#{login.welcome}">Welcome to</h2>
+                    
+                    <div class="text-center mb-4">
+                        <img th:src="@{/img/logo.png}" width="150" alt="Logo" class="mx-auto">
+                    </div>
+                    
+                    <!-- Error Message -->
+                    <div th:if="${param.error}" class="alert alert-danger" th:text="#{login.error}">
+                        Username atau password salah.
+                    </div>
+                    <!-- Logout Message -->
+                    <div th:if="${param.logout}" class="alert alert-success" th:text="#{login.logout.success}">
+                        Anda telah berhasil logout.
+                    </div>
+
+                    <form th:action="@{/login}" method="post" autocomplete="off">
+                        <div class="mb-3">
+                            <label class="form-label" th:text="#{login.username}">Username</label>
+                            <input type="text" name="username" class="form-control" th:placeholder="#{login.username.placeholder}" required autocomplete="off">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label" th:text="#{login.password}">Password</label>
+                            <input type="password" name="password" class="form-control" th:placeholder="#{login.password.placeholder}" required autocomplete="off">
+                        </div>
+                        <div class="form-footer">
+                            <button type="submit" class="btn btn-primary w-100" th:text="#{login.signin}">Sign in</button>
+                        </div>
+                    </form>
+
+                    <div class="hr-text" th:text="#{label.search}">or</div>
+                    <div class="text-center">
+                        <a th:href="@{/}" class="btn btn-link w-100" th:text="#{login.back.home}">
+                            Kembali ke Beranda
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Tabler Core JS (CDN Latest) -->
+    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/js/tabler.min.js" defer></script>
+</body>
+</html>
