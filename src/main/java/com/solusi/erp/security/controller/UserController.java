@@ -6,6 +6,8 @@ import com.solusi.erp.security.service.RoleService;
 import com.solusi.erp.security.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,6 +22,7 @@ public class UserController {
 
     private final UserService userService;
     private final RoleService roleService;
+    private final MessageSource messageSource;
 
     @GetMapping
     @PreAuthorize("hasAuthority('USERS_READ')")
@@ -49,7 +52,8 @@ public class UserController {
 
         try {
             userService.create(request);
-            redirectAttributes.addFlashAttribute("successMessage", "Pengguna berhasil dibuat");
+            String message = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
+            redirectAttributes.addFlashAttribute("successMessage", message);
             return "redirect:/security/users";
         } catch (Exception e) {
             model.addAttribute("errorMessage", e.getMessage());
@@ -80,7 +84,8 @@ public class UserController {
 
         try {
             userService.update(id, request);
-            redirectAttributes.addFlashAttribute("successMessage", "Data pengguna berhasil diperbarui");
+            String message = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
+            redirectAttributes.addFlashAttribute("successMessage", message);
             return "redirect:/security/users";
         } catch (Exception e) {
             model.addAttribute("errorMessage", e.getMessage());
@@ -94,7 +99,8 @@ public class UserController {
     public String toggleStatus(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             userService.toggleStatus(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Status pengguna berhasil diubah");
+            String message = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
+            redirectAttributes.addFlashAttribute("successMessage", message);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
@@ -106,7 +112,8 @@ public class UserController {
     public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             userService.delete(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Pengguna berhasil dihapus");
+            String message = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
+            redirectAttributes.addFlashAttribute("successMessage", message);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }

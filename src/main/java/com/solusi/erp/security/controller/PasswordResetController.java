@@ -4,6 +4,8 @@ import com.solusi.erp.security.model.SecurityUser;
 import com.solusi.erp.security.model.User;
 import com.solusi.erp.security.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -20,6 +22,7 @@ public class PasswordResetController {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final MessageSource messageSource;
 
     @GetMapping("/reset-password")
     public String showResetPage() {
@@ -33,12 +36,14 @@ public class PasswordResetController {
                                RedirectAttributes redirectAttributes) {
         
         if (!password.equals(confirmPassword)) {
-            redirectAttributes.addFlashAttribute("error", "Password dan konfirmasi tidak cocok.");
+            String error = messageSource.getMessage("msg.error.password.mismatch", null, LocaleContextHolder.getLocale());
+            redirectAttributes.addFlashAttribute("error", error);
             return "redirect:/reset-password";
         }
 
         if (password.length() < 6) {
-            redirectAttributes.addFlashAttribute("error", "Password minimal 6 karakter.");
+            String error = messageSource.getMessage("msg.error.password.length", null, LocaleContextHolder.getLocale());
+            redirectAttributes.addFlashAttribute("error", error);
             return "redirect:/reset-password";
         }
 

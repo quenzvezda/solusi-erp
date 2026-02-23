@@ -58,6 +58,7 @@ public class UserServiceImpl implements UserService {
                 .fullName(user.getProfile().getFullName())
                 .phoneNumber(user.getProfile().getPhoneNumber())
                 .enabled(user.isEnabled())
+                .passwordChangeRequired(user.isPasswordChangeRequired())
                 .build();
     }
 
@@ -73,6 +74,10 @@ public class UserServiceImpl implements UserService {
 
         Role role = roleRepository.findById(request.getRoleId())
                 .orElseThrow(() -> new RuntimeException("Role tidak ditemukan"));
+
+        if (!StringUtils.hasText(request.getPassword()) || request.getPassword().length() < 6) {
+            throw new RuntimeException("Password minimal 6 karakter");
+        }
 
         User user = userMapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -107,6 +112,9 @@ public class UserServiceImpl implements UserService {
         user.setRole(role);
 
         if (StringUtils.hasText(request.getPassword())) {
+            if (request.getPassword().length() < 6) {
+                throw new RuntimeException("Password minimal 6 karakter");
+            }
             user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
 

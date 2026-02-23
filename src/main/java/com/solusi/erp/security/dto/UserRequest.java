@@ -25,8 +25,7 @@ public class UserRequest {
     @Email(message = "Format email tidak valid")
     private String email;
 
-    @Size(min = 6, message = "Password minimal 6 karakter")
-    private String password; // Optional on update
+    private String password; // Optional on update, validated manually
 
     @NotNull(message = "Role wajib dipilih")
     private Long roleId;
@@ -39,4 +38,6 @@ public class UserRequest {
     private String phoneNumber;
 
     private boolean enabled = true;
+
+    private boolean passwordChangeRequired = false;
 }
