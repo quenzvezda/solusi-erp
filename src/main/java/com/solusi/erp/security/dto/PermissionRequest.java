@@ -17,11 +17,11 @@ public class PermissionRequest {
 
     private Long id;
 
-    @NotBlank(message = "Nama permission/modul wajib diisi")
-    @Size(max = 50, message = "Nama maksimal 50 karakter")
+    @NotBlank(message = "{validation.permission.name.required}")
+    @Size(max = 50, message = "{validation.permission.name.max}")
     private String name;
 
-    @Size(max = 255, message = "Deskripsi maksimal 255 karakter")
+    @Size(max = 255, message = "{validation.permission.description.max}")
     private String description;
 
     // Untuk fitur Batch Generation

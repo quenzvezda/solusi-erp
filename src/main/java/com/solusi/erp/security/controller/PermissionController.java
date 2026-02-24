@@ -3,6 +3,8 @@ package com.solusi.erp.security.controller;
 import com.solusi.erp.security.dto.PermissionRequest;
 import com.solusi.erp.security.service.PermissionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,6 +19,7 @@ import java.util.List;
 public class PermissionController {
 
     private final PermissionService permissionService;
+    private final MessageSource messageSource;
 
     @GetMapping
     @PreAuthorize("hasAuthority('PERMISSIONS_READ')")
@@ -26,7 +29,8 @@ public class PermissionController {
                 .collect(java.util.stream.Collectors.groupingBy(p -> {
                     String name = p.getName();
                     int underscoreIndex = name.indexOf('_');
-                    return underscoreIndex != -1 ? name.substring(0, underscoreIndex) : "OTHER";
+                    return underscoreIndex != -1 ? name.substring(0, underscoreIndex) : 
+                        messageSource.getMessage("label.other", null, LocaleContextHolder.getLocale());
                 }, java.util.TreeMap::new, java.util.stream.Collectors.toList()));
 
         model.addAttribute("groupedPermissions", groupedPermissions);
@@ -42,7 +46,8 @@ public class PermissionController {
         try {
             request.setBatchActions(actions);
             permissionService.createBatch(request);
-            redirectAttributes.addFlashAttribute("successMessage", "Batch permission untuk modul " + request.getName() + " berhasil dibuat");
+            redirectAttributes.addFlashAttribute("successMessage", 
+                messageSource.getMessage("msg.permissions.success.batch", new Object[]{request.getName()}, LocaleContextHolder.getLocale()));
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
@@ -55,7 +60,8 @@ public class PermissionController {
                          RedirectAttributes redirectAttributes) {
         try {
             permissionService.create(request);
-            redirectAttributes.addFlashAttribute("successMessage", "Permission " + request.getName() + " berhasil dibuat secara manual");
+            redirectAttributes.addFlashAttribute("successMessage", 
+                messageSource.getMessage("msg.permissions.success.create", new Object[]{request.getName()}, LocaleContextHolder.getLocale()));
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
@@ -67,7 +73,8 @@ public class PermissionController {
     public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             permissionService.delete(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Permission berhasil dihapus");
+            redirectAttributes.addFlashAttribute("successMessage", 
+                messageSource.getMessage("msg.permissions.success.delete", null, LocaleContextHolder.getLocale()));
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }

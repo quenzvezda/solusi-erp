@@ -1,5 +1,6 @@
 package com.solusi.erp.security.controller;
 
+import com.solusi.erp.security.dto.PermissionResponse;
 import com.solusi.erp.security.dto.RoleRequest;
 import com.solusi.erp.security.dto.RoleResponse;
 import com.solusi.erp.security.service.RoleService;
@@ -14,6 +15,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Controller
@@ -105,9 +108,9 @@ public class RoleController {
         }
     }
 
-    private java.util.Map<String, java.util.List<com.solusi.erp.security.dto.PermissionResponse>> getGroupedPermissions() {
+    private Map<String, List<PermissionResponse>> getGroupedPermissions() {
         return roleService.findAllPermissions().stream()
-                .collect(java.util.stream.Collectors.groupingBy(p -> {
+                .collect(Collectors.groupingBy(p -> {
                     String name = p.getName();
                     int underscoreIndex = name.indexOf('_');
                     return underscoreIndex != -1 ? name.substring(0, underscoreIndex) : 

@@ -7,6 +7,8 @@ import com.solusi.erp.security.model.Permission;
 import com.solusi.erp.security.repository.PermissionRepository;
 import com.solusi.erp.security.service.PermissionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +21,7 @@ public class PermissionServiceImpl implements PermissionService {
 
     private final PermissionRepository permissionRepository;
     private final PermissionMapper permissionMapper;
+    private final MessageSource messageSource;
 
     @Override
     @Transactional(readOnly = true)
@@ -31,7 +34,7 @@ public class PermissionServiceImpl implements PermissionService {
     public void create(PermissionRequest request) {
         String name = request.getName().toUpperCase().replace(" ", "-");
         if (permissionRepository.findByName(name).isPresent()) {
-            throw new RuntimeException("Permission " + name + " sudah ada");
+            throw new RuntimeException(messageSource.getMessage("msg.error.permission.exists", new Object[]{name}, LocaleContextHolder.getLocale()));
         }
         Permission permission = permissionMapper.toEntity(request);
         permission.setName(name);
@@ -54,7 +57,7 @@ public class PermissionServiceImpl implements PermissionService {
             if (permissionRepository.findByName(fullName).isEmpty()) {
                 Permission p = new Permission();
                 p.setName(fullName);
-                p.setDescription("Akses " + action + " untuk modul " + moduleBase);
+                p.setDescription(messageSource.getMessage("msg.permission.description", new Object[]{action, moduleBase}, LocaleContextHolder.getLocale()));
                 toSave.add(p);
             }
         }
@@ -68,11 +71,11 @@ public class PermissionServiceImpl implements PermissionService {
     @Transactional
     public void delete(Long id) {
         Permission permission = permissionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Permission tidak ditemukan"));
+                .orElseThrow(() -> new RuntimeException(messageSource.getMessage("msg.error.permission.notfound", null, LocaleContextHolder.getLocale())));
         
         // Prevent deleting core permissions if needed
-        if (permission.getName().startsWith("USERS_") || permission.getName().startsWith("ROLES_") || permission.getName().startsWith("DASHBOARD_")) {
-            throw new RuntimeException("Permission sistem tidak boleh dihapus");
+        if (permission.getName().startsWith("USERS_") || permission.getName().startsWith("ROLES_") || permission.getName().startsWith("DASHBOARD_") || permission.getName().startsWith("PERMISSIONS_")) {
+            throw new RuntimeException(messageSource.getMessage("msg.error.permission.system.nodelete", null, LocaleContextHolder.getLocale()));
         }
         
         permissionRepository.delete(permission);

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{layout/master :: head('Manajemen Permission')}"></head>
+<head th:replace="~{layout/master :: head(#{label.permissions.title})}"></head>
 <body th:replace="~{layout/master :: layout(~{:: .perm-list-content})}">
     <div class="perm-list-content">
         <!-- Page Header -->
@@ -9,8 +9,8 @@
             <div class="container-xl">
                 <div class="row g-2 align-items-center">
                     <div class="col">
-                        <h2 class="page-title">Manajemen Permission</h2>
-                        <div class="text-secondary mt-1">Daftar otoritas akses sistem dan generator batch.</div>
+                        <h2 class="page-title" th:text="#{label.permissions.title}">Manajemen Permission</h2>
+                        <div class="text-secondary mt-1" th:text="#{label.permissions.subtitle}">Daftar otoritas akses sistem dan generator batch.</div>
                     </div>
                 </div>
             </div>
@@ -37,12 +37,12 @@
                                 <ul class="nav nav-tabs card-header-tabs m-0" data-bs-toggle="tabs">
                                     <li class="nav-item">
                                         <a href="#tabs-batch" class="nav-link active" data-bs-toggle="tab">
-                                            <i class="ti ti-layers-plus me-1"></i> Batch Generator
+                                            <i class="ti ti-layers-plus me-1"></i> <span th:text="#{label.permissions.batch.title}">Batch Generator</span>
                                         </a>
                                     </li>
                                     <li class="nav-item">
                                         <a href="#tabs-manual" class="nav-link" data-bs-toggle="tab">
-                                            <i class="ti ti-plus me-1"></i> Input Manual
+                                            <i class="ti ti-plus me-1"></i> <span th:text="#{label.permissions.manual.title}">Input Manual</span>
                                         </a>
                                     </li>
                                 </ul>
@@ -54,12 +54,12 @@
                                         <form th:action="@{/security/permissions/batch}" th:object="${permissionRequest}" method="post">
                                             <div class="row g-3">
                                                 <div class="col-md-4">
-                                                    <label class="form-label required">Nama Modul / Fitur</label>
-                                                    <input type="text" th:field="*{name}" class="form-control" placeholder="Contoh: SALES-ORDER" required>
-                                                    <small class="form-hint">Akan men-generate aksi standar (READ, CREATE, dll).</small>
+                                                    <label class="form-label required" th:text="#{label.permissions.batch.module}">Nama Modul / Fitur</label>
+                                                    <input type="text" th:field="*{name}" class="form-control" th:placeholder="#{label.permissions.batch.module.placeholder}" required>
+                                                    <small class="form-hint" th:text="#{label.permissions.batch.module.hint}">Akan men-generate aksi standar (READ, CREATE, dll).</small>
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <label class="form-label">Aksi yang akan di-generate</label>
+                                                    <label class="form-label" th:text="#{label.permissions.batch.actions}">Aksi yang akan di-generate</label>
                                                     <div class="mt-2">
                                                         <label class="form-check form-check-inline" th:each="action : ${ {'READ', 'CREATE', 'UPDATE', 'DELETE', 'PRINT'} }">
                                                             <input class="form-check-input" type="checkbox" name="actions" th:value="${action}" th:checked="${action != 'PRINT'}">
@@ -68,7 +68,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="col-md-2 align-self-end text-end">
-                                                    <button type="submit" class="btn btn-primary w-100">Generate</button>
+                                                    <button type="submit" class="btn btn-primary w-100" th:text="#{label.permissions.batch.btn}">Generate</button>
                                                 </div>
                                             </div>
                                         </form>
@@ -78,16 +78,16 @@
                                         <form th:action="@{/security/permissions/create}" th:object="${permissionRequest}" method="post">
                                             <div class="row g-3">
                                                 <div class="col-md-4">
-                                                    <label class="form-label required">Nama Permission Lengkap</label>
-                                                    <input type="text" th:field="*{name}" class="form-control" placeholder="Contoh: SALES-ORDER_POPUP" required>
-                                                    <small class="form-hint">Gunakan format NAMA-MODUL_AKSI.</small>
+                                                    <label class="form-label required" th:text="#{label.permissions.manual.name}">Nama Permission Lengkap</label>
+                                                    <input type="text" th:field="*{name}" class="form-control" th:placeholder="#{label.permissions.manual.name.placeholder}" required>
+                                                    <small class="form-hint" th:text="#{label.permissions.manual.name.hint}">Gunakan format NAMA-MODUL_AKSI.</small>
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <label class="form-label">Deskripsi</label>
-                                                    <input type="text" th:field="*{description}" class="form-control" placeholder="Tujuan permission ini...">
+                                                    <label class="form-label" th:text="#{label.permissions.manual.description}">Deskripsi</label>
+                                                    <input type="text" th:field="*{description}" class="form-control" th:placeholder="#{label.permissions.manual.description.placeholder}">
                                                 </div>
                                                 <div class="col-md-2 align-self-end text-end">
-                                                    <button type="submit" class="btn btn-outline-primary w-100">Simpan</button>
+                                                    <button type="submit" class="btn btn-outline-primary w-100" th:text="#{label.permissions.manual.btn}">Simpan</button>
                                                 </div>
                                             </div>
                                         </form>
@@ -118,10 +118,10 @@
                                     <table class="table table-vcenter card-table">
                                         <thead>
                                             <tr>
-                                                <th class="ps-3">Aksi / Suffix</th>
-                                                <th>Nama Lengkap</th>
-                                                <th>Deskripsi</th>
-                                                <th class="w-1 pe-3 text-end">Hapus</th>
+                                                <th class="ps-3" th:text="#{label.permissions.column.suffix}">Aksi / Suffix</th>
+                                                <th th:text="#{label.permissions.column.fullname}">Nama Lengkap</th>
+                                                <th th:text="#{label.permissions.column.description}">Deskripsi</th>
+                                                <th class="w-1 pe-3 text-end" th:text="#{label.delete}">Hapus</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -139,10 +139,13 @@
                                                     <form th:if="${!#strings.startsWith(p.name, 'USERS_') && !#strings.startsWith(p.name, 'ROLES_') && !#strings.startsWith(p.name, 'DASHBOARD_') && !#strings.startsWith(p.name, 'PERMISSIONS_')}"
                                                           th:action="@{/security/permissions/delete/{id}(id=${p.id})}" method="post"
                                                           sec:authorize="hasAuthority('PERMISSIONS_DELETE')">
-                                                        <button type="submit" class="btn btn-link text-danger p-0" onclick="return confirm('Hapus permission ini?')">
+                                                        <button type="submit" class="btn btn-link text-danger p-0" 
+                                                                th:attr="onclick='return confirm(\'' + #{label.permissions.delete.confirm} + '\')'">
                                                             <i class="ti ti-trash"></i>
                                                         </button>
                                                     </form>
+                                                    <span th:if="${#strings.startsWith(p.name, 'USERS_') || #strings.startsWith(p.name, 'ROLES_') || #strings.startsWith(p.name, 'DASHBOARD_') || #strings.startsWith(p.name, 'PERMISSIONS_')}"
+                                                          class="text-muted small" th:text="#{label.permissions.delete.system}">System</span>
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -154,7 +157,7 @@
                     
                     <div class="col-12" th:if="${#maps.isEmpty(groupedPermissions)}">
                         <div class="card card-body text-center py-5">
-                            <p class="text-secondary mb-0">Tidak ada data permission.</p>
+                            <p class="text-secondary mb-0" th:text="#{label.permissions.empty}">Tidak ada data permission.</p>
                         </div>
                     </div>
                 </div>
