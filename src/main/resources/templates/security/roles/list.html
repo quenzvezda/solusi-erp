@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{layout/master :: head('Manajemen Role')}"></head>
+<head th:replace="~{layout/master :: head(#{label.roles.title})}"></head>
 <body th:replace="~{layout/master :: layout(~{:: .role-list-content})}">
     <div class="role-list-content">
         <!-- Page Header -->
@@ -9,15 +9,15 @@
             <div class="container-xl">
                 <div class="row g-2 align-items-center">
                     <div class="col">
-                        <h2 class="page-title">Manajemen Role</h2>
-                        <div class="text-secondary mt-1">Daftar role dan hak akses (permissions) dalam sistem.</div>
+                        <h2 class="page-title" th:text="#{label.roles.title}">Manajemen Role</h2>
+                        <div class="text-secondary mt-1" th:text="#{label.roles.subtitle}">Daftar role dan hak akses (permissions) dalam sistem.</div>
                     </div>
                     <!-- Page title actions -->
                     <div class="col-auto ms-auto d-print-none" sec:authorize="hasAuthority('ROLES_CREATE')">
                         <div class="btn-list">
                             <a th:href="@{/security/roles/create}" class="btn btn-primary d-none d-sm-inline-block">
                                 <i class="ti ti-plus"></i>
-                                Tambah Role Baru
+                                <span th:text="#{label.roles.add}">Tambah Role Baru</span>
                             </a>
                         </div>
                     </div>
@@ -49,10 +49,10 @@
                         <table class="table table-vcenter card-table">
                             <thead>
                                 <tr>
-                                    <th>Nama Role</th>
-                                    <th>Deskripsi</th>
-                                    <th>Permissions</th>
-                                    <th class="w-1">Aksi</th>
+                                    <th th:text="#{label.roles.name}">Nama Role</th>
+                                    <th th:text="#{label.roles.description}">Deskripsi</th>
+                                    <th th:text="#{label.roles.permissions}">Permissions</th>
+                                    <th class="w-1" th:text="#{label.actions}">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -70,14 +70,16 @@
                                         <div class="btn-list flex-nowrap">
                                             <a th:href="@{/security/roles/edit/{id}(id=${role.id})}" 
                                                class="btn btn-white btn-sm"
-                                               sec:authorize="hasAuthority('ROLES_UPDATE')">
+                                               sec:authorize="hasAuthority('ROLES_UPDATE')"
+                                               th:text="#{label.edit}">
                                                 Edit
                                             </a>
                                             <button th:if="${role.name != 'ROLE_ADMIN'}" 
                                                     class="btn btn-danger btn-sm"
                                                     data-bs-toggle="modal" 
                                                     th:data-bs-target="'#modal-delete-' + ${role.id}"
-                                                    sec:authorize="hasAuthority('ROLES_DELETE')">
+                                                    sec:authorize="hasAuthority('ROLES_DELETE')"
+                                                    th:text="#{label.delete}">
                                                 Hapus
                                             </button>
                                         </div>
@@ -90,16 +92,16 @@
                                                     <div class="modal-status bg-danger"></div>
                                                     <div class="modal-body text-center py-4">
                                                         <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
-                                                        <h3>Konfirmasi Hapus</h3>
-                                                        <div class="text-secondary">Apakah Anda yakin ingin menghapus role <strong th:text="${role.name}"></strong>? Tindakan ini tidak dapat dibatalkan.</div>
+                                                        <h3 th:text="#{label.roles.delete.confirm.title}">Konfirmasi Hapus</h3>
+                                                        <div class="text-secondary" th:text="#{label.roles.delete.confirm.text(${role.name})}">Apakah Anda yakin ingin menghapus role <strong th:text="${role.name}"></strong>? Tindakan ini tidak dapat dibatalkan.</div>
                                                     </div>
                                                     <div class="modal-footer">
                                                         <div class="w-100">
                                                             <div class="row">
-                                                                <div class="col"><a href="#" class="btn w-100" data-bs-dismiss="modal">Batal</a></div>
+                                                                <div class="col"><a href="#" class="btn w-100" data-bs-dismiss="modal" th:text="#{label.cancel}">Batal</a></div>
                                                                 <div class="col">
                                                                     <form th:action="@{/security/roles/delete/{id}(id=${role.id})}" method="post">
-                                                                        <button type="submit" class="btn btn-danger w-100">Hapus</button>
+                                                                        <button type="submit" class="btn btn-danger w-100" th:text="#{label.delete}">Hapus</button>
                                                                     </form>
                                                                 </div>
                                                             </div>
@@ -111,7 +113,7 @@
                                     </td>
                                 </tr>
                                 <tr th:if="${#lists.isEmpty(roles)}">
-                                    <td colspan="4" class="text-center text-secondary py-4">Tidak ada data role.</td>
+                                    <td colspan="4" class="text-center text-secondary py-4" th:text="#{label.roles.empty}">Tidak ada data role.</td>
                                 </tr>
                             </tbody>
                         </table>

@@ -19,13 +19,13 @@ public class RoleRequest {
     
     private Long id;
 
-    @NotBlank(message = "Nama role wajib diisi")
-    @Size(max = 50, message = "Nama role maksimal 50 karakter")
+    @NotBlank(message = "{validation.role.name.required}")
+    @Size(max = 50, message = "{validation.role.name.max}")
     private String name;
 
-    @Size(max = 255, message = "Deskripsi maksimal 255 karakter")
+    @Size(max = 255, message = "{validation.role.description.max}")
     private String description;
 
-    @NotEmpty(message = "Minimal pilih satu permission")
+    @NotEmpty(message = "{validation.role.permissions.required}")
     private Set<Long> permissionIds = new HashSet<>();
 }

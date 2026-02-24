@@ -5,7 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 /**
- * Controller for the main dashboard (landing page).
+ * Controller for the main dashboard (landing page logged in user).
  */
 @Controller
 public class DashboardController {

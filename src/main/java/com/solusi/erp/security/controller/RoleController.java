@@ -5,6 +5,8 @@ import com.solusi.erp.security.dto.RoleResponse;
 import com.solusi.erp.security.service.RoleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 public class RoleController {
 
     private final RoleService roleService;
+    private final MessageSource messageSource;
 
     @GetMapping
     @PreAuthorize("hasAuthority('ROLES_READ')")
@@ -49,7 +52,8 @@ public class RoleController {
 
         try {
             roleService.create(request);
-            redirectAttributes.addFlashAttribute("successMessage", "Role berhasil dibuat");
+            redirectAttributes.addFlashAttribute("successMessage", 
+                messageSource.getMessage("msg.roles.success.create", null, LocaleContextHolder.getLocale()));
             return "redirect:/security/roles";
         } catch (Exception e) {
             model.addAttribute("errorMessage", e.getMessage());
@@ -91,7 +95,8 @@ public class RoleController {
 
         try {
             roleService.update(id, request);
-            redirectAttributes.addFlashAttribute("successMessage", "Role berhasil diperbarui");
+            redirectAttributes.addFlashAttribute("successMessage", 
+                messageSource.getMessage("msg.roles.success.update", null, LocaleContextHolder.getLocale()));
             return "redirect:/security/roles";
         } catch (Exception e) {
             model.addAttribute("errorMessage", e.getMessage());
@@ -105,7 +110,8 @@ public class RoleController {
                 .collect(java.util.stream.Collectors.groupingBy(p -> {
                     String name = p.getName();
                     int underscoreIndex = name.indexOf('_');
-                    return underscoreIndex != -1 ? name.substring(0, underscoreIndex) : "OTHER";
+                    return underscoreIndex != -1 ? name.substring(0, underscoreIndex) : 
+                        messageSource.getMessage("label.other", null, LocaleContextHolder.getLocale());
                 }));
     }
 
@@ -114,7 +120,8 @@ public class RoleController {
     public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             roleService.delete(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Role berhasil dihapus");
+            redirectAttributes.addFlashAttribute("successMessage", 
+                messageSource.getMessage("msg.roles.success.delete", null, LocaleContextHolder.getLocale()));
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }

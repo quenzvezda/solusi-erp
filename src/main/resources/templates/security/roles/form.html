@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{layout/master :: head(${roleRequest.id == null ? 'Tambah Role' : 'Edit Role'})}"></head>
+<head th:replace="~{layout/master :: head(${roleRequest.id == null ? #messages.msg('label.roles.add') : #messages.msg('label.roles.edit')})}"></head>
 <body th:replace="~{layout/master :: layout(~{:: .role-form-content})}">
     <div class="role-form-content">
         <!-- Page Header -->
@@ -9,7 +9,7 @@
             <div class="container-xl">
                 <div class="row g-2 align-items-center">
                     <div class="col">
-                        <h2 class="page-title" th:text="${roleRequest.id == null ? 'Tambah Role Baru' : 'Edit Role: ' + roleRequest.name}">Role Form</h2>
+                        <h2 class="page-title" th:text="${roleRequest.id == null ? #messages.msg('label.roles.add') : #messages.msg('label.roles.edit') + ': ' + roleRequest.name}">Role Form</h2>
                     </div>
                 </div>
             </div>
@@ -27,26 +27,29 @@
                             <!-- Role Info -->
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label class="form-label required">Nama Role</label>
+                                    <label class="form-label required" th:text="#{label.roles.name}">Nama Role</label>
                                     <input type="text" th:field="*{name}" class="form-control" 
                                            th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'"
-                                           placeholder="Contoh: ROLE_STAFF" 
+                                           th:placeholder="#{label.roles.name.placeholder}" 
                                            th:readonly="${roleRequest.name == 'ROLE_ADMIN'}">
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Error</div>
-                                    <small class="form-hint">Gunakan awalan ROLE_ (misal: ROLE_MANAGER)</small>
+                                    <small class="form-hint" th:text="#{label.roles.name.hint}">Gunakan awalan ROLE_ (misal: ROLE_MANAGER)</small>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">Deskripsi</label>
+                                    <label class="form-label" th:text="#{label.roles.description}">Deskripsi</label>
                                     <textarea th:field="*{description}" class="form-control" 
                                               th:classappend="${#fields.hasErrors('description')} ? 'is-invalid'"
-                                              rows="2" placeholder="Tuliskan kegunaan role ini..."></textarea>
+                                              rows="2" th:placeholder="#{label.roles.description.placeholder}"></textarea>
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">Error</div>
                                 </div>
                             </div>
 
                             <!-- Grouped Permissions Checklist (Collapsible) -->
                             <div class="col-md-12 mt-3">
-                                <label class="form-label required mb-3">Hak Akses (Klik pada nama fitur untuk melihat aksi)</label>
+                                <label class="form-label required mb-3">
+                                    <span th:text="#{label.roles.permissions}">Hak Akses</span> 
+                                    (<span th:text="#{label.roles.permission.hint}">Klik pada nama fitur untuk melihat aksi</span>)
+                                </label>
                                 <div th:classappend="${#fields.hasErrors('permissionIds')} ? 'is-invalid'">
                                     <div class="row row-cards">
                                         <!-- Iterate over groups (e.g., USERS, ROLES, DASHBOARD) -->
@@ -97,9 +100,9 @@
                     </div>
                     <div class="card-footer text-end">
                         <div class="d-flex">
-                            <a th:href="@{/security/roles}" class="btn btn-link">Batal</a>
-                            <button type="submit" class="btn btn-primary ms-auto" th:if="${roleRequest.name != 'ROLE_ADMIN'}">Simpan Role</button>
-                            <span class="text-secondary small ms-auto align-self-center" th:if="${roleRequest.name == 'ROLE_ADMIN'}">Role Admin tidak dapat diubah</span>
+                            <a th:href="@{/security/roles}" class="btn btn-link" th:text="#{label.cancel}">Batal</a>
+                            <button type="submit" class="btn btn-primary ms-auto" th:if="${roleRequest.name != 'ROLE_ADMIN'}" th:text="#{label.save}">Simpan Role</button>
+                            <span class="text-secondary small ms-auto align-self-center" th:if="${roleRequest.name == 'ROLE_ADMIN'}" th:text="#{label.roles.admin.readonly}">Role Admin tidak dapat diubah</span>
                         </div>
                     </div>
                 </form>
