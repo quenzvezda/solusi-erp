@@ -23,7 +23,17 @@
                         </a>
                     </li>
                     <li class="nav-hr"></li>
-                    <!-- Use a broader check for the dropdown to ensure visibility if any sub-menu is accessible -->
+                    <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('PRODUCT-CATEGORY_READ')">
+                        <a class="nav-link dropdown-toggle" href="#navbar-inventory" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <i class="ti ti-package"></i>
+                            </span>
+                            <span class="nav-link-title" th:text="#{label.inventory}">Inventory</span>
+                        </a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" th:href="@{/inventory/product-categories}" sec:authorize="hasAuthority('PRODUCT-CATEGORY_READ')" th:text="#{label.product.category}">Product Category</a>
+                        </div>
+                    </li>
                     <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('USERS_READ', 'ROLES_READ', 'PERMISSIONS_READ')">
                         <a class="nav-link dropdown-toggle" href="#navbar-security" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">

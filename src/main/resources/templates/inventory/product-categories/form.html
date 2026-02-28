@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/master :: head(${productCategoryRequest.id == null ? #messages.msg('label.product.category.add') : #messages.msg('label.product.category.edit')})}"></head>
+<body th:replace="~{layout/master :: layout(~{:: .product-category-form-content})}">
+    <div class="product-category-form-content">
+        <!-- Page Header -->
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="${productCategoryRequest.id == null ? #messages.msg('label.product.category.add') : #messages.msg('label.product.category.edit') + ': ' + productCategoryRequest.name}">Form Kategori</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Body -->
+        <div class="page-body">
+            <div class="container-xl">
+                <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}">Error message</div>
+
+                <form th:action="${productCategoryRequest.id == null ? '/inventory/product-categories/create' : '/inventory/product-categories/edit/' + productCategoryRequest.id}" 
+                      th:object="${productCategoryRequest}" method="post" class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label" th:text="#{label.product.category.code}">Kode</label>
+                                    <input type="text" th:field="*{code}" class="form-control bg-light" 
+                                           th:classappend="${#fields.hasErrors('code')} ? 'is-invalid'"
+                                           th:placeholder="${productCategoryRequest.id == null} ? '[Auto Generated]' : #{placeholder.product.category.code}"
+                                           readonly>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('code')}" th:errors="*{code}">Error</div>
+                                    <small class="form-hint" th:if="${productCategoryRequest.id == null}">Kode akan dibuat otomatis oleh sistem.</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label required" th:text="#{label.product.category.name}">Nama</label>
+                                    <input type="text" th:field="*{name}" class="form-control" 
+                                           th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'"
+                                           th:placeholder="#{placeholder.product.category.name}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Error</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label required" th:text="#{label.product.category.type}">Tipe</label>
+                                    <div class="form-selectgroup">
+                                        <label class="form-selectgroup-item" th:each="type : ${types}">
+                                            <input type="radio" th:field="*{type}" th:value="${type}" class="form-selectgroup-input">
+                                            <span class="form-selectgroup-label" th:text="#{'label.product.category.type.' + ${type.name().toLowerCase()}}">TYPE</span>
+                                        </label>
+                                    </div>
+                                    <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('type')}" th:errors="*{type}">Error</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 border-start-md">
+                                <div class="mb-3">
+                                    <label class="form-label" th:text="#{label.product.category.note}">Catatan</label>
+                                    <textarea th:field="*{note}" class="form-control" rows="6" 
+                                              th:placeholder="#{placeholder.product.category.note}"></textarea>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('note')}" th:errors="*{note}">Error</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-end">
+                        <div class="d-flex">
+                            <a th:href="@{/inventory/product-categories}" class="btn btn-link" th:text="#{label.cancel}">Batal</a>
+                            <button type="submit" class="btn btn-primary ms-auto" th:text="#{label.save}">Simpan Kategori Produk</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

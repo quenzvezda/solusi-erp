@@ -48,7 +48,23 @@ AI Assistant WAJIB mematuhi versi dan teknologi berikut berdasarkan `pom.xml` ut
     * `version` (Integer/Long) dengan anotasi `@Version` untuk *optimistic locking* (default 1).
 * AI WAJIB memastikan Spring Data JPA Auditing aktif (`@EnableJpaAuditing` dan bean `AuditorAware` terkonfigurasi).
 
-## 5. Security & RBAC (Role-Based Access Control)
+## 5. Business Module Standards
+Setiap modul bisnis baru (Inventory, Sales, Purchasing, dll) WAJIB mengikuti pola berikut:
+*   **Pagination (Mandatory)**: Selalu gunakan `Page<T>` dari Spring Data JPA pada level Service dan Controller.
+    *   **Automated Resolver**: Gunakan parameter `Pageable pageable` langsung di method Controller. 
+    *   Sistem secara otomatis akan meresolve `pageSize` berdasarkan preferensi `UserProfile.defaultPageSize`.
+    *   Detail teknis silakan merujuk ke [docs/spec/pagination.md](spec/pagination.md).
+    *   Tampilkan footer pagination standar Tabler di Thymeleaf.
+*   **Search (Mandatory)**: Setiap list view WAJIB memiliki fitur pencarian minimal pada 1-2 kolom utama (misal: Code, Name).
+*   **Code Auto-Generation**: Field `code` (95% modul) WAJIB di-generate oleh `SequenceGeneratorService`.
+    *   Detail teknis dan pattern silakan merujuk ke [docs/spec/sequence-generator.md](spec/sequence-generator.md).
+    *   DILARANG menginput kode manual di form `create`.
+    *   UI field `code` WAJIB diset `readonly` dan `bg-light`.
+*   **i18n Implementation**: 
+    *   Semua pesan error di Service (yang dilempar via `RuntimeException`) WAJIB di-resolve menggunakan `MessageSource` agar mendukung multi-bahasa.
+    *   Gunakan helper method `private String getMessage(String key)` di setiap Service Implementation.
+
+## 6. Security & RBAC (Role-Based Access Control)
 Sistem otorisasi menggunakan model **Fine-Grained Authority (Privilege-Based)**.
 * **Database Entities:** Harus terdiri dari `User`, `Role`, dan `Permission` (Authority).
 * **Mapping:** 1 User memiliki 1 Role. 1 Role memiliki banyak Permission (Many-to-Many).

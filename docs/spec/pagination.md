@@ -1,0 +1,34 @@
+# Technical Standard: Dynamic Pageable Resolver
+
+Sistem ini menggunakan **Custom Argument Resolver** untuk menangani paginasi secara cerdas berdasarkan preferensi pengguna yang tersimpan di database.
+
+## 1. Komponen Utama
+*   **`UserPreferencePageableResolver`**: Sebuah resolver yang meng-extend `PageableHandlerMethodArgumentResolver` milik Spring Data.
+*   **`WebMvcConfig`**: Mendaftarkan resolver tersebut agar aktif secara global.
+
+## 2. Alur Resolusi (Priority Order)
+Saat sebuah request masuk ke Controller yang memiliki parameter `Pageable`, resolver akan menentukan `pageSize` dengan urutan prioritas berikut:
+
+1.  **Explicit Request**: Jika URL mengandung `?size=X`, sistem akan menggunakan nilai `X`.
+2.  **User Preference**: Jika parameter `size` kosong, sistem akan mengambil nilai `defaultPageSize` dari `UserProfile` user yang sedang login.
+3.  **System Default**: Jika user belum login atau profil tidak ditemukan, sistem akan menggunakan default Spring (biasanya 10).
+
+## 3. Cara Penggunaan di Controller
+Developer tidak perlu lagi melakukan inisialisasi `PageRequest` manual. Cukup terima parameter `Pageable`.
+
+```java
+// BEST PRACTICE
+@GetMapping
+public String list(@RequestParam(required = false) String keyword, 
+                   Pageable pageable, 
+                   Model model) {
+    // pageable sudah berisi pageSize yang sesuai preferensi user
+    model.addAttribute("page", service.findAll(keyword, pageable));
+    return "my-module/list";
+}
+```
+
+## 4. Keuntungan Standar Ini
+*   **Konsistensi UI**: Semua halaman list akan menampilkan jumlah data yang sama sesuai keinginan user.
+*   **Boilerplate Reduction**: Menghilangkan logika manual pengambilan session/profil di setiap Controller.
+*   **Maintainability**: Perubahan logika paginasi global cukup dilakukan di satu file (`UserPreferencePageableResolver`).
