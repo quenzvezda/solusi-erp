@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/master :: head(#{label.error.500.title})}"></head>
+<body th:replace="~{layout/master :: layout(~{:: .error-content})}">
+    <div class="error-content">
+        <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 60vh;">
+            <div class="empty">
+                <div class="mb-4">
+                    <!-- Inline SVG Illustration for 500 (Server/System Error) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180" fill="none">
+                        <!-- Soft background circle -->
+                        <circle cx="90" cy="90" r="80" fill="#FFFBEB"/>
+
+                        <!-- Server rack: bottom unit -->
+                        <rect x="38" y="108" width="88" height="24" rx="5" fill="#FDE68A" stroke="#F59E0B" stroke-width="3"/>
+                        <circle cx="54" cy="120" r="4" fill="#F59E0B"/>
+                        <circle cx="67" cy="120" r="4" fill="#FCD34D"/>
+                        <line x1="80" y1="114" x2="118" y2="114" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="80" y1="120" x2="118" y2="120" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="80" y1="126" x2="118" y2="126" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+
+                        <!-- Server rack: middle unit (damaged - red tint) -->
+                        <rect x="38" y="80" width="88" height="24" rx="5" fill="#FEE2E2" stroke="#EF4444" stroke-width="3"/>
+                        <circle cx="54" cy="92" r="4" fill="#EF4444"/>
+                        <circle cx="67" cy="92" r="4" fill="#FCA5A5"/>
+                        <line x1="80" y1="86" x2="118" y2="86" stroke="#FCA5A5" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="80" y1="92" x2="118" y2="92" stroke="#FCA5A5" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="80" y1="98" x2="118" y2="98" stroke="#FCA5A5" stroke-width="2" stroke-linecap="round"/>
+
+                        <!-- Server rack: top unit -->
+                        <rect x="38" y="52" width="88" height="24" rx="5" fill="#FDE68A" stroke="#F59E0B" stroke-width="3"/>
+                        <circle cx="54" cy="64" r="4" fill="#F59E0B"/>
+                        <circle cx="67" cy="64" r="4" fill="#FCD34D"/>
+                        <line x1="80" y1="58" x2="118" y2="58" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="80" y1="64" x2="118" y2="64" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="80" y1="70" x2="118" y2="70" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+
+                        <!-- Lightning bolt (striking the middle unit) -->
+                        <path d="M125 38 L111 66 L121 66 L105 98 L124 68 L114 68 Z"
+                              fill="#F59E0B" stroke="#D97706" stroke-width="1.5" stroke-linejoin="round"/>
+
+                        <!-- Small sparks around impact -->
+                        <line x1="115" y1="76" x2="122" y2="72" stroke="#FCD34D" stroke-width="2.5" stroke-linecap="round"/>
+                        <line x1="116" y1="82" x2="124" y2="82" stroke="#FCD34D" stroke-width="2.5" stroke-linecap="round"/>
+                        <line x1="114" y1="88" x2="120" y2="93" stroke="#FCD34D" stroke-width="2.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <p class="empty-title" th:text="#{label.error.500.title}">Internal Server Error</p>
+                <p class="empty-subtitle text-secondary" th:text="#{label.error.500.subtitle}">
+                    Something went wrong on our server. Please try again later.
+                </p>
+                <!-- Show error message if available -->
+                <div th:if="${message}" class="mt-3 text-start w-100" style="max-width: 500px;">
+                    <pre class="bg-light p-3 border small text-danger" th:text="${message}"></pre>
+                </div>
+                <div class="empty-action">
+                    <a th:href="@{/dashboard}" class="btn btn-primary">
+                        <i class="ti ti-arrow-left"></i>
+                        <span th:text="#{label.error.back_home}">Take me home</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

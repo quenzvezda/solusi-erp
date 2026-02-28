@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/master :: head(#{label.error.404.title})}"></head>
+<body th:replace="~{layout/master :: layout(~{:: .error-content})}">
+    <div class="error-content">
+        <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 60vh;">
+            <div class="empty">
+                <div class="mb-4">
+                    <!-- Inline SVG Illustration for 404 (Simplistic Version of a lost person) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180" fill="none">
+                        <!-- Soft background circle -->
+                        <circle cx="90" cy="90" r="80" fill="#EFF6FF"/>
+
+                        <!-- Magnifying glass lens ring -->
+                        <circle cx="82" cy="80" r="38" fill="#BFDBFE" stroke="#3B82F6" stroke-width="7"/>
+
+                        <!-- Inner lens -->
+                        <circle cx="82" cy="80" r="28" fill="#DBEAFE"/>
+
+                        <!-- Question mark: curve -->
+                        <path d="M73 70 C73 60 91 58 91 70 C91 78 82 79 82 88"
+                              stroke="#3B82F6" stroke-width="6" stroke-linecap="round" fill="none"/>
+
+                        <!-- Question mark: stem gap -->
+                        <path d="M82 92 L82 96" stroke="#3B82F6" stroke-width="6" stroke-linecap="round"/>
+
+                        <!-- Question mark: dot -->
+                        <circle cx="82" cy="102" r="3.5" fill="#3B82F6"/>
+
+                        <!-- Handle -->
+                        <line x1="112" y1="108" x2="135" y2="132"
+                              stroke="#3B82F6" stroke-width="10" stroke-linecap="round"/>
+
+                        <!-- Handle cap -->
+                        <circle cx="135" cy="132" r="5" fill="#2563EB"/>
+                    </svg>
+                </div>
+                <p class="empty-title" th:text="#{label.error.404.title}">Oops… You just found an error page</p>
+                <p class="empty-subtitle text-secondary" th:text="#{label.error.404.subtitle}">
+                    We are sorry but the page you are looking for was not found
+                </p>
+                <div class="empty-action">
+                    <a th:href="@{/dashboard}" class="btn btn-primary">
+                        <i class="ti ti-arrow-left"></i>
+                        <span th:text="#{label.error.back_home}">Take me home</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

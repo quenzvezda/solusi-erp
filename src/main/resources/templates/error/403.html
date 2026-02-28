@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/master :: head(#{label.error.403.title})}"></head>
+<body th:replace="~{layout/master :: layout(~{:: .error-content})}">
+    <div class="error-content">
+        <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 60vh;">
+            <div class="empty">
+                <div class="mb-4">
+                    <!-- Inline SVG Illustration for 403 (Security/Lock) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180" fill="none">
+                        <!-- Soft background circle -->
+                        <circle cx="90" cy="90" r="80" fill="#FEF2F2"/>
+
+                        <!-- Shield body -->
+                        <path d="M90 30 L140 52 L140 100 C140 128 90 155 90 155 C90 155 40 128 40 100 L40 52 Z"
+                              fill="#FECACA" stroke="#EF4444" stroke-width="4" stroke-linejoin="round"/>
+
+                        <!-- Lock body (rounded rect, vertically centered in shield) -->
+                        <rect x="70" y="95" width="40" height="30" rx="6" fill="#EF4444"/>
+
+                        <!-- Lock shackle (U-shape arc) -->
+                        <path d="M78 95 L78 82 C78 72 102 72 102 82 L102 95"
+                              stroke="#EF4444" stroke-width="7" stroke-linecap="round" fill="none"/>
+
+                        <!-- Keyhole dot -->
+                        <circle cx="90" cy="109" r="4" fill="white"/>
+                        <!-- Keyhole slot -->
+                        <rect x="88" y="113" width="4" height="6" rx="2" fill="white"/>
+                    </svg>
+                </div>
+                <p class="empty-title" th:text="#{label.error.403.title}">Forbidden</p>
+                <p class="empty-subtitle text-secondary" th:text="#{label.error.403.subtitle}">
+                    You do not have permission to access this page.
+                </p>
+                <div class="empty-action">
+                    <a th:href="@{/dashboard}" class="btn btn-primary">
+                        <i class="ti ti-arrow-left"></i>
+                        <span th:text="#{label.error.back_home}">Take me home</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
