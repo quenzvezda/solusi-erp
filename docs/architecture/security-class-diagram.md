@@ -72,5 +72,7 @@ classDiagram
 ## Alur Sinkronisasi Preferensi (i18n & UI):
 1. **Login Sukses**: `CustomAuthenticationSuccessHandler` mencegat alur setelah autentikasi berhasil.
 2. **Ekstraksi Profil**: Mengambil `UserProfile` dari objek `SecurityUser`.
-3. **Set Locale**: `LocaleResolver` memperbarui locale session sesuai dengan `languageCode` yang tersimpan di database.
-4. **Update Profil**: Saat user mengubah preferensi di halaman Profil, `ProfileController` memperbarui database sekaligus memperbarui locale session secara *real-time*.
+3. **Smart Sync Locale**: `LocaleResolver` melakukan sinkronisasi dua arah:
+    * Jika Cookie browser memiliki bahasa berbeda dengan DB (karena user pilih di landing page), maka DB diupdate agar sinkron dengan pilihan user.
+    * Jika Cookie browser kosong/default, maka locale dari DB disetel ke browser.
+4. **Update Profil**: Saat user mengubah preferensi di halaman Profil, `ProfileController` memperbarui database sekaligus memperbarui Cookie browser secara *real-time*.

@@ -78,9 +78,12 @@ Sistem otorisasi menggunakan model **Fine-Grained Authority (Privilege-Based)**.
 * **SecurityUser Implementation:** Gunakan class `SecurityUser` yang mengimplementasikan `UserDetails` dan **WAJIB** melakukan *pre-calculate* authorities di constructor untuk menghindari `LazyInitializationException` atau *detachment* saat UI merender izin.
 * **Permission Batching:** Gunakan fitur generator untuk mempercepat pembuatan set standar (READ, CREATE, UPDATE, DELETE) untuk setiap modul baru.
 
-## 6. Internationalization (i18n)
+## 7. Internationalization (i18n)
 Sistem ini menggunakan mekanisme internasionalisasi dinamis untuk mendukung multi-bahasa (default: `id`, `en`).
-* **Source of Truth:** Saat pengguna login, locale session **WAJIB** disinkronkan dengan `UserProfile.languageCode` melalui `CustomAuthenticationSuccessHandler`.
+* **Storage:** Menggunakan **Cookie-based Locale Resolver** (cookie name: `lang`) agar preferensi bertahan selama 30 hari di browser meskipun session berakhir.
+* **Smart Synchronization:** Saat login sukses, `CustomAuthenticationSuccessHandler` melakukan sinkronisasi dua arah:
+    1. Jika user sudah memilih bahasa di landing page (Cookie ada), maka database (`UserProfile`) otomatis diupdate mengikuti pilihan browser.
+    2. Jika Cookie kosong/default, maka preferensi dari database disetel ke browser.
 * **Thymeleaf Implementation:** DILARANG melakukan hardcoding teks statis. Selalu gunakan operator `#{key.pesan}`.
 * **Naming Convention:** Ikuti panduan penamaan kunci di [docs/spec/i18n-guide.md](spec/i18n-guide.md) untuk menjaga konsistensi.
 
