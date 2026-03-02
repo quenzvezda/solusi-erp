@@ -64,9 +64,9 @@
                         <table class="table table-vcenter card-table">
                             <thead>
                                 <tr>
-                                    <th th:text="#{label.uom.column.code}">Kode (Simbol)</th>
-                                    <th th:text="#{label.uom.column.name}">Nama Lengkap</th>
-                                    <th th:text="#{label.uom.column.type}">Tipe</th>
+                                    <th th:replace="~{fragments/table :: sortable('code', #{label.uom.column.code})}">Kode (Simbol)</th>
+                                    <th th:replace="~{fragments/table :: sortable('name', #{label.uom.column.name})}">Nama Lengkap</th>
+                                    <th th:replace="~{fragments/table :: sortable('type', #{label.uom.column.type})}">Tipe</th>
                                     <th class="w-1" th:text="#{label.actions}">Aksi</th>
                                 </tr>
                             </thead>
@@ -124,7 +124,7 @@
                                         </div>
                                     </td>
                                 </tr>
-                                <tr th:if="${page.empty}">
+                                <tr th:if="${page.totalElements == 0}">
                                     <td colspan="4" class="text-center text-secondary py-4" th:text="#{label.uom.empty}">Tidak ada data.</td>
                                 </tr>
                             </tbody>
@@ -143,16 +143,16 @@
                         </p>
                         <ul class="pagination m-0 ms-auto">
                             <li class="page-item" th:classappend="${page.first} ? 'disabled'">
-                                <a class="page-link" th:href="@{/inventory/unit-of-measures(page=${page.number - 1}, keyword=${keyword})}" tabindex="-1" aria-disabled="true">
+                                <a class="page-link" th:href="@{${currentUri}(page=${page.number - 1}, keyword=${keyword}, sort=${sortField != '' ? sortField + ',' + sortDir : ''})}" tabindex="-1" aria-disabled="true">
                                     <i class="ti ti-chevron-left"></i>
                                     <span th:text="#{label.pagination.previous}">prev</span>
                                 </a>
                             </li>
                             <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}" th:classappend="${i == page.number} ? 'active'">
-                                <a class="page-link" th:href="@{/inventory/unit-of-measures(page=${i}, keyword=${keyword})}" th:text="${i + 1}">1</a>
+                                <a class="page-link" th:href="@{${currentUri}(page=${i}, keyword=${keyword}, sort=${sortField != '' ? sortField + ',' + sortDir : ''})}" th:text="${i + 1}">1</a>
                             </li>
                             <li class="page-item" th:classappend="${page.last} ? 'disabled'">
-                                <a class="page-link" th:href="@{/inventory/unit-of-measures(page=${page.number + 1}, keyword=${keyword})}">
+                                <a class="page-link" th:href="@{${currentUri}(page=${page.number + 1}, keyword=${keyword}, sort=${sortField != '' ? sortField + ',' + sortDir : ''})}">
                                     <span th:text="#{label.pagination.next}">next</span>
                                     <i class="ti ti-chevron-right"></i>
                                 </a>

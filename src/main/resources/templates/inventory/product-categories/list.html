@@ -128,7 +128,7 @@
                                         </div>
                                     </td>
                                 </tr>
-                                <tr th:if="${page.empty}">
+                                <tr th:if="${page.totalElements == 0}">
                                     <td colspan="5" class="text-center text-secondary py-4" th:text="#{label.product.category.empty}">Tidak ada data.</td>
                                 </tr>
                             </tbody>

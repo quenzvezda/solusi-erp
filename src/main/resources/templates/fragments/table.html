@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <!-- 
+        Generic Sortable Header Fragment 
+        Params:
+        - field: Field name in the entity (e.g., 'name', 'code')
+        - label: Text to display in the header
+    -->
+    <th th:fragment="sortable(field, label)" scope="col">
+        <a th:href="@{${currentUri}(page=0, keyword=${keyword}, sort=${field + ',' + (sortField == field && sortDir == 'asc' ? 'desc' : 'asc')})}"
+           class="table-sort text-dark text-decoration-none">
+            <span th:text="${label}">Label</span>
+            <span class="ms-1 d-inline-flex">
+                <!-- Sorting Icons -->
+                <i th:if="${sortField == field && sortDir == 'asc'}" class="ti ti-arrow-narrow-up icon text-primary"></i>
+                <i th:if="${sortField == field && sortDir == 'desc'}" class="ti ti-arrow-narrow-down icon text-primary"></i>
+                <i th:if="${sortField != field}" class="ti ti-arrows-sort text-secondary opacity-30 icon"></i>
+            </span>
+        </a>
+    </th>
+</body>
+</html>

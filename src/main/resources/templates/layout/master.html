@@ -26,6 +26,45 @@
             vertical-align: middle;
         }
     </style>
+    <style>
+        /* Global Table Sorting (Custom Refinement) */
+        .table-sort {
+            cursor: pointer;
+            padding: 0.5rem 0.25rem;
+            margin: -0.5rem -0.25rem;
+            transition: all 0.15s ease-in-out;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            position: relative;
+        }
+        
+        /* Disable default Tabler/Bootstrap sorting arrows (::after and ::before) */
+        .table-sort::after, .table-sort::before {
+            display: none !important;
+            content: none !important;
+        }
+
+        .table-sort:hover {
+            background-color: rgba(32, 107, 196, 0.06);
+            color: #206bc4 !important;
+        }
+
+        .table-sort .icon {
+            font-size: 1rem;
+            transition: transform 0.2s;
+            line-height: 1;
+        }
+
+        /* Add a subtle highlight to the active sort icon's container */
+        .table-sort .ms-1 {
+            display: flex;
+            align-items: center;
+            height: 100%;
+        }
+    </style>
 </head>
 <body th:fragment="layout(content)">
     <div class="page">
