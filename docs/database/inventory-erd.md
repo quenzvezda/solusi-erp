@@ -14,6 +14,18 @@ erDiagram
         datetime updated_date
         int version
     }
+
+    unit_of_measures {
+        bigint id PK
+        varchar code UK "Manual input (e.g. KG)"
+        varchar name
+        enum type "WEIGHT, LENGTH, UNIT, VOLUME, TIME, AREA"
+        varchar created_by
+        datetime created_date
+        varchar updated_by
+        datetime updated_date
+        int version
+    }
 ```
 
 ## Detail Standarisasi:

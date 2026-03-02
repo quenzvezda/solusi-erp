@@ -1,0 +1,21 @@
+package com.solusi.erp.inventory.mapper;
+
+import com.solusi.erp.inventory.dto.UnitOfMeasureRequest;
+import com.solusi.erp.inventory.dto.UnitOfMeasureResponse;
+import com.solusi.erp.inventory.model.UnitOfMeasure;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.ReportingPolicy;
+
+/**
+ * MapStruct Mapper for UnitOfMeasure.
+ */
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface UnitOfMeasureMapper {
+
+    UnitOfMeasure toEntity(UnitOfMeasureRequest request);
+
+    UnitOfMeasureResponse toResponse(UnitOfMeasure entity);
+
+    void updateEntityFromRequest(UnitOfMeasureRequest request, @MappingTarget UnitOfMeasure entity);
+}
