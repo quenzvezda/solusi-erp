@@ -1,0 +1,25 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-SolusiProgramErpApplication<solusi-program-erp>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.solusi.erp.SolusiProgramErpApplication",
+            "projectName": "solusi-program-erp",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Debug (JRebel)",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.solusi.erp.SolusiProgramErpApplication",
+            "projectName": "solusi-program-erp",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env",
+            "vmArgs": "-agentpath:F:/jrebel/lib/jrebel64.dll -Drebel.disable_update=true"
+        }
+    ]
+}
