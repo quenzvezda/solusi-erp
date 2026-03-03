@@ -16,7 +16,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RoleRequest {
-    
+
     private Long id;
 
     @NotBlank(message = "{validation.role.name.required}")
@@ -27,5 +27,6 @@ public class RoleRequest {
     private String description;
 
     @NotEmpty(message = "{validation.role.permissions.required}")
+    @Builder.Default
     private Set<Long> permissionIds = new HashSet<>();
 }

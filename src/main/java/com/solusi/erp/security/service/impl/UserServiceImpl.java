@@ -9,7 +9,7 @@ import com.solusi.erp.security.model.Role;
 import com.solusi.erp.security.model.User;
 import com.solusi.erp.security.model.UserProfile;
 import com.solusi.erp.security.repository.RoleRepository;
-import com.solusi.erp.security.repository.UserProfileRepository;
+
 import com.solusi.erp.security.repository.UserRepository;
 import com.solusi.erp.security.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +26,7 @@ import org.springframework.data.domain.Pageable;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final UserProfileRepository userProfileRepository;
+
     private final RoleRepository roleRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;

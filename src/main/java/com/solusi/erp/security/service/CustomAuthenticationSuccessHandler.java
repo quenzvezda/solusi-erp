@@ -23,14 +23,16 @@ public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthent
     private final UserProfileRepository userProfileRepository;
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+            Authentication authentication) throws IOException, ServletException {
         SecurityUser securityUser = (SecurityUser) authentication.getPrincipal();
         UserProfile profile = securityUser.user().getProfile();
 
         if (profile != null) {
             LocaleResolver localeResolver = RequestContextUtils.getLocaleResolver(request);
             if (localeResolver != null) {
-                // 1. Ambil locale saat ini (bisa dari Cookie 'lang' yang dipilih di landing page)
+                // 1. Ambil locale saat ini (bisa dari Cookie 'lang' yang dipilih di landing
+                // page)
                 Locale currentLocale = localeResolver.resolveLocale(request);
                 String currentLang = currentLocale.getLanguage();
 
@@ -39,10 +41,10 @@ public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthent
                     // Update Database sesuai pilihan browser terakhir
                     profile.setLanguageCode(currentLang);
                     userProfileRepository.save(profile);
-                } 
+                }
                 // 3. Jika di Cookie tidak ada/default, gunakan preferensi dari DB
                 else if (profile.getLanguageCode() != null) {
-                    localeResolver.setLocale(request, response, new Locale(profile.getLanguageCode()));
+                    localeResolver.setLocale(request, response, Locale.of(profile.getLanguageCode()));
                 }
             }
         }

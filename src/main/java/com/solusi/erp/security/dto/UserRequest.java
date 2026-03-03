@@ -37,7 +37,9 @@ public class UserRequest {
     @Size(max = 20, message = "Nomor telepon maksimal 20 karakter")
     private String phoneNumber;
 
+    @Builder.Default
     private boolean enabled = true;
 
+    @Builder.Default
     private boolean passwordChangeRequired = false;
 }

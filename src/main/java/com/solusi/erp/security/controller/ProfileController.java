@@ -44,22 +44,22 @@ public class ProfileController {
 
     @PostMapping("/edit")
     public String updateProfile(@AuthenticationPrincipal UserDetails userDetails,
-                               @Valid @ModelAttribute("profileRequest") ProfileRequest request,
-                               BindingResult bindingResult,
-                               HttpServletRequest httpServletRequest,
-                               HttpServletResponse httpServletResponse,
-                               RedirectAttributes redirectAttributes) {
+            @Valid @ModelAttribute("profileRequest") ProfileRequest request,
+            BindingResult bindingResult,
+            HttpServletRequest httpServletRequest,
+            HttpServletResponse httpServletResponse,
+            RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             return "security/profile/form";
         }
 
         try {
             userService.updateProfile(userDetails.getUsername(), request);
-            
+
             // Update locale in session
             LocaleResolver localeResolver = RequestContextUtils.getLocaleResolver(httpServletRequest);
             if (localeResolver != null) {
-                localeResolver.setLocale(httpServletRequest, httpServletResponse, new Locale(request.getLanguageCode()));
+                localeResolver.setLocale(httpServletRequest, httpServletResponse, Locale.of(request.getLanguageCode()));
             }
 
             redirectAttributes.addFlashAttribute("successMessage", "Profil berhasil diperbarui");

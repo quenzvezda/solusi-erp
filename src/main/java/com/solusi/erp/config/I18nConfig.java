@@ -17,7 +17,7 @@ public class I18nConfig implements WebMvcConfigurer {
     @Bean
     public LocaleResolver localeResolver() {
         CookieLocaleResolver clr = new CookieLocaleResolver("lang");
-        clr.setDefaultLocale(new Locale("id"));
+        clr.setDefaultLocale(Locale.of("id"));
         clr.setCookieMaxAge(Duration.ofDays(30)); // Simpan preferensi selama 30 hari
         clr.setCookiePath("/");
         return clr;

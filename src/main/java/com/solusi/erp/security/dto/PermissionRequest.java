@@ -25,6 +25,7 @@ public class PermissionRequest {
     private String description;
 
     // Untuk fitur Batch Generation
+    @Builder.Default
     private boolean isBatch = false;
     private List<String> batchActions; // Default: READ, CREATE, UPDATE, DELETE
 }
