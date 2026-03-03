@@ -21,6 +21,12 @@ public interface UserMapper {
 
     List<UserResponse> toResponseList(List<User> users);
 
+    @Mapping(target = "roleId", source = "role.id")
+    @Mapping(target = "fullName", source = "profile.fullName")
+    @Mapping(target = "phoneNumber", source = "profile.phoneNumber")
+    @Mapping(target = "password", ignore = true)
+    UserRequest toRequest(User user);
+
     @Mapping(target = "password", ignore = true)
     @Mapping(target = "role", ignore = true)
     @Mapping(target = "profile", ignore = true)

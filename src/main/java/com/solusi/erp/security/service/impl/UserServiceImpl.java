@@ -18,7 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -32,8 +33,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<UserResponse> findAll() {
-        return userMapper.toResponseList(userRepository.findAll());
+    public Page<UserResponse> findAll(String keyword, Pageable pageable) {
+        Page<User> page;
+        if (StringUtils.hasText(keyword)) {
+            page = userRepository.search(keyword, pageable);
+        } else {
+            page = userRepository.findAll(pageable);
+        }
+        return page.map(userMapper::toResponse);
     }
 
     @Override
@@ -49,17 +56,8 @@ public class UserServiceImpl implements UserService {
     public UserRequest getEditData(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
-        
-        return UserRequest.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .roleId(user.getRole().getId())
-                .fullName(user.getProfile().getFullName())
-                .phoneNumber(user.getProfile().getPhoneNumber())
-                .enabled(user.isEnabled())
-                .passwordChangeRequired(user.isPasswordChangeRequired())
-                .build();
+
+        return userMapper.toRequest(user);
     }
 
     @Override
@@ -99,10 +97,12 @@ public class UserServiceImpl implements UserService {
 
         // Validate unique username/email excluding current user
         userRepository.findByUsername(request.getUsername()).ifPresent(existing -> {
-            if (!existing.getId().equals(id)) throw new RuntimeException("Username sudah digunakan");
+            if (!existing.getId().equals(id))
+                throw new RuntimeException("Username sudah digunakan");
         });
         userRepository.findByEmail(request.getEmail()).ifPresent(existing -> {
-            if (!existing.getId().equals(id)) throw new RuntimeException("Email sudah digunakan");
+            if (!existing.getId().equals(id))
+                throw new RuntimeException("Email sudah digunakan");
         });
 
         Role role = roleRepository.findById(request.getRoleId())
@@ -119,7 +119,7 @@ public class UserServiceImpl implements UserService {
         }
 
         userMapper.updateProfileEntity(request, user.getProfile());
-        
+
         userRepository.save(user);
     }
 
@@ -128,11 +128,11 @@ public class UserServiceImpl implements UserService {
     public void delete(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
-        
+
         if ("admin".equals(user.getUsername())) {
             throw new RuntimeException("User admin utama tidak boleh dihapus");
         }
-        
+
         userRepository.delete(user);
     }
 
@@ -141,11 +141,11 @@ public class UserServiceImpl implements UserService {
     public void toggleStatus(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
-        
+
         if ("admin".equals(user.getUsername())) {
             throw new RuntimeException("Status user admin tidak boleh diubah");
         }
-        
+
         user.setEnabled(!user.isEnabled());
         userRepository.save(user);
     }
@@ -163,7 +163,7 @@ public class UserServiceImpl implements UserService {
     public ProfileRequest getProfileUpdateData(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
-        
+
         UserProfile profile = user.getProfile();
         return ProfileRequest.builder()
                 .fullName(profile.getFullName())
@@ -183,7 +183,8 @@ public class UserServiceImpl implements UserService {
 
         // Validate unique email excluding current user
         userRepository.findByEmail(request.getEmail()).ifPresent(existing -> {
-            if (!existing.getId().equals(user.getId())) throw new RuntimeException("Email sudah digunakan oleh pengguna lain");
+            if (!existing.getId().equals(user.getId()))
+                throw new RuntimeException("Email sudah digunakan oleh pengguna lain");
         });
 
         user.setEmail(request.getEmail());

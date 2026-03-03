@@ -1,7 +1,7 @@
 package com.solusi.erp.security.controller;
 
 import com.solusi.erp.security.dto.UserRequest;
-import com.solusi.erp.security.dto.UserResponse;
+
 import com.solusi.erp.security.service.RoleService;
 import com.solusi.erp.security.service.UserService;
 import jakarta.validation.Valid;
@@ -14,6 +14,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.data.domain.Pageable;
 
 @Controller
 @RequestMapping("/security/users")
@@ -26,8 +27,11 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('USERS_READ')")
-    public String list(Model model) {
-        model.addAttribute("users", userService.findAll());
+    public String list(@RequestParam(value = "keyword", required = false) String keyword,
+            Pageable pageable,
+            Model model) {
+        model.addAttribute("page", userService.findAll(keyword, pageable));
+        model.addAttribute("keyword", keyword);
         return "security/users/list";
     }
 
@@ -42,9 +46,9 @@ public class UserController {
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('USERS_CREATE')")
     public String create(@Valid @ModelAttribute("userRequest") UserRequest request,
-                         BindingResult bindingResult,
-                         Model model,
-                         RedirectAttributes redirectAttributes) {
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("roles", roleService.findAll());
             return "security/users/form";
@@ -73,10 +77,10 @@ public class UserController {
     @PostMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('USERS_UPDATE')")
     public String update(@PathVariable Long id,
-                         @Valid @ModelAttribute("userRequest") UserRequest request,
-                         BindingResult bindingResult,
-                         Model model,
-                         RedirectAttributes redirectAttributes) {
+            @Valid @ModelAttribute("userRequest") UserRequest request,
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("roles", roleService.findAll());
             return "security/users/form";
