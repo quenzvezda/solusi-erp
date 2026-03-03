@@ -19,7 +19,7 @@
             "projectName": "solusi-program-erp",
             "args": "",
             "envFile": "${workspaceFolder}/.env",
-            "vmArgs": "-agentpath:F:/jrebel/lib/jrebel64.dll -Drebel.disable_update=true"
+            "vmArgs": "-agentpath:C:/PATH_TO_YOUR_JREBEL/lib/jrebel64.dll -Drebel.disable_update=true"
         }
     ]
 }
