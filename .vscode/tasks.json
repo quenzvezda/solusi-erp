@@ -1,0 +1,16 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "mvn-compile",
+            "type": "shell",
+            "command": ".\\mvnw.cmd compile -DskipTests -q",
+            "group": "build",
+            "presentation": {
+                "reveal": "silent",
+                "revealProblems": "onProblem"
+            },
+            "problemMatcher": []
+        }
+    ]
+}

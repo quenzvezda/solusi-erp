@@ -35,3 +35,4 @@ build/
 ### VS Code ###
 .vscode/*
 !.vscode/launch.json.example
+!.vscode/tasks.json

@@ -8,7 +8,8 @@
             "mainClass": "com.solusi.erp.SolusiProgramErpApplication",
             "projectName": "solusi-program-erp",
             "args": "",
-            "envFile": "${workspaceFolder}/.env"
+            "envFile": "${workspaceFolder}/.env",
+            "preLaunchTask": "mvn-compile"
         },
         {
             "type": "java",
@@ -19,7 +20,8 @@
             "projectName": "solusi-program-erp",
             "args": "",
             "envFile": "${workspaceFolder}/.env",
-            "vmArgs": "-agentpath:C:/PATH_TO_YOUR_JREBEL/lib/jrebel64.dll -Drebel.disable_update=true"
+            "vmArgs": "-agentpath:C:/PATH_TO_YOUR_JREBEL/lib/jrebel64.dll -Drebel.disable_update=true",
+            "preLaunchTask": "mvn-compile"
         }
     ]
 }
