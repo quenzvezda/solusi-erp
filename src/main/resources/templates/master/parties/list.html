@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.party.title})}"></head>
+
+<body th:replace="~{layout/master :: layout(~{:: .party-list-content})}">
+    <div class="party-list-content">
+        <!-- Page Header -->
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="#{label.party.title}">Business Partner</h2>
+                        <div class="text-secondary mt-1" th:text="#{label.party.subtitle}">Kelola data pelanggan, pemasok, dan rekan bisnis lainnya.</div>
+                    </div>
+                    <!-- Page title actions -->
+                    <div class="col-auto ms-auto d-print-none" sec:authorize="hasAuthority('PARTY_CREATE')">
+                        <div class="btn-list">
+                            <a th:href="@{/master/parties/create}"
+                                class="btn btn-primary d-none d-sm-inline-block">
+                                <i class="ti ti-plus"></i>
+                                <span th:text="#{label.party.add}">Tambah Partner Baru</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Body -->
+        <div class="page-body">
+            <div class="container-xl">
+                <!-- Alerts -->
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-check icon alert-icon"></i></div>
+                        <div th:text="${successMessage}">Success!</div>
+                    </div>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                </div>
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
+                        <div th:text="${errorMessage}">Error!</div>
+                    </div>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                </div>
+
+                <div class="card">
+                    <div class="card-body border-bottom py-3">
+                        <div class="d-flex">
+                            <div class="text-secondary">
+                                <!-- Future: Filter by Role -->
+                            </div>
+                            <div class="ms-auto text-secondary">
+                                <form th:action="@{/master/parties}" method="get" class="input-icon">
+                                    <input type="text" name="keyword" th:value="${keyword}"
+                                        class="form-control form-control-sm" th:placeholder="#{label.search}">
+                                    <span class="input-icon-addon">
+                                        <i class="ti ti-search"></i>
+                                    </span>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th th:replace="~{fragments/table :: sortable('code', #{label.party.column.code})}">Kode</th>
+                                    <th th:replace="~{fragments/table :: sortable('name', #{label.party.column.name})}">Nama</th>
+                                    <th th:replace="~{fragments/table :: sortable('type', #{label.party.column.type})}">Tipe</th>
+                                    <th th:text="#{label.party.column.roles}">Peran</th>
+                                    <th th:replace="~{fragments/table :: sortable('isActive', #{label.status})}">Status</th>
+                                    <th class="w-1" th:text="#{label.actions}">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="item : ${page.content}">
+                                    <td th:text="${item.code}">CODE</td>
+                                    <td class="font-weight-medium" th:text="${item.name}">Name</td>
+                                    <td>
+                                        <span class="badge" th:classappend="${item.type.name() == 'PERSON' ? 'bg-info-lt' : 'bg-primary-lt'}"
+                                            th:text="#{'label.party.type.' + ${item.type.name().toLowerCase()}}">TYPE</span>
+                                    </td>
+                                    <td>
+                                        <div class="badges-list">
+                                            <span th:each="roleName : ${item.roleNames}" class="badge bg-secondary-lt" th:text="${roleName}">Role</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge" th:classappend="${item.isActive ? 'bg-success' : 'bg-danger'}"
+                                            th:text="${item.isActive ? #messages.msg('label.active') : #messages.msg('label.inactive')}">Status</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-list flex-nowrap">
+                                            <a th:href="@{/master/parties/edit/{id}(id=${item.id})}"
+                                                class="btn btn-white btn-sm"
+                                                sec:authorize="hasAuthority('PARTY_UPDATE')"
+                                                th:text="#{label.edit}">
+                                                Edit
+                                            </a>
+                                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                                                th:data-bs-target="'#modal-delete-' + ${item.id}"
+                                                sec:authorize="hasAuthority('PARTY_DELETE')"
+                                                th:text="#{label.delete}">
+                                                Hapus
+                                            </button>
+                                        </div>
+
+                                        <!-- Delete Modal -->
+                                        <div class="modal modal-blur fade" th:id="'modal-delete-' + ${item.id}"
+                                            tabindex="-1" role="dialog" aria-hidden="true">
+                                            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+                                                <div class="modal-content">
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
+                                                    <div class="modal-status bg-danger"></div>
+                                                    <div class="modal-body text-center py-4">
+                                                        <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
+                                                        <h3 th:text="#{label.party.delete.confirm.title}">Konfirmasi Hapus</h3>
+                                                        <div class="text-secondary"
+                                                            th:text="#{label.party.delete.confirm.text(${item.code})}">
+                                                            Apakah Anda yakin ingin menghapus partner ini?</div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <div class="w-100">
+                                                            <div class="row">
+                                                                <div class="col"><a href="#" class="btn w-100" data-bs-dismiss="modal" th:text="#{label.cancel}">Batal</a></div>
+                                                                <div class="col">
+                                                                    <form th:action="@{/master/parties/delete/{id}(id=${item.id})}" method="post">
+                                                                        <button type="submit" class="btn btn-danger w-100" th:text="#{label.delete}">Hapus</button>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${page.totalElements == 0}">
+                                    <td colspan="6" class="text-center text-secondary py-4"
+                                        th:text="#{label.party.empty}">Tidak ada data.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Pagination -->
+                    <div class="card-footer d-flex align-items-center" th:if="${page.totalPages > 0}">
+                        <p class="m-0 text-secondary">
+                            <span th:text="#{label.pagination.showing}">Showing</span>
+                            <span th:text="${page.number * page.size + 1}">1</span>
+                            <span th:text="#{label.pagination.to}">to</span>
+                            <span th:text="${(page.number + 1) * page.size > page.totalElements ? page.totalElements : (page.number + 1) * page.size}">10</span>
+                            <span th:text="#{label.pagination.of}">of</span>
+                            <span th:text="${page.totalElements}">100</span>
+                            <span th:text="#{label.pagination.entries}">entries</span>
+                        </p>
+                        <ul class="pagination m-0 ms-auto">
+                            <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                                <a class="page-link"
+                                    th:href="@{${currentUri}(page=${page.number - 1}, keyword=${keyword}, sort=${sortField != null and sortField != '' ? sortField + ',' + sortDir : ''})}"
+                                    tabindex="-1" aria-disabled="true">
+                                    <i class="ti ti-chevron-left"></i>
+                                    <span th:text="#{label.pagination.previous}">prev</span>
+                                </a>
+                            </li>
+                            <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}"
+                                th:classappend="${i == page.number} ? 'active'">
+                                <a class="page-link"
+                                    th:href="@{${currentUri}(page=${i}, keyword=${keyword}, sort=${sortField != null and sortField != '' ? sortField + ',' + sortDir : ''})}"
+                                    th:text="${i + 1}">1</a>
+                            </li>
+                            <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                                <a class="page-link"
+                                    th:href="@{${currentUri}(page=${page.number + 1}, keyword=${keyword}, sort=${sortField != null and sortField != '' ? sortField + ',' + sortDir : ''})}">
+                                    <span th:text="#{label.pagination.next}">next</span>
+                                    <i class="ti ti-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

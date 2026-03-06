@@ -23,6 +23,17 @@
                         </a>
                     </li>
                     <li class="nav-hr"></li>
+                    <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('PARTY_READ')">
+                        <a class="nav-link dropdown-toggle" href="#navbar-master" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <i class="ti ti-database"></i>
+                            </span>
+                            <span class="nav-link-title" th:text="#{label.master.data}">Master Data</span>
+                        </a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" th:href="@{/master/parties}" sec:authorize="hasAuthority('PARTY_READ')" th:text="#{label.party}">Business Partner</a>
+                        </div>
+                    </li>
                     <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('PRODUCT_READ', 'PRODUCT-CATEGORY_READ', 'UNIT-OF-MEASURE_READ', 'BRAND_READ')">
                         <a class="nav-link dropdown-toggle" href="#navbar-inventory" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">

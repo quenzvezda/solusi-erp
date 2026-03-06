@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout/master :: head(${partyRequest.id == null ? #messages.msg('label.party.add') : #messages.msg('label.party.edit')})}"></head>
+
+<body th:replace="~{layout/master :: layout(~{:: .party-form-content})}">
+    <div class="party-form-content">
+        <!-- Page Header -->
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="${partyRequest.id == null ? #messages.msg('label.party.add') : #messages.msg('label.party.edit')}">
+                            Tambah Partner Baru
+                        </h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Body -->
+        <div class="page-body">
+            <div class="container-xl">
+                <form th:action="${partyRequest.id == null ? '/master/parties/create' : '/master/parties/edit/' + partyRequest.id}"
+                    th:object="${partyRequest}" method="post" id="partyForm">
+                    
+                    <div class="row row-cards">
+                        <!-- Left Column: Core Info -->
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header"><h3 class="card-title" th:text="#{label.party.section.basic}">Informasi Dasar</h3></div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label" th:text="#{label.party.code}">Kode Partner</label>
+                                        <input type="text" th:field="*{code}" class="form-control bg-light" readonly 
+                                            th:placeholder="${partyRequest.id == null ? '[ Auto Generated ]' : ''}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label required" th:text="#{label.party.name}">Nama Partner</label>
+                                        <input type="text" th:field="*{name}" class="form-control" th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'">
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label required" th:text="#{label.party.type}">Tipe Partner</label>
+                                        <div class="form-selectgroup">
+                                            <label th:each="t : ${partyTypes}" class="form-selectgroup-item">
+                                                <input type="radio" th:field="*{type}" th:value="${t}" class="form-selectgroup-input">
+                                                <span class="form-selectgroup-label" th:text="#{'label.party.type.' + ${t.name().toLowerCase()}}">Tipe</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" th:text="#{label.party.email}">Email</label>
+                                        <input type="email" th:field="*{email}" class="form-control">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" th:text="#{label.party.phone}">Telepon</label>
+                                        <input type="text" th:field="*{phone}" class="form-control">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" th:field="*{isActive}">
+                                            <span class="form-check-label" th:text="#{label.active}">Aktif</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card mt-3">
+                                <div class="card-header"><h3 class="card-title" th:text="#{label.party.section.roles}">Peran Partner</h3></div>
+                                <div class="card-body">
+                                    <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column">
+                                        <label th:each="role : ${roleTypes}" class="form-selectgroup-item flex-fill">
+                                            <input type="checkbox" name="roleIds" th:value="${role.id}" 
+                                                th:checked="${partyRequest.roleIds.contains(role.id)}" class="form-selectgroup-input">
+                                            <span class="form-selectgroup-label d-flex align-items-center p-3">
+                                                <span class="me-3"><span class="form-selectgroup-check"></span></span>
+                                                <span class="form-selectgroup-label-content">
+                                                    <span class="block font-weight-medium" th:text="${role.name}">Role Name</span>
+                                                </span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: IDs and Addresses -->
+                        <div class="col-md-8">
+                            <!-- Identifications -->
+                            <div class="card">
+                                <div class="card-header d-flex align-items-center">
+                                    <h3 class="card-title" th:text="#{label.party.section.identifications}">Identitas / Legal Dokumen</h3>
+                                    <button type="button" class="btn btn-sm btn-outline-primary ms-auto" onclick="addIdentificationRow()">
+                                        <i class="ti ti-plus"></i> Tambah Identitas
+                                    </button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-vcenter card-table" id="table-identifications">
+                                        <thead>
+                                            <tr>
+                                                <th th:text="#{label.party.id.type}">Jenis</th>
+                                                <th th:text="#{label.party.id.number}">Nomor</th>
+                                                <th th:text="#{label.party.id.expiry}">Berlaku S/D</th>
+                                                <th class="w-1"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="iden, stat : *{identifications}" class="id-row">
+                                                <td>
+                                                    <select th:field="*{identifications[__${stat.index}__].typeId}" class="form-select form-select-sm">
+                                                        <option th:each="t : ${idTypes}" th:value="${t.id}" th:text="${t.name}"></option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <input type="text" th:field="*{identifications[__${stat.index}__].idNumber}" class="form-control form-control-sm">
+                                                </td>
+                                                <td>
+                                                    <input type="date" th:field="*{identifications[__${stat.index}__].expiryDate}" class="form-control form-control-sm">
+                                                </td>
+                                                <td>
+                                                    <button type="button" class="btn btn-sm btn-ghost-danger" onclick="removeRow(this)"><i class="ti ti-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Addresses -->
+                            <div class="card mt-3">
+                                <div class="card-header d-flex align-items-center">
+                                    <h3 class="card-title" th:text="#{label.party.section.addresses}">Daftar Alamat</h3>
+                                    <button type="button" class="btn btn-sm btn-outline-primary ms-auto" onclick="addAddressRow()">
+                                        <i class="ti ti-plus"></i> Tambah Alamat
+                                    </button>
+                                </div>
+                                <div id="address-container">
+                                    <div th:each="addr, stat : *{addresses}" class="card-body border-bottom address-row">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <select th:field="*{addresses[__${stat.index}__].type}" class="form-select form-select-sm mb-2">
+                                                    <option th:each="at : ${addressTypes}" th:value="${at}" th:text="#{'label.party.address.type.' + ${at.name().toLowerCase()}}"></option>
+                                                </select>
+                                                <button type="button" class="btn btn-sm btn-ghost-danger w-100" onclick="removeAddressRow(this)"><i class="ti ti-trash"></i> Hapus</button>
+                                            </div>
+                                            <div class="col-md-9">
+                                                <textarea th:field="*{addresses[__${stat.index}__].addressLine1}" class="form-control form-control-sm mb-2" rows="2" placeholder="Alamat lengkap..."></textarea>
+                                                <div class="row g-2">
+                                                    <div class="col-4"><input type="text" th:field="*{addresses[__${stat.index}__].city}" class="form-control form-control-sm" placeholder="Kota"></div>
+                                                    <div class="col-4"><input type="text" th:field="*{addresses[__${stat.index}__].province}" class="form-control form-control-sm" placeholder="Provinsi"></div>
+                                                    <div class="col-4"><input type="text" th:field="*{addresses[__${stat.index}__].postalCode}" class="form-control form-control-sm" placeholder="Kodepos"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <label class="form-label" th:text="#{label.party.notes}">Catatan</label>
+                                    <textarea th:field="*{notes}" class="form-control" rows="3"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer text-end mt-3">
+                        <div class="d-flex">
+                            <a th:href="@{/master/parties}" class="btn btn-link" th:text="#{label.cancel}">Batal</a>
+                            <button type="submit" class="btn btn-primary ms-auto">
+                                <i class="ti ti-device-floppy"></i>
+                                <span th:text="#{label.save}">Simpan Partner</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Templates for Dynamic Rows (Hidden) -->
+    <table style="display:none">
+        <tr id="iden-template">
+            <td>
+                <select name="identifications[INDEX].typeId" class="form-select form-select-sm">
+                    <option th:each="t : ${idTypes}" th:value="${t.id}" th:text="${t.name}"></option>
+                </select>
+            </td>
+            <td><input type="text" name="identifications[INDEX].idNumber" class="form-control form-control-sm"></td>
+            <td><input type="date" name="identifications[INDEX].expiryDate" class="form-control form-control-sm"></td>
+            <td><button type="button" class="btn btn-sm btn-ghost-danger" onclick="removeRow(this)"><i class="ti ti-trash"></i></button></td>
+        </tr>
+    </table>
+
+    <div id="address-template" style="display:none">
+        <div class="card-body border-bottom address-row">
+            <div class="row">
+                <div class="col-md-3">
+                    <select name="addresses[INDEX].type" class="form-select form-select-sm mb-2">
+                        <option th:each="at : ${addressTypes}" th:value="${at}" th:text="#{'label.party.address.type.' + ${at.name().toLowerCase()}}"></option>
+                    </select>
+                    <button type="button" class="btn btn-sm btn-ghost-danger w-100" onclick="removeAddressRow(this)"><i class="ti ti-trash"></i> Hapus Alamat</button>
+                </div>
+                <div class="col-md-9">
+                    <textarea name="addresses[INDEX].addressLine1" class="form-control form-control-sm mb-2" rows="2" placeholder="Alamat lengkap..."></textarea>
+                    <div class="row g-2">
+                        <div class="col-4"><input type="text" name="addresses[INDEX].city" class="form-control form-control-sm" placeholder="Kota"></div>
+                        <div class="col-4"><input type="text" name="addresses[INDEX].province" class="form-control form-control-sm" placeholder="Provinsi"></div>
+                        <div class="col-4"><input type="text" name="addresses[INDEX].postalCode" class="form-control form-control-sm" placeholder="Kodepos"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function addIdentificationRow() {
+            const table = document.getElementById('table-identifications').getElementsByTagName('tbody')[0];
+            const rowCount = table.getElementsByClassName('id-row').length;
+            const template = document.getElementById('iden-template').innerHTML;
+            const newRow = table.insertRow();
+            newRow.className = 'id-row';
+            newRow.innerHTML = template.replace(/INDEX/g, rowCount);
+        }
+
+        function removeRow(btn) {
+            const row = btn.closest('tr');
+            row.remove();
+            reindexRows('table-identifications', 'id-row', 'identifications');
+        }
+
+        function addAddressRow() {
+            const container = document.getElementById('address-container');
+            const rowCount = container.getElementsByClassName('address-row').length;
+            const template = document.getElementById('address-template').innerHTML;
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = template.replace(/INDEX/g, rowCount);
+            container.appendChild(tempDiv.firstElementChild);
+        }
+
+        function removeAddressRow(btn) {
+            const row = btn.closest('.address-row');
+            row.remove();
+            reindexAddressRows();
+        }
+
+        function reindexRows(tableId, rowClass, prefix) {
+            const rows = document.getElementById(tableId).getElementsByClassName(rowClass);
+            for (let i = 0; i < rows.length; i++) {
+                const inputs = rows[i].querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    const name = input.getAttribute('name');
+                    if (name) {
+                        input.setAttribute('name', name.replace(/\[\d+\]/, '[' + i + ']'));
+                        input.setAttribute('id', name.replace(/\[\d+\]/, '[' + i + ']'));
+                    }
+                });
+            }
+        }
+
+        function reindexAddressRows() {
+            const rows = document.getElementById('address-container').getElementsByClassName('address-row');
+            for (let i = 0; i < rows.length; i++) {
+                const inputs = rows[i].querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    const name = input.getAttribute('name');
+                    if (name) {
+                        input.setAttribute('name', name.replace(/\[\d+\]/, '[' + i + ']'));
+                        input.setAttribute('id', name.replace(/\[\d+\]/, '[' + i + ']'));
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+
+</html>
