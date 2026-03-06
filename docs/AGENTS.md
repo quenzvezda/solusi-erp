@@ -81,6 +81,9 @@ Sistem otorisasi menggunakan model **Fine-Grained Authority (Privilege-Based)**.
 * **Frontend Guard:** Gunakan `sec:authorize="hasAuthority('...')"` dari library `thymeleaf-extras-springsecurity6`.
 * **SecurityUser Implementation:** Gunakan class `SecurityUser` yang mengimplementasikan `UserDetails` dan **WAJIB** melakukan *pre-calculate* authorities di constructor untuk menghindari `LazyInitializationException` atau *detachment* saat UI merender izin.
 * **Permission Batching:** Gunakan fitur generator untuk mempercepat pembuatan set standar (READ, CREATE, UPDATE, DELETE) untuk setiap modul baru.
+* **SQL Wildcard Safety (CRITICAL):** Saat melakukan *seeding* permission di Flyway (terutama saat `INSERT INTO role_permissions`), gunakan `ESCAPE` jika nama modul merupakan awalan dari modul lain (contoh: `PRODUCT` dan `PRODUCT-CATEGORY`).
+    * SALAH: `LIKE 'PRODUCT_%'` (akan mencocokkan `PRODUCT-CATEGORY` karena `-` dianggap satu karakter oleh `_`).
+    * BENAR: `LIKE 'PRODUCT\_%' ESCAPE '\\'`.
 
 ## 7. Internationalization (i18n)
 Sistem ini menggunakan mekanisme internasionalisasi dinamis untuk mendukung multi-bahasa (default: `id`, `en`).

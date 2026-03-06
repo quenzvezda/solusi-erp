@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.service.impl;
 
+import com.solusi.erp.inventory.model.UomType;
 import com.solusi.erp.inventory.dto.UnitOfMeasureRequest;
 import com.solusi.erp.inventory.dto.UnitOfMeasureResponse;
 import com.solusi.erp.inventory.mapper.UnitOfMeasureMapper;
@@ -14,6 +15,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of UnitOfMeasureService.
@@ -36,6 +40,14 @@ public class UnitOfMeasureServiceImpl implements UnitOfMeasureService {
             page = repository.findAll(pageable);
         }
         return page.map(mapper::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UnitOfMeasureResponse> findByType(UomType type) {
+        return repository.findByType(type).stream()
+                .map(mapper::toResponse)
+                .collect(Collectors.toList());
     }
 
     @Override

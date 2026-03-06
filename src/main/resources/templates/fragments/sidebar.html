@@ -23,7 +23,7 @@
                         </a>
                     </li>
                     <li class="nav-hr"></li>
-                    <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('PRODUCT-CATEGORY_READ', 'UNIT-OF-MEASURE_READ', 'BRAND_READ')">
+                    <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('PRODUCT_READ', 'PRODUCT-CATEGORY_READ', 'UNIT-OF-MEASURE_READ', 'BRAND_READ')">
                         <a class="nav-link dropdown-toggle" href="#navbar-inventory" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
                                 <i class="ti ti-package"></i>
@@ -31,6 +31,7 @@
                             <span class="nav-link-title" th:text="#{label.inventory}">Inventory</span>
                         </a>
                         <div class="dropdown-menu">
+                            <a class="dropdown-item" th:href="@{/inventory/products}" sec:authorize="hasAuthority('PRODUCT_READ')" th:text="#{label.product}">Product</a>
                             <a class="dropdown-item" th:href="@{/inventory/product-categories}" sec:authorize="hasAuthority('PRODUCT-CATEGORY_READ')" th:text="#{label.product.category}">Product Category</a>
                             <a class="dropdown-item" th:href="@{/inventory/unit-of-measures}" sec:authorize="hasAuthority('UNIT-OF-MEASURE_READ')" th:text="#{label.uom}">Unit of Measure</a>
                             <a class="dropdown-item" th:href="@{/inventory/brands}" sec:authorize="hasAuthority('BRAND_READ')" th:text="#{label.brand}">Brand</a>
