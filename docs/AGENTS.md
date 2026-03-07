@@ -46,6 +46,7 @@ AI Assistant WAJIB mematuhi versi dan teknologi berikut berdasarkan `pom.xml` ut
     * `updatedBy` (String/Long) dengan anotasi `@LastModifiedBy`
     * `updatedDate` (LocalDateTime) dengan anotasi `@LastModifiedDate`
     * `version` (Integer/Long) dengan anotasi `@Version` untuk *optimistic locking* (default 1).
+* **Data Retention (Soft Delete):** DILARANG menggunakan *Hard Delete* untuk data master. Selalu gunakan flag `isActive` (boolean/tinyint) untuk mengatur status aktif/tidak aktif. Hindari menggunakan `@Where` global (Hibernate) jika masih perlu melihat data historis, filter `isActive = true` secara eksplisit di level Repository.
 * AI WAJIB memastikan Spring Data JPA Auditing aktif (`@EnableJpaAuditing` dan bean `AuditorAware` terkonfigurasi).
 
 ## 5. Business Module Standards
@@ -64,6 +65,7 @@ Setiap modul bisnis baru (Inventory, Sales, Purchasing, dll) WAJIB mengikuti pol
     *   Detail teknis dan pattern silakan merujuk ke [docs/spec/sequence-generator.md](spec/sequence-generator.md).
     *   DILARANG menginput kode manual di form `create`.
     *   UI field `code` WAJIB diset `readonly` dan `bg-light`.
+*   **Collection Validation**: Jika entitas memiliki *nested collection* (seperti `contacts`, `addresses`) yang dilengkapi flag `isDefault`, pastikan membuat validasi backend (toleransi maksimal 1 data default) dan validasi frontend (menggunakan *radio button*).
 *   **i18n Implementation**: 
     *   Semua pesan error di Service (yang dilempar via `RuntimeException`) WAJIB di-resolve menggunakan `MessageSource` agar mendukung multi-bahasa.
     *   Gunakan helper method `private String getMessage(String key)` di setiap Service Implementation.
@@ -87,6 +89,8 @@ Sistem otorisasi menggunakan model **Fine-Grained Authority (Privilege-Based)**.
 
 ## 7. Internationalization (i18n)
 Sistem ini menggunakan mekanisme internasionalisasi dinamis untuk mendukung multi-bahasa (default: `id`, `en`).
+* **Central Configuration (CRITICAL FOR AI):** SELURUH konfigurasi bahasa utama (LocaleResolver, LocaleChangeInterceptor) SUDAH TERPUSAT di `com.solusi.erp.config.I18nConfig.java`. Integrasi validasi Spring (`LocalValidatorFactoryBean`) ada di `WebMvcConfig.java`. 
+    *   **DILARANG KERAS** membuat Bean `localeResolver` baru atau menggandakannya di file konfigurasi lain (seperti `WebMvcConfig.java`). Ini akan memicu `BeanDefinitionOverrideException`.
 * **Storage:** Menggunakan **Cookie-based Locale Resolver** (cookie name: `lang`) agar preferensi bertahan selama 30 hari di browser meskipun session berakhir.
 * **Smart Synchronization:** Saat login sukses, `CustomAuthenticationSuccessHandler` melakukan sinkronisasi dua arah:
     1. Jika user sudah memilih bahasa di landing page (Cookie ada), maka database (`UserProfile`) otomatis diupdate mengikuti pilihan browser.

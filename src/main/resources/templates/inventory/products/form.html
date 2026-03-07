@@ -1,16 +1,22 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="~{layout/master :: head(${productRequest.id == null ? #messages.msg('label.product.add') : #messages.msg('label.product.edit')})}"></head>
+<head th:replace="~{layout/master :: head(${productRequest.id == null
+    ? #messages.msg('label.product.add')
+    : #messages.msg('label.product.edit')})}">
+</head>
 
 <body th:replace="~{layout/master :: layout(~{:: .product-form-content})}">
     <div class="product-form-content">
+
         <!-- Page Header -->
         <div class="page-header d-print-none">
             <div class="container-xl">
                 <div class="row g-2 align-items-center">
                     <div class="col">
-                        <h2 class="page-title" th:text="${productRequest.id == null ? #messages.msg('label.product.add') : #messages.msg('label.product.edit')}">
+                        <h2 class="page-title" th:text="${productRequest.id == null
+                            ? #messages.msg('label.product.add')
+                            : #messages.msg('label.product.edit')}">
                             Tambah Produk Baru
                         </h2>
                     </div>
@@ -21,55 +27,110 @@
         <!-- Page Body -->
         <div class="page-body">
             <div class="container-xl">
-                <form th:action="${productRequest.id == null ? '/inventory/products/create' : '/inventory/products/edit/' + productRequest.id}"
-                    th:object="${productRequest}" method="post" class="card">
+
+                <!-- Exception Error Alert -->
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
+                        <div th:text="${errorMessage}">Error!</div>
+                    </div>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                </div>
+
+                <form th:action="${productRequest.id == null
+                        ? '/inventory/products/create'
+                        : '/inventory/products/edit/' + productRequest.id}" th:object="${productRequest}" method="post"
+                    class="card">
+
                     <div class="card-body">
+
+                        <!-- Global Binding Error Alert -->
+                        <div th:if="${#fields.hasAnyErrors()}" class="alert alert-danger" role="alert">
+                            <div class="d-flex">
+                                <div><i class="ti ti-alert-triangle icon alert-icon"></i></div>
+                                <div>
+                                    <h4 class="alert-title" th:text="#{msg.error.validation.title}">Terdapat Kesalahan
+                                    </h4>
+                                    <div class="text-secondary" th:text="#{msg.error.validation.subtitle}">
+                                        Mohon periksa kembali form di bawah ini.
+                                    </div>
+                                    <ul class="mb-0 mt-2">
+                                        <li th:each="err : ${#fields.allErrors()}" th:text="${err}">Input tidak valid
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row">
-                            <!-- Basic Information -->
+
+                            <!-- ===================== -->
+                            <!-- Section: Basic Info   -->
+                            <!-- ===================== -->
                             <div class="col-md-12">
                                 <h3 class="card-title" th:text="#{label.product.section.basic}">Informasi Dasar</h3>
                             </div>
+
+                            <!-- Column 1 -->
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label" th:text="#{label.product.code}">Kode Produk</label>
-                                    <input type="text" th:field="*{code}" class="form-control bg-light" readonly 
+                                    <input type="text" th:field="*{code}" class="form-control bg-light" readonly
                                         th:placeholder="${productRequest.id == null ? '[ Auto Generated ]' : ''}">
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label required" th:text="#{label.product.name}">Nama Produk</label>
-                                    <input type="text" th:field="*{name}" class="form-control" th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'">
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                                    <label class="form-label required" th:text="#{label.product.name}">Nama
+                                        Produk</label>
+                                    <input type="text" th:field="*{name}" class="form-control"
+                                        th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}"
+                                        th:errors="*{name}"></div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label" th:text="#{label.product.barcode}">Barcode (EAN)</label>
-                                    <input type="text" th:field="*{barcode}" class="form-control" th:placeholder="#{placeholder.product.barcode}">
+                                    <input type="text" th:field="*{barcode}" class="form-control"
+                                        th:placeholder="#{placeholder.product.barcode}">
                                 </div>
                             </div>
+
+                            <!-- Column 2 -->
                             <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label class="form-label required" th:text="#{label.product.category}">Kategori</label>
-                                    <select th:field="*{categoryId}" class="form-select" id="category-select" th:classappend="${#fields.hasErrors('categoryId')} ? 'is-invalid'">
-                                        <option value="" th:text="#{label.product.select.category}">-- Pilih Kategori --</option>
-                                        <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}" th:data-type="${cat.type}"></option>
+                                    <label class="form-label required"
+                                        th:text="#{label.product.category}">Kategori</label>
+                                    <select th:field="*{categoryId}" class="form-select" id="category-select"
+                                        th:classappend="${#fields.hasErrors('categoryId')} ? 'is-invalid'">
+                                        <option value="" th:text="#{label.product.select.category}">-- Pilih Kategori --
+                                        </option>
+                                        <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"
+                                            th:data-type="${cat.type}"></option>
                                     </select>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}"></div>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('categoryId')}"
+                                        th:errors="*{categoryId}"></div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label required" th:text="#{label.product.uom}">Satuan Ukur (UoM)</label>
-                                    <select th:field="*{uomId}" class="form-select" th:classappend="${#fields.hasErrors('uomId')} ? 'is-invalid'">
+                                    <label class="form-label required" th:text="#{label.product.uom}">Satuan Ukur
+                                        (UoM)</label>
+                                    <select th:field="*{uomId}" class="form-select"
+                                        th:classappend="${#fields.hasErrors('uomId')} ? 'is-invalid'">
                                         <option value="" th:text="#{label.product.select.uom}">-- Pilih UoM --</option>
-                                        <option th:each="u : ${uoms}" th:value="${u.id}" th:text="${u.name + ' (' + u.code + ')'}"></option>
+                                        <option th:each="u : ${uoms}" th:value="${u.id}"
+                                            th:text="${u.name + ' (' + u.code + ')'}"></option>
                                     </select>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('uomId')}" th:errors="*{uomId}"></div>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('uomId')}"
+                                        th:errors="*{uomId}"></div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label" th:text="#{label.brand}">Brand</label>
                                     <select th:field="*{brandId}" class="form-select">
-                                        <option value="" th:text="#{label.product.select.brand}">-- Tanpa Brand --</option>
+                                        <option value="" th:text="#{label.product.select.brand}">-- Tanpa Brand --
+                                        </option>
                                         <option th:each="b : ${brands}" th:value="${b.id}" th:text="${b.name}"></option>
                                     </select>
                                 </div>
                             </div>
+
+                            <!-- Column 3 -->
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label" th:text="#{label.product.hscode}">HS Code</label>
@@ -83,73 +144,111 @@
                                 </div>
                             </div>
 
-                            <!-- Inventory Section (STOCK only) -->
+                            <!-- ========================= -->
+                            <!-- Section: Inventory Mgmt  -->
+                            <!-- ========================= -->
                             <div class="col-md-12 mt-3 section-stock">
                                 <hr class="my-3">
-                                <h3 class="card-title" th:text="#{label.product.section.inventory}">Manajemen Inventori</h3>
+                                <h3 class="card-title" th:text="#{label.product.section.inventory}">Manajemen Inventori
+                                </h3>
                             </div>
+
                             <div class="col-md-4 section-stock">
                                 <div class="mb-3">
-                                    <label class="form-label" th:text="#{label.product.min.stock}">Batas Stok Minimum</label>
+                                    <label class="form-label" th:text="#{label.product.min.stock}">Batas Stok
+                                        Minimum</label>
                                     <input type="number" step="0.0001" th:field="*{minStock}" class="form-control">
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label" th:text="#{label.product.max.stock}">Batas Stok Maksimum</label>
+                                    <label class="form-label" th:text="#{label.product.max.stock}">Batas Stok
+                                        Maksimum</label>
                                     <input type="number" step="0.0001" th:field="*{maxStock}" class="form-control">
                                 </div>
                             </div>
+
                             <div class="col-md-4 section-stock">
                                 <div class="mb-3">
                                     <label class="form-check form-switch mt-4">
                                         <input class="form-check-input" type="checkbox" th:field="*{isSerialized}">
-                                        <span class="form-check-label" th:text="#{label.product.serialized}">Gunakan Nomor Serial</span>
+                                        <span class="form-check-label" th:text="#{label.product.serialized}">Gunakan
+                                            Nomor Serial</span>
                                     </label>
                                 </div>
                             </div>
 
-                            <!-- Physical / Logistics Section (STOCK only) -->
+                            <!-- =========================== -->
+                            <!-- Section: Physical/Logistics -->
+                            <!-- =========================== -->
                             <div class="col-md-12 mt-3 section-stock">
                                 <hr class="my-3">
-                                <h3 class="card-title" th:text="#{label.product.section.physical}">Fisik & Logistik</h3>
+                                <h3 class="card-title" th:text="#{label.product.section.physical}">Fisik &amp; Logistik
+                                </h3>
                             </div>
-                            <div class="col-md-4 section-stock">
+
+                            <!-- Weight -->
+                            <div class="col-md-6 section-stock">
                                 <div class="mb-3">
-                                    <label class="form-label" th:text="#{label.product.weight.net}">Berat Bersih (Net)</label>
-                                    <div class="input-group">
-                                        <input type="number" step="0.0001" th:field="*{weightNet}" class="form-control">
-                                        <select th:field="*{weightUomId}" class="form-select" style="max-width: 100px;">
-                                            <option value="" th:text="#{label.product.select.uom.short}">Unit</option>
-                                            <option th:each="u : ${weightUoms}" th:value="${u.id}" th:text="${u.code}"></option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label" th:text="#{label.product.weight.gross}">Berat Kotor (Gross)</label>
-                                    <input type="number" step="0.0001" th:field="*{weightGross}" class="form-control">
-                                </div>
-                            </div>
-                            <div class="col-md-4 section-stock">
-                                <div class="mb-3">
-                                    <label class="form-label" th:text="#{label.product.dimensions}">Dimensi (P x L x T)</label>
                                     <div class="row g-2 mb-2">
-                                        <div class="col-4">
-                                            <input type="number" step="0.0001" th:field="*{length}" class="form-control" placeholder="P">
+                                        <div class="col-6">
+                                            <label class="form-label" th:text="#{label.product.weight.net}">Berat Bersih
+                                                (Net)</label>
+                                            <input type="number" step="0.0001" th:field="*{weightNet}"
+                                                class="form-control">
                                         </div>
-                                        <div class="col-4">
-                                            <input type="number" step="0.0001" th:field="*{width}" class="form-control" placeholder="L">
-                                        </div>
-                                        <div class="col-4">
-                                            <input type="number" step="0.0001" th:field="*{height}" class="form-control" placeholder="T">
+                                        <div class="col-6">
+                                            <label class="form-label" th:text="#{label.product.weight.gross}">Berat
+                                                Kotor
+                                                (Gross)</label>
+                                            <input type="number" step="0.0001" th:field="*{weightGross}"
+                                                class="form-control">
                                         </div>
                                     </div>
-                                    <select th:field="*{dimensionUomId}" class="form-select">
-                                        <option value="" th:text="#{label.product.select.uom.dimension}">-- Pilih Satuan Dimensi --</option>
-                                        <option th:each="u : ${lengthUoms}" th:value="${u.id}" th:text="${u.name + ' (' + u.code + ')'}"></option>
+                                    <select th:field="*{weightUomId}" class="form-select"
+                                        th:classappend="${#fields.hasErrors('weightUomId')} ? 'is-invalid'">
+                                        <option value="" th:text="#{label.product.select.uom.weight}">-- Pilih Satuan
+                                            Berat --</option>
+                                        <option th:each="u : ${weightUoms}" th:value="${u.id}"
+                                            th:text="${u.name + ' (' + u.code + ')'}"></option>
                                     </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('weightUomId')}"
+                                        th:errors="*{weightUomId}"></div>
                                 </div>
                             </div>
 
-                            <!-- Notes -->
+                            <!-- Dimensions -->
+                            <div class="col-md-6 section-stock">
+                                <div class="mb-3">
+                                    <label class="form-label" th:text="#{label.product.dimensions}">Dimensi (P x L x
+                                        T)</label>
+                                    <div class="row g-2 mb-2">
+                                        <div class="col-4">
+                                            <input type="number" step="0.0001" th:field="*{length}" class="form-control"
+                                                placeholder="P">
+                                        </div>
+                                        <div class="col-4">
+                                            <input type="number" step="0.0001" th:field="*{width}" class="form-control"
+                                                placeholder="L">
+                                        </div>
+                                        <div class="col-4">
+                                            <input type="number" step="0.0001" th:field="*{height}" class="form-control"
+                                                placeholder="T">
+                                        </div>
+                                    </div>
+                                    <select th:field="*{dimensionUomId}" class="form-select"
+                                        th:classappend="${#fields.hasErrors('dimensionUomId')} ? 'is-invalid'">
+                                        <option value="" th:text="#{label.product.select.uom.dimension}">-- Pilih Satuan
+                                            Dimensi --</option>
+                                        <option th:each="u : ${lengthUoms}" th:value="${u.id}"
+                                            th:text="${u.name + ' (' + u.code + ')'}"></option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('dimensionUomId')}"
+                                        th:errors="*{dimensionUomId}"></div>
+                                </div>
+                            </div>
+
+                            <!-- ============= -->
+                            <!-- Section: Note -->
+                            <!-- ============= -->
                             <div class="col-md-12 mt-3">
                                 <hr class="my-3">
                                 <div class="mb-3">
@@ -157,8 +256,10 @@
                                     <textarea th:field="*{note}" class="form-control" rows="3"></textarea>
                                 </div>
                             </div>
+
                         </div>
                     </div>
+
                     <div class="card-footer text-end">
                         <div class="d-flex">
                             <a th:href="@{/inventory/products}" class="btn btn-link" th:text="#{label.cancel}">Batal</a>
@@ -168,9 +269,11 @@
                             </button>
                         </div>
                     </div>
+
                 </form>
             </div>
         </div>
+
     </div>
 
     <!-- Conditional UI Logic -->
@@ -182,16 +285,12 @@
             function toggleSections() {
                 const selectedOption = categorySelect.options[categorySelect.selectedIndex];
                 const type = selectedOption ? selectedOption.getAttribute('data-type') : '';
-                
-                if (type === 'STOCK') {
-                    stockSections.forEach(el => el.style.display = 'block');
-                } else {
-                    stockSections.forEach(el => el.style.display = 'none');
-                }
+                const isStock = type === 'STOCK';
+                stockSections.forEach(el => el.style.display = isStock ? 'block' : 'none');
             }
 
             categorySelect.addEventListener('change', toggleSections);
-            toggleSections(); // Run once on load
+            toggleSections();
         });
     </script>
 </body>

@@ -50,3 +50,8 @@ Gunakan `MessageSource` jika perlu mengirim pesan dari backend.
 String message = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
 redirectAttributes.addFlashAttribute("successMessage", message);
 ```
+
+## 5. Configuration Architecture (For AI & Developers)
+**PENTING:** Arsitektur i18n pada project ini sudah final dan terbagi menjadi dua bagian utama:
+1.  **`I18nConfig.java`**: Bertanggung jawab penuh atas manajemen `LocaleResolver` (menggunakan `CookieLocaleResolver`) dan `LocaleChangeInterceptor`. **DILARANG** menambahkan bean `localeResolver` di tempat/file config lain.
+2.  **`WebMvcConfig.java`**: Bertugas me-register interceptor dari *I18nConfig* dan mendefinisikan `LocalValidatorFactoryBean` agar anomali/pesan error dari `@Valid` DTO tersinkronisasi murni dengan file `messages_id.properties`.

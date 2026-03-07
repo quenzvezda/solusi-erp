@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head
+    th:replace="~{layout/master :: head(${partyRequest.id == null ? #messages.msg('label.party.add') : #messages.msg('label.party.edit')})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .party-form-content})}">
+    <div class="party-form-content">
+        <!-- Page Header -->
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title"
+                            th:text="${partyRequest.id == null ? #messages.msg('label.party.add') : #messages.msg('label.party.edit')}">
+                            Tambah Partner Baru
+                        </h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Body -->
+        <div class="page-body">
+            <div class="container-xl">
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible mb-3" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
+                        <div th:text="${errorMessage}"></div>
+                    </div>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                </div>
+
+                <form
+                    th:action="${partyRequest.id == null ? '/master/parties/create' : '/master/parties/edit/' + partyRequest.id}"
+                    th:object="${partyRequest}" method="post" id="partyForm">
+
+                    <div class="row row-cards">
+                        <!-- Left Column: Core Info + Roles -->
+                        <div class="col-md-4">
+                            <!-- Basic Info Card -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title" th:text="#{label.party.section.basic}">Informasi Dasar</h3>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Salutation -->
+                                    <div class="mb-3">
+                                        <label class="form-label" th:text="#{label.party.salutation}">Sapaan</label>
+                                        <input type="text" th:field="*{salutation}" class="form-control"
+                                            th:placeholder="#{placeholder.party.salutation}">
+                                    </div>
+                                    <!-- Code (readonly) -->
+                                    <div class="mb-3">
+                                        <label class="form-label" th:text="#{label.party.code}">Kode Partner</label>
+                                        <input type="text" th:field="*{code}" class="form-control bg-light" readonly
+                                            th:placeholder="${partyRequest.id == null ? '[ Auto Generated ]' : ''}">
+                                    </div>
+                                    <!-- Name -->
+                                    <div class="mb-3">
+                                        <label class="form-label required" th:text="#{label.party.name}">Nama
+                                            Partner</label>
+                                        <input type="text" th:field="*{name}" class="form-control"
+                                            th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'">
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}"
+                                            th:errors="*{name}"></div>
+                                    </div>
+                                    <!-- Type -->
+                                    <div class="mb-3">
+                                        <label class="form-label required" th:text="#{label.party.type}">Tipe
+                                            Partner</label>
+                                        <div class="form-selectgroup">
+                                            <label th:each="t : ${partyTypes}" class="form-selectgroup-item">
+                                                <input type="radio" th:field="*{type}" th:value="${t}"
+                                                    class="form-selectgroup-input">
+                                                <span class="form-selectgroup-label"
+                                                    th:text="#{'label.party.type.' + ${t.name().toLowerCase()}}">Tipe</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <!-- Active toggle -->
+                                    <div class="mb-3">
+                                        <label class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" th:field="*{isActive}">
+                                            <span class="form-check-label" th:text="#{label.active}">Aktif</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Roles Card -->
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h3 class="card-title" th:text="#{label.party.section.roles}">Peran Partner</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column">
+                                        <label th:each="role : ${roleTypes}" class="form-selectgroup-item flex-fill">
+                                            <input type="checkbox" name="roleIds" th:value="${role.id}"
+                                                th:checked="${partyRequest.roleIds.contains(role.id)}"
+                                                class="form-selectgroup-input">
+                                            <span class="form-selectgroup-label d-flex align-items-center p-3">
+                                                <span class="me-3"><span class="form-selectgroup-check"></span></span>
+                                                <span class="form-selectgroup-label-content">
+                                                    <span class="block font-weight-medium" th:text="${role.name}">Role
+                                                        Name</span>
+                                                    <span class="text-secondary small" th:text="${role.code}"></span>
+                                                </span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Identifications, Addresses, Contacts -->
+                        <div class="col-md-8">
+                            <!-- Contacts Card -->
+                            <div class="card">
+                                <div class="card-header d-flex align-items-center">
+                                    <h3 class="card-title" th:text="#{label.party.section.contacts}">Kontak (PIC)</h3>
+                                    <button type="button" class="btn btn-sm btn-outline-primary ms-auto"
+                                        onclick="addContactRow()">
+                                        <i class="ti ti-plus"></i> <span th:text="#{label.party.contact.add}">Tambah
+                                            Kontak</span>
+                                    </button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-vcenter card-table" id="table-contacts">
+                                        <thead>
+                                            <tr>
+                                                <th th:text="#{label.party.contact.label}">Label</th>
+                                                <th th:text="#{label.party.contact.mobile}">HP</th>
+                                                <th th:text="#{label.party.contact.email}">Email</th>
+                                                <th th:text="#{label.party.is.default}">Default</th>
+                                                <th th:text="#{label.party.is.active}">Aktif</th>
+                                                <th class="w-1"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="c, stat : *{contacts}" class="contact-row">
+                                                <input type="hidden" th:field="*{contacts[__${stat.index}__].id}">
+                                                <td><input type="text" th:field="*{contacts[__${stat.index}__].label}"
+                                                        class="form-control form-control-sm"
+                                                        th:placeholder="#{placeholder.party.contact.label}"></td>
+                                                <td><input type="text" th:field="*{contacts[__${stat.index}__].mobile}"
+                                                        class="form-control form-control-sm"
+                                                        th:placeholder="#{placeholder.party.contact.mobile}"></td>
+                                                <td><input type="email" th:field="*{contacts[__${stat.index}__].email}"
+                                                        class="form-control form-control-sm"
+                                                        th:placeholder="#{placeholder.party.contact.email}"></td>
+                                                <td class="text-center">
+                                                    <input type="radio" name="contactDefault"
+                                                        class="form-check-input contact-default-radio"
+                                                        th:value="${stat.index}" th:checked="${c.isDefault}"
+                                                        onchange="handleDefaultRadio('contacts', this)">
+                                                    <input type="hidden"
+                                                        th:field="*{contacts[__${stat.index}__].isDefault}">
+                                                </td>
+                                                <td class="text-center">
+                                                    <input type="checkbox"
+                                                        th:field="*{contacts[__${stat.index}__].isActive}"
+                                                        class="form-check-input">
+                                                </td>
+                                                <td><button type="button" class="btn btn-sm btn-ghost-danger"
+                                                        onclick="softRemoveRow(this, 'contacts')"><i
+                                                            class="ti ti-trash"></i></button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Identifications Card -->
+                            <div class="card mt-3">
+                                <div class="card-header d-flex align-items-center">
+                                    <h3 class="card-title" th:text="#{label.party.section.identifications}">Identitas /
+                                        Legal Dokumen</h3>
+                                    <button type="button" class="btn btn-sm btn-outline-primary ms-auto"
+                                        onclick="addIdentificationRow()">
+                                        <i class="ti ti-plus"></i> <span th:text="#{label.party.id.add}">Tambah
+                                            Identitas</span>
+                                    </button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-vcenter card-table" id="table-identifications">
+                                        <thead>
+                                            <tr>
+                                                <th th:text="#{label.party.id.type}">Jenis</th>
+                                                <th th:text="#{label.party.id.number}">Nomor</th>
+                                                <th th:text="#{label.party.id.expiry}">Berlaku S/D</th>
+                                                <th th:text="#{label.party.is.default}">Default</th>
+                                                <th th:text="#{label.party.is.active}">Aktif</th>
+                                                <th class="w-1"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="iden, stat : *{identifications}" class="id-row"
+                                                th:classappend="${!iden.isActive} ? 'table-secondary text-muted'">
+                                                <input type="hidden"
+                                                    th:field="*{identifications[__${stat.index}__].id}">
+                                                <td>
+                                                    <select th:field="*{identifications[__${stat.index}__].typeId}"
+                                                        class="form-select form-select-sm">
+                                                        <option th:each="t : ${idTypes}" th:value="${t.id}"
+                                                            th:text="${t.name}"></option>
+                                                    </select>
+                                                </td>
+                                                <td><input type="text"
+                                                        th:field="*{identifications[__${stat.index}__].idNumber}"
+                                                        class="form-control form-control-sm"></td>
+                                                <td><input type="date"
+                                                        th:field="*{identifications[__${stat.index}__].expiryDate}"
+                                                        class="form-control form-control-sm"></td>
+                                                <td class="text-center">
+                                                    <input type="radio" name="idenDefault"
+                                                        class="form-check-input iden-default-radio"
+                                                        th:value="${stat.index}" th:checked="${iden.isDefault}"
+                                                        onchange="handleDefaultRadio('identifications', this)">
+                                                    <input type="hidden"
+                                                        th:field="*{identifications[__${stat.index}__].isDefault}">
+                                                </td>
+                                                <td class="text-center">
+                                                    <input type="checkbox"
+                                                        th:field="*{identifications[__${stat.index}__].isActive}"
+                                                        class="form-check-input">
+                                                </td>
+                                                <td><button type="button" class="btn btn-sm btn-ghost-danger"
+                                                        onclick="softRemoveRow(this, 'identifications')"><i
+                                                            class="ti ti-trash"></i></button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Addresses Card -->
+                            <div class="card mt-3">
+                                <div class="card-header d-flex align-items-center">
+                                    <h3 class="card-title" th:text="#{label.party.section.addresses}">Daftar Alamat</h3>
+                                    <button type="button" class="btn btn-sm btn-outline-primary ms-auto"
+                                        onclick="addAddressRow()">
+                                        <i class="ti ti-plus"></i> <span th:text="#{label.party.address.add}">Tambah
+                                            Alamat</span>
+                                    </button>
+                                </div>
+                                <div id="address-container">
+                                    <div th:each="addr, stat : *{addresses}" class="card-body border-bottom address-row"
+                                        th:classappend="${!addr.isActive} ? 'bg-light opacity-75'">
+                                        <input type="hidden" th:field="*{addresses[__${stat.index}__].id}">
+                                        <div class="row align-items-start">
+                                            <div class="col-md-3">
+                                                <select th:field="*{addresses[__${stat.index}__].type}"
+                                                    class="form-select form-select-sm mb-2">
+                                                    <option th:each="at : ${addressTypes}" th:value="${at}"
+                                                        th:text="#{'label.party.address.type.' + ${at.name().toLowerCase()}}">
+                                                    </option>
+                                                </select>
+                                                <!-- Default radio -->
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input addr-default-radio" type="radio"
+                                                        name="addrDefault" th:value="${stat.index}"
+                                                        th:checked="${addr.isDefault}"
+                                                        onchange="handleDefaultRadio('addresses', this)">
+                                                    <label class="form-check-label small"
+                                                        th:text="#{label.party.is.default}">Default</label>
+                                                    <input type="hidden"
+                                                        th:field="*{addresses[__${stat.index}__].isDefault}">
+                                                </div>
+                                                <!-- Active toggle -->
+                                                <div class="form-check form-switch mb-2">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        th:field="*{addresses[__${stat.index}__].isActive}">
+                                                    <label class="form-check-label small"
+                                                        th:text="#{label.party.is.active}">Aktif</label>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-ghost-danger w-100"
+                                                    onclick="softRemoveRow(this, 'addresses')">
+                                                    <i class="ti ti-trash"></i> <span
+                                                        th:text="#{label.party.address.remove}">Hapus</span>
+                                                </button>
+                                            </div>
+                                            <div class="col-md-9">
+                                                <textarea th:field="*{addresses[__${stat.index}__].addressLine1}"
+                                                    class="form-control form-control-sm mb-2" rows="2"
+                                                    th:placeholder="#{placeholder.party.address}"></textarea>
+                                                <div class="row g-2">
+                                                    <div class="col-4"><input type="text"
+                                                            th:field="*{addresses[__${stat.index}__].city}"
+                                                            class="form-control form-control-sm"
+                                                            th:placeholder="#{placeholder.party.city}"></div>
+                                                    <div class="col-4"><input type="text"
+                                                            th:field="*{addresses[__${stat.index}__].province}"
+                                                            class="form-control form-control-sm"
+                                                            th:placeholder="#{placeholder.party.province}"></div>
+                                                    <div class="col-4"><input type="text"
+                                                            th:field="*{addresses[__${stat.index}__].postalCode}"
+                                                            class="form-control form-control-sm"
+                                                            th:placeholder="#{placeholder.party.postalcode}"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Notes Card -->
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <label class="form-label" th:text="#{label.party.notes}">Catatan</label>
+                                    <textarea th:field="*{notes}" class="form-control" rows="3"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer text-end mt-3">
+                        <div class="d-flex">
+                            <a th:href="@{/master/parties}" class="btn btn-link" th:text="#{label.cancel}">Batal</a>
+                            <button type="submit" class="btn btn-primary ms-auto">
+                                <i class="ti ti-device-floppy"></i>
+                                <span th:text="#{label.save}">Simpan</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- Hidden Templates for dynamic rows                            -->
+        <!-- ============================================================ -->
+        <table style="display:none">
+            <tr id="contact-template">
+                <td><input type="text" name="contacts[INDEX].label" class="form-control form-control-sm"
+                        th:placeholder="#{placeholder.party.contact.label}"></td>
+                <td><input type="text" name="contacts[INDEX].mobile" class="form-control form-control-sm"
+                        th:placeholder="#{placeholder.party.contact.mobile}"></td>
+                <td><input type="email" name="contacts[INDEX].email" class="form-control form-control-sm"
+                        th:placeholder="#{placeholder.party.contact.email}"></td>
+                <td class="text-center">
+                    <input type="radio" name="contactDefault" class="form-check-input contact-default-radio"
+                        value="INDEX" onchange="handleDefaultRadio('contacts', this)">
+                    <input type="hidden" name="contacts[INDEX].isDefault" value="false">
+                </td>
+                <td class="text-center"><input type="checkbox" name="contacts[INDEX].isActive" class="form-check-input"
+                        checked></td>
+                <td><button type="button" class="btn btn-sm btn-ghost-danger"
+                        onclick="softRemoveRow(this, 'contacts')"><i class="ti ti-trash"></i></button></td>
+            </tr>
+        </table>
+
+        <table style="display:none">
+            <tr id="iden-template">
+                <td>
+                    <select name="identifications[INDEX].typeId" class="form-select form-select-sm">
+                        <option th:each="t : ${idTypes}" th:value="${t.id}" th:text="${t.name}"></option>
+                    </select>
+                </td>
+                <td><input type="text" name="identifications[INDEX].idNumber" class="form-control form-control-sm"></td>
+                <td><input type="date" name="identifications[INDEX].expiryDate" class="form-control form-control-sm">
+                </td>
+                <td class="text-center">
+                    <input type="radio" name="idenDefault" class="form-check-input iden-default-radio" value="INDEX"
+                        onchange="handleDefaultRadio('identifications', this)">
+                    <input type="hidden" name="identifications[INDEX].isDefault" value="false">
+                </td>
+                <td class="text-center"><input type="checkbox" name="identifications[INDEX].isActive"
+                        class="form-check-input" checked></td>
+                <td><button type="button" class="btn btn-sm btn-ghost-danger"
+                        onclick="softRemoveRow(this, 'identifications')"><i class="ti ti-trash"></i></button></td>
+            </tr>
+        </table>
+
+        <div id="address-template" style="display:none">
+            <div class="card-body border-bottom address-row">
+                <div class="row align-items-start">
+                    <div class="col-md-3">
+                        <select name="addresses[INDEX].type" class="form-select form-select-sm mb-2">
+                            <option th:each="at : ${addressTypes}" th:value="${at}"
+                                th:text="#{'label.party.address.type.' + ${at.name().toLowerCase()}}"></option>
+                        </select>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input addr-default-radio" type="radio" name="addrDefault"
+                                value="INDEX" onchange="handleDefaultRadio('addresses', this)">
+                            <label class="form-check-label small" th:text="#{label.party.is.default}">Default</label>
+                            <input type="hidden" name="addresses[INDEX].isDefault" value="false">
+                        </div>
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" name="addresses[INDEX].isActive" checked>
+                            <label class="form-check-label small" th:text="#{label.party.is.active}">Aktif</label>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-ghost-danger w-100"
+                            onclick="softRemoveRow(this, 'addresses')">
+                            <i class="ti ti-trash"></i> <span th:text="#{label.party.address.remove}">Hapus</span>
+                        </button>
+                    </div>
+                    <div class="col-md-9">
+                        <textarea name="addresses[INDEX].addressLine1" class="form-control form-control-sm mb-2"
+                            rows="2" th:placeholder="#{placeholder.party.address}"></textarea>
+                        <div class="row g-2">
+                            <div class="col-4"><input type="text" name="addresses[INDEX].city"
+                                    class="form-control form-control-sm" th:placeholder="#{placeholder.party.city}">
+                            </div>
+                            <div class="col-4"><input type="text" name="addresses[INDEX].province"
+                                    class="form-control form-control-sm" th:placeholder="#{placeholder.party.province}">
+                            </div>
+                            <div class="col-4"><input type="text" name="addresses[INDEX].postalCode"
+                                    class="form-control form-control-sm"
+                                    th:placeholder="#{placeholder.party.postalcode}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // ============================================================
+            // Generic: handle "only one default" radio → update hidden input
+            // ============================================================
+            function handleDefaultRadio(prefix, radioEl) {
+                const idx = radioEl.value;
+                // Uncheck all hidden isDefault inputs for this prefix
+                document.querySelectorAll(`input[name^="${prefix}["][name$="].isDefault"]`).forEach(h => h.value = 'false');
+                // Set the selected one to true
+                const targetHidden = document.querySelector(`input[name="${prefix}[${idx}].isDefault"]`);
+                if (targetHidden) targetHidden.value = 'true';
+            }
+
+            // ============================================================
+            // Soft-remove: mark isActive=false and visually dim the row
+            // (still submits so backend records the soft-delete)
+            // ============================================================
+            function softRemoveRow(btn, prefix) {
+                let row = btn.closest('tr') || btn.closest('.address-row');
+                if (!row) return;
+                // Find & uncheck the isActive checkbox / hidden input
+                const activeInput = row.querySelector(`input[name*=".isActive"]`);
+                if (activeInput) {
+                    if (activeInput.type === 'checkbox') activeInput.checked = false;
+                    else activeInput.value = 'false';
+                }
+                // Visually dim
+                row.classList.add('table-secondary', 'text-muted', 'opacity-75');
+                // Unset any default radio
+                const defaultHidden = row.querySelector(`input[name*=".isDefault"]`);
+                if (defaultHidden) defaultHidden.value = 'false';
+                const defaultRadio = row.querySelector(`input[type="radio"]`);
+                if (defaultRadio) defaultRadio.checked = false;
+            }
+
+            // ============================================================
+            // Add new rows
+            // ============================================================
+            function addContactRow() {
+                const tbody = document.getElementById('table-contacts').querySelector('tbody');
+                const idx = tbody.querySelectorAll('.contact-row').length;
+                const template = document.getElementById('contact-template').innerHTML;
+                const newRow = tbody.insertRow();
+                newRow.className = 'contact-row';
+                newRow.innerHTML = template.replace(/INDEX/g, idx);
+            }
+
+            function addIdentificationRow() {
+                const tbody = document.getElementById('table-identifications').querySelector('tbody');
+                const idx = tbody.querySelectorAll('.id-row').length;
+                const template = document.getElementById('iden-template').innerHTML;
+                const newRow = tbody.insertRow();
+                newRow.className = 'id-row';
+                newRow.innerHTML = template.replace(/INDEX/g, idx);
+            }
+
+            function addAddressRow() {
+                const container = document.getElementById('address-container');
+                const idx = container.querySelectorAll('.address-row').length;
+                const template = document.getElementById('address-template').innerHTML;
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = template.replace(/INDEX/g, idx);
+                container.appendChild(tempDiv.firstElementChild);
+            }
+        </script>
+    </div>
+</body>
+
+</html>

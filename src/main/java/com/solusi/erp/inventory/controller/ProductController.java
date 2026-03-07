@@ -35,8 +35,8 @@ public class ProductController {
     @GetMapping
     @PreAuthorize("hasAuthority('PRODUCT_READ')")
     public String list(@RequestParam(value = "keyword", required = false) String keyword,
-                       Pageable pageable,
-                       Model model) {
+            Pageable pageable,
+            Model model) {
         model.addAttribute("page", service.findAll(keyword, pageable));
         model.addAttribute("keyword", keyword);
         return "inventory/products/list";
@@ -53,9 +53,9 @@ public class ProductController {
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('PRODUCT_CREATE')")
     public String create(@Valid @ModelAttribute("productRequest") ProductRequest request,
-                         BindingResult bindingResult,
-                         Model model,
-                         RedirectAttributes redirectAttributes) {
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             populateSelectOptions(model);
             return "inventory/products/form";
@@ -89,10 +89,10 @@ public class ProductController {
     @PostMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('PRODUCT_UPDATE')")
     public String update(@PathVariable Long id,
-                         @Valid @ModelAttribute("productRequest") ProductRequest request,
-                         BindingResult bindingResult,
-                         Model model,
-                         RedirectAttributes redirectAttributes) {
+            @Valid @ModelAttribute("productRequest") ProductRequest request,
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             populateSelectOptions(model);
             return "inventory/products/form";

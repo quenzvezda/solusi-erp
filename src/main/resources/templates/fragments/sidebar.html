@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <body>
     <aside th:fragment="sidebar" class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
         <div class="container-fluid">
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu" aria-controls="sidebar-menu" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu"
+                aria-controls="sidebar-menu" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <h1 class="navbar-brand navbar-brand-autodark">
@@ -23,31 +24,61 @@
                         </a>
                     </li>
                     <li class="nav-hr"></li>
-                    <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('PRODUCT_READ', 'PRODUCT-CATEGORY_READ', 'UNIT-OF-MEASURE_READ', 'BRAND_READ')">
-                        <a class="nav-link dropdown-toggle" href="#navbar-inventory" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
+                    <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('PARTY_READ', 'PARTY-ROLE-TYPE_READ')">
+                        <a class="nav-link dropdown-toggle" href="#navbar-master" data-bs-toggle="dropdown"
+                            data-bs-auto-close="false" role="button" aria-expanded="false">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <i class="ti ti-database"></i>
+                            </span>
+                            <span class="nav-link-title" th:text="#{label.master.data}">Master Data</span>
+                        </a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" th:href="@{/master/parties}"
+                                sec:authorize="hasAuthority('PARTY_READ')" th:text="#{label.party}">Business Partner</a>
+                            <a class="dropdown-item" th:href="@{/master/party-role-types}"
+                                sec:authorize="hasAuthority('PARTY-ROLE-TYPE_READ')"
+                                th:text="#{label.party-role-type}">Party Role Types</a>
+                        </div>
+                    </li>
+                    <li class="nav-item dropdown"
+                        sec:authorize="hasAnyAuthority('PRODUCT_READ', 'PRODUCT-CATEGORY_READ', 'UNIT-OF-MEASURE_READ', 'BRAND_READ')">
+                        <a class="nav-link dropdown-toggle" href="#navbar-inventory" data-bs-toggle="dropdown"
+                            data-bs-auto-close="false" role="button" aria-expanded="false">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
                                 <i class="ti ti-package"></i>
                             </span>
                             <span class="nav-link-title" th:text="#{label.inventory}">Inventory</span>
                         </a>
                         <div class="dropdown-menu">
-                            <a class="dropdown-item" th:href="@{/inventory/products}" sec:authorize="hasAuthority('PRODUCT_READ')" th:text="#{label.product}">Product</a>
-                            <a class="dropdown-item" th:href="@{/inventory/product-categories}" sec:authorize="hasAuthority('PRODUCT-CATEGORY_READ')" th:text="#{label.product.category}">Product Category</a>
-                            <a class="dropdown-item" th:href="@{/inventory/unit-of-measures}" sec:authorize="hasAuthority('UNIT-OF-MEASURE_READ')" th:text="#{label.uom}">Unit of Measure</a>
-                            <a class="dropdown-item" th:href="@{/inventory/brands}" sec:authorize="hasAuthority('BRAND_READ')" th:text="#{label.brand}">Brand</a>
+                            <a class="dropdown-item" th:href="@{/inventory/products}"
+                                sec:authorize="hasAuthority('PRODUCT_READ')" th:text="#{label.product}">Product</a>
+                            <a class="dropdown-item" th:href="@{/inventory/product-categories}"
+                                sec:authorize="hasAuthority('PRODUCT-CATEGORY_READ')"
+                                th:text="#{label.product.category}">Product Category</a>
+                            <a class="dropdown-item" th:href="@{/inventory/unit-of-measures}"
+                                sec:authorize="hasAuthority('UNIT-OF-MEASURE_READ')" th:text="#{label.uom}">Unit of
+                                Measure</a>
+                            <a class="dropdown-item" th:href="@{/inventory/brands}"
+                                sec:authorize="hasAuthority('BRAND_READ')" th:text="#{label.brand}">Brand</a>
                         </div>
                     </li>
-                    <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('USERS_READ', 'ROLES_READ', 'PERMISSIONS_READ')">
-                        <a class="nav-link dropdown-toggle" href="#navbar-security" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false">
+                    <li class="nav-item dropdown"
+                        sec:authorize="hasAnyAuthority('USERS_READ', 'ROLES_READ', 'PERMISSIONS_READ')">
+                        <a class="nav-link dropdown-toggle" href="#navbar-security" data-bs-toggle="dropdown"
+                            data-bs-auto-close="false" role="button" aria-expanded="false">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
                                 <i class="ti ti-shield-lock"></i>
                             </span>
                             <span class="nav-link-title" th:text="#{label.security}">Security</span>
                         </a>
                         <div class="dropdown-menu">
-                            <a class="dropdown-item" th:href="@{/security/users}" sec:authorize="hasAuthority('USERS_READ')" th:text="#{label.users}">Users</a>
-                            <a class="dropdown-item" th:href="@{/security/roles}" sec:authorize="hasAuthority('ROLES_READ')" th:text="#{label.roles}">Roles</a>
-                            <a class="dropdown-item" th:href="@{/security/permissions}" sec:authorize="hasAuthority('PERMISSIONS_READ')" th:text="#{label.permissions}">Permissions</a>
+                            <a class="dropdown-item" th:href="@{/security/users}"
+                                sec:authorize="hasAuthority('USERS_READ')" th:text="#{label.users}">Users</a>
+                            <a class="dropdown-item" th:href="@{/security/roles}"
+                                sec:authorize="hasAuthority('ROLES_READ')" th:text="#{label.roles}">Roles</a>
+                            <a class="dropdown-item" th:href="@{/security/permissions}"
+                                sec:authorize="hasAuthority('PERMISSIONS_READ')"
+                                th:text="#{label.permissions}">Permissions</a>
                         </div>
                     </li>
                 </ul>
@@ -55,4 +86,5 @@
         </div>
     </aside>
 </body>
+
 </html>
