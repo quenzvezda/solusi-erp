@@ -1,89 +1,468 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
+<head></head>
+
 <body>
-    <aside th:fragment="sidebar" class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
+    <aside th:fragment="sidebar" id="sidebar" class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
         <div class="container-fluid">
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu"
                 aria-controls="sidebar-menu" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
             <h1 class="navbar-brand navbar-brand-autodark">
-                <a th:href="@{/dashboard}">
-                    <img th:src="@{/img/logo.png}" width="110" height="32" alt="Solusi ERP" class="navbar-brand-image">
+                <a th:href="@{/dashboard}" class="d-flex align-items-center justify-content-center w-100">
+                    <img th:src="@{/img/logo.png}" height="32" alt="Solusi ERP" class="navbar-brand-image logo-full">
+                    <img th:src="@{/img/logo-only.png}" height="32" alt="Solusi ERP"
+                        class="navbar-brand-image logo-icon" style="display: none;">
                 </a>
             </h1>
+
             <div class="collapse navbar-collapse" id="sidebar-menu">
-                <ul class="navbar-nav pt-lg-3">
+                <ul class="navbar-nav pt-lg-3 flex-grow-1">
+
+                    <!-- Dashboard -->
                     <li class="nav-item" sec:authorize="hasAuthority('DASHBOARD_READ')">
                         <a class="nav-link" th:href="@{/dashboard}">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                <i class="ti ti-home"></i>
+                                <i class="ti ti-home-2"></i>
                             </span>
                             <span class="nav-link-title" th:text="#{label.dashboard}">Dashboard</span>
                         </a>
                     </li>
-                    <li class="nav-hr"></li>
-                    <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('PARTY_READ', 'PARTY-ROLE-TYPE_READ')">
-                        <a class="nav-link dropdown-toggle" href="#navbar-master" data-bs-toggle="dropdown"
-                            data-bs-auto-close="false" role="button" aria-expanded="false">
+
+                    <!-- Section: Company Admin -->
+                    <li class="nav-item nav-section-label"
+                        sec:authorize="hasAnyAuthority('PARTY_READ', 'PARTY-ROLE-TYPE_READ')">
+                        <span class="nav-link-title text-uppercase"
+                            style="font-size:0.65rem; letter-spacing:0.08em; opacity:0.45; padding: 0.75rem 0.75rem 0.25rem;"
+                            th:text="#{label.management}">
+                            Management
+                        </span>
+                    </li>
+
+                    <li class="nav-item" sec:authorize="hasAnyAuthority('PARTY_READ', 'PARTY-ROLE-TYPE_READ')">
+                        <a class="nav-link dropdown-toggle" href="#sidebar-company-admin" data-bs-toggle="collapse"
+                            role="button" aria-expanded="false" aria-controls="sidebar-company-admin">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                <i class="ti ti-database"></i>
+                                <i class="ti ti-building-skyscraper"></i>
                             </span>
-                            <span class="nav-link-title" th:text="#{label.master.data}">Master Data</span>
+                            <span class="nav-link-title" th:text="#{label.company.admin}">Company Admin</span>
                         </a>
-                        <div class="dropdown-menu">
-                            <a class="dropdown-item" th:href="@{/master/parties}"
-                                sec:authorize="hasAuthority('PARTY_READ')" th:text="#{label.party}">Business Partner</a>
-                            <a class="dropdown-item" th:href="@{/master/party-role-types}"
-                                sec:authorize="hasAuthority('PARTY-ROLE-TYPE_READ')"
-                                th:text="#{label.party-role-type}">Party Role Types</a>
+                        <div class="collapse" id="sidebar-company-admin" data-bs-parent="#sidebar-menu">
+                            <ul class="nav flex-column nav-nested">
+
+                                <!-- Master Data -->
+                                <li class="nav-item">
+                                    <a class="nav-link dropdown-toggle nav-sub-toggle" href="#sidebar-master"
+                                        data-bs-toggle="collapse" role="button" aria-expanded="false"
+                                        aria-controls="sidebar-master">
+                                        <span class="nav-link-icon-sm"><i class="ti ti-database"></i></span>
+                                        <span class="nav-link-title" th:text="#{label.master.data}">Master Data</span>
+                                    </a>
+                                    <div class="collapse" id="sidebar-master" data-bs-parent="#sidebar-company-admin">
+                                        <ul class="nav flex-column nav-leaf">
+                                            <li class="nav-item" sec:authorize="hasAuthority('PARTY_READ')">
+                                                <a class="nav-link" th:href="@{/master/parties}">
+                                                    <span class="nav-leaf-dot"></span>
+                                                    <span class="nav-link-title" th:text="#{label.party}">Business
+                                                        Partner</span>
+                                                </a>
+                                            </li>
+                                            <li class="nav-item" sec:authorize="hasAuthority('PARTY-ROLE-TYPE_READ')">
+                                                <a class="nav-link" th:href="@{/master/party-role-types}">
+                                                    <span class="nav-leaf-dot"></span>
+                                                    <span class="nav-link-title"
+                                                        th:text="#{label.party-role-type}">Party Role Types</span>
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </li>
+
+                                <!-- General Settings -->
+                                <li class="nav-item">
+                                    <a class="nav-link dropdown-toggle nav-sub-toggle" href="#sidebar-general-setting"
+                                        data-bs-toggle="collapse" role="button" aria-expanded="false"
+                                        aria-controls="sidebar-general-setting">
+                                        <span class="nav-link-icon-sm"><i class="ti ti-settings"></i></span>
+                                        <span class="nav-link-title" th:text="#{label.general.settings}">General
+                                            Settings</span>
+                                    </a>
+                                    <div class="collapse" id="sidebar-general-setting"
+                                        data-bs-parent="#sidebar-company-admin">
+                                        <ul class="nav flex-column nav-leaf">
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="#">
+                                                    <span class="nav-leaf-dot"></span>
+                                                    <span class="nav-link-title" th:text="#{label.tax}">Tax</span>
+                                                </a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="#">
+                                                    <span class="nav-leaf-dot"></span>
+                                                    <span class="nav-link-title" th:text="#{label.money}">Money</span>
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </li>
+
+                            </ul>
                         </div>
                     </li>
-                    <li class="nav-item dropdown"
+
+                    <!-- Section: Operations -->
+                    <li class="nav-item nav-section-label"
                         sec:authorize="hasAnyAuthority('PRODUCT_READ', 'PRODUCT-CATEGORY_READ', 'UNIT-OF-MEASURE_READ', 'BRAND_READ')">
-                        <a class="nav-link dropdown-toggle" href="#navbar-inventory" data-bs-toggle="dropdown"
-                            data-bs-auto-close="false" role="button" aria-expanded="false">
+                        <span class="nav-link-title text-uppercase"
+                            style="font-size:0.65rem; letter-spacing:0.08em; opacity:0.45; padding: 0.75rem 0.75rem 0.25rem;"
+                            th:text="#{label.operations}">
+                            Operations
+                        </span>
+                    </li>
+
+                    <!-- Inventory -->
+                    <li class="nav-item"
+                        sec:authorize="hasAnyAuthority('PRODUCT_READ', 'PRODUCT-CATEGORY_READ', 'UNIT-OF-MEASURE_READ', 'BRAND_READ')">
+                        <a class="nav-link dropdown-toggle" href="#sidebar-inventory" data-bs-toggle="collapse"
+                            role="button" aria-expanded="false" aria-controls="sidebar-inventory">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
                                 <i class="ti ti-package"></i>
                             </span>
                             <span class="nav-link-title" th:text="#{label.inventory}">Inventory</span>
                         </a>
-                        <div class="dropdown-menu">
-                            <a class="dropdown-item" th:href="@{/inventory/products}"
-                                sec:authorize="hasAuthority('PRODUCT_READ')" th:text="#{label.product}">Product</a>
-                            <a class="dropdown-item" th:href="@{/inventory/product-categories}"
-                                sec:authorize="hasAuthority('PRODUCT-CATEGORY_READ')"
-                                th:text="#{label.product.category}">Product Category</a>
-                            <a class="dropdown-item" th:href="@{/inventory/unit-of-measures}"
-                                sec:authorize="hasAuthority('UNIT-OF-MEASURE_READ')" th:text="#{label.uom}">Unit of
-                                Measure</a>
-                            <a class="dropdown-item" th:href="@{/inventory/brands}"
-                                sec:authorize="hasAuthority('BRAND_READ')" th:text="#{label.brand}">Brand</a>
+                        <div class="collapse" id="sidebar-inventory" data-bs-parent="#sidebar-menu">
+                            <ul class="nav flex-column nav-leaf ps-4">
+                                <li class="nav-item" sec:authorize="hasAuthority('PRODUCT_READ')">
+                                    <a class="nav-link" th:href="@{/inventory/products}">
+                                        <span class="nav-leaf-dot"></span>
+                                        <span class="nav-link-title" th:text="#{label.product}">Product</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item" sec:authorize="hasAuthority('PRODUCT-CATEGORY_READ')">
+                                    <a class="nav-link" th:href="@{/inventory/product-categories}">
+                                        <span class="nav-leaf-dot"></span>
+                                        <span class="nav-link-title" th:text="#{label.product.category}">Product
+                                            Category</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item" sec:authorize="hasAuthority('UNIT-OF-MEASURE_READ')">
+                                    <a class="nav-link" th:href="@{/inventory/unit-of-measures}">
+                                        <span class="nav-leaf-dot"></span>
+                                        <span class="nav-link-title" th:text="#{label.uom}">Unit of Measure</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item" sec:authorize="hasAuthority('BRAND_READ')">
+                                    <a class="nav-link" th:href="@{/inventory/brands}">
+                                        <span class="nav-leaf-dot"></span>
+                                        <span class="nav-link-title" th:text="#{label.brand}">Brand</span>
+                                    </a>
+                                </li>
+                            </ul>
                         </div>
                     </li>
-                    <li class="nav-item dropdown"
+
+                    <!-- Section: System -->
+                    <li class="nav-item nav-section-label"
                         sec:authorize="hasAnyAuthority('USERS_READ', 'ROLES_READ', 'PERMISSIONS_READ')">
-                        <a class="nav-link dropdown-toggle" href="#navbar-security" data-bs-toggle="dropdown"
-                            data-bs-auto-close="false" role="button" aria-expanded="false">
+                        <span class="nav-link-title text-uppercase"
+                            style="font-size:0.65rem; letter-spacing:0.08em; opacity:0.45; padding: 0.75rem 0.75rem 0.25rem;"
+                            th:text="#{label.system}">
+                            System
+                        </span>
+                    </li>
+
+                    <!-- Security -->
+                    <li class="nav-item"
+                        sec:authorize="hasAnyAuthority('USERS_READ', 'ROLES_READ', 'PERMISSIONS_READ')">
+                        <a class="nav-link dropdown-toggle" href="#sidebar-security" data-bs-toggle="collapse"
+                            role="button" aria-expanded="false" aria-controls="sidebar-security">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
                                 <i class="ti ti-shield-lock"></i>
                             </span>
                             <span class="nav-link-title" th:text="#{label.security}">Security</span>
                         </a>
-                        <div class="dropdown-menu">
-                            <a class="dropdown-item" th:href="@{/security/users}"
-                                sec:authorize="hasAuthority('USERS_READ')" th:text="#{label.users}">Users</a>
-                            <a class="dropdown-item" th:href="@{/security/roles}"
-                                sec:authorize="hasAuthority('ROLES_READ')" th:text="#{label.roles}">Roles</a>
-                            <a class="dropdown-item" th:href="@{/security/permissions}"
-                                sec:authorize="hasAuthority('PERMISSIONS_READ')"
-                                th:text="#{label.permissions}">Permissions</a>
+                        <div class="collapse" id="sidebar-security" data-bs-parent="#sidebar-menu">
+                            <ul class="nav flex-column nav-leaf ps-4">
+                                <li class="nav-item" sec:authorize="hasAuthority('USERS_READ')">
+                                    <a class="nav-link" th:href="@{/security/users}">
+                                        <span class="nav-leaf-dot"></span>
+                                        <span class="nav-link-title" th:text="#{label.users}">Users</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item" sec:authorize="hasAuthority('ROLES_READ')">
+                                    <a class="nav-link" th:href="@{/security/roles}">
+                                        <span class="nav-leaf-dot"></span>
+                                        <span class="nav-link-title" th:text="#{label.roles}">Roles</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item" sec:authorize="hasAuthority('PERMISSIONS_READ')">
+                                    <a class="nav-link" th:href="@{/security/permissions}">
+                                        <span class="nav-leaf-dot"></span>
+                                        <span class="nav-link-title" th:text="#{label.permissions}">Permissions</span>
+                                    </a>
+                                </li>
+                            </ul>
                         </div>
                     </li>
+
                 </ul>
+
+                <!-- Sidebar Toggle Button (Desktop Only) -->
+                <div class="sidebar-footer mt-auto d-none d-lg-flex align-items-center border-top border-secondary">
+                    <button class="btn-sidebar-toggle w-100" onclick="toggleSidebar()" title="Toggle Sidebar">
+                        <i class="ti ti-layout-sidebar-left-collapse" id="sidebar-toggle-icon"></i>
+                        <span class="nav-link-title ms-2" id="sidebar-toggle-text"
+                            th:text="#{label.collapse}">Collapse</span>
+                    </button>
+                </div>
             </div>
         </div>
+
+        <style>
+            /* =============================================
+               SIDEBAR REFINED STYLES
+               ============================================= */
+
+            /* Section labels */
+            .nav-section-label {
+                pointer-events: none;
+            }
+
+            /* Nested menu container */
+            .nav-nested {
+                padding-left: 0.5rem;
+                border-left: 1px solid rgba(255, 255, 255, 0.08);
+                margin-left: 1.25rem;
+                margin-top: 0.125rem;
+                margin-bottom: 0.25rem;
+            }
+
+            /* Sub-toggle items (2nd level labels) */
+            .nav-sub-toggle {
+                font-size: 0.8125rem !important;
+                opacity: 0.75;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .nav-sub-toggle:hover {
+                opacity: 1 !important;
+            }
+
+            .nav-link-icon-sm {
+                font-size: 0.875rem;
+                width: 1.25rem;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                opacity: 0.6;
+            }
+
+            /* Leaf nav items */
+            .nav-leaf {
+                padding-left: 0.25rem !important;
+            }
+
+            .nav-leaf .nav-link {
+                padding-top: 0.3rem !important;
+                padding-bottom: 0.3rem !important;
+                font-size: 0.8125rem !important;
+                display: flex;
+                align-items: center;
+                gap: 0.625rem;
+            }
+
+            .nav-leaf-dot {
+                width: 5px;
+                height: 5px;
+                border-radius: 50%;
+                background-color: rgba(255, 255, 255, 0.25);
+                flex-shrink: 0;
+                transition: background-color 0.2s, transform 0.2s;
+            }
+
+            .nav-leaf .nav-link:hover .nav-leaf-dot,
+            .nav-leaf .nav-link.active .nav-leaf-dot {
+                background-color: #4da6ff;
+                transform: scale(1.5);
+            }
+
+            .nav-leaf .nav-link.active {
+                color: #4da6ff !important;
+            }
+
+            /* Smooth collapse animation */
+            .collapse {
+                transition: height 0.2s ease;
+            }
+
+            /* Dropdown caret refinement */
+            .nav-link.dropdown-toggle::after {
+                margin-left: auto;
+                opacity: 0.4;
+                transition: transform 0.2s ease, opacity 0.2s;
+            }
+
+            .nav-link.dropdown-toggle[aria-expanded="true"]::after {
+                transform: rotate(180deg);
+                opacity: 0.8;
+            }
+
+            .nav-link.dropdown-toggle[aria-expanded="true"] {
+                color: #fff !important;
+                opacity: 1 !important;
+            }
+
+            .nav-link.dropdown-toggle[aria-expanded="true"] .nav-link-icon {
+                color: #4da6ff;
+            }
+
+            /* Footer toggle button */
+            .sidebar-footer {
+                padding: 0.75rem 1rem;
+            }
+
+            .btn-sidebar-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: none;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                color: rgba(255, 255, 255, 0.5);
+                padding: 0.5rem 1rem;
+                font-size: 0.8125rem;
+                cursor: pointer;
+                transition: background 0.2s, color 0.2s, border-color 0.2s;
+                width: 100%;
+            }
+
+            .btn-sidebar-toggle:hover {
+                background: rgba(255, 255, 255, 0.06);
+                border-color: rgba(255, 255, 255, 0.2);
+                color: rgba(255, 255, 255, 0.85);
+            }
+
+            /* =============================================
+               NARROW/COLLAPSED MODE
+               ============================================= */
+            @media (min-width: 992px) {
+                body.sidebar-narrow .navbar-vertical {
+                    width: 4.5rem !important;
+                    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+
+                body:not(.sidebar-narrow) .navbar-vertical {
+                    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+
+                /* Hide all text in narrow mode */
+                body.sidebar-narrow .nav-link-title,
+                body.sidebar-narrow .dropdown-toggle::after,
+                body.sidebar-narrow #sidebar-toggle-text,
+                body.sidebar-narrow .nav-section-label {
+                    display: none !important;
+                }
+
+                /* Center icons */
+                body.sidebar-narrow .nav-link {
+                    justify-content: center;
+                    padding-left: 0.5rem;
+                    padding-right: 0.5rem;
+                }
+
+                body.sidebar-narrow .nav-link-icon {
+                    margin-right: 0 !important;
+                    font-size: 1.25rem;
+                }
+
+                /* Logo swap */
+                body.sidebar-narrow .logo-full {
+                    display: none !important;
+                }
+
+                body.sidebar-narrow .logo-icon {
+                    display: block !important;
+                    margin: 0 auto;
+                }
+
+                /* Adjust footer padding in narrow mode */
+                body.sidebar-narrow .sidebar-footer {
+                    padding: 0.5rem 0.25rem;
+                }
+
+                body.sidebar-narrow .btn-sidebar-toggle {
+                    padding-left: 0;
+                    padding-right: 0;
+                }
+
+                /* Hide nested menus in narrow mode */
+                body.sidebar-narrow #sidebar-menu .nav-item .collapse {
+                    display: none !important;
+                }
+
+                /* Fix main content wrapper margin */
+                body.sidebar-narrow .page-wrapper {
+                    margin-left: 4.5rem !important;
+                }
+
+                body:not(.sidebar-narrow) .page-wrapper {
+                    transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+
+                /* Collapse icon swap */
+                body.sidebar-narrow #sidebar-toggle-icon::before {
+                    content: "\eb83";
+                }
+
+                /* Tooltip on hover for narrow mode icons */
+                body.sidebar-narrow .nav-item>.nav-link {
+                    position: relative;
+                }
+            }
+        </style>
+
+        <script>
+            (function () {
+                if (localStorage.getItem('sidebar-narrow') === 'true') {
+                    document.body.classList.add('sidebar-narrow');
+                }
+            })();
+
+            function toggleSidebar() {
+                const isNarrow = document.body.classList.toggle('sidebar-narrow');
+                if (isNarrow) {
+                    document.querySelectorAll('#sidebar .collapse.show').forEach(el => {
+                        el.classList.remove('show');
+                        const trigger = document.querySelector(`[data-bs-target="#${el.id}"]`);
+                        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+                    });
+                }
+                localStorage.setItem('sidebar-narrow', isNarrow);
+            }
+
+            // Highlight active nav link based on current URL
+            document.addEventListener('DOMContentLoaded', function () {
+                const currentPath = window.location.pathname;
+                document.querySelectorAll('#sidebar .nav-link').forEach(link => {
+                    if (link.getAttribute('href') === currentPath) {
+                        link.classList.add('active');
+                        // Expand parent collapses
+                        let parent = link.closest('.collapse');
+                        while (parent) {
+                            parent.classList.add('show');
+                            const trigger = document.querySelector(`[data-bs-target="#${parent.id}"]`);
+                            if (trigger) trigger.setAttribute('aria-expanded', 'true');
+                            parent = parent.parentElement?.closest('.collapse');
+                        }
+                    }
+                });
+            });
+        </script>
     </aside>
 </body>
 
