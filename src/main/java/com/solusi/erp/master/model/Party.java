@@ -23,6 +23,9 @@ import java.util.Set;
 @AllArgsConstructor
 public class Party extends BaseModel {
 
+    @Column(length = 50)
+    private String salutation;
+
     @Column(nullable = false, unique = true, length = 50)
     private String code;
 
@@ -46,18 +49,17 @@ public class Party extends BaseModel {
     private String phone;
 
     @ManyToMany
-    @JoinTable(
-        name = "party_roles",
-        joinColumns = @JoinColumn(name = "party_id"),
-        inverseJoinColumns = @JoinColumn(name = "role_type_id")
-    )
+    @JoinTable(name = "party_roles", joinColumns = @JoinColumn(name = "party_id"), inverseJoinColumns = @JoinColumn(name = "role_type_id"))
     private Set<PartyRoleType> roles = new HashSet<>();
 
-    @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = false)
     private List<PartyIdentification> identifications = new ArrayList<>();
 
-    @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = false)
     private List<PartyAddress> addresses = new ArrayList<>();
+
+    @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = false)
+    private List<PartyContact> contacts = new ArrayList<>();
 
     // Helper methods to maintain bidirectional relationships
     public void addIdentification(PartyIdentification identification) {
@@ -68,5 +70,10 @@ public class Party extends BaseModel {
     public void addAddress(PartyAddress address) {
         addresses.add(address);
         address.setParty(this);
+    }
+
+    public void addContact(PartyContact contact) {
+        contacts.add(contact);
+        contact.setParty(this);
     }
 }

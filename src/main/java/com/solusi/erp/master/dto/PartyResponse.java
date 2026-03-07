@@ -16,6 +16,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class PartyResponse {
     private Long id;
+    private String salutation;
     private String code;
     private String name;
     private PartyType type;
@@ -23,13 +24,14 @@ public class PartyResponse {
     private Boolean isActive;
     private String email;
     private String phone;
-    
+
     private Set<String> roleCodes;
     private Set<String> roleNames;
-    
+
     private List<PartyIdentificationResponse> identifications;
     private List<PartyAddressResponse> addresses;
-    
+    private List<PartyContactResponse> contacts;
+
     private LocalDateTime createdDate;
     private String createdBy;
     private LocalDateTime updatedDate;

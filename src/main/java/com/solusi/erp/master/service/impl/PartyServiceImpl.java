@@ -17,9 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -39,31 +37,26 @@ public class PartyServiceImpl implements PartyService {
     @Override
     @Transactional(readOnly = true)
     public Page<PartyResponse> findAll(String keyword, Pageable pageable) {
-        Page<Party> page;
-        if (StringUtils.hasText(keyword)) {
-            page = repository.search(keyword, pageable);
-        } else {
-            page = repository.findAll(pageable);
-        }
+        Page<Party> page = StringUtils.hasText(keyword)
+                ? repository.search(keyword, pageable)
+                : repository.findAll(pageable);
         return page.map(mapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public PartyResponse findById(Long id) {
-        Party entity = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.party.notfound")));
-        return mapper.toResponse(entity);
+        return mapper.toResponse(findOrThrow(id));
     }
 
     @Override
     @Transactional(readOnly = true)
     public PartyRequest getEditData(Long id) {
-        Party entity = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.party.notfound")));
-        
-        PartyRequest request = PartyRequest.builder()
+        Party entity = findOrThrow(id);
+
+        return PartyRequest.builder()
                 .id(entity.getId())
+                .salutation(entity.getSalutation())
                 .code(entity.getCode())
                 .name(entity.getName())
                 .type(entity.getType())
@@ -79,6 +72,8 @@ public class PartyServiceImpl implements PartyService {
                                 .idNumber(i.getIdNumber())
                                 .issuedDate(i.getIssuedDate())
                                 .expiryDate(i.getExpiryDate())
+                                .isActive(i.getIsActive())
+                                .isDefault(i.getIsDefault())
                                 .build())
                         .collect(Collectors.toList()))
                 .addresses(entity.getAddresses().stream()
@@ -90,44 +85,57 @@ public class PartyServiceImpl implements PartyService {
                                 .province(a.getProvince())
                                 .postalCode(a.getPostalCode())
                                 .country(a.getCountry())
+                                .isActive(a.getIsActive())
+                                .isDefault(a.getIsDefault())
+                                .build())
+                        .collect(Collectors.toList()))
+                .contacts(entity.getContacts().stream()
+                        .map(c -> PartyContactRequest.builder()
+                                .id(c.getId())
+                                .label(c.getLabel())
+                                .mobile(c.getMobile())
+                                .phone(c.getPhone())
+                                .email(c.getEmail())
+                                .isActive(c.getIsActive())
+                                .isDefault(c.getIsDefault())
                                 .build())
                         .collect(Collectors.toList()))
                 .build();
-        
-        return request;
     }
 
     @Override
     @Transactional
     public void create(PartyRequest request) {
+        validateSingleDefault(request);
+
         Party entity = mapper.toEntity(request);
-        
-        // Auto-generate code
         entity.setCode(sequenceGeneratorService.generate("PARTY"));
-        
+
         syncRoles(entity, request.getRoleIds());
         syncIdentifications(entity, request.getIdentifications());
         syncAddresses(entity, request.getAddresses());
-        
+        syncContacts(entity, request.getContacts());
+
         repository.save(entity);
     }
 
     @Override
     @Transactional
     public void update(Long id, PartyRequest request) {
-        Party entity = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.party.notfound")));
+        Party entity = findOrThrow(id);
 
         if (StringUtils.hasText(request.getCode()) && repository.existsByCodeAndIdNot(request.getCode(), id)) {
             throw new RuntimeException(getMessage("msg.error.party.duplicate-code"));
         }
 
+        validateSingleDefault(request);
         mapper.updateEntityFromRequest(request, entity);
-        
+
         syncRoles(entity, request.getRoleIds());
         syncIdentifications(entity, request.getIdentifications());
         syncAddresses(entity, request.getAddresses());
-        
+        syncContacts(entity, request.getContacts());
+
         repository.save(entity);
     }
 
@@ -150,41 +158,180 @@ public class PartyServiceImpl implements PartyService {
         return idTypeRepository.findAll();
     }
 
+    // ===================================================================
+    // Private sync helpers — SOFT DELETE pattern
+    // ===================================================================
+
     private void syncRoles(Party entity, Set<Long> roleIds) {
         if (roleIds == null || roleIds.isEmpty()) {
             entity.setRoles(new HashSet<>());
             return;
         }
-        List<PartyRoleType> roles = roleTypeRepository.findAllById(roleIds);
-        entity.setRoles(new HashSet<>(roles));
+        entity.setRoles(new HashSet<>(roleTypeRepository.findAllById(roleIds)));
     }
 
+    /**
+     * Soft-delete sync for Identifications.
+     * - Rows with incoming id → update fields (isActive, isDefault, etc.)
+     * - Rows with no id → create new
+     * - Existing DB rows NOT present in request → set isActive = false
+     */
     private void syncIdentifications(Party entity, List<PartyIdentificationRequest> requests) {
-        entity.getIdentifications().clear();
+        Map<Long, PartyIdentification> existingById = entity.getIdentifications().stream()
+                .filter(i -> i.getId() != null)
+                .collect(Collectors.toMap(PartyIdentification::getId, i -> i));
+
+        Set<Long> incomingIds = new HashSet<>();
+
         if (requests != null) {
             for (PartyIdentificationRequest req : requests) {
-                if (!StringUtils.hasText(req.getIdNumber())) continue;
-                
-                PartyIdentification iden = new PartyIdentification();
-                iden.setIdNumber(req.getIdNumber());
-                iden.setIssuedDate(req.getIssuedDate());
-                iden.setExpiryDate(req.getExpiryDate());
-                iden.setType(idTypeRepository.findById(req.getTypeId()).orElse(null));
-                entity.addIdentification(iden);
+                if (!StringUtils.hasText(req.getIdNumber()))
+                    continue;
+
+                if (req.getId() != null && existingById.containsKey(req.getId())) {
+                    // Update existing
+                    PartyIdentification existing = existingById.get(req.getId());
+                    existing.setIdNumber(req.getIdNumber());
+                    existing.setIssuedDate(req.getIssuedDate());
+                    existing.setExpiryDate(req.getExpiryDate());
+                    existing.setIsActive(Boolean.TRUE.equals(req.getIsActive()));
+                    existing.setIsDefault(Boolean.TRUE.equals(req.getIsDefault()));
+                    if (req.getTypeId() != null) {
+                        idTypeRepository.findById(req.getTypeId()).ifPresent(existing::setType);
+                    }
+                    incomingIds.add(req.getId());
+                } else {
+                    // Create new
+                    PartyIdentification iden = new PartyIdentification();
+                    iden.setIdNumber(req.getIdNumber());
+                    iden.setIssuedDate(req.getIssuedDate());
+                    iden.setExpiryDate(req.getExpiryDate());
+                    iden.setIsActive(true);
+                    iden.setIsDefault(Boolean.TRUE.equals(req.getIsDefault()));
+                    iden.setType(
+                            req.getTypeId() != null ? idTypeRepository.findById(req.getTypeId()).orElse(null) : null);
+                    entity.addIdentification(iden);
+                }
             }
+        }
+
+        // Soft-delete rows not in the request
+        existingById.forEach((existId, iden) -> {
+            if (!incomingIds.contains(existId)) {
+                iden.setIsActive(false);
+                iden.setIsDefault(false);
+            }
+        });
+    }
+
+    /**
+     * Soft-delete sync for Addresses.
+     */
+    private void syncAddresses(Party entity, List<PartyAddressRequest> requests) {
+        Map<Long, PartyAddress> existingById = entity.getAddresses().stream()
+                .filter(a -> a.getId() != null)
+                .collect(Collectors.toMap(PartyAddress::getId, a -> a));
+
+        Set<Long> incomingIds = new HashSet<>();
+
+        if (requests != null) {
+            for (PartyAddressRequest req : requests) {
+                if (!StringUtils.hasText(req.getAddressLine1()))
+                    continue;
+
+                if (req.getId() != null && existingById.containsKey(req.getId())) {
+                    PartyAddress existing = existingById.get(req.getId());
+                    existing.setType(req.getType());
+                    existing.setAddressLine1(req.getAddressLine1());
+                    existing.setCity(req.getCity());
+                    existing.setProvince(req.getProvince());
+                    existing.setPostalCode(req.getPostalCode());
+                    existing.setCountry(req.getCountry());
+                    existing.setIsActive(Boolean.TRUE.equals(req.getIsActive()));
+                    existing.setIsDefault(Boolean.TRUE.equals(req.getIsDefault()));
+                    incomingIds.add(req.getId());
+                } else {
+                    PartyAddress addr = mapper.toEntity(req);
+                    addr.setIsActive(true);
+                    addr.setIsDefault(Boolean.TRUE.equals(req.getIsDefault()));
+                    entity.addAddress(addr);
+                }
+            }
+        }
+
+        existingById.forEach((existId, addr) -> {
+            if (!incomingIds.contains(existId)) {
+                addr.setIsActive(false);
+                addr.setIsDefault(false);
+            }
+        });
+    }
+
+    /**
+     * Soft-delete sync for Contacts.
+     */
+    private void syncContacts(Party entity, List<PartyContactRequest> requests) {
+        Map<Long, PartyContact> existingById = entity.getContacts().stream()
+                .filter(c -> c.getId() != null)
+                .collect(Collectors.toMap(PartyContact::getId, c -> c));
+
+        Set<Long> incomingIds = new HashSet<>();
+
+        if (requests != null) {
+            for (PartyContactRequest req : requests) {
+                if (!StringUtils.hasText(req.getLabel()))
+                    continue;
+
+                if (req.getId() != null && existingById.containsKey(req.getId())) {
+                    PartyContact existing = existingById.get(req.getId());
+                    existing.setLabel(req.getLabel());
+                    existing.setMobile(req.getMobile());
+                    existing.setPhone(req.getPhone());
+                    existing.setEmail(req.getEmail());
+                    existing.setIsActive(Boolean.TRUE.equals(req.getIsActive()));
+                    existing.setIsDefault(Boolean.TRUE.equals(req.getIsDefault()));
+                    incomingIds.add(req.getId());
+                } else {
+                    PartyContact contact = mapper.toEntity(req);
+                    contact.setIsActive(true);
+                    contact.setIsDefault(Boolean.TRUE.equals(req.getIsDefault()));
+                    entity.addContact(contact);
+                }
+            }
+        }
+
+        existingById.forEach((existId, contact) -> {
+            if (!incomingIds.contains(existId)) {
+                contact.setIsActive(false);
+                contact.setIsDefault(false);
+            }
+        });
+    }
+
+    /**
+     * Backend validation: each list may have at most 1 default.
+     */
+    private void validateSingleDefault(PartyRequest request) {
+        checkSingleDefault(request.getIdentifications(), r -> Boolean.TRUE.equals(r.getIsDefault()),
+                "msg.error.party.multiple-default.identification");
+        checkSingleDefault(request.getAddresses(), r -> Boolean.TRUE.equals(r.getIsDefault()),
+                "msg.error.party.multiple-default.address");
+        checkSingleDefault(request.getContacts(), r -> Boolean.TRUE.equals(r.getIsDefault()),
+                "msg.error.party.multiple-default.contact");
+    }
+
+    private <T> void checkSingleDefault(List<T> list, java.util.function.Predicate<T> isDefaultFn, String msgKey) {
+        if (list == null)
+            return;
+        long count = list.stream().filter(isDefaultFn).count();
+        if (count > 1) {
+            throw new RuntimeException(getMessage(msgKey));
         }
     }
 
-    private void syncAddresses(Party entity, List<PartyAddressRequest> requests) {
-        entity.getAddresses().clear();
-        if (requests != null) {
-            for (PartyAddressRequest req : requests) {
-                if (!StringUtils.hasText(req.getAddressLine1())) continue;
-                
-                PartyAddress addr = mapper.toEntity(req);
-                entity.addAddress(addr);
-            }
-        }
+    private Party findOrThrow(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.party.notfound")));
     }
 
     private String getMessage(String key) {

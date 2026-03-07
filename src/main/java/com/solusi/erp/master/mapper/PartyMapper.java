@@ -16,6 +16,7 @@ public interface PartyMapper {
     @Mapping(target = "roles", ignore = true)
     @Mapping(target = "identifications", ignore = true)
     @Mapping(target = "addresses", ignore = true)
+    @Mapping(target = "contacts", ignore = true)
     Party toEntity(PartyRequest request);
 
     @Mapping(target = "roleCodes", source = "roles", qualifiedByName = "mapRoleCodes")
@@ -39,6 +40,8 @@ public interface PartyMapper {
 
     PartyAddressResponse toResponse(PartyAddress entity);
 
+    PartyContactResponse toResponse(PartyContact entity);
+
     @Mapping(target = "party", ignore = true)
     @Mapping(target = "type", ignore = true) // Handled in service
     PartyIdentification toEntity(PartyIdentificationRequest request);
@@ -46,8 +49,12 @@ public interface PartyMapper {
     @Mapping(target = "party", ignore = true)
     PartyAddress toEntity(PartyAddressRequest request);
 
+    @Mapping(target = "party", ignore = true)
+    PartyContact toEntity(PartyContactRequest request);
+
     @Mapping(target = "roles", ignore = true)
     @Mapping(target = "identifications", ignore = true)
     @Mapping(target = "addresses", ignore = true)
+    @Mapping(target = "contacts", ignore = true)
     void updateEntityFromRequest(PartyRequest request, @MappingTarget Party entity);
 }

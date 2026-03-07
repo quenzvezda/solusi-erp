@@ -19,4 +19,6 @@ public class PartyIdentificationResponse {
     private String idNumber;
     private LocalDate issuedDate;
     private LocalDate expiryDate;
+    private Boolean isActive;
+    private Boolean isDefault;
 }

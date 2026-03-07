@@ -18,4 +18,8 @@ public class PartyAddressRequest {
     private String province;
     private String postalCode;
     private String country;
+    @Builder.Default
+    private Boolean isActive = true;
+    @Builder.Default
+    private Boolean isDefault = false;
 }

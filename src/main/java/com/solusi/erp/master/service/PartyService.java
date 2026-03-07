@@ -14,13 +14,19 @@ import java.util.List;
  */
 public interface PartyService {
     Page<PartyResponse> findAll(String keyword, Pageable pageable);
+
     PartyResponse findById(Long id);
+
     PartyRequest getEditData(Long id);
+
     void create(PartyRequest request);
+
     void update(Long id, PartyRequest request);
+
     void delete(Long id);
-    
+
     // Lookup data
     List<PartyRoleType> findAllRoleTypes();
+
     List<PartyIdentificationType> findAllIdTypes();
 }

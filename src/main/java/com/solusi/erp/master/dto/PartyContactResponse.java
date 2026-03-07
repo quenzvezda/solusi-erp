@@ -1,6 +1,5 @@
 package com.solusi.erp.master.dto;
 
-import com.solusi.erp.master.model.AddressType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,14 +9,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PartyAddressResponse {
+public class PartyContactResponse {
     private Long id;
-    private AddressType type;
-    private String addressLine1;
-    private String city;
-    private String province;
-    private String postalCode;
-    private String country;
+    private String label;
+    private String mobile;
+    private String phone;
+    private String email;
     private Boolean isActive;
     private Boolean isDefault;
 }

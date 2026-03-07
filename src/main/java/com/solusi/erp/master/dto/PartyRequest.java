@@ -22,6 +22,8 @@ public class PartyRequest {
 
     private Long id;
 
+    private String salutation;
+
     @Size(max = 50, message = "{validation.size}")
     private String code;
 
@@ -51,4 +53,7 @@ public class PartyRequest {
 
     @Builder.Default
     private List<PartyAddressRequest> addresses = new ArrayList<>();
+
+    @Builder.Default
+    private List<PartyContactRequest> contacts = new ArrayList<>();
 }

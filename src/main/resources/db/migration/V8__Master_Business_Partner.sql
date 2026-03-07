@@ -1,4 +1,4 @@
-/-- V8: Master Module - Business Partner (Party)
+-- V8: Master Module - Business Partner (Party)
 -- Mandate: AGENTS.md Section 4 & 5
 
 -- 1. Party Role Types

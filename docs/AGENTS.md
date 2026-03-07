@@ -46,6 +46,7 @@ AI Assistant WAJIB mematuhi versi dan teknologi berikut berdasarkan `pom.xml` ut
     * `updatedBy` (String/Long) dengan anotasi `@LastModifiedBy`
     * `updatedDate` (LocalDateTime) dengan anotasi `@LastModifiedDate`
     * `version` (Integer/Long) dengan anotasi `@Version` untuk *optimistic locking* (default 1).
+* **Data Retention (Soft Delete):** DILARANG menggunakan *Hard Delete* untuk data master. Selalu gunakan flag `isActive` (boolean/tinyint) untuk mengatur status aktif/tidak aktif. Hindari menggunakan `@Where` global (Hibernate) jika masih perlu melihat data historis, filter `isActive = true` secara eksplisit di level Repository.
 * AI WAJIB memastikan Spring Data JPA Auditing aktif (`@EnableJpaAuditing` dan bean `AuditorAware` terkonfigurasi).
 
 ## 5. Business Module Standards
@@ -64,6 +65,7 @@ Setiap modul bisnis baru (Inventory, Sales, Purchasing, dll) WAJIB mengikuti pol
     *   Detail teknis dan pattern silakan merujuk ke [docs/spec/sequence-generator.md](spec/sequence-generator.md).
     *   DILARANG menginput kode manual di form `create`.
     *   UI field `code` WAJIB diset `readonly` dan `bg-light`.
+*   **Collection Validation**: Jika entitas memiliki *nested collection* (seperti `contacts`, `addresses`) yang dilengkapi flag `isDefault`, pastikan membuat validasi backend (toleransi maksimal 1 data default) dan validasi frontend (menggunakan *radio button*).
 *   **i18n Implementation**: 
     *   Semua pesan error di Service (yang dilempar via `RuntimeException`) WAJIB di-resolve menggunakan `MessageSource` agar mendukung multi-bahasa.
     *   Gunakan helper method `private String getMessage(String key)` di setiap Service Implementation.

@@ -1,0 +1,96 @@
+package com.solusi.erp.master.service.impl;
+
+import com.solusi.erp.core.service.SequenceGeneratorService;
+import com.solusi.erp.master.dto.PartyRoleTypeRequest;
+import com.solusi.erp.master.dto.PartyRoleTypeResponse;
+import com.solusi.erp.master.model.PartyRoleType;
+import com.solusi.erp.master.repository.PartyRoleTypeRepository;
+import com.solusi.erp.master.service.PartyRoleTypeService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+/**
+ * Implementation of PartyRoleTypeService.
+ */
+@Service
+@RequiredArgsConstructor
+public class PartyRoleTypeServiceImpl implements PartyRoleTypeService {
+
+    private final PartyRoleTypeRepository repository;
+    private final SequenceGeneratorService sequenceGeneratorService;
+    private final MessageSource messageSource;
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PartyRoleTypeResponse> findAll(String keyword, Pageable pageable) {
+        Page<PartyRoleType> page = StringUtils.hasText(keyword)
+                ? repository.search(keyword, pageable)
+                : repository.findAll(pageable);
+        return page.map(e -> PartyRoleTypeResponse.builder()
+                .id(e.getId())
+                .code(e.getCode())
+                .name(e.getName())
+                .build());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PartyRoleTypeResponse findById(Long id) {
+        PartyRoleType e = findOrThrow(id);
+        return PartyRoleTypeResponse.builder().id(e.getId()).code(e.getCode()).name(e.getName()).build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PartyRoleTypeRequest getEditData(Long id) {
+        PartyRoleType e = findOrThrow(id);
+        return PartyRoleTypeRequest.builder().id(e.getId()).code(e.getCode()).name(e.getName()).build();
+    }
+
+    @Override
+    @Transactional
+    public void create(PartyRoleTypeRequest request) {
+        if (!StringUtils.hasText(request.getName())) {
+            throw new RuntimeException(getMessage("msg.error.party-role-type.name-required"));
+        }
+        PartyRoleType entity = new PartyRoleType();
+        entity.setCode(sequenceGeneratorService.generate("PARTY-ROLE-TYPE"));
+        entity.setName(request.getName());
+        repository.save(entity);
+    }
+
+    @Override
+    @Transactional
+    public void update(Long id, PartyRoleTypeRequest request) {
+        PartyRoleType entity = findOrThrow(id);
+        if (!StringUtils.hasText(request.getName())) {
+            throw new RuntimeException(getMessage("msg.error.party-role-type.name-required"));
+        }
+        entity.setName(request.getName());
+        repository.save(entity);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id) {
+        findOrThrow(id);
+        // Check if any Party is using this role type
+        // We rely on DB FK constraint to fail here — catch in controller
+        repository.deleteById(id);
+    }
+
+    private PartyRoleType findOrThrow(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.party-role-type.notfound")));
+    }
+
+    private String getMessage(String key) {
+        return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
+    }
+}

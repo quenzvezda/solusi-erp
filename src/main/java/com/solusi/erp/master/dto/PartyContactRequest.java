@@ -5,18 +5,16 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PartyIdentificationRequest {
+public class PartyContactRequest {
     private Long id;
-    private Long typeId;
-    private String idNumber;
-    private LocalDate issuedDate;
-    private LocalDate expiryDate;
+    private String label;
+    private String mobile;
+    private String phone;
+    private String email;
     @Builder.Default
     private Boolean isActive = true;
     @Builder.Default

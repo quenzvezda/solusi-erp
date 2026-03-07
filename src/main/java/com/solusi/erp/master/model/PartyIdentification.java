@@ -36,4 +36,10 @@ public class PartyIdentification extends BaseModel {
 
     @Column(name = "expiry_date")
     private LocalDate expiryDate;
+
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
+
+    @Column(name = "is_default", nullable = false)
+    private Boolean isDefault = false;
 }

@@ -11,13 +11,13 @@
                 <div class="row g-2 align-items-center">
                     <div class="col">
                         <h2 class="page-title" th:text="#{label.party.title}">Business Partner</h2>
-                        <div class="text-secondary mt-1" th:text="#{label.party.subtitle}">Kelola data pelanggan, pemasok, dan rekan bisnis lainnya.</div>
+                        <div class="text-secondary mt-1" th:text="#{label.party.subtitle}">Kelola data pelanggan,
+                            pemasok, dan rekan bisnis lainnya.</div>
                     </div>
                     <!-- Page title actions -->
                     <div class="col-auto ms-auto d-print-none" sec:authorize="hasAuthority('PARTY_CREATE')">
                         <div class="btn-list">
-                            <a th:href="@{/master/parties/create}"
-                                class="btn btn-primary d-none d-sm-inline-block">
+                            <a th:href="@{/master/parties/create}" class="btn btn-primary d-none d-sm-inline-block">
                                 <i class="ti ti-plus"></i>
                                 <span th:text="#{label.party.add}">Tambah Partner Baru</span>
                             </a>
@@ -67,11 +67,15 @@
                         <table class="table table-vcenter card-table">
                             <thead>
                                 <tr>
-                                    <th th:replace="~{fragments/table :: sortable('code', #{label.party.column.code})}">Kode</th>
-                                    <th th:replace="~{fragments/table :: sortable('name', #{label.party.column.name})}">Nama</th>
-                                    <th th:replace="~{fragments/table :: sortable('type', #{label.party.column.type})}">Tipe</th>
+                                    <th th:replace="~{fragments/table :: sortable('code', #{label.party.column.code})}">
+                                        Kode</th>
+                                    <th th:replace="~{fragments/table :: sortable('name', #{label.party.column.name})}">
+                                        Nama</th>
+                                    <th th:replace="~{fragments/table :: sortable('type', #{label.party.column.type})}">
+                                        Tipe</th>
                                     <th th:text="#{label.party.column.roles}">Peran</th>
-                                    <th th:replace="~{fragments/table :: sortable('isActive', #{label.status})}">Status</th>
+                                    <th th:replace="~{fragments/table :: sortable('isActive', #{label.status})}">Status
+                                    </th>
                                     <th class="w-1" th:text="#{label.actions}">Aksi</th>
                                 </tr>
                             </thead>
@@ -80,30 +84,36 @@
                                     <td th:text="${item.code}">CODE</td>
                                     <td class="font-weight-medium" th:text="${item.name}">Name</td>
                                     <td>
-                                        <span class="badge" th:classappend="${item.type.name() == 'PERSON' ? 'bg-info-lt' : 'bg-primary-lt'}"
+                                        <span class="badge"
+                                            th:classappend="${item.type.name() == 'PERSON' ? 'bg-info-lt' : 'bg-primary-lt'}"
                                             th:text="#{'label.party.type.' + ${item.type.name().toLowerCase()}}">TYPE</span>
                                     </td>
                                     <td>
                                         <div class="badges-list">
-                                            <span th:each="roleName : ${item.roleNames}" class="badge bg-secondary-lt" th:text="${roleName}">Role</span>
+                                            <span th:each="roleName : ${item.roleNames}" class="badge bg-secondary-lt"
+                                                th:text="${roleName}">Role</span>
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="badge" th:classappend="${item.isActive ? 'bg-success' : 'bg-danger'}"
-                                            th:text="${item.isActive ? #messages.msg('label.active') : #messages.msg('label.inactive')}">Status</span>
+                                        <span class="badge badge-outline text-green" th:if="${item.isActive}">
+                                            <span class="badge-dot bg-success me-1"></span>
+                                            <span th:text="#{label.active}">Active</span>
+                                        </span>
+                                        <span class="badge badge-outline text-red" th:unless="${item.isActive}">
+                                            <span class="badge-dot bg-danger me-1"></span>
+                                            <span th:text="#{label.inactive}">Inactive</span>
+                                        </span>
                                     </td>
                                     <td>
                                         <div class="btn-list flex-nowrap">
                                             <a th:href="@{/master/parties/edit/{id}(id=${item.id})}"
                                                 class="btn btn-white btn-sm"
-                                                sec:authorize="hasAuthority('PARTY_UPDATE')"
-                                                th:text="#{label.edit}">
+                                                sec:authorize="hasAuthority('PARTY_UPDATE')" th:text="#{label.edit}">
                                                 Edit
                                             </a>
                                             <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
                                                 th:data-bs-target="'#modal-delete-' + ${item.id}"
-                                                sec:authorize="hasAuthority('PARTY_DELETE')"
-                                                th:text="#{label.delete}">
+                                                sec:authorize="hasAuthority('PARTY_DELETE')" th:text="#{label.delete}">
                                                 Hapus
                                             </button>
                                         </div>
@@ -117,8 +127,10 @@
                                                         aria-label="Close"></button>
                                                     <div class="modal-status bg-danger"></div>
                                                     <div class="modal-body text-center py-4">
-                                                        <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
-                                                        <h3 th:text="#{label.party.delete.confirm.title}">Konfirmasi Hapus</h3>
+                                                        <i
+                                                            class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
+                                                        <h3 th:text="#{label.party.delete.confirm.title}">Konfirmasi
+                                                            Hapus</h3>
                                                         <div class="text-secondary"
                                                             th:text="#{label.party.delete.confirm.text(${item.code})}">
                                                             Apakah Anda yakin ingin menghapus partner ini?</div>
@@ -126,10 +138,16 @@
                                                     <div class="modal-footer">
                                                         <div class="w-100">
                                                             <div class="row">
-                                                                <div class="col"><a href="#" class="btn w-100" data-bs-dismiss="modal" th:text="#{label.cancel}">Batal</a></div>
+                                                                <div class="col"><a href="#" class="btn w-100"
+                                                                        data-bs-dismiss="modal"
+                                                                        th:text="#{label.cancel}">Batal</a></div>
                                                                 <div class="col">
-                                                                    <form th:action="@{/master/parties/delete/{id}(id=${item.id})}" method="post">
-                                                                        <button type="submit" class="btn btn-danger w-100" th:text="#{label.delete}">Hapus</button>
+                                                                    <form
+                                                                        th:action="@{/master/parties/delete/{id}(id=${item.id})}"
+                                                                        method="post">
+                                                                        <button type="submit"
+                                                                            class="btn btn-danger w-100"
+                                                                            th:text="#{label.delete}">Hapus</button>
                                                                     </form>
                                                                 </div>
                                                             </div>
@@ -153,7 +171,8 @@
                             <span th:text="#{label.pagination.showing}">Showing</span>
                             <span th:text="${page.number * page.size + 1}">1</span>
                             <span th:text="#{label.pagination.to}">to</span>
-                            <span th:text="${(page.number + 1) * page.size > page.totalElements ? page.totalElements : (page.number + 1) * page.size}">10</span>
+                            <span
+                                th:text="${(page.number + 1) * page.size > page.totalElements ? page.totalElements : (page.number + 1) * page.size}">10</span>
                             <span th:text="#{label.pagination.of}">of</span>
                             <span th:text="${page.totalElements}">100</span>
                             <span th:text="#{label.pagination.entries}">entries</span>

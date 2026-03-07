@@ -40,4 +40,10 @@ public class PartyAddress extends BaseModel {
 
     @Column(length = 100)
     private String country = "Indonesia";
+
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
+
+    @Column(name = "is_default", nullable = false)
+    private Boolean isDefault = false;
 }
