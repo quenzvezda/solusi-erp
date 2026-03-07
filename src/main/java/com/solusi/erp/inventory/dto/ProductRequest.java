@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.dto;
 
+import com.solusi.erp.inventory.validation.ValidUomMeasurement;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -16,6 +17,7 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ValidUomMeasurement
 public class ProductRequest {
 
     private Long id;

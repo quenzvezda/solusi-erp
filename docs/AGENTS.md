@@ -87,6 +87,8 @@ Sistem otorisasi menggunakan model **Fine-Grained Authority (Privilege-Based)**.
 
 ## 7. Internationalization (i18n)
 Sistem ini menggunakan mekanisme internasionalisasi dinamis untuk mendukung multi-bahasa (default: `id`, `en`).
+* **Central Configuration (CRITICAL FOR AI):** SELURUH konfigurasi bahasa utama (LocaleResolver, LocaleChangeInterceptor) SUDAH TERPUSAT di `com.solusi.erp.config.I18nConfig.java`. Integrasi validasi Spring (`LocalValidatorFactoryBean`) ada di `WebMvcConfig.java`. 
+    *   **DILARANG KERAS** membuat Bean `localeResolver` baru atau menggandakannya di file konfigurasi lain (seperti `WebMvcConfig.java`). Ini akan memicu `BeanDefinitionOverrideException`.
 * **Storage:** Menggunakan **Cookie-based Locale Resolver** (cookie name: `lang`) agar preferensi bertahan selama 30 hari di browser meskipun session berakhir.
 * **Smart Synchronization:** Saat login sukses, `CustomAuthenticationSuccessHandler` melakukan sinkronisasi dua arah:
     1. Jika user sudah memilih bahasa di landing page (Cookie ada), maka database (`UserProfile`) otomatis diupdate mengikuti pilihan browser.
