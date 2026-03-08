@@ -32,3 +32,17 @@ public String list(@RequestParam(required = false) String keyword,
 *   **Konsistensi UI**: Semua halaman list akan menampilkan jumlah data yang sama sesuai keinginan user.
 *   **Boilerplate Reduction**: Menghilangkan logika manual pengambilan session/profil di setiap Controller.
 *   **Maintainability**: Perubahan logika paginasi global cukup dilakukan di satu file (`UserPreferencePageableResolver`).
+
+## 5. Standar UI Tambahan: Status Label
+Untuk konsistensi UI pada kolom "Status" (misalnya field `isActive`) di dalam tabel paginasi, disarankan menggunakan desain *badge outline* dengan *dot* indikator warna seperti contoh berikut (diambil dari rancangan tabel `Party` dan `Tax`):
+
+```html
+<span class="badge badge-outline text-green" th:if="${item.isActive}">
+    <span class="badge-dot bg-success me-1"></span>
+    <span th:text="#{label.active}">Active</span>
+</span>
+<span class="badge badge-outline text-red" th:unless="${item.isActive}">
+    <span class="badge-dot bg-danger me-1"></span>
+    <span th:text="#{label.inactive}">Inactive</span>
+</span>
+```

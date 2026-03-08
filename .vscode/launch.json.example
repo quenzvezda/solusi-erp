@@ -9,7 +9,8 @@
             "projectName": "solusi-program-erp",
             "args": "",
             "envFile": "${workspaceFolder}/.env",
-            "preLaunchTask": "mvn-compile"
+            "preLaunchTask": "mvn-compile",
+            "console": "internalConsole"
         },
         {
             "type": "java",
@@ -21,7 +22,8 @@
             "args": "",
             "envFile": "${workspaceFolder}/.env",
             "vmArgs": "-agentpath:C:/PATH_TO_YOUR_JREBEL/lib/jrebel64.dll -Drebel.disable_update=true",
-            "preLaunchTask": "mvn-compile"
+            "preLaunchTask": "mvn-compile",
+            "console": "internalConsole"
         }
     ]
 }

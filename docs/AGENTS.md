@@ -107,6 +107,7 @@ Saat menghasilkan kode:
 1.  **Fokus pada Backend & Integrasi Thymeleaf:** Tulis kode Java yang bersih dan berikan contoh HTML Thymeleaf yang mengimplementasikan class Bootstrap/Tabler secara langsung.
 2.  **Berikan Kode Lengkap:** Jika membuat sebuah DTO atau Controller, sertakan seluruh import, anotasi, dan field yang diperlukan secara utuh.
 3.  **Strategic replace Tool Usage:** The replace tool requires an exact literal match for `old_string` and is highly sensitive to whitespace. Avoid replacing large, complex blocks of code. Prefer smaller, more targeted replacements. Always re-read the target file immediately before executing a replace command to ensure the `old_string` is based on the file's current content.
+4.  **Wajib Membaca Referensi & Contoh Eksisting:** DILARANG keras berasumsi tentang komponen UI atau *library*. Jika tugas berkaitan dengan pembuatan fitur baru atau modifikasi fitur yang sudah ada, AI **WAJIB** membaca dokumen spesifikasi terkait di dalam direktori `docs/spec/` dan **DISARANKAN KUAT** untuk mempelajari *source code* dari fitur serupa yang sudah ada (misalnya struktur `ProductCategory` atau `User`) sebagai panduan atau contoh yang benar/berfungsi sebelum menulis kode apa pun.
 
 ## 8. Cold Start Strategy (Initial Setup)
 Untuk menjamin keamanan dan sinkronisasi enkripsi:
