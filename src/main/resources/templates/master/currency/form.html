@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head
+    th:replace="~{layout/master :: head(${currency.id == null ? #messages.msg('label.currency.add') : #messages.msg('label.currency.edit')})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .currency-form-content})}">
+    <div class="currency-form-content">
+        <!-- Page Header -->
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title"
+                            th:text="${currency.id == null ? #messages.msg('label.currency.add') : #messages.msg('label.currency.edit') + ': ' + currency.name}">
+                            Form Mata Uang</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Body -->
+        <div class="page-body">
+            <div class="container-xl">
+                <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}">Error message</div>
+
+                <form
+                    th:action="${currency.id == null ? '/master/currencies/create' : '/master/currencies/edit/' + currency.id}"
+                    th:object="${currency}" method="post" class="card">
+                    <input type="hidden" th:field="*{version}" />
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label required" th:text="#{label.currency.symbol}">Simbol</label>
+                                    <input type="text" th:field="*{symbol}" class="form-control"
+                                        th:classappend="${#fields.hasErrors('symbol')} ? 'is-invalid'"
+                                        th:placeholder="#{placeholder.currency.symbol}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('symbol')}"
+                                        th:errors="*{symbol}">Error</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label required" th:text="#{label.currency.alias}">Alias (e.g.
+                                        USD)</label>
+                                    <input type="text" th:field="*{alias}" class="form-control"
+                                        th:classappend="${#fields.hasErrors('alias')} ? 'is-invalid'"
+                                        th:placeholder="#{placeholder.currency.alias}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('alias')}"
+                                        th:errors="*{alias}">Error</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label required" th:text="#{label.currency.name}">Nama Mata
+                                        Uang</label>
+                                    <input type="text" th:field="*{name}" class="form-control"
+                                        th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'"
+                                        th:placeholder="#{placeholder.currency.name}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}"
+                                        th:errors="*{name}">Error</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 border-start-md">
+                                <div class="mb-3">
+                                    <label class="form-label" th:text="#{label.currency.note}">Catatan</label>
+                                    <textarea th:field="*{note}" class="form-control" rows="4"
+                                        th:placeholder="#{placeholder.currency.note}"></textarea>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('note')}"
+                                        th:errors="*{note}">Error</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" th:field="*{isActive}" />
+                                        <span class="form-check-label"
+                                            th:text="#{label.currency.is.active}">Aktif</span>
+                                    </label>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-check">
+                                        <input class="form-check-input" type="checkbox" th:field="*{isDefault}" />
+                                        <span class="form-check-label" th:text="#{label.currency.is.default}">Jadikan
+                                            Default</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-end">
+                        <div class="d-flex">
+                            <a th:href="@{/master/currencies}" class="btn btn-link" th:text="#{label.cancel}">Batal</a>
+                            <button type="submit" class="btn btn-primary ms-auto" th:text="#{label.save}">Simpan
+                                Mata Uang</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

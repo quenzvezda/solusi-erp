@@ -102,15 +102,23 @@ Sistem ini menggunakan mekanisme internasionalisasi dinamis untuk mendukung mult
 * **Global Handler:** Gunakan `@ControllerAdvice` untuk menangkap *exception* (seperti 403 Forbidden, 404 Not Found, 500 Internal Server Error, dan `MethodArgumentNotValidException` untuk validasi form).
 * **Custom Error Views:** Arahkan *error* tersebut ke halaman khusus Thymeleaf (misal: `error/404.html`, `error/403.html`) yang sudah di-styling menggunakan UI Tabler agar menyatu dengan tema ERP. Jangan gunakan *Whitelabel Error Page* bawaan Spring Boot.
 
-## 7. Agent Instructions (How to Assist)
+## 8. Agent Instructions (How to Assist)
 Saat menghasilkan kode:
 1.  **Fokus pada Backend & Integrasi Thymeleaf:** Tulis kode Java yang bersih dan berikan contoh HTML Thymeleaf yang mengimplementasikan class Bootstrap/Tabler secara langsung.
 2.  **Berikan Kode Lengkap:** Jika membuat sebuah DTO atau Controller, sertakan seluruh import, anotasi, dan field yang diperlukan secara utuh.
 3.  **Strategic replace Tool Usage:** The replace tool requires an exact literal match for `old_string` and is highly sensitive to whitespace. Avoid replacing large, complex blocks of code. Prefer smaller, more targeted replacements. Always re-read the target file immediately before executing a replace command to ensure the `old_string` is based on the file's current content.
-4.  **Wajib Membaca Referensi & Contoh Eksisting:** DILARANG keras berasumsi tentang komponen UI atau *library*. Jika tugas berkaitan dengan pembuatan fitur baru atau modifikasi fitur yang sudah ada, AI **WAJIB** membaca dokumen spesifikasi terkait di dalam direktori `docs/spec/` dan **DISARANKAN KUAT** untuk mempelajari *source code* dari fitur serupa yang sudah ada (misalnya struktur `ProductCategory` atau `User`) sebagai panduan atau contoh yang benar/berfungsi sebelum menulis kode apa pun.
+4.  **Wajib Membaca Referensi & Contoh Eksisting:** DILARANG keras berasumsi tentang komponen UI, spesifikasi teknis, atau fitur bisnis yang sudah ada. Jika tugas berkaitan dengan modul baru/lama, AI **WAJIB** membaca dokumen spesifikasi teknis di direktori `docs/spec/` dan dokumentasi proses bisnis di `docs/modules/`. AI **DISARANKAN KUAT** untuk memeriksa *source code* serupa yang sudah stabil (seperti `Product` atau `Tax`) sebagai template *best practice* sebelum membuat kode.
 
-## 8. Cold Start Strategy (Initial Setup)
+## 9. Cold Start Strategy (Initial Setup)
 Untuk menjamin keamanan dan sinkronisasi enkripsi:
 *   **Seeder SQL**: Menggunakan placeholder `INITIAL_PASSWORD_SETUP` untuk password admin pertama.
 *   **SystemInitializer (Java)**: Sebuah `CommandLineRunner` yang mendeteksi placeholder tersebut dan menggantinya dengan hash BCrypt yang valid untuk password **`admin123`** saat aplikasi pertama kali dijalankan.
 *   **Force Reset**: Semua user baru (termasuk admin) wajib memiliki flag `password_change_required = true` di database.
+
+## 10. Understanding Documentation Structure
+Sistem ini menggunakan folder `docs/` terstruktur agar AI dan Developer dapat menemukan konteks secara mandiri. AI diharapkan inisiatif membuka dan membaca direktori ini jika kekurangan konteks:
+*   **`docs/architecture/`**: Visualisasi dan arsitektur klasifikasi (Class Diagram, Usecases, dll).
+*   **`docs/database/`**: Dokumentasi ERD dan definisi relasi antar identitas database ERP yang kompleks.
+*   **`docs/modules/`**: **[SANGAT PENTING UNTUK AI]** Penjelasan setiap Modul/Fitur bisnis spesifik (misal: `modules/master/tax.md`, `modules/master/currency.md`). Jelajahi riwayat aturan modul melalui file ini.
+*   **`docs/spec/`**: Spesifikasi teknis horizontal/bersama yang dipakai seluruh fitur (misal: Tata cara standar `pagination.md` atau `sequence-generator.md`).
+*   **`docs/roadmap/`**: Dokumen perencanaan masa depan ERP atau fitur yang masih tertunda.
