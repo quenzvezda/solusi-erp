@@ -48,12 +48,24 @@ erDiagram
     party_addresses {
         bigint id PK
         bigint party_id FK
-        enum type "MAIN, BILLING, SHIPPING, OTHER"
         text address_line1
-        varchar city
-        varchar province
+        bigint city_id FK "Reference to geographics"
         varchar postal_code
-        varchar country
+        boolean is_active
+        boolean is_default
+    }
+
+    party_address_types {
+        bigint party_address_id PK, FK
+        varchar type PK "FACTORY, HOME, OFFICE, BILLING, SHIPPING, TAX, WAREHOUSE"
+    }
+
+    geographics {
+        bigint id PK
+        varchar code UK
+        varchar name
+        varchar type
+        bigint parent_id FK
     }
 
     parties ||--o{ party_roles : "mapped by"
@@ -61,6 +73,9 @@ erDiagram
     parties ||--o{ party_identifications : "has many"
     party_id_types ||--o{ party_identifications : "defines"
     parties ||--o{ party_addresses : "has many"
+    party_addresses ||--o{ party_address_types : "has multiple"
+    party_addresses }o--|| geographics : "city reference"
+    geographics ||--o{ geographics : "parent-child"
 ```
 
 ## Spesifikasi Teknis:

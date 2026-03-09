@@ -98,7 +98,7 @@
                                     <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column">
                                         <label th:each="role : ${roleTypes}" class="form-selectgroup-item flex-fill">
                                             <input type="checkbox" name="roleIds" th:value="${role.id}"
-                                                th:checked="${partyRequest.roleIds.contains(role.id)}"
+                                                th:checked="${partyRequest.roleIds != null && partyRequest.roleIds.contains(role.id)}"
                                                 class="form-selectgroup-input">
                                             <span class="form-selectgroup-label d-flex align-items-center p-3">
                                                 <span class="me-3"><span class="form-selectgroup-check"></span></span>
@@ -139,7 +139,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr th:each="c, stat : *{contacts}" class="contact-row">
+                                            <tr th:each="c, stat : *{contacts}" class="contact-row" th:classappend="${!c.isActive} ? 'table-secondary text-muted opacity-75'">
                                                 <input type="hidden" th:field="*{contacts[__${stat.index}__].id}">
                                                 <td><input type="text" th:field="*{contacts[__${stat.index}__].label}"
                                                         class="form-control form-control-sm"
@@ -197,7 +197,7 @@
                                         </thead>
                                         <tbody>
                                             <tr th:each="iden, stat : *{identifications}" class="id-row"
-                                                th:classappend="${!iden.isActive} ? 'table-secondary text-muted'">
+                                                th:classappend="${!iden.isActive} ? 'table-secondary text-muted opacity-75'">
                                                 <input type="hidden"
                                                     th:field="*{identifications[__${stat.index}__].id}">
                                                 <td>
@@ -251,12 +251,17 @@
                                         <input type="hidden" th:field="*{addresses[__${stat.index}__].id}">
                                         <div class="row align-items-start">
                                             <div class="col-md-3">
-                                                <select th:field="*{addresses[__${stat.index}__].type}"
-                                                    class="form-select form-select-sm mb-2">
-                                                    <option th:each="at : ${addressTypes}" th:value="${at}"
-                                                        th:text="#{'label.party.address.type.' + ${at.name().toLowerCase()}}">
-                                                    </option>
-                                                </select>
+                                                <div class="mb-2">
+                                                    <label class="form-label small mb-1" th:text="#{label.party.address.type}">Tipe Alamat</label>
+                                                    <select th:name="'addresses[' + ${stat.index} + '].types'"
+                                                        class="form-select form-select-sm mb-2" multiple size="4">
+                                                        <option th:each="at : ${addressTypes}" th:value="${at}"
+                                                            th:selected="${addr.types != null && addr.types.contains(at)}"
+                                                            th:text="#{'label.party.address.type.' + ${at.name().toLowerCase()}}">
+                                                        </option>
+                                                    </select>
+                                                    <small class="text-muted d-block" style="font-size: 0.7rem">Hold Ctrl to select multiple</small>
+                                                </div>
                                                 <!-- Default radio -->
                                                 <div class="form-check mb-2">
                                                     <input class="form-check-input addr-default-radio" type="radio"
@@ -275,30 +280,56 @@
                                                     <label class="form-check-label small"
                                                         th:text="#{label.party.is.active}">Aktif</label>
                                                 </div>
-                                                <button type="button" class="btn btn-sm btn-ghost-danger w-100"
+                                                <button type="button" class="btn btn-sm btn-ghost-danger w-100 mt-2"
                                                     onclick="softRemoveRow(this, 'addresses')">
                                                     <i class="ti ti-trash"></i> <span
                                                         th:text="#{label.party.address.remove}">Hapus</span>
                                                 </button>
                                             </div>
                                             <div class="col-md-9">
+                                                <label class="form-label small mb-1" th:text="#{label.party.address}">Alamat</label>
                                                 <textarea th:field="*{addresses[__${stat.index}__].addressLine1}"
                                                     class="form-control form-control-sm mb-2" rows="2"
                                                     th:placeholder="#{placeholder.party.address}"></textarea>
+                                                
+                                                <div class="row g-2 mb-2">
+                                                    <!-- Country -->
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small mb-0">Negara</label>
+                                                        <select class="form-select form-select-sm country-select" 
+                                                                th:onchange="'loadProvinces(this, ' + ${stat.index} + ')'">
+                                                            <option value="">-- Pilih Negara --</option>
+                                                        </select>
+                                                    </div>
+                                                    <!-- Province -->
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small mb-0">Provinsi</label>
+                                                        <select class="form-select form-select-sm province-select"
+                                                                th:onchange="'loadCities(this, ' + ${stat.index} + ')'">
+                                                            <option value="">-- Pilih Provinsi --</option>
+                                                        </select>
+                                                    </div>
+                                                    <!-- City -->
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small mb-0">Kota / Kab</label>
+                                                        <select th:name="'addresses[' + ${stat.index} + '].cityId'"
+                                                                class="form-select form-select-sm city-select"
+                                                                th:onchange="'onCityChange(this, ' + ${stat.index} + ')'">
+                                                            <option value="">-- Pilih Kota --</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
                                                 <div class="row g-2">
-                                                    <div class="col-4"><input type="text"
-                                                            th:field="*{addresses[__${stat.index}__].city}"
-                                                            class="form-control form-control-sm"
-                                                            th:placeholder="#{placeholder.party.city}"></div>
-                                                    <div class="col-4"><input type="text"
-                                                            th:field="*{addresses[__${stat.index}__].province}"
-                                                            class="form-control form-control-sm"
-                                                            th:placeholder="#{placeholder.party.province}"></div>
-                                                    <div class="col-4"><input type="text"
+                                                    <div class="col-4">
+                                                        <label class="form-label small mb-0">Kodepos</label>
+                                                        <input type="text"
                                                             th:field="*{addresses[__${stat.index}__].postalCode}"
                                                             class="form-control form-control-sm"
-                                                            th:placeholder="#{placeholder.party.postalcode}"></div>
+                                                            th:placeholder="#{placeholder.party.postalcode}">
+                                                    </div>
                                                 </div>
+                                                <!-- Hidden helper to store initial city ID for JS to load hierarchy -->
+                                                <input type="hidden" class="initial-city-id" th:value="${addr.cityId}">
                                             </div>
                                         </div>
                                     </div>
@@ -377,10 +408,14 @@
             <div class="card-body border-bottom address-row">
                 <div class="row align-items-start">
                     <div class="col-md-3">
-                        <select name="addresses[INDEX].type" class="form-select form-select-sm mb-2">
-                            <option th:each="at : ${addressTypes}" th:value="${at}"
-                                th:text="#{'label.party.address.type.' + ${at.name().toLowerCase()}}"></option>
-                        </select>
+                        <div class="mb-2">
+                            <label class="form-label small mb-1" th:text="#{label.party.address.type}">Tipe Alamat</label>
+                            <select name="addresses[INDEX].types" class="form-select form-select-sm mb-2" multiple size="4">
+                                <option th:each="at : ${addressTypes}" th:value="${at}"
+                                    th:text="#{'label.party.address.type.' + ${at.name().toLowerCase()}}"></option>
+                            </select>
+                            <small class="text-muted d-block" style="font-size: 0.7rem">Hold Ctrl to select multiple</small>
+                        </div>
                         <div class="form-check mb-2">
                             <input class="form-check-input addr-default-radio" type="radio" name="addrDefault"
                                 value="INDEX" onchange="handleDefaultRadio('addresses', this)">
@@ -391,31 +426,191 @@
                             <input class="form-check-input" type="checkbox" name="addresses[INDEX].isActive" checked>
                             <label class="form-check-label small" th:text="#{label.party.is.active}">Aktif</label>
                         </div>
-                        <button type="button" class="btn btn-sm btn-ghost-danger w-100"
+                        <button type="button" class="btn btn-sm btn-ghost-danger w-100 mt-2"
                             onclick="softRemoveRow(this, 'addresses')">
                             <i class="ti ti-trash"></i> <span th:text="#{label.party.address.remove}">Hapus</span>
                         </button>
                     </div>
                     <div class="col-md-9">
+                        <label class="form-label small mb-1" th:text="#{label.party.address}">Alamat</label>
                         <textarea name="addresses[INDEX].addressLine1" class="form-control form-control-sm mb-2"
                             rows="2" th:placeholder="#{placeholder.party.address}"></textarea>
+                        
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-4">
+                                <label class="form-label small mb-0">Negara</label>
+                                <select class="form-select form-select-sm country-select" onchange="loadProvinces(this, INDEX)">
+                                    <option value="">-- Pilih Negara --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small mb-0">Provinsi</label>
+                                <select class="form-select form-select-sm province-select" onchange="loadCities(this, INDEX)">
+                                    <option value="">-- Pilih Provinsi --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small mb-0">Kota / Kab</label>
+                                <select name="addresses[INDEX].cityId" class="form-select form-select-sm city-select" onchange="onCityChange(this, INDEX)">
+                                    <option value="">-- Pilih Kota --</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="row g-2">
-                            <div class="col-4"><input type="text" name="addresses[INDEX].city"
-                                    class="form-control form-control-sm" th:placeholder="#{placeholder.party.city}">
-                            </div>
-                            <div class="col-4"><input type="text" name="addresses[INDEX].province"
-                                    class="form-control form-control-sm" th:placeholder="#{placeholder.party.province}">
-                            </div>
-                            <div class="col-4"><input type="text" name="addresses[INDEX].postalCode"
+                            <div class="col-4">
+                                <label class="form-label small mb-0">Kodepos</label>
+                                <input type="text" name="addresses[INDEX].postalCode"
                                     class="form-control form-control-sm"
-                                    th:placeholder="#{placeholder.party.postalcode}"></div>
+                                    th:placeholder="#{placeholder.party.postalcode}">
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <script>
+        <script th:inline="javascript">
+            // ============================================================
+            // Geographic Dynamic Dropdowns
+            // ============================================================
+            
+            async function loadCountries(selectEl, index) {
+                const response = await fetch('/master/geographics/api/countries');
+                const countries = await response.json();
+                const currentVal = selectEl.value;
+                selectEl.innerHTML = '<option value="">-- Pilih Negara --</option>';
+                countries.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.text = c.name;
+                    selectEl.appendChild(opt);
+                });
+                if (currentVal) selectEl.value = currentVal;
+            }
+
+            async function loadProvinces(countrySelect, index, selectedId = null) {
+                const countryId = countrySelect.value;
+                const row = countrySelect.closest('.address-row');
+                const provinceSelect = row.querySelector('.province-select');
+                const citySelect = row.querySelector('.city-select');
+
+                provinceSelect.innerHTML = '<option value="">-- Pilih Provinsi --</option>';
+                citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
+
+                if (!countryId) return;
+
+                const response = await fetch(`/master/geographics/api/provinces?countryId=${countryId}`);
+                const provinces = await response.json();
+                provinces.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.text = p.name;
+                    provinceSelect.appendChild(opt);
+                });
+
+                if (selectedId) provinceSelect.value = selectedId;
+            }
+
+            async function loadCities(provinceSelect, index, selectedId = null) {
+                const provinceId = provinceSelect.value;
+                const row = provinceSelect.closest('.address-row');
+                const citySelect = row.querySelector('.city-select');
+
+                citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
+
+                if (!provinceId) {
+                    // If no province, maybe try loading cities directly from country?
+                    const countryId = row.querySelector('.country-select').value;
+                    if (!countryId) return;
+                    const response = await fetch(`/master/geographics/api/cities?parentId=${countryId}`);
+                    const cities = await response.json();
+                    cities.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c.id;
+                        opt.text = c.name;
+                        citySelect.appendChild(opt);
+                    });
+                } else {
+                    const response = await fetch(`/master/geographics/api/cities?parentId=${provinceId}`);
+                    const cities = await response.json();
+                    cities.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c.id;
+                        opt.text = c.name;
+                        citySelect.appendChild(opt);
+                    });
+                }
+
+                if (selectedId) citySelect.value = selectedId;
+            }
+
+            async function onCityChange(citySelect, index) {
+                const cityId = citySelect.value;
+                if (!cityId) return;
+
+                const row = citySelect.closest('.address-row');
+                const countrySelect = row.querySelector('.country-select');
+                const provinceSelect = row.querySelector('.province-select');
+
+                // Get hierarchy
+                const response = await fetch(`/master/geographics/api/hierarchy/${cityId}`);
+                const hierarchy = await response.json();
+                
+                // Hierarchy is [Country, Province, City] or [Country, City]
+                let country = null;
+                let province = null;
+
+                hierarchy.forEach(g => {
+                    if (g.type === 'COUNTRY') country = g;
+                    if (g.type === 'STATE_PROVINCE') province = g;
+                });
+
+                if (country && countrySelect.value != country.id) {
+                    countrySelect.value = country.id;
+                    await loadProvinces(countrySelect, index, province ? province.id : null);
+                    await loadCities(provinceSelect, index, cityId);
+                } else if (province && provinceSelect.value != province.id) {
+                    provinceSelect.value = province.id;
+                    await loadCities(provinceSelect, index, cityId);
+                }
+            }
+
+            // Initialize existing rows
+            document.addEventListener('DOMContentLoaded', async () => {
+                const addressRows = document.querySelectorAll('.address-row');
+                for (let i = 0; i < addressRows.length; i++) {
+                    const row = addressRows[i];
+                    const countrySelect = row.querySelector('.country-select');
+                    const initialCityId = row.querySelector('.initial-city-id').value;
+
+                    // Load countries first
+                    await loadCountries(countrySelect, i);
+
+                    if (initialCityId) {
+                        // Load hierarchy to set initial values
+                        const response = await fetch(`/master/geographics/api/hierarchy/${initialCityId}`);
+                        const hierarchy = await response.json();
+                        
+                        let country = null;
+                        let province = null;
+                        hierarchy.forEach(g => {
+                            if (g.type === 'COUNTRY') country = g;
+                            if (g.type === 'STATE_PROVINCE') province = g;
+                        });
+
+                        if (country) {
+                            countrySelect.value = country.id;
+                            await loadProvinces(countrySelect, i, province ? province.id : null);
+                            if (province) {
+                                await loadCities(row.querySelector('.province-select'), i, initialCityId);
+                            } else {
+                                await loadCities(countrySelect, i, initialCityId);
+                            }
+                        }
+                    }
+                }
+            });
+
             // ============================================================
             // Generic: handle "only one default" radio → update hidden input
             // ============================================================
@@ -428,31 +623,21 @@
                 if (targetHidden) targetHidden.value = 'true';
             }
 
-            // ============================================================
-            // Soft-remove: mark isActive=false and visually dim the row
-            // (still submits so backend records the soft-delete)
-            // ============================================================
             function softRemoveRow(btn, prefix) {
                 let row = btn.closest('tr') || btn.closest('.address-row');
                 if (!row) return;
-                // Find & uncheck the isActive checkbox / hidden input
                 const activeInput = row.querySelector(`input[name*=".isActive"]`);
                 if (activeInput) {
                     if (activeInput.type === 'checkbox') activeInput.checked = false;
                     else activeInput.value = 'false';
                 }
-                // Visually dim
                 row.classList.add('table-secondary', 'text-muted', 'opacity-75');
-                // Unset any default radio
                 const defaultHidden = row.querySelector(`input[name*=".isDefault"]`);
                 if (defaultHidden) defaultHidden.value = 'false';
                 const defaultRadio = row.querySelector(`input[type="radio"]`);
                 if (defaultRadio) defaultRadio.checked = false;
             }
 
-            // ============================================================
-            // Add new rows
-            // ============================================================
             function addContactRow() {
                 const tbody = document.getElementById('table-contacts').querySelector('tbody');
                 const idx = tbody.querySelectorAll('.contact-row').length;
@@ -471,13 +656,17 @@
                 newRow.innerHTML = template.replace(/INDEX/g, idx);
             }
 
-            function addAddressRow() {
+            async function addAddressRow() {
                 const container = document.getElementById('address-container');
                 const idx = container.querySelectorAll('.address-row').length;
                 const template = document.getElementById('address-template').innerHTML;
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = template.replace(/INDEX/g, idx);
                 container.appendChild(tempDiv.firstElementChild);
+                
+                // Initialize the new country dropdown
+                const newRow = container.lastElementChild;
+                await loadCountries(newRow.querySelector('.country-select'), idx);
             }
         </script>
     </div>

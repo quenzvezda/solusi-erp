@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.Set;
 
 @Data
 @Builder
@@ -12,12 +13,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PartyAddressRequest {
     private Long id;
-    private AddressType type;
+    private Set<AddressType> types;
     private String addressLine1;
-    private String city;
-    private String province;
+    private Long cityId;
     private String postalCode;
-    private String country;
     @Builder.Default
     private Boolean isActive = true;
     @Builder.Default

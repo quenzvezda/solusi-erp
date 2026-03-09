@@ -45,12 +45,19 @@ classDiagram
     }
 
     class PartyAddress {
-        -AddressType type
+        -Set~AddressType~ types
         -String addressLine1
-        -String city
-        -String province
+        -Geographic city
         -String postalCode
-        -String country
+        -Boolean isActive
+        -Boolean isDefault
+    }
+
+    class Geographic {
+        -String code
+        -String name
+        -GeographicType type
+        -Geographic parent
     }
 
     class PartyType {
@@ -61,10 +68,13 @@ classDiagram
 
     class AddressType {
         <<enumeration>>
-        MAIN
+        FACTORY
+        HOME
+        OFFICE
         BILLING
         SHIPPING
-        OTHER
+        TAX
+        WAREHOUSE
     }
 
     BaseModel <|-- Party
@@ -72,11 +82,15 @@ classDiagram
     BaseModel <|-- PartyIdentificationType
     BaseModel <|-- PartyIdentification
     BaseModel <|-- PartyAddress
+    BaseModel <|-- Geographic
 
     Party "1" *-- "n" PartyIdentification : composition
     Party "1" *-- "n" PartyAddress : composition
     Party "n" -- "m" PartyRoleType : many-to-many
     PartyIdentification "n" -- "1" PartyIdentificationType : reference
+    PartyAddress "n" -- "1" Geographic : reference (City)
+    PartyAddress "1" *-- "n" AddressType : element-collection
+    Geographic "n" -- "0..1" Geographic : parent-child
 ```
 
 ## Komponen Utama:

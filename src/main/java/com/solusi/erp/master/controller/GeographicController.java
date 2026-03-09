@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -144,6 +145,51 @@ public class GeographicController {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             return "redirect:/master/geographics";
         }
+    }
+
+    // ===================================================================
+    // API Endpoints for Dynamic UI
+    // ===================================================================
+
+    @GetMapping("/api/countries")
+    @ResponseBody
+    public List<GeographicDto> getCountries() {
+        return geographicService.getByType(GeographicType.COUNTRY);
+    }
+
+    @GetMapping("/api/provinces")
+    @ResponseBody
+    public List<GeographicDto> getProvinces(@RequestParam(required = false) Long countryId) {
+        if (countryId != null) {
+            return geographicService.getByParentActive(countryId);
+        }
+        return geographicService.getByType(GeographicType.STATE_PROVINCE);
+    }
+
+    @GetMapping("/api/cities")
+    @ResponseBody
+    public List<GeographicDto> getCities(@RequestParam(required = false) Long parentId) {
+        if (parentId != null) {
+            return geographicService.getByParentActive(parentId);
+        }
+        return geographicService.getByType(GeographicType.CITY_MUNICIPALITY);
+    }
+
+    @GetMapping("/api/hierarchy/{id}")
+    @ResponseBody
+    public List<GeographicDto> getHierarchy(@PathVariable Long id) {
+        List<GeographicDto> hierarchy = new ArrayList<>();
+        GeographicDto current = geographicService.getById(id);
+        while (current != null) {
+            hierarchy.add(current);
+            if (current.getParentId() != null) {
+                current = geographicService.getById(current.getParentId());
+            } else {
+                current = null;
+            }
+        }
+        Collections.reverse(hierarchy);
+        return hierarchy;
     }
 
     @GetMapping("/api/search-parents")

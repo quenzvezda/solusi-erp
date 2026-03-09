@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.Set;
 
 @Data
 @Builder
@@ -12,12 +13,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PartyAddressResponse {
     private Long id;
-    private AddressType type;
+    private Set<AddressType> types;
     private String addressLine1;
-    private String city;
-    private String province;
+    private Long cityId;
+    private String cityName;
+    private String provinceName;
+    private String countryName;
     private String postalCode;
-    private String country;
     private Boolean isActive;
     private Boolean isDefault;
 }

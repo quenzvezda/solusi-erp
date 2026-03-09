@@ -4,6 +4,7 @@ import com.solusi.erp.core.service.SequenceGeneratorService;
 import com.solusi.erp.master.dto.*;
 import com.solusi.erp.master.mapper.PartyMapper;
 import com.solusi.erp.master.model.*;
+import com.solusi.erp.master.repository.GeographicRepository;
 import com.solusi.erp.master.repository.PartyIdentificationTypeRepository;
 import com.solusi.erp.master.repository.PartyRepository;
 import com.solusi.erp.master.repository.PartyRoleTypeRepository;
@@ -30,6 +31,7 @@ public class PartyServiceImpl implements PartyService {
     private final PartyRepository repository;
     private final PartyRoleTypeRepository roleTypeRepository;
     private final PartyIdentificationTypeRepository idTypeRepository;
+    private final GeographicRepository geographicRepository;
     private final PartyMapper mapper;
     private final SequenceGeneratorService sequenceGeneratorService;
     private final MessageSource messageSource;
@@ -79,12 +81,10 @@ public class PartyServiceImpl implements PartyService {
                 .addresses(entity.getAddresses().stream()
                         .map(a -> PartyAddressRequest.builder()
                                 .id(a.getId())
-                                .type(a.getType())
+                                .types(new HashSet<>(a.getTypes()))
                                 .addressLine1(a.getAddressLine1())
-                                .city(a.getCity())
-                                .province(a.getProvince())
+                                .cityId(a.getCity() != null ? a.getCity().getId() : null)
                                 .postalCode(a.getPostalCode())
-                                .country(a.getCountry())
                                 .isActive(a.getIsActive())
                                 .isDefault(a.getIsDefault())
                                 .build())
@@ -170,12 +170,6 @@ public class PartyServiceImpl implements PartyService {
         entity.setRoles(new HashSet<>(roleTypeRepository.findAllById(roleIds)));
     }
 
-    /**
-     * Soft-delete sync for Identifications.
-     * - Rows with incoming id → update fields (isActive, isDefault, etc.)
-     * - Rows with no id → create new
-     * - Existing DB rows NOT present in request → set isActive = false
-     */
     private void syncIdentifications(Party entity, List<PartyIdentificationRequest> requests) {
         Map<Long, PartyIdentification> existingById = entity.getIdentifications().stream()
                 .filter(i -> i.getId() != null)
@@ -241,19 +235,25 @@ public class PartyServiceImpl implements PartyService {
 
                 if (req.getId() != null && existingById.containsKey(req.getId())) {
                     PartyAddress existing = existingById.get(req.getId());
-                    existing.setType(req.getType());
+                    existing.setTypes(req.getTypes() != null ? new HashSet<>(req.getTypes()) : new HashSet<>());
                     existing.setAddressLine1(req.getAddressLine1());
-                    existing.setCity(req.getCity());
-                    existing.setProvince(req.getProvince());
                     existing.setPostalCode(req.getPostalCode());
-                    existing.setCountry(req.getCountry());
                     existing.setIsActive(Boolean.TRUE.equals(req.getIsActive()));
                     existing.setIsDefault(Boolean.TRUE.equals(req.getIsDefault()));
+                    if (req.getCityId() != null) {
+                        geographicRepository.findById(req.getCityId()).ifPresent(existing::setCity);
+                    } else {
+                        existing.setCity(null);
+                    }
                     incomingIds.add(req.getId());
                 } else {
                     PartyAddress addr = mapper.toEntity(req);
+                    addr.setTypes(req.getTypes() != null ? new HashSet<>(req.getTypes()) : new HashSet<>());
                     addr.setIsActive(true);
                     addr.setIsDefault(Boolean.TRUE.equals(req.getIsDefault()));
+                    if (req.getCityId() != null) {
+                        geographicRepository.findById(req.getCityId()).ifPresent(addr::setCity);
+                    }
                     entity.addAddress(addr);
                 }
             }
@@ -267,9 +267,6 @@ public class PartyServiceImpl implements PartyService {
         });
     }
 
-    /**
-     * Soft-delete sync for Contacts.
-     */
     private void syncContacts(Party entity, List<PartyContactRequest> requests) {
         Map<Long, PartyContact> existingById = entity.getContacts().stream()
                 .filter(c -> c.getId() != null)
@@ -308,9 +305,6 @@ public class PartyServiceImpl implements PartyService {
         });
     }
 
-    /**
-     * Backend validation: each list may have at most 1 default.
-     */
     private void validateSingleDefault(PartyRequest request) {
         checkSingleDefault(request.getIdentifications(), r -> Boolean.TRUE.equals(r.getIsDefault()),
                 "msg.error.party.multiple-default.identification");
