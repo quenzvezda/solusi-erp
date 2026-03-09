@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head
+    th:replace="~{layout/master :: head(${geographic.id == null ? #messages.msg('label.geographic.create') : #messages.msg('label.geographic.edit')})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .geographic-form-content})}">
+    <div class="geographic-form-content">
+        <!-- Page Header -->
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title"
+                            th:text="${geographic.id == null ? #messages.msg('label.geographic.create') : #messages.msg('label.geographic.edit') + ': ' + geographic.name}">
+                            Form Geographic</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Body -->
+        <div class="page-body">
+            <div class="container-xl">
+                <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}">Error message</div>
+
+                <form
+                    th:action="${geographic.id == null ? '/master/geographics/create' : '/master/geographics/edit/' + geographic.id}"
+                    th:object="${geographic}" method="post" class="card">
+                    <input type="hidden" th:field="*{id}" />
+                    <input type="hidden" th:field="*{version}" />
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <!-- Type Selection -->
+                                <div class="mb-3">
+                                    <label class="form-label required" th:text="#{label.geographic.type}">Type</label>
+                                    <div>
+                                        <div th:each="type : ${types}" class="form-check form-check-inline">
+                                            <input class="form-check-input geographic-type-radio" type="radio" 
+                                                   th:field="*{type}" th:value="${type}"
+                                                   th:id="'type-' + ${type}">
+                                            <label class="form-check-label" th:for="'type-' + ${type}" th:text="${type}">TYPE</label>
+                                        </div>
+                                    </div>
+                                    <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('type')}" th:errors="*{type}"></div>
+                                </div>
+
+                                <!-- Parent Selection (Dynamic) -->
+                                <div class="mb-3" id="parent-container" th:style="*{type != null and type.name() == 'COUNTRY' ? 'display: none;' : ''}">
+                                    <label class="form-label" th:text="#{label.geographic.parent}">Parent</label>
+                                    <select th:field="*{parentId}" class="form-select" id="parent-select">
+                                        <option value="" th:text="#{placeholder.geographic.parent}">Select Parent...</option>
+                                        <option th:if="*{parentId != null}" th:value="*{parentId}" th:text="*{parentName}" selected></option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('parentId')}" th:errors="*{parentId}"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 border-start-md">
+                                <!-- Code -->
+                                <div class="mb-3">
+                                    <label class="form-label required" th:text="#{label.geographic.code}">Code</label>
+                                    <input type="text" th:field="*{code}" class="form-control" 
+                                           th:placeholder="#{placeholder.geographic.code}"
+                                           th:classappend="${#fields.hasErrors('code')} ? 'is-invalid'">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('code')}" th:errors="*{code}"></div>
+                                </div>
+
+                                <!-- Name -->
+                                <div class="mb-3">
+                                    <label class="form-label required" th:text="#{label.geographic.name}">Name</label>
+                                    <input type="text" th:field="*{name}" class="form-control" 
+                                           th:placeholder="#{placeholder.geographic.name}"
+                                           th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                                </div>
+
+                                <!-- Active Status -->
+                                <div class="mb-3">
+                                    <label class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" th:field="*{isActive}">
+                                        <span class="form-check-label" th:text="#{label.active}">Active</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-end">
+                        <div class="d-flex">
+                            <a th:href="@{/master/geographics(parentId=*{parentId})}" class="btn btn-link" th:text="#{label.cancel}">Cancel</a>
+                            <button type="submit" class="btn btn-primary ms-auto" th:text="#{label.save}">Save</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script th:inline="javascript">
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('Geographic Form Script Loaded and Internal');
+                
+                const typeRadios = document.querySelectorAll('input[name="type"]');
+                const parentContainer = document.getElementById('parent-container');
+                const parentSelect = document.getElementById('parent-select');
+                
+                // Ambil parentId awal untuk mode Edit
+                const initialParentId = [[${geographic.parentId}]] || null;
+                const initialParentName = [[${geographic.parentName}]] || null;
+                
+                function updateParentList(selectedType, isInitialLoad = false) {
+                    console.log('Updating for Type:', selectedType);
+                    
+                    if (selectedType === 'COUNTRY') {
+                        parentContainer.style.display = 'none';
+                        parentSelect.value = '';
+                        parentSelect.disabled = true;
+                        return;
+                    }
+
+                    parentContainer.style.display = 'block';
+                    parentSelect.disabled = false;
+                    
+                    // Fetch potential parents via API
+                    fetch(`/master/geographics/api/search-parents?type=${selectedType}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            // Simpan value yang sedang terpilih (jika ada)
+                            const currentVal = parentSelect.value || initialParentId;
+                            
+                            parentSelect.innerHTML = `<option value="">[[#{placeholder.geographic.parent}]]</option>`;
+                            
+                            data.forEach(item => {
+                                const option = document.createElement('option');
+                                option.value = item.id;
+                                option.textContent = item.name;
+                                if (item.id == currentVal) {
+                                    option.selected = true;
+                                }
+                                parentSelect.appendChild(option);
+                            });
+
+                            // Case khusus: Jika data parent tidak ada di list (karena beda tipe), 
+                            // tapi ini initial load (mode Edit), tambahkan manual agar tidak hilang tampilannya
+                            if (isInitialLoad && initialParentId && !Array.from(parentSelect.options).some(opt => opt.value == initialParentId)) {
+                                const option = document.createElement('option');
+                                option.value = initialParentId;
+                                option.textContent = initialParentName;
+                                option.selected = true;
+                                parentSelect.appendChild(option);
+                            }
+                        })
+                        .catch(err => console.error('Error fetching parents:', err));
+                }
+
+                typeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        if (this.checked) {
+                            updateParentList(this.value);
+                        }
+                    });
+                });
+
+                const checkedType = document.querySelector('input[name="type"]:checked');
+                if (checkedType) {
+                    updateParentList(checkedType.value, true);
+                } else {
+                    parentContainer.style.display = 'none';
+                }
+            });
+        </script>
+    </div>
+</body>
+
+</html>

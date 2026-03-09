@@ -1,4 +1,4 @@
-package com.solusi.erp.dashboard.controller;
+package com.solusi.erp.core.controller;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
