@@ -1,0 +1,36 @@
+/* TomSelect overrides: ensure solid background and proper z-index */
+.ts-wrapper .ts-control {
+    background-color: #fff;
+    min-height: 31px;
+    padding: 3px 8px;
+}
+.ts-wrapper.single .ts-control {
+    cursor: text;
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+.ts-wrapper.single .ts-control > input {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0 !important;
+}
+.ts-dropdown {
+    background-color: #fff !important;
+    z-index: 1055;
+    border: 1px solid rgba(0,0,0,.15);
+    box-shadow: 0 4px 12px rgba(0,0,0,.1);
+}
+.ts-dropdown .option {
+    background-color: #fff;
+}
+/* Fix: active/highlighted option in dropdown */
+.ts-dropdown .option.active,
+.ts-dropdown .option:hover {
+    background-color: #206bc4 !important;
+    color: #fff !important;
+}
+.ts-dropdown .option.active small,
+.ts-dropdown .option:hover small {
+    color: rgba(255,255,255,0.8) !important;
+}

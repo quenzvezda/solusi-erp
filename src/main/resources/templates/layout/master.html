@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head th:fragment="head(title)">
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title th:text="${title} + ' - Solusi ERP'">Solusi ERP</title>
 
     <!-- Performance: DNS Prefetch & Preconnect -->
@@ -16,11 +17,17 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
     <!-- Inter Font (CDN) -->
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
-    
+    <!-- TomSelect (Autocomplete) CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2/dist/css/tom-select.bootstrap5.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/tomselect-custom.css}">
+
     <style>
         :root {
             --tblr-font-sans-serif: 'Inter var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
         }
+
         .ti {
             display: inline-block;
             vertical-align: middle;
@@ -40,9 +47,10 @@
             width: 100%;
             position: relative;
         }
-        
+
         /* Disable default Tabler/Bootstrap sorting arrows (::after and ::before) */
-        .table-sort::after, .table-sort::before {
+        .table-sort::after,
+        .table-sort::before {
             display: none !important;
             content: none !important;
         }
@@ -66,6 +74,7 @@
         }
     </style>
 </head>
+
 <body th:fragment="layout(content)">
     <div class="page">
         <!-- Sidebar Fragment -->
@@ -95,5 +104,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/js/tabler.min.js" defer></script>
     <!-- ApexCharts JS (CDN Latest) -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@latest/dist/apexcharts.min.js" defer></script>
+    <!-- TomSelect (Autocomplete) JS -->
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2/dist/js/tom-select.complete.min.js" defer></script>
 </body>
+
 </html>

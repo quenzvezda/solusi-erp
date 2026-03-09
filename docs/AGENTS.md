@@ -122,3 +122,10 @@ Sistem ini menggunakan folder `docs/` terstruktur agar AI dan Developer dapat me
 *   **`docs/modules/`**: **[SANGAT PENTING UNTUK AI]** Penjelasan setiap Modul/Fitur bisnis spesifik (misal: `modules/master/tax.md`, `modules/master/currency.md`). Jelajahi riwayat aturan modul melalui file ini.
 *   **`docs/spec/`**: Spesifikasi teknis horizontal/bersama yang dipakai seluruh fitur (misal: Tata cara standar `pagination.md` atau `sequence-generator.md`).
 *   **`docs/roadmap/`**: Dokumen perencanaan masa depan ERP atau fitur yang masih tertunda.
+
+## 11. Security & Role Permissions
+Aplikasi ini memiliki UI dinamis untuk Manajemen Role (Grouped Permissions) yang secara otomatis akan mengelompokkan daftar _permission_ ke dalam sebuah Folder berdasarkan **kata pertama sebelum underscore (`_`)**. Oleh sebab itu, konvensi penamaan permission sangatlah penting:
+1. **Modul Utama (CRUD)**: Gunakan format `[NAMA_MODUL]_[AKSI]`. 
+   Contoh: `GEOGRAPHIC_READ`, `PRODUCT_CREATE`. Ini akan mengelompokkan mereka ke folder `GEOGRAPHIC` dan `PRODUCT`.
+2. **Fitur Lintas Modul (Shared Features)**: Gunakan *Prefix* jenis fiturnya, contohnya `LOOKUP_` untuk autocomplete popup, dan `POPUP_` untuk fitur modal/popup lainnya (misal: Popup selector item di transaksi).
+   Contoh: `LOOKUP_GEOGRAPHIC`, `LOOKUP_PRODUCT`, `POPUP_PARTNER`. Ini akan membuat folder `LOOKUP` dan `POPUP` yang bersih dan mudah diatur oleh Administrator di UI tanpa mencampuri izin akses CRUD reguler.

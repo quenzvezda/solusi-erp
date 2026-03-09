@@ -40,7 +40,7 @@ public class GeographicController {
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "parentId", required = false) Long parentId,
             Pageable pageable) {
-        
+
         Page<GeographicDto> geographics;
         if (parentId != null) {
             geographics = geographicService.getByParent(parentId, pageable);
@@ -48,7 +48,7 @@ public class GeographicController {
         } else {
             geographics = geographicService.getAllGeographics(keyword, pageable);
         }
-        
+
         model.addAttribute("page", geographics);
         model.addAttribute("keyword", keyword);
         model.addAttribute("parentId", parentId);
@@ -64,7 +64,7 @@ public class GeographicController {
             GeographicDto parent = geographicService.getById(parentId);
             dto.setParentId(parentId);
             dto.setParentName(parent.getName());
-            
+
             // Auto-set type based on parent
             if (parent.getType() == GeographicType.COUNTRY) {
                 dto.setType(GeographicType.STATE_PROVINCE);
@@ -72,7 +72,7 @@ public class GeographicController {
                 dto.setType(GeographicType.CITY_MUNICIPALITY);
             }
         }
-        
+
         model.addAttribute("geographic", dto);
         model.addAttribute("types", GeographicType.values());
         return "master/geographic/form";
@@ -82,7 +82,7 @@ public class GeographicController {
     @PreAuthorize("hasAuthority('GEOGRAPHIC_CREATE')")
     public String create(@Valid @ModelAttribute("geographic") GeographicDto dto,
             BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
-        
+
         if (bindingResult.hasErrors()) {
             model.addAttribute("types", GeographicType.values());
             return "master/geographic/form";
@@ -113,7 +113,7 @@ public class GeographicController {
     @PreAuthorize("hasAuthority('GEOGRAPHIC_UPDATE')")
     public String update(@PathVariable Long id, @Valid @ModelAttribute("geographic") GeographicDto dto,
             BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
-        
+
         if (bindingResult.hasErrors()) {
             model.addAttribute("types", GeographicType.values());
             return "master/geographic/form";
@@ -151,32 +151,9 @@ public class GeographicController {
     // API Endpoints for Dynamic UI
     // ===================================================================
 
-    @GetMapping("/api/countries")
-    @ResponseBody
-    public List<GeographicDto> getCountries() {
-        return geographicService.getByType(GeographicType.COUNTRY);
-    }
-
-    @GetMapping("/api/provinces")
-    @ResponseBody
-    public List<GeographicDto> getProvinces(@RequestParam(required = false) Long countryId) {
-        if (countryId != null) {
-            return geographicService.getByParentActive(countryId);
-        }
-        return geographicService.getByType(GeographicType.STATE_PROVINCE);
-    }
-
-    @GetMapping("/api/cities")
-    @ResponseBody
-    public List<GeographicDto> getCities(@RequestParam(required = false) Long parentId) {
-        if (parentId != null) {
-            return geographicService.getByParentActive(parentId);
-        }
-        return geographicService.getByType(GeographicType.CITY_MUNICIPALITY);
-    }
-
     @GetMapping("/api/hierarchy/{id}")
     @ResponseBody
+    @PreAuthorize("hasAuthority('GEOGRAPHIC_READ')")
     public List<GeographicDto> getHierarchy(@PathVariable Long id) {
         List<GeographicDto> hierarchy = new ArrayList<>();
         GeographicDto current = geographicService.getById(id);
@@ -192,19 +169,4 @@ public class GeographicController {
         return hierarchy;
     }
 
-    @GetMapping("/api/search-parents")
-    @ResponseBody
-    public List<GeographicDto> searchParents(@RequestParam GeographicType type) {
-        if (type == GeographicType.STATE_PROVINCE) {
-            return geographicService.getByType(GeographicType.COUNTRY);
-        }
-        if (type == GeographicType.CITY_MUNICIPALITY) {
-            // City can have Province OR Country as parent
-            List<GeographicDto> parents = new ArrayList<>();
-            parents.addAll(geographicService.getByType(GeographicType.STATE_PROVINCE));
-            parents.addAll(geographicService.getByType(GeographicType.COUNTRY));
-            return parents;
-        }
-        return List.of();
-    }
 }

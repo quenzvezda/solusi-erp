@@ -1,5 +1,6 @@
 package com.solusi.erp.master.service.impl;
 
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.master.dto.GeographicDto;
 import com.solusi.erp.master.mapper.GeographicMapper;
 import com.solusi.erp.master.model.Geographic;
@@ -11,7 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -72,9 +75,9 @@ public class GeographicServiceImpl implements GeographicService {
     public GeographicDto update(Long id, GeographicDto dto) {
         Geographic geographic = geographicRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.notfound")));
-        
+
         geographicMapper.updateEntity(dto, geographic);
-        
+
         if (dto.getParentId() != null) {
             Geographic parent = geographicRepository.findById(dto.getParentId())
                     .orElseThrow(() -> new RuntimeException(getMessage("msg.error.notfound")));
@@ -82,7 +85,7 @@ public class GeographicServiceImpl implements GeographicService {
         } else {
             geographic.setParent(null);
         }
-        
+
         geographic = geographicRepository.save(geographic);
         return geographicMapper.toDto(geographic);
     }
@@ -96,19 +99,60 @@ public class GeographicServiceImpl implements GeographicService {
         geographicRepository.save(geographic);
     }
 
+    // -----------------------------------------------------------------------
+    // Lookup methods for TomSelect autocomplete
+    // -----------------------------------------------------------------------
+
     @Override
     @Transactional(readOnly = true)
-    public List<GeographicDto> getByType(GeographicType type) {
-        return geographicRepository.findByTypeAndIsActiveTrue(type).stream()
-                .map(geographicMapper::toDto)
+    public List<LookupDto> lookupCountries(String q, int limit) {
+        Pageable pageable = PageRequest.of(0, limit, Sort.by("name").ascending());
+        String keyword = q != null ? q.trim() : "";
+        return geographicRepository.lookupByType(GeographicType.COUNTRY, keyword, pageable)
+                .getContent()
+                .stream()
+                .map(g -> new LookupDto(g.getId(), g.getName(), g.getCode()))
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<GeographicDto> getByParentActive(Long parentId) {
-        return geographicRepository.findByParentIdAndIsActiveTrue(parentId).stream()
-                .map(geographicMapper::toDto)
+    public List<LookupDto> lookupProvinces(Long countryId, String q, int limit) {
+        Pageable pageable = PageRequest.of(0, limit, Sort.by("name").ascending());
+        String keyword = q != null ? q.trim() : "";
+        Page<Geographic> pageResult = (countryId != null)
+                ? geographicRepository.lookupProvincesByParent(countryId, keyword, pageable)
+                : geographicRepository.lookupProvincesByType(GeographicType.STATE_PROVINCE, keyword, pageable);
+
+        return pageResult.getContent()
+                .stream()
+                .map(g -> {
+                    String countryName = g.getParent() != null ? g.getParent().getName() : "";
+                    return new LookupDto(g.getId(), g.getName(), countryName);
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LookupDto> lookupCities(Long provinceId, String q, int limit) {
+        Pageable pageable = PageRequest.of(0, limit, Sort.by("name").ascending());
+        String keyword = q != null ? q.trim() : "";
+        Page<Geographic> pageResult = (provinceId != null)
+                ? geographicRepository.lookupCitiesByParent(provinceId, keyword, pageable)
+                : geographicRepository.lookupCitiesByType(GeographicType.CITY_MUNICIPALITY, keyword, pageable);
+
+        return pageResult.getContent()
+                .stream()
+                .map(g -> {
+                    String provinceName = g.getParent() != null ? g.getParent().getName() : "";
+                    String countryName = (g.getParent() != null && g.getParent().getParent() != null)
+                            ? g.getParent().getParent().getName()
+                            : "";
+                    String subText = provinceName.isEmpty() ? countryName
+                            : (countryName.isEmpty() ? provinceName : provinceName + ", " + countryName);
+                    return new LookupDto(g.getId(), g.getName(), subText);
+                })
                 .collect(Collectors.toList());
     }
 }
