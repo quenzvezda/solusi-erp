@@ -3,10 +3,7 @@ package com.solusi.erp.master.controller;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.master.service.GeographicService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
@@ -40,5 +37,10 @@ public class GeographicLookupController {
             @RequestParam(defaultValue = "") String q,
             @RequestParam(defaultValue = "5") int limit) {
         return geographicService.lookupCities(provinceId, q, limit);
+    }
+
+    @GetMapping("/{id}")
+    public LookupDto getLookupById(@PathVariable Long id) {
+        return geographicService.getLookupById(id);
     }
 }

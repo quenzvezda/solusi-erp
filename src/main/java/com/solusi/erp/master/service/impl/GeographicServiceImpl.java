@@ -155,4 +155,27 @@ public class GeographicServiceImpl implements GeographicService {
                 })
                 .collect(Collectors.toList());
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LookupDto getLookupById(Long id) {
+        Geographic g = geographicRepository.findByIdAndIsActiveTrue(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.notfound")));
+        
+        String subText = "";
+        if (g.getType() == GeographicType.STATE_PROVINCE) {
+            subText = g.getParent() != null ? g.getParent().getName() : g.getCode();
+        } else if (g.getType() == GeographicType.CITY_MUNICIPALITY) {
+            String provinceName = g.getParent() != null ? g.getParent().getName() : "";
+            String countryName = (g.getParent() != null && g.getParent().getParent() != null)
+                    ? g.getParent().getParent().getName()
+                    : "";
+            subText = provinceName.isEmpty() ? countryName
+                    : (countryName.isEmpty() ? provinceName : provinceName + ", " + countryName);
+        } else {
+            subText = g.getCode();
+        }
+        
+        return new LookupDto(g.getId(), g.getName(), subText);
+    }
 }

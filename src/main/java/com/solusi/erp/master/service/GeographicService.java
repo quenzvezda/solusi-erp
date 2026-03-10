@@ -26,4 +26,6 @@ public interface GeographicService {
     List<LookupDto> lookupProvinces(Long countryId, String q, int limit);
 
     List<LookupDto> lookupCities(Long provinceId, String q, int limit);
+
+    LookupDto getLookupById(Long id);
 }

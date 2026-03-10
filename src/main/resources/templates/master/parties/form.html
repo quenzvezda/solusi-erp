@@ -300,7 +300,7 @@
                                                     <!-- Country -->
                                                     <div class="col-md-4">
                                                         <label class="form-label small mb-0">Negara</label>
-                                                        <select class="country-ts" th:id="'country-ts-' + ${stat.index}"
+                                                        <select class="country-ts form-select form-select-sm" th:id="'country-ts-' + ${stat.index}"
                                                             th:attr="data-address-index=${stat.index}">
                                                             <option value=""></option>
                                                         </select>
@@ -308,7 +308,7 @@
                                                     <!-- Province -->
                                                     <div class="col-md-4">
                                                         <label class="form-label small mb-0">Provinsi</label>
-                                                        <select class="province-ts"
+                                                        <select class="province-ts form-select form-select-sm"
                                                             th:id="'province-ts-' + ${stat.index}"
                                                             th:attr="data-address-index=${stat.index}">
                                                             <option value=""></option>
@@ -317,7 +317,7 @@
                                                     <!-- City (submitted to server) -->
                                                     <div class="col-md-4">
                                                         <label class="form-label small mb-0">Kota / Kab</label>
-                                                        <select class="city-ts"
+                                                        <select class="city-ts form-select form-select-sm"
                                                             th:name="'addresses[' + ${stat.index} + '].cityId'"
                                                             th:id="'city-ts-' + ${stat.index}"
                                                             th:attr="data-address-index=${stat.index}">
@@ -448,19 +448,19 @@
                         <div class="row g-2 mb-2">
                             <div class="col-md-4">
                                 <label class="form-label small mb-0">Negara</label>
-                                <select class="country-ts" id="country-ts-INDEX" data-address-index="INDEX">
+                                <select class="country-ts form-select form-select-sm" id="country-ts-INDEX" data-address-index="INDEX">
                                     <option value=""></option>
                                 </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small mb-0">Provinsi</label>
-                                <select class="province-ts" id="province-ts-INDEX" data-address-index="INDEX">
+                                <select class="province-ts form-select form-select-sm" id="province-ts-INDEX" data-address-index="INDEX">
                                     <option value=""></option>
                                 </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small mb-0">Kota / Kab</label>
-                                <select class="city-ts" name="addresses[INDEX].cityId" id="city-ts-INDEX"
+                                <select class="city-ts form-select form-select-sm" name="addresses[INDEX].cityId" id="city-ts-INDEX"
                                     data-address-index="INDEX">
                                     <option value=""></option>
                                 </select>
