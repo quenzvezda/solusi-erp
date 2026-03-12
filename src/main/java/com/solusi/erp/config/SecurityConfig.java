@@ -41,7 +41,6 @@ public class SecurityConfig {
                 // Publicly accessible paths (Assets, Landing Page & Login)
                 .requestMatchers(
                     "/",
-                    "/static/**",
                     "/libs/**",
                     "/css/**",
                     "/js/**",
