@@ -160,41 +160,7 @@
                         </table>
                     </div>
                     <!-- Pagination -->
-                    <div class="card-footer d-flex align-items-center" th:if="${page.totalPages > 0}">
-                        <p class="m-0 text-secondary">
-                            <span th:text="#{label.pagination.showing}">Showing</span>
-                            <span th:text="${page.number * page.size + 1}">1</span>
-                            <span th:text="#{label.pagination.to}">to</span>
-                            <span
-                                th:text="${(page.number + 1) * page.size > page.totalElements ? page.totalElements : (page.number + 1) * page.size}">10</span>
-                            <span th:text="#{label.pagination.of}">of</span>
-                            <span th:text="${page.totalElements}">100</span>
-                            <span th:text="#{label.pagination.entries}">entries</span>
-                        </p>
-                        <ul class="pagination m-0 ms-auto">
-                            <li class="page-item" th:classappend="${page.first} ? 'disabled'">
-                                <a class="page-link"
-                                    th:href="@{${currentUri}(page=${page.number - 1}, keyword=${keyword}, sort=${sortField != null and sortField != '' ? sortField + ',' + sortDir : ''})}"
-                                    tabindex="-1" aria-disabled="true">
-                                    <i class="ti ti-chevron-left"></i>
-                                    <span th:text="#{label.pagination.previous}">prev</span>
-                                </a>
-                            </li>
-                            <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}"
-                                th:classappend="${i == page.number} ? 'active'">
-                                <a class="page-link"
-                                    th:href="@{${currentUri}(page=${i}, keyword=${keyword}, sort=${sortField != null and sortField != '' ? sortField + ',' + sortDir : ''})}"
-                                    th:text="${i + 1}">1</a>
-                            </li>
-                            <li class="page-item" th:classappend="${page.last} ? 'disabled'">
-                                <a class="page-link"
-                                    th:href="@{${currentUri}(page=${page.number + 1}, keyword=${keyword}, sort=${sortField != null and sortField != '' ? sortField + ',' + sortDir : ''})}">
-                                    <span th:text="#{label.pagination.next}">next</span>
-                                    <i class="ti ti-chevron-right"></i>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
+                    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                 </div>
             </div>
         </div>

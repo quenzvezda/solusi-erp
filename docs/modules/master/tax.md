@@ -32,7 +32,7 @@ if (tax.getIsActive() == null) {
 ```
 
 ### UI Status Label Standard
-Pada halaman *List View*, status Aktif/Tidak Aktif menggunakan standar desain *badge-outline* dengan *badge-dot* yang diwajibkan dalam proyek (lihat `docs/spec/pagination.md` bagian 5).
+Pada halaman *List View*, status Aktif/Tidak Aktif menggunakan standar desain *badge-outline* dengan *badge-dot* yang diwajibkan dalam proyek (lihat `docs/spec/pagination.md` bagian 6).
 
 ```html
 <span class="badge badge-outline text-green" th:if="${item.isActive}">

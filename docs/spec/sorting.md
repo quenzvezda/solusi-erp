@@ -23,12 +23,14 @@ Gunakan fragment generic di `fragments/table.html` untuk setiap header tabel yan
 ```
 
 ### 3.2. Pagination Integration
-Agar *state* pengurutan tidak hilang saat berpindah halaman, parameter `sort` wajib disertakan pada link pagination.
+Integrasi *state* pengurutan (parameter `sort`) dengan paginasi **sudah ditangani secara otomatis** oleh fragment paginasi.
+Developer cukup memanggil fragment paginasi di *view* tanpa perlu menulis manual struktur URL-nya.
 
-**Contoh Link Pagination:**
+**Contoh Penggunaan:**
 ```html
-<a th:href="@{${currentUri}(page=${i}, keyword=${keyword}, sort=${sortField != '' ? sortField + ',' + sortDir : ''})}">
+<div th:replace="~{fragments/table :: pagination(${page})}"></div>
 ```
+Fragment tersebut menggunakan `ServletUriComponentsBuilder` di balik layar untuk menangkap dan mempertahankan parameter `sort` saat pengguna mengklik halaman selanjutnya.
 
 ## 4. UI/UX Standards
 - **Hover Effect**: Header yang dapat di-sort akan memiliki kursor *pointer* dan *background highlight* biru transparan.

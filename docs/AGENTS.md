@@ -55,11 +55,11 @@ Setiap modul bisnis baru (Inventory, Sales, Purchasing, dll) WAJIB mengikuti pol
     *   **Automated Resolver**: Gunakan parameter `Pageable pageable` langsung di method Controller. 
     *   Sistem secara otomatis akan meresolve `pageSize` berdasarkan preferensi `UserProfile.defaultPageSize`.
     *   Detail teknis silakan merujuk ke [docs/spec/pagination.md](spec/pagination.md).
-    *   Tampilkan footer pagination standar Tabler di Thymeleaf.
+    *   **Frontend UI (Thymeleaf)**: Tampilkan pagination menggunakan *generic fragment* `<div th:replace="~{fragments/table :: pagination(${page})}"></div>`. Fragment ini otomatis menangani *page windowing*, navigasi lengkap (First/Last), dan *retention* parameter URL (termasuk *search* dan *sorting*).
+    *   DILARANG keras menulis struktur HTML `<ul class="pagination">` secara manual di setiap halaman list.
 *   **Sorting (Mandatory)**: Setiap list view WAJIB mendukung pengurutan kolom menggunakan `TableSortingAdvice`.
     *   Gunakan fragment generic `th:replace="~{fragments/table :: sortable('fieldName', #{label})}"`.
     *   Sistem secara otomatis menangani *state* pengurutan dan indikator visual (icons).
-    *   Pastikan parameter `sort` diteruskan ke link pagination agar tidak kereset saat pindah halaman.
 *   **Search (Mandatory)**: Setiap list view WAJIB memiliki fitur pencarian minimal pada 1-2 kolom utama (misal: Code, Name).
 *   **Code Auto-Generation**: Field `code` (95% modul) WAJIB di-generate oleh `SequenceGeneratorService`.
     *   Detail teknis dan pattern silakan merujuk ke [docs/spec/sequence-generator.md](spec/sequence-generator.md).

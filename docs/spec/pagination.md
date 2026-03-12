@@ -33,7 +33,20 @@ public String list(@RequestParam(required = false) String keyword,
 *   **Boilerplate Reduction**: Menghilangkan logika manual pengambilan session/profil di setiap Controller.
 *   **Maintainability**: Perubahan logika paginasi global cukup dilakukan di satu file (`UserPreferencePageableResolver`).
 
-## 5. Standar UI Tambahan: Status Label
+## 5. Frontend Implementation (Thymeleaf)
+Untuk merender navigasi paginasi di *view*, DILARANG keras menulis blok HTML (`<ul class="pagination">...`) secara manual. Selalu gunakan fragment terpusat yang sudah disediakan.
+
+```html
+<!-- Cukup panggil fragment ini di bagian bawah tabel Anda -->
+<div th:replace="~{fragments/table :: pagination(${page})}"></div>
+```
+
+**Fitur dari Fragment Paginasi Generic:**
+1.  **Page Windowing**: Secara otomatis membatasi jumlah tombol navigasi maksimal 7 angka (3 ke kiri, 1 aktif, 3 ke kanan) untuk mencegah tampilan *break* pada *dataset* yang besar.
+2.  **Full Navigation**: Menyediakan tombol standar *First* (`<<`), *Prev* (`<`), *Next* (`>`), dan *Last* (`>>`).
+3.  **Automatic URL Retention**: Menggunakan `ServletUriComponentsBuilder` untuk secara otomatis mempertahankan semua parameter *query string* (seperti `keyword`, `sort`, `parentId`) saat pengguna berpindah halaman, tanpa perlu Anda *passing* secara manual.
+
+## 6. Standar UI Tambahan: Status Label
 Untuk konsistensi UI pada kolom "Status" (misalnya field `isActive`) di dalam tabel paginasi, disarankan menggunakan desain *badge outline* dengan *dot* indikator warna seperti contoh berikut (diambil dari rancangan tabel `Party` dan `Tax`):
 
 ```html
