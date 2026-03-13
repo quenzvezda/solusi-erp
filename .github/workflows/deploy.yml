@@ -37,42 +37,40 @@ jobs:
         if: always()
         run: |
           mkdir -p logs
+          LOG=logs/deploy-${{ github.run_number }}.txt
 
-          # Setup SSH key
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/deploy_key
           chmod 600 /tmp/deploy_key
 
-          # Restart service
           ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
             "sudo systemctl restart erp && sleep 10"
 
-          # Capture semua log ke file
-          {
-            echo "====== DEPLOY INFO ======"
-            echo "Run Number : ${{ github.run_number }}"
-            echo "Commit     : ${{ github.sha }}"
-            echo "Triggered  : ${{ github.actor }}"
-            echo "Branch     : ${{ github.ref_name }}"
-            echo "Timestamp  : $(date)"
-            echo ""
-            echo "====== SYSTEMCTL STATUS ======"
-            ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no \
-              ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-              "sudo systemctl status erp"
-            echo ""
-            echo "====== APP LOG (last 50 lines) ======"
-            ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no \
-              ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-              "sudo journalctl -u erp -n 50 --no-pager"
-            echo ""
-            echo "====== JAR INFO ======"
-            ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no \
-              ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-              "ls -lh /home/ubuntu/app/app.jar"
-          } > logs/deploy-${{ github.run_number }}.txt
+          echo "====== DEPLOY INFO ======" > $LOG
+          echo "Run Number : ${{ github.run_number }}" >> $LOG
+          echo "Commit     : ${{ github.sha }}" >> $LOG
+          echo "Triggered  : ${{ github.actor }}" >> $LOG
+          echo "Branch     : ${{ github.ref_name }}" >> $LOG
+          echo "Timestamp  : $(date)" >> $LOG
 
-          # Cleanup key
+          echo "" >> $LOG
+          echo "====== SYSTEMCTL STATUS ======" >> $LOG
+          ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "sudo systemctl status erp" >> $LOG
+
+          echo "" >> $LOG
+          echo "====== APP LOG (last 50 lines) ======" >> $LOG
+          ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "sudo journalctl -u erp -n 50 --no-pager" >> $LOG
+
+          echo "" >> $LOG
+          echo "====== JAR INFO ======" >> $LOG
+          ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "ls -lh /home/ubuntu/app/app.jar" >> $LOG
+
           rm /tmp/deploy_key
 
       - name: Upload log sebagai artifact
