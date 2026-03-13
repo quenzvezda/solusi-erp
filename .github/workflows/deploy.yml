@@ -30,8 +30,10 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "target/app.jar"
           target: "/home/ubuntu/app/"
+          strip_components: 1
+          overwrite: true
 
-      - name: Restart service
+      - name: Restart service & simpan log
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -39,5 +41,35 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             sudo systemctl restart erp
-            sleep 5
-            sudo systemctl status erp
+            sleep 10
+            echo "====== SYSTEMCTL STATUS ======" > /tmp/deploy-log.txt
+            sudo systemctl status erp >> /tmp/deploy-log.txt
+            echo "" >> /tmp/deploy-log.txt
+            echo "====== APP LOG (last 50 lines) ======" >> /tmp/deploy-log.txt
+            sudo journalctl -u erp -n 50 --no-pager >> /tmp/deploy-log.txt
+            echo "" >> /tmp/deploy-log.txt
+            echo "====== JAR INFO ======" >> /tmp/deploy-log.txt
+            ls -lh /home/ubuntu/app/app.jar >> /tmp/deploy-log.txt
+
+      - name: Download log dari VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "/tmp/deploy-log.txt"
+          target: "logs/"
+          strip_components: 2
+
+      - name: Rename log dengan timestamp
+        run: |
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          mv logs/deploy-log.txt logs/deploy-$TIMESTAMP.txt
+          echo "Log file: deploy-$TIMESTAMP.txt"
+
+      - name: Upload log sebagai artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-log-${{ github.run_number }}
+          path: logs/
+          retention-days: 30
