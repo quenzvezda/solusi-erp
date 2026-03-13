@@ -34,7 +34,7 @@
 
                     <!-- Section: Company Admin -->
                     <li class="nav-item nav-section-label"
-                        sec:authorize="hasAnyAuthority('PARTY_READ', 'PARTY-ROLE-TYPE_READ', 'TAX_READ', 'CURRENCY_READ', 'GEOGRAPHIC_READ')">
+                        sec:authorize="hasAnyAuthority('PARTY_READ', 'PARTY-ROLE-TYPE_READ', 'TAX_READ', 'CURRENCY_READ', 'GEOGRAPHIC_READ', 'BANK-ACCOUNT_READ')">
                         <span class="nav-link-title text-uppercase"
                             style="font-size:0.65rem; letter-spacing:0.08em; opacity:0.45; padding: 0.75rem 0.75rem 0.25rem;"
                             th:text="#{label.management}">
@@ -43,7 +43,7 @@
                     </li>
 
                     <li class="nav-item"
-                        sec:authorize="hasAnyAuthority('PARTY_READ', 'PARTY-ROLE-TYPE_READ', 'TAX_READ', 'CURRENCY_READ', 'GEOGRAPHIC_READ')">
+                        sec:authorize="hasAnyAuthority('PARTY_READ', 'PARTY-ROLE-TYPE_READ', 'TAX_READ', 'CURRENCY_READ', 'GEOGRAPHIC_READ', 'BANK-ACCOUNT_READ')">
                         <a class="nav-link dropdown-toggle" href="#sidebar-company-admin" data-bs-toggle="collapse"
                             role="button" aria-expanded="false" aria-controls="sidebar-company-admin">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
@@ -89,7 +89,7 @@
                                 </li>
 
                                 <!-- General Settings -->
-                                <li class="nav-item" sec:authorize="hasAnyAuthority('TAX_READ', 'CURRENCY_READ')">
+                                <li class="nav-item" sec:authorize="hasAnyAuthority('TAX_READ', 'CURRENCY_READ', 'BANK-ACCOUNT_READ')">
                                     <a class="nav-link dropdown-toggle nav-sub-toggle" href="#sidebar-general-setting"
                                         data-bs-toggle="collapse" role="button" aria-expanded="false"
                                         aria-controls="sidebar-general-setting">
@@ -111,6 +111,13 @@
                                                     <span class="nav-leaf-dot"></span>
                                                     <span class="nav-link-title"
                                                         th:text="#{label.currency}">Currency</span>
+                                                </a>
+                                            </li>
+                                            <li class="nav-item" sec:authorize="hasAuthority('BANK-ACCOUNT_READ')">
+                                                <a class="nav-link" th:href="@{/master/bank-accounts}">
+                                                    <span class="nav-leaf-dot"></span>
+                                                    <span class="nav-link-title"
+                                                        th:text="#{label.bank-account}">Bank Account</span>
                                                 </a>
                                             </li>
                                         </ul>

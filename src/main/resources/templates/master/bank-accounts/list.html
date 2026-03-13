@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{master.bank-account.title})}"></head>
+
+<body th:replace="~{layout/master :: layout(~{:: .bank-account-list-content})}">
+    <div class="bank-account-list-content">
+        <!-- Page Header -->
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="#{master.bank-account.title}">Bank Account</h2>
+                        <div class="text-secondary mt-1" th:text="#{master.bank-account.subtitle}">Manage bank accounts.</div>
+                    </div>
+                    <!-- Page title actions -->
+                    <div class="col-auto ms-auto d-print-none" sec:authorize="hasAuthority('BANK-ACCOUNT_CREATE')">
+                        <div class="btn-list">
+                            <a th:href="@{/master/bank-accounts/create}" class="btn btn-primary d-none d-sm-inline-block">
+                                <i class="ti ti-plus"></i>
+                                <span th:text="#{master.bank-account.add}">Add Bank Account</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Body -->
+        <div class="page-body">
+            <div class="container-xl">
+                <!-- Alerts -->
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-check icon alert-icon"></i></div>
+                        <div th:text="${successMessage}">Success!</div>
+                    </div>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                </div>
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
+                        <div th:text="${errorMessage}">Error!</div>
+                    </div>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                </div>
+
+                <div class="card">
+                    <div class="card-body border-bottom py-3">
+                        <div class="d-flex">
+                            <div class="ms-auto text-secondary">
+                                <form th:action="@{/master/bank-accounts}" method="get" class="input-icon">
+                                    <input type="text" name="keyword" th:value="${keyword}"
+                                        class="form-control form-control-sm" th:placeholder="#{label.search}">
+                                    <span class="input-icon-addon">
+                                        <i class="ti ti-search"></i>
+                                    </span>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th th:replace="~{fragments/table :: sortable('code', #{master.bank-account.code})}">Code</th>
+                                    <th th:replace="~{fragments/table :: sortable('bankName', #{master.bank-account.bank-name})}">Bank Name</th>
+                                    <th th:replace="~{fragments/table :: sortable('accountName', #{master.bank-account.account-name})}">Account Name</th>
+                                    <th th:replace="~{fragments/table :: sortable('accountNo', #{master.bank-account.account-no})}">Account No</th>
+                                    <th th:text="#{master.bank-account.type}">Type</th>
+                                    <th th:text="#{master.bank-account.party}">Holder</th>
+                                    <th class="w-1" th:text="#{label.actions}">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="item : ${page.content}">
+                                    <td th:text="${item.code}">CODE</td>
+                                    <td th:text="${item.bankName}">BANK</td>
+                                    <td th:text="${item.accountName}">ACCOUNT NAME</td>
+                                    <td th:text="${item.accountNo}">ACCOUNT NO</td>
+                                    <td th:text="${item.accountType}">TYPE</td>
+                                    <td th:text="${item.partyName}">HOLDER</td>
+                                    <td>
+                                        <div class="btn-list flex-nowrap">
+                                            <a th:href="@{/master/bank-accounts/edit/{id}(id=${item.id})}"
+                                                class="btn btn-white btn-sm"
+                                                sec:authorize="hasAuthority('BANK-ACCOUNT_UPDATE')" th:text="#{label.edit}">
+                                                Edit
+                                            </a>
+                                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                                                th:data-bs-target="'#modal-delete-' + ${item.id}"
+                                                sec:authorize="hasAuthority('BANK-ACCOUNT_DELETE')"
+                                                th:text="#{label.delete}">
+                                                Delete
+                                            </button>
+                                        </div>
+
+                                        <!-- Delete Modal -->
+                                        <div class="modal modal-blur fade" th:id="'modal-delete-' + ${item.id}"
+                                            tabindex="-1" role="dialog" aria-hidden="true">
+                                            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+                                                <div class="modal-content">
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
+                                                    <div class="modal-status bg-danger"></div>
+                                                    <div class="modal-body text-center py-4">
+                                                        <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
+                                                        <h3 th:text="#{master.bank-account.delete.confirm.title}">Confirm Delete</h3>
+                                                        <div class="text-secondary" th:text="#{master.bank-account.delete.confirm.text(${item.code})}">Are you sure?</div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <div class="w-100">
+                                                            <div class="row">
+                                                                <div class="col"><a href="#" class="btn w-100" data-bs-dismiss="modal" th:text="#{label.cancel}">Cancel</a></div>
+                                                                <div class="col">
+                                                                    <form th:action="@{/master/bank-accounts/delete/{id}(id=${item.id})}" method="post">
+                                                                        <button type="submit" class="btn btn-danger w-100" th:text="#{label.delete}">Delete</button>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${page.totalElements == 0}">
+                                    <td colspan="7" class="text-center text-secondary py-4" th:text="#{master.bank-account.empty}">No data found.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Pagination -->
+                    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
