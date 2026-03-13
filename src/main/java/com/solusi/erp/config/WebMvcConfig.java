@@ -48,7 +48,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .setCacheControl(CacheControl.maxAge(365, TimeUnit.DAYS));
 
         registry.addResourceHandler("/favicon.ico")
-                .addResourceLocations("classpath:/static/favicon.ico")
+                .addResourceLocations("classpath:/static/")
                 .setCacheControl(CacheControl.maxAge(365, TimeUnit.DAYS));
     }
 
