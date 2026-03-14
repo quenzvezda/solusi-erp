@@ -1,16 +1,18 @@
 package com.solusi.erp.master.dto;
 
+import com.solusi.erp.core.dto.BaseAuditResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PartyContactResponse {
-    private Long id;
+@EqualsAndHashCode(callSuper = true)
+public class PartyContactResponse extends BaseAuditResponse {
     private String label;
     private String mobile;
     private String phone;
@@ -18,3 +20,4 @@ public class PartyContactResponse {
     private Boolean isActive;
     private Boolean isDefault;
 }
+

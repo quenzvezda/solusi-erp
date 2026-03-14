@@ -1,13 +1,14 @@
 package com.solusi.erp.master.dto;
 
+import com.solusi.erp.core.dto.BaseAuditResponse;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class CurrencyDto {
-
-    private Long id;
+@EqualsAndHashCode(callSuper = true)
+public class CurrencyDto extends BaseAuditResponse {
 
     @NotBlank(message = "{currency.symbol.required}")
     @Size(max = 10, message = "{currency.symbol.max}")
@@ -26,6 +27,5 @@ public class CurrencyDto {
     private Boolean isActive;
 
     private Boolean isDefault;
-
-    private Integer version;
 }
+

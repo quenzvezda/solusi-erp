@@ -7,9 +7,11 @@ classDiagram
     class BaseModel {
         <<abstract>>
         -Long id
-        -String createdBy
+        -Long createdBy
+        -User createdByUser
         -LocalDateTime createdDate
-        -String updatedBy
+        -Long updatedBy
+        -User updatedByUser
         -LocalDateTime updatedDate
         -Integer version
     }

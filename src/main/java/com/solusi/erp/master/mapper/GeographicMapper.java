@@ -1,5 +1,6 @@
 package com.solusi.erp.master.mapper;
 
+import com.solusi.erp.core.mapper.AuditMapperHelper;
 import com.solusi.erp.master.dto.GeographicDto;
 import com.solusi.erp.master.model.Geographic;
 import org.mapstruct.*;
@@ -7,7 +8,7 @@ import org.mapstruct.*;
 /**
  * Mapper for Geographic entity and DTO.
  */
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = {AuditMapperHelper.class})
 public interface GeographicMapper {
 
     @Mapping(target = "parentId", source = "parent.id")
@@ -15,8 +16,23 @@ public interface GeographicMapper {
     GeographicDto toDto(Geographic geographic);
 
     @Mapping(target = "parent", ignore = true) // Handled in Service
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "updatedDate", ignore = true)
+    @Mapping(target = "createdByUser", ignore = true)
+    @Mapping(target = "updatedByUser", ignore = true)
     Geographic toEntity(GeographicDto geographicDto);
 
     @Mapping(target = "parent", ignore = true) // Handled in Service
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "updatedDate", ignore = true)
+    @Mapping(target = "createdByUser", ignore = true)
+    @Mapping(target = "updatedByUser", ignore = true)
     void updateEntity(GeographicDto geographicDto, @MappingTarget Geographic geographic);
 }
+

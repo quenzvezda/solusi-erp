@@ -8,12 +8,18 @@ erDiagram
         bigint id PK
         varchar code UK
         varchar name
+        bigint created_by_user_id FK
+        datetime created_date
+        int version
     }
 
     party_id_types {
         bigint id PK
         varchar code UK
         varchar name
+        bigint created_by_user_id FK
+        datetime created_date
+        int version
     }
 
     parties {
@@ -25,8 +31,10 @@ erDiagram
         boolean is_active
         varchar email
         varchar phone
-        varchar created_by
+        bigint created_by_user_id FK
         datetime created_date
+        bigint updated_by_user_id FK
+        datetime updated_date
         int version
     }
 
@@ -43,6 +51,9 @@ erDiagram
         varchar id_number
         date issued_date
         date expiry_date
+        bigint created_by_user_id FK
+        datetime created_date
+        int version
     }
 
     party_addresses {
@@ -53,6 +64,9 @@ erDiagram
         varchar postal_code
         boolean is_active
         boolean is_default
+        bigint created_by_user_id FK
+        datetime created_date
+        int version
     }
 
     party_address_types {
@@ -66,6 +80,9 @@ erDiagram
         varchar name
         varchar type
         bigint parent_id FK
+        bigint created_by_user_id FK
+        datetime created_date
+        int version
     }
 
     parties ||--o{ party_roles : "mapped by"
@@ -83,4 +100,4 @@ erDiagram
 2.  **Unique Constraints**: 
     *   `parties.code` bersifat unik.
     *   `party_role_types.code` dan `party_id_types.code` bersifat unik untuk lookup yang stabil di kode Java.
-3.  **Auditing**: Tabel utama dan tabel detail memiliki kolom `created_by`, `created_date`, dan `version` untuk audit trail (mengikuti `BaseModel`).
+3.  **Auditing**: Tabel utama dan tabel detail memiliki kolom `created_by_user_id`, `created_date`, dan `version` untuk audit trail (mengikuti `BaseModel`).

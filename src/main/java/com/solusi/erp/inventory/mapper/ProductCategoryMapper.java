@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.mapper;
 
+import com.solusi.erp.core.mapper.AuditMapperHelper;
 import com.solusi.erp.inventory.dto.ProductCategoryRequest;
 import com.solusi.erp.inventory.dto.ProductCategoryResponse;
 import com.solusi.erp.inventory.model.ProductCategory;
@@ -10,7 +11,7 @@ import org.mapstruct.ReportingPolicy;
 /**
  * MapStruct Mapper for ProductCategory.
  */
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = {AuditMapperHelper.class})
 public interface ProductCategoryMapper {
 
     ProductCategory toEntity(ProductCategoryRequest request);

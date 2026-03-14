@@ -1,11 +1,13 @@
 package com.solusi.erp.master.dto;
 
+import com.solusi.erp.core.dto.BaseAuditResponse;
 import com.solusi.erp.master.model.AccountType;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class BankAccountResponseDto {
-    private Long id;
+@EqualsAndHashCode(callSuper = true)
+public class BankAccountResponseDto extends BaseAuditResponse {
     private String code;
     private String bankName;
     private String branch;
@@ -18,3 +20,4 @@ public class BankAccountResponseDto {
     private AccountType accountType;
     private String note;
 }
+

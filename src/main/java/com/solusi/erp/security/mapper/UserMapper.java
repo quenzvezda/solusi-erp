@@ -1,5 +1,6 @@
 package com.solusi.erp.security.mapper;
 
+import com.solusi.erp.core.mapper.AuditMapperHelper;
 import com.solusi.erp.security.dto.ProfileRequest;
 import com.solusi.erp.security.dto.ProfileResponse;
 import com.solusi.erp.security.dto.UserRequest;
@@ -9,10 +10,11 @@ import com.solusi.erp.security.model.UserProfile;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.ReportingPolicy;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = {AuditMapperHelper.class})
 public interface UserMapper {
 
     @Mapping(target = "roleName", source = "role.name")

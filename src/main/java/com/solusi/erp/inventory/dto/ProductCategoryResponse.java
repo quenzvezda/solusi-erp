@@ -1,12 +1,12 @@
 package com.solusi.erp.inventory.dto;
 
+import com.solusi.erp.core.dto.BaseAuditResponse;
 import com.solusi.erp.inventory.model.ProductCategoryType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 /**
  * DTO for displaying Product Category data.
@@ -15,15 +15,11 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductCategoryResponse {
-    private Long id;
+@EqualsAndHashCode(callSuper = true)
+public class ProductCategoryResponse extends BaseAuditResponse {
     private String code;
     private String name;
     private ProductCategoryType type;
     private String note;
-    private LocalDateTime createdDate;
-    private String createdBy;
-    private LocalDateTime updatedDate;
-    private String updatedBy;
-    private Integer version;
 }
+

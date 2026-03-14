@@ -1,9 +1,11 @@
 package com.solusi.erp.master.dto;
 
+import com.solusi.erp.core.dto.BaseAuditResponse;
 import com.solusi.erp.master.model.AddressType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import java.util.Set;
 
@@ -11,8 +13,8 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PartyAddressResponse {
-    private Long id;
+@EqualsAndHashCode(callSuper = true)
+public class PartyAddressResponse extends BaseAuditResponse {
     private Set<AddressType> types;
     private String addressLine1;
     private Long cityId;
@@ -23,3 +25,4 @@ public class PartyAddressResponse {
     private Boolean isActive;
     private Boolean isDefault;
 }
+

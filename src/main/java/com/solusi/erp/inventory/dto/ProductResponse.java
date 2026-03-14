@@ -1,11 +1,12 @@
 package com.solusi.erp.inventory.dto;
 
+import com.solusi.erp.core.dto.BaseAuditResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 /**
  * DTO for displaying Product data.
@@ -14,8 +15,8 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductResponse {
-    private Long id;
+@EqualsAndHashCode(callSuper = true)
+public class ProductResponse extends BaseAuditResponse {
     private String code;
     private String name;
     private String barcode;
@@ -49,10 +50,5 @@ public class ProductResponse {
     private BigDecimal height;
     private Long dimensionUomId;
     private String dimensionUomCode;
-    
-    private LocalDateTime createdDate;
-    private String createdBy;
-    private LocalDateTime updatedDate;
-    private String updatedBy;
-    private Integer version;
 }
+

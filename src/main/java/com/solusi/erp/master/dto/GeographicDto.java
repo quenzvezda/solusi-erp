@@ -1,11 +1,13 @@
 package com.solusi.erp.master.dto;
 
+import com.solusi.erp.core.dto.BaseAuditResponse;
 import com.solusi.erp.master.model.GeographicType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
@@ -16,8 +18,8 @@ import java.io.Serializable;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class GeographicDto implements Serializable {
-    private Long id;
+@EqualsAndHashCode(callSuper = true)
+public class GeographicDto extends BaseAuditResponse implements Serializable {
 
     @NotBlank(message = "{validation.geographic.code.notblank}")
     @Size(max = 50, message = "{validation.geographic.code.size}")
@@ -34,6 +36,5 @@ public class GeographicDto implements Serializable {
     private String parentName;
 
     private Boolean isActive = true;
-    
-    private Integer version;
 }
+

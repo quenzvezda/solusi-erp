@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.mapper;
 
+import com.solusi.erp.core.mapper.AuditMapperHelper;
 import com.solusi.erp.inventory.dto.UnitOfMeasureRequest;
 import com.solusi.erp.inventory.dto.UnitOfMeasureResponse;
 import com.solusi.erp.inventory.model.UnitOfMeasure;
@@ -10,7 +11,7 @@ import org.mapstruct.ReportingPolicy;
 /**
  * MapStruct Mapper for UnitOfMeasure.
  */
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = {AuditMapperHelper.class})
 public interface UnitOfMeasureMapper {
 
     UnitOfMeasure toEntity(UnitOfMeasureRequest request);

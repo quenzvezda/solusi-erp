@@ -1,13 +1,15 @@
 package com.solusi.erp.master.mapper;
 
+import com.solusi.erp.core.mapper.AuditMapperHelper;
 import com.solusi.erp.master.dto.BankAccountRequestDto;
 import com.solusi.erp.master.dto.BankAccountResponseDto;
 import com.solusi.erp.master.model.BankAccount;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = {AuditMapperHelper.class})
 public interface BankAccountMapper {
 
     @Mapping(target = "cityId", source = "city.id")

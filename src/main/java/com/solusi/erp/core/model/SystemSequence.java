@@ -1,5 +1,6 @@
 package com.solusi.erp.core.model;
 
+import com.solusi.erp.security.model.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -45,8 +46,12 @@ public class SystemSequence {
     private LocalDateTime lastResetDate;
 
     @LastModifiedBy
-    @Column(name = "updated_by")
-    private String updatedBy;
+    @Column(name = "updated_by_user_id")
+    private Long updatedBy;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "updated_by_user_id", insertable = false, updatable = false)
+    private User updatedByUser;
 
     @LastModifiedDate
     @Column(name = "updated_date")

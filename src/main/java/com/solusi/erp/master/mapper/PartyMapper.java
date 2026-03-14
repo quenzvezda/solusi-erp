@@ -2,6 +2,7 @@ package com.solusi.erp.master.mapper;
 
 import com.solusi.erp.master.dto.*;
 import com.solusi.erp.master.model.*;
+import com.solusi.erp.core.mapper.AuditMapperHelper;
 import org.mapstruct.*;
 
 import java.util.Set;
@@ -10,7 +11,7 @@ import java.util.stream.Collectors;
 /**
  * MapStruct Mapper for Party and its components.
  */
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = {AuditMapperHelper.class})
 public interface PartyMapper {
 
     @Mapping(target = "roles", ignore = true)

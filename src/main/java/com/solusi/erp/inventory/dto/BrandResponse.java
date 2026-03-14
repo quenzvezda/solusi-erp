@@ -1,11 +1,11 @@
 package com.solusi.erp.inventory.dto;
 
+import com.solusi.erp.core.dto.BaseAuditResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 /**
  * DTO for displaying Brand data.
@@ -14,14 +14,10 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BrandResponse {
-    private Long id;
+@EqualsAndHashCode(callSuper = true)
+public class BrandResponse extends BaseAuditResponse {
     private String code;
     private String name;
     private String note;
-    private LocalDateTime createdDate;
-    private String createdBy;
-    private LocalDateTime updatedDate;
-    private String updatedBy;
-    private Integer version;
 }
+
