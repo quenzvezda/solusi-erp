@@ -1,15 +1,15 @@
 package com.solusi.erp.master.service;
 
-import com.solusi.erp.master.dto.BankAccountRequestDto;
-import com.solusi.erp.master.dto.BankAccountResponseDto;
+import com.solusi.erp.master.dto.BankAccountRequest;
+import com.solusi.erp.master.dto.BankAccountResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface BankAccountService {
-    Page<BankAccountResponseDto> findAll(String keyword, Pageable pageable);
-    BankAccountResponseDto findById(Long id);
-    BankAccountRequestDto getEditData(Long id);
-    void create(BankAccountRequestDto request);
-    void update(Long id, BankAccountRequestDto request);
+    Page<BankAccountResponse> findAll(String keyword, Pageable pageable);
+    BankAccountResponse findById(Long id);
+    BankAccountRequest getEditData(Long id);
+    void create(BankAccountRequest request);
+    void update(Long id, BankAccountRequest request);
     void delete(Long id);
 }

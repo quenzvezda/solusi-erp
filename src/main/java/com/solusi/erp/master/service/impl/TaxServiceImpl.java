@@ -1,6 +1,7 @@
 package com.solusi.erp.master.service.impl;
 
-import com.solusi.erp.master.dto.TaxDto;
+import com.solusi.erp.master.dto.TaxRequest;
+import com.solusi.erp.master.dto.TaxResponse;
 import com.solusi.erp.master.mapper.TaxMapper;
 import com.solusi.erp.master.model.Tax;
 import com.solusi.erp.master.repository.TaxRepository;
@@ -29,30 +30,38 @@ public class TaxServiceImpl implements TaxService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<TaxDto> getAllTaxes(String keyword, Pageable pageable) {
+    public Page<TaxResponse> getAllTaxes(String keyword, Pageable pageable) {
         if (keyword != null && !keyword.trim().isEmpty()) {
-            return taxRepository.search(keyword, pageable).map(taxMapper::toDto);
+            return taxRepository.search(keyword, pageable).map(taxMapper::toResponse);
         }
-        return taxRepository.findAll(pageable).map(taxMapper::toDto);
+        return taxRepository.findAll(pageable).map(taxMapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public TaxDto getTaxById(Long id) {
+    public TaxResponse getTaxById(Long id) {
         Tax tax = taxRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("error.tax.not.found")));
-        return taxMapper.toDto(tax);
+        return taxMapper.toResponse(tax);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TaxRequest getEditData(Long id) {
+        Tax tax = taxRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("error.tax.not.found")));
+        return taxMapper.toRequest(tax);
     }
 
     @Override
     @Transactional
-    public TaxDto createTax(TaxDto dto) {
+    public void createTax(TaxRequest request) {
         // Validate duplicate code
-        if (taxRepository.findByCode(dto.getCode()).isPresent()) {
+        if (taxRepository.findByCode(request.getCode()).isPresent()) {
             throw new RuntimeException(getMessage("error.tax.duplicate-code"));
         }
 
-        Tax tax = taxMapper.toEntity(dto);
+        Tax tax = taxMapper.toEntity(request);
         if (tax.getIsActive() == null) {
             tax.setIsActive(false);
         }
@@ -62,16 +71,15 @@ public class TaxServiceImpl implements TaxService {
 
         Tax savedTax = taxRepository.save(tax);
         log.info("Created Tax with code: {}", savedTax.getCode());
-        return taxMapper.toDto(savedTax);
     }
 
     @Override
     @Transactional
-    public TaxDto updateTax(Long id, TaxDto dto) {
+    public void updateTax(Long id, TaxRequest request) {
         Tax existingTax = taxRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("error.tax.not.found")));
 
-        taxMapper.updateEntityFromDto(dto, existingTax);
+        taxMapper.updateEntityFromRequest(request, existingTax);
         if (existingTax.getIsSubtract() == null) {
             existingTax.setIsSubtract(false);
         }
@@ -81,7 +89,6 @@ public class TaxServiceImpl implements TaxService {
 
         Tax updatedTax = taxRepository.save(existingTax);
         log.info("Updated Tax with code: {}", updatedTax.getCode());
-        return taxMapper.toDto(updatedTax);
     }
 
     @Override

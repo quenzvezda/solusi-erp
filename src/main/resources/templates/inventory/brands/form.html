@@ -52,6 +52,9 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Record Info (Edit Mode only) -->
+                        <div th:if="${auditInfo != null and auditInfo.id != null}" th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
                     </div>
                     <div class="card-footer text-end">
                         <div class="d-flex">

@@ -59,7 +59,6 @@ public interface UserMapper {
     @Mapping(target = "id", ignore = true)
     void updateProfileEntity(UserRequest request, @MappingTarget UserProfile profile);
 
-    @Mapping(target = "roleName", source = "role.name")
     @Mapping(target = "fullName", source = "profile.fullName")
     @Mapping(target = "phoneNumber", source = "profile.phoneNumber")
     @Mapping(target = "avatarPath", source = "profile.avatarPath")
@@ -67,6 +66,16 @@ public interface UserMapper {
     @Mapping(target = "defaultPageSize", source = "profile.defaultPageSize")
     @Mapping(target = "theme", source = "profile.theme")
     ProfileResponse toProfileResponse(User user);
+
+    @Mapping(target = "fullName", source = "profile.fullName")
+    @Mapping(target = "phoneNumber", source = "profile.phoneNumber")
+    @Mapping(target = "languageCode", source = "profile.languageCode")
+    @Mapping(target = "defaultPageSize", source = "profile.defaultPageSize")
+    @Mapping(target = "theme", source = "profile.theme")
+    @Mapping(target = "currentPassword", ignore = true)
+    @Mapping(target = "newPassword", ignore = true)
+    @Mapping(target = "confirmPassword", ignore = true)
+    ProfileRequest toProfileRequest(User user);
 
     @Mapping(target = "fullName", source = "fullName")
     @Mapping(target = "phoneNumber", source = "phoneNumber")

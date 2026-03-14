@@ -1,5 +1,6 @@
 package com.solusi.erp.master.dto;
 
+import com.solusi.erp.core.dto.BaseAuditResponse;
 import com.solusi.erp.master.model.PartyType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -7,6 +8,7 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
@@ -14,13 +16,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * DTO for creating or updating a Party.
+ */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PartyRequest {
-
-    private Long id;
+@EqualsAndHashCode(callSuper = true)
+public class PartyRequest extends BaseAuditResponse {
 
     private String salutation;
 

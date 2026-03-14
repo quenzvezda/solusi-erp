@@ -1,17 +1,20 @@
 package com.solusi.erp.master.service;
 
-import com.solusi.erp.master.dto.TaxDto;
+import com.solusi.erp.master.dto.TaxRequest;
+import com.solusi.erp.master.dto.TaxResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface TaxService {
-    Page<TaxDto> getAllTaxes(String keyword, Pageable pageable);
+    Page<TaxResponse> getAllTaxes(String keyword, Pageable pageable);
 
-    TaxDto getTaxById(Long id);
+    TaxResponse getTaxById(Long id);
 
-    TaxDto createTax(TaxDto dto);
+    TaxRequest getEditData(Long id);
 
-    TaxDto updateTax(Long id, TaxDto dto);
+    void createTax(TaxRequest request);
+
+    void updateTax(Long id, TaxRequest request);
 
     void deleteTax(Long id);
 }

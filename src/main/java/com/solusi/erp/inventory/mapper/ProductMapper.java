@@ -39,6 +39,13 @@ public interface ProductMapper {
     @Mapping(target = "dimensionUomCode", source = "dimensionUom.code")
     ProductResponse toResponse(Product entity);
 
+    @Mapping(target = "categoryId", source = "category.id")
+    @Mapping(target = "uomId", source = "uom.id")
+    @Mapping(target = "brandId", source = "brand.id")
+    @Mapping(target = "weightUomId", source = "weightUom.id")
+    @Mapping(target = "dimensionUomId", source = "dimensionUom.id")
+    ProductRequest toRequest(Product entity);
+
     @Mapping(target = "category", source = "categoryId")
     @Mapping(target = "uom", source = "uomId")
     @Mapping(target = "brand", source = "brandId")

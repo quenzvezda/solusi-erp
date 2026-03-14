@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.dto;
 
+import com.solusi.erp.core.dto.BaseAuditResponse;
 import com.solusi.erp.inventory.model.UomType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -7,6 +8,7 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 /**
@@ -16,9 +18,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UnitOfMeasureRequest {
-
-    private Long id;
+@EqualsAndHashCode(callSuper = true)
+public class UnitOfMeasureRequest extends BaseAuditResponse {
 
     @NotBlank(message = "{validation.notblank}")
     @Size(max = 20, message = "{validation.size}")

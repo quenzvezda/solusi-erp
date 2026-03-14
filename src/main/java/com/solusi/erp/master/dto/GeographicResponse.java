@@ -1,21 +1,28 @@
 package com.solusi.erp.master.dto;
 
 import com.solusi.erp.core.dto.BaseAuditResponse;
+import com.solusi.erp.master.model.GeographicType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
- * DTO for creating or updating a Party Role Type.
+ * DTO for displaying Geographic information.
  */
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class PartyRoleTypeRequest extends BaseAuditResponse {
+public class GeographicResponse extends BaseAuditResponse implements Serializable {
     private String code;
     private String name;
+    private GeographicType type;
+    private Long parentId;
+    private String parentName;
+    private Boolean isActive;
 }

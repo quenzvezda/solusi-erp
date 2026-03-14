@@ -2,12 +2,21 @@ package com.solusi.erp.master.dto;
 
 import com.solusi.erp.core.dto.BaseAuditResponse;
 import com.solusi.erp.master.model.AccountType;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
+/**
+ * DTO for displaying Bank Account information.
+ */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class BankAccountResponseDto extends BaseAuditResponse {
+public class BankAccountResponse extends BaseAuditResponse {
     private String code;
     private String bankName;
     private String branch;
@@ -20,4 +29,3 @@ public class BankAccountResponseDto extends BaseAuditResponse {
     private AccountType accountType;
     private String note;
 }
-

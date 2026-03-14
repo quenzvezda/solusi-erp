@@ -1,7 +1,8 @@
 package com.solusi.erp.master.mapper;
 
 import com.solusi.erp.core.mapper.AuditMapperHelper;
-import com.solusi.erp.master.dto.GeographicDto;
+import com.solusi.erp.master.dto.GeographicRequest;
+import com.solusi.erp.master.dto.GeographicResponse;
 import com.solusi.erp.master.model.Geographic;
 import org.mapstruct.*;
 
@@ -13,7 +14,10 @@ public interface GeographicMapper {
 
     @Mapping(target = "parentId", source = "parent.id")
     @Mapping(target = "parentName", source = "parent.name")
-    GeographicDto toDto(Geographic geographic);
+    GeographicResponse toResponse(Geographic geographic);
+
+    @Mapping(target = "parentId", source = "parent.id")
+    GeographicRequest toRequest(Geographic geographic);
 
     @Mapping(target = "parent", ignore = true) // Handled in Service
     @Mapping(target = "id", ignore = true)
@@ -23,7 +27,7 @@ public interface GeographicMapper {
     @Mapping(target = "updatedDate", ignore = true)
     @Mapping(target = "createdByUser", ignore = true)
     @Mapping(target = "updatedByUser", ignore = true)
-    Geographic toEntity(GeographicDto geographicDto);
+    Geographic toEntity(GeographicRequest request);
 
     @Mapping(target = "parent", ignore = true) // Handled in Service
     @Mapping(target = "id", ignore = true)
@@ -33,6 +37,5 @@ public interface GeographicMapper {
     @Mapping(target = "updatedDate", ignore = true)
     @Mapping(target = "createdByUser", ignore = true)
     @Mapping(target = "updatedByUser", ignore = true)
-    void updateEntity(GeographicDto geographicDto, @MappingTarget Geographic geographic);
+    void updateEntity(GeographicRequest request, @MappingTarget Geographic geographic);
 }
-

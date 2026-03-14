@@ -1,7 +1,8 @@
 package com.solusi.erp.master.service.impl;
 
 import com.solusi.erp.core.dto.LookupDto;
-import com.solusi.erp.master.dto.GeographicDto;
+import com.solusi.erp.master.dto.GeographicRequest;
+import com.solusi.erp.master.dto.GeographicResponse;
 import com.solusi.erp.master.mapper.GeographicMapper;
 import com.solusi.erp.master.model.Geographic;
 import com.solusi.erp.master.model.GeographicType;
@@ -36,58 +37,64 @@ public class GeographicServiceImpl implements GeographicService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<GeographicDto> getAllGeographics(String keyword, Pageable pageable) {
+    public Page<GeographicResponse> getAllGeographics(String keyword, Pageable pageable) {
         if (keyword != null && !keyword.trim().isEmpty()) {
-            return geographicRepository.search(keyword, pageable).map(geographicMapper::toDto);
+            return geographicRepository.search(keyword, pageable).map(geographicMapper::toResponse);
         }
-        return geographicRepository.findAll(pageable).map(geographicMapper::toDto);
+        return geographicRepository.findAll(pageable).map(geographicMapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<GeographicDto> getByParent(Long parentId, Pageable pageable) {
-        return geographicRepository.findByParentId(parentId, pageable).map(geographicMapper::toDto);
+    public Page<GeographicResponse> getByParent(Long parentId, Pageable pageable) {
+        return geographicRepository.findByParentId(parentId, pageable).map(geographicMapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public GeographicDto getById(Long id) {
+    public GeographicResponse getById(Long id) {
         Geographic geographic = geographicRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.notfound")));
-        return geographicMapper.toDto(geographic);
+        return geographicMapper.toResponse(geographic);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public GeographicRequest getEditData(Long id) {
+        Geographic geographic = geographicRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.notfound")));
+        return geographicMapper.toRequest(geographic);
     }
 
     @Override
     @Transactional
-    public GeographicDto create(GeographicDto dto) {
-        Geographic geographic = geographicMapper.toEntity(dto);
-        if (dto.getParentId() != null) {
-            Geographic parent = geographicRepository.findById(dto.getParentId())
+    public void create(GeographicRequest request) {
+        Geographic geographic = geographicMapper.toEntity(request);
+        if (request.getParentId() != null) {
+            Geographic parent = geographicRepository.findById(request.getParentId())
                     .orElseThrow(() -> new RuntimeException(getMessage("msg.error.notfound")));
             geographic.setParent(parent);
         }
-        geographic = geographicRepository.save(geographic);
-        return geographicMapper.toDto(geographic);
+        geographicRepository.save(geographic);
     }
 
     @Override
     @Transactional
-    public GeographicDto update(Long id, GeographicDto dto) {
+    public void update(Long id, GeographicRequest request) {
         Geographic geographic = geographicRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.notfound")));
 
-        geographicMapper.updateEntity(dto, geographic);
+        geographicMapper.updateEntity(request, geographic);
 
-        if (dto.getParentId() != null) {
-            Geographic parent = geographicRepository.findById(dto.getParentId())
+        if (request.getParentId() != null) {
+            Geographic parent = geographicRepository.findById(request.getParentId())
                     .orElseThrow(() -> new RuntimeException(getMessage("msg.error.notfound")));
             geographic.setParent(parent);
         } else {
             geographic.setParent(null);
         }
 
-        geographic = geographicRepository.save(geographic);
-        return geographicMapper.toDto(geographic);
+        geographicRepository.save(geographic);
     }
 
     @Override

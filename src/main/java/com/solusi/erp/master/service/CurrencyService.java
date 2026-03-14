@@ -1,18 +1,21 @@
 package com.solusi.erp.master.service;
 
-import com.solusi.erp.master.dto.CurrencyDto;
+import com.solusi.erp.master.dto.CurrencyRequest;
+import com.solusi.erp.master.dto.CurrencyResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface CurrencyService {
 
-    Page<CurrencyDto> getAllCurrencies(String keyword, Pageable pageable);
+    Page<CurrencyResponse> getAllCurrencies(String keyword, Pageable pageable);
 
-    CurrencyDto getCurrencyById(Long id);
+    CurrencyResponse getCurrencyById(Long id);
 
-    CurrencyDto createCurrency(CurrencyDto dto);
+    CurrencyRequest getEditData(Long id);
 
-    CurrencyDto updateCurrency(Long id, CurrencyDto dto);
+    void createCurrency(CurrencyRequest request);
+
+    void updateCurrency(Long id, CurrencyRequest request);
 
     void deleteCurrency(Long id);
 }

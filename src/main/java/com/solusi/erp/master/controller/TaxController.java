@@ -1,6 +1,7 @@
 package com.solusi.erp.master.controller;
 
-import com.solusi.erp.master.dto.TaxDto;
+import com.solusi.erp.master.dto.TaxRequest;
+import com.solusi.erp.master.dto.TaxResponse;
 import com.solusi.erp.master.service.TaxService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +31,7 @@ public class TaxController {
     public String listTaxes(Model model,
             @RequestParam(value = "keyword", required = false) String keyword,
             Pageable pageable) {
-        Page<TaxDto> taxes = taxService.getAllTaxes(keyword, pageable);
+        Page<TaxResponse> taxes = taxService.getAllTaxes(keyword, pageable);
         model.addAttribute("page", taxes);
         model.addAttribute("keyword", keyword);
         return "master/tax/list";
@@ -39,23 +40,23 @@ public class TaxController {
     @GetMapping("/create")
     @PreAuthorize("hasAuthority('TAX_CREATE')")
     public String showCreateForm(Model model) {
-        TaxDto taxDto = new TaxDto();
-        taxDto.setIsActive(true);
-        taxDto.setIsSubtract(false);
-        model.addAttribute("tax", taxDto);
+        TaxRequest request = new TaxRequest();
+        request.setIsActive(true);
+        request.setIsSubtract(false);
+        model.addAttribute("tax", request);
         return "master/tax/form";
     }
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('TAX_CREATE')")
-    public String createTax(@Valid @ModelAttribute("tax") TaxDto taxDto,
+    public String createTax(@Valid @ModelAttribute("tax") TaxRequest request,
             BindingResult result,
             RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             return "master/tax/form";
         }
         try {
-            taxService.createTax(taxDto);
+            taxService.createTax(request);
             String message = messageSource.getMessage("tax.create.success", null, LocaleContextHolder.getLocale());
             redirectAttributes.addFlashAttribute("successMessage", message);
             return "redirect:/master/taxes";
@@ -69,22 +70,22 @@ public class TaxController {
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('TAX_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
-        TaxDto taxDto = taxService.getTaxById(id);
-        model.addAttribute("tax", taxDto);
+        TaxRequest request = taxService.getEditData(id);
+        model.addAttribute("tax", request);
         return "master/tax/form";
     }
 
     @PostMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('TAX_UPDATE')")
     public String updateTax(@PathVariable Long id,
-            @Valid @ModelAttribute("tax") TaxDto taxDto,
+            @Valid @ModelAttribute("tax") TaxRequest request,
             BindingResult result,
             RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             return "master/tax/form";
         }
         try {
-            taxService.updateTax(id, taxDto);
+            taxService.updateTax(id, request);
             String message = messageSource.getMessage("tax.update.success", null, LocaleContextHolder.getLocale());
             redirectAttributes.addFlashAttribute("successMessage", message);
             return "redirect:/master/taxes";

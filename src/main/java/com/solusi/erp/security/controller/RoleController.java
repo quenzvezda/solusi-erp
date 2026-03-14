@@ -71,13 +71,13 @@ public class RoleController {
         RoleResponse roleResponse = roleService.findById(id);
         
         RoleRequest request = RoleRequest.builder()
-                .id(roleResponse.getId())
                 .name(roleResponse.getName())
                 .description(roleResponse.getDescription())
                 .permissionIds(roleResponse.getPermissions().stream()
                         .map(p -> p.getId())
                         .collect(Collectors.toSet()))
                 .build();
+        request.setId(roleResponse.getId());
 
         model.addAttribute("roleRequest", request);
         model.addAttribute("groupedPermissions", getGroupedPermissions());

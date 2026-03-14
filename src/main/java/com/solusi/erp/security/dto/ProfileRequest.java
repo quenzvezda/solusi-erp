@@ -1,5 +1,6 @@
 package com.solusi.erp.security.dto;
 
+import com.solusi.erp.core.dto.BaseAuditResponse;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -7,13 +8,18 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO for updating a User Profile.
+ */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProfileRequest {
+@EqualsAndHashCode(callSuper = true)
+public class ProfileRequest extends BaseAuditResponse {
 
     @NotBlank(message = "Nama lengkap wajib diisi")
     @Size(max = 100, message = "Nama lengkap maksimal 100 karakter")

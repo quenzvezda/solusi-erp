@@ -1,5 +1,6 @@
 package com.solusi.erp.config;
 
+import com.solusi.erp.core.advice.AuditInfoInterceptor;
 import com.solusi.erp.core.pagination.UserPreferencePageableResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -9,6 +10,7 @@ import org.springframework.http.CacheControl;
 import org.springframework.validation.Validator;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -25,11 +27,17 @@ import java.util.concurrent.TimeUnit;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final UserPreferencePageableResolver userPreferencePageableResolver;
+    private final AuditInfoInterceptor auditInfoInterceptor;
     private final MessageSource messageSource;
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
         resolvers.add(userPreferencePageableResolver);
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(auditInfoInterceptor);
     }
 
     @Override

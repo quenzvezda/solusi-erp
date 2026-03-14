@@ -24,6 +24,14 @@ public interface PartyMapper {
     @Mapping(target = "roleNames", source = "roles", qualifiedByName = "mapRoleNames")
     PartyResponse toResponse(Party entity);
 
+    @Mapping(target = "roleIds", source = "roles", qualifiedByName = "mapRoleIds")
+    PartyRequest toRequest(Party entity);
+
+    @Named("mapRoleIds")
+    default Set<Long> mapRoleIds(Set<PartyRoleType> roles) {
+        return roles.stream().map(PartyRoleType::getId).collect(Collectors.toSet());
+    }
+
     @Named("mapRoleCodes")
     default Set<String> mapRoleCodes(Set<PartyRoleType> roles) {
         return roles.stream().map(PartyRoleType::getCode).collect(Collectors.toSet());
@@ -46,6 +54,14 @@ public interface PartyMapper {
     PartyAddressResponse toResponse(PartyAddress entity);
 
     PartyContactResponse toResponse(PartyContact entity);
+
+    @Mapping(target = "typeId", source = "type.id")
+    PartyIdentificationRequest toRequest(PartyIdentification entity);
+
+    @Mapping(target = "cityId", source = "city.id")
+    PartyAddressRequest toRequest(PartyAddress entity);
+
+    PartyContactRequest toRequest(PartyContact entity);
 
     @Mapping(target = "party", ignore = true)
     @Mapping(target = "type", ignore = true) // Handled in service

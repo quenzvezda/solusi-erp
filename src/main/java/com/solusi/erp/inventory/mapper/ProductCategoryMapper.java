@@ -18,5 +18,7 @@ public interface ProductCategoryMapper {
 
     ProductCategoryResponse toResponse(ProductCategory entity);
 
+    ProductCategoryRequest toRequest(ProductCategory entity);
+
     void updateEntityFromRequest(ProductCategoryRequest request, @MappingTarget ProductCategory entity);
 }

@@ -54,28 +54,7 @@ public class ProductServiceImpl implements ProductService {
         Product entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.product.notfound")));
         
-        return ProductRequest.builder()
-                .id(entity.getId())
-                .code(entity.getCode())
-                .name(entity.getName())
-                .barcode(entity.getBarcode())
-                .note(entity.getNote())
-                .categoryId(entity.getCategory().getId())
-                .uomId(entity.getUom().getId())
-                .brandId(entity.getBrand() != null ? entity.getBrand().getId() : null)
-                .hscode(entity.getHscode())
-                .isActive(entity.getIsActive())
-                .isSerialized(entity.getIsSerialized())
-                .minStock(entity.getMinStock())
-                .maxStock(entity.getMaxStock())
-                .weightNet(entity.getWeightNet())
-                .weightGross(entity.getWeightGross())
-                .weightUomId(entity.getWeightUom() != null ? entity.getWeightUom().getId() : null)
-                .length(entity.getLength())
-                .width(entity.getWidth())
-                .height(entity.getHeight())
-                .dimensionUomId(entity.getDimensionUom() != null ? entity.getDimensionUom().getId() : null)
-                .build();
+        return mapper.toRequest(entity);
     }
 
     @Override

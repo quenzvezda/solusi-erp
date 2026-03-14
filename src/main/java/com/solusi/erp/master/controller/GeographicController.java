@@ -1,6 +1,7 @@
 package com.solusi.erp.master.controller;
 
-import com.solusi.erp.master.dto.GeographicDto;
+import com.solusi.erp.master.dto.GeographicRequest;
+import com.solusi.erp.master.dto.GeographicResponse;
 import com.solusi.erp.master.model.GeographicType;
 import com.solusi.erp.master.service.GeographicService;
 import jakarta.validation.Valid;
@@ -41,7 +42,7 @@ public class GeographicController {
             @RequestParam(value = "parentId", required = false) Long parentId,
             Pageable pageable) {
 
-        Page<GeographicDto> geographics;
+        Page<GeographicResponse> geographics;
         if (parentId != null) {
             geographics = geographicService.getByParent(parentId, pageable);
             model.addAttribute("currentParent", geographicService.getById(parentId));
@@ -58,29 +59,29 @@ public class GeographicController {
     @GetMapping("/create")
     @PreAuthorize("hasAuthority('GEOGRAPHIC_CREATE')")
     public String showCreateForm(Model model, @RequestParam(value = "parentId", required = false) Long parentId) {
-        GeographicDto dto = new GeographicDto();
-        dto.setIsActive(true);
+        GeographicRequest request = new GeographicRequest();
+        request.setIsActive(true);
         if (parentId != null) {
-            GeographicDto parent = geographicService.getById(parentId);
-            dto.setParentId(parentId);
-            dto.setParentName(parent.getName());
+            GeographicResponse parent = geographicService.getById(parentId);
+            request.setParentId(parentId);
+            model.addAttribute("parentName", parent.getName());
 
             // Auto-set type based on parent
             if (parent.getType() == GeographicType.COUNTRY) {
-                dto.setType(GeographicType.STATE_PROVINCE);
+                request.setType(GeographicType.STATE_PROVINCE);
             } else if (parent.getType() == GeographicType.STATE_PROVINCE) {
-                dto.setType(GeographicType.CITY_MUNICIPALITY);
+                request.setType(GeographicType.CITY_MUNICIPALITY);
             }
         }
 
-        model.addAttribute("geographic", dto);
+        model.addAttribute("geographic", request);
         model.addAttribute("types", GeographicType.values());
         return "master/geographic/form";
     }
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('GEOGRAPHIC_CREATE')")
-    public String create(@Valid @ModelAttribute("geographic") GeographicDto dto,
+    public String create(@Valid @ModelAttribute("geographic") GeographicRequest request,
             BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
 
         if (bindingResult.hasErrors()) {
@@ -89,9 +90,9 @@ public class GeographicController {
         }
 
         try {
-            geographicService.create(dto);
+            geographicService.create(request);
             redirectAttributes.addFlashAttribute("successMessage", getMessage("msg.success.create"));
-            return "redirect:/master/geographics" + (dto.getParentId() != null ? "?parentId=" + dto.getParentId() : "");
+            return "redirect:/master/geographics" + (request.getParentId() != null ? "?parentId=" + request.getParentId() : "");
         } catch (Exception e) {
             log.error("Error creating geographic", e);
             model.addAttribute("errorMessage", e.getMessage());
@@ -103,15 +104,18 @@ public class GeographicController {
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('GEOGRAPHIC_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
-        GeographicDto dto = geographicService.getById(id);
-        model.addAttribute("geographic", dto);
+        GeographicRequest request = geographicService.getEditData(id);
+        GeographicResponse response = geographicService.getById(id);
+        
+        model.addAttribute("geographic", request);
+        model.addAttribute("parentName", response.getParentName());
         model.addAttribute("types", GeographicType.values());
         return "master/geographic/form";
     }
 
     @PostMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('GEOGRAPHIC_UPDATE')")
-    public String update(@PathVariable Long id, @Valid @ModelAttribute("geographic") GeographicDto dto,
+    public String update(@PathVariable Long id, @Valid @ModelAttribute("geographic") GeographicRequest request,
             BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
 
         if (bindingResult.hasErrors()) {
@@ -120,9 +124,9 @@ public class GeographicController {
         }
 
         try {
-            geographicService.update(id, dto);
+            geographicService.update(id, request);
             redirectAttributes.addFlashAttribute("successMessage", getMessage("msg.success.update"));
-            return "redirect:/master/geographics" + (dto.getParentId() != null ? "?parentId=" + dto.getParentId() : "");
+            return "redirect:/master/geographics" + (request.getParentId() != null ? "?parentId=" + request.getParentId() : "");
         } catch (Exception e) {
             log.error("Error updating geographic", e);
             model.addAttribute("errorMessage", e.getMessage());
@@ -135,8 +139,8 @@ public class GeographicController {
     @PreAuthorize("hasAuthority('GEOGRAPHIC_DELETE')")
     public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
-            GeographicDto dto = geographicService.getById(id);
-            Long parentId = dto.getParentId();
+            GeographicResponse response = geographicService.getById(id);
+            Long parentId = response.getParentId();
             geographicService.delete(id);
             redirectAttributes.addFlashAttribute("successMessage", getMessage("msg.success.delete"));
             return "redirect:/master/geographics" + (parentId != null ? "?parentId=" + parentId : "");
@@ -154,9 +158,9 @@ public class GeographicController {
     @GetMapping("/api/hierarchy/{id}")
     @ResponseBody
     @PreAuthorize("hasAuthority('GEOGRAPHIC_READ')")
-    public List<GeographicDto> getHierarchy(@PathVariable Long id) {
-        List<GeographicDto> hierarchy = new ArrayList<>();
-        GeographicDto current = geographicService.getById(id);
+    public List<GeographicResponse> getHierarchy(@PathVariable Long id) {
+        List<GeographicResponse> hierarchy = new ArrayList<>();
+        GeographicResponse current = geographicService.getById(id);
         while (current != null) {
             hierarchy.add(current);
             if (current.getParentId() != null) {

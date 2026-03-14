@@ -164,15 +164,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
 
-        UserProfile profile = user.getProfile();
-        return ProfileRequest.builder()
-                .fullName(profile.getFullName())
-                .email(user.getEmail())
-                .phoneNumber(profile.getPhoneNumber())
-                .languageCode(profile.getLanguageCode())
-                .defaultPageSize(profile.getDefaultPageSize())
-                .theme(profile.getTheme())
-                .build();
+        return userMapper.toProfileRequest(user);
     }
 
     @Override

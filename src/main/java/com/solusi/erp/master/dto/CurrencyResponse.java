@@ -7,12 +7,19 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO for displaying Currency information.
+ */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class PartyRoleTypeResponse extends BaseAuditResponse {
-    private String code;
+public class CurrencyResponse extends BaseAuditResponse {
+    private String symbol;
+    private String alias;
     private String name;
+    private String note;
+    private Boolean isActive;
+    private Boolean isDefault;
 }

@@ -1,22 +1,25 @@
 package com.solusi.erp.master.service;
 
 import com.solusi.erp.core.dto.LookupDto;
-import com.solusi.erp.master.dto.GeographicDto;
+import com.solusi.erp.master.dto.GeographicRequest;
+import com.solusi.erp.master.dto.GeographicResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 public interface GeographicService {
-    Page<GeographicDto> getAllGeographics(String keyword, Pageable pageable);
+    Page<GeographicResponse> getAllGeographics(String keyword, Pageable pageable);
 
-    Page<GeographicDto> getByParent(Long parentId, Pageable pageable);
+    Page<GeographicResponse> getByParent(Long parentId, Pageable pageable);
 
-    GeographicDto getById(Long id);
+    GeographicResponse getById(Long id);
 
-    GeographicDto create(GeographicDto dto);
+    GeographicRequest getEditData(Long id);
 
-    GeographicDto update(Long id, GeographicDto dto);
+    void create(GeographicRequest request);
+
+    void update(Long id, GeographicRequest request);
 
     void delete(Long id);
 

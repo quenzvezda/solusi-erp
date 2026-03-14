@@ -352,6 +352,13 @@
                         </div>
                     </div>
 
+                    <!-- Record Info (Edit Mode only) -->
+                    <div th:if="${auditInfo != null and auditInfo.id != null}" class="card mt-3">
+                        <div class="card-body">
+                            <div th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
+                        </div>
+                    </div>
+
                     <div class="card-footer text-end mt-3">
                         <div class="d-flex">
                             <a th:href="@{/master/parties}" class="btn btn-link" th:text="#{label.cancel}">Batal</a>

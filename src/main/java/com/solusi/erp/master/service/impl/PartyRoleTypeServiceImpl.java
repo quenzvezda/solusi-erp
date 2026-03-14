@@ -3,6 +3,7 @@ package com.solusi.erp.master.service.impl;
 import com.solusi.erp.core.service.SequenceGeneratorService;
 import com.solusi.erp.master.dto.PartyRoleTypeRequest;
 import com.solusi.erp.master.dto.PartyRoleTypeResponse;
+import com.solusi.erp.master.mapper.PartyRoleTypeMapper;
 import com.solusi.erp.master.model.PartyRoleType;
 import com.solusi.erp.master.repository.PartyRoleTypeRepository;
 import com.solusi.erp.master.service.PartyRoleTypeService;
@@ -23,6 +24,7 @@ import org.springframework.util.StringUtils;
 public class PartyRoleTypeServiceImpl implements PartyRoleTypeService {
 
     private final PartyRoleTypeRepository repository;
+    private final PartyRoleTypeMapper mapper;
     private final SequenceGeneratorService sequenceGeneratorService;
     private final MessageSource messageSource;
 
@@ -32,25 +34,19 @@ public class PartyRoleTypeServiceImpl implements PartyRoleTypeService {
         Page<PartyRoleType> page = StringUtils.hasText(keyword)
                 ? repository.search(keyword, pageable)
                 : repository.findAll(pageable);
-        return page.map(e -> PartyRoleTypeResponse.builder()
-                .id(e.getId())
-                .code(e.getCode())
-                .name(e.getName())
-                .build());
+        return page.map(mapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public PartyRoleTypeResponse findById(Long id) {
-        PartyRoleType e = findOrThrow(id);
-        return PartyRoleTypeResponse.builder().id(e.getId()).code(e.getCode()).name(e.getName()).build();
+        return mapper.toResponse(findOrThrow(id));
     }
 
     @Override
     @Transactional(readOnly = true)
     public PartyRoleTypeRequest getEditData(Long id) {
-        PartyRoleType e = findOrThrow(id);
-        return PartyRoleTypeRequest.builder().id(e.getId()).code(e.getCode()).name(e.getName()).build();
+        return mapper.toRequest(findOrThrow(id));
     }
 
     @Override

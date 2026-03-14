@@ -18,5 +18,7 @@ public interface BrandMapper {
 
     BrandResponse toResponse(Brand entity);
 
+    BrandRequest toRequest(Brand entity);
+
     void updateEntityFromRequest(BrandRequest request, @MappingTarget Brand entity);
 }

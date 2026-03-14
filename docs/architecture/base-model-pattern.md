@@ -56,5 +56,14 @@ private User createdByUser;
 2.  **Performa Write**: Saat `save()`, Hibernate tidak perlu melakukan query tambahan untuk mencari objek `User`, cukup mengambil ID dari Security Context.
 3.  **Kemudahan Read**: Saat rendering UI/Mapper, kita bisa mengakses data profil user (misal: `entity.getCreatedByUser().getProfile().getFullName()`) tanpa query manual.
 
-## 3. Optimistic Locking
+## 3. DTO Inheritance Pattern (`BaseAuditResponse`)
+
+Untuk mendukung tampilan audit di UI secara otomatis, seluruh DTO (baik `*Request` maupun `*Response`) wajib mewarisi class `BaseAuditResponse`.
+
+### Keuntungan:
+1.  **Otomatisasi UI**: Metadata audit (siapa & kapan) tersedia secara konsisten di semua form edit.
+2.  **Generic Access**: Memungkinkan `AuditInfoInterceptor` untuk secara otomatis menyediakan variabel `auditInfo` ke Thymeleaf.
+3.  **Clean Code**: Menghapus boilerplate field `id`, `version`, dan audit di setiap file DTO.
+
+## 4. Optimistic Locking
 `BaseModel` menyertakan atribut `version` dengan anotasi `@Version`. Ini digunakan untuk mencegah **Lost Updates** jika dua user mencoba mengedit data yang sama secara bersamaan. Jika terjadi konflik, Spring akan melempar `ObjectOptimisticLockingFailureException`.

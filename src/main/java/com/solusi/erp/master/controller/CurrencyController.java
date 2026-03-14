@@ -1,6 +1,7 @@
 package com.solusi.erp.master.controller;
 
-import com.solusi.erp.master.dto.CurrencyDto;
+import com.solusi.erp.master.dto.CurrencyRequest;
+import com.solusi.erp.master.dto.CurrencyResponse;
 import com.solusi.erp.master.service.CurrencyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +31,7 @@ public class CurrencyController {
     public String listCurrencies(Model model,
             @RequestParam(value = "keyword", required = false) String keyword,
             Pageable pageable) {
-        Page<CurrencyDto> currencies = currencyService.getAllCurrencies(keyword, pageable);
+        Page<CurrencyResponse> currencies = currencyService.getAllCurrencies(keyword, pageable);
         model.addAttribute("page", currencies);
         model.addAttribute("keyword", keyword);
         return "master/currency/list";
@@ -39,23 +40,23 @@ public class CurrencyController {
     @GetMapping("/create")
     @PreAuthorize("hasAuthority('CURRENCY_CREATE')")
     public String showCreateForm(Model model) {
-        CurrencyDto currencyDto = new CurrencyDto();
-        currencyDto.setIsActive(true);
-        currencyDto.setIsDefault(false);
-        model.addAttribute("currency", currencyDto);
+        CurrencyRequest request = new CurrencyRequest();
+        request.setIsActive(true);
+        request.setIsDefault(false);
+        model.addAttribute("currency", request);
         return "master/currency/form";
     }
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('CURRENCY_CREATE')")
-    public String createCurrency(@Valid @ModelAttribute("currency") CurrencyDto currencyDto,
+    public String createCurrency(@Valid @ModelAttribute("currency") CurrencyRequest request,
             BindingResult result,
             RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             return "master/currency/form";
         }
         try {
-            currencyService.createCurrency(currencyDto);
+            currencyService.createCurrency(request);
             String message = messageSource.getMessage("currency.create.success", null, LocaleContextHolder.getLocale());
             redirectAttributes.addFlashAttribute("successMessage", message);
             return "redirect:/master/currencies";
@@ -69,22 +70,22 @@ public class CurrencyController {
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('CURRENCY_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
-        CurrencyDto currencyDto = currencyService.getCurrencyById(id);
-        model.addAttribute("currency", currencyDto);
+        CurrencyRequest request = currencyService.getEditData(id);
+        model.addAttribute("currency", request);
         return "master/currency/form";
     }
 
     @PostMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('CURRENCY_UPDATE')")
     public String updateCurrency(@PathVariable Long id,
-            @Valid @ModelAttribute("currency") CurrencyDto currencyDto,
+            @Valid @ModelAttribute("currency") CurrencyRequest request,
             BindingResult result,
             RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             return "master/currency/form";
         }
         try {
-            currencyService.updateCurrency(id, currencyDto);
+            currencyService.updateCurrency(id, request);
             String message = messageSource.getMessage("currency.update.success", null, LocaleContextHolder.getLocale());
             redirectAttributes.addFlashAttribute("successMessage", message);
             return "redirect:/master/currencies";

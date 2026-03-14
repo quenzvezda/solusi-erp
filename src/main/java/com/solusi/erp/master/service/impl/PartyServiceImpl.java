@@ -56,51 +56,22 @@ public class PartyServiceImpl implements PartyService {
     public PartyRequest getEditData(Long id) {
         Party entity = findOrThrow(id);
 
-        return PartyRequest.builder()
-                .id(entity.getId())
-                .salutation(entity.getSalutation())
-                .code(entity.getCode())
-                .name(entity.getName())
-                .type(entity.getType())
-                .notes(entity.getNotes())
-                .isActive(entity.getIsActive())
-                .email(entity.getEmail())
-                .phone(entity.getPhone())
-                .roleIds(entity.getRoles().stream().map(PartyRoleType::getId).collect(Collectors.toSet()))
-                .identifications(entity.getIdentifications().stream()
-                        .map(i -> PartyIdentificationRequest.builder()
-                                .id(i.getId())
-                                .typeId(i.getType().getId())
-                                .idNumber(i.getIdNumber())
-                                .issuedDate(i.getIssuedDate())
-                                .expiryDate(i.getExpiryDate())
-                                .isActive(i.getIsActive())
-                                .isDefault(i.getIsDefault())
-                                .build())
-                        .collect(Collectors.toList()))
-                .addresses(entity.getAddresses().stream()
-                        .map(a -> PartyAddressRequest.builder()
-                                .id(a.getId())
-                                .types(new HashSet<>(a.getTypes()))
-                                .addressLine1(a.getAddressLine1())
-                                .cityId(a.getCity() != null ? a.getCity().getId() : null)
-                                .postalCode(a.getPostalCode())
-                                .isActive(a.getIsActive())
-                                .isDefault(a.getIsDefault())
-                                .build())
-                        .collect(Collectors.toList()))
-                .contacts(entity.getContacts().stream()
-                        .map(c -> PartyContactRequest.builder()
-                                .id(c.getId())
-                                .label(c.getLabel())
-                                .mobile(c.getMobile())
-                                .phone(c.getPhone())
-                                .email(c.getEmail())
-                                .isActive(c.getIsActive())
-                                .isDefault(c.getIsDefault())
-                                .build())
-                        .collect(Collectors.toList()))
-                .build();
+        PartyRequest request = mapper.toRequest(entity);
+        
+        // Map Collections using mapper methods to ensure audit data is carried over
+        request.setIdentifications(entity.getIdentifications().stream()
+                .map(mapper::toRequest)
+                .collect(Collectors.toList()));
+        
+        request.setAddresses(entity.getAddresses().stream()
+                .map(mapper::toRequest)
+                .collect(Collectors.toList()));
+        
+        request.setContacts(entity.getContacts().stream()
+                .map(mapper::toRequest)
+                .collect(Collectors.toList()));
+
+        return request;
     }
 
     @Override

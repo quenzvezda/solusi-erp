@@ -1,8 +1,8 @@
 package com.solusi.erp.master.mapper;
 
 import com.solusi.erp.core.mapper.AuditMapperHelper;
-import com.solusi.erp.master.dto.BankAccountRequestDto;
-import com.solusi.erp.master.dto.BankAccountResponseDto;
+import com.solusi.erp.master.dto.BankAccountRequest;
+import com.solusi.erp.master.dto.BankAccountResponse;
 import com.solusi.erp.master.model.BankAccount;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -16,18 +16,22 @@ public interface BankAccountMapper {
     @Mapping(target = "cityName", source = "city.name")
     @Mapping(target = "partyId", source = "party.id")
     @Mapping(target = "partyName", source = "party.name")
-    BankAccountResponseDto toDto(BankAccount entity);
+    BankAccountResponse toResponse(BankAccount entity);
+
+    @Mapping(target = "cityId", source = "city.id")
+    @Mapping(target = "partyId", source = "party.id")
+    BankAccountRequest toRequest(BankAccount entity);
 
     @Mapping(target = "city", ignore = true)
     @Mapping(target = "party", ignore = true)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "isActive", ignore = true)
-    BankAccount toEntity(BankAccountRequestDto dto);
+    BankAccount toEntity(BankAccountRequest request);
 
     @Mapping(target = "city", ignore = true)
     @Mapping(target = "party", ignore = true)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "isActive", ignore = true)
     @Mapping(target = "code", ignore = true) // Do not update code
-    void updateEntityFromDto(BankAccountRequestDto dto, @MappingTarget BankAccount entity);
+    void updateEntityFromRequest(BankAccountRequest request, @MappingTarget BankAccount entity);
 }

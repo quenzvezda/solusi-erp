@@ -1,0 +1,62 @@
+<div th:fragment="audit-info(auditInfo)"
+     style="margin: 12px 0 0;
+            border-top: 0.5px solid rgba(0,0,0,.10);
+            padding: 12px 0 4px;">
+
+  <!-- Section label -->
+  <div class="d-flex align-items-center gap-1 mb-2">
+    <i class="ti ti-clock-hour-4" style="font-size:13px; opacity:0.4;"></i>
+    <span class="text-uppercase text-muted"
+          style="font-size:10.5px; letter-spacing:.05em; font-weight:500;"
+          th:text="#{label.audit.record.info}">
+      Record info
+    </span>
+  </div>
+
+  <!-- 4-column grid -->
+  <div class="row g-2">
+
+    <!-- Created by -->
+    <div class="col-6 col-md-3">
+      <p class="text-muted mb-1" style="font-size:11px;"
+         th:text="#{label.audit.created.by}">Created by</p>
+      <div class="d-flex align-items-center gap-2">
+        <span class="avatar avatar-xs rounded-circle bg-azure-lt text-azure"
+              style="font-size:9px; width:20px; height:20px; line-height:20px;"
+              th:text="${auditInfo.getCreatedInitials()}">?</span>
+        <span style="font-size:12px;"
+              th:text="${auditInfo.createdByName ?: '-'}">-</span>
+      </div>
+    </div>
+
+    <!-- Created date -->
+    <div class="col-6 col-md-3">
+      <p class="text-muted mb-1" style="font-size:11px;"
+         th:text="#{label.audit.created.date}">Created date</p>
+      <span style="font-size:12px;"
+            th:text="${auditInfo.getFormattedCreatedDate()}">-</span>
+    </div>
+
+    <!-- Updated by -->
+    <div class="col-6 col-md-3">
+      <p class="text-muted mb-1" style="font-size:11px;"
+         th:text="#{label.audit.updated.by}">Last updated by</p>
+      <div class="d-flex align-items-center gap-2">
+        <span class="avatar avatar-xs rounded-circle bg-green-lt text-green"
+              style="font-size:9px; width:20px; height:20px; line-height:20px;"
+              th:text="${auditInfo.getUpdatedInitials()}">?</span>
+        <span style="font-size:12px;"
+              th:text="${auditInfo.updatedByName ?: '-'}">-</span>
+      </div>
+    </div>
+
+    <!-- Updated date -->
+    <div class="col-6 col-md-3">
+      <p class="text-muted mb-1" style="font-size:11px;"
+         th:text="#{label.audit.updated.date}">Last updated</p>
+      <span style="font-size:12px;"
+            th:text="${auditInfo.getFormattedUpdatedDate()}">-</span>
+    </div>
+
+  </div>
+</div>

@@ -1,6 +1,7 @@
 package com.solusi.erp.master.service.impl;
 
-import com.solusi.erp.master.dto.CurrencyDto;
+import com.solusi.erp.master.dto.CurrencyRequest;
+import com.solusi.erp.master.dto.CurrencyResponse;
 import com.solusi.erp.master.mapper.CurrencyMapper;
 import com.solusi.erp.master.model.Currency;
 import com.solusi.erp.master.repository.CurrencyRepository;
@@ -31,30 +32,38 @@ public class CurrencyServiceImpl implements CurrencyService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<CurrencyDto> getAllCurrencies(String keyword, Pageable pageable) {
+    public Page<CurrencyResponse> getAllCurrencies(String keyword, Pageable pageable) {
         if (keyword != null && !keyword.trim().isEmpty()) {
-            return currencyRepository.search(keyword, pageable).map(currencyMapper::toDto);
+            return currencyRepository.search(keyword, pageable).map(currencyMapper::toResponse);
         }
-        return currencyRepository.findAll(pageable).map(currencyMapper::toDto);
+        return currencyRepository.findAll(pageable).map(currencyMapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public CurrencyDto getCurrencyById(Long id) {
+    public CurrencyResponse getCurrencyById(Long id) {
         Currency currency = currencyRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("error.currency.not.found")));
-        return currencyMapper.toDto(currency);
+        return currencyMapper.toResponse(currency);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CurrencyRequest getEditData(Long id) {
+        Currency currency = currencyRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("error.currency.not.found")));
+        return currencyMapper.toRequest(currency);
     }
 
     @Override
     @Transactional
-    public CurrencyDto createCurrency(CurrencyDto dto) {
+    public void createCurrency(CurrencyRequest request) {
         // Validate duplicate alias
-        if (currencyRepository.findByAlias(dto.getAlias()).isPresent()) {
+        if (currencyRepository.findByAlias(request.getAlias()).isPresent()) {
             throw new RuntimeException(getMessage("error.currency.duplicate-alias"));
         }
 
-        Currency currency = currencyMapper.toEntity(dto);
+        Currency currency = currencyMapper.toEntity(request);
 
         handleDefaultStatus(currency);
 
@@ -64,23 +73,22 @@ public class CurrencyServiceImpl implements CurrencyService {
 
         Currency savedCurrency = currencyRepository.save(currency);
         log.info("Created Currency with symbol: {}", savedCurrency.getSymbol());
-        return currencyMapper.toDto(savedCurrency);
     }
 
     @Override
     @Transactional
-    public CurrencyDto updateCurrency(Long id, CurrencyDto dto) {
+    public void updateCurrency(Long id, CurrencyRequest request) {
         Currency existingCurrency = currencyRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("error.currency.not.found")));
 
         // Validate duplicate alias if changed
-        if (!existingCurrency.getAlias().equalsIgnoreCase(dto.getAlias())) {
-            if (currencyRepository.findByAlias(dto.getAlias()).isPresent()) {
+        if (!existingCurrency.getAlias().equalsIgnoreCase(request.getAlias())) {
+            if (currencyRepository.findByAlias(request.getAlias()).isPresent()) {
                 throw new RuntimeException(getMessage("error.currency.duplicate-alias"));
             }
         }
 
-        currencyMapper.updateEntityFromDto(dto, existingCurrency);
+        currencyMapper.updateEntityFromRequest(request, existingCurrency);
 
         handleDefaultStatus(existingCurrency);
 
@@ -90,7 +98,6 @@ public class CurrencyServiceImpl implements CurrencyService {
 
         Currency updatedCurrency = currencyRepository.save(existingCurrency);
         log.info("Updated Currency with symbol: {}", updatedCurrency.getSymbol());
-        return currencyMapper.toDto(updatedCurrency);
     }
 
     @Override

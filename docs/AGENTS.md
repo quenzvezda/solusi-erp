@@ -26,6 +26,7 @@ AI Assistant WAJIB mematuhi versi dan teknologi berikut berdasarkan `pom.xml` ut
     * JANGAN PERNAH mengirimkan JPA Entity secara langsung ke Thymeleaf (Controller to View).
     * JANGAN PERNAH menerima form submission langsung ke JPA Entity.
     * Selalu gunakan DTO untuk *request* (form) dan *response* (view), dan gunakan MapStruct untuk *mapping*.
+    * **Standard DTO Inheritance**: Semua Request dan Response DTO **WAJIB** meng-extend `BaseAuditResponse` agar metadata ID, Version, dan Audit Trace otomatis terkelola dan tampil di UI secara seragam.
 * **UI Performance Standards:**
     * **CDN usage:** Gunakan JSDelivr (@latest) untuk semua library eksternal (Tabler Core, Icons, ApexCharts) untuk memaksimalkan caching.
     * **Compression:** Pastikan Gzip compression aktif di `application.yaml` untuk tipe file text, css, js, json, dan woff2.

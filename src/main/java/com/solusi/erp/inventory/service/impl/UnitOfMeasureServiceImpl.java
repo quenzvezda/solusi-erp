@@ -64,12 +64,7 @@ public class UnitOfMeasureServiceImpl implements UnitOfMeasureService {
         UnitOfMeasure entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.uom.notfound")));
         
-        return UnitOfMeasureRequest.builder()
-                .id(entity.getId())
-                .code(entity.getCode())
-                .name(entity.getName())
-                .type(entity.getType())
-                .build();
+        return mapper.toRequest(entity);
     }
 
     @Override

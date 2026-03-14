@@ -18,5 +18,7 @@ public interface UnitOfMeasureMapper {
 
     UnitOfMeasureResponse toResponse(UnitOfMeasure entity);
 
+    UnitOfMeasureRequest toRequest(UnitOfMeasure entity);
+
     void updateEntityFromRequest(UnitOfMeasureRequest request, @MappingTarget UnitOfMeasure entity);
 }

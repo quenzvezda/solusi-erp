@@ -18,6 +18,9 @@ public interface RoleMapper {
 
     RoleResponse toResponse(Role role);
 
+    @Mapping(target = "permissionIds", expression = "java(role.getPermissions().stream().map(p -> p.getId()).collect(java.util.stream.Collectors.toSet()))")
+    RoleRequest toRequest(Role role);
+
     List<RoleResponse> toResponseList(List<Role> roles);
 
     PermissionResponse toPermissionResponse(Permission permission);

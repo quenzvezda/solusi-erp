@@ -54,12 +54,7 @@ public class BrandServiceImpl implements BrandService {
         Brand entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.brand.notfound")));
         
-        return BrandRequest.builder()
-                .id(entity.getId())
-                .code(entity.getCode())
-                .name(entity.getName())
-                .note(entity.getNote())
-                .build();
+        return mapper.toRequest(entity);
     }
 
     @Override

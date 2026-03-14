@@ -1,7 +1,7 @@
 package com.solusi.erp.master.controller;
 
-import com.solusi.erp.master.dto.BankAccountRequestDto;
-import com.solusi.erp.master.dto.BankAccountResponseDto;
+import com.solusi.erp.master.dto.BankAccountRequest;
+import com.solusi.erp.master.dto.BankAccountResponse;
 import com.solusi.erp.master.model.AccountType;
 import com.solusi.erp.master.service.BankAccountService;
 import jakarta.validation.Valid;
@@ -32,7 +32,7 @@ public class BankAccountController {
     public String list(Model model,
             @RequestParam(value = "keyword", required = false) String keyword,
             Pageable pageable) {
-        Page<BankAccountResponseDto> page = bankAccountService.findAll(keyword, pageable);
+        Page<BankAccountResponse> page = bankAccountService.findAll(keyword, pageable);
         model.addAttribute("page", page);
         model.addAttribute("keyword", keyword);
         return "master/bank-accounts/list";
@@ -41,14 +41,14 @@ public class BankAccountController {
     @GetMapping("/create")
     @PreAuthorize("hasAuthority('BANK-ACCOUNT_CREATE')")
     public String showCreateForm(Model model) {
-        model.addAttribute("bankAccount", new BankAccountRequestDto());
+        model.addAttribute("bankAccount", new BankAccountRequest());
         model.addAttribute("accountTypes", AccountType.values());
         return "master/bank-accounts/form";
     }
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('BANK-ACCOUNT_CREATE')")
-    public String create(@Valid @ModelAttribute("bankAccount") BankAccountRequestDto request,
+    public String create(@Valid @ModelAttribute("bankAccount") BankAccountRequest request,
             BindingResult result,
             RedirectAttributes redirectAttributes, Model model) {
         if (result.hasErrors()) {
@@ -71,10 +71,10 @@ public class BankAccountController {
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('BANK-ACCOUNT_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
-        BankAccountRequestDto request = bankAccountService.getEditData(id);
+        BankAccountRequest request = bankAccountService.getEditData(id);
         
         // Fetch full entity to populate the view correctly (specifically for party and city names)
-        BankAccountResponseDto responseDto = bankAccountService.findById(id);
+        BankAccountResponse responseDto = bankAccountService.findById(id);
         
         model.addAttribute("bankAccount", request);
         model.addAttribute("selectedCity", responseDto.getCityName());
@@ -86,14 +86,14 @@ public class BankAccountController {
     @PostMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('BANK-ACCOUNT_UPDATE')")
     public String update(@PathVariable Long id,
-            @Valid @ModelAttribute("bankAccount") BankAccountRequestDto request,
+            @Valid @ModelAttribute("bankAccount") BankAccountRequest request,
             BindingResult result,
             RedirectAttributes redirectAttributes, Model model) {
         if (result.hasErrors()) {
             model.addAttribute("accountTypes", AccountType.values());
             // Need to repopulate selected names
             try {
-                BankAccountResponseDto responseDto = bankAccountService.findById(id);
+                BankAccountResponse responseDto = bankAccountService.findById(id);
                 model.addAttribute("selectedCity", responseDto.getCityName());
                 model.addAttribute("selectedParty", responseDto.getPartyName());
             } catch (Exception ignored) {}

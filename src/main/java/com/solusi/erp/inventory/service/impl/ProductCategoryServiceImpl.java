@@ -54,13 +54,7 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
         ProductCategory entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.product-category.notfound")));
         
-        return ProductCategoryRequest.builder()
-                .id(entity.getId())
-                .code(entity.getCode())
-                .name(entity.getName())
-                .type(entity.getType())
-                .note(entity.getNote())
-                .build();
+        return mapper.toRequest(entity);
     }
 
     @Override

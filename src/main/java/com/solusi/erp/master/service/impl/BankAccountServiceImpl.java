@@ -1,8 +1,8 @@
 package com.solusi.erp.master.service.impl;
 
 import com.solusi.erp.core.service.SequenceGeneratorService;
-import com.solusi.erp.master.dto.BankAccountRequestDto;
-import com.solusi.erp.master.dto.BankAccountResponseDto;
+import com.solusi.erp.master.dto.BankAccountRequest;
+import com.solusi.erp.master.dto.BankAccountResponse;
 import com.solusi.erp.master.mapper.BankAccountMapper;
 import com.solusi.erp.master.model.BankAccount;
 import com.solusi.erp.master.model.Geographic;
@@ -33,47 +33,35 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<BankAccountResponseDto> findAll(String keyword, Pageable pageable) {
+    public Page<BankAccountResponse> findAll(String keyword, Pageable pageable) {
         Page<BankAccount> page;
         if (StringUtils.hasText(keyword)) {
             page = repository.search(keyword, pageable);
         } else {
             page = repository.findByIsActiveTrue(pageable);
         }
-        return page.map(mapper::toDto);
+        return page.map(mapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public BankAccountResponseDto findById(Long id) {
+    public BankAccountResponse findById(Long id) {
         BankAccount entity = repository.findByIdAndIsActiveTrue(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("master.bank-account.not-found")));
-        return mapper.toDto(entity);
+        return mapper.toResponse(entity);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public BankAccountRequestDto getEditData(Long id) {
+    public BankAccountRequest getEditData(Long id) {
         BankAccount entity = repository.findByIdAndIsActiveTrue(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("master.bank-account.not-found")));
-        
-        BankAccountRequestDto dto = new BankAccountRequestDto();
-        dto.setCode(entity.getCode());
-        dto.setBankName(entity.getBankName());
-        dto.setBranch(entity.getBranch());
-        dto.setCityId(entity.getCity().getId());
-        dto.setPartyId(entity.getParty().getId());
-        dto.setAccountName(entity.getAccountName());
-        dto.setAccountNo(entity.getAccountNo());
-        dto.setAccountType(entity.getAccountType());
-        dto.setNote(entity.getNote());
-        
-        return dto;
+        return mapper.toRequest(entity);
     }
 
     @Override
     @Transactional
-    public void create(BankAccountRequestDto request) {
+    public void create(BankAccountRequest request) {
         BankAccount entity = mapper.toEntity(request);
         
         Geographic city = geographicRepository.findById(request.getCityId())
@@ -93,11 +81,11 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     @Override
     @Transactional
-    public void update(Long id, BankAccountRequestDto request) {
+    public void update(Long id, BankAccountRequest request) {
         BankAccount entity = repository.findByIdAndIsActiveTrue(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("master.bank-account.not-found")));
 
-        mapper.updateEntityFromDto(request, entity);
+        mapper.updateEntityFromRequest(request, entity);
         
         if (!entity.getCity().getId().equals(request.getCityId())) {
             Geographic city = geographicRepository.findById(request.getCityId())
