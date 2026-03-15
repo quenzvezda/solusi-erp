@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:fragment="core(pageTitle)">
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <title th:text="${pageTitle} + ' - Solusi ERP'">Solusi ERP</title>
+
+        <!-- SEO & Metadata -->
+        <meta name="description" th:content="#{landing.hero.subtitle}">
+        <meta name="author" content="Solusi ERP">
+        <link rel="shortcut icon" th:href="@{/favicon.ico}" type="image/x-icon">
+
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website">
+        <meta property="og:title" th:content="(${pageTitle} ?: 'Beranda') + ' - Solusi ERP'">
+        <meta property="og:description" th:content="#{landing.hero.subtitle}">
+        <meta property="og:image" th:content="@{/img/logo.png}">
+        <meta property="og:site_name" content="Solusi ERP">
+
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary_large_image">
+        <meta property="twitter:title" th:content="(${pageTitle} ?: 'Beranda') + ' - Solusi ERP'">
+        <meta property="twitter:description" th:content="#{landing.hero.subtitle}">
+        <meta property="twitter:image" th:content="@{/img/logo.png}">
+
+        <!-- Performance: DNS Prefetch & Preconnect -->
+        <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+        <link rel="dns-prefetch" href="https://rsms.me">
+        <link rel="preconnect" href="https://rsms.me" crossorigin>
+
+        <!-- Tabler Core CSS (CDN Latest) -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/css/tabler.min.css">
+        <!-- Tabler Icons CSS (CDN Latest) -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+        <!-- Inter Font (CDN) -->
+        <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+
+        <!-- Global App CSS -->
+        <link rel="stylesheet" th:href="@{/css/global.css}">
+    </th:block>
+</head>
+<body></body>
+</html>

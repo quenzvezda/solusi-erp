@@ -2,78 +2,14 @@
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head th:fragment="head(title)">
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title th:text="${title} + ' - Solusi ERP'">Solusi ERP</title>
+    <th:block th:replace="~{fragments/head :: core(${title})}"></th:block>
 
-    <!-- Performance: DNS Prefetch & Preconnect -->
-    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-
-    <!-- Tabler Core CSS (CDN Latest) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/css/tabler.min.css">
-    <!-- Tabler Icons CSS (CDN Latest) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
-    <!-- Inter Font (CDN) -->
-    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
     <!-- TomSelect (Autocomplete) CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2/dist/css/tom-select.bootstrap5.min.css">
-
     <!-- Custom CSS -->
     <link rel="stylesheet" th:href="@{/css/tomselect-custom.css}">
-
-    <style>
-        :root {
-            --tblr-font-sans-serif: 'Inter var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
-        }
-
-        .ti {
-            display: inline-block;
-            vertical-align: middle;
-        }
-    </style>
-    <style>
-        /* Global Table Sorting (Custom Refinement) */
-        .table-sort {
-            cursor: pointer;
-            padding: 0.5rem 0.25rem;
-            margin: -0.5rem -0.25rem;
-            transition: all 0.15s ease-in-out;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            position: relative;
-        }
-
-        /* Disable default Tabler/Bootstrap sorting arrows (::after and ::before) */
-        .table-sort::after,
-        .table-sort::before {
-            display: none !important;
-            content: none !important;
-        }
-
-        .table-sort:hover {
-            background-color: rgba(32, 107, 196, 0.06);
-            color: #206bc4 !important;
-        }
-
-        .table-sort .icon {
-            font-size: 1rem;
-            transition: transform 0.2s;
-            line-height: 1;
-        }
-
-        /* Add a subtle highlight to the active sort icon's container */
-        .table-sort .ms-1 {
-            display: flex;
-            align-items: center;
-            height: 100%;
-        }
-    </style>
 </head>
+
 
 <body th:fragment="layout(content)">
     <div class="page">

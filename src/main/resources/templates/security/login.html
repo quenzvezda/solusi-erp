@@ -1,22 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-    <title th:text="#{login.title} + ' - Solusi ERP'">Login - Solusi ERP</title>
-    <!-- Tabler Core CSS (CDN Latest) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/css/tabler.min.css">
-    <!-- Tabler Icons CSS (CDN Latest) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
-    <!-- Inter Font (CDN) -->
-    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
-    
-    <style>
-        :root {
-            --tblr-font-sans-serif: 'Inter var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
-        }
-    </style>
+    <th:block th:replace="~{fragments/head :: core(#{login.title})}"></th:block>
 </head>
+
 <body class="d-flex flex-column">
     <div class="page page-center">
         <div class="container container-tight py-4">

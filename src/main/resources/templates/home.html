@@ -1,20 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-    <title th:text="#{landing.welcome}">Selamat Datang - Solusi ERP</title>
-    <!-- Tabler Core CSS (CDN Latest) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/css/tabler.min.css">
-    <!-- Tabler Icons CSS (CDN Latest) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
-    <!-- Inter Font -->
-    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    <th:block th:replace="~{fragments/head :: core(#{landing.welcome})}"></th:block>
     
     <style>
-        :root {
-            --tblr-font-sans-serif: 'Inter var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
-        }
         .hero-section {
             padding: 4rem 0;
             background: linear-gradient(135deg, #f5f7fb 0%, #eef2f7 100%);
@@ -27,6 +16,7 @@
         }
     </style>
 </head>
+
 <body class="d-flex flex-column">
     <div class="page">
         <!-- Navbar -->
