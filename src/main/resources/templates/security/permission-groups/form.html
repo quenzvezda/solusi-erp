@@ -33,12 +33,29 @@
                                        placeholder="e.g. SEC-01" required>
                                 <div class="invalid-feedback" th:if="${#fields.hasErrors('code')}" th:errors="*{code}"></div>
                             </div>
-                            <div class="col-md-8">
+                            <div class="col-md-4">
                                 <label class="form-label required" th:text="#{label.menu.group.url}">Target URL Path</label>
                                 <input type="text" th:field="*{urlPath}" class="form-control" 
                                        th:classappend="${#fields.hasErrors('urlPath')} ? 'is-invalid'"
                                        placeholder="e.g. /security/users" required>
                                 <div class="invalid-feedback" th:if="${#fields.hasErrors('urlPath')}" th:errors="*{urlPath}"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    Icon Class
+                                    <a href="https://tabler-icons.io/" target="_blank" class="ms-1 small" title="Browse Icons">
+                                        <i class="ti ti-external-link"></i>
+                                    </a>
+                                </label>
+                                <div class="input-group input-group-flat">
+                                    <span class="input-group-text">
+                                        <i th:class="'ti ' + (*{iconClass} ?: 'ti-circle')" id="icon-preview"></i>
+                                    </span>
+                                    <input type="text" th:field="*{iconClass}" class="form-control" 
+                                           placeholder="e.g. ti-user"
+                                           oninput="document.getElementById('icon-preview').className = 'ti ' + (this.value || 'ti-circle')">
+                                </div>
+                                <small class="form-hint">Use Tabler Icon class (e.g., ti-package).</small>
                             </div>
 
                             <!-- Indonesian Section -->

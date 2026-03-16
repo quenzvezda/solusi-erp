@@ -127,7 +127,7 @@ Sistem ini menggunakan folder `docs/` terstruktur agar AI dan Developer dapat me
 *   **`docs/architecture/`**: Visualisasi dan arsitektur klasifikasi (Class Diagram, Usecases, dll).
 *   **`docs/database/`**: Dokumentasi ERD dan definisi relasi antar identitas database ERP yang kompleks.
 *   **`docs/modules/`**: **[SANGAT PENTING UNTUK AI]** Penjelasan setiap Modul/Fitur bisnis spesifik (misal: `modules/master/tax.md`, `modules/master/currency.md`, `modules/security/permission-groups.md`). Jelajahi riwayat aturan modul melalui file ini.
-*   **`docs/spec/`**: Spesifikasi teknis horizontal/bersama yang dipakai seluruh fitur (misal: Tata cara standar `pagination.md`, `sequence-generator.md`, atau `search-menu.md`).
+*   **`docs/spec/`**: Spesifikasi teknis horizontal/bersama yang dipakai seluruh fitur (misal: Tata cara standar `pagination.md`, `sequence-generator.md`, `search-menu.md`, atau `menu-structure.md`).
 *   **`docs/roadmap/`**: Dokumen perencanaan masa depan ERP atau fitur yang masih tertunda.
 
 ## 11. Security & Role Permissions

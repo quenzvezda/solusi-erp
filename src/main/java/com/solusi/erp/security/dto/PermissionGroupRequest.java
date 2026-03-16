@@ -38,6 +38,9 @@ public class PermissionGroupRequest {
     @Size(max = 255, message = "{validation.size}")
     private String urlPath;
 
+    @Size(max = 50, message = "{validation.size}")
+    private String iconClass;
+
     @Size(max = 255, message = "{validation.size}")
     private String descriptionId;
 

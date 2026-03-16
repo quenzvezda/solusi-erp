@@ -15,4 +15,5 @@ public interface PermissionGroupService {
     void create(PermissionGroupRequest request);
     void update(Long id, PermissionGroupRequest request);
     void delete(Long id);
+    List<com.solusi.erp.security.dto.MenuNodeResponse> buildMenuTree(java.util.Collection<String> authorities);
 }

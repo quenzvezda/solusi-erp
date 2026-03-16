@@ -63,6 +63,7 @@
                         <table class="table table-vcenter card-table">
                             <thead>
                                 <tr>
+                                    <th class="w-1">Icon</th>
                                     <th th:replace="~{fragments/table :: sortable('code', #{label.menu.group.code})}">Code</th>
                                     <th th:replace="~{fragments/table :: sortable('nameId', #{label.menu.group.name})}">Name</th>
                                     <th>URL Path</th>
@@ -72,6 +73,11 @@
                             </thead>
                             <tbody>
                                 <tr th:each="g : ${page.content}">
+                                    <td>
+                                        <div class="avatar avatar-sm bg-primary-lt">
+                                            <i th:class="'ti ' + (${g.iconClass} ?: 'ti-circle')"></i>
+                                        </div>
+                                    </td>
                                     <td><code th:text="${g.code}">CODE</code></td>
                                     <td>
                                         <div class="d-flex flex-column">

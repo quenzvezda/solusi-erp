@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
+import java.util.List;
 
 public interface PermissionGroupRepository extends JpaRepository<PermissionGroup, Long> {
 
@@ -23,4 +24,7 @@ public interface PermissionGroupRepository extends JpaRepository<PermissionGroup
            "OR LOWER(pg.nameEn) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
            "OR LOWER(pg.code) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<PermissionGroup> search(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query("SELECT DISTINCT pg FROM PermissionGroup pg JOIN pg.permissions p WHERE p.name IN :authorities")
+    List<PermissionGroup> findAllByAuthorities(@Param("authorities") Collection<String> authorities);
 }

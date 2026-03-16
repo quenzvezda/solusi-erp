@@ -21,12 +21,20 @@ import java.util.Locale;
 public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
 
     private final UserProfileRepository userProfileRepository;
+    private final PermissionGroupService permissionGroupService;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
             Authentication authentication) throws IOException, ServletException {
         SecurityUser securityUser = (SecurityUser) authentication.getPrincipal();
         UserProfile profile = securityUser.user().getProfile();
+
+        // Build and Store Menu Tree in Session
+        java.util.Set<String> authorities = authentication.getAuthorities().stream()
+                .map(org.springframework.security.core.GrantedAuthority::getAuthority)
+                .collect(java.util.stream.Collectors.toSet());
+        
+        request.getSession().setAttribute("userMenu", permissionGroupService.buildMenuTree(authorities));
 
         if (profile != null) {
             LocaleResolver localeResolver = RequestContextUtils.getLocaleResolver(request);

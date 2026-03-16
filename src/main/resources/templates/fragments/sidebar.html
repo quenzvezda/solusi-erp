@@ -4,487 +4,580 @@
 <head></head>
 
 <body>
-    <aside th:fragment="sidebar" id="sidebar" class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
-        <div class="container-fluid">
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu"
+<aside th:fragment="sidebar" id="sidebar" class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
+
+    <!-- ============================================================
+         RESIZER HANDLE — the invisible hot-zone at the right edge
+         ============================================================ -->
+    <div class="sidebar-resizer" id="sidebar-resizer" aria-hidden="true">
+        <div class="sidebar-resizer-line"></div>
+    </div>
+
+    <div class="container-fluid">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu"
                 aria-controls="sidebar-menu" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-            <h1 class="navbar-brand navbar-brand-autodark">
-                <a th:href="@{/dashboard}" class="d-flex align-items-center justify-content-center w-100">
-                    <img th:src="@{/img/logo.png}" height="32" alt="Solusi ERP" class="navbar-brand-image logo-full">
-                    <img th:src="@{/img/logo-only.png}" height="32" alt="Solusi ERP"
-                        class="navbar-brand-image logo-icon" style="display: none;">
-                </a>
-            </h1>
+        <h1 class="navbar-brand navbar-brand-autodark">
+            <a th:href="@{/dashboard}" class="d-flex align-items-center justify-content-center w-100">
+                <img th:src="@{/img/logo.png}" height="32" alt="Solusi ERP" class="navbar-brand-image logo-full">
+                <img th:src="@{/img/logo-only.png}" height="32" alt="Solusi ERP"
+                     class="navbar-brand-image logo-icon" style="display:none;">
+            </a>
+        </h1>
 
-            <div class="collapse navbar-collapse" id="sidebar-menu">
-                <ul class="navbar-nav pt-lg-3 flex-grow-1">
+        <div class="collapse navbar-collapse" id="sidebar-menu">
+            <ul class="navbar-nav pt-lg-3 flex-grow-1">
 
-                    <!-- Dashboard -->
-                    <li class="nav-item" sec:authorize="hasAuthority('DASHBOARD_READ')">
-                        <a class="nav-link" th:href="@{/dashboard}">
-                            <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                <i class="ti ti-home-2"></i>
-                            </span>
-                            <span class="nav-link-title" th:text="#{label.dashboard}">Dashboard</span>
-                        </a>
-                    </li>
-
-                    <!-- Section: Company Admin -->
-                    <li class="nav-item nav-section-label"
-                        sec:authorize="hasAnyAuthority('PARTY_READ', 'PARTY-ROLE-TYPE_READ', 'TAX_READ', 'CURRENCY_READ', 'GEOGRAPHIC_READ', 'BANK-ACCOUNT_READ')">
-                        <span class="nav-link-title text-uppercase"
-                            style="font-size:0.65rem; letter-spacing:0.08em; opacity:0.45; padding: 0.75rem 0.75rem 0.25rem;"
-                            th:text="#{label.management}">
-                            Management
+                <!-- Dashboard -->
+                <li class="nav-item" sec:authorize="hasAuthority('DASHBOARD_READ')">
+                    <a class="nav-link" th:href="@{/dashboard}">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-home-2"></i>
                         </span>
-                    </li>
+                        <span class="nav-link-title" th:text="#{label.dashboard}">Dashboard</span>
+                    </a>
+                </li>
 
-                    <li class="nav-item"
-                        sec:authorize="hasAnyAuthority('PARTY_READ', 'PARTY-ROLE-TYPE_READ', 'TAX_READ', 'CURRENCY_READ', 'GEOGRAPHIC_READ', 'BANK-ACCOUNT_READ')">
-                        <a class="nav-link dropdown-toggle" href="#sidebar-company-admin" data-bs-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="sidebar-company-admin">
-                            <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                <i class="ti ti-building-skyscraper"></i>
-                            </span>
-                            <span class="nav-link-title" th:text="#{label.company.admin}">Company Admin</span>
-                        </a>
-                        <div class="collapse" id="sidebar-company-admin" data-bs-parent="#sidebar-menu">
-                            <ul class="nav flex-column nav-nested">
+                <!-- Dynamic Menu Nodes from Session -->
+                <th:block th:if="${session.userMenu != null}">
+                    <th:block th:each="mNode, iterStat : ${session.userMenu}">
+                        <th:block
+                                th:replace="~{:: menuNode(node=${mNode}, id='sidebar-item-' + ${iterStat.index}, parentId='sidebar-menu')}">
+                        </th:block>
+                    </th:block>
+                </th:block>
 
-                                <!-- Master Data -->
-                                <li class="nav-item">
-                                    <a class="nav-link dropdown-toggle nav-sub-toggle" href="#sidebar-master"
-                                        data-bs-toggle="collapse" role="button" aria-expanded="false"
-                                        aria-controls="sidebar-master">
-                                        <span class="nav-link-icon-sm"><i class="ti ti-database"></i></span>
-                                        <span class="nav-link-title" th:text="#{label.master.data}">Master Data</span>
-                                    </a>
-                                    <div class="collapse" id="sidebar-master" data-bs-parent="#sidebar-company-admin">
-                                        <ul class="nav flex-column nav-leaf">
-                                            <li class="nav-item" sec:authorize="hasAuthority('PARTY_READ')">
-                                                <a class="nav-link" th:href="@{/master/parties}">
-                                                    <span class="nav-leaf-dot"></span>
-                                                    <span class="nav-link-title" th:text="#{label.party}">Business
-                                                        Partner</span>
-                                                </a>
-                                            </li>
-                                            <li class="nav-item" sec:authorize="hasAuthority('PARTY-ROLE-TYPE_READ')">
-                                                <a class="nav-link" th:href="@{/master/party-role-types}">
-                                                    <span class="nav-leaf-dot"></span>
-                                                    <span class="nav-link-title"
-                                                        th:text="#{label.party-role-type}">Party Role Types</span>
-                                                </a>
-                                            </li>
-                                            <li class="nav-item" sec:authorize="hasAuthority('GEOGRAPHIC_READ')">
-                                                <a class="nav-link" th:href="@{/master/geographics}">
-                                                    <span class="nav-leaf-dot"></span>
-                                                    <span class="nav-link-title" th:text="#{label.geographic}">Geographic</span>
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </li>
+            </ul>
 
-                                <!-- General Settings -->
-                                <li class="nav-item" sec:authorize="hasAnyAuthority('TAX_READ', 'CURRENCY_READ', 'BANK-ACCOUNT_READ')">
-                                    <a class="nav-link dropdown-toggle nav-sub-toggle" href="#sidebar-general-setting"
-                                        data-bs-toggle="collapse" role="button" aria-expanded="false"
-                                        aria-controls="sidebar-general-setting">
-                                        <span class="nav-link-icon-sm"><i class="ti ti-settings"></i></span>
-                                        <span class="nav-link-title" th:text="#{label.general.settings}">General
-                                            Settings</span>
-                                    </a>
-                                    <div class="collapse" id="sidebar-general-setting"
-                                        data-bs-parent="#sidebar-company-admin">
-                                        <ul class="nav flex-column nav-leaf">
-                                            <li class="nav-item" sec:authorize="hasAuthority('TAX_READ')">
-                                                <a class="nav-link" th:href="@{/master/taxes}">
-                                                    <span class="nav-leaf-dot"></span>
-                                                    <span class="nav-link-title" th:text="#{label.tax}">Tax</span>
-                                                </a>
-                                            </li>
-                                            <li class="nav-item" sec:authorize="hasAuthority('CURRENCY_READ')">
-                                                <a class="nav-link" th:href="@{/master/currencies}">
-                                                    <span class="nav-leaf-dot"></span>
-                                                    <span class="nav-link-title"
-                                                        th:text="#{label.currency}">Currency</span>
-                                                </a>
-                                            </li>
-                                            <li class="nav-item" sec:authorize="hasAuthority('BANK-ACCOUNT_READ')">
-                                                <a class="nav-link" th:href="@{/master/bank-accounts}">
-                                                    <span class="nav-leaf-dot"></span>
-                                                    <span class="nav-link-title"
-                                                        th:text="#{label.bank-account}">Bank Account</span>
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </li>
-
-                            </ul>
-                        </div>
-                    </li>
-
-                    <!-- Section: Operations -->
-                    <li class="nav-item nav-section-label"
-                        sec:authorize="hasAnyAuthority('PRODUCT_READ', 'PRODUCT-CATEGORY_READ', 'UNIT-OF-MEASURE_READ', 'BRAND_READ')">
-                        <span class="nav-link-title text-uppercase"
-                            style="font-size:0.65rem; letter-spacing:0.08em; opacity:0.45; padding: 0.75rem 0.75rem 0.25rem;"
-                            th:text="#{label.operations}">
-                            Operations
-                        </span>
-                    </li>
-
-                    <!-- Inventory -->
-                    <li class="nav-item"
-                        sec:authorize="hasAnyAuthority('PRODUCT_READ', 'PRODUCT-CATEGORY_READ', 'UNIT-OF-MEASURE_READ', 'BRAND_READ')">
-                        <a class="nav-link dropdown-toggle" href="#sidebar-inventory" data-bs-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="sidebar-inventory">
-                            <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                <i class="ti ti-package"></i>
-                            </span>
-                            <span class="nav-link-title" th:text="#{label.inventory}">Inventory</span>
-                        </a>
-                        <div class="collapse" id="sidebar-inventory" data-bs-parent="#sidebar-menu">
-                            <ul class="nav flex-column nav-leaf ps-4">
-                                <li class="nav-item" sec:authorize="hasAuthority('PRODUCT_READ')">
-                                    <a class="nav-link" th:href="@{/inventory/products}">
-                                        <span class="nav-leaf-dot"></span>
-                                        <span class="nav-link-title" th:text="#{label.product}">Product</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item" sec:authorize="hasAuthority('PRODUCT-CATEGORY_READ')">
-                                    <a class="nav-link" th:href="@{/inventory/product-categories}">
-                                        <span class="nav-leaf-dot"></span>
-                                        <span class="nav-link-title" th:text="#{label.product.category}">Product
-                                            Category</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item" sec:authorize="hasAuthority('UNIT-OF-MEASURE_READ')">
-                                    <a class="nav-link" th:href="@{/inventory/unit-of-measures}">
-                                        <span class="nav-leaf-dot"></span>
-                                        <span class="nav-link-title" th:text="#{label.uom}">Unit of Measure</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item" sec:authorize="hasAuthority('BRAND_READ')">
-                                    <a class="nav-link" th:href="@{/inventory/brands}">
-                                        <span class="nav-leaf-dot"></span>
-                                        <span class="nav-link-title" th:text="#{label.brand}">Brand</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    <!-- Section: System -->
-                    <li class="nav-item nav-section-label"
-                        sec:authorize="hasAnyAuthority('USERS_READ', 'ROLES_READ', 'PERMISSIONS_READ')">
-                        <span class="nav-link-title text-uppercase"
-                            style="font-size:0.65rem; letter-spacing:0.08em; opacity:0.45; padding: 0.75rem 0.75rem 0.25rem;"
-                            th:text="#{label.system}">
-                            System
-                        </span>
-                    </li>
-
-                    <!-- Security -->
-                    <li class="nav-item"
-                        sec:authorize="hasAnyAuthority('USERS_READ', 'ROLES_READ', 'PERMISSIONS_READ')">
-                        <a class="nav-link dropdown-toggle" href="#sidebar-security" data-bs-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="sidebar-security">
-                            <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                <i class="ti ti-shield-lock"></i>
-                            </span>
-                            <span class="nav-link-title" th:text="#{label.security}">Security</span>
-                        </a>
-                        <div class="collapse" id="sidebar-security" data-bs-parent="#sidebar-menu">
-                            <ul class="nav flex-column nav-leaf ps-4">
-                                <li class="nav-item" sec:authorize="hasAuthority('USERS_READ')">
-                                    <a class="nav-link" th:href="@{/security/users}">
-                                        <span class="nav-leaf-dot"></span>
-                                        <span class="nav-link-title" th:text="#{label.users}">Users</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item" sec:authorize="hasAuthority('ROLES_READ')">
-                                    <a class="nav-link" th:href="@{/security/roles}">
-                                        <span class="nav-leaf-dot"></span>
-                                        <span class="nav-link-title" th:text="#{label.roles}">Roles</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item" sec:authorize="hasAuthority('PERMISSIONS_READ')">
-                                    <a class="nav-link" th:href="@{/security/permissions}">
-                                        <span class="nav-leaf-dot"></span>
-                                        <span class="nav-link-title" th:text="#{label.permissions}">Permissions</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item" sec:authorize="hasAuthority('PERMISSIONS_READ')">
-                                    <a class="nav-link" th:href="@{/security/menu-groups}">
-                                        <span class="nav-leaf-dot"></span>
-                                        <span class="nav-link-title" th:text="#{label.menu.groups}">Menu Groups</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-
-                </ul>
-
-                <!-- Sidebar Toggle Button (Desktop Only) -->
-                <div class="sidebar-footer mt-auto d-none d-lg-flex align-items-center border-top border-secondary">
-                    <button class="btn-sidebar-toggle w-100" onclick="toggleSidebar()" title="Toggle Sidebar">
+            <!-- Sidebar Footer -->
+            <div class="sidebar-footer mt-auto d-none d-lg-flex align-items-center">
+                <button class="btn-sidebar-toggle" id="sidebar-toggle-btn" onclick="toggleSidebar()"
+                        title="Toggle Sidebar">
+                    <span class="toggle-icon-wrap">
                         <i class="ti ti-layout-sidebar-left-collapse" id="sidebar-toggle-icon"></i>
-                        <span class="nav-link-title ms-2" id="sidebar-toggle-text"
-                            th:text="#{label.collapse}">Collapse</span>
-                    </button>
-                </div>
+                    </span>
+                    <span class="nav-link-title ms-2" id="sidebar-toggle-text"
+                          th:text="#{label.collapse}">Collapse</span>
+                </button>
             </div>
         </div>
+    </div>
 
-        <style>
-            /* =============================================
-               SIDEBAR REFINED STYLES
-               ============================================= */
 
-            /* Section labels */
-            .nav-section-label {
-                pointer-events: none;
+    <!-- ============================================================
+         RECURSIVE MENU FRAGMENT
+         ============================================================ -->
+    <th:block th:fragment="menuNode(node, id, parentId)">
+        <th:block th:if="${node != null}">
+            <!-- Leaf -->
+            <li th:if="${node.leaf}" class="nav-item">
+                <a class="nav-link" th:href="@{${node.urlPath}}">
+                    <span th:if="${node.iconClass != null}" class="nav-link-icon d-md-none d-lg-inline-block">
+                        <i th:class="'ti ' + ${node.iconClass}"></i>
+                    </span>
+                    <span th:if="${node.iconClass == null}" class="nav-leaf-dot"></span>
+                    <span class="nav-link-title" th:text="${node.name}">Menu Name</span>
+                </a>
+            </li>
+            <!-- Parent -->
+            <li th:if="${!node.leaf}" class="nav-item">
+                <a class="nav-link dropdown-toggle" th:href="'#' + ${id}"
+                   data-bs-toggle="collapse" role="button"
+                   aria-expanded="false" th:attr="aria-controls=${id}">
+                    <span th:if="${node.iconClass != null}" class="nav-link-icon d-md-none d-lg-inline-block">
+                        <i th:class="'ti ' + ${node.iconClass}"></i>
+                    </span>
+                    <span th:if="${node.iconClass == null}" class="nav-link-icon d-md-none d-lg-inline-block">
+                        <i class="ti ti-folder"></i>
+                    </span>
+                    <span class="nav-link-title" th:text="${node.name}">Parent Name</span>
+                </a>
+                <div class="collapse" th:id="${id}" th:attr="data-bs-parent='#' + ${parentId}">
+                    <ul class="nav flex-column nav-nested">
+                        <th:block th:each="child, cstat : ${node.children}">
+                            <th:block
+                                    th:replace="~{:: menuNode(node=${child}, id=${id} + '-c-' + ${cstat.index}, parentId=${id})}">
+                            </th:block>
+                        </th:block>
+                    </ul>
+                </div>
+            </li>
+        </th:block>
+    </th:block>
+
+
+    <!-- ============================================================
+         STYLES
+         ============================================================ -->
+    <style>
+        /* ── Design Tokens ─────────────────────────────────────── */
+        :root {
+            --sidebar-width: 260px;
+            --sidebar-min-width: 220px;
+            --sidebar-max-width: 480px;
+            --sidebar-narrow-width: 4.5rem;
+            --sidebar-transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            --page-transition: margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+
+            /* Resizer colours */
+            --resizer-idle-bg: transparent;
+            --resizer-hover-bg: rgba(77, 166, 255, 0.18);
+            --resizer-active-bg: rgba(77, 166, 255, 0.35);
+            --resizer-line-idle: rgba(255, 255, 255, 0.06);
+            --resizer-line-hover: rgba(77, 166, 255, 0.7);
+            --resizer-line-active: #4da6ff;
+
+            /* Nav accent */
+            --nav-accent: #4da6ff;
+            --nav-accent-glow: rgba(77, 166, 255, 0.22);
+        }
+
+        /* ── Resizer Handle ─────────────────────────────────────── */
+        /*
+         * Key geometry:
+         *  - The aside is position:fixed by Tabler, overflow:hidden by default.
+         *  - We use overflow:visible on the aside so the handle can bleed outside.
+         *  - right: 0  + transform: translateX(50%)  →  handle straddles the
+         *    exact border between sidebar and page-wrapper (4px left, 4px right).
+         *  - NO negative right value → nothing bleeds into the scrollable document
+         *    flow, so zero horizontal scrollbar.
+         */
+        #sidebar {
+            overflow: visible !important; /* allow resizer to bleed rightward */
+        }
+
+        .sidebar-resizer {
+            position: absolute;
+            top: 0;
+            right: 0;                       /* flush with sidebar's right edge  */
+            transform: translateX(50%);     /* center the zone ON that edge      */
+            width: 8px;
+            height: 100%;
+            cursor: col-resize;
+            z-index: 1060;
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+        }
+
+        .sidebar-resizer-line {
+            width: 1px;
+            border-radius: 2px;
+            background: var(--resizer-line-idle);
+            transition: background 0.2s, box-shadow 0.2s, width 0.15s;
+            align-self: stretch;
+            pointer-events: none;
+        }
+
+        /* Hover state */
+        .sidebar-resizer:hover .sidebar-resizer-line {
+            background: var(--resizer-line-hover);
+            box-shadow: 0 0 8px rgba(77, 166, 255, 0.4);
+            width: 2px;
+        }
+
+        /* Active drag state — body carries this class */
+        body.sidebar-resizing .sidebar-resizer-line {
+            background: var(--resizer-line-active) !important;
+            box-shadow: 0 0 14px rgba(77, 166, 255, 0.7) !important;
+            width: 3px !important;
+        }
+
+        /* Freeze transitions & prevent text selection while dragging */
+        body.sidebar-resizing * {
+            transition: none !important;
+            user-select: none !important;
+            cursor: col-resize !important;
+        }
+
+        /* Hide resizer in narrow mode */
+        body.sidebar-narrow .sidebar-resizer {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Prevent horizontal scrollbar from appearing during/after resize */
+        html, body {
+            overflow-x: hidden;
+        }
+
+        /* ── Sidebar Base (desktop) ─────────────────────────────── */
+        @media (min-width: 992px) {
+            .navbar-vertical {
+                width: var(--sidebar-width) !important;
+                transition: var(--sidebar-transition);
+                will-change: width;
             }
 
-            /* Nested menu container */
-            .nav-nested {
-                padding-left: 0.5rem;
-                border-left: 1px solid rgba(255, 255, 255, 0.08);
-                margin-left: 1.25rem;
-                margin-top: 0.125rem;
-                margin-bottom: 0.25rem;
+            .page-wrapper {
+                margin-left: var(--sidebar-width) !important;
+                transition: var(--page-transition);
+                will-change: margin-left;
             }
 
-            /* Sub-toggle items (2nd level labels) */
-            .nav-sub-toggle {
-                font-size: 0.8125rem !important;
-                opacity: 0.75;
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
+            /* ── Narrow / Collapsed Mode ──────────────────────── */
+            body.sidebar-narrow .navbar-vertical {
+                width: var(--sidebar-narrow-width) !important;
             }
 
-            .nav-sub-toggle:hover {
-                opacity: 1 !important;
+            body.sidebar-narrow .page-wrapper {
+                margin-left: var(--sidebar-narrow-width) !important;
             }
 
-            .nav-link-icon-sm {
-                font-size: 0.875rem;
-                width: 1.25rem;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                opacity: 0.6;
+            body.sidebar-narrow .nav-link-title,
+            body.sidebar-narrow .dropdown-toggle::after,
+            body.sidebar-narrow #sidebar-toggle-text,
+            body.sidebar-narrow .nav-section-label {
+                display: none !important;
             }
 
-            /* Leaf nav items */
-            .nav-leaf {
-                padding-left: 0.25rem !important;
+            /* Reset ALL padding so icons land exactly in the centre of the narrow width */
+            body.sidebar-narrow .navbar-vertical,
+            body.sidebar-narrow .navbar-vertical .container-fluid {
+                padding-left: 0 !important;
+                padding-right: 0 !important;
             }
 
-            .nav-leaf .nav-link {
-                padding-top: 0.3rem !important;
-                padding-bottom: 0.3rem !important;
-                font-size: 0.8125rem !important;
-                display: flex;
-                align-items: center;
-                gap: 0.625rem;
+            /* Center .nav-item list inside the ul */
+            body.sidebar-narrow .navbar-nav {
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            body.sidebar-narrow .nav-item {
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
             }
 
-            .nav-leaf-dot {
-                width: 5px;
-                height: 5px;
-                border-radius: 50%;
-                background-color: rgba(255, 255, 255, 0.25);
-                flex-shrink: 0;
-                transition: background-color 0.2s, transform 0.2s;
+            /* Force perfectly square links with absolute positioning for the icon */
+            body.sidebar-narrow .nav-link {
+                width: 3rem !important;
+                height: 3rem !important;
+                margin: 0 auto !important; /* Ultimate block-level horizontal centering */
+                padding: 0 !important;
+                position: relative !important;
+                display: block !important; /* Defeat flex to avoid inner layout struggles */
+                border-radius: 8px; /* Ensure uniform active state shape */
             }
 
-            .nav-leaf .nav-link:hover .nav-leaf-dot,
-            .nav-leaf .nav-link.active .nav-leaf-dot {
-                background-color: #4da6ff;
-                transform: scale(1.5);
+            body.sidebar-narrow .nav-link-icon {
+                margin: 0 !important;
+                padding: 0 !important;
+                font-size: 1.25rem;
+                position: absolute !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                display: block !important; /* Defeat d-lg-inline-block !important utility */
+                width: auto !important;
+                height: auto !important;
+                line-height: 1 !important;
             }
 
-            .nav-leaf .nav-link.active {
-                color: #4da6ff !important;
+            /* Hide leaf dots & nested menus in narrow mode */
+            body.sidebar-narrow .nav-leaf-dot,
+            body.sidebar-narrow .nav-nested {
+                display: none !important;
             }
 
-            /* Smooth collapse animation */
-            .collapse {
-                transition: height 0.2s ease;
+            body.sidebar-narrow .logo-full  { display: none !important; }
+            body.sidebar-narrow .logo-icon  { display: block !important; margin: 0 auto; }
+
+            /* Fix sidebar footer collapse button centering */
+            body.sidebar-narrow .sidebar-footer { 
+                padding: 0.5rem 0 !important; 
+                display: flex !important;
+                justify-content: center !important;
             }
 
-            /* Dropdown caret refinement */
-            .nav-link.dropdown-toggle::after {
-                margin-left: auto;
-                opacity: 0.4;
-                transition: transform 0.2s ease, opacity 0.2s;
-            }
-
-            .nav-link.dropdown-toggle[aria-expanded="true"]::after {
-                transform: rotate(180deg);
-                opacity: 0.8;
-            }
-
-            .nav-link.dropdown-toggle[aria-expanded="true"] {
-                color: #fff !important;
-                opacity: 1 !important;
-            }
-
-            .nav-link.dropdown-toggle[aria-expanded="true"] .nav-link-icon {
-                color: #4da6ff;
-            }
-
-            /* Footer toggle button */
-            .sidebar-footer {
-                padding: 0.75rem 1rem;
-            }
-
-            .btn-sidebar-toggle {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: none;
-                border: 1px solid rgba(255, 255, 255, 0.1);
+            body.sidebar-narrow .btn-sidebar-toggle {
+                width: 3rem !important;
+                height: 3rem !important;
+                margin: 0 auto !important; /* Ultimate block-level horizontal centering */
+                padding: 0 !important;
+                position: relative !important;
+                display: block !important;
                 border-radius: 8px;
-                color: rgba(255, 255, 255, 0.5);
-                padding: 0.5rem 1rem;
-                font-size: 0.8125rem;
-                cursor: pointer;
-                transition: background 0.2s, color 0.2s, border-color 0.2s;
-                width: 100%;
             }
 
-            .btn-sidebar-toggle:hover {
-                background: rgba(255, 255, 255, 0.06);
-                border-color: rgba(255, 255, 255, 0.2);
-                color: rgba(255, 255, 255, 0.85);
+            body.sidebar-narrow .btn-sidebar-toggle .toggle-icon-wrap {
+                position: absolute !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
 
-            /* =============================================
-               NARROW/COLLAPSED MODE
-               ============================================= */
-            @media (min-width: 992px) {
-                body.sidebar-narrow .navbar-vertical {
-                    width: 4.5rem !important;
-                    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-                }
-
-                body:not(.sidebar-narrow) .navbar-vertical {
-                    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-                }
-
-                /* Hide all text in narrow mode */
-                body.sidebar-narrow .nav-link-title,
-                body.sidebar-narrow .dropdown-toggle::after,
-                body.sidebar-narrow #sidebar-toggle-text,
-                body.sidebar-narrow .nav-section-label {
-                    display: none !important;
-                }
-
-                /* Center icons */
-                body.sidebar-narrow .nav-link {
-                    justify-content: center;
-                    padding-left: 0.5rem;
-                    padding-right: 0.5rem;
-                }
-
-                body.sidebar-narrow .nav-link-icon {
-                    margin-right: 0 !important;
-                    font-size: 1.25rem;
-                }
-
-                /* Logo swap */
-                body.sidebar-narrow .logo-full {
-                    display: none !important;
-                }
-
-                body.sidebar-narrow .logo-icon {
-                    display: block !important;
-                    margin: 0 auto;
-                }
-
-                /* Adjust footer padding in narrow mode */
-                body.sidebar-narrow .sidebar-footer {
-                    padding: 0.5rem 0.25rem;
-                }
-
-                body.sidebar-narrow .btn-sidebar-toggle {
-                    padding-left: 0;
-                    padding-right: 0;
-                }
-
-                /* Hide nested menus in narrow mode */
-                body.sidebar-narrow #sidebar-menu .nav-item .collapse {
-                    display: none !important;
-                }
-
-                /* Fix main content wrapper margin */
-                body.sidebar-narrow .page-wrapper {
-                    margin-left: 4.5rem !important;
-                }
-
-                body:not(.sidebar-narrow) .page-wrapper {
-                    transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-                }
-
-                /* Collapse icon swap */
-                body.sidebar-narrow #sidebar-toggle-icon::before {
-                    content: "\eb83";
-                }
-
-                /* Tooltip on hover for narrow mode icons */
-                body.sidebar-narrow .nav-item>.nav-link {
-                    position: relative;
-                }
+            body.sidebar-narrow #sidebar-menu .nav-item .collapse {
+                display: none !important;
             }
-        </style>
+        }
 
-        <script>
-            (function () {
-                if (localStorage.getItem('sidebar-narrow') === 'true') {
-                    document.body.classList.add('sidebar-narrow');
-                }
-            })();
+        /* ── Nav Items ───────────────────────────────────────────── */
+        .nav-nested {
+            padding-left: 0.5rem;
+            border-left: 1px solid rgba(255, 255, 255, 0.07);
+            margin-left: 1.3rem;
+            margin-top: 0.1rem;
+            margin-bottom: 0.2rem;
+        }
 
-            function toggleSidebar() {
-                const isNarrow = document.body.classList.toggle('sidebar-narrow');
-                if (isNarrow) {
-                    document.querySelectorAll('#sidebar .collapse.show').forEach(el => {
-                        el.classList.remove('show');
-                        const trigger = document.querySelector(`[data-bs-target="#${el.id}"]`);
-                        if (trigger) trigger.setAttribute('aria-expanded', 'false');
-                    });
-                }
-                localStorage.setItem('sidebar-narrow', isNarrow);
+        .nav-leaf-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.22);
+            flex-shrink: 0;
+            transition: background 0.18s, transform 0.18s;
+            margin-right: 0.75rem;
+        }
+
+        .nav-link:hover .nav-leaf-dot,
+        .nav-link.active .nav-leaf-dot {
+            background: var(--nav-accent);
+            transform: scale(1.6);
+        }
+
+        .nav-link.active {
+            color: var(--nav-accent) !important;
+            background: var(--nav-accent-glow) !important;
+            border-radius: 6px;
+        }
+
+        .nav-link.dropdown-toggle::after {
+            margin-left: auto;
+            opacity: 0.35;
+            transition: transform 0.2s ease, opacity 0.2s;
+        }
+
+        .nav-link.dropdown-toggle[aria-expanded="true"]::after {
+            transform: rotate(180deg);
+            opacity: 0.75;
+        }
+
+        .nav-link.dropdown-toggle[aria-expanded="true"] {
+            color: #fff !important;
+        }
+
+        .nav-link.dropdown-toggle[aria-expanded="true"] .nav-link-icon {
+            color: var(--nav-accent);
+        }
+
+        /* ── Sidebar Footer / Toggle Button ─────────────────────── */
+        .sidebar-footer {
+            padding: 0.75rem 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .btn-sidebar-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.45);
+            padding: 0.45rem 0.875rem;
+            font-size: 0.8125rem;
+            cursor: pointer;
+            transition: background 0.18s, color 0.18s, border-color 0.18s;
+            width: 100%;
+            gap: 0.5rem;
+        }
+
+        .btn-sidebar-toggle:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.16);
+            color: rgba(255, 255, 255, 0.82);
+        }
+
+        .toggle-icon-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        /* ── Width tooltip shown while resizing ─────────────────── */
+        #sidebar-width-tooltip {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(15, 23, 42, 0.9);
+            color: #e2e8f0;
+            border: 1px solid rgba(77, 166, 255, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 6px;
+            padding: 0.3rem 0.65rem;
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            letter-spacing: 0.03em;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s;
+            z-index: 2000;
+            white-space: nowrap;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+
+        #sidebar-width-tooltip.visible {
+            opacity: 1;
+        }
+
+        /* ── Collapse chevron direction hint ────────────────────── */
+        body.sidebar-narrow #sidebar-toggle-icon::before {
+            font-family: 'tabler-icons' !important;
+            content: "\eb83";  /* ti-layout-sidebar-right-expand */
+        }
+    </style>
+
+
+    <!-- ============================================================
+         SCRIPTS
+         ============================================================ -->
+    <script>
+        /* ── Immediate init (before paint) ── */
+        (function () {
+            var narrow   = localStorage.getItem('sidebar-narrow') === 'true';
+            var width    = localStorage.getItem('sidebar-width')  || '260px';
+            if (narrow) document.body.classList.add('sidebar-narrow');
+            document.documentElement.style.setProperty('--sidebar-width', width);
+        }());
+
+        /* ── Toggle collapse ── */
+        function toggleSidebar() {
+            var isNarrow = document.body.classList.toggle('sidebar-narrow');
+            if (isNarrow) {
+                /* 1. Close all open collapse panels */
+                document.querySelectorAll('#sidebar .collapse.show').forEach(function (el) {
+                    // Manually close the panel in the DOM
+                    el.classList.remove('show');
+                    
+                    // Destroy the Bootstrap instance to prevent internal state desync
+                    // so the next time it's opened, it initializes cleanly from the closed state
+                    var bsCollapse = bootstrap.Collapse.getInstance(el);
+                    if (bsCollapse) {
+                        bsCollapse.dispose();
+                    }
+                });
+                /* 2. Reset aria-expanded on EVERY dropdown-toggle so the
+                      white/open highlight is fully cleared */
+                document.querySelectorAll('#sidebar .nav-link.dropdown-toggle').forEach(function (trigger) {
+                    trigger.setAttribute('aria-expanded', 'false');
+                });
             }
+            localStorage.setItem('sidebar-narrow', isNarrow);
+        }
 
-            // Highlight active nav link based on current URL
-            document.addEventListener('DOMContentLoaded', function () {
-                const currentPath = window.location.pathname;
-                document.querySelectorAll('#sidebar .nav-link').forEach(link => {
-                    if (link.getAttribute('href') === currentPath) {
-                        link.classList.add('active');
-                        // Expand parent collapses
-                        let parent = link.closest('.collapse');
-                        while (parent) {
-                            parent.classList.add('show');
-                            const trigger = document.querySelector(`[data-bs-target="#${parent.id}"]`);
-                            if (trigger) trigger.setAttribute('aria-expanded', 'true');
-                            parent = parent.parentElement?.closest('.collapse');
-                        }
+        /* ── Auto-expand sidebar when clicking parent menu in narrow mode ── */
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('#sidebar .nav-link.dropdown-toggle').forEach(function (trigger) {
+                trigger.addEventListener('click', function (e) {
+                    if (document.body.classList.contains('sidebar-narrow')) {
+                        // Expand the sidebar immediately
+                        document.body.classList.remove('sidebar-narrow');
+                        localStorage.setItem('sidebar-narrow', false);
+
+                        // Allow the click event to naturally bubble up to Bootstrap's data-api listener.
+                        // Bootstrap will handle opening the submenu synchronously.
                     }
                 });
             });
-        </script>
-    </aside>
-</body>
+        });
 
+        /* ── Resizer ── */
+        document.addEventListener('DOMContentLoaded', function () {
+
+            var resizer = document.getElementById('sidebar-resizer');
+            var tooltip = document.createElement('div');
+            tooltip.id  = 'sidebar-width-tooltip';
+            document.body.appendChild(tooltip);
+
+            if (!resizer) return;
+
+            var startX, startWidth, dragging = false;
+
+            resizer.addEventListener('mousedown', function (e) {
+                if (document.body.classList.contains('sidebar-narrow')) return;
+
+                e.preventDefault();
+                dragging   = true;
+                startX     = e.clientX;
+                startWidth = parseInt(
+                    getComputedStyle(document.documentElement)
+                        .getPropertyValue('--sidebar-width'), 10
+                ) || 260;
+
+                document.body.classList.add('sidebar-resizing');
+                tooltip.classList.add('visible');
+                updateTooltip(startWidth, e.clientX);
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup',   onMouseUp);
+            });
+
+            function onMouseMove(e) {
+                if (!dragging) return;
+
+                var delta    = e.clientX - startX;
+                var newWidth = Math.min(
+                    Math.max(startWidth + delta, parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-min-width')) || 220),
+                    parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-max-width')) || 480
+                );
+
+                document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
+                updateTooltip(newWidth, e.clientX);
+            }
+
+            function onMouseUp() {
+                if (!dragging) return;
+                dragging = false;
+
+                document.body.classList.remove('sidebar-resizing');
+                tooltip.classList.remove('visible');
+
+                var finalWidth = getComputedStyle(document.documentElement)
+                    .getPropertyValue('--sidebar-width').trim();
+                localStorage.setItem('sidebar-width', finalWidth);
+
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup',   onMouseUp);
+            }
+
+            function updateTooltip(widthPx, cursorX) {
+                tooltip.textContent = widthPx + ' px';
+                /* Position tooltip just to the right of the cursor */
+                tooltip.style.left = (cursorX + 18) + 'px';
+            }
+
+            /* ── Highlight active nav link ── */
+            var currentPath = window.location.pathname;
+            document.querySelectorAll('#sidebar .nav-link').forEach(function (link) {
+                var href = link.getAttribute('href');
+                if (href && href !== '#' && (currentPath === href || currentPath.startsWith(href + '/'))) {
+                    link.classList.add('active');
+                    /* Open all ancestor collapse panels */
+                    var panel = link.closest('.collapse');
+                    while (panel) {
+                        panel.classList.add('show');
+                        var trigger = document.querySelector('[data-bs-target="#' + panel.id + '"]');
+                        if (trigger) trigger.setAttribute('aria-expanded', 'true');
+                        panel = panel.parentElement && panel.parentElement.closest('.collapse');
+                    }
+                }
+            });
+        });
+    </script>
+
+</aside>
+</body>
 </html>

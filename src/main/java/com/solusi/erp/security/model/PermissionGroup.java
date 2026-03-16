@@ -37,6 +37,9 @@ public class PermissionGroup extends BaseModel {
     @Column(name = "url_path", nullable = false, length = 255)
     private String urlPath;
 
+    @Column(name = "icon_class", length = 50)
+    private String iconClass;
+
     @Column(name = "description_id", length = 255)
     private String descriptionId;
 

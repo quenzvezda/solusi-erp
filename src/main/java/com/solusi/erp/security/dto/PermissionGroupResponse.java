@@ -15,6 +15,7 @@ public class PermissionGroupResponse extends BaseAuditResponse {
     private String breadcrumbId;
     private String breadcrumbEn;
     private String urlPath;
+    private String iconClass;
     private String descriptionId;
     private String descriptionEn;
 
