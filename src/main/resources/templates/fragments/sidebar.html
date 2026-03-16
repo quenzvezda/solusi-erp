@@ -219,6 +219,12 @@
                                         <span class="nav-link-title" th:text="#{label.permissions}">Permissions</span>
                                     </a>
                                 </li>
+                                <li class="nav-item" sec:authorize="hasAuthority('PERMISSIONS_READ')">
+                                    <a class="nav-link" th:href="@{/security/menu-groups}">
+                                        <span class="nav-leaf-dot"></span>
+                                        <span class="nav-link-title" th:text="#{label.menu.groups}">Menu Groups</span>
+                                    </a>
+                                </li>
                             </ul>
                         </div>
                     </li>

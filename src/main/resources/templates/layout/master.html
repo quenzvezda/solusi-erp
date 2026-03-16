@@ -42,6 +42,51 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@latest/dist/apexcharts.min.js" defer></script>
     <!-- TomSelect (Autocomplete) JS -->
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2/dist/js/tom-select.complete.min.js" defer></script>
+    
+    <!-- Global Menu Search Initialization -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const menuSearchEl = document.getElementById('global-menu-search');
+            if (menuSearchEl) {
+                // Debounce Function
+                function debounce(fn, delay) {
+                    let timer;
+                    return function (...args) {
+                        clearTimeout(timer);
+                        timer = setTimeout(() => fn.apply(this, args), delay);
+                    };
+                }
+
+                new TomSelect('#global-menu-search', {
+                    valueField: 'urlPath',
+                    labelField: 'name',
+                    searchField: ['name'],
+                    openOnFocus: true,
+                    preload: false,
+                    load: debounce(function (q, callback) {
+                        fetch(`/api/lookup/menus?q=${encodeURIComponent(q)}&limit=10`)
+                            .then(r => r.json())
+                            .then(callback)
+                            .catch(() => callback([]));
+                    }, 100),
+                    render: {
+                        option: function(data, escape) {
+                            const sub = data.subText ? `<small class="text-muted d-block" style="font-size:0.75em;line-height:1.2">${escape(data.subText)}</small>` : '';
+                            return `<div class="py-1">${escape(data.name)}${sub}</div>`;
+                        },
+                        item: function(data, escape) {
+                            return `<span>${escape(data.name)}</span>`;
+                        }
+                    },
+                    onChange: function(value) {
+                        if (value) {
+                            window.location.href = value;
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>

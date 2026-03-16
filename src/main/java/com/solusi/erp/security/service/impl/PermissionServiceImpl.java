@@ -4,6 +4,8 @@ import com.solusi.erp.security.dto.PermissionRequest;
 import com.solusi.erp.security.dto.PermissionResponse;
 import com.solusi.erp.security.mapper.PermissionMapper;
 import com.solusi.erp.security.model.Permission;
+import com.solusi.erp.security.model.PermissionGroup;
+import com.solusi.erp.security.repository.PermissionGroupRepository;
 import com.solusi.erp.security.repository.PermissionRepository;
 import com.solusi.erp.security.service.PermissionService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import java.util.List;
 public class PermissionServiceImpl implements PermissionService {
 
     private final PermissionRepository permissionRepository;
+    private final PermissionGroupRepository permissionGroupRepository;
     private final PermissionMapper permissionMapper;
     private final MessageSource messageSource;
 
@@ -38,6 +41,13 @@ public class PermissionServiceImpl implements PermissionService {
         }
         Permission permission = permissionMapper.toEntity(request);
         permission.setName(name);
+
+        if (request.getPermissionGroupId() != null) {
+            PermissionGroup group = permissionGroupRepository.findById(request.getPermissionGroupId())
+                    .orElseThrow(() -> new RuntimeException("Permission Group not found"));
+            permission.setPermissionGroup(group);
+        }
+
         permissionRepository.save(permission);
     }
 
@@ -51,6 +61,12 @@ public class PermissionServiceImpl implements PermissionService {
             actions = List.of("READ", "CREATE", "UPDATE", "DELETE");
         }
 
+        PermissionGroup group = null;
+        if (request.getPermissionGroupId() != null) {
+            group = permissionGroupRepository.findById(request.getPermissionGroupId())
+                    .orElseThrow(() -> new RuntimeException("Permission Group not found"));
+        }
+
         List<Permission> toSave = new ArrayList<>();
         for (String action : actions) {
             String fullName = moduleBase + "_" + action.toUpperCase();
@@ -58,6 +74,7 @@ public class PermissionServiceImpl implements PermissionService {
                 Permission p = new Permission();
                 p.setName(fullName);
                 p.setDescription(messageSource.getMessage("msg.permission.description", new Object[]{action, moduleBase}, LocaleContextHolder.getLocale()));
+                p.setPermissionGroup(group);
                 toSave.add(p);
             }
         }

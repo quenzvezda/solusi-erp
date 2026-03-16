@@ -12,10 +12,14 @@ import java.util.List;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = {AuditMapperHelper.class})
 public interface PermissionMapper {
+    @Mapping(target = "permissionGroupId", source = "permissionGroup.id")
+    @Mapping(target = "permissionGroupName", source = "permissionGroup.localizedName")
     PermissionResponse toResponse(Permission entity);
+
     List<PermissionResponse> toResponseList(List<Permission> entities);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "permissionGroup", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)

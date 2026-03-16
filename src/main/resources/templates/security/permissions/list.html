@@ -58,7 +58,7 @@
                                                     <input type="text" th:field="*{name}" class="form-control" th:placeholder="#{label.permissions.batch.module.placeholder}" required>
                                                     <small class="form-hint" th:text="#{label.permissions.batch.module.hint}">Akan men-generate aksi standar (READ, CREATE, dll).</small>
                                                 </div>
-                                                <div class="col-md-6">
+                                                <div class="col-md-5">
                                                     <label class="form-label" th:text="#{label.permissions.batch.actions}">Aksi yang akan di-generate</label>
                                                     <div class="mt-2">
                                                         <label class="form-check form-check-inline" th:each="action : ${ {'READ', 'CREATE', 'UPDATE', 'DELETE', 'PRINT'} }">
@@ -67,8 +67,20 @@
                                                         </label>
                                                     </div>
                                                 </div>
-                                                <div class="col-md-2 align-self-end text-end">
-                                                    <button type="submit" class="btn btn-primary w-100" th:text="#{label.permissions.batch.btn}">Generate</button>
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Link to Menu Group? (Optional)</label>
+                                                    <div class="input-group">
+                                                        <select th:field="*{permissionGroupId}" class="form-select pg-dropdown">
+                                                            <option value="">-- No Group --</option>
+                                                            <option th:each="g : ${permissionGroups}" th:value="${g.id}" th:text="${g.name}">Group Name</option>
+                                                        </select>
+                                                        <button type="button" class="btn btn-icon btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal-pg-create" title="Create New Group">
+                                                            <i class="ti ti-plus"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div class="col-12 text-end mt-2">
+                                                    <button type="submit" class="btn btn-primary" th:text="#{label.permissions.batch.btn}">Generate</button>
                                                 </div>
                                             </div>
                                         </form>
@@ -82,7 +94,19 @@
                                                     <input type="text" th:field="*{name}" class="form-control" th:placeholder="#{label.permissions.manual.name.placeholder}" required>
                                                     <small class="form-hint" th:text="#{label.permissions.manual.name.hint}">Gunakan format NAMA-MODUL_AKSI.</small>
                                                 </div>
-                                                <div class="col-md-6">
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Link to Menu Group?</label>
+                                                    <div class="input-group">
+                                                        <select th:field="*{permissionGroupId}" class="form-select pg-dropdown">
+                                                            <option value="">-- No Group --</option>
+                                                            <option th:each="g : ${permissionGroups}" th:value="${g.id}" th:text="${g.name}">Group Name</option>
+                                                        </select>
+                                                        <button type="button" class="btn btn-icon btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal-pg-create" title="Create New Group">
+                                                            <i class="ti ti-plus"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
                                                     <label class="form-label" th:text="#{label.permissions.manual.description}">Deskripsi</label>
                                                     <input type="text" th:field="*{description}" class="form-control" th:placeholder="#{label.permissions.manual.description.placeholder}">
                                                 </div>
@@ -120,6 +144,7 @@
                                             <tr>
                                                 <th class="ps-3" th:text="#{label.permissions.column.suffix}">Aksi / Suffix</th>
                                                 <th th:text="#{label.permissions.column.fullname}">Nama Lengkap</th>
+                                                <th>Menu Group</th>
                                                 <th th:text="#{label.permissions.column.description}">Deskripsi</th>
                                                 <th class="w-1 pe-3 text-end" th:text="#{label.delete}">Hapus</th>
                                             </tr>
@@ -132,6 +157,12 @@
                                                 </td>
                                                 <td>
                                                     <code class="text-secondary small" th:text="${p.name}">NAME</code>
+                                                </td>
+                                                <td>
+                                                    <span th:if="${p.permissionGroupName}" class="badge bg-purple-lt">
+                                                        <i class="ti ti-link me-1"></i> <span th:text="${p.permissionGroupName}">Group</span>
+                                                    </span>
+                                                    <span th:unless="${p.permissionGroupName}" class="text-muted small italic">- None -</span>
                                                 </td>
                                                 <td class="text-secondary" th:text="${p.description}">Description</td>
                                                 <td class="pe-3 text-end">
@@ -163,6 +194,61 @@
                 </div>
             </div>
         </div>
+
+        <div class="modal modal-blur fade" id="modal-pg-create" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Create New Permission Group (Menu)</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="form-pg-create">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label required">Unique Code</label>
+                                    <input type="text" name="code" class="form-control" placeholder="e.g. SEC-01" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label required">Name (ID)</label>
+                                    <input type="text" name="nameId" class="form-control" placeholder="e.g. Pengguna" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label required">Name (EN)</label>
+                                    <input type="text" name="nameEn" class="form-control" placeholder="e.g. Users" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label required">Breadcrumb (ID)</label>
+                                    <input type="text" name="breadcrumbId" class="form-control" placeholder="Keamanan > Pengguna" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label required">Breadcrumb (EN)</label>
+                                    <input type="text" name="breadcrumbEn" class="form-control" placeholder="Security > Users" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label required">Target URL Path</label>
+                                    <input type="text" name="urlPath" class="form-control" placeholder="e.g. /security/users" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Description (ID)</label>
+                                    <textarea name="descriptionId" class="form-control" rows="2"></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Description (EN)</label>
+                                    <textarea name="descriptionEn" class="form-control" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" id="btn-pg-save" class="btn btn-primary ms-auto">
+                            <i class="ti ti-plus me-1"></i> Save Group
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -178,6 +264,48 @@
                     if (icon) icon.style.transform = 'rotate(0deg)';
                 });
             });
+
+            const pgSaveBtn = document.getElementById('btn-pg-save');
+            const pgForm = document.getElementById('form-pg-create');
+            
+            if (pgSaveBtn) {
+                pgSaveBtn.addEventListener('click', function() {
+                    const formData = new FormData(pgForm);
+                    const data = Object.fromEntries(formData.entries());
+
+                    fetch('/api/security/permission-groups', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('input[name="_csrf"]').value
+                        },
+                        body: JSON.stringify(data)
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            return fetch('/api/security/permission-groups');
+                        }
+                        throw new Error('Failed to create group');
+                    })
+                    .then(r => r.json())
+                    .then(groups => {
+                        const dropdowns = document.querySelectorAll('.pg-dropdown');
+                        dropdowns.forEach(select => {
+                            const currentValue = select.value;
+                            select.innerHTML = '<option value="">-- No Group --</option>';
+                            groups.forEach(g => {
+                                const option = new Option(g.name, g.id);
+                                select.add(option);
+                            });
+                            select.value = currentValue;
+                        });
+                        
+                        bootstrap.Modal.getInstance(document.getElementById('modal-pg-create')).hide();
+                        pgForm.reset();
+                    })
+                    .catch(err => alert(err.message));
+                });
+            }
         });
     </script>
     <style>

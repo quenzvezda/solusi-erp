@@ -24,6 +24,8 @@ public class PermissionRequest {
     @Size(max = 255, message = "{validation.permission.description.max}")
     private String description;
 
+    private Long permissionGroupId;
+
     // Untuk fitur Batch Generation
     @Builder.Default
     private boolean isBatch = false;

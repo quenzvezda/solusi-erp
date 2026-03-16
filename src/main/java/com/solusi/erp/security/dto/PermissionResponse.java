@@ -15,5 +15,7 @@ import lombok.NoArgsConstructor;
 public class PermissionResponse extends BaseAuditResponse {
     private String name;
     private String description;
+    private Long permissionGroupId;
+    private String permissionGroupName;
 }
 

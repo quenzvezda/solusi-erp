@@ -26,4 +26,8 @@ public class Permission extends BaseModel {
 
     @Column(length = 255)
     private String description;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "permission_group_id")
+    private PermissionGroup permissionGroup;
 }

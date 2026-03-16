@@ -1,6 +1,7 @@
 package com.solusi.erp.security.controller;
 
 import com.solusi.erp.security.dto.PermissionRequest;
+import com.solusi.erp.security.dto.PermissionResponse;
 import com.solusi.erp.security.service.PermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -9,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import com.solusi.erp.security.service.PermissionGroupService;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -19,12 +21,13 @@ import java.util.List;
 public class PermissionController {
 
     private final PermissionService permissionService;
+    private final PermissionGroupService permissionGroupService;
     private final MessageSource messageSource;
 
     @GetMapping
     @PreAuthorize("hasAuthority('PERMISSIONS_READ')")
     public String list(Model model) {
-        java.util.Map<String, List<com.solusi.erp.security.dto.PermissionResponse>> groupedPermissions = 
+        java.util.Map<String, List<PermissionResponse>> groupedPermissions =
             permissionService.findAll().stream()
                 .collect(java.util.stream.Collectors.groupingBy(p -> {
                     String name = p.getName();
@@ -34,6 +37,7 @@ public class PermissionController {
                 }, java.util.TreeMap::new, java.util.stream.Collectors.toList()));
 
         model.addAttribute("groupedPermissions", groupedPermissions);
+        model.addAttribute("permissionGroups", permissionGroupService.findAll());
         model.addAttribute("permissionRequest", new PermissionRequest());
         return "security/permissions/list";
     }
