@@ -3,6 +3,14 @@ name: Deploy ERP
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - 'docs/**'
+      - 'conductor/**'
+      - '**.md'
+      - '.gitignore'
+      - '.gitattributes'
+      - '.vscode/**'
+      - '.idea/**'
 
 jobs:
   deploy:

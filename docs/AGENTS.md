@@ -126,8 +126,8 @@ Untuk menjamin keamanan dan sinkronisasi enkripsi:
 Sistem ini menggunakan folder `docs/` terstruktur agar AI dan Developer dapat menemukan konteks secara mandiri. AI diharapkan inisiatif membuka dan membaca direktori ini jika kekurangan konteks:
 *   **`docs/architecture/`**: Visualisasi dan arsitektur klasifikasi (Class Diagram, Usecases, dll).
 *   **`docs/database/`**: Dokumentasi ERD dan definisi relasi antar identitas database ERP yang kompleks.
-*   **`docs/modules/`**: **[SANGAT PENTING UNTUK AI]** Penjelasan setiap Modul/Fitur bisnis spesifik (misal: `modules/master/tax.md`, `modules/master/currency.md`). Jelajahi riwayat aturan modul melalui file ini.
-*   **`docs/spec/`**: Spesifikasi teknis horizontal/bersama yang dipakai seluruh fitur (misal: Tata cara standar `pagination.md` atau `sequence-generator.md`).
+*   **`docs/modules/`**: **[SANGAT PENTING UNTUK AI]** Penjelasan setiap Modul/Fitur bisnis spesifik (misal: `modules/master/tax.md`, `modules/master/currency.md`, `modules/security/permission-groups.md`). Jelajahi riwayat aturan modul melalui file ini.
+*   **`docs/spec/`**: Spesifikasi teknis horizontal/bersama yang dipakai seluruh fitur (misal: Tata cara standar `pagination.md`, `sequence-generator.md`, atau `search-menu.md`).
 *   **`docs/roadmap/`**: Dokumen perencanaan masa depan ERP atau fitur yang masih tertunda.
 
 ## 11. Security & Role Permissions
@@ -136,3 +136,8 @@ Aplikasi ini memiliki UI dinamis untuk Manajemen Role (Grouped Permissions) yang
    Contoh: `GEOGRAPHIC_READ`, `PRODUCT_CREATE`. Ini akan mengelompokkan mereka ke folder `GEOGRAPHIC` dan `PRODUCT`.
 2. **Fitur Lintas Modul (Shared Features)**: Gunakan *Prefix* jenis fiturnya, contohnya `LOOKUP_` untuk autocomplete popup, dan `POPUP_` untuk fitur modal/popup lainnya (misal: Popup selector item di transaksi).
    Contoh: `LOOKUP_GEOGRAPHIC`, `LOOKUP_PRODUCT`, `POPUP_PARTNER`. Ini akan membuat folder `LOOKUP` dan `POPUP` yang bersih dan mudah diatur oleh Administrator di UI tanpa mencampuri izin akses CRUD reguler.
+
+### Global Search Menu & Permission Groups
+Selain pengelompokan visual di UI Role, sistem memiliki fitur **Global Search Menu** yang menggunakan entitas `PermissionGroup`.
+- Setiap `Permission` **WAJIB** dikaitkan dengan satu `PermissionGroup` agar modul tersebut dapat muncul di hasil pencarian navbar (jika user punya akses).
+- Detail teknis silakan merujuk ke [docs/spec/search-menu.md](spec/search-menu.md) dan [docs/modules/security/permission-groups.md](modules/security/permission-groups.md).
