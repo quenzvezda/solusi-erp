@@ -9,10 +9,10 @@ Dokumen ini merincikan rencana pengembangan fitur Inventory setelah Master Data 
 *   [x] **Conditional UI Logic**: Validasi form berbasis tipe produk (STOCK vs NON-STOCK).
 
 ## Phase 2: Warehouse & Storage Hierarchy
-*   **Multi-Level Storage Management**:
-    *   **Facility**: Top-level building/warehouse management.
-    *   **Grid (Zone)**: Blocking/Area management within a facility (e.g., Aisle A, Cold Zone).
-    *   **Container (Bin)**: The smallest addressable unit where products are physically placed.
+*   [x] **Multi-Level Storage Management**:
+    *   [x] **Facility**: Top-level building/warehouse management.
+    *   [x] **Grid (Zone)**: Blocking/Area management within a facility (e.g., Aisle A, Cold Zone).
+    *   [x] **Container (Bin)**: The smallest addressable unit where products are physically placed.
 *   **Stock Balance Table**:
     *   Tabel `stock_balances` untuk menyimpan saldo stok real-time.
     *   Tracking kini lebih detail: `product_id`, `facility_id`, `grid_id`, dan `bin_id`.
