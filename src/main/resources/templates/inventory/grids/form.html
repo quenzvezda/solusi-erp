@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout/master :: head(${gridRequest.id == null
+    ? #messages.msg('label.grid.create')
+    : #messages.msg('label.grid.edit')})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .grid-form-content})}">
+    <div class="grid-form-content">
+
+        <!-- Page Header -->
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="${gridRequest.id == null
+                            ? #messages.msg('label.grid.create')
+                            : #messages.msg('label.grid.edit')}">
+                            Buat Grid Baru
+                        </h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Body -->
+        <div class="page-body">
+            <div class="container-xl">
+
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
+                        <div th:text="${errorMessage}">Error!</div>
+                    </div>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                </div>
+
+                <form th:action="${gridRequest.id == null
+                        ? '/inventory/grids/create'
+                        : '/inventory/grids/edit/' + gridRequest.id}" th:object="${gridRequest}" method="post"
+                    class="card">
+
+                    <div class="card-body">
+                        <!-- Global Binding Error Alert -->
+                        <div th:if="${#fields.hasAnyErrors()}" class="alert alert-danger" role="alert">
+                            <div class="d-flex">
+                                <div><i class="ti ti-alert-triangle icon alert-icon"></i></div>
+                                <div>
+                                    <h4 class="alert-title" th:text="#{msg.error.validation.title}">Terdapat Kesalahan</h4>
+                                    <ul class="mb-0 mt-2">
+                                        <li th:each="err : ${#fields.allErrors()}" th:text="${err}">Input tidak valid</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label required" th:text="#{label.grid.facility}">Fasilitas</label>
+                                    <select th:field="*{facilityId}" class="form-select"
+                                        th:classappend="${#fields.hasErrors('facilityId')} ? 'is-invalid'">
+                                        <option value="" th:text="#{label.grid.select.facility}">-- Pilih Fasilitas --</option>
+                                        <option th:each="f : ${facilities}" th:value="${f.id}" th:text="${f.name}"></option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('facilityId')}" th:errors="*{facilityId}"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label required" th:text="#{label.grid.code}">Kode Grid</label>
+                                    <input type="text" th:field="*{code}" class="form-control"
+                                        th:classappend="${#fields.hasErrors('code')} ? 'is-invalid'"
+                                        placeholder="cth: AISLE-A, ZONE-COOL">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('code')}" th:errors="*{code}"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label required" th:text="#{label.grid.name}">Nama Grid</label>
+                                    <input type="text" th:field="*{name}" class="form-control"
+                                        th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label" th:text="#{label.grid.note}">Catatan</label>
+                                    <textarea th:field="*{note}" class="form-control" rows="4"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-check form-switch mt-4">
+                                        <input class="form-check-input" type="checkbox" th:field="*{isActive}">
+                                        <span class="form-check-label" th:text="#{label.active}">Aktif</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Record Info (Edit Mode only) -->
+                        <div th:if="${auditInfo != null and auditInfo.id != null}" 
+                             th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
+                    </div>
+
+                    <div class="card-footer text-end">
+                        <div class="d-flex">
+                            <a th:href="@{/inventory/grids}" class="btn btn-link" th:text="#{label.cancel}">Batal</a>
+                            <button type="submit" class="btn btn-primary ms-auto">
+                                <i class="ti ti-device-floppy"></i>
+                                <span th:text="#{label.save}">Simpan</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

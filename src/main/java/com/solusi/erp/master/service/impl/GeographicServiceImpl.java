@@ -185,4 +185,13 @@ public class GeographicServiceImpl implements GeographicService {
         
         return new LookupDto(g.getId(), g.getName(), subText);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<GeographicResponse> findByType(GeographicType type) {
+        return geographicRepository.findByTypeAndIsActiveTrue(type)
+                .stream()
+                .map(geographicMapper::toResponse)
+                .collect(Collectors.toList());
+    }
 }

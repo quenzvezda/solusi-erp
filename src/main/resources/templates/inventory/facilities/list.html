@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.facility.list})}"></head>
+
+<body th:replace="~{layout/master :: layout(~{:: .facility-list-content})}">
+    <div class="facility-list-content">
+        <!-- Page Header -->
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="#{label.facility.list}">Daftar Fasilitas</h2>
+                        <div class="text-secondary mt-1" th:text="#{label.facility.subtitle}">Kelola gedung dan gudang penyimpanan.</div>
+                    </div>
+                    <!-- Page title actions -->
+                    <div class="col-auto ms-auto d-print-none" sec:authorize="hasAuthority('FACILITY_CREATE')">
+                        <div class="btn-list">
+                            <a th:href="@{/inventory/facilities/create}"
+                                class="btn btn-primary d-none d-sm-inline-block">
+                                <i class="ti ti-plus"></i>
+                                <span th:text="#{label.facility.create}">Tambah Fasilitas</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Body -->
+        <div class="page-body">
+            <div class="container-xl">
+                <!-- Alerts -->
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-check icon alert-icon"></i></div>
+                        <div th:text="${successMessage}">Success!</div>
+                    </div>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                </div>
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
+                        <div th:text="${errorMessage}">Error!</div>
+                    </div>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                </div>
+
+                <div class="card">
+                    <div class="card-body border-bottom py-3">
+                        <div class="d-flex">
+                            <div class="ms-auto text-secondary">
+                                <form th:action="@{/inventory/facilities}" method="get" class="input-icon">
+                                    <input type="text" name="keyword" th:value="${keyword}"
+                                        class="form-control form-control-sm" th:placeholder="#{label.search}">
+                                    <span class="input-icon-addon">
+                                        <i class="ti ti-search"></i>
+                                    </span>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th th:replace="~{fragments/table :: sortable('code', #{label.facility.code})}">Kode</th>
+                                    <th th:replace="~{fragments/table :: sortable('name', #{label.facility.name})}">Nama</th>
+                                    <th th:replace="~{fragments/table :: sortable('owner.name', #{label.facility.owner})}">Pemilik</th>
+                                    <th th:text="#{label.facility.address}">Alamat</th>
+                                    <th th:replace="~{fragments/table :: sortable('isActive', #{label.status})}">Status</th>
+                                    <th class="w-1 text-end" th:text="#{label.actions}">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="item : ${page.content}">
+                                    <td th:text="${item.code}">CODE</td>
+                                    <td class="font-weight-medium" th:text="${item.name}">Name</td>
+                                    <td th:text="${item.ownerName}">Owner</td>
+                                    <td>
+                                        <div th:text="${item.addressLine1}">Address</div>
+                                        <div class="text-secondary small" th:text="${item.cityName}">City</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-outline text-green" th:if="${item.isActive}">
+                                            <span class="badge-dot bg-success me-1"></span>
+                                            <span th:text="#{label.active}">Active</span>
+                                        </span>
+                                        <span class="badge badge-outline text-red" th:unless="${item.isActive}">
+                                            <span class="badge-dot bg-danger me-1"></span>
+                                            <span th:text="#{label.inactive}">Inactive</span>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-list flex-nowrap justify-content-end">
+                                            <a th:href="@{/inventory/grids(facilityId=${item.id})}" class="btn btn-white btn-sm">
+                                                <i class="ti ti-layers-intersect"></i>
+                                                Grids
+                                            </a>
+                                            <a th:href="@{/inventory/facilities/edit/{id}(id=${item.id})}"
+                                                class="btn btn-white btn-sm" sec:authorize="hasAuthority('FACILITY_UPDATE')">
+                                                <i class="ti ti-edit"></i>
+                                                <span th:text="#{label.edit}">Edit</span>
+                                            </a>
+                                            <form th:action="@{/inventory/facilities/delete/{id}(id=${item.id})}"
+                                                method="post" onsubmit="return confirm('Are you sure?')"
+                                                sec:authorize="hasAuthority('FACILITY_DELETE')">
+                                                <button type="submit" class="btn btn-white btn-sm text-danger">
+                                                    <i class="ti ti-trash"></i>
+                                                    <span th:text="#{label.delete}">Delete</span>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${page.totalElements == 0}">
+                                    <td colspan="6" class="text-center text-secondary py-4" th:text="#{msg.error.notfound}">No data found</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Pagination -->
+                    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

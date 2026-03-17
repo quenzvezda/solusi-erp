@@ -3,6 +3,7 @@ package com.solusi.erp.master.service;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.master.dto.GeographicRequest;
 import com.solusi.erp.master.dto.GeographicResponse;
+import com.solusi.erp.master.model.GeographicType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -31,4 +32,6 @@ public interface GeographicService {
     List<LookupDto> lookupCities(Long provinceId, String q, int limit);
 
     LookupDto getLookupById(Long id);
+
+    List<GeographicResponse> findByType(GeographicType type);
 }
