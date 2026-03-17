@@ -69,7 +69,7 @@
                                     <th th:replace="~{fragments/table :: sortable('owner.name', #{label.facility.owner})}">Pemilik</th>
                                     <th th:text="#{label.facility.address}">Alamat</th>
                                     <th th:replace="~{fragments/table :: sortable('isActive', #{label.status})}">Status</th>
-                                    <th class="w-1" th:text="#{label.actions}">Aksi</th>
+                                    <th class="w-1 text-end" th:text="#{label.actions}">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -92,7 +92,7 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <div class="btn-list flex-nowrap">
+                                        <div class="btn-list flex-nowrap justify-content-end">
                                             <a th:href="@{/inventory/grids(facilityId=${item.id})}" class="btn btn-white btn-sm">
                                                 <i class="ti ti-layers-intersect"></i>
                                                 Grids
@@ -113,15 +113,14 @@
                                         </div>
                                     </td>
                                 </tr>
-                                <tr th:if="${page.isEmpty()}">
+                                <tr th:if="${page.totalElements == 0}">
                                     <td colspan="6" class="text-center text-secondary py-4" th:text="#{msg.error.notfound}">No data found</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <div class="card-footer d-flex align-items-center">
-                        <div th:replace="~{fragments/table :: pagination(${page})}"></div>
-                    </div>
+                    <!-- Pagination -->
+                    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                 </div>
             </div>
         </div>

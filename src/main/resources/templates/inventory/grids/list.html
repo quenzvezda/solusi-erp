@@ -11,7 +11,15 @@
                 <div class="row g-2 align-items-center">
                     <div class="col">
                         <h2 class="page-title" th:text="#{label.grid.list}">Daftar Grid</h2>
-                        <div class="text-secondary mt-1" th:text="#{label.grid.subtitle}">Kelola area dan zona di dalam fasilitas.</div>
+                        <div class="text-secondary mt-1">
+                            <span th:if="${selectedFacility == null}" th:text="#{label.grid.subtitle}">Kelola area dan zona di dalam fasilitas.</span>
+                            <nav th:if="${selectedFacility != null}" aria-label="breadcrumb">
+                                <ol class="breadcrumb">
+                                    <li class="breadcrumb-item"><a th:href="@{/inventory/facilities}" th:text="#{label.facility}">Fasilitas</a></li>
+                                    <li class="breadcrumb-item active" aria-current="page" th:text="${selectedFacility.name}">Facility Name</li>
+                                </ol>
+                            </nav>
+                        </div>
                     </div>
                     <!-- Page title actions -->
                     <div class="col-auto ms-auto d-print-none" sec:authorize="hasAuthority('GRID_CREATE')">
@@ -48,9 +56,21 @@
 
                 <div class="card">
                     <div class="card-body border-bottom py-3">
-                        <div class="d-flex">
+                        <div class="d-flex align-items-center">
+                            <!-- Filter Badge -->
+                            <div th:if="${selectedFacility != null}" class="d-flex align-items-center">
+                                <span class="badge bg-blue-lt me-2 p-2 d-flex align-items-center">
+                                    <i class="ti ti-building-warehouse me-1"></i>
+                                    <span th:text="${selectedFacility.code + ' - ' + selectedFacility.name}">FAC-001 - Main Warehouse</span>
+                                    <a th:href="@{/inventory/grids}" class="ms-2 text-reset" th:title="#{label.clear.filter}">
+                                        <i class="ti ti-x"></i>
+                                    </a>
+                                </span>
+                            </div>
+
                             <div class="ms-auto text-secondary">
                                 <form th:action="@{/inventory/grids}" method="get" class="input-icon">
+                                    <input type="hidden" name="facilityId" th:value="${facilityId}" th:if="${facilityId != null}"/>
                                     <input type="text" name="keyword" th:value="${keyword}"
                                         class="form-control form-control-sm" th:placeholder="#{label.search}">
                                     <span class="input-icon-addon">
@@ -69,7 +89,7 @@
                                     <th th:replace="~{fragments/table :: sortable('name', #{label.grid.name})}">Nama</th>
                                     <th th:text="#{label.grid.note}">Catatan</th>
                                     <th th:replace="~{fragments/table :: sortable('isActive', #{label.status})}">Status</th>
-                                    <th class="w-1" th:text="#{label.actions}">Aksi</th>
+                                    <th class="w-1 text-end" th:text="#{label.actions}">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -89,7 +109,7 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <div class="btn-list flex-nowrap">
+                                        <div class="btn-list flex-nowrap justify-content-end">
                                             <a th:href="@{/inventory/containers(gridId=${item.id})}" class="btn btn-white btn-sm">
                                                 <i class="ti ti-box"></i>
                                                 Bins
@@ -110,15 +130,14 @@
                                         </div>
                                     </td>
                                 </tr>
-                                <tr th:if="${page.isEmpty()}">
+                                <tr th:if="${page.totalElements == 0}">
                                     <td colspan="6" class="text-center text-secondary py-4" th:text="#{msg.error.notfound}">No data found</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <div class="card-footer d-flex align-items-center">
-                        <div th:replace="~{fragments/table :: pagination(${page})}"></div>
-                    </div>
+                    <!-- Pagination -->
+                    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                 </div>
             </div>
         </div>

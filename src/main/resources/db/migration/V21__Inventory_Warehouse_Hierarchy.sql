@@ -80,6 +80,6 @@ CREATE TABLE inv_containers (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 4. Initial Sequences
-INSERT INTO system_sequences (module_code, format_pattern, pad_length, reset_cycle) VALUES 
-('FACILITY', 'FAC-{seq}', 4, 'NEVER'),
-('CONTAINER', 'BIN-{seq}', 5, 'NEVER');
+INSERT INTO system_sequences (module_code, format_pattern, pad_length, reset_cycle, updated_by_user_id, updated_date) VALUES 
+('FACILITY', 'FAC-{seq}', 4, 'NEVER', 1, NOW()),
+('CONTAINER', 'BIN-{seq}', 5, 'NEVER', 1, NOW());

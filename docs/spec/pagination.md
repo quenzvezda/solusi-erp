@@ -36,9 +36,18 @@ public String list(@RequestParam(required = false) String keyword,
 ## 5. Frontend Implementation (Thymeleaf)
 Untuk merender navigasi paginasi di *view*, DILARANG keras menulis blok HTML (`<ul class="pagination">...`) secara manual. Selalu gunakan fragment terpusat yang sudah disediakan.
 
+**PENTING (UI Consistency):** 
+Fragment paginasi harus diletakkan **langsung di bawah** `div.table-responsive` (masih di dalam `div.card`). 
+**DILARANG** membungkus fragment ini dengan `<div class="card-footer">` karena fragment tersebut sudah memiliki struktur styling internal yang sesuai untuk template ini.
+
 ```html
-<!-- Cukup panggil fragment ini di bagian bawah tabel Anda -->
-<div th:replace="~{fragments/table :: pagination(${page})}"></div>
+<div class="card">
+    <div class="table-responsive">
+        <table class="table ...">...</table>
+    </div>
+    <!-- Letakkan di sini, sejajar dengan table-responsive -->
+    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+</div>
 ```
 
 **Fitur dari Fragment Paginasi Generic:**

@@ -36,6 +36,13 @@ public class GridController {
         model.addAttribute("page", service.findAll(keyword, facilityId, pageable));
         model.addAttribute("keyword", keyword);
         model.addAttribute("facilityId", facilityId);
+        
+        if (facilityId != null) {
+            try {
+                model.addAttribute("selectedFacility", facilityService.findById(facilityId));
+            } catch (Exception ignored) {}
+        }
+        
         return "inventory/grids/list";
     }
 

@@ -36,6 +36,13 @@ public class ContainerController {
         model.addAttribute("page", service.findAll(keyword, gridId, pageable));
         model.addAttribute("keyword", keyword);
         model.addAttribute("gridId", gridId);
+        
+        if (gridId != null) {
+            try {
+                model.addAttribute("selectedGrid", gridService.findById(gridId));
+            } catch (Exception ignored) {}
+        }
+        
         return "inventory/containers/list";
     }
 
