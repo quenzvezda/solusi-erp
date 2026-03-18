@@ -1,0 +1,85 @@
+# Project Workflow
+
+## Guiding Principles
+
+1. **The Plan is the Source of Truth:** All work must be tracked in `plan.md`
+2. **The Tech Stack is Deliberate:** Changes to the tech stack must be documented in `tech-stack.md` *before* implementation
+3. **Consistent Architecture:** Every feature must follow the established patterns (BaseModel, DTOs, MapStruct, Thymeleaf fragments) defined in `code_styleguides/`.
+4. **User Experience First:** Every decision should prioritize user experience and consistency with existing UI.
+5. **No Direct Git Operations:** The agent MUST NOT execute any Git commands (`git commit`, `git add`, `git notes`, etc.).
+6. **No Server Management:** The agent MUST NOT run build or server commands (`mvn clean`, `mvn spring-boot:run`, etc.). The user handles building and rebooting the server.
+7. **Manual Feedback Loop:** After implementation, the agent waits for user feedback (success, error, or bug) before proceeding.
+
+## Task Workflow
+
+All tasks follow a strict lifecycle:
+
+### Standard Task Workflow
+
+1. **Select Task:** Choose the next available task from `plan.md` in sequential order.
+
+2. **Mark In Progress:** Before beginning work, edit `plan.md` and change the task from `[ ]` to `[~]`.
+
+3. **Implementation:**
+   - Write the minimum amount of application code necessary to fulfill the task.
+   - Ensure the code follows the project's code style guidelines.
+
+4. **Prepare Commit Message:**
+   - Instead of committing, the agent MUST write the formatted commit message to `commit.txt` in the project root.
+   - Format: `<type>(<scope>): <description>`
+
+5. **Provide Task Summary and Verification Guide:**
+   - The agent MUST provide a detailed summary in the chat:
+     - **What changed:** List of all created/modified files and a summary of the changes.
+     - **How it works:** Brief explanation of the technical implementation.
+     - **Manual Verification Guide:** Step-by-step instructions for the user to verify the changes manually.
+
+6. **Wait for User Feedback:**
+   - The agent MUST pause and wait for the user to manually build, run, and verify the changes.
+   - Proceed ONLY after the user confirms the task is successful.
+
+7. **Update Plan:**
+   - After user confirmation, update `plan.md` by changing the task status from `[~]` to `[x]`.
+
+### Phase Completion Verification and Checkpointing Protocol
+
+**Trigger:** This protocol is executed immediately after a task is completed that also concludes a phase in `plan.md`.
+
+1.  **Announce Phase Completion:** Inform the user that the phase is complete.
+
+2.  **Summary of Phase:** Provide a high-level summary of all changes made during the phase.
+
+3.  **Await Explicit User Feedback:**
+    -   Wait for the user to confirm the entire phase is working as expected.
+    -   **PAUSE** and await the user's response.
+
+4.  **Update Plan:**
+    -   Update `plan.md` to mark the phase as complete.
+
+## Quality Gates
+
+Before marking any task complete, verify:
+
+- [ ] Feature works as specified (User Manual Verification)
+- [ ] Code follows project's code style guidelines (as defined in `code_styleguides/`)
+- [ ] Documentation updated if needed
+- [ ] No security vulnerabilities introduced
+
+## Commit Guidelines (for commit.txt)
+
+### Message Format
+```
+<type>(<scope>): <description>
+
+[optional body]
+```
+
+### Types
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation only
+- `style`: Formatting, missing semicolons, etc.
+- `refactor`: Code change that neither fixes a bug nor adds a feature
+- `test`: Adding missing tests
+- `chore`: Maintenance tasks
+- `conductor`: Conductor-specific tasks (setup, plan updates)
