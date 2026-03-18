@@ -6,7 +6,7 @@
 2. **The Tech Stack is Deliberate:** Changes to the tech stack must be documented in `tech-stack.md` *before* implementation
 3. **Consistent Architecture:** Every feature must follow the established patterns (BaseModel, DTOs, MapStruct, Thymeleaf fragments) defined in `code_styleguides/`.
 4. **User Experience First:** Every decision should prioritize user experience and consistency with existing UI.
-5. **No Direct Git Operations:** The agent MUST NOT execute any Git commands (`git commit`, `git add`, `git notes`, etc.).
+5. **Authorized Git Operations:** The agent can execute Git commands (`git commit`, `git add`) ONLY when explicitly instructed by the user or as part of a finalized track protocol.
 6. **No Server Management:** The agent MUST NOT run build or server commands (`mvn clean`, `mvn spring-boot:run`, etc.). The user handles building and rebooting the server.
 7. **Manual Feedback Loop:** After implementation, the agent waits for user feedback (success, error, or bug) before proceeding.
 
@@ -24,9 +24,9 @@ All tasks follow a strict lifecycle:
    - Write the minimum amount of application code necessary to fulfill the task.
    - Ensure the code follows the project's code style guidelines.
 
-4. **Prepare Commit Message:**
-   - Instead of committing, the agent MUST write the formatted commit message to `commit.txt` in the project root.
-   - Format: `<type>(<scope>): <description>`
+4. **Commit Changes:**
+   - Follow the **Commit Guidelines** below.
+   - Stage relevant files and commit with a descriptive message.
 
 5. **Provide Task Summary and Verification Guide:**
    - The agent MUST provide a detailed summary in the chat:
@@ -65,14 +65,21 @@ Before marking any task complete, verify:
 - [ ] Documentation updated if needed
 - [ ] No security vulnerabilities introduced
 
-## Commit Guidelines (for commit.txt)
+## Commit Guidelines
 
 ### Message Format
 ```
 <type>(<scope>): <description>
 
-[optional body]
+<body>
 ```
+
+### Body Requirements (Mandatory)
+The body must provide technical context and follow these best practices:
+- **Bullet Points:** List key technical changes (Entities, Services, Mappers, UI).
+- **Logic Explanation:** Briefly explain the "how" for complex business logic.
+- **Impact:** Note any database migrations, menu refactors, or cross-module impacts.
+- **Verification:** Confirm that unit/integration tests were added and passed.
 
 ### Types
 - `feat`: New feature
