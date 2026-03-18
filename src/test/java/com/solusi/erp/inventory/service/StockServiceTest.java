@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.MessageSource;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -36,6 +37,15 @@ public class StockServiceTest {
 
     @Mock
     private ContainerRepository containerRepository;
+
+    @Mock
+    private UomConversionService uomConversionService;
+
+    @Mock
+    private ValuationService valuationService;
+
+    @Mock
+    private MessageSource messageSource;
 
     @InjectMocks
     private StockServiceImpl stockService;
@@ -278,6 +288,31 @@ public class StockServiceTest {
         ));
         verify(inventoryMovementRepository).save(argThat(mov -> 
             mov.getSerialNumber() != null && mov.getSerialNumber().startsWith("SN-")
+        ));
+    }
+
+    @Test
+    void shouldConvertUomBeforeProcessing() {
+        StockMovementPayload payload = StockMovementPayload.builder()
+                .productId(1L)
+                .containerId(1L)
+                .quantity(BigDecimal.valueOf(2)) // 2 Boxes
+                .uomId(2L) // BOX
+                .movementType(MovementType.RECEIPT)
+                .build();
+
+        product.setIsSerialized(false);
+        when(productRepository.getReferenceById(1L)).thenReturn(product);
+        when(containerRepository.getReferenceById(1L)).thenReturn(container);
+        when(uomConversionService.convertToBaseUom(1L, 2L, BigDecimal.valueOf(2)))
+                .thenReturn(BigDecimal.valueOf(48)); // 2 Boxes * 24 factor
+        when(stockBalanceRepository.findByProductIdAndContainerIdAndSerialNumber(1L, 1L, null))
+                .thenReturn(Optional.empty());
+
+        stockService.adjust(payload);
+
+        verify(stockBalanceRepository).save(argThat(sb -> 
+            sb.getQuantity().compareTo(BigDecimal.valueOf(48)) == 0
         ));
     }
 }

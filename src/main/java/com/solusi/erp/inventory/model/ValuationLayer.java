@@ -2,27 +2,31 @@ package com.solusi.erp.inventory.model;
 
 import com.solusi.erp.core.model.BaseModel;
 import com.solusi.erp.core.model.CurrencyAmount;
-import jakarta.persistence.*;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.AssociationOverride;
+import jakarta.persistence.AssociationOverrides;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 /**
- * Inventory Movement Entity.
+ * Valuation Layer entity for FIFO costing.
+ * Tracks the cost of remaining stock layers.
  */
 @Entity
-@Table(name = "inv_movements")
+@Table(name = "inv_valuation_layers")
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class InventoryMovement extends BaseModel {
-
-    @Column(name = "transaction_date", nullable = false)
-    private LocalDateTime transactionDate;
+public class ValuationLayer extends BaseModel {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
@@ -35,22 +39,11 @@ public class InventoryMovement extends BaseModel {
     @Column(name = "serial_number", length = 100)
     private String serialNumber;
 
-    @Column(nullable = false, precision = 19, scale = 4)
-    private BigDecimal quantity;
+    @Column(name = "initial_quantity", nullable = false, precision = 19, scale = 4)
+    private BigDecimal initialQuantity;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "movement_type", nullable = false, length = 50)
-    private MovementType movementType;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "reference_type", length = 50)
-    private ReferenceType referenceType;
-
-    @Column(name = "reference_id")
-    private Long referenceId;
-
-    @Column(name = "reference_code", length = 100)
-    private String referenceCode;
+    @Column(name = "remaining_quantity", nullable = false, precision = 19, scale = 4)
+    private BigDecimal remainingQuantity;
 
     @Embedded
     @AttributeOverrides({

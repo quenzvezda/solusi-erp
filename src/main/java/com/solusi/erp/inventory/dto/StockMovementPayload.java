@@ -33,6 +33,8 @@ public class StockMovementPayload {
     @DecimalMin(value = "0.0001", message = "{validation.quantity.min}")
     private BigDecimal quantity;
 
+    private Long uomId;
+
     @NotNull(message = "{validation.movement_type.required}")
     private MovementType movementType;
 
@@ -41,6 +43,10 @@ public class StockMovementPayload {
     private Long referenceId;
 
     private String referenceCode;
+
+    private Long currencyId;
+
+    private BigDecimal exchangeRate;
 
     private BigDecimal netPrice;
     
