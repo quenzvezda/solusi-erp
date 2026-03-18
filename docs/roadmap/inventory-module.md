@@ -30,10 +30,14 @@ Modul ini fokus pada pengelolaan penyimpanan fisik barang, pergerakan stok, dan 
     *   **Stock Adjustment**: Penyesuaian stok manual (hasil stock opname).
 
 ## Phase 4: Labeling & Serial Tracking
-*   **Serialized Item Tracking**: Pelacakan status per Serial Number unik.
+*   [x] **Core Stock Utility**: Standardized service for atomic stock updates.
+*   [x] **Serial Number Foundation**: Auto-generation and tracking in `inv_stock_balances`.
+*   **Lot/Batch Management**: Grouping items by production or purchase batch.
+*   **Expiration Tracking**: For perishable goods with automated alerts.
 *   **Barcode Printing**: Pembuatan label barcode untuk identitas produk dan lokasi bin.
 
 ## Phase 5: Inventory Analytics
+*   **Cycle Counting (Stock Opname)**: Periodic physical inventory verification.
 *   **On-Hand Quantity Report**: Laporan saldo stok saat ini per gudang/bin.
 *   **Stock Card (Kartu Stok)**: Mutasi kuantitas dan nilai secara kronologis.
 *   **Inventory Valuation**: Total nilai aset persediaan yang sinkron dengan General Ledger.
