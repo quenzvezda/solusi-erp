@@ -1,9 +1,11 @@
 package com.solusi.erp.inventory.dto;
 
+import com.solusi.erp.core.dto.BaseAuditResponse;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
@@ -15,7 +17,8 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class StockAdjustmentLineRequest {
+@EqualsAndHashCode(callSuper = true)
+public class StockAdjustmentLineRequest extends BaseAuditResponse {
 
     @NotNull(message = "{validation.notnull}")
     private Long productId;

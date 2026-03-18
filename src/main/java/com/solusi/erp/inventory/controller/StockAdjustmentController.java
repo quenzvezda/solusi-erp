@@ -30,13 +30,13 @@ public class StockAdjustmentController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('STOCK-ADJUSTMENT_READ')")
-    public Model list(@RequestParam(value = "search", required = false) String keyword,
+    public String list(@RequestParam(value = "search", required = false) String keyword,
                      @PageableDefault(size = 10) Pageable pageable,
                      Model model) {
         Page<StockAdjustmentResponse> page = service.findAll(keyword, pageable);
         model.addAttribute("page", page);
         model.addAttribute("search", keyword);
-        return model;
+        return "inventory/adjustments/list";
     }
 
     @GetMapping("/create")

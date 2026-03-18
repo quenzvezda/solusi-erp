@@ -47,7 +47,7 @@
                                         <div class="row g-2">
                                             <div class="col">
                                                 <select class="form-select" th:field="*{currencyId}" th:errorclass="is-invalid">
-                                                    <option value="" th:text="#{label.product.select.uom.short}">-- Select --</option>
+                                                    <option value="" th:text="#{label.currency.select}">-- Select --</option>
                                                     <option th:each="c : ${currencies}" th:value="${c.id}" th:text="${c.alias}" th:data-rate="${c.id == 1 ? '1.00' : ''}"></option>
                                                 </select>
                                             </div>

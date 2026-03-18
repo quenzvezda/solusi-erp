@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.dto;
 
+import com.solusi.erp.core.dto.BaseAuditResponse;
 import com.solusi.erp.inventory.model.StockAdjustment.AdjustmentStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
@@ -7,6 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
@@ -20,7 +22,8 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class StockAdjustmentRequest {
+@EqualsAndHashCode(callSuper = true)
+public class StockAdjustmentRequest extends BaseAuditResponse {
 
     private String code; // Read-only in UI, handled by sequence generator
 
