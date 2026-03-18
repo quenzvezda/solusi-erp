@@ -30,6 +30,7 @@
   - Classes: PascalCase (e.g., `ProductService`).
   - Methods and Variables: camelCase (e.g., `findById`, `productRequest`).
   - Constants: UPPER_SNAKE_CASE.
+- **Imports:** Prefer explicit imports over Fully Qualified Names (FQN) in method signatures and bodies, unless there is a naming conflict.
 - **Validation:** Use Jakarta Validation annotations (`@Valid`, `@NotNull`, `@Size`, etc.).
 - **Internationalization (I18n):** 
   - Use `MessageSource` for all user-facing messages.
