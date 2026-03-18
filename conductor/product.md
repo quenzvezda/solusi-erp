@@ -20,16 +20,17 @@ To build a modular, high-quality, and comprehensive ERP system using Java 21 and
 ### 1. Inventory Management
 - Product and category management.
 - Warehouse hierarchy (Facilities, Containers, Grids).
-- Unit of Measure (UOM) management.
+- Unit of Measure (UOM) management and automated conversion factors.
 - Stock adjustments and transfer orders.
+- FIFO-based COGS calculation with Multi-Currency support.
 
 ### 2. Operational Flows (Planned)
 - **Sales Flow:** Order to invoice.
 - **Procurement Flow:** Requisition to payment.
 
-### 3. Financial Integration (Deep Dive Needed)
+### 3. Financial Integration (In Progress)
 - **Accounting Schema:** Automated journal entries for operational transactions.
-- **COGS (HPP):** Accurate calculation of Cost of Goods Sold.
+- **COGS (HPP):** Accurate FIFO calculation with Multi-Currency support.
 - **Profit & Loss:** Generation of reports based on operational and financial data.
 
 ## User Experience
