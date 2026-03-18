@@ -115,6 +115,15 @@ public class CurrencyServiceImpl implements CurrencyService {
         log.info("Soft deleted Currency with symbol: {}", existingCurrency.getSymbol());
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<CurrencyResponse> findAllActive() {
+        return currencyRepository.findAll().stream()
+                .filter(c -> c.getIsActive() != null && c.getIsActive())
+                .map(currencyMapper::toResponse)
+                .toList();
+    }
+
     private void handleDefaultStatus(Currency currency) {
         if (currency.getIsDefault() != null && currency.getIsDefault()) {
             List<Currency> existingDefaults = currencyRepository.findByIsDefaultTrue();

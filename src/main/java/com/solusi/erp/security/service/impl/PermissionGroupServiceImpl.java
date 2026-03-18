@@ -34,6 +34,9 @@ public class PermissionGroupServiceImpl implements PermissionGroupService {
             Map.entry("Operations", "ti-briefcase"),
             Map.entry("Inventory", "ti-packages"),
             Map.entry("Inventory Management", "ti-packages"),
+            Map.entry("Inventory Setup", "ti-settings"),
+            Map.entry("Inventory Transactions", "ti-transfer-in"),
+            Map.entry("Inventory Reports", "ti-report-analytics"),
             Map.entry("Sales & Distribution", "ti-truck-delivery"),
             Map.entry("Procurement (Purchase)", "ti-shopping-cart"),
 

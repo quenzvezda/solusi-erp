@@ -18,4 +18,6 @@ public interface CurrencyService {
     void updateCurrency(Long id, CurrencyRequest request);
 
     void deleteCurrency(Long id);
+
+    java.util.List<CurrencyResponse> findAllActive();
 }

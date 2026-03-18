@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.stock-adjustment.title})}"></head>
+
+<body th:replace="~{layout/master :: layout(~{:: .stock-adjustment-list-content})}">
+    <div class="stock-adjustment-list-content">
+        <!-- Page Header -->
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="#{label.stock-adjustment.title}">Stock Adjustment</h2>
+                        <div class="text-secondary mt-1" th:text="#{label.stock-adjustment.subtitle}">Manage manual stock corrections.</div>
+                    </div>
+                    <!-- Page title actions -->
+                    <div class="col-auto ms-auto d-print-none" sec:authorize="hasAuthority('STOCK-ADJUSTMENT_CREATE')">
+                        <div class="btn-list">
+                            <a th:href="@{/inventory/adjustments/create}"
+                                class="btn btn-primary d-none d-sm-inline-block">
+                                <i class="ti ti-plus"></i>
+                                <span th:text="#{label.stock-adjustment.add}">Add New Adjustment</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Body -->
+        <div class="page-body">
+            <div class="container-xl">
+                <!-- Alerts -->
+                <div th:if="${message}" class="alert alert-success alert-dismissible" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-check icon alert-icon"></i></div>
+                        <div th:text="${message}">Success!</div>
+                    </div>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                </div>
+                <div th:if="${error}" class="alert alert-danger alert-dismissible" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
+                        <div th:text="${error}">Error!</div>
+                    </div>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                </div>
+
+                <div class="card">
+                    <div class="card-body border-bottom py-3">
+                        <div class="d-flex">
+                            <div class="ms-auto text-secondary">
+                                <form th:action="@{/inventory/adjustments}" method="get" class="input-icon">
+                                    <input type="text" name="search" th:value="${search}"
+                                        class="form-control form-control-sm" th:placeholder="#{label.search}">
+                                    <span class="input-icon-addon">
+                                        <i class="ti ti-search"></i>
+                                    </span>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th th:replace="~{fragments/table :: sortable('code', #{label.stock-adjustment.code})}">No. Adj</th>
+                                    <th th:replace="~{fragments/table :: sortable('transactionDate', #{label.stock-adjustment.date})}">Date</th>
+                                    <th th:replace="~{fragments/table :: sortable('status', #{label.stock-adjustment.status})}">Status</th>
+                                    <th th:text="#{label.stock-adjustment.total.local}">Total (Local)</th>
+                                    <th th:text="#{label.stock-adjustment.note}">Note</th>
+                                    <th class="w-1" th:text="#{label.actions}">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="item : ${page.content}">
+                                    <td>
+                                        <a th:href="@{/inventory/adjustments/{id}(id=${item.id})}" th:text="${item.code}">CODE</a>
+                                    </td>
+                                    <td th:text="${#temporals.format(item.transactionDate, 'dd MMM yyyy')}">DATE</td>
+                                    <td>
+                                        <span class="badge" 
+                                              th:classappend="${item.status.name() == 'DRAFT' ? 'bg-secondary' : 'bg-success'}"
+                                              th:text="${item.status}">
+                                            STATUS
+                                        </span>
+                                    </td>
+                                    <td class="text-end font-weight-medium">
+                                        <span th:text="${#numbers.formatDecimal(item.totalAmountLocal, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                                    </td>
+                                    <td class="text-secondary small" th:text="${#strings.abbreviate(item.note, 50)}">Note</td>
+                                    <td>
+                                        <div class="btn-list flex-nowrap">
+                                            <a th:if="${item.status.name() == 'DRAFT'}" 
+                                               th:href="@{/inventory/adjustments/{id}/edit(id=${item.id})}"
+                                               class="btn btn-white btn-sm"
+                                               sec:authorize="hasAuthority('STOCK-ADJUSTMENT_UPDATE')"
+                                               th:text="#{label.edit}">
+                                                Edit
+                                            </a>
+                                            <a th:href="@{/inventory/adjustments/{id}(id=${item.id})}"
+                                               class="btn btn-white btn-sm"
+                                               th:text="#{label.view}">
+                                                View
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${page.totalElements == 0}">
+                                    <td colspan="6" class="text-center text-secondary py-4">No records found.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Pagination -->
+                    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.stock-card.title})}"></head>
+
+<body th:replace="~{layout/master :: layout(~{:: .stock-card-content})}">
+    <div class="stock-card-content">
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="#{label.stock-card.title}">Stock Card</h2>
+                        <div class="text-secondary mt-1" th:text="#{label.stock-card.subtitle}">Chronological movement history.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <form th:action="@{/inventory/reports/stock-card}" method="get" th:object="${filter}">
+                            <div class="row row-cards">
+                                <div class="col-md-3">
+                                    <label class="form-label">Product</label>
+                                    <select class="form-select" th:field="*{productId}">
+                                        <option value="">-- All Products --</option>
+                                        <option th:each="p : ${products}" th:value="${p.id}" th:text="${p.code + ' - ' + p.name}"></option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Container</label>
+                                    <select class="form-select" th:field="*{containerId}">
+                                        <option value="">-- All Containers --</option>
+                                        <option th:each="c : ${containers}" th:value="${c.id}" th:text="${c.code}"></option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">From Date</label>
+                                    <input type="date" class="form-control" th:field="*{startDate}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">To Date</label>
+                                    <input type="date" class="form-control" th:field="*{endDate}">
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="ti ti-filter"></i> Filter
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th th:text="#{label.stock-adjustment.date}">Date</th>
+                                    <th th:text="#{label.product}">Product</th>
+                                    <th th:text="#{label.container}">Location</th>
+                                    <th th:text="#{label.pagination.entries}">Qty</th>
+                                    <th th:text="#{label.stock-adjustment.status}">Type</th>
+                                    <th th:text="#{label.stock-adjustment.code}">Reference</th>
+                                    <th class="text-end">Cost (Local)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="item : ${page.content}">
+                                    <td class="text-nowrap" th:text="${#temporals.format(item.transactionDate, 'dd MMM yyyy HH:mm')}">DATE</td>
+                                    <td>
+                                        <div th:text="${item.product.code}">CODE</div>
+                                        <div class="text-secondary small" th:text="${item.product.name}">Name</div>
+                                    </td>
+                                    <td>
+                                        <div th:text="${item.container.code}">BIN</div>
+                                        <div class="text-secondary small" th:text="${item.container.grid.facility.name}">Facility</div>
+                                    </td>
+                                    <td class="font-weight-medium" 
+                                        th:classappend="${item.quantity.signum() > 0 ? 'text-green' : 'text-red'}"
+                                        th:text="${(item.quantity.signum() > 0 ? '+' : '') + #numbers.formatDecimal(item.quantity, 1, 'COMMA', 2, 'POINT')}">QTY</td>
+                                    <td>
+                                        <span class="badge badge-outline text-blue" th:text="${item.movementType}">TYPE</span>
+                                    </td>
+                                    <td>
+                                        <div th:text="${item.referenceCode}">REF-001</div>
+                                        <div class="text-muted small" th:text="${item.referenceType}">TYPE</div>
+                                    </td>
+                                    <td class="text-end">
+                                        <span th:if="${item.unitCost != null}" 
+                                              th:text="${#numbers.formatDecimal(item.unitCost.localAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                                        <span th:if="${item.unitCost == null}">-</span>
+                                    </td>
+                                </tr>
+                                <tr th:if="${page.totalElements == 0}">
+                                    <td colspan="7" class="text-center text-secondary py-4">No movement history found.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
