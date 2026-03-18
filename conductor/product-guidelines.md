@@ -30,6 +30,8 @@ All implementations MUST strictly adhere to the following technical standards:
 - **Menu & Breadcrumbs:** [../docs/spec/menu-structure.md](../docs/spec/menu-structure.md)
 - **Pagination Strategy:** [../docs/spec/pagination.md](../docs/spec/pagination.md)
 - **Global Search:** [../docs/spec/search-menu.md](../docs/spec/search-menu.md)
-- **Code Generation (Sequence):** [../docs/spec/sequence-generator.md](../docs/spec/sequence-generator.md)
-- **Sorting Logic:** [../docs/spec/sorting.md](../docs/spec/sorting.md)
-- **Inventory Valuation & UOM:** [../docs/modules/inventory/valuation-and-uom.md](../docs/modules/inventory/valuation-and-uom.md)
+- Code Generation (Sequence): [../docs/spec/sequence-generator.md](../docs/spec/sequence-generator.md)
+- Sorting Logic: [../docs/spec/sorting.md](../docs/spec/sorting.md)
+- Inventory Stock Adjustment: [../docs/modules/inventory/stock-adjustment.md](../docs/modules/inventory/stock-adjustment.md)
+- Inventory Valuation & UOM: [../docs/modules/inventory/valuation-and-uom.md](../docs/modules/inventory/valuation-and-uom.md)
+

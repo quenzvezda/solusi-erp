@@ -22,9 +22,18 @@ public class StockAdjustmentLineRequest extends BaseAuditResponse {
 
     @NotNull(message = "{validation.notnull}")
     private Long productId;
+    
+    private String productCode; // For display in Edit mode
+
+    @NotNull(message = "{validation.notnull}")
+    private Long gridId;
+    
+    private String gridCode; // For display in Edit mode
 
     @NotNull(message = "{validation.notnull}")
     private Long containerId;
+    
+    private String containerCode; // For display in Edit mode
 
     @NotNull(message = "{validation.notnull}")
     private BigDecimal quantity;

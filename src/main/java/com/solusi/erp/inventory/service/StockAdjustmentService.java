@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface StockAdjustmentService {
+    StockAdjustmentRequest getEditData(Long id);
     Page<StockAdjustmentResponse> findAll(String keyword, Pageable pageable);
     StockAdjustmentResponse findById(Long id);
     StockAdjustmentResponse create(StockAdjustmentRequest request);

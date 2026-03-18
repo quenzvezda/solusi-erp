@@ -10,19 +10,22 @@
   - Use `@Controller` for Thymeleaf views and `@RestController` for APIs.
   - Use `RequiredArgsConstructor` for dependency injection.
   - Apply `@PreAuthorize` for method-level security.
+  - **Clean Controller Policy:** Controllers MUST NOT perform manual mapping or business logic. For Edit Forms, call `service.getEditData(id)` to retrieve a populated Request DTO.
 - **Service:**
   - Define interfaces in the base package and implementations in the `.impl` sub-package.
   - Use `@Transactional` for database operations.
-  - Handle business logic and mapping.
+  - **Mapping Responsibility:** Services are responsible for mapping Entities to Request DTOs via `getEditData`.
 - **Repository:**
   - Use Spring Data JPA repositories.
   - Define custom search methods using `@Query` or method name conventions.
 - **Model (Entity):**
   - Entities MUST extend `BaseModel` to include auditing fields.
+  - **Embedded Objects:** Always initialize `@Embedded` objects (e.g., `CurrencyAmount`) in the default constructor to prevent `NullPointerException` during data population in Services.
   - Use Lombok `@Getter`, `@Setter`, `@NoArgsConstructor`, and `@AllArgsConstructor`.
   - Use JPA annotations correctly (`@Entity`, `@Table`, `@Column`, `@ManyToOne`, etc.).
 - **DTOs:**
   - Use `Request` DTOs for input and `Response` DTOs for output.
+  - **Standard Request Fields:** Include label fields (e.g., `facilityName`) in Request DTOs if they are needed for rendering in a shared Form (Create/Edit).
   - Use MapStruct for efficient mapping between entities and DTOs.
 
 ## Coding Standards

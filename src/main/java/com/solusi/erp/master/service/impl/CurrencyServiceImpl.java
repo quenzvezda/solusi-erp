@@ -97,6 +97,15 @@ public class CurrencyServiceImpl implements CurrencyService {
                 .toList();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public CurrencyResponse getDefaultCurrency() {
+        return currencyRepository.findByIsDefaultTrue().stream()
+                .findFirst()
+                .map(currencyMapper::toResponse)
+                .orElse(null);
+    }
+
     private void handleDefaultStatus(Currency currency) {
         if (currency.getIsDefault() != null && currency.getIsDefault()) {
             List<Currency> defaults = currencyRepository.findByIsDefaultTrue();

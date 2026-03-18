@@ -10,9 +10,9 @@
                 <div class="row g-2 align-items-center">
                     <div class="col">
                         <h2 class="page-title" th:text="${stockAdjustment.code}">ADJ-001</h2>
-                        <div class="text-secondary mt-1">
+                        <div class="mt-1">
                             <span class="badge" 
-                                  th:classappend="${stockAdjustment.status.name() == 'DRAFT' ? 'bg-secondary' : 'bg-success'}"
+                                  th:classappend="${stockAdjustment.status.name() == 'DRAFT' ? 'bg-secondary-lt' : 'bg-success-lt'}"
                                   th:text="${stockAdjustment.status}">STATUS</span>
                         </div>
                     </div>
@@ -29,7 +29,7 @@
                                   onsubmit="return confirm(this.getAttribute('data-confirm'))"
                                   th:data-confirm="#{label.stock-adjustment.process.confirm}">
                                 <button type="submit" class="btn btn-success" sec:authorize="hasAuthority('STOCK-ADJUSTMENT_PROCESS')">
-                                    <i class="ti ti-check"></i> <span th:text="#{label.stock-adjustment.btn.process}">Process</span>
+                                    <i class="ti ti-check"></i> <span th:text="#{label.stock-adjustment.btn.process}">Process to Inventory</span>
                                 </button>
                             </form>
                         </div>
@@ -41,19 +41,21 @@
         <div class="page-body">
             <div class="container-xl">
                 <div class="row row-cards">
-                    <div class="col-md-8">
+                    <!-- Left: Table Items -->
+                    <div class="col-lg-8">
                         <div class="card">
                             <div class="card-header">
-                                <h3 class="card-title" th:text="#{label.stock-adjustment.lines}">Items</h3>
+                                <h3 class="card-title" th:text="#{label.stock-adjustment.lines}">Adjustment Items</h3>
                             </div>
                             <div class="table-responsive">
                                 <table class="table table-vcenter card-table">
                                     <thead>
                                         <tr>
                                             <th th:text="#{label.product}">Product</th>
-                                            <th th:text="#{label.container}">Container</th>
+                                            <th th:text="#{label.grid}">Grid</th>
+                                            <th th:text="#{label.container}">Bin</th>
                                             <th th:text="#{label.product.serialized}">SN</th>
-                                            <th class="text-end" th:text="#{label.pagination.entries}">Qty</th>
+                                            <th class="text-end">Qty</th>
                                             <th class="text-end" th:text="#{label.stock-adjustment.total.original}">Unit Cost</th>
                                             <th class="text-end">Total</th>
                                         </tr>
@@ -61,14 +63,12 @@
                                     <tbody>
                                         <tr th:each="line : ${stockAdjustment.lines}">
                                             <td>
-                                                <div th:text="${line.productCode}">CODE</div>
+                                                <div class="font-weight-medium" th:text="${line.productCode}">CODE</div>
                                                 <div class="text-secondary small" th:text="${line.productName}">Name</div>
                                             </td>
-                                            <td>
-                                                <div th:text="${line.containerCode}">BIN</div>
-                                                <div class="text-secondary small" th:text="${line.facilityName}">Facility</div>
-                                            </td>
-                                            <td th:text="${line.serialNumber ?: '-'}">-</td>
+                                            <td><div th:text="${line.gridCode}">GRID</div></td>
+                                            <td><div th:text="${line.containerCode}">BIN</div></td>
+                                            <td class="text-secondary" th:text="${line.serialNumber ?: '-'}">-</td>
                                             <td class="text-end" th:text="${#numbers.formatDecimal(line.quantity, 1, 'COMMA', 2, 'POINT')}">0</td>
                                             <td class="text-end" th:text="${#numbers.formatDecimal(line.unitCost, 1, 'COMMA', 2, 'POINT')}">0.00</td>
                                             <td class="text-end font-weight-medium" th:text="${#numbers.formatDecimal(line.totalAmount, 1, 'COMMA', 2, 'POINT')}">0.00</td>
@@ -78,33 +78,43 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="card mb-3">
+
+                    <!-- Right: Summary -->
+                    <div class="col-lg-4">
+                        <div class="card">
                             <div class="card-header">
                                 <h3 class="card-title">Summary</h3>
                             </div>
                             <div class="card-body">
                                 <div class="mb-3">
-                                    <label class="form-label" th:text="#{label.stock-adjustment.date}">Date</label>
-                                    <div class="form-control-plaintext" th:text="${#temporals.format(stockAdjustment.transactionDate, 'dd MMM yyyy')}">Date</div>
+                                    <label class="form-label text-muted" th:text="#{label.stock-adjustment.date}">Date</label>
+                                    <div class="font-weight-medium" th:text="${#temporals.format(stockAdjustment.transactionDate, 'dd MMM yyyy')}">Date</div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label" th:text="#{label.stock-adjustment.currency}">Currency</label>
-                                    <div class="form-control-plaintext">
+                                    <label class="form-label text-muted" th:text="#{label.facility}">Facility</label>
+                                    <div class="font-weight-medium" th:text="${stockAdjustment.facilityName}">Gudang Utama</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted" th:text="#{label.stock-adjustment.currency}">Currency</label>
+                                    <div class="font-weight-medium">
                                         <span th:text="${stockAdjustment.currencyAlias}">USD</span>
-                                        (Rate: <span th:text="${#numbers.formatDecimal(stockAdjustment.exchangeRate, 1, 'COMMA', 2, 'POINT')}">1.00</span>)
+                                        <span class="text-muted small">(Rate: <span th:text="${#numbers.formatDecimal(stockAdjustment.exchangeRate, 1, 'COMMA', 2, 'POINT')}">1.00</span>)</span>
                                     </div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label" th:text="#{label.stock-adjustment.total.local}">Total Local</label>
-                                    <div class="h2 font-weight-bold" th:text="${#numbers.formatDecimal(stockAdjustment.totalAmountLocal, 1, 'COMMA', 2, 'POINT')}">0.00</div>
+                                    <label class="form-label text-muted" th:text="#{label.stock-adjustment.total.local}">Total (Local)</label>
+                                    <div class="h2 font-weight-bold text-primary mb-0" th:text="${#numbers.formatDecimal(stockAdjustment.totalAmountLocal, 1, 'COMMA', 2, 'POINT')}">0.00</div>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label" th:text="#{label.stock-adjustment.note}">Note</label>
-                                    <div class="text-secondary" th:text="${stockAdjustment.note ?: '-'}">None</div>
+                                <div class="mb-0">
+                                    <label class="form-label text-muted" th:text="#{label.stock-adjustment.note}">Note</label>
+                                    <div class="text-secondary small" th:text="${stockAdjustment.note ?: '-'}">None</div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Bottom: Record Info (Full Width) -->
+                    <div class="col-12 mt-3">
                         <div th:replace="~{fragments/audit-info :: audit-info(${stockAdjustment})}"></div>
                     </div>
                 </div>

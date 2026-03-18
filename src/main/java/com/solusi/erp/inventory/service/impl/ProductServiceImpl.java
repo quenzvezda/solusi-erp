@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.service.impl;
 
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.service.SequenceGeneratorService;
 import com.solusi.erp.inventory.dto.ProductRequest;
 import com.solusi.erp.inventory.dto.ProductResponse;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,8 +34,25 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
+    public LookupDto getLookupProduct(Long id) {
+        Product p = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.product.notfound")));
+        return new LookupDto(p.getId(), p.getCode() + " - " + p.getName(), p.getBarcode());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ProductResponse> findAll() {
         return repository.findAll().stream().map(mapper::toResponse).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LookupDto> lookupProducts(String keyword, int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        return repository.search(keyword, pageable).getContent().stream()
+                .map(p -> new LookupDto(p.getId(), p.getCode() + " - " + p.getName(), p.getBarcode()))
+                .toList();
     }
 
     @Override

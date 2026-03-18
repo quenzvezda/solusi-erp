@@ -11,6 +11,8 @@ import com.solusi.erp.inventory.model.StockAdjustment;
 import com.solusi.erp.inventory.model.StockAdjustment.AdjustmentStatus;
 import com.solusi.erp.inventory.model.StockAdjustmentLine;
 import com.solusi.erp.inventory.repository.ContainerRepository;
+import com.solusi.erp.inventory.repository.FacilityRepository;
+import com.solusi.erp.inventory.repository.GridRepository;
 import com.solusi.erp.inventory.repository.ProductRepository;
 import com.solusi.erp.inventory.repository.StockAdjustmentRepository;
 import com.solusi.erp.inventory.service.StockAdjustmentService;
@@ -25,7 +27,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -38,10 +39,20 @@ public class StockAdjustmentServiceImpl implements StockAdjustmentService {
     private final ProductRepository productRepository;
     private final ContainerRepository containerRepository;
     private final CurrencyRepository currencyRepository;
+    private final FacilityRepository facilityRepository;
+    private final GridRepository gridRepository;
     private final MessageSource messageSource;
 
     private String getMessage(String key, Object... args) {
         return messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StockAdjustmentRequest getEditData(Long id) {
+        StockAdjustment entity = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.notfound")));
+        return mapper.toRequest(entity);
     }
 
     @Override
@@ -64,6 +75,7 @@ public class StockAdjustmentServiceImpl implements StockAdjustmentService {
         StockAdjustment entity = mapper.toEntity(request);
         entity.setCode(sequenceGeneratorService.generate("STOCK_ADJUSTMENT"));
         entity.setStatus(AdjustmentStatus.DRAFT);
+        entity.setFacility(facilityRepository.getReferenceById(request.getFacilityId()));
         
         // Populate associations for lines
         populateLines(entity, request);
@@ -86,6 +98,7 @@ public class StockAdjustmentServiceImpl implements StockAdjustmentService {
         entity.setTransactionDate(updated.getTransactionDate());
         entity.setNote(updated.getNote());
         entity.setTotalCost(updated.getTotalCost());
+        entity.setFacility(facilityRepository.getReferenceById(request.getFacilityId()));
         
         // Clear and repopulate lines
         entity.getLines().clear();
@@ -141,12 +154,20 @@ public class StockAdjustmentServiceImpl implements StockAdjustmentService {
     }
 
     private void populateLines(StockAdjustment entity, StockAdjustmentRequest request) {
+        if (entity.getTotalCost() == null) {
+            entity.setTotalCost(new com.solusi.erp.core.model.CurrencyAmount());
+        }
         entity.getTotalCost().setCurrency(currencyRepository.getReferenceById(request.getCurrencyId()));
+        entity.getTotalCost().setExchangeRate(request.getExchangeRate());
+        
         request.getLines().forEach(lineReq -> {
             StockAdjustmentLine line = mapper.toLineEntity(lineReq);
             line.setHeader(entity);
             line.setProduct(productRepository.getReferenceById(lineReq.getProductId()));
             line.setContainer(containerRepository.getReferenceById(lineReq.getContainerId()));
+            if (lineReq.getGridId() != null) {
+                line.setGrid(gridRepository.getReferenceById(lineReq.getGridId()));
+            }
             line.setTotalAmount(line.getQuantity().multiply(line.getUnitCost()));
             entity.getLines().add(line);
         });

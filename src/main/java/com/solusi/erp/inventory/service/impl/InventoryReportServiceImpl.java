@@ -1,8 +1,10 @@
 package com.solusi.erp.inventory.service.impl;
 
+import com.solusi.erp.inventory.dto.InventoryMovementResponse;
 import com.solusi.erp.inventory.dto.LocationStockDetailResponse;
 import com.solusi.erp.inventory.dto.ProductStockSummaryResponse;
 import com.solusi.erp.inventory.dto.StockCardFilter;
+import com.solusi.erp.inventory.mapper.InventoryMovementMapper;
 import com.solusi.erp.inventory.model.InventoryMovement;
 import com.solusi.erp.inventory.repository.InventoryMovementRepository;
 import com.solusi.erp.inventory.repository.StockBalanceRepository;
@@ -23,6 +25,7 @@ public class InventoryReportServiceImpl implements InventoryReportService {
 
     private final StockBalanceRepository stockBalanceRepository;
     private final InventoryMovementRepository inventoryMovementRepository;
+    private final InventoryMovementMapper movementMapper;
 
     @Override
     @Transactional(readOnly = true)
@@ -38,15 +41,17 @@ public class InventoryReportServiceImpl implements InventoryReportService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<InventoryMovement> getStockCard(StockCardFilter filter, Pageable pageable) {
+    public Page<InventoryMovementResponse> getStockCard(StockCardFilter filter, Pageable pageable) {
         LocalDateTime start = filter.getStartDate() != null ? filter.getStartDate().atStartOfDay() : null;
         LocalDateTime end = filter.getEndDate() != null ? filter.getEndDate().atTime(LocalTime.MAX) : null;
         
-        return inventoryMovementRepository.search(
+        Page<InventoryMovement> page = inventoryMovementRepository.search(
                 filter.getProductId(), 
                 filter.getContainerId(), 
                 start, 
                 end, 
                 pageable);
+        
+        return page.map(movementMapper::toResponse);
     }
 }

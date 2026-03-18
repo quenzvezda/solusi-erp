@@ -24,6 +24,23 @@ public interface ContainerRepository extends JpaRepository<Container, Long> {
            "LOWER(f.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<Container> search(@Param("keyword") String keyword, Pageable pageable);
 
+    @Query("SELECT c FROM Container c " +
+           "JOIN c.grid g " +
+           "WHERE g.id = :gridId AND (" +
+           "LOWER(c.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(c.barcode) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<Container> searchByGrid(@Param("keyword") String keyword, @Param("gridId") Long gridId, Pageable pageable);
+
+    @Query("SELECT c FROM Container c " +
+           "JOIN c.grid g " +
+           "JOIN g.facility f " +
+           "WHERE f.id = :facilityId AND (" +
+           "LOWER(c.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(c.barcode) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<Container> searchByFacility(@Param("keyword") String keyword, @Param("facilityId") Long facilityId, Pageable pageable);
+
     Page<Container> findByGridId(Long gridId, Pageable pageable);
 
     boolean existsByGridIdAndCode(Long gridId, String code);

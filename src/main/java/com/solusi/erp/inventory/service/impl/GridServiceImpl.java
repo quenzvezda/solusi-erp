@@ -2,6 +2,7 @@ package com.solusi.erp.inventory.service.impl;
 
 import com.solusi.erp.inventory.dto.GridRequest;
 import com.solusi.erp.inventory.dto.GridResponse;
+import com.solusi.erp.inventory.dto.InventoryLookupDto;
 import com.solusi.erp.inventory.mapper.WarehouseMapper;
 import com.solusi.erp.inventory.model.Grid;
 import com.solusi.erp.inventory.repository.GridRepository;
@@ -10,10 +11,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+
+import java.util.List;
 
 /**
  * Implementation of GridService.
@@ -25,6 +29,42 @@ public class GridServiceImpl implements GridService {
     private final GridRepository repository;
     private final WarehouseMapper mapper;
     private final MessageSource messageSource;
+
+    @Override
+    @Transactional(readOnly = true)
+    public InventoryLookupDto getLookupGrid(Long id) {
+        Grid g = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.grid.notfound")));
+        return InventoryLookupDto.builder()
+                .id(g.getId())
+                .name(g.getCode() + " - " + g.getName())
+                .subText(g.getFacility().getName())
+                .parentId(g.getFacility().getId())
+                .parentName(g.getFacility().getCode() + " - " + g.getFacility().getName())
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<InventoryLookupDto> lookupGrids(String keyword, Long facilityId, int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        Page<Grid> page;
+        if (facilityId != null) {
+            page = repository.searchByFacility(keyword, facilityId, pageable);
+        } else {
+            page = repository.search(keyword, pageable);
+        }
+        
+        return page.getContent().stream()
+                .map(g -> InventoryLookupDto.builder()
+                        .id(g.getId())
+                        .name(g.getCode() + " - " + g.getName())
+                        .subText(g.getFacility().getName())
+                        .parentId(g.getFacility().getId())
+                        .parentName(g.getFacility().getCode() + " - " + g.getFacility().getName())
+                        .build())
+                .toList();
+    }
 
     @Override
     @Transactional(readOnly = true)

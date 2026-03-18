@@ -19,5 +19,5 @@ This file acts as a central registry for all Conductor tracks in the project.
 
 ---
 
-- [ ] **Track: Stock Adjustment UI Polish & Autocomplete Integration**
+- [x] **Track: Stock Adjustment UI Polish & Autocomplete Integration**
 *Link: [./tracks/stock_adjustment_polish_20260319/](./tracks/stock_adjustment_polish_20260319/)*

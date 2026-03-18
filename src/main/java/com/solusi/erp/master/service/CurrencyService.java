@@ -22,4 +22,6 @@ public interface CurrencyService {
     void deleteCurrency(Long id);
 
     List<CurrencyResponse> findAllActive();
+
+    CurrencyResponse getDefaultCurrency();
 }

@@ -32,6 +32,10 @@ public class StockAdjustment extends BaseModel {
     @Column(columnDefinition = "TEXT")
     private String note;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "facility_id")
+    private Facility facility;
+
     @Embedded
     @AttributeOverrides({
         @AttributeOverride(name = "exchangeRate", column = @Column(name = "total_exchange_rate")),
@@ -45,6 +49,10 @@ public class StockAdjustment extends BaseModel {
 
     @OneToMany(mappedBy = "header", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StockAdjustmentLine> lines = new ArrayList<>();
+
+    public StockAdjustment() {
+        this.totalCost = new CurrencyAmount();
+    }
 
     public enum AdjustmentStatus {
         DRAFT, COMPLETED

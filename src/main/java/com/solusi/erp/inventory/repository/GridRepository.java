@@ -21,6 +21,13 @@ public interface GridRepository extends JpaRepository<Grid, Long> {
            "LOWER(f.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<Grid> search(@Param("keyword") String keyword, Pageable pageable);
 
+    @Query("SELECT g FROM Grid g " +
+           "JOIN g.facility f " +
+           "WHERE f.id = :facilityId AND (" +
+           "LOWER(g.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(g.name) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<Grid> searchByFacility(@Param("keyword") String keyword, @Param("facilityId") Long facilityId, Pageable pageable);
+
     Page<Grid> findByFacilityId(Long facilityId, Pageable pageable);
 
     boolean existsByFacilityIdAndCode(Long facilityId, String code);

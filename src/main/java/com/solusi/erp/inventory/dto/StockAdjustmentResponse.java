@@ -30,6 +30,10 @@ public class StockAdjustmentResponse extends BaseAuditResponse {
     private Long currencyId;
     private String currencyAlias;
     private BigDecimal exchangeRate;
+
+    private Long facilityId;
+    private String facilityName;
+
     private BigDecimal totalAmountOriginal;
     private BigDecimal totalAmountLocal;
 

@@ -14,6 +14,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface StockAdjustmentRepository extends JpaRepository<StockAdjustment, Long> {
 
-    @Query("SELECT s FROM StockAdjustment s WHERE s.code LIKE %:keyword% OR s.note LIKE %:keyword%")
+    @Query("SELECT s FROM StockAdjustment s WHERE " +
+           "(:keyword IS NULL OR :keyword = '' OR " +
+           "LOWER(s.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(s.note) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<StockAdjustment> search(@Param("keyword") String keyword, Pageable pageable);
 }

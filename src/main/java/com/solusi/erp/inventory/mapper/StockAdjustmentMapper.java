@@ -17,6 +17,8 @@ public interface StockAdjustmentMapper {
     @Mapping(target = "currencyId", source = "totalCost.currency.id")
     @Mapping(target = "currencyAlias", source = "totalCost.currency.alias")
     @Mapping(target = "exchangeRate", source = "totalCost.exchangeRate")
+    @Mapping(target = "facilityId", source = "facility.id")
+    @Mapping(target = "facilityName", source = "facility.name")
     @Mapping(target = "totalAmountOriginal", source = "totalCost.originalAmount")
     @Mapping(target = "totalAmountLocal", source = "totalCost.localAmount")
     StockAdjustmentResponse toResponse(StockAdjustment entity);
@@ -24,6 +26,8 @@ public interface StockAdjustmentMapper {
     @Mapping(target = "productId", source = "product.id")
     @Mapping(target = "productCode", source = "product.code")
     @Mapping(target = "productName", source = "product.name")
+    @Mapping(target = "gridId", source = "grid.id")
+    @Mapping(target = "gridCode", source = "grid.code")
     @Mapping(target = "containerId", source = "container.id")
     @Mapping(target = "containerCode", source = "container.code")
     @Mapping(target = "facilityName", source = "container.grid.facility.name")
@@ -36,14 +40,28 @@ public interface StockAdjustmentMapper {
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "totalCost.currency", ignore = true)
     @Mapping(target = "totalCost.exchangeRate", source = "exchangeRate")
+    @Mapping(target = "facility", ignore = true)
     @Mapping(target = "lines", ignore = true)
     StockAdjustment toEntity(StockAdjustmentRequest request);
+
+    @Mapping(target = "facilityId", source = "facility.id")
+    @Mapping(target = "facilityName", source = "facility.name")
+    StockAdjustmentRequest toRequest(StockAdjustment entity);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "header", ignore = true)
     @Mapping(target = "product", ignore = true)
+    @Mapping(target = "grid", ignore = true)
     @Mapping(target = "container", ignore = true)
     StockAdjustmentLine toLineEntity(StockAdjustmentLineRequest request);
+
+    @Mapping(target = "productId", source = "product.id")
+    @Mapping(target = "productCode", source = "product.code")
+    @Mapping(target = "gridId", source = "grid.id")
+    @Mapping(target = "gridCode", source = "grid.code")
+    @Mapping(target = "containerId", source = "container.id")
+    @Mapping(target = "containerCode", source = "container.code")
+    StockAdjustmentLineRequest toLineRequest(StockAdjustmentLine entity);
 
     @AfterMapping
     default void linkLines(@MappingTarget StockAdjustment entity) {

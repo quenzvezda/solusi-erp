@@ -72,12 +72,12 @@
                                 <tr th:each="item : ${page.content}">
                                     <td class="text-nowrap" th:text="${#temporals.format(item.transactionDate, 'dd MMM yyyy HH:mm')}">DATE</td>
                                     <td>
-                                        <div th:text="${item.product.code}">CODE</div>
-                                        <div class="text-secondary small" th:text="${item.product.name}">Name</div>
+                                        <div class="font-weight-medium" th:text="${item.productCode}">CODE</div>
+                                        <div class="text-secondary small" th:text="${item.productName}">Name</div>
                                     </td>
                                     <td>
-                                        <div th:text="${item.container.code}">BIN</div>
-                                        <div class="text-secondary small" th:text="${item.container.grid.facility.name}">Facility</div>
+                                        <div th:text="${item.containerCode}">BIN</div>
+                                        <div class="text-secondary small" th:text="${item.facilityName}">Facility</div>
                                     </td>
                                     <td class="font-weight-medium" 
                                         th:classappend="${item.quantity.signum() > 0 ? 'text-green' : 'text-red'}"
@@ -89,10 +89,10 @@
                                         <div th:text="${item.referenceCode}">REF-001</div>
                                         <div class="text-muted small" th:text="${item.referenceType}">TYPE</div>
                                     </td>
-                                    <td class="text-end">
-                                        <span th:if="${item.unitCost != null}" 
-                                              th:text="${#numbers.formatDecimal(item.unitCost.localAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span>
-                                        <span th:if="${item.unitCost == null}">-</span>
+                                    <td class="text-end font-weight-medium">
+                                        <span th:if="${item.unitCostLocal != null}" 
+                                              th:text="${#numbers.formatDecimal(item.unitCostLocal, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                                        <span th:if="${item.unitCostLocal == null}">-</span>
                                     </td>
                                 </tr>
                                 <tr th:if="${page.totalElements == 0}">

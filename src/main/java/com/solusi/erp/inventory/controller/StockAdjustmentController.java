@@ -2,12 +2,14 @@ package com.solusi.erp.inventory.controller;
 
 import com.solusi.erp.inventory.dto.StockAdjustmentRequest;
 import com.solusi.erp.inventory.dto.StockAdjustmentResponse;
+import com.solusi.erp.inventory.model.StockAdjustment;
 import com.solusi.erp.inventory.service.StockAdjustmentService;
 import com.solusi.erp.inventory.service.ProductService;
 import com.solusi.erp.inventory.service.ContainerService;
 import com.solusi.erp.master.service.CurrencyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -18,6 +20,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+@Slf4j
 @Controller
 @RequestMapping("/inventory/adjustments")
 @RequiredArgsConstructor
@@ -42,7 +45,15 @@ public class StockAdjustmentController {
     @GetMapping("/create")
     @PreAuthorize("hasAuthority('STOCK-ADJUSTMENT_CREATE')")
     public String createForm(Model model) {
-        model.addAttribute("stockAdjustment", new StockAdjustmentRequest());
+        com.solusi.erp.master.dto.CurrencyResponse defaultCurr = currencyService.getDefaultCurrency();
+        StockAdjustmentRequest request = new StockAdjustmentRequest();
+        if (defaultCurr != null) {
+            request.setCurrencyId(defaultCurr.getId());
+        }
+        request.setExchangeRate(java.math.BigDecimal.ONE);
+        request.setTransactionDate(java.time.LocalDate.now());
+        
+        model.addAttribute("stockAdjustment", request);
         populateFormModels(model);
         return "inventory/adjustments/form";
     }
@@ -51,23 +62,32 @@ public class StockAdjustmentController {
     @PreAuthorize("hasAuthority('STOCK-ADJUSTMENT_CREATE')")
     public String create(@Valid @ModelAttribute("stockAdjustment") StockAdjustmentRequest request,
                         BindingResult result, Model model, RedirectAttributes ra) {
+        log.info("Creating stock adjustment with {} lines", request.getLines().size());
         if (result.hasErrors()) {
+            log.warn("Validation errors: {}", result.getAllErrors());
             populateFormModels(model);
             return "inventory/adjustments/form";
         }
-        service.create(request);
-        ra.addFlashAttribute("message", "Stock Adjustment created successfully");
-        return "redirect:/inventory/adjustments";
+        try {
+            service.create(request);
+            ra.addFlashAttribute("message", "Stock Adjustment created successfully");
+            return "redirect:/inventory/adjustments";
+        } catch (Exception e) {
+            log.error("Error creating adjustment", e);
+            ra.addFlashAttribute("error", e.getMessage());
+            populateFormModels(model);
+            return "inventory/adjustments/form";
+        }
     }
 
     @GetMapping("/{id}/edit")
     @PreAuthorize("hasAuthority('STOCK-ADJUSTMENT_UPDATE')")
     public String editForm(@PathVariable Long id, Model model) {
         StockAdjustmentResponse response = service.findById(id);
-        if (response.getStatus() == com.solusi.erp.inventory.model.StockAdjustment.AdjustmentStatus.COMPLETED) {
+        if (response.getStatus() == StockAdjustment.AdjustmentStatus.COMPLETED) {
             return "redirect:/inventory/adjustments/" + id;
         }
-        model.addAttribute("stockAdjustment", response);
+        model.addAttribute("stockAdjustment", service.getEditData(id));
         populateFormModels(model);
         return "inventory/adjustments/form";
     }
@@ -93,5 +113,6 @@ public class StockAdjustmentController {
 
     private void populateFormModels(Model model) {
         model.addAttribute("currencies", currencyService.findAllActive());
+        model.addAttribute("defaultCurrency", currencyService.getDefaultCurrency());
     }
 }

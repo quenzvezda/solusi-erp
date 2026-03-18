@@ -80,7 +80,7 @@
                                     <td th:text="${#temporals.format(item.transactionDate, 'dd MMM yyyy')}">DATE</td>
                                     <td>
                                         <span class="badge" 
-                                              th:classappend="${item.status.name() == 'DRAFT' ? 'bg-secondary' : 'bg-success'}"
+                                              th:classappend="${item.status.name() == 'DRAFT' ? 'bg-secondary-lt' : 'bg-success-lt'}"
                                               th:text="${item.status}">
                                             STATUS
                                         </span>

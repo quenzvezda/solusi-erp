@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.service.impl;
 
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.service.SequenceGeneratorService;
 import com.solusi.erp.inventory.dto.FacilityRequest;
 import com.solusi.erp.inventory.dto.FacilityResponse;
@@ -11,10 +12,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+
+import java.util.List;
 
 /**
  * Implementation of FacilityService.
@@ -27,6 +31,29 @@ public class FacilityServiceImpl implements FacilityService {
     private final WarehouseMapper mapper;
     private final SequenceGeneratorService sequenceGeneratorService;
     private final MessageSource messageSource;
+
+    @Override
+    @Transactional(readOnly = true)
+    public LookupDto getLookupFacility(Long id) {
+        Facility f = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.facility.notfound")));
+        return new LookupDto(f.getId(), f.getCode() + " - " + f.getName(), f.getOwner().getName());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<FacilityResponse> findAll() {
+        return repository.findAll().stream().map(mapper::toResponse).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LookupDto> lookupFacilities(String keyword, int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        return repository.search(keyword, pageable).getContent().stream()
+                .map(f -> new LookupDto(f.getId(), f.getCode() + " - " + f.getName(), f.getOwner().getName()))
+                .toList();
+    }
 
     @Override
     @Transactional(readOnly = true)

@@ -13,6 +13,17 @@
 - **Utility Classes:** Use utility-first CSS principles (e.g., Bootstrap-like utilities) for layout and spacing.
 - **Consistency:** Follow established design patterns (e.g., standard margins, colors, and typography).
 - **Responsive Design:** Ensure layouts work across different screen sizes using responsive utility classes.
+- **Dense Data Entry Tables:** 
+  - Use `table-layout: fixed; width: 100%;` for forms with many input columns to prevent horizontal scrollbars.
+  - Apply tight padding (e.g., `padding: 0.4rem 0.2rem`) and slightly smaller font sizes (e.g., `0.85rem`) for table content.
+  - Force TomSelect width with `.ts-wrapper { width: 100% !important; }`.
+
+## Component Standards
+- **TomSelect (Autocomplete):**
+  - **Preload:** Use `preload: 'focus'` to trigger lookups immediately upon interaction.
+  - **Dropdown Parent:** Use `dropdownParent: 'body'` to prevent clipping issues inside narrow table cells or overflow containers.
+  - **Debounce:** Always implement a minimum of 150ms debounce for remote AJAX lookups.
+  - **Empty Options:** Hide empty anchor options (`!data.id`) in the render logic to maintain a clean dropdown list.
 
 ## Best Practices
 - **Clean Structure:** Keep templates well-organized and modular.

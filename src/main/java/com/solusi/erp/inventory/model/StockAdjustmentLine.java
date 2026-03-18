@@ -25,6 +25,10 @@ public class StockAdjustmentLine extends BaseModel {
     private Product product;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "grid_id")
+    private Grid grid;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "container_id", nullable = false)
     private Container container;
 

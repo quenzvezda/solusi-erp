@@ -25,15 +25,21 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class StockAdjustmentRequest extends BaseAuditResponse {
 
-    private String code; // Read-only in UI, handled by sequence generator
+    private String code; // Read-only in UI
 
     @NotNull(message = "{validation.notnull}")
-    private LocalDate transactionDate;
+    @Builder.Default
+    private LocalDate transactionDate = LocalDate.now();
 
     private String note;
 
     @NotNull(message = "{validation.notnull}")
     private Long currencyId;
+
+    @NotNull(message = "{validation.notnull}")
+    private Long facilityId;
+    
+    private String facilityName; // For display in Edit mode
 
     @NotNull(message = "{validation.notnull}")
     private java.math.BigDecimal exchangeRate;
