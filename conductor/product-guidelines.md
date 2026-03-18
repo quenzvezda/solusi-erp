@@ -32,3 +32,4 @@ All implementations MUST strictly adhere to the following technical standards:
 - **Global Search:** [../docs/spec/search-menu.md](../docs/spec/search-menu.md)
 - **Code Generation (Sequence):** [../docs/spec/sequence-generator.md](../docs/spec/sequence-generator.md)
 - **Sorting Logic:** [../docs/spec/sorting.md](../docs/spec/sorting.md)
+- **Inventory Valuation & UOM:** [../docs/modules/inventory/valuation-and-uom.md](../docs/modules/inventory/valuation-and-uom.md)
