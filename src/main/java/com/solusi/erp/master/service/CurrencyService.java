@@ -5,6 +5,8 @@ import com.solusi.erp.master.dto.CurrencyResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface CurrencyService {
 
     Page<CurrencyResponse> getAllCurrencies(String keyword, Pageable pageable);
@@ -19,5 +21,5 @@ public interface CurrencyService {
 
     void deleteCurrency(Long id);
 
-    java.util.List<CurrencyResponse> findAllActive();
+    List<CurrencyResponse> findAllActive();
 }

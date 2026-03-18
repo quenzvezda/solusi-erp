@@ -7,43 +7,38 @@ import com.solusi.erp.master.model.Currency;
 import com.solusi.erp.master.repository.CurrencyRepository;
 import com.solusi.erp.master.service.CurrencyService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CurrencyServiceImpl implements CurrencyService {
 
     private final CurrencyRepository currencyRepository;
     private final CurrencyMapper currencyMapper;
-    private final MessageSource messageSource;
-
-    private String getMessage(String key, Object... args) {
-        return messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
-    }
 
     @Override
     @Transactional(readOnly = true)
     public Page<CurrencyResponse> getAllCurrencies(String keyword, Pageable pageable) {
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            return currencyRepository.search(keyword, pageable).map(currencyMapper::toResponse);
+        Page<Currency> page;
+        if (StringUtils.hasText(keyword)) {
+            page = currencyRepository.search(keyword, pageable);
+        } else {
+            page = currencyRepository.findAll(pageable);
         }
-        return currencyRepository.findAll(pageable).map(currencyMapper::toResponse);
+        return page.map(currencyMapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public CurrencyResponse getCurrencyById(Long id) {
         Currency currency = currencyRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(getMessage("error.currency.not.found")));
+                .orElseThrow(() -> new RuntimeException("Currency not found"));
         return currencyMapper.toResponse(currency);
     }
 
@@ -51,68 +46,46 @@ public class CurrencyServiceImpl implements CurrencyService {
     @Transactional(readOnly = true)
     public CurrencyRequest getEditData(Long id) {
         Currency currency = currencyRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(getMessage("error.currency.not.found")));
+                .orElseThrow(() -> new RuntimeException("Currency not found"));
         return currencyMapper.toRequest(currency);
     }
 
     @Override
     @Transactional
     public void createCurrency(CurrencyRequest request) {
-        // Validate duplicate alias
         if (currencyRepository.findByAlias(request.getAlias()).isPresent()) {
-            throw new RuntimeException(getMessage("error.currency.duplicate-alias"));
+            throw new RuntimeException("Currency alias already exists");
         }
-
         Currency currency = currencyMapper.toEntity(request);
-
         handleDefaultStatus(currency);
-
-        if (currency.getIsActive() == null) {
-            currency.setIsActive(false);
-        }
-
-        Currency savedCurrency = currencyRepository.save(currency);
-        log.info("Created Currency with symbol: {}", savedCurrency.getSymbol());
+        currencyRepository.save(currency);
     }
 
     @Override
     @Transactional
     public void updateCurrency(Long id, CurrencyRequest request) {
-        Currency existingCurrency = currencyRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(getMessage("error.currency.not.found")));
+        Currency currency = currencyRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Currency not found"));
 
-        // Validate duplicate alias if changed
-        if (!existingCurrency.getAlias().equalsIgnoreCase(request.getAlias())) {
-            if (currencyRepository.findByAlias(request.getAlias()).isPresent()) {
-                throw new RuntimeException(getMessage("error.currency.duplicate-alias"));
-            }
-        }
+        currencyRepository.findByAlias(request.getAlias())
+                .ifPresent(existing -> {
+                    if (!existing.getId().equals(id)) {
+                        throw new RuntimeException("Currency alias already exists");
+                    }
+                });
 
-        currencyMapper.updateEntityFromRequest(request, existingCurrency);
-
-        handleDefaultStatus(existingCurrency);
-
-        if (existingCurrency.getIsActive() == null) {
-            existingCurrency.setIsActive(false);
-        }
-
-        Currency updatedCurrency = currencyRepository.save(existingCurrency);
-        log.info("Updated Currency with symbol: {}", updatedCurrency.getSymbol());
+        currencyMapper.updateEntityFromRequest(request, currency);
+        handleDefaultStatus(currency);
+        currencyRepository.save(currency);
     }
 
     @Override
     @Transactional
     public void deleteCurrency(Long id) {
-        Currency existingCurrency = currencyRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(getMessage("error.currency.not.found")));
-
-        // Soft delete
-        existingCurrency.setIsActive(false);
-        if (existingCurrency.getIsDefault()) {
-            existingCurrency.setIsDefault(false);
+        if (!currencyRepository.existsById(id)) {
+            throw new RuntimeException("Currency not found");
         }
-        currencyRepository.save(existingCurrency);
-        log.info("Soft deleted Currency with symbol: {}", existingCurrency.getSymbol());
+        currencyRepository.deleteById(id);
     }
 
     @Override
@@ -126,9 +99,9 @@ public class CurrencyServiceImpl implements CurrencyService {
 
     private void handleDefaultStatus(Currency currency) {
         if (currency.getIsDefault() != null && currency.getIsDefault()) {
-            List<Currency> existingDefaults = currencyRepository.findByIsDefaultTrue();
-            for (Currency prevDefault : existingDefaults) {
-                if (currency.getId() == null || !prevDefault.getId().equals(currency.getId())) {
+            List<Currency> defaults = currencyRepository.findByIsDefaultTrue();
+            for (Currency prevDefault : defaults) {
+                if (!prevDefault.getId().equals(currency.getId())) {
                     prevDefault.setIsDefault(false);
                     currencyRepository.save(prevDefault);
                 }

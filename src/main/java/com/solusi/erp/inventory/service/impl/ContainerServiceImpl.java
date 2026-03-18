@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.List;
+
 /**
  * Implementation of ContainerService.
  */
@@ -27,6 +29,12 @@ public class ContainerServiceImpl implements ContainerService {
     private final WarehouseMapper mapper;
     private final SequenceGeneratorService sequenceGeneratorService;
     private final MessageSource messageSource;
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ContainerResponse> findAll() {
+        return repository.findAll().stream().map(mapper::toResponse).toList();
+    }
 
     @Override
     @Transactional(readOnly = true)

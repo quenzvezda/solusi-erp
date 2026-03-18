@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.List;
+
 /**
  * Implementation of ProductService.
  */
@@ -27,6 +29,12 @@ public class ProductServiceImpl implements ProductService {
     private final ProductMapper mapper;
     private final SequenceGeneratorService sequenceGeneratorService;
     private final MessageSource messageSource;
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductResponse> findAll() {
+        return repository.findAll().stream().map(mapper::toResponse).toList();
+    }
 
     @Override
     @Transactional(readOnly = true)

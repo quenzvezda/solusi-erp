@@ -34,7 +34,7 @@ public class InventoryReportController {
     @GetMapping("/on-hand/{productId}")
     @PreAuthorize("hasAuthority('ON-HAND_READ')")
     public String onHandDetail(@PathVariable Long productId, Model model) {
-        model.addAttribute("product", productService.getProductById(productId));
+        model.addAttribute("product", productService.findById(productId));
         model.addAttribute("details", reportService.getOnHandDetail(productId));
         return "inventory/reports/on-hand/detail";
     }
