@@ -1,8 +1,8 @@
 package com.solusi.erp.inventory.service.impl;
 
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.inventory.dto.GridRequest;
 import com.solusi.erp.inventory.dto.GridResponse;
-import com.solusi.erp.inventory.dto.InventoryLookupDto;
 import com.solusi.erp.inventory.mapper.WarehouseMapper;
 import com.solusi.erp.inventory.model.Grid;
 import com.solusi.erp.inventory.repository.GridRepository;
@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Implementation of GridService.
@@ -32,21 +33,23 @@ public class GridServiceImpl implements GridService {
 
     @Override
     @Transactional(readOnly = true)
-    public InventoryLookupDto getLookupGrid(Long id) {
+    public LookupDto getLookupGrid(Long id) {
         Grid g = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.grid.notfound")));
-        return InventoryLookupDto.builder()
-                .id(g.getId())
-                .name(g.getCode() + " - " + g.getName())
-                .subText(g.getFacility().getName())
-                .parentId(g.getFacility().getId())
-                .parentName(g.getFacility().getCode() + " - " + g.getFacility().getName())
-                .build();
+        return new LookupDto(
+                g.getId(),
+                g.getCode() + " - " + g.getName(),
+                g.getFacility().getName(),
+                Map.of(
+                        "parentId", g.getFacility().getId(),
+                        "parentName", g.getFacility().getCode() + " - " + g.getFacility().getName()
+                )
+        );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<InventoryLookupDto> lookupGrids(String keyword, Long facilityId, int limit) {
+    public List<LookupDto> lookupGrids(String keyword, Long facilityId, int limit) {
         Pageable pageable = PageRequest.of(0, limit);
         Page<Grid> page;
         if (facilityId != null) {
@@ -56,13 +59,15 @@ public class GridServiceImpl implements GridService {
         }
         
         return page.getContent().stream()
-                .map(g -> InventoryLookupDto.builder()
-                        .id(g.getId())
-                        .name(g.getCode() + " - " + g.getName())
-                        .subText(g.getFacility().getName())
-                        .parentId(g.getFacility().getId())
-                        .parentName(g.getFacility().getCode() + " - " + g.getFacility().getName())
-                        .build())
+                .map(g -> new LookupDto(
+                        g.getId(),
+                        g.getCode() + " - " + g.getName(),
+                        g.getFacility().getName(),
+                        Map.of(
+                                "parentId", g.getFacility().getId(),
+                                "parentName", g.getFacility().getCode() + " - " + g.getFacility().getName()
+                        )
+                ))
                 .toList();
     }
 

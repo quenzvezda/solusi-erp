@@ -1,6 +1,6 @@
 package com.solusi.erp.inventory.service;
 
-import com.solusi.erp.inventory.dto.InventoryLookupDto;
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.inventory.dto.ContainerRequest;
 import com.solusi.erp.inventory.dto.ContainerResponse;
 import org.springframework.data.domain.Page;
@@ -12,8 +12,8 @@ import java.util.List;
  * Service for Container.
  */
 public interface ContainerService {
-    InventoryLookupDto getLookupContainer(Long id);
-    List<InventoryLookupDto> lookupContainers(String keyword, Long facilityId, Long gridId, int limit);
+    LookupDto getLookupContainer(Long id);
+    List<LookupDto> lookupContainers(String keyword, Long facilityId, Long gridId, int limit);
     List<ContainerResponse> findAll();
     Page<ContainerResponse> findAll(String keyword, Long gridId, Pageable pageable);
     ContainerResponse findById(Long id);

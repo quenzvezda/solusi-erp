@@ -1,6 +1,6 @@
 package com.solusi.erp.inventory.service;
 
-import com.solusi.erp.inventory.dto.InventoryLookupDto;
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.inventory.dto.GridRequest;
 import com.solusi.erp.inventory.dto.GridResponse;
 import org.springframework.data.domain.Page;
@@ -12,8 +12,8 @@ import java.util.List;
  * Service for Grid.
  */
 public interface GridService {
-    InventoryLookupDto getLookupGrid(Long id);
-    List<InventoryLookupDto> lookupGrids(String keyword, Long facilityId, int limit);
+    LookupDto getLookupGrid(Long id);
+    List<LookupDto> lookupGrids(String keyword, Long facilityId, int limit);
     Page<GridResponse> findAll(String keyword, Long facilityId, Pageable pageable);
     GridResponse findById(Long id);
     GridRequest getEditData(Long id);

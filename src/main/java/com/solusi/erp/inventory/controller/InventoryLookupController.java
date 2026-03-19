@@ -1,7 +1,6 @@
 package com.solusi.erp.inventory.controller;
 
 import com.solusi.erp.core.dto.LookupDto;
-import com.solusi.erp.inventory.dto.InventoryLookupDto;
 import com.solusi.erp.inventory.service.ContainerService;
 import com.solusi.erp.inventory.service.FacilityService;
 import com.solusi.erp.inventory.service.GridService;
@@ -34,12 +33,12 @@ public class InventoryLookupController {
     }
 
     @GetMapping("/grids/{id}")
-    public InventoryLookupDto getLookupGrid(@PathVariable Long id) {
+    public LookupDto getLookupGrid(@PathVariable Long id) {
         return gridService.getLookupGrid(id);
     }
 
     @GetMapping("/containers/{id}")
-    public InventoryLookupDto getLookupContainer(@PathVariable Long id) {
+    public LookupDto getLookupContainer(@PathVariable Long id) {
         return containerService.getLookupContainer(id);
     }
 
@@ -56,14 +55,14 @@ public class InventoryLookupController {
     }
 
     @GetMapping("/grids")
-    public List<InventoryLookupDto> lookupGrids(@RequestParam(value = "q", defaultValue = "") String q,
+    public List<LookupDto> lookupGrids(@RequestParam(value = "q", defaultValue = "") String q,
                                       @RequestParam(value = "facilityId", required = false) Long facilityId,
                                       @RequestParam(value = "limit", defaultValue = "10") int limit) {
         return gridService.lookupGrids(q, facilityId, limit);
     }
 
     @GetMapping("/containers")
-    public List<InventoryLookupDto> lookupContainers(@RequestParam(value = "q", defaultValue = "") String q,
+    public List<LookupDto> lookupContainers(@RequestParam(value = "q", defaultValue = "") String q,
                                            @RequestParam(value = "facilityId", required = false) Long facilityId,
                                            @RequestParam(value = "gridId", required = false) Long gridId,
                                            @RequestParam(value = "limit", defaultValue = "10") int limit) {
