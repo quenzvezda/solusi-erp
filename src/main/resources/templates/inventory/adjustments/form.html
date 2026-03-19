@@ -205,12 +205,12 @@
                         const target = mapping[key];
                         const val = data.payload[key];
                         if (val !== undefined && target) {
-                            if (target.tomselect) {
-                                // If parentName is provided, add it as an option if it doesn't exist
+                            // Check if target is a TomSelect instance or a regular input
+                            if (typeof target.setValue === 'function' && typeof target.addOption === 'function') {
                                 if (key === 'parentId' && data.payload.parentName) {
-                                    target.tomselect.addOption({id: val, name: data.payload.parentName});
+                                    target.addOption({id: val, name: data.payload.parentName});
                                 }
-                                target.tomselect.setValue(val);
+                                target.setValue(val);
                             } else {
                                 target.value = val;
                             }
