@@ -44,6 +44,8 @@ public class StockAdjustmentRequest extends BaseAuditResponse {
     @NotNull(message = "{validation.notnull}")
     private java.math.BigDecimal exchangeRate;
 
+    private AdjustmentStatus status;
+
     @NotEmpty(message = "{validation.notempty}")
     @Valid
     @Builder.Default

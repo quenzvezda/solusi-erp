@@ -18,6 +18,9 @@
                     </div>
                     <div class="col-auto ms-auto d-print-none">
                         <div class="btn-list">
+                            <a th:href="@{/inventory/adjustments}" class="btn btn-white">
+                                <i class="ti ti-arrow-left"></i> <span th:text="#{label.back}">Back</span>
+                            </a>
                             <a th:if="${stockAdjustment.status.name() == 'DRAFT'}"
                                th:href="@{/inventory/adjustments/{id}/edit(id=${stockAdjustment.id})}"
                                class="btn btn-white">

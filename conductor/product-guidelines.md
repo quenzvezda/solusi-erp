@@ -12,6 +12,7 @@
   - Prioritize reusing existing UI elements. 
   - When new UI is required, design it to be generic and reusable across different modules. Avoid "one-time use" components.
 - **Consistency:** Maintain a unified look and feel across all screens, using standard navigation and interaction patterns.
+- **Numeric Display Standard:** All numeric values in the UI (amounts, prices, quantities, totals) MUST be displayed with exactly 2 decimal places (e.g., `10.00`, `1,250.50`) for consistency and neatness, regardless of backend precision.
 
 ## Naming & Domain Concepts
 - **Domain-driven Terms:** Use precise business and accounting terminology (e.g., *Journal Entry*, *COGS*, *UOM*, *Facility*, *Container*).

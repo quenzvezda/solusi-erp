@@ -92,6 +92,26 @@ public class StockAdjustmentController {
         return "inventory/adjustments/form";
     }
 
+    @PostMapping("/{id}/edit")
+    @PreAuthorize("hasAuthority('STOCK-ADJUSTMENT_UPDATE')")
+    public String update(@PathVariable Long id,
+                        @Valid @ModelAttribute("stockAdjustment") StockAdjustmentRequest request,
+                        BindingResult result, Model model, RedirectAttributes ra) {
+        if (result.hasErrors()) {
+            populateFormModels(model);
+            return "inventory/adjustments/form";
+        }
+        try {
+            service.update(id, request);
+            ra.addFlashAttribute("message", "Stock Adjustment updated successfully");
+            return "redirect:/inventory/adjustments/" + id;
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", e.getMessage());
+            populateFormModels(model);
+            return "inventory/adjustments/form";
+        }
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('STOCK-ADJUSTMENT_READ')")
     public String view(@PathVariable Long id, Model model) {

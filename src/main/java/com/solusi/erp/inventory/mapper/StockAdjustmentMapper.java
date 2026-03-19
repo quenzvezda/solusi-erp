@@ -46,6 +46,7 @@ public interface StockAdjustmentMapper {
 
     @Mapping(target = "facilityId", source = "facility.id")
     @Mapping(target = "facilityName", source = "facility.name")
+    @Mapping(target = "exchangeRate", source = "totalCost.exchangeRate")
     StockAdjustmentRequest toRequest(StockAdjustment entity);
 
     @Mapping(target = "id", ignore = true)
