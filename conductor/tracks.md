@@ -24,5 +24,5 @@ This file acts as a central registry for all Conductor tracks in the project.
 
 ---
 
-- [ ] **Track: Generic LookupDto Refactor**
+- [x] **Track: Generic LookupDto Refactor**
 *Link: [./tracks/lookup_dto_refactor_20260319/](./tracks/lookup_dto_refactor_20260319/)*
