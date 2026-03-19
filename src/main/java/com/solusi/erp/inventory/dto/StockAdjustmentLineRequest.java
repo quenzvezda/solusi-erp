@@ -24,16 +24,19 @@ public class StockAdjustmentLineRequest extends BaseAuditResponse {
     private Long productId;
     
     private String productCode; // For display in Edit mode
+    private String productName; // For display in Edit mode
 
     @NotNull(message = "{validation.notnull}")
     private Long gridId;
     
     private String gridCode; // For display in Edit mode
+    private String gridName; // For display in Edit mode
 
     @NotNull(message = "{validation.notnull}")
     private Long containerId;
     
     private String containerCode; // For display in Edit mode
+    private String containerName; // For display in Edit mode
 
     @NotNull(message = "{validation.notnull}")
     private BigDecimal quantity;

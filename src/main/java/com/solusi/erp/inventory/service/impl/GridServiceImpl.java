@@ -38,11 +38,11 @@ public class GridServiceImpl implements GridService {
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.grid.notfound")));
         return new LookupDto(
                 g.getId(),
-                g.getCode() + " - " + g.getName(),
-                g.getFacility().getName(),
+                g.getName(),
+                g.getCode(),
                 Map.of(
                         "parentId", g.getFacility().getId(),
-                        "parentName", g.getFacility().getCode() + " - " + g.getFacility().getName()
+                        "parentName", g.getFacility().getName()
                 )
         );
     }
@@ -57,15 +57,15 @@ public class GridServiceImpl implements GridService {
         } else {
             page = repository.search(keyword, pageable);
         }
-        
+
         return page.getContent().stream()
                 .map(g -> new LookupDto(
                         g.getId(),
-                        g.getCode() + " - " + g.getName(),
-                        g.getFacility().getName(),
+                        g.getName(),
+                        g.getCode(),
                         Map.of(
                                 "parentId", g.getFacility().getId(),
-                                "parentName", g.getFacility().getCode() + " - " + g.getFacility().getName()
+                                "parentName", g.getFacility().getName()
                         )
                 ))
                 .toList();

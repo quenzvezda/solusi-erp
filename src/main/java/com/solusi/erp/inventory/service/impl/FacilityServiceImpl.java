@@ -37,7 +37,7 @@ public class FacilityServiceImpl implements FacilityService {
     public LookupDto getLookupFacility(Long id) {
         Facility f = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.facility.notfound")));
-        return new LookupDto(f.getId(), f.getCode() + " - " + f.getName(), f.getOwner().getName());
+        return new LookupDto(f.getId(), f.getName(), f.getCode());
     }
 
     @Override
@@ -51,7 +51,7 @@ public class FacilityServiceImpl implements FacilityService {
     public List<LookupDto> lookupFacilities(String keyword, int limit) {
         Pageable pageable = PageRequest.of(0, limit);
         return repository.search(keyword, pageable).getContent().stream()
-                .map(f -> new LookupDto(f.getId(), f.getCode() + " - " + f.getName(), f.getOwner().getName()))
+                .map(f -> new LookupDto(f.getId(), f.getName(), f.getCode()))
                 .toList();
     }
 

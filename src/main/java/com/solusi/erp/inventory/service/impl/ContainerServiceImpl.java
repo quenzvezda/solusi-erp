@@ -40,11 +40,11 @@ public class ContainerServiceImpl implements ContainerService {
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.container.notfound")));
         return new LookupDto(
                 c.getId(),
+                c.getName(),
                 c.getCode(),
-                c.getName() + " (" + c.getGrid().getFacility().getName() + ")",
                 Map.of(
                         "parentId", c.getGrid().getId(),
-                        "parentName", c.getGrid().getCode() + " - " + c.getGrid().getName()
+                        "parentName", c.getGrid().getName()
                 )
         );
     }
@@ -72,11 +72,11 @@ public class ContainerServiceImpl implements ContainerService {
         return page.getContent().stream()
                 .map(c -> new LookupDto(
                         c.getId(),
+                        c.getName(),
                         c.getCode(),
-                        c.getName() + " (" + c.getGrid().getFacility().getName() + ")",
                         Map.of(
                                 "parentId", c.getGrid().getId(),
-                                "parentName", c.getGrid().getCode() + " - " + c.getGrid().getName()
+                                "parentName", c.getGrid().getName()
                         )
                 ))
                 .toList();

@@ -36,10 +36,11 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Handle all other generic exceptions (500).
+     * Handle all other generic errors and exceptions (500).
+     * Changed from Exception to Throwable to catch system Errors (like NoSuchMethodError).
      */
-    @ExceptionHandler(Exception.class)
-    public String handleGenericException(Exception ex, Model model) {
+    @ExceptionHandler(Throwable.class)
+    public String handleGenericError(Throwable ex, Model model) {
         log.error("Internal server error", ex);
         
         // In production, we should not show the full stack trace or internal message

@@ -103,7 +103,11 @@
                                             <label class="form-label required" th:text="#{label.facility}">Facility</label>
                                             <select class="form-select" th:field="*{facilityId}" id="header-facility" th:disabled="${isLocked}">
                                                 <option value=""></option>
-                                                <option th:if="${stockAdjustment.facilityId != null}" th:value="${stockAdjustment.facilityId}" th:text="${stockAdjustment.facilityName}" selected></option>
+                                                <option th:if="${stockAdjustment.facilityId != null}" 
+                                                        th:value="${stockAdjustment.facilityId}" 
+                                                        th:text="${stockAdjustment.facilityName}" 
+                                                        th:attr="data-subtext=${stockAdjustment.facilityCode}"
+                                                        selected></option>
                                             </select>
                                         </div>
                                         <div class="col-12">
@@ -152,12 +156,18 @@
                                 </thead>
                                 <tbody id="line-container">
                                     <tr th:each="line, stat : *{lines}" class="line-row">
-                                        <td><select th:field="*{lines[__${stat.index}__].productId}" class="select-product" required th:disabled="${isLocked}"><option th:if="${line.productId != null}" th:value="${line.productId}" th:text="${line.productCode}"></option></select></td>
-                                        <td><select th:field="*{lines[__${stat.index}__].gridId}" class="select-grid" required th:disabled="${isLocked}"><option th:if="${line.gridId != null}" th:value="${line.gridId}" th:text="${line.gridCode}"></option></select></td>
-                                        <td><select th:field="*{lines[__${stat.index}__].containerId}" class="select-container" required th:disabled="${isLocked}"><option th:if="${line.containerId != null}" th:value="${line.containerId}" th:text="${line.containerCode}"></option></select></td>
+                                        <td><select th:field="*{lines[__${stat.index}__].productId}" class="select-product" required th:disabled="${isLocked}"><option th:if="${line.productId != null}" th:value="${line.productId}" th:text="${line.productName}" th:attr="data-subtext=${line.productCode}"></option></select></td>
+                                        <td><select th:field="*{lines[__${stat.index}__].gridId}" class="select-grid" required th:disabled="${isLocked}"><option th:if="${line.gridId != null}" th:value="${line.gridId}" th:text="${line.gridName}" th:attr="data-subtext=${line.gridCode}"></option></select></td>
+                                        <td><select th:field="*{lines[__${stat.index}__].containerId}" class="select-container" required th:disabled="${isLocked}"><option th:if="${line.containerId != null}" th:value="${line.containerId}" th:text="${line.containerName}" th:attr="data-subtext=${line.containerCode}"></option></select></td>
                                         <td><input type="text" class="form-control form-control-sm" th:field="*{lines[__${stat.index}__].serialNumber}" th:readonly="${isLocked}"></td>
-                                        <td><input type="number" step="0.01" class="form-control form-control-sm text-end input-qty" th:field="*{lines[__${stat.index}__].quantity}" required th:readonly="${isLocked}"></td>
-                                        <td><input type="number" step="0.01" class="form-control form-control-sm text-end input-price" th:field="*{lines[__${stat.index}__].unitCost}" required th:readonly="${isLocked}"></td>
+                                        <td><input type="number" step="0.01" class="form-control form-control-sm text-end input-qty" 
+                                                   th:name="${'lines[' + stat.index + '].quantity'}"
+                                                   th:value="${line.quantity != null ? #numbers.formatDecimal(line.quantity, 1, 2) : '0.00'}" 
+                                                   required th:readonly="${isLocked}"></td>
+                                        <td><input type="number" step="0.01" class="form-control form-control-sm text-end input-price" 
+                                                   th:name="${'lines[' + stat.index + '].unitCost'}"
+                                                   th:value="${line.unitCost != null ? #numbers.formatDecimal(line.unitCost, 1, 2) : '0.00'}" 
+                                                   required th:readonly="${isLocked}"></td>
                                         <td class="text-end font-weight-medium line-total">0.00</td>
                                         <td th:if="!${isLocked}"><button type="button" class="btn btn-link link-danger btn-remove-line p-0"><i class="ti ti-trash"></i></button></td>
                                     </tr>
@@ -206,7 +216,6 @@
                         const target = mapping[key];
                         const val = data.payload[key];
                         if (val !== undefined && target) {
-                            // Check if target is a TomSelect instance or a regular input
                             if (typeof target.setValue === 'function' && typeof target.addOption === 'function') {
                                 if (key === 'parentId' && data.payload.parentName) {
                                     target.addOption({id: val, name: data.payload.parentName});
@@ -241,6 +250,17 @@
                         onInitialize: function() {
                             this.control.classList.add('form-control-sm');
                             this.control.style.width = '100%';
+                            
+                            // Map data-subtext from initial option if exists
+                            const initialOption = el.querySelector('option[selected], option[value]:not([value=""])');
+                            if (initialOption) {
+                                const val = initialOption.value;
+                                const subText = initialOption.getAttribute('data-subtext');
+                                if (subText && this.options[val]) {
+                                    this.options[val].subText = subText;
+                                    this.refreshOptions(false);
+                                }
+                            }
                         },
                         load: debounce(function(q, callback) {
                             let url = `${LOOKUP_BASE}/${type}?q=${encodeURIComponent(q)}&limit=10`;
@@ -258,11 +278,7 @@
                                 return `<div class="py-1"><div>${escape(data.name)}</div>${sub}</div>`;
                             },
                             item: (data, escape) => {
-                                let displayName = data.name;
-                                if (type === 'grids' && displayName.includes(' - ')) {
-                                    displayName = displayName.split(' - ')[1];
-                                }
-                                return `<span>${escape(displayName)}</span>`;
+                                return `<span>${escape(data.name)}</span>`;
                             }
                         }
                     });
@@ -281,7 +297,7 @@
                 const tsCurrency = new TomSelect(headerCurrency, { onInitialize: function() { this.control.style.width = '100%'; } });
 
                 tsFacility.on('change', () => {
-                    lineContainer.querySelectorAll('.line-row').forEach(row => {
+                    lineContainer.querySelectorAll('.line-row:not(.child-row)').forEach(row => {
                         if (row.querySelector('.select-grid').tomselect) row.querySelector('.select-grid').tomselect.clear();
                         if (row.querySelector('.select-container').tomselect) row.querySelector('.select-container').tomselect.clear();
                     });
@@ -300,7 +316,70 @@
                     calculateTotals();
                 });
 
+                function syncChildRows(parentRow) {
+                    if (!parentRow.classList.contains('parent-row')) return;
+                    
+                    const qty = parseInt(parentRow.querySelector('.input-qty').value) || 0;
+                    const productId = parentRow.querySelector('.select-product').value || '';
+                    const gridId = parentRow.querySelector('.select-grid').value || '';
+                    const containerId = parentRow.querySelector('.select-container').value || '';
+                    const unitCostRaw = parseFloat(parentRow.querySelector('.input-price').value) || 0;
+                    const unitCost = unitCostRaw.toFixed(2);
+                    
+                    let nextEl = parentRow.nextElementSibling;
+                    let existingChildren = [];
+                    while (nextEl && nextEl.classList.contains('child-row')) {
+                        existingChildren.push(nextEl);
+                        nextEl = nextEl.nextElementSibling;
+                    }
+                    
+                    if (existingChildren.length > qty) {
+                        for (let i = qty; i < existingChildren.length; i++) {
+                            existingChildren[i].remove();
+                        }
+                        existingChildren = existingChildren.slice(0, qty);
+                    } else if (existingChildren.length < qty) {
+                        for (let i = existingChildren.length; i < qty; i++) {
+                            const tr = document.createElement('tr');
+                            tr.className = 'line-row child-row bg-light-lt';
+                            tr.innerHTML = `
+                                <td colspan="3" class="text-end text-muted align-middle pe-2" style="font-size: 0.75rem;">
+                                    <i class="ti ti-corner-down-right"></i> Serial Item
+                                    <input type="hidden" class="child-product" value="${productId}">
+                                    <input type="hidden" class="child-grid" value="${gridId}">
+                                    <input type="hidden" class="child-container" value="${containerId}">
+                                </td>
+                                <td><input type="text" class="form-control form-control-sm child-sn" placeholder="Serial Number" required></td>
+                                <td><input type="number" step="0.01" class="form-control form-control-sm text-end input-qty child-qty" value="1.00" required></td>
+                                <td><input type="number" step="0.01" class="form-control form-control-sm text-end input-price child-price" value="${unitCost}" required></td>
+                                <td class="text-end font-weight-medium line-total">0.00</td>
+                                <td><button type="button" class="btn btn-link link-danger btn-remove-child p-0"><i class="ti ti-trash"></i></button></td>
+                            `;
+                            
+                            const qInput = tr.querySelector('.input-qty');
+                            const pInput = tr.querySelector('.input-price');
+                            qInput.addEventListener('blur', () => formatDecimalInput(qInput));
+                            pInput.addEventListener('blur', () => formatDecimalInput(pInput));
+                            
+                            const insertAfter = existingChildren.length > 0 ? existingChildren[existingChildren.length - 1] : parentRow;
+                            insertAfter.parentNode.insertBefore(tr, insertAfter.nextSibling);
+                            existingChildren.push(tr);
+                        }
+                    }
+                    
+                    existingChildren.forEach(child => {
+                        child.querySelector('.child-product').value = productId;
+                        child.querySelector('.child-grid').value = gridId;
+                        child.querySelector('.child-container').value = containerId;
+                    });
+                    
+                    updateIndexes();
+                    calculateTotals();
+                }
+
                 function setupRowLogic(row) {
+                    if (row.classList.contains('child-row')) return;
+
                     const tsProduct = initLookup(row.querySelector('.select-product'), 'products');
                     const tsGrid = initLookup(row.querySelector('.select-grid'), 'grids', () => ({ type: 'facility', id: headerFacility.value }));
                     const tsContainer = initLookup(row.querySelector('.select-container'), 'containers', () => {
@@ -311,21 +390,71 @@
                     const qInput = row.querySelector('.input-qty');
                     const pInput = row.querySelector('.input-price');
 
-                    // Auto-format to 2 decimals on blur
                     qInput.addEventListener('blur', () => formatDecimalInput(qInput));
                     pInput.addEventListener('blur', () => formatDecimalInput(pInput));
                     
-                    // Initial format
                     formatDecimalInput(qInput);
                     formatDecimalInput(pInput);
 
                     let isAutoSetting = false;
+
+                    tsProduct.on('change', function(val) {
+                        if (val) {
+                            const data = tsProduct.options[val];
+                            const isSerialized = data && data.payload && data.payload.isSerialized;
+                            const snInput = row.querySelector('input[name$=".serialNumber"], input[data-name="serialNumber"]');
+                            
+                            // Reset quantity on product change
+                            qInput.value = '0.00';
+                            
+                            if (isSerialized) {
+                                row.classList.add('parent-row');
+                                if (snInput) {
+                                    snInput.value = '';
+                                    snInput.parentElement.style.visibility = 'hidden';
+                                }
+                                syncChildRows(row);
+                            } else {
+                                if (row.classList.contains('parent-row')) {
+                                    row.classList.remove('parent-row');
+                                    let nextEl = row.nextElementSibling;
+                                    while (nextEl && nextEl.classList.contains('child-row')) {
+                                        const toRemove = nextEl;
+                                        nextEl = nextEl.nextElementSibling;
+                                        toRemove.remove();
+                                    }
+                                    if (snInput) {
+                                        snInput.parentElement.style.visibility = 'visible';
+                                        snInput.placeholder = '';
+                                    }
+                                    updateIndexes();
+                                    calculateTotals();
+                                }
+                            }
+                        }
+                    });
+
+                    qInput.addEventListener('input', () => syncChildRows(row));
+
+                    pInput.addEventListener('input', () => {
+                        if (row.classList.contains('parent-row')) {
+                            const newPrice = pInput.value;
+                            let nextEl = row.nextElementSibling;
+                            while (nextEl && nextEl.classList.contains('child-row')) {
+                                nextEl.querySelector('.child-price').value = newPrice;
+                                formatDecimalInput(nextEl.querySelector('.child-price'));
+                                nextEl = nextEl.nextElementSibling;
+                            }
+                            calculateTotals();
+                        }
+                    });
 
                     tsGrid.on('change', () => {
                         if (!isAutoSetting) {
                             tsContainer.clear();
                             tsContainer.clearOptions();
                         }
+                        syncChildRows(row);
                     });
 
                     tsContainer.on('change', function(val) {
@@ -337,6 +466,7 @@
                                 setTimeout(() => { isAutoSetting = false; }, 100);
                             }
                         }
+                        syncChildRows(row);
                     });
                 }
 
@@ -346,7 +476,7 @@
                             alert(msgSelectFirst.replace('{0}', labelFacility));
                             return;
                         }
-                        const index = lineContainer.querySelectorAll('.line-row').length;
+                        const index = lineContainer.querySelectorAll('.line-row:not(.parent-row)').length;
                         let html = rowTemplateSource.innerHTML.replace(/INDEX/g, index);
                         const temp = document.createElement('tbody');
                         temp.innerHTML = html;
@@ -358,10 +488,33 @@
                 }
 
                 function updateIndexes() {
-                    lineContainer.querySelectorAll('.line-row').forEach((row, index) => {
-                        row.querySelectorAll('input, select').forEach(input => {
-                            if (input.name) input.name = input.name.replace(/lines\[\d+\]/, `lines[${index}]`);
-                        });
+                    let index = 0;
+                    lineContainer.querySelectorAll('.line-row').forEach(row => {
+                        if (row.classList.contains('parent-row')) {
+                            row.querySelectorAll('input, select').forEach(input => {
+                                if (input.name) {
+                                    input.dataset.name = input.name.replace(/lines\[\d+\]\./, '');
+                                    input.removeAttribute('name');
+                                }
+                            });
+                        } else {
+                            if (row.classList.contains('child-row')) {
+                                row.querySelector('.child-product').name = `lines[${index}].productId`;
+                                row.querySelector('.child-grid').name = `lines[${index}].gridId`;
+                                row.querySelector('.child-container').name = `lines[${index}].containerId`;
+                                row.querySelector('.child-sn').name = `lines[${index}].serialNumber`;
+                                row.querySelector('.child-qty').name = `lines[${index}].quantity`;
+                                row.querySelector('.child-price').name = `lines[${index}].unitCost`;
+                            } else {
+                                row.querySelectorAll('input, select').forEach(input => {
+                                    let propName = input.dataset.name || (input.name ? input.name.replace(/lines\[\d+\]\./, '') : null);
+                                    if (propName) {
+                                        input.name = `lines[${index}].${propName}`;
+                                    }
+                                });
+                            }
+                            index++;
+                        }
                     });
                     if (document.getElementById('empty-msg')) {
                         document.getElementById('empty-msg').style.display = lineContainer.children.length > 0 ? 'none' : '';
@@ -372,6 +525,10 @@
                     let total = 0;
                     const rate = parseFloat(headerRate.value) || 1;
                     lineContainer.querySelectorAll('.line-row').forEach(row => {
+                        if (row.classList.contains('parent-row')) {
+                            row.querySelector('.line-total').textContent = '0.00';
+                            return;
+                        }
                         const q = parseFloat(row.querySelector('.input-qty').value) || 0;
                         const p = parseFloat(row.querySelector('.input-price').value) || 0;
                         const sub = q * p;
@@ -382,33 +539,126 @@
                     recapLocal.textContent = (total * rate).toLocaleString(undefined, {minimumFractionDigits: 2});
                 }
 
+                function autoGroupEditMode() {
+                    let parentRow = null;
+                    let parentProductId = null;
+                    let parentGridId = null;
+                    let parentContainerId = null;
+                    
+                    const rows = Array.from(lineContainer.querySelectorAll('.line-row'));
+                    
+                    rows.forEach(row => {
+                        const productId = row.querySelector('.select-product').value;
+                        const gridId = row.querySelector('.select-grid').value;
+                        const containerId = row.querySelector('.select-container').value;
+                        const snInput = row.querySelector('input[name$=".serialNumber"]');
+                        const serialNumber = snInput ? snInput.value : '';
+                        
+                        if (serialNumber && serialNumber.trim() !== '') {
+                            if (!parentRow || parentProductId !== productId || parentGridId !== gridId || parentContainerId !== containerId) {
+                                parentRow = row.cloneNode(true);
+                                parentRow.classList.add('parent-row');
+                                
+                                const parentSnInput = parentRow.querySelector('input[name$=".serialNumber"]');
+                                if (parentSnInput) {
+                                    parentSnInput.value = '';
+                                    parentSnInput.parentElement.style.visibility = 'hidden';
+                                }
+                                
+                                parentRow.querySelector('.input-qty').value = '0';
+                                row.parentNode.insertBefore(parentRow, row);
+                                
+                                parentProductId = productId;
+                                parentGridId = gridId;
+                                parentContainerId = containerId;
+                            }
+                            
+                            const parentQtyInput = parentRow.querySelector('.input-qty');
+                            const currentLineQty = parseFloat(row.querySelector('.input-qty').value) || 0;
+                            parentQtyInput.value = (parseFloat(parentQtyInput.value) + currentLineQty).toFixed(2);
+                            
+                            const tds = row.querySelectorAll('td');
+                            tds[0].colSpan = 3;
+                            tds[0].className = "text-end text-muted align-middle pe-2";
+                            tds[0].style.fontSize = "0.75rem";
+                            tds[0].innerHTML = `
+                                <i class="ti ti-corner-down-right"></i> Serial Item
+                                <input type="hidden" class="child-product" value="${productId}">
+                                <input type="hidden" class="child-grid" value="${gridId}">
+                                <input type="hidden" class="child-container" value="${containerId}">
+                            `;
+                            tds[1].remove();
+                            tds[2].remove();
+                            
+                            row.classList.add('child-row', 'bg-light-lt');
+                            if(snInput) snInput.classList.add('child-sn');
+                            
+                            const qtyInput = row.querySelector('.input-qty');
+                            qtyInput.classList.add('child-qty');
+                            qtyInput.value = currentLineQty.toFixed(2);
+
+                            const priceInput = row.querySelector('.input-price');
+                            priceInput.classList.add('child-price');
+                            priceInput.value = parseFloat(priceInput.value || 0).toFixed(2);
+                        } else {
+                            parentRow = null;
+                        }
+                    });
+                }
+
+                autoGroupEditMode();
+
                 lineContainer.addEventListener('input', calculateTotals);
                 headerRate.addEventListener('input', calculateTotals);
                 lineContainer.addEventListener('click', e => {
                     if (e.target.closest('.btn-remove-line')) {
-                        e.target.closest('.line-row').remove();
+                        const row = e.target.closest('.line-row');
+                        if (row.classList.contains('parent-row')) {
+                            let nextEl = row.nextElementSibling;
+                            while (nextEl && nextEl.classList.contains('child-row')) {
+                                const toRemove = nextEl;
+                                nextEl = nextEl.nextElementSibling;
+                                toRemove.remove();
+                            }
+                        }
+                        row.remove();
+                        updateIndexes();
+                        calculateTotals();
+                    } else if (e.target.closest('.btn-remove-child')) {
+                        const childRow = e.target.closest('.child-row');
+                        let prevEl = childRow.previousElementSibling;
+                        while (prevEl && !prevEl.classList.contains('parent-row') && !prevEl.classList.contains('line-row')) {
+                            prevEl = prevEl.previousElementSibling;
+                        }
+                        if (prevEl && prevEl.classList.contains('parent-row')) {
+                            const qtyInput = prevEl.querySelector('.input-qty');
+                            let currentQty = parseFloat(qtyInput.value) || 0;
+                            if (currentQty > 0) {
+                                qtyInput.value = (currentQty - 1).toFixed(2);
+                            }
+                        }
+                        childRow.remove();
                         updateIndexes();
                         calculateTotals();
                     }
                 });
 
-                lineContainer.querySelectorAll('.line-row').forEach(setupRowLogic);
+                lineContainer.querySelectorAll('.line-row:not(.child-row)').forEach(setupRowLogic);
                 
-                // Header Rate auto-format
                 headerRate.addEventListener('blur', () => formatDecimalInput(headerRate));
                 formatDecimalInput(headerRate);
 
+                updateIndexes();
                 calculateTotals();
                 updateCurrencyLabel();
 
                 /*[# th:if="${isLocked}"]*/
-                // If form is locked, disable all TomSelect instances and Save button
                 tsFacility.disable();
                 tsCurrency.disable();
-                document.querySelectorAll('.line-row').forEach(row => {
-                    const tsProduct = row.querySelector('.select-product').tomselect;
-                    const tsGrid = row.querySelector('.select-grid').tomselect;
-                    const tsContainer = row.querySelector('.select-container').tomselect;
+                document.querySelectorAll('.line-row:not(.child-row)').forEach(row => {
+                    const tsProduct = row.querySelector('.select-product')?.tomselect;
+                    const tsGrid = row.querySelector('.select-grid')?.tomselect;
+                    const tsContainer = row.querySelector('.select-container')?.tomselect;
                     if (tsProduct) tsProduct.disable();
                     if (tsGrid) tsGrid.disable();
                     if (tsContainer) tsContainer.disable();

@@ -46,6 +46,7 @@ public interface StockAdjustmentMapper {
 
     @Mapping(target = "facilityId", source = "facility.id")
     @Mapping(target = "facilityName", source = "facility.name")
+    @Mapping(target = "facilityCode", source = "facility.code")
     @Mapping(target = "exchangeRate", source = "totalCost.exchangeRate")
     StockAdjustmentRequest toRequest(StockAdjustment entity);
 
@@ -58,10 +59,13 @@ public interface StockAdjustmentMapper {
 
     @Mapping(target = "productId", source = "product.id")
     @Mapping(target = "productCode", source = "product.code")
+    @Mapping(target = "productName", source = "product.name")
     @Mapping(target = "gridId", source = "grid.id")
     @Mapping(target = "gridCode", source = "grid.code")
+    @Mapping(target = "gridName", source = "grid.name")
     @Mapping(target = "containerId", source = "container.id")
     @Mapping(target = "containerCode", source = "container.code")
+    @Mapping(target = "containerName", source = "container.name")
     StockAdjustmentLineRequest toLineRequest(StockAdjustmentLine entity);
 
     @AfterMapping

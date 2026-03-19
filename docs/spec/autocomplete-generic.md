@@ -2,51 +2,43 @@
 
 Dokumen ini menjelaskan spesifikasi dan panduan untuk mengimplementasikan komponen Autocomplete yang _generic_ dan _hierarchical_, yang telah terstandarisasi melalui pengerjaan modul Stock Adjustment.
 
-Implementasi ini menggunakan library frontend **TomSelect** yang dihubungkan dengan **Spring Boot REST API** di backend, mendukung debouncing, cascading (filtering bertingkat), dan auto-filling.
+Implementasi ini menggunakan library frontend **TomSelect** yang dihubungkan dengan **Spring Boot REST API** di backend, mendukung debouncing, cascading (filtering bertingkat), auto-filling, dan sinkronisasi Server-Side Rendering (Thymeleaf).
 
 ---
 
 ## 1. Komponen Backend
 
-### A. Data Transfer Object (`LookupDto` vs `InventoryLookupDto`)
+### A. Data Transfer Object (`LookupDto`)
 
-1. **`LookupDto` (Core)**: Digunakan untuk pencarian sederhana satu tingkat (misal: Brand, Currency).
-   ```java
-   public record LookupDto(Long id, String name, String subText) {}
-   ```
+Gunakan `LookupDto` standar untuk semua kebutuhan autocomplete. Pastikan mengikuti aturan penamaan field untuk menjaga estetika UI.
 
-2. **`InventoryLookupDto` (Module Specific)**: Digunakan untuk entitas hirarkis (Container -> Grid -> Facility). Menambahkan context parent agar UI bisa melakukan auto-filling field terkait tanpa request tambahan.
-   ```java
-   public class InventoryLookupDto {
-       private Long id;
-       private String name;
-       private String subText;
-       private Long parentId;   // misal: gridId
-       private String parentName; // misal: gridName
-   }
-   ```
+```java
+public record LookupDto(
+    Long id, 
+    String name,      // WAJIB: Hanya Nama (Tanpa Kode)
+    String subText,   // WAJIB: Kode/Informasi Sekunder
+    Map<String, Object> payload // OPTIONAL: Metadata tambahan (e.g., isSerialized)
+) {}
+```
+
+**Aturan Estetika:**
+*   **DILARANG** menggabungkan Kode ke dalam field `name` (misal: `Code - Name`).
+*   Field `name` akan menjadi teks utama yang dipilih user. Jika terlalu panjang, akan merusak tata letak tabel (memicu line-break).
+*   Field `subText` akan tampil otomatis di bawah nama pada dropdown pencarian untuk membantu identifikasi unik.
 
 ### B. Controller (Standard Endpoint)
 
 Setiap entitas yang mendukung autocomplete harus memiliki dua jenis endpoint:
 1.  **Search Endpoint**: `/api/lookup/[entities]?q=[keyword]&limit=10`
-2.  **Detail Endpoint**: `/api/lookup/[entities]/{id}` (PENTING untuk mekanisme cascading yang stabil).
-
-```java
-@GetMapping("/containers/{id}")
-public InventoryLookupDto getLookupContainer(@PathVariable Long id) {
-    return containerService.getLookupContainer(id);
-}
-```
-
-### C. Security Prefix
-Gunakan prefix **`LOOKUP_`** pada permission (contoh: `LOOKUP_INVENTORY`) agar izin pencarian terkelompok rapi di UI Role Management.
+2.  **Detail Endpoint**: `/api/lookup/[entities]/{id}` (PENTING untuk mekanisme cascading dan binding data awal yang stabil).
 
 ---
 
 ## 2. Komponen Frontend (UI)
 
-### A. Inisialisasi Standard
+### A. Inisialisasi Standard dengan Sinkronisasi SSR
+
+Fungsi inisialisasi harus mampu membaca data awal yang dirender oleh Thymeleaf agar informasi `subText` tidak hilang saat halaman pertama kali dimuat (Mode Edit).
 
 ```javascript
 function initLookup(el, type, parentProvider = null) {
@@ -55,7 +47,19 @@ function initLookup(el, type, parentProvider = null) {
         labelField: 'name',
         searchField: ['name'],
         placeholder: '-- Select --',
-        preload: 'focus', // Load data saat fokus/klik tanpa ketik
+        preload: 'focus',
+        onInitialize: function() {
+            // Sinkronisasi data awal dari atribut data-subtext HTML
+            const initialOption = el.querySelector('option[selected], option[value]:not([value=""])');
+            if (initialOption) {
+                const val = initialOption.value;
+                const subText = initialOption.getAttribute('data-subtext');
+                if (subText && this.options[val]) {
+                    this.options[val].subText = subText;
+                    this.refreshOptions(false);
+                }
+            }
+        },
         load: debounce(function(q, callback) {
             let url = `/api/lookup/${type}?q=${encodeURIComponent(q)}&limit=10`;
             if (parentProvider) {
@@ -66,60 +70,53 @@ function initLookup(el, type, parentProvider = null) {
         }, 150),
         render: {
             option: (data, escape) => {
-                if (!data.id) return ''; // Sembunyikan empty anchor
-                return `<div class="py-1"><div>${escape(data.name)}</div><small class="text-muted">${escape(data.subText || '')}</small></div>`;
-            }
+                if (!data.id) return '';
+                let sub = data.subText ? `<small class="text-muted d-block" style="font-size:0.75em">${escape(data.subText)}</small>` : '';
+                return `<div class="py-1"><div>${escape(data.name)}</div>${sub}</div>`;
+            },
+            item: (data, escape) => `<span>${escape(data.name)}</span>`
         }
     });
 }
 ```
 
-### B. Pola Cascading Hirarkis (Parent -> Child)
+### B. Integrasi Thymeleaf (Mode Edit)
 
-Untuk memastikan data yang muncul di dropdown anak selalu relevan dengan pilihan di induk, gunakan event `dropdown_open` untuk membersihkan cache pilihan lama.
+Agar informasi Kode tetap tampil di bawah Nama saat halaman pertama kali dibuka, gunakan atribut `data-subtext` pada elemen `<option>`.
+
+```html
+<select th:field="*{facilityId}" id="facility">
+    <option value=""></option>
+    <option th:if="${dto.facilityId != null}" 
+            th:value="${dto.facilityId}" 
+            th:text="${dto.facilityName}" 
+            th:attr="data-subtext=${dto.facilityCode}"
+            selected></option>
+</select>
+```
+
+---
+
+## 3. Pola Cascading & Auto-filling
+
+### A. Cascading (Parent -> Child)
+Gunakan event `dropdown_open` untuk memastikan data anak selalu segar berdasarkan pilihan induk yang terbaru.
 
 ```javascript
-// Contoh: Inisialisasi Grid yang difilter oleh Facility
-const tsGrid = initLookup(elGrid, 'grids', () => ({ key: 'facilityId', id: headerFacility.value }));
-
-tsGrid.on('dropdown_open', () => {
-    tsGrid.clearOptions(); // Paksa fetch ulang setiap kali dibuka
+tsChild.on('dropdown_open', () => {
+    tsChild.clearOptions(); 
+    tsChild.refreshOptions(false);
 });
 ```
 
-### C. Pola Auto-filling (Child -> Parent)
-
-Gunakan **Fetch API** pada event `change` untuk mengambil metadata lengkap dari Detail Endpoint. Ini lebih stabil daripada mengandalkan cache `options` di TomSelect. Gunakan **Flag Guard** untuk mencegah *Circular Reset* (induk berubah -> anak ke-reset -> loop).
-
-```javascript
-let isAutoSetting = false;
-
-tsChild.on('change', function(val) {
-    if (val && !isAutoSetting) {
-        fetch(`/api/lookup/children/${val}`)
-            .then(r => r.json())
-            .then(data => {
-                if (data.parentId) {
-                    isAutoSetting = true; 
-                    tsParent.addOption({id: data.parentId, name: data.parentName});
-                    tsParent.setValue(data.parentId);
-                    setTimeout(() => { isAutoSetting = false; }, 100);
-                }
-            });
-    }
-});
-```
-
-### D. CSS Standar untuk Tabel
-Agar tabel dengan banyak kolom autocomplete tetap rapi dan tidak memiliki scrollbar:
-1.  Gunakan `table-layout: fixed; width: 100%;`.
-2.  Gunakan `.ts-control { width: 100% !important; }`.
-3.  Persempit padding sel tabel (misal: `padding: 0.4rem 0.2rem`).
+### B. Auto-filling (Child -> Parent)
+Gunakan metadata dari `payload` atau request Detail Endpoint untuk mengisi field induk secara otomatis jika user memilih data anak terlebih dahulu. Gunakan **Flag Guard** untuk mencegah infinite loop reset.
 
 ---
 
 ## Ringkasan Ketentuan
-1.  **Selalu** gunakan debouncing minimal 150ms.
-2.  **Selalu** sediakan Detail Endpoint untuk setiap Lookup Entity.
-3.  **Gunakan Flag Guard** saat melakukan set nilai antar field dependen.
-4.  **Sembunyikan Opsi Kosong** (`!data.id`) agar tidak merusak visual dropdown.
+1.  **Estetika**: Field `name` hanya berisi Nama. Kode wajib di `subText`.
+2.  **Konsistensi**: Gunakan `data-subtext` di Thymeleaf agar UI SSR dan Autocomplete identik.
+3.  **Robust**: Selalu sediakan Detail Endpoint (`/{id}`) untuk setiap Lookup.
+4.  **Performance**: Gunakan debouncing 150ms dan limit query backend.
+5.  **UX**: Sembunyikan opsi kosong (`!data.id`) agar tidak merusak visual dropdown.

@@ -71,7 +71,13 @@ Setiap modul bisnis baru (Inventory, Sales, Purchasing, dll) WAJIB mengikuti pol
     *   Semua pesan error di Service (yang dilempar via `RuntimeException`) WAJIB di-resolve menggunakan `MessageSource` agar mendukung multi-bahasa.
     *   Gunakan helper method `private String getMessage(String key)` di setiap Service Implementation.
 
-## 6. Security & RBAC (Role-Based Access Control)
+## 6. UI/UX Lookup Standardization
+Untuk menjaga estetika dan konsistensi tampilan pada elemen autocomplete (TomSelect), AI dan Developer WAJIB mengikuti standar berikut:
+*   **Field `name` (Primary Text)**: Selalu gunakan **Nama** saja (contoh: `p.getName()`). DILARANG menggabungkan Code ke dalam field name (seperti `Code - Name`) karena akan membuat teks terlalu panjang dan berpotensi memicu *line-break* pada sel tabel.
+*   **Field `subText` (Secondary Text)**: Gunakan **Code** (contoh: `p.getCode()`). Field ini akan tampil otomatis di bawah nama pada dropdown pencarian.
+*   **Consistency**: Pastikan data yang di-render oleh Thymeleaf saat pertama kali halaman di-muat (mode Edit) menggunakan format yang sama (Hanya Nama) agar tidak terjadi perbedaan visual saat user melakukan pencarian ulang.
+
+## 7. Security & RBAC (Role-Based Access Control)
 Sistem otorisasi menggunakan model **Fine-Grained Authority (Privilege-Based)**.
 * **Database Entities:** Harus terdiri dari `User`, `Role`, dan `Permission` (Authority).
 * **Mapping:** 1 User memiliki 1 Role. 1 Role memiliki banyak Permission (Many-to-Many).

@@ -40,6 +40,7 @@ public class StockAdjustmentRequest extends BaseAuditResponse {
     private Long facilityId;
     
     private String facilityName; // For display in Edit mode
+    private String facilityCode; // For display in Edit mode
 
     @NotNull(message = "{validation.notnull}")
     private java.math.BigDecimal exchangeRate;
