@@ -199,6 +199,25 @@
                     };
                 }
 
+                function lookupAutoFill(data, mapping) {
+                    if (!data || !data.payload) return;
+                    Object.keys(mapping).forEach(key => {
+                        const target = mapping[key];
+                        const val = data.payload[key];
+                        if (val !== undefined && target) {
+                            if (target.tomselect) {
+                                // For TomSelect, if it's a new option we might need to add it first
+                                if (key === 'parentId' && data.payload.parentName) {
+                                    target.tomselect.addOption({id: val, name: data.payload.parentName});
+                                }
+                                target.tomselect.setValue(val);
+                            } else {
+                                target.value = val;
+                            }
+                        }
+                    });
+                }
+
                 function initLookup(el, type, parentProvider = null) {
                     if (!el) return null;
                     if (el.tomselect) el.tomselect.destroy();
@@ -295,10 +314,9 @@
                             fetch(`${LOOKUP_BASE}/containers/${val}`)
                                 .then(r => r.json())
                                 .then(data => {
-                                    if (data && data.parentId && tsGrid.getValue() != data.parentId) {
+                                    if (data && data.payload && data.payload.parentId && tsGrid.getValue() != data.payload.parentId) {
                                         isAutoSetting = true;
-                                        tsGrid.addOption({id: data.parentId, name: data.parentName});
-                                        tsGrid.setValue(data.parentId);
+                                        lookupAutoFill(data, { 'parentId': tsGrid });
                                         setTimeout(() => { isAutoSetting = false; }, 100);
                                     }
                                 });
