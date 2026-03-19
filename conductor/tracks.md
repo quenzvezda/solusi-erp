@@ -21,3 +21,8 @@ This file acts as a central registry for all Conductor tracks in the project.
 
 - [x] **Track: Stock Adjustment UI Polish & Autocomplete Integration**
 *Link: [./tracks/stock_adjustment_polish_20260319/](./tracks/stock_adjustment_polish_20260319/)*
+
+---
+
+- [ ] **Track: Generic LookupDto Refactor**
+*Link: [./tracks/lookup_dto_refactor_20260319/](./tracks/lookup_dto_refactor_20260319/)*
