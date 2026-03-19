@@ -206,7 +206,7 @@
                         const val = data.payload[key];
                         if (val !== undefined && target) {
                             if (target.tomselect) {
-                                // For TomSelect, if it's a new option we might need to add it first
+                                // If parentName is provided, add it as an option if it doesn't exist
                                 if (key === 'parentId' && data.payload.parentName) {
                                     target.tomselect.addOption({id: val, name: data.payload.parentName});
                                 }
@@ -311,15 +311,12 @@
 
                     tsContainer.on('change', function(val) {
                         if (val && !isAutoSetting) {
-                            fetch(`${LOOKUP_BASE}/containers/${val}`)
-                                .then(r => r.json())
-                                .then(data => {
-                                    if (data && data.payload && data.payload.parentId && tsGrid.getValue() != data.payload.parentId) {
-                                        isAutoSetting = true;
-                                        lookupAutoFill(data, { 'parentId': tsGrid });
-                                        setTimeout(() => { isAutoSetting = false; }, 100);
-                                    }
-                                });
+                            const data = tsContainer.options[val];
+                            if (data && data.payload && data.payload.parentId && tsGrid.getValue() != data.payload.parentId) {
+                                isAutoSetting = true;
+                                lookupAutoFill(data, { 'parentId': tsGrid });
+                                setTimeout(() => { isAutoSetting = false; }, 100);
+                            }
                         }
                     });
                 }
