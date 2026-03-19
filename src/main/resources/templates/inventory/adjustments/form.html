@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.stock-adjustment.title})}"></head>
+
+<body th:replace="~{layout/master :: layout(~{:: .stock-adjustment-form-content})}">
+    <div class="stock-adjustment-form-content">
+        <style>
+            /* Force TomSelect consistency */
+            .ts-wrapper, .ts-control, .ts-control input {
+                width: 100% !important;
+            }
+            .ts-wrapper.sm .ts-control {
+                padding: 0.2rem 0.4rem !important;
+                min-height: calc(1.4em + 0.4rem + 2px) !important;
+            }
+            .line-row td {
+                vertical-align: top;
+                padding: 0.3rem 0.15rem !important;
+            }
+            /* Ultra-tight table layout */
+            #table-lines {
+                table-layout: fixed;
+                width: 100%;
+                font-size: 0.85rem;
+            }
+            #table-lines th {
+                padding: 0.4rem 0.15rem !important;
+                font-size: 0.65rem;
+                text-transform: uppercase;
+                letter-spacing: .02em;
+                color: #626976;
+            }
+            .form-control-sm {
+                padding: 0.2rem 0.4rem;
+            }
+            /* Hide number spinners */
+            input::-webkit-outer-spin-button,
+            input::-webkit-inner-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+            input[type=number] {
+                -moz-appearance: textfield;
+            }
+            /* Recap Styling */
+            .recap-label { color: #626976 !important; font-weight: 500; }
+            .recap-value-secondary { color: #1d273b !important; font-size: 1.2rem; font-weight: 700; }
+        </style>
+
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="${stockAdjustment.id == null ? #messages.msg('label.stock-adjustment.add') : #messages.msg('label.stock-adjustment.edit')}">
+                            Add New Adjustment
+                        </h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body" th:with="isLocked=${stockAdjustment.status != null && stockAdjustment.status.name() == 'COMPLETED'}">
+            <div class="container-xl">
+                <form th:action="${stockAdjustment.id == null ? '/inventory/adjustments/create' : '/inventory/adjustments/' + stockAdjustment.id + '/edit'}"
+                      th:object="${stockAdjustment}" method="post" id="adjustment-form">
+                    
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-9 border-end">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label" th:text="#{label.stock-adjustment.code}">No. Adj</label>
+                                            <input type="text" class="form-control bg-light" th:field="*{code}" readonly placeholder="AUTO">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label required" th:text="#{label.stock-adjustment.date}">Date</label>
+                                            <!-- Force ISO format for date input compatibility -->
+                                            <input type="date" class="form-control" 
+                                                   th:value="${stockAdjustment.transactionDate != null ? #temporals.format(stockAdjustment.transactionDate, 'yyyy-MM-dd') : #calendars.format(#calendars.createNow(), 'yyyy-MM-dd')}"
+                                                   name="transactionDate"
+                                                   th:errorclass="is-invalid"
+                                                   th:readonly="${isLocked}">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label required" th:text="#{label.stock-adjustment.currency}">Currency</label>
+                                            <div class="row g-2">
+                                                <div class="col-7">
+                                                    <select class="form-select" th:field="*{currencyId}" id="header-currency" th:disabled="${isLocked}">
+                                                        <option th:each="c : ${currencies}" th:value="${c.id}" th:text="${c.alias}" th:data-alias="${c.alias}"></option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-5">
+                                                    <div class="input-group">
+                                                        <span class="input-group-text">Rate</span>
+                                                        <input type="number" step="0.01" class="form-control text-end" th:field="*{exchangeRate}" id="header-rate" th:readonly="${isLocked}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label required" th:text="#{label.facility}">Facility</label>
+                                            <select class="form-select" th:field="*{facilityId}" id="header-facility" th:disabled="${isLocked}">
+                                                <option value=""></option>
+                                                <option th:if="${stockAdjustment.facilityId != null}" th:value="${stockAdjustment.facilityId}" th:text="${stockAdjustment.facilityName}" selected></option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label" th:text="#{label.stock-adjustment.note}">Note</label>
+                                            <textarea class="form-control" th:field="*{note}" rows="2" placeholder="Optional notes..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 d-flex flex-column justify-content-center bg-light-lt">
+                                    <div class="px-3 text-center">
+                                        <div class="text-uppercase text-secondary font-weight-bold mb-2">Grand Total</div>
+                                        <div class="mb-3">
+                                            <div class="small recap-label" id="label-recap-original">Total (Original)</div>
+                                            <div class="recap-value-secondary" id="recap-total-original">0.00</div>
+                                        </div>
+                                        <div>
+                                            <div class="small recap-label" id="label-recap-local" th:text="${'Total (' + (defaultCurrency != null ? defaultCurrency.alias : 'Local') + ')'}">Total (Local)</div>
+                                            <div class="h1 font-weight-bold text-primary mb-0" id="recap-total-local">0.00</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title" th:text="#{label.stock-adjustment.lines}">Items</h3>
+                            <div class="card-actions" th:if="!${isLocked}">
+                                <button type="button" class="btn btn-primary btn-sm" id="btn-add-line"><i class="ti ti-plus"></i> Add Line</button>
+                            </div>
+                        </div>
+                        <div class="table-responsive" style="min-height: 250px; overflow-x: hidden;">
+                            <table class="table table-vcenter card-table" id="table-lines">
+                                <thead>
+                                    <tr>
+                                        <th th:text="#{label.product}" style="width: 26%;">Product</th>
+                                        <th th:text="#{label.grid}" style="width: 14%;">Grid</th>
+                                        <th th:text="#{label.container}" style="width: 14%;">Bin</th>
+                                        <th th:text="#{label.product.serialized}" style="width: 12%;">SN</th>
+                                        <th class="text-end" style="width: 7%;">Qty</th>
+                                        <th class="text-end" style="width: 11%;">Price</th>
+                                        <th class="text-end" style="width: 13%;">Total</th>
+                                        <th class="w-1" style="width: 30px;" th:if="!${isLocked}"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="line-container">
+                                    <tr th:each="line, stat : *{lines}" class="line-row">
+                                        <td><select th:field="*{lines[__${stat.index}__].productId}" class="select-product" required th:disabled="${isLocked}"><option th:if="${line.productId != null}" th:value="${line.productId}" th:text="${line.productCode}"></option></select></td>
+                                        <td><select th:field="*{lines[__${stat.index}__].gridId}" class="select-grid" required th:disabled="${isLocked}"><option th:if="${line.gridId != null}" th:value="${line.gridId}" th:text="${line.gridCode}"></option></select></td>
+                                        <td><select th:field="*{lines[__${stat.index}__].containerId}" class="select-container" required th:disabled="${isLocked}"><option th:if="${line.containerId != null}" th:value="${line.containerId}" th:text="${line.containerCode}"></option></select></td>
+                                        <td><input type="text" class="form-control form-control-sm" th:field="*{lines[__${stat.index}__].serialNumber}" th:readonly="${isLocked}"></td>
+                                        <td><input type="number" step="0.01" class="form-control form-control-sm text-end input-qty" th:field="*{lines[__${stat.index}__].quantity}" required th:readonly="${isLocked}"></td>
+                                        <td><input type="number" step="0.01" class="form-control form-control-sm text-end input-price" th:field="*{lines[__${stat.index}__].unitCost}" required th:readonly="${isLocked}"></td>
+                                        <td class="text-end font-weight-medium line-total">0.00</td>
+                                        <td th:if="!${isLocked}"><button type="button" class="btn btn-link link-danger btn-remove-line p-0"><i class="ti ti-trash"></i></button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div id="empty-msg" class="text-center py-4 text-secondary" th:style="${#lists.isEmpty(stockAdjustment.lines)} ? '' : 'display:none'">No items added yet. Click "Add Line" to start.</div>
+                        </div>
+                        <div class="card-footer text-end">
+                            <a th:href="@{/inventory/adjustments}" class="btn btn-link link-secondary" th:text="#{label.cancel}">Cancel</a>
+                            <button type="submit" class="btn btn-primary" th:text="#{label.save}">Save Adjustment</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <table style="display:none"><tbody id="row-template-source"><tr class="line-row"><td><select name="lines[INDEX].productId" class="select-product" required></select></td><td><select name="lines[INDEX].gridId" class="select-grid" required></select></td><td><select name="lines[INDEX].containerId" class="select-container" required></select></td><td><input type="text" name="lines[INDEX].serialNumber" class="form-control form-control-sm"></td><td><input type="number" step="0.01" name="lines[INDEX].quantity" class="form-control form-control-sm text-end input-qty" value="0.00" required></td><td><input type="number" step="0.01" name="lines[INDEX].unitCost" class="form-control form-control-sm text-end input-price" value="0.00" required></td><td class="text-end font-weight-medium line-total">0.00</td><td><button type="button" class="btn btn-link link-danger btn-remove-line p-0"><i class="ti ti-trash"></i></button></td></tr></tbody></table>
+
+        <script th:inline="javascript">
+            window.addEventListener('load', function() {
+                const lineContainer = document.getElementById('line-container');
+                const btnAddLine = document.getElementById('btn-add-line');
+                const rowTemplateSource = document.getElementById('row-template-source');
+                const headerFacility = document.getElementById('header-facility');
+                const headerCurrency = document.getElementById('header-currency');
+                const headerRate = document.getElementById('header-rate');
+                const recapOriginal = document.getElementById('recap-total-original');
+                const recapLocal = document.getElementById('recap-total-local');
+                const labelRecapOriginal = document.getElementById('label-recap-original');
+
+                const LOOKUP_BASE = '/api/lookup/inventory';
+                const msgSelectFirst = /*[[#{msg.error.please_select_first}]]*/ 'Please select {0} first!';
+                const labelFacility = /*[[#{label.facility}]]*/ 'Facility';
+
+                function debounce(fn, delay) {
+                    let timer;
+                    return function (...args) {
+                        clearTimeout(timer);
+                        timer = setTimeout(() => fn.apply(this, args), delay);
+                    };
+                }
+
+                function lookupAutoFill(data, mapping) {
+                    if (!data || !data.payload) return;
+                    Object.keys(mapping).forEach(key => {
+                        const target = mapping[key];
+                        const val = data.payload[key];
+                        if (val !== undefined && target) {
+                            // Check if target is a TomSelect instance or a regular input
+                            if (typeof target.setValue === 'function' && typeof target.addOption === 'function') {
+                                if (key === 'parentId' && data.payload.parentName) {
+                                    target.addOption({id: val, name: data.payload.parentName});
+                                }
+                                target.setValue(val);
+                            } else {
+                                target.value = val;
+                            }
+                        }
+                    });
+                }
+
+                function formatDecimalInput(input) {
+                    const val = parseFloat(input.value);
+                    if (!isNaN(val)) {
+                        input.value = val.toFixed(2);
+                    }
+                }
+
+                function initLookup(el, type, parentProvider = null) {
+                    if (!el) return null;
+                    if (el.tomselect) el.tomselect.destroy();
+                    
+                    const ts = new TomSelect(el, {
+                        valueField: 'id',
+                        labelField: 'name',
+                        searchField: ['name'],
+                        placeholder: '-- Select --',
+                        allowEmptyOption: false,
+                        preload: 'focus', 
+                        dropdownParent: 'body',
+                        onInitialize: function() {
+                            this.control.classList.add('form-control-sm');
+                            this.control.style.width = '100%';
+                        },
+                        load: debounce(function(q, callback) {
+                            let url = `${LOOKUP_BASE}/${type}?q=${encodeURIComponent(q)}&limit=10`;
+                            if (parentProvider) {
+                                const parent = parentProvider();
+                                if (parent.type === 'facility' && parent.id) url += `&facilityId=${parent.id}`;
+                                if (parent.type === 'grid' && parent.id) url += `&gridId=${parent.id}`;
+                            }
+                            fetch(url).then(r => r.json()).then(callback).catch(() => callback([]));
+                        }, 150),
+                        render: {
+                            option: (data, escape) => {
+                                if (!data.id) return '';
+                                let sub = data.subText ? `<small class="text-muted d-block" style="font-size:0.75em">${escape(data.subText)}</small>` : '';
+                                return `<div class="py-1"><div>${escape(data.name)}</div>${sub}</div>`;
+                            },
+                            item: (data, escape) => {
+                                let displayName = data.name;
+                                if (type === 'grids' && displayName.includes(' - ')) {
+                                    displayName = displayName.split(' - ')[1];
+                                }
+                                return `<span>${escape(displayName)}</span>`;
+                            }
+                        }
+                    });
+
+                    if (parentProvider) {
+                        ts.on('dropdown_open', () => {
+                            ts.clearOptions();
+                            ts.refreshOptions(false);
+                        });
+                    }
+
+                    return ts;
+                }
+
+                const tsFacility = initLookup(headerFacility, 'facilities');
+                const tsCurrency = new TomSelect(headerCurrency, { onInitialize: function() { this.control.style.width = '100%'; } });
+
+                tsFacility.on('change', () => {
+                    lineContainer.querySelectorAll('.line-row').forEach(row => {
+                        if (row.querySelector('.select-grid').tomselect) row.querySelector('.select-grid').tomselect.clear();
+                        if (row.querySelector('.select-container').tomselect) row.querySelector('.select-container').tomselect.clear();
+                    });
+                });
+
+                function updateCurrencyLabel() {
+                    if (headerCurrency.value) {
+                        const opt = headerCurrency.options[headerCurrency.selectedIndex];
+                        const alias = opt.getAttribute('data-alias') || opt.text;
+                        labelRecapOriginal.textContent = `Total (${alias})`;
+                    }
+                }
+
+                tsCurrency.on('change', () => {
+                    updateCurrencyLabel();
+                    calculateTotals();
+                });
+
+                function setupRowLogic(row) {
+                    const tsProduct = initLookup(row.querySelector('.select-product'), 'products');
+                    const tsGrid = initLookup(row.querySelector('.select-grid'), 'grids', () => ({ type: 'facility', id: headerFacility.value }));
+                    const tsContainer = initLookup(row.querySelector('.select-container'), 'containers', () => {
+                        const gId = tsGrid.getValue();
+                        return gId ? { type: 'grid', id: gId } : { type: 'facility', id: headerFacility.value };
+                    });
+
+                    const qInput = row.querySelector('.input-qty');
+                    const pInput = row.querySelector('.input-price');
+
+                    // Auto-format to 2 decimals on blur
+                    qInput.addEventListener('blur', () => formatDecimalInput(qInput));
+                    pInput.addEventListener('blur', () => formatDecimalInput(pInput));
+                    
+                    // Initial format
+                    formatDecimalInput(qInput);
+                    formatDecimalInput(pInput);
+
+                    let isAutoSetting = false;
+
+                    tsGrid.on('change', () => {
+                        if (!isAutoSetting) {
+                            tsContainer.clear();
+                            tsContainer.clearOptions();
+                        }
+                    });
+
+                    tsContainer.on('change', function(val) {
+                        if (val && !isAutoSetting) {
+                            const data = tsContainer.options[val];
+                            if (data && data.payload && data.payload.parentId && tsGrid.getValue() != data.payload.parentId) {
+                                isAutoSetting = true;
+                                lookupAutoFill(data, { 'parentId': tsGrid });
+                                setTimeout(() => { isAutoSetting = false; }, 100);
+                            }
+                        }
+                    });
+                }
+
+                if (btnAddLine) {
+                    btnAddLine.onclick = function() {
+                        if (!headerFacility.value) {
+                            alert(msgSelectFirst.replace('{0}', labelFacility));
+                            return;
+                        }
+                        const index = lineContainer.querySelectorAll('.line-row').length;
+                        let html = rowTemplateSource.innerHTML.replace(/INDEX/g, index);
+                        const temp = document.createElement('tbody');
+                        temp.innerHTML = html;
+                        const row = temp.querySelector('tr');
+                        lineContainer.appendChild(row);
+                        setupRowLogic(row);
+                        updateIndexes();
+                    };
+                }
+
+                function updateIndexes() {
+                    lineContainer.querySelectorAll('.line-row').forEach((row, index) => {
+                        row.querySelectorAll('input, select').forEach(input => {
+                            if (input.name) input.name = input.name.replace(/lines\[\d+\]/, `lines[${index}]`);
+                        });
+                    });
+                    if (document.getElementById('empty-msg')) {
+                        document.getElementById('empty-msg').style.display = lineContainer.children.length > 0 ? 'none' : '';
+                    }
+                }
+
+                function calculateTotals() {
+                    let total = 0;
+                    const rate = parseFloat(headerRate.value) || 1;
+                    lineContainer.querySelectorAll('.line-row').forEach(row => {
+                        const q = parseFloat(row.querySelector('.input-qty').value) || 0;
+                        const p = parseFloat(row.querySelector('.input-price').value) || 0;
+                        const sub = q * p;
+                        row.querySelector('.line-total').textContent = sub.toLocaleString(undefined, {minimumFractionDigits: 2});
+                        total += sub;
+                    });
+                    recapOriginal.textContent = total.toLocaleString(undefined, {minimumFractionDigits: 2});
+                    recapLocal.textContent = (total * rate).toLocaleString(undefined, {minimumFractionDigits: 2});
+                }
+
+                lineContainer.addEventListener('input', calculateTotals);
+                headerRate.addEventListener('input', calculateTotals);
+                lineContainer.addEventListener('click', e => {
+                    if (e.target.closest('.btn-remove-line')) {
+                        e.target.closest('.line-row').remove();
+                        updateIndexes();
+                        calculateTotals();
+                    }
+                });
+
+                lineContainer.querySelectorAll('.line-row').forEach(setupRowLogic);
+                
+                // Header Rate auto-format
+                headerRate.addEventListener('blur', () => formatDecimalInput(headerRate));
+                formatDecimalInput(headerRate);
+
+                calculateTotals();
+                updateCurrencyLabel();
+
+                /*[# th:if="${isLocked}"]*/
+                // If form is locked, disable all TomSelect instances and Save button
+                tsFacility.disable();
+                tsCurrency.disable();
+                document.querySelectorAll('.line-row').forEach(row => {
+                    const tsProduct = row.querySelector('.select-product').tomselect;
+                    const tsGrid = row.querySelector('.select-grid').tomselect;
+                    const tsContainer = row.querySelector('.select-container').tomselect;
+                    if (tsProduct) tsProduct.disable();
+                    if (tsGrid) tsGrid.disable();
+                    if (tsContainer) tsContainer.disable();
+                });
+                const btnSave = document.querySelector('button[type="submit"]');
+                if (btnSave) btnSave.disabled = true;
+                /*[/]*/
+            });
+        </script>
+    </div>
+</body>
+</html>

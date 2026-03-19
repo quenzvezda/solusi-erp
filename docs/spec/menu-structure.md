@@ -31,12 +31,20 @@ Dokumen ini mendefinisikan standar hirarki menu (Breadcrumb) yang digunakan di s
     - Rekening Bank (`MST-03`)
 
 ### B. Operations (Inti Bisnis)
-- **Inventory Management**
+- **Inventory Setup**
     - Produk (`INV-01`)
     - Kategori Produk (`INV-02`)
     - Brand (`INV-03`)
     - Satuan Ukur (`INV-04`)
-    - *Future: Stock Adjustment, Goods Issue, Goods Receipt, On Hand Quantity, Inventory Report*
+    - Fasilitas (`INV-05`)
+    - Grid (`INV-06`)
+    - Kontainer (`INV-07`)
+- **Inventory Transactions**
+    - Penyesuaian Stok (`INV-08`)
+    - *Future: Goods Receipt, Goods Issue, Internal Transfer*
+- **Inventory Reports**
+    - Kartu Stok (`INV-09`)
+    - Stok On-Hand (`INV-10`)
 - **Sales & Distribution**
     - *Future: Sales Quotation, Sales Order, Delivery Planning, Delivery Order, Sales Return, Sales Report*
 - **Procurement (Purchase)**

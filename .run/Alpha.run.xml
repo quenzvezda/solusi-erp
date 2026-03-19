@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Alpha" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <envs>
+      <env name="DB_PASSWORD" value="root" />
+      <env name="DB_URL" value="jdbc:mariadb://localhost:3307/solusi_erp_db" />
+      <env name="DB_USERNAME" value="root" />
+    </envs>
+    <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+    <module name="solusi-program-erp" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.solusi.erp.SolusiProgramErpApplication" />
+    <option name="UPDATE_ACTION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

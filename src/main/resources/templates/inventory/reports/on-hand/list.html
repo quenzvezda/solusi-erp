@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.on-hand.title})}"></head>
+
+<body th:replace="~{layout/master :: layout(~{:: .on-hand-list-content})}">
+    <div class="on-hand-list-content">
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="#{label.on-hand.title}">On-Hand Quantity</h2>
+                        <div class="text-secondary mt-1" th:text="#{label.on-hand.subtitle}">Real-time physical stock summary.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+                <div class="card">
+                    <div class="card-body border-bottom py-3">
+                        <div class="d-flex">
+                            <div class="ms-auto text-secondary">
+                                <form th:action="@{/inventory/reports/on-hand}" method="get" class="input-icon">
+                                    <input type="text" name="search" th:value="${search}"
+                                        class="form-control form-control-sm" th:placeholder="#{label.search}">
+                                    <span class="input-icon-addon">
+                                        <i class="ti ti-search"></i>
+                                    </span>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th th:text="#{label.product.column.code}">Product</th>
+                                    <th class="text-end">On-Hand</th>
+                                    <th class="text-end text-muted">Reserved</th>
+                                    <th class="text-end font-weight-bold">Available</th>
+                                    <th class="text-end text-azure">In-Transit</th>
+                                    <th class="w-1"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="item : ${page.content}">
+                                    <td>
+                                        <div class="font-weight-medium" th:text="${item.productCode}">CODE</div>
+                                        <div class="text-secondary small" th:text="${item.productName}">Name</div>
+                                    </td>
+                                    <td class="text-end">
+                                        <span th:text="${#numbers.formatDecimal(item.totalOnHand, 1, 'COMMA', 2, 'POINT')}">0</span>
+                                        <span class="text-secondary small" th:text="${item.uomCode}">PCS</span>
+                                    </td>
+                                    <td class="text-end text-muted" th:text="${#numbers.formatDecimal(item.totalReserved, 1, 'COMMA', 2, 'POINT')}">0</td>
+                                    <td class="text-end font-weight-bold text-green" th:text="${#numbers.formatDecimal(item.totalAvailable, 1, 'COMMA', 2, 'POINT')}">0</td>
+                                    <td class="text-end text-azure" th:text="${#numbers.formatDecimal(item.totalInTransit, 1, 'COMMA', 2, 'POINT')}">0</td>
+                                    <td>
+                                        <a th:href="@{/inventory/reports/on-hand/{id}(id=${item.productId})}" class="btn btn-white btn-sm">
+                                            Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr th:if="${page.totalElements == 0}">
+                                    <td colspan="6" class="text-center text-secondary py-4">No product stock found.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

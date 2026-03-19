@@ -1,42 +1,39 @@
-# Roadmap: Inventory & Stock Tracking Module
+# Roadmap: Inventory & Warehouse Management System (WMS)
 
-Dokumen ini merincikan rencana pengembangan fitur Inventory setelah Master Data (Product, Brand, Category, UoM) selesai diimplementasikan.
+Modul ini fokus pada pengelolaan penyimpanan fisik barang, pergerakan stok, dan valuasi persediaan.
 
-## Phase 1: Foundation (Current)
+## Phase 1: Foundation (Current) [x]
 *   [x] **Master Data Brand**: CRUD Dasar.
-*   [x] **Master Data Product**: Struktur data lengkap dengan dukungan multi-UoM (Base, Weight, Dimension).
+*   [x] **Master Data Product**: Struktur data lengkap dengan dukungan multi-UoM.
 *   [x] **Smart Sequence Generator**: Integrasi kode otomatis (PRD-XXXX).
 *   [x] **Conditional UI Logic**: Validasi form berbasis tipe produk (STOCK vs NON-STOCK).
 
-## Phase 2: Warehouse & Storage Hierarchy
-*   [x] **Multi-Level Storage Management**:
-    *   [x] **Facility**: Top-level building/warehouse management.
-    *   [x] **Grid (Zone)**: Blocking/Area management within a facility (e.g., Aisle A, Cold Zone).
-    *   [x] **Container (Bin)**: The smallest addressable unit where products are physically placed.
-*   **Stock Balance Table**:
-    *   Tabel `stock_balances` untuk menyimpan saldo stok real-time.
-    *   Tracking kini lebih detail: `product_id`, `facility_id`, `grid_id`, dan `bin_id`.
-    *   Constraint: `UNIQUE(product_id, bin_id)`.
+## Phase 2: Warehouse Hierarchy & Stock Status [x]
+*   [x] **Multi-Level Storage Management**: Facility, Grid, dan Container.
+*   [x] **Stock Quantities & Statuses**: Implementasi On-Hand, Reserved, dan Available.
+*   [x] **Stock Balance Table (`inv_stock_balances`)**: Saldo real-time per lokasi fisik.
 
-## Phase 3: Inventory Transactions (Core WMS)
-*   **Goods Receipt (GR)**: Penerimaan barang dari Supplier/Produksi.
-    *   Logika **Serialization**: Jika `product.isSerialized = TRUE`, user wajib input Serial Number unik saat GR.
-*   **Goods Issue (GI)**: Pengeluaran barang untuk Sales/Internal.
-*   **Internal Transfer**: Pemindahan barang antar Warehouse.
-*   **Stock Adjustment**: Penyesuaian stok jika ada selisih audit (Stock Opname).
+## Phase 3: Movements & Valuation [x]
+*   [x] **Inventory Movements (`inv_movements`)**: Sejarah mutasi barang sebagai audit trail lengkap.
+*   [x] **Valuation Layers (FIFO)**: Pencatatan HPP per batch masuk (Foundation).
+*   [x] **Stock Adjustment**: Penyesuaian stok manual dengan alur DRAFT -> COMPLETED.
+*   **Core Transactions (Future)**:
+    *   **Goods Receipt (GR)**: Penerimaan dari Supplier (Integrasi: Procurement).
+    *   **Goods Issue (GI)**: Pengeluaran untuk Customer (Integrasi: Sales).
+    *   **Internal Transfer**: Pemindahan antar lokasi fisik atau gudang.
 
-## Phase 4: Advanced Tracking & Integration
-*   **Serialized Item Tracking**:
-    *   Tabel `inventory_items` untuk menyimpan status fisik setiap Serial Number (In Stock, Sold, Damaged).
-*   **Hybrid Serialization**:
-    *   **Manual Scan**: Untuk SN manufaktur asli (Laptop, HP).
-    *   **Auto-Generate**: Untuk SN internal perusahaan.
-*   **Barcode Printing**: Fitur untuk men-generate label barcode (EAN/Internal) dalam format PDF/ZPL.
+## Phase 4: Labeling & Serial Tracking [~]
+*   [x] **Core Stock Utility**: Standardized service for atomic stock updates.
+*   [x] **Serial Number Foundation**: Auto-generation and tracking in `inv_stock_balances`.
+*   **Lot/Batch Management**: Grouping items by production or purchase batch.
+*   **Expiration Tracking**: For perishable goods with automated alerts.
+*   **Barcode Printing**: Pembuatan label barcode untuk identitas produk dan lokasi bin.
 
-## Phase 5: Inventory Analytics
-*   **Stock Card (Buku Stok)**: Histori mutasi barang (Masuk, Keluar, Saldo) secara kronologis.
-*   **Low Stock Alerts**: Notifikasi otomatis jika stok di bawah `min_stock`.
-*   **Valuation**: Perhitungan nilai aset inventori (FIFO / Average Costing).
+## Phase 5: Inventory Analytics [x]
+*   [x] **On-Hand Quantity Report**: Laporan saldo stok saat ini per gudang/bin.
+*   [x] **Stock Card (Kartu Stok)**: Mutasi kuantitas dan nilai secara kronologis (Professional Report).
+*   **Cycle Counting (Stock Opname)**: Periodic physical inventory verification.
+*   **Inventory Valuation**: Total nilai aset persediaan yang sinkron dengan General Ledger.
 
 ---
-*Last Updated: 2026-03-05*
+*Last Updated: 2026-03-19*

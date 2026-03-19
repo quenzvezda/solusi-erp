@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.service.impl;
 
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.service.SequenceGeneratorService;
 import com.solusi.erp.inventory.dto.ContainerRequest;
 import com.solusi.erp.inventory.dto.ContainerResponse;
@@ -11,10 +12,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Implementation of ContainerService.
@@ -27,6 +32,55 @@ public class ContainerServiceImpl implements ContainerService {
     private final WarehouseMapper mapper;
     private final SequenceGeneratorService sequenceGeneratorService;
     private final MessageSource messageSource;
+
+    @Override
+    @Transactional(readOnly = true)
+    public LookupDto getLookupContainer(Long id) {
+        Container c = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.container.notfound")));
+        return new LookupDto(
+                c.getId(),
+                c.getCode(),
+                c.getName() + " (" + c.getGrid().getFacility().getName() + ")",
+                Map.of(
+                        "parentId", c.getGrid().getId(),
+                        "parentName", c.getGrid().getCode() + " - " + c.getGrid().getName()
+                )
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ContainerResponse> findAll() {
+        return repository.findAll().stream().map(mapper::toResponse).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LookupDto> lookupContainers(String keyword, Long facilityId, Long gridId, int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        Page<Container> page;
+        
+        if (gridId != null) {
+            page = repository.searchByGrid(keyword, gridId, pageable);
+        } else if (facilityId != null) {
+            page = repository.searchByFacility(keyword, facilityId, pageable);
+        } else {
+            page = repository.search(keyword, pageable);
+        }
+        
+        return page.getContent().stream()
+                .map(c -> new LookupDto(
+                        c.getId(),
+                        c.getCode(),
+                        c.getName() + " (" + c.getGrid().getFacility().getName() + ")",
+                        Map.of(
+                                "parentId", c.getGrid().getId(),
+                                "parentName", c.getGrid().getCode() + " - " + c.getGrid().getName()
+                        )
+                ))
+                .toList();
+    }
 
     @Override
     @Transactional(readOnly = true)

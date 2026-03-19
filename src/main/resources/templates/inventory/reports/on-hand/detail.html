@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.on-hand.title})}"></head>
+
+<body th:replace="~{layout/master :: layout(~{:: .on-hand-detail-content})}">
+    <div class="on-hand-detail-content">
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <div class="page-pretitle">Report Detail</div>
+                        <h2 class="page-title" th:text="${product.code + ' - ' + product.name}">P001 - Product Name</h2>
+                    </div>
+                    <div class="col-auto ms-auto d-print-none">
+                        <a th:href="@{/inventory/reports/on-hand}" class="btn btn-white">
+                            <i class="ti ti-arrow-left"></i> Back to List
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th th:text="#{label.facility}">Facility</th>
+                                    <th th:text="#{label.grid}">Grid</th>
+                                    <th th:text="#{label.container}">Bin</th>
+                                    <th th:text="#{label.product.serialized}">SN</th>
+                                    <th class="text-end">On-Hand</th>
+                                    <th class="text-end">Reserved</th>
+                                    <th class="text-end font-weight-bold">Available</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="row : ${details}">
+                                    <td th:text="${row.facilityName}">Facility</td>
+                                    <td th:text="${row.gridCode}">Grid</td>
+                                    <td th:text="${row.containerCode}">Bin</td>
+                                    <td th:text="${row.serialNumber ?: '-'}">-</td>
+                                    <td class="text-end" th:text="${#numbers.formatDecimal(row.onHand, 1, 'COMMA', 2, 'POINT')}">0</td>
+                                    <td class="text-end text-muted" th:text="${#numbers.formatDecimal(row.reserved, 1, 'COMMA', 2, 'POINT')}">0</td>
+                                    <td class="text-end font-weight-bold text-green" th:text="${#numbers.formatDecimal(row.available, 1, 'COMMA', 2, 'POINT')}">0</td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(details)}">
+                                    <td colspan="7" class="text-center text-secondary py-4">No specific location balances found.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
