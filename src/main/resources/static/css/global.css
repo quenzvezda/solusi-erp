@@ -45,3 +45,24 @@
     align-items: center;
     height: 100%;
 }
+
+/* Unified ERP Input Styling */
+.erp-input {
+    height: 32px !important;
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
+}
+
+.erp-input-sm {
+    height: 28px !important;
+    padding: 0.15rem 0.4rem !important;
+    font-size: 0.8125rem !important;
+}
+
+/* Ensure consistent height for date inputs */
+input[type="date"].erp-input {
+    line-height: 1.1 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
