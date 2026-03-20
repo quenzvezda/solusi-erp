@@ -29,5 +29,5 @@ This file acts as a central registry for all Conductor tracks in the project.
 
 ---
 
-- [ ] **Track: Product UoM Conversion CRUD**
+- [x] **Track: Product UoM Conversion CRUD**
 *Link: [./tracks/uom_conversion_crud_20260320/](./tracks/uom_conversion_crud_20260320/)*

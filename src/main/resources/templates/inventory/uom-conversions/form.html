@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout/master :: head(${uomConversionRequest.id == null
+    ? #messages.msg('label.uom-conversion.add')
+    : #messages.msg('label.uom-conversion.edit')})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .uom-conversion-form-content})}">
+    <div class="uom-conversion-form-content">
+
+        <!-- Page Header -->
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="${uomConversionRequest.id == null
+                            ? #messages.msg('label.uom-conversion.add')
+                            : #messages.msg('label.uom-conversion.edit')}">
+                            Add New Conversion
+                        </h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Body -->
+        <div class="page-body">
+            <div class="container-xl">
+
+                <!-- Exception Error Alert -->
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
+                        <div th:text="${errorMessage}">Error!</div>
+                    </div>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                </div>
+
+                <form th:action="${uomConversionRequest.id == null
+                        ? '/inventory/uom-conversions/create'
+                        : '/inventory/uom-conversions/edit/' + uomConversionRequest.id}" th:object="${uomConversionRequest}" method="post"
+                    class="card">
+
+                    <div class="card-body">
+
+                        <!-- Global Binding Error Alert -->
+                        <div th:if="${#fields.hasAnyErrors()}" class="alert alert-danger" role="alert">
+                            <div class="d-flex">
+                                <div><i class="ti ti-alert-triangle icon alert-icon"></i></div>
+                                <div>
+                                    <h4 class="alert-title" th:text="#{msg.error.validation.title}">Validation Error</h4>
+                                    <div class="text-secondary" th:text="#{msg.error.validation.subtitle}">
+                                        Please check the form fields below.
+                                    </div>
+                                    <ul class="mb-0 mt-2">
+                                        <li th:each="err : ${#fields.allErrors()}" th:text="${err}">Invalid input</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div th:replace="~{fragments/inputs :: autocomplete(field='productId', label=#{label.uom-conversion.product}, placeholder='', required=true, id='product-select', 
+                                    initialValue=${uomConversionRequest.productId}, initialText=${uomConversionRequest.productName}, initialSubtext=${uomConversionRequest.productCode})}"></div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label required" th:text="#{label.uom-conversion.from-uom}">From UoM</label>
+                                    <select th:field="*{fromUomId}" class="form-select erp-input"
+                                        th:classappend="${#fields.hasErrors('fromUomId')} ? 'is-invalid'">
+                                        <option value="" th:text="#{label.product.select.uom}">-- Select UoM --</option>
+                                        <option th:each="u : ${uoms}" th:value="${u.id}"
+                                            th:text="${u.name + ' (' + u.code + ')'}"></option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('fromUomId')}" th:errors="*{fromUomId}"></div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label" th:text="#{label.uom-conversion.to-uom}">To UoM (Base)</label>
+                                    <input type="text" id="base-uom-display" class="form-control bg-light erp-input" readonly 
+                                        th:value="${uomConversionRequest.toUomName != null ? uomConversionRequest.toUomName : '-'}">
+                                    <!-- Hidden input to store toUomId for the request -->
+                                    <input type="hidden" th:field="*{toUomId}" id="base-uom-id">
+                                </div>
+                            </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label required" th:text="#{label.uom-conversion.factor}">Conversion Factor</label>
+                                    <input type="number" step="0.01" th:name="conversionFactor" 
+                                        th:value="${uomConversionRequest.conversionFactor != null ? #numbers.formatDecimal(uomConversionRequest.conversionFactor, 1, 'POINT', 2, 'POINT') : '1.00'}" 
+                                        class="form-control erp-input input-factor"
+                                        th:classappend="${#fields.hasErrors('conversionFactor')} ? 'is-invalid'"
+                                        onkeypress="return (event.charCode >= 48 && event.charCode <= 57) || event.charCode == 46">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('conversionFactor')}" th:errors="*{conversionFactor}"></div>
+                                </div>
+                        </div>
+
+                        <!-- Record Info (Edit Mode only) -->
+                        <div th:if="${auditInfo != null and auditInfo.id != null}" th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
+                    </div>
+
+                    <div class="card-footer text-end">
+                        <div class="d-flex">
+                            <a th:href="@{/inventory/uom-conversions}" class="btn btn-link link-secondary" th:text="#{label.cancel}">Cancel</a>
+                            <button type="submit" class="btn btn-primary ms-auto">
+                                <i class="ti ti-device-floppy"></i>
+                                <span th:text="#{label.save}">Save</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+        <script th:inline="javascript">
+            window.addEventListener('load', function() {
+                const productEl = document.getElementById('product-select');
+                const baseUomDisplay = document.getElementById('base-uom-display');
+                const baseUomIdInput = document.getElementById('base-uom-id');
+
+                // Check if initLookup exists (it should be in master.html)
+                if (typeof initLookup === 'function') {
+                    const tsProduct = initLookup(productEl, 'inventory/products');
+
+                    if (tsProduct) {
+                        tsProduct.on('change', function(value) {
+                            if (value) {
+                                const item = this.options[value];
+                                if (item.payload) {
+                                    if (item.payload.uomName) baseUomDisplay.value = item.payload.uomName;
+                                    if (item.payload.uomId) baseUomIdInput.value = item.payload.uomId;
+                                }
+                            } else {
+                                baseUomDisplay.value = '-';
+                                baseUomIdInput.value = '';
+                            }
+                        });
+                    }
+                } else {
+                    console.error('initLookup function not found! Check master.html');
+                }
+
+                // Auto-format factor to 2 decimal places on blur
+                const factorInput = document.querySelector('.input-factor');
+                if (factorInput) {
+                    factorInput.addEventListener('blur', function() {
+                        if (this.value) {
+                            this.value = parseFloat(this.value).toFixed(2);
+                        }
+                    });
+                }
+            });
+        </script>
+    </div>
+</body>
+
+</html>

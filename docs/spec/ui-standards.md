@@ -8,12 +8,12 @@ To ensure visual consistency across the Solusi Program ERP, all input elements m
 ### 1. Standard Form Inputs (`32px` height)
 Used for header fields and standard forms.
 - `.erp-input`: Applied to `<input>`, `<select>`, and `<textarea>`.
-- `.erp-input-ts`: Applied to TomSelect wrappers.
+- `.erp-input-ts`: Applied to TomSelect **wrappers** (automatically managed by `initLookup`).
 
 ### 2. Table/Dense Inputs (`28px` height)
 Used for inline editing inside tables (e.g., line items).
 - `.erp-input-sm`: Applied to small `<input>` and `<select>`.
-- `.erp-input-ts-sm`: Applied to small TomSelect wrappers.
+- `.erp-input-ts-sm`: Applied to small TomSelect **wrappers** (automatically managed by `initLookup`).
 
 ## Thymeleaf Fragments
 Always prefer using the standardized fragments in `templates/fragments/inputs.html` instead of writing raw HTML.
@@ -27,16 +27,34 @@ Always prefer using the standardized fragments in `templates/fragments/inputs.ht
 
 #### TomSelect Autocomplete
 ```html
-<div th:replace="~{fragments/inputs :: autocomplete(field=*{facilityId}, label='Facility', id='header-facility', extraClass='required')}"></div>
+<!-- fragment inside templates/fragments/inputs.html -->
+<div th:replace="~{fragments/inputs :: autocomplete(field=*{facilityId}, label='Facility', id='header-facility', required=true)}"></div>
 ```
 
-#### Table Number Input
-```html
-<div th:replace="~{fragments/inputs :: table-number(name='lines[0].quantity', value='1.00', extraClass='input-qty')}"></div>
+## Best Practices & JavaScript Initialization
+
+### 1. The Global `initLookup` Function
+All autocompletes **MUST** be initialized using the global `initLookup` function defined in `master.html`. **DILARANG** melakukan inisialisasi `new TomSelect()` secara manual untuk lookup standar.
+
+**Example Implementation:**
+```javascript
+window.addEventListener('load', function() {
+    const el = document.getElementById('header-facility');
+    // Global function handles: wrapper classes, SSR sync, and debouncing
+    const ts = initLookup(el, 'inventory/facilities');
+    
+    // Optional: Add custom event listeners
+    if (ts) {
+        ts.on('change', (val) => { ... });
+    }
+});
 ```
 
-## Best Practices
-1. **Consistency:** All inputs in the same row/container should use the same height class (e.g., don't mix `.erp-input` and standard `.form-control`).
-2. **Autocomplete Initialization:** When using `autocomplete` fragments, ensure the corresponding JavaScript `initLookup` is called for the ID.
-3. **Date Inputs:** Use the `.erp-input` class on date inputs to ensure they align with text inputs.
-4. **Validation:** Always include `th:errorclass="is-invalid"` (included by default in fragments) for server-side validation feedback.
+### 2. Height Consistency
+The `initLookup` function automatically detects if an element is inside a `.line-row` table and applies `.erp-input-ts-sm`, otherwise it applies `.erp-input-ts`. This ensures that the TomSelect component matches the `32px` or `28px` height of adjacent `.erp-input` fields.
+
+### 3. SSR Synchronization
+The `initLookup` function reads the `data-subtext` attribute from the initial `<option>` rendered by Thymeleaf. This ensures that the Code/Subtext is visible immediately upon page load (Edit Mode).
+
+### 4. Validation
+Always include `th:errorclass="is-invalid"` (included by default in fragments) for server-side validation feedback.

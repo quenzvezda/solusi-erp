@@ -37,7 +37,11 @@ public class ProductServiceImpl implements ProductService {
     public LookupDto getLookupProduct(Long id) {
         Product p = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.product.notfound")));
-        return new LookupDto(p.getId(), p.getName(), p.getCode(), java.util.Map.of("isSerialized", p.getIsSerialized()));
+        return new LookupDto(p.getId(), p.getName(), p.getCode(), java.util.Map.of(
+            "isSerialized", p.getIsSerialized(),
+            "uomId", p.getUom().getId(),
+            "uomName", p.getUom().getName()
+        ));
     }
 
     @Override
@@ -51,7 +55,11 @@ public class ProductServiceImpl implements ProductService {
     public List<LookupDto> lookupProducts(String keyword, int limit) {
         Pageable pageable = PageRequest.of(0, limit);
         return repository.search(keyword, pageable).getContent().stream()
-                .map(p -> new LookupDto(p.getId(), p.getName(), p.getCode(), java.util.Map.of("isSerialized", p.getIsSerialized())))
+                .map(p -> new LookupDto(p.getId(), p.getName(), p.getCode(), java.util.Map.of(
+                    "isSerialized", p.getIsSerialized(),
+                    "uomId", p.getUom().getId(),
+                    "uomName", p.getUom().getName()
+                )))
                 .toList();
     }
 
