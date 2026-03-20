@@ -19,8 +19,21 @@
 
         <div class="page-body" th:with="isLocked=${stockAdjustment.status != null && stockAdjustment.status.name() == 'COMPLETED'}">
             <div class="container-xl">
+                
+                <!-- Alert Placeholder for HTMX Errors -->
+                <div id="alert-container">
+                    <div th:replace="~{fragments/alerts :: success}"></div>
+                    <div th:replace="~{fragments/alerts :: error}"></div>
+                </div>
+
                 <form th:action="${stockAdjustment.id == null ? '/inventory/adjustments/create' : '/inventory/adjustments/' + stockAdjustment.id + '/edit'}"
-                      th:object="${stockAdjustment}" method="post" id="adjustment-form">
+                      th:object="${stockAdjustment}" 
+                      method="post" 
+                      id="adjustment-form"
+                      hx-post
+                      hx-target="#alert-container"
+                      hx-swap="innerHTML"
+                      hx-indicator="#loading-indicator">
                     
                     <div class="card mb-3">
                         <div class="card-body">
@@ -42,10 +55,7 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-5">
-                                                    <div class="input-group">
-                                                        <span class="input-group-text py-0" style="height: 32px; font-size: 0.75rem;">Rate</span>
-                                                        <input type="number" step="0.01" class="form-control text-end erp-input" th:field="*{exchangeRate}" id="header-rate" th:readonly="${isLocked}">
-                                                    </div>
+                                                    <div th:replace="~{fragments/inputs :: decimal(field='exchangeRate', label=null, isReadonly=${isLocked}, id='header-rate')}"></div>
                                                 </div>
                                             </div>
                                         </div>
@@ -121,8 +131,8 @@
                                         <td>
                                             <input type="hidden" th:field="*{lines[__${stat.index}__].serialNumber}">
                                         </td>
-                                        <td><div th:replace="~{fragments/inputs :: table-number(name='lines[' + __${stat.index}__ + '].quantity', value=${line.quantity != null ? #numbers.formatDecimal(line.quantity, 1, 2) : '0.00'}, isReadonly=${isLocked}, extraClass='input-qty')}"></div></td>
-                                        <td><div th:replace="~{fragments/inputs :: table-number(name='lines[' + __${stat.index}__ + '].unitCost', value=${line.unitCost != null ? #numbers.formatDecimal(line.unitCost, 1, 2) : '0.00'}, isReadonly=${isLocked}, extraClass='input-price')}"></div></td>
+                                        <td><input type="text" th:name="'lines[' + ${stat.index} + '].quantity'" th:value="${line.quantity}" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-qty" th:readonly="${isLocked}"></td>
+                                        <td><input type="text" th:name="'lines[' + ${stat.index} + '].unitCost'" th:value="${line.unitCost}" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-price" th:readonly="${isLocked}"></td>
                                         <td class="text-end font-weight-medium line-total">0.00</td>
                                         <td th:if="!${isLocked}"><button type="button" class="btn btn-link link-danger btn-remove-line p-0"><i class="ti ti-trash"></i></button></td>
                                     </tr>
@@ -131,15 +141,31 @@
                             <div id="empty-msg" class="text-center py-4 text-secondary" th:style="${#lists.isEmpty(stockAdjustment.lines)} ? '' : 'display:none'">No items added yet. Click "Add Line" to start.</div>
                         </div>
                         <div class="card-footer text-end">
-                            <a th:href="@{/inventory/adjustments}" class="btn btn-link link-secondary" th:text="#{label.cancel}">Cancel</a>
-                            <button type="submit" class="btn btn-primary" th:text="#{label.save}">Save Adjustment</button>
+                            <div class="d-flex align-items-center">
+                                <div id="loading-indicator" class="htmx-indicator spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                <a th:href="@{/inventory/adjustments}" class="btn btn-link link-secondary" th:text="#{label.cancel}">Cancel</a>
+                                <button type="submit" class="btn btn-primary ms-auto" th:text="#{label.save}">Save Adjustment</button>
+                            </div>
                         </div>
                     </div>
                 </form>
             </div>
         </div>
 
-        <table style="display:none"><tbody id="row-template-source"><tr class="line-row"><td><div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[INDEX].productId', id='', isReadonly=false, extraClass='select-product')}"></div></td><td><div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[INDEX].gridId', id='', isReadonly=false, extraClass='select-grid')}"></div></td><td><div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[INDEX].containerId', id='', isReadonly=false, extraClass='select-container')}"></div></td><td></td><td><div th:replace="~{fragments/inputs :: table-number(name='lines[INDEX].quantity', value='0.00', isReadonly=false, extraClass='input-qty')}"></div></td><td><div th:replace="~{fragments/inputs :: table-number(name='lines[INDEX].unitCost', value='0.00', isReadonly=false, extraClass='input-price')}"></div></td><td class="text-end font-weight-medium line-total">0.00</td><td><button type="button" class="btn btn-link link-danger btn-remove-line p-0"><i class="ti ti-trash"></i></button></td></tr></tbody></table>
+        <table style="display:none">
+            <tbody id="row-template-source">
+                <tr class="line-row">
+                    <td><div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[INDEX].productId', id='', isReadonly=false, extraClass='select-product')}"></div></td>
+                    <td><div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[INDEX].gridId', id='', isReadonly=false, extraClass='select-grid')}"></div></td>
+                    <td><div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[INDEX].containerId', id='', isReadonly=false, extraClass='select-container')}"></div></td>
+                    <td></td>
+                    <td><input type="text" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-qty" value="0.00"></td>
+                    <td><input type="text" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-price" value="0.00"></td>
+                    <td class="text-end font-weight-medium line-total">0.00</td>
+                    <td><button type="button" class="btn btn-link link-danger btn-remove-line p-0"><i class="ti ti-trash"></i></button></td>
+                </tr>
+            </tbody>
+        </table>
 
         <script th:inline="javascript">
             window.addEventListener('load', function() {
@@ -156,14 +182,6 @@
                 const LOOKUP_BASE = '/api/lookup/inventory';
                 const msgSelectFirst = /*[[#{msg.error.please_select_first}]]*/ 'Please select {0} first!';
                 const labelFacility = /*[[#{label.facility}]]*/ 'Facility';
-
-                function debounce(fn, delay) {
-                    let timer;
-                    return function (...args) {
-                        clearTimeout(timer);
-                        timer = setTimeout(() => fn.apply(this, args), delay);
-                    };
-                }
 
                 function lookupAutoFill(data, mapping) {
                     if (!data || !data.payload) return;
@@ -183,13 +201,6 @@
                     });
                 }
 
-                function formatDecimalInput(input) {
-                    const val = parseFloat(input.value);
-                    if (!isNaN(val)) {
-                        input.value = val.toFixed(2);
-                    }
-                }
-
                 function initLookup(el, type, parentProvider = null) {
                     if (!el) return null;
                     if (el.tomselect) el.tomselect.destroy();
@@ -203,13 +214,11 @@
                         preload: 'focus', 
                         dropdownParent: 'body',
                         onInitialize: function() {
-                            // Check if this element is inside a table line
+                            this.wrapper.classList.add('erp-input-ts');
                             if (el.closest('.line-row')) {
-                                this.wrapper.classList.add('sm');
+                                this.wrapper.classList.add('erp-input-ts-sm');
                             }
                             this.control.style.width = '100%';
-                            
-                            // Map data-subtext from initial option if exists
                             const initialOption = el.querySelector('option[selected], option[value]:not([value=""])');
                             if (initialOption) {
                                 const val = initialOption.value;
@@ -278,12 +287,11 @@
                 function syncChildRows(parentRow) {
                     if (!parentRow.classList.contains('parent-row')) return;
                     
-                    const qty = parseInt(parentRow.querySelector('.input-qty').value) || 0;
+                    const qty = parseInt(parentRow.querySelector('.input-qty').value.replace(/,/g, '')) || 0;
                     const productId = parentRow.querySelector('.select-product').value || '';
                     const gridId = parentRow.querySelector('.select-grid').value || '';
                     const containerId = parentRow.querySelector('.select-container').value || '';
-                    const unitCostRaw = parseFloat(parentRow.querySelector('.input-price').value) || 0;
-                    const unitCost = unitCostRaw.toFixed(2);
+                    const unitCost = parentRow.querySelector('.input-price').value || '0.00';
                     
                     let nextEl = parentRow.nextElementSibling;
                     let existingChildren = [];
@@ -309,19 +317,17 @@
                                     <input type="hidden" class="child-container" value="${containerId}">
                                 </td>
                                 <td><input type="text" class="form-control form-control-sm child-sn" placeholder="Serial Number"></td>
-                                <td><input type="number" step="0.01" class="form-control form-control-sm text-end input-qty child-qty" value="1.00" required></td>
-                                <td><input type="number" step="0.01" class="form-control form-control-sm text-end input-price child-price" value="${unitCost}" required></td>
+                                <td><input type="text" class="form-control form-control-sm text-end erp-number-decimal input-qty child-qty" value="1.00" required></td>
+                                <td><input type="text" class="form-control form-control-sm text-end erp-number-decimal input-price child-price" value="${unitCost}" required></td>
                                 <td class="text-end font-weight-medium line-total">0.00</td>
                                 <td><button type="button" class="btn btn-link link-danger btn-remove-child p-0"><i class="ti ti-trash"></i></button></td>
                             `;
                             
-                            const qInput = tr.querySelector('.input-qty');
-                            const pInput = tr.querySelector('.input-price');
-                            qInput.addEventListener('blur', () => formatDecimalInput(qInput));
-                            pInput.addEventListener('blur', () => formatDecimalInput(pInput));
-                            
                             const insertAfter = existingChildren.length > 0 ? existingChildren[existingChildren.length - 1] : parentRow;
                             insertAfter.parentNode.insertBefore(tr, insertAfter.nextSibling);
+                            
+                            // Initialize AutoNumeric for new child inputs
+                            initNumericInputs(tr);
                             existingChildren.push(tr);
                         }
                     }
@@ -349,12 +355,6 @@
                     const qInput = row.querySelector('.input-qty');
                     const pInput = row.querySelector('.input-price');
 
-                    qInput.addEventListener('blur', () => formatDecimalInput(qInput));
-                    pInput.addEventListener('blur', () => formatDecimalInput(pInput));
-                    
-                    formatDecimalInput(qInput);
-                    formatDecimalInput(pInput);
-
                     let isAutoSetting = false;
 
                     tsProduct.on('change', function(val) {
@@ -363,14 +363,9 @@
                             const isSerialized = data && data.payload && data.payload.isSerialized;
                             const snInput = row.querySelector('input[name$=".serialNumber"], input[data-name="serialNumber"]');
                             
-                            // Reset quantity on product change
-                            qInput.value = '0.00';
-                            
                             if (isSerialized) {
                                 row.classList.add('parent-row');
-                                if (snInput) {
-                                    snInput.value = '';
-                                }
+                                if (snInput) snInput.value = '';
                                 syncChildRows(row);
                             } else {
                                 if (row.classList.contains('parent-row')) {
@@ -395,8 +390,8 @@
                             const newPrice = pInput.value;
                             let nextEl = row.nextElementSibling;
                             while (nextEl && nextEl.classList.contains('child-row')) {
-                                nextEl.querySelector('.child-price').value = newPrice;
-                                formatDecimalInput(nextEl.querySelector('.child-price'));
+                                const childPriceEl = nextEl.querySelector('.child-price');
+                                AutoNumeric.set(childPriceEl, newPrice);
                                 nextEl = nextEl.nextElementSibling;
                             }
                             calculateTotals();
@@ -437,6 +432,7 @@
                         const row = temp.querySelector('tr');
                         lineContainer.appendChild(row);
                         setupRowLogic(row);
+                        initNumericInputs(row);
                         updateIndexes();
                     };
                 }
@@ -477,14 +473,14 @@
 
                 function calculateTotals() {
                     let total = 0;
-                    const rate = parseFloat(headerRate.value) || 1;
+                    const rate = parseFloat(headerRate.value.replace(/,/g, '')) || 1;
                     lineContainer.querySelectorAll('.line-row').forEach(row => {
                         if (row.classList.contains('parent-row')) {
                             row.querySelector('.line-total').textContent = '0.00';
                             return;
                         }
-                        const q = parseFloat(row.querySelector('.input-qty').style.display !== 'none' ? row.querySelector('.input-qty').value : 0) || 0;
-                        const p = parseFloat(row.querySelector('.input-price').style.display !== 'none' ? row.querySelector('.input-price').value : 0) || 0;
+                        const q = parseFloat(row.querySelector('.input-qty').value.replace(/,/g, '')) || 0;
+                        const p = parseFloat(row.querySelector('.input-price').value.replace(/,/g, '')) || 0;
                         const sub = q * p;
                         row.querySelector('.line-total').textContent = sub.toLocaleString(undefined, {minimumFractionDigits: 2});
                         total += sub;
@@ -498,7 +494,6 @@
                     let parentProductId = null;
                     let parentGridId = null;
                     let parentContainerId = null;
-                    
                     const rows = Array.from(lineContainer.querySelectorAll('.line-row'));
                     
                     rows.forEach(row => {
@@ -512,24 +507,23 @@
                             if (!parentRow || parentProductId !== productId || parentGridId !== gridId || parentContainerId !== containerId) {
                                 parentRow = row.cloneNode(true);
                                 parentRow.classList.add('parent-row');
-                                
                                 const parentSnInput = parentRow.querySelector('input[name$=".serialNumber"]');
                                 if (parentSnInput) {
                                     parentSnInput.value = '';
                                     parentSnInput.parentElement.style.visibility = 'hidden';
                                 }
-                                
                                 parentRow.querySelector('.input-qty').value = '0';
                                 row.parentNode.insertBefore(parentRow, row);
-                                
+                                initNumericInputs(parentRow);
                                 parentProductId = productId;
                                 parentGridId = gridId;
                                 parentContainerId = containerId;
                             }
                             
                             const parentQtyInput = parentRow.querySelector('.input-qty');
-                            const currentLineQty = parseFloat(row.querySelector('.input-qty').value) || 0;
-                            parentQtyInput.value = (parseFloat(parentQtyInput.value) + currentLineQty).toFixed(2);
+                            const currentLineQty = parseFloat(row.querySelector('.input-qty').value.replace(/,/g, '')) || 0;
+                            const newParentQty = (parseFloat(parentQtyInput.value.replace(/,/g, '')) + currentLineQty).toFixed(2);
+                            AutoNumeric.set(parentQtyInput, newParentQty);
                             
                             const tds = row.querySelectorAll('td');
                             tds[0].colSpan = 3;
@@ -546,14 +540,8 @@
                             
                             row.classList.add('child-row', 'bg-light-lt');
                             if(snInput) snInput.classList.add('child-sn');
-                            
-                            const qtyInput = row.querySelector('.input-qty');
-                            qtyInput.classList.add('child-qty');
-                            qtyInput.value = currentLineQty.toFixed(2);
-
-                            const priceInput = row.querySelector('.input-price');
-                            priceInput.classList.add('child-price');
-                            priceInput.value = parseFloat(priceInput.value || 0).toFixed(2);
+                            row.querySelector('.input-qty').classList.add('child-qty');
+                            row.querySelector('.input-price').classList.add('child-price');
                         } else {
                             parentRow = null;
                         }
@@ -586,9 +574,9 @@
                         }
                         if (prevEl && prevEl.classList.contains('parent-row')) {
                             const qtyInput = prevEl.querySelector('.input-qty');
-                            let currentQty = parseFloat(qtyInput.value) || 0;
+                            let currentQty = parseFloat(qtyInput.value.replace(/,/g, '')) || 0;
                             if (currentQty > 0) {
-                                qtyInput.value = (currentQty - 1).toFixed(2);
+                                AutoNumeric.set(qtyInput, (currentQty - 1).toFixed(2));
                             }
                         }
                         childRow.remove();
@@ -598,10 +586,6 @@
                 });
 
                 lineContainer.querySelectorAll('.line-row:not(.child-row)').forEach(setupRowLogic);
-                
-                headerRate.addEventListener('blur', () => formatDecimalInput(headerRate));
-                formatDecimalInput(headerRate);
-
                 updateIndexes();
                 calculateTotals();
                 updateCurrencyLabel();

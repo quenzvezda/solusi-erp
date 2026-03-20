@@ -28,38 +28,26 @@
         <div class="page-body">
             <div class="container-xl">
 
-                <!-- Exception Error Alert -->
-                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
-                    <div class="d-flex">
-                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
-                        <div th:text="${errorMessage}">Error!</div>
-                    </div>
-                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                <!-- Alert Placeholder for HTMX Errors -->
+                <div id="alert-container">
+                    <!-- Standard alerts when page is loaded normally -->
+                    <div th:replace="~{fragments/alerts :: success}"></div>
+                    <div th:replace="~{fragments/alerts :: error}"></div>
                 </div>
 
+                <!-- HTMX Form: POST via AJAX, target alert container on error -->
                 <form th:action="${uomConversionRequest.id == null
                         ? '/inventory/uom-conversions/create'
-                        : '/inventory/uom-conversions/edit/' + uomConversionRequest.id}" th:object="${uomConversionRequest}" method="post"
-                    class="card">
+                        : '/inventory/uom-conversions/edit/' + uomConversionRequest.id}" 
+                    th:object="${uomConversionRequest}" 
+                    method="post"
+                    class="card"
+                    hx-post
+                    hx-target="#alert-container"
+                    hx-swap="innerHTML"
+                    hx-indicator="#loading-indicator">
 
                     <div class="card-body">
-
-                        <!-- Global Binding Error Alert -->
-                        <div th:if="${#fields.hasAnyErrors()}" class="alert alert-danger" role="alert">
-                            <div class="d-flex">
-                                <div><i class="ti ti-alert-triangle icon alert-icon"></i></div>
-                                <div>
-                                    <h4 class="alert-title" th:text="#{msg.error.validation.title}">Validation Error</h4>
-                                    <div class="text-secondary" th:text="#{msg.error.validation.subtitle}">
-                                        Please check the form fields below.
-                                    </div>
-                                    <ul class="mb-0 mt-2">
-                                        <li th:each="err : ${#fields.allErrors()}" th:text="${err}">Invalid input</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <div th:replace="~{fragments/inputs :: autocomplete(field='productId', label=#{label.uom-conversion.product}, placeholder='', required=true, id='product-select', 
@@ -89,15 +77,9 @@
                                 </div>
                             </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label required" th:text="#{label.uom-conversion.factor}">Conversion Factor</label>
-                                    <input type="number" step="0.01" th:name="conversionFactor" 
-                                        th:value="${uomConversionRequest.conversionFactor != null ? #numbers.formatDecimal(uomConversionRequest.conversionFactor, 1, 'POINT', 2, 'POINT') : '1.00'}" 
-                                        class="form-control erp-input input-factor"
-                                        th:classappend="${#fields.hasErrors('conversionFactor')} ? 'is-invalid'"
-                                        onkeypress="return (event.charCode >= 48 && event.charCode <= 57) || event.charCode == 46">
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('conversionFactor')}" th:errors="*{conversionFactor}"></div>
-                                </div>
+                            <div class="col-md-6">
+                                <div th:replace="~{fragments/inputs :: decimal(field='conversionFactor', label=#{label.uom-conversion.factor}, required=true)}"></div>
+                            </div>
                         </div>
 
                         <!-- Record Info (Edit Mode only) -->
@@ -105,7 +87,8 @@
                     </div>
 
                     <div class="card-footer text-end">
-                        <div class="d-flex">
+                        <div class="d-flex align-items-center">
+                            <div id="loading-indicator" class="htmx-indicator spinner-border spinner-border-sm text-primary me-2" role="status"></div>
                             <a th:href="@{/inventory/uom-conversions}" class="btn btn-link link-secondary" th:text="#{label.cancel}">Cancel</a>
                             <button type="submit" class="btn btn-primary ms-auto">
                                 <i class="ti ti-device-floppy"></i>
@@ -142,18 +125,6 @@
                             }
                         });
                     }
-                } else {
-                    console.error('initLookup function not found! Check master.html');
-                }
-
-                // Auto-format factor to 2 decimal places on blur
-                const factorInput = document.querySelector('.input-factor');
-                if (factorInput) {
-                    factorInput.addEventListener('blur', function() {
-                        if (this.value) {
-                            this.value = parseFloat(this.value).toFixed(2);
-                        }
-                    });
                 }
             });
         </script>

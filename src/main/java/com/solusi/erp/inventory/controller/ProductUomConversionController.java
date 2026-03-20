@@ -4,6 +4,8 @@ import com.solusi.erp.inventory.dto.ProductUomConversionRequest;
 import com.solusi.erp.inventory.model.UomType;
 import com.solusi.erp.inventory.service.ProductUomConversionService;
 import com.solusi.erp.inventory.service.UnitOfMeasureService;
+import com.solusi.erp.util.HtmxResponseUtility;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -47,9 +49,13 @@ public class ProductUomConversionController {
     @PreAuthorize("hasAuthority('UOM-CONVERSION_CREATE')")
     public String create(@Valid @ModelAttribute("uomConversionRequest") ProductUomConversionRequest request,
             BindingResult bindingResult,
+            @RequestHeader(value = "HX-Request", required = false) boolean htmxRequest,
             Model model,
+            HttpServletResponse response,
             RedirectAttributes redirectAttributes) {
+        
         if (bindingResult.hasErrors()) {
+            if (htmxRequest) return HtmxResponseUtility.returnErrorFragment();
             populateSelectOptions(model);
             return "inventory/uom-conversions/form";
         }
@@ -58,8 +64,12 @@ public class ProductUomConversionController {
             service.create(request);
             String message = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
             redirectAttributes.addFlashAttribute("successMessage", message);
+            
+            if (htmxRequest) return HtmxResponseUtility.redirect(response, "/inventory/uom-conversions");
             return "redirect:/inventory/uom-conversions";
         } catch (Exception e) {
+            if (htmxRequest) return HtmxResponseUtility.handleException(model, e.getMessage());
+            request.setId(null); 
             model.addAttribute("errorMessage", e.getMessage());
             populateSelectOptions(model);
             return "inventory/uom-conversions/form";
@@ -84,9 +94,14 @@ public class ProductUomConversionController {
     public String update(@PathVariable Long id,
             @Valid @ModelAttribute("uomConversionRequest") ProductUomConversionRequest request,
             BindingResult bindingResult,
+            @RequestHeader(value = "HX-Request", required = false) boolean htmxRequest,
             Model model,
+            HttpServletResponse response,
             RedirectAttributes redirectAttributes) {
+        
         if (bindingResult.hasErrors()) {
+            if (htmxRequest) return HtmxResponseUtility.returnErrorFragment();
+            request.setId(id);
             populateSelectOptions(model);
             return "inventory/uom-conversions/form";
         }
@@ -95,8 +110,12 @@ public class ProductUomConversionController {
             service.update(id, request);
             String message = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
             redirectAttributes.addFlashAttribute("successMessage", message);
+            
+            if (htmxRequest) return HtmxResponseUtility.redirect(response, "/inventory/uom-conversions");
             return "redirect:/inventory/uom-conversions";
         } catch (Exception e) {
+            if (htmxRequest) return HtmxResponseUtility.handleException(model, e.getMessage());
+            request.setId(id);
             model.addAttribute("errorMessage", e.getMessage());
             populateSelectOptions(model);
             return "inventory/uom-conversions/form";

@@ -40,5 +40,6 @@ public class ProductUomConversionRequest extends BaseAuditResponse {
 
     @NotNull(message = "{validation.notnull}")
     @DecimalMin(value = "0.000001", message = "{validation.min}")
-    private BigDecimal conversionFactor;
+    @Builder.Default
+    private BigDecimal conversionFactor = new BigDecimal("1.00");
 }

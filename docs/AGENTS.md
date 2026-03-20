@@ -1,5 +1,7 @@
 # AGENTS.md / Project Architecture & AI Guidelines
 
+> **PENTING**: Jika Anda baru atau sedang melakukan troubleshooting, harap baca **[Documentation Index](index.md)** untuk melihat peta lengkap dokumentasi teknis dan fungsional proyek ini.
+
 ## 1. Project Overview
 Proyek ini adalah sistem Enterprise Resource Planning (ERP) Monolitik yang dibangun untuk tujuan pembelajaran dan MVP. Aplikasi dirender sepenuhnya di sisi server (Server-Side Rendering/SSR) tanpa memisahkan frontend sebagai Single Page Application (SPA).
 
@@ -15,7 +17,9 @@ AI Assistant WAJIB mematuhi versi dan teknologi berikut berdasarkan `pom.xml` ut
 * **Frontend Template Engine:** Thymeleaf (Gunakan **Native Thymeleaf Fragments** `th:fragment`, `th:replace`). DILARANG menggunakan `thymeleaf-layout-dialect` karena masalah stabilitas dengan Spring Boot 4.
 * **UI/CSS Framework:** Bootstrap 5
 * **Admin Template:** Tabler (MIT License) - Gunakan kelas dan struktur HTML bawaan Tabler.
-* **Boilerplate Reduction:** Lombok (aktif dan dikonfigurasi di `maven-compiler-plugin`).
+* **AJAX & Fragments:** HTMX (Wajib untuk Form Submission).
+* **Numeric Formatting:** AutoNumeric (Untuk ribuan separator & desimal).
+* **Boilerplate Reduction:** Lombok & HtmxResponseUtility.
 * **Mapping:** MapStruct (untuk konversi Entity ke DTO).
 * **Validation:** Hibernate Validator (`spring-boot-starter-validation`).
 * **Reporting:** Apache POI (Excel) & JasperReports (PDF).

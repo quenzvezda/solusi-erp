@@ -54,6 +54,43 @@
             };
         }
 
+        /**
+         * Initialize AutoNumeric for all inputs with numeric classes
+         * @param {HTMLElement} container - The container to search within (optional)
+         */
+        function initNumericInputs(container = document) {
+            if (typeof AutoNumeric === 'undefined') return;
+
+            const decimalOptions = {
+                digitGroupSeparator: ',',
+                decimalCharacter: '.',
+                decimalPlaces: 2,
+                minimumValue: '0',
+                unformatOnSubmit: false,
+                modifyValueOnWheel: false
+            };
+
+            const integerOptions = {
+                digitGroupSeparator: ',',
+                decimalPlaces: 0,
+                minimumValue: '0',
+                unformatOnSubmit: false,
+                modifyValueOnWheel: false
+            };
+
+            // Initialize Decimal Inputs
+            container.querySelectorAll('.erp-number-decimal:not([data-autonumeric])').forEach(el => {
+                new AutoNumeric(el, decimalOptions);
+                el.setAttribute('data-autonumeric', 'true');
+            });
+
+            // Initialize Integer Inputs
+            container.querySelectorAll('.erp-number-integer:not([data-autonumeric])').forEach(el => {
+                new AutoNumeric(el, integerOptions);
+                el.setAttribute('data-autonumeric', 'true');
+            });
+        }
+
         // Global TomSelect Initialization (Golden Standard)
         function initLookup(el, type, parentProvider = null) {
             if (!el) return null;
@@ -122,6 +159,9 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
+            // Initial numeric setup
+            initNumericInputs();
+
             const menuSearchEl = document.getElementById('global-menu-search');
             if (menuSearchEl) {
                 new TomSelect('#global-menu-search', {
@@ -152,6 +192,11 @@
                     }
                 });
             }
+        });
+
+        // HTMX integration for dynamic content
+        document.body.addEventListener('htmx:afterSwap', function (evt) {
+            initNumericInputs(evt.detail.target);
         });
     </script>
 </body>

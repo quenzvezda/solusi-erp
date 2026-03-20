@@ -1,0 +1,35 @@
+<!-- Reusable alert fragments for ERP standard error/success messaging -->
+
+<!-- Error Alert for HTMX or Standard SSR -->
+<div th:fragment="error" th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
+    <div class="d-flex">
+        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
+        <div>
+            <div th:text="${errorMessage}">Error message goes here.</div>
+        </div>
+    </div>
+    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+</div>
+
+<!-- Validation Summary Alert (Global Binding Errors) -->
+<div th:fragment="validation-summary" th:if="${#fields.hasAnyErrors()}" class="alert alert-danger" role="alert">
+    <div class="d-flex">
+        <div><i class="ti ti-alert-triangle icon alert-icon"></i></div>
+        <div>
+            <h4 class="alert-title" th:text="#{msg.error.validation.title}">Validation Error</h4>
+            <div class="text-secondary" th:text="#{msg.error.validation.subtitle}">Please check the form fields below.</div>
+            <ul class="mb-0 mt-2">
+                <li th:each="err : ${#fields.allErrors()}" th:text="${err}">Invalid input</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Success Alert -->
+<div th:fragment="success" th:if="${successMessage}" class="alert alert-success alert-dismissible" role="alert">
+    <div class="d-flex">
+        <div><i class="ti ti-check icon alert-icon"></i></div>
+        <div th:text="${successMessage}">Success message goes here.</div>
+    </div>
+    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+</div>

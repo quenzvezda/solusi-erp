@@ -91,3 +91,27 @@
                 selected></option>
     </select>
 </div>
+
+<!-- Decimal Numeric Input (with AutoNumeric) -->
+<div th:fragment="decimal" class="mb-3">
+    <label th:if="${label}" class="form-label" th:classappend="${required} ? 'required'" th:text="${label}"></label>
+    <input type="text" 
+           th:field="*{__${field}__}" 
+           th:readonly="${isReadonly}" 
+           class="form-control erp-input erp-number-decimal text-end" 
+           th:classappend="${extraClass}"
+           th:errorclass="is-invalid"
+           th:id="${id}">
+</div>
+
+<!-- Integer Numeric Input (with AutoNumeric) -->
+<div th:fragment="integer" class="mb-3">
+    <label th:if="${label}" class="form-label" th:classappend="${required} ? 'required'" th:text="${label}"></label>
+    <input type="text" 
+           th:field="*{__${field}__}" 
+           th:readonly="${isReadonly}" 
+           class="form-control erp-input erp-number-integer text-end" 
+           th:classappend="${extraClass}"
+           th:errorclass="is-invalid"
+           th:id="${id}">
+</div>
