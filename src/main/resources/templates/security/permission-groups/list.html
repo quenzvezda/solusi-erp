@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{layout/master :: head(#{label.menu.group.title})}"></head>
-<body th:replace="~{layout/master :: layout(~{:: .pg-list-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .pg-list-content}, ~{})}">
     <div class="pg-list-content">
         <!-- Page Header -->
         <div class="page-header d-print-none">

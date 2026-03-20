@@ -1,6 +1,6 @@
 # Autocomplete Generic Implementation Guide
 
-Dokumen ini menjelaskan spesifikasi dan panduan untuk mengimplementasikan komponen Autocomplete yang _generic_ dan _hierarchical_, yang telah terstandarisasi melalui modul Stock Adjustment dan UoM Conversion.
+Dokumen ini menjelaskan spesifikasi dan panduan untuk mengimplementasikan komponen Autocomplete (Server-side Search) di sistem ERP.
 
 ---
 
@@ -14,78 +14,53 @@ public record LookupDto(
     Long id, 
     String name,      // WAJIB: Hanya Nama (Tanpa Kode)
     String subText,   // WAJIB: Kode/Informasi Sekunder
-    Map<String, Object> payload // OPTIONAL: Metadata tambahan (e.g., isSerialized, uomName)
+    Map<String, Object> payload // OPTIONAL: Metadata tambahan (e.g., type, isSerialized)
 ) {}
 ```
 
 ### B. Controller (Standard Endpoint)
-Setiap entitas yang mendukung autocomplete harus memiliki dua jenis endpoint:
-1.  **Search Endpoint**: `/api/lookup/[module]/[entities]?q=[keyword]&limit=10`
-2.  **Detail Endpoint**: `/api/lookup/[module]/[entities]/{id}`
+Setiap entitas yang mendukung autocomplete harus memiliki endpoint lookup:
+- **Search**: `GET /api/lookup/[module]/[entities]?q=[keyword]&limit=10`
+- **Detail**: `GET /api/lookup/[module]/[entities]/{id}`
 
 ---
 
 ## 2. Komponen Frontend (UI)
 
-### A. Inisialisasi Standard (Global `initLookup`)
-Semua komponen autocomplete **WAJIB** diinisialisasi melalui fungsi `initLookup(el, type, parentProvider)` yang berada di `layout/master.html`.
+### A. Memilih Antara Select vs Autocomplete
+- **Standard Select**: Gunakan untuk data yang jumlahnya sedikit (< 50 entri) dan statis. Contoh: Satuan Ukur (UoM), Tipe Kategori.
+- **Autocomplete**: Wajib digunakan untuk data besar (> 100 entri) atau data yang terus bertambah. Contoh: Produk, Brand, Pelanggan, Lokasi Gudang.
 
-**Fitur Otomatis `initLookup`:**
-1.  **ERP Height Standard**: Menambahkan class `.erp-input-ts` atau `.erp-input-ts-sm` (jika di dalam tabel) ke wrapper TomSelect.
-2.  **SSR Synchronization**: Membaca atribut `data-subtext` dari Thymeleaf untuk menampilkan kode pada saat halaman pertama dimuat (Mode Edit).
-3.  **Search Field**: Mencari berdasarkan `name` (default).
-4.  **Debouncing**: Menunda request ke server sebesar 150ms.
-
-### B. Integrasi Thymeleaf
-Gunakan fragment `fragments/inputs :: autocomplete` atau `table-autocomplete`.
+### B. Global Auto-Initialization (Recommended)
+Cara termudah adalah menggunakan fragment `autocomplete` dengan parameter `path`. Sistem akan menginisialisasi TomSelect secara otomatis.
 
 ```html
-<div th:replace="~{fragments/inputs :: autocomplete(field='productId', label=#{label.product}, id='product-select', 
-    initialValue=${dto.productId}, initialText=${dto.productName}, initialSubtext=${dto.productCode})}"></div>
+<div th:replace="~{fragments/inputs :: autocomplete(field='brandId', label=#{label.brand}, path='inventory/brands', 
+    initialValue=${dto.brandId}, initialText=${dto.brandName}, initialSubtext=${dto.brandCode})}"></div>
 ```
 
----
+**Aturan Wajib (Trinity Data):**
+Untuk menjaga konsistensi UI, setiap penggunaan autocomplete **WAJIB** menyertakan tiga data awal:
+1.  **`initialValue`**: ID dari record (disimpan ke database).
+2.  **`initialText`**: Nama/Label utama (ditampilkan besar).
+3.  **`initialSubtext`**: Kode/Informasi sekunder (ditampilkan kecil di bawah nama).
 
-## 3. Pola JavaScript di Halaman
+Hal ini berlaku untuk semua Request DTO yang dikirim kembali ke View. Jika salah satu kosong, maka UI akan terlihat tidak konsisten saat mode Edit.
 
-Inisialisasi dilakukan di dalam `window.addEventListener('load', ...)` untuk memastikan library TomSelect yang di-defer sudah tersedia.
-
-```javascript
-window.addEventListener('load', function() {
-    const el = document.getElementById('product-select');
-    
-    // Inisialisasi Standard
-    const ts = initLookup(el, 'inventory/products');
-
-    // Opsional: Custom Logic (misal: mengambil metadata dari payload)
-    if (ts) {
-        // Jika butuh search di field tambahan (subText)
-        ts.settings.searchField = ['name', 'subText'];
-        
-        ts.on('change', function(val) {
-            if (val) {
-                const item = this.options[val];
-                if (item.payload) {
-                    // Logika auto-fill field lain berdasarkan payload
-                    console.log(item.payload.uomName);
-                }
-            }
-        });
-    }
-});
-```
-
----
-
-## 4. Pola Cascading (Parent -> Child)
-
-Jika sebuah lookup bergantung pada field lain (misal: Bin bergantung pada Grid), gunakan `parentProvider`.
+### C. Inisialisasi Manual (Cascading)
+Jika sebuah lookup bergantung pada field lain (misal: Bin bergantung pada Grid), gunakan fungsi `initLookup` secara manual di JavaScript halaman tersebut.
 
 ```javascript
-// Provider mengirimkan data parent saat dipanggil oleh initLookup load()
+// initLookup(element, lookupPath, parentProvider)
 const tsChild = initLookup(childEl, 'inventory/bins', () => {
     return { id: parentTs.getValue(), key: 'gridId' };
 });
 ```
 
-`initLookup` akan otomatis membersihkan cache dan opsi setiap kali dropdown dibuka jika `parentProvider` disediakan, menjamin data yang tampil selalu relevan dengan pilihan induk terbaru.
+---
+
+## 3. Fitur Otomatis `initLookup`
+1.  **ERP Height Standard**: Menyesuaikan tinggi input (32px atau 28px).
+2.  **SSR Synchronization**: Sinkronisasi otomatis data awal dari server (mencegah teks hilang saat load).
+3.  **Debouncing**: Penundaan request (150ms) untuk menghemat beban server.
+4.  **HTMX Compatibility**: Otomatis re-init setelah swap HTMX selesai.

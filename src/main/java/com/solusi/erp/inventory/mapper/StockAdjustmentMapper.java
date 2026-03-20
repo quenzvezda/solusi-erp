@@ -28,8 +28,10 @@ public interface StockAdjustmentMapper {
     @Mapping(target = "productName", source = "product.name")
     @Mapping(target = "gridId", source = "grid.id")
     @Mapping(target = "gridCode", source = "grid.code")
+    @Mapping(target = "gridName", source = "grid.name")
     @Mapping(target = "containerId", source = "container.id")
     @Mapping(target = "containerCode", source = "container.code")
+    @Mapping(target = "containerName", source = "container.name")
     @Mapping(target = "facilityName", source = "container.grid.facility.name")
     StockAdjustmentLineResponse toLineResponse(StockAdjustmentLine entity);
 

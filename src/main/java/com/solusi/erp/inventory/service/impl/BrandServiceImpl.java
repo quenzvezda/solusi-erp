@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.service.impl;
 
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.service.SequenceGeneratorService;
 import com.solusi.erp.inventory.dto.BrandRequest;
 import com.solusi.erp.inventory.dto.BrandResponse;
@@ -15,6 +16,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of BrandService.
@@ -91,6 +95,32 @@ public class BrandServiceImpl implements BrandService {
             throw new RuntimeException(getMessage("msg.error.brand.notfound"));
         }
         repository.deleteById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LookupDto> lookupBrands(String keyword, int limit) {
+        return repository.search(keyword, Pageable.ofSize(limit))
+                .getContent()
+                .stream()
+                .map(this::mapToLookupDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LookupDto getLookupBrand(Long id) {
+        Brand entity = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.brand.notfound")));
+        return mapToLookupDto(entity);
+    }
+
+    private LookupDto mapToLookupDto(Brand entity) {
+        return new LookupDto(
+                entity.getId(),
+                entity.getName(),
+                entity.getCode()
+        );
     }
 
     private String getMessage(String key) {

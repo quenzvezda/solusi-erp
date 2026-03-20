@@ -24,9 +24,11 @@ public class StockAdjustmentLineResponse extends BaseAuditResponse {
 
     private Long gridId;
     private String gridCode;
+    private String gridName;
     
     private Long containerId;
     private String containerCode;
+    private String containerName;
     private String facilityName;
     
     private BigDecimal quantity;

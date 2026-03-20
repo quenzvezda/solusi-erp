@@ -3,7 +3,7 @@
 
 <head th:replace="~{layout/master :: head(${brandRequest.id == null ? #messages.msg('label.brand.add') : #messages.msg('label.brand.edit')})}"></head>
 
-<body th:replace="~{layout/master :: layout(~{:: .brand-form-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .brand-form-content}, ~{})}">
     <div class="brand-form-content">
         <!-- Page Header -->
         <div class="page-header d-print-none">
@@ -21,33 +21,36 @@
         <!-- Page Body -->
         <div class="page-body">
             <div class="container-xl">
+
+                <!-- Alert Placeholder for HTMX Errors -->
+                <div id="alert-container">
+                    <div th:replace="~{fragments/alerts :: success}"></div>
+                    <div th:replace="~{fragments/alerts :: error}"></div>
+                </div>
+
                 <form th:action="${brandRequest.id == null ? '/inventory/brands/create' : '/inventory/brands/edit/' + brandRequest.id}"
-                    th:object="${brandRequest}" method="post" class="card">
+                    th:object="${brandRequest}" 
+                    method="post" 
+                    class="card"
+                    hx-post
+                    hx-target="#alert-container"
+                    hx-swap="innerHTML"
+                    hx-indicator="#loading-indicator">
+
                     <div class="card-body">
-                        <div class="row">
+                        <div class="row g-3">
                             <div class="col-md-6">
-                                <!-- Brand Code (Readonly for Edit, Hidden/Placeholder for Create as it's auto-generated) -->
-                                <div class="mb-3">
-                                    <label class="form-label" th:text="#{label.brand.code}">Kode Brand</label>
-                                    <input type="text" th:field="*{code}" class="form-control bg-light" 
-                                        readonly th:placeholder="${brandRequest.id == null ? '[ Auto Generated ]' : ''}">
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('code')}" th:errors="*{code}"></div>
-                                </div>
+                                <!-- Brand Code -->
+                                <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.brand.code}, isReadonly=true, extraClass='bg-light', placeholder=${brandRequest.id == null ? '[ Auto Generated ]' : ''})}"></div>
 
                                 <!-- Brand Name -->
-                                <div class="mb-3">
-                                    <label class="form-label required" th:text="#{label.brand.name}">Nama Brand</label>
-                                    <input type="text" th:field="*{name}" class="form-control"
-                                        th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'"
-                                        th:placeholder="#{placeholder.brand.name}">
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
-                                </div>
+                                <div th:replace="~{fragments/inputs :: text(field='name', label=#{label.brand.name}, required=true, placeholder=#{placeholder.brand.name})}"></div>
                             </div>
                             <div class="col-md-6">
                                 <!-- Note -->
                                 <div class="mb-3">
                                     <label class="form-label" th:text="#{label.brand.note}">Catatan</label>
-                                    <textarea th:field="*{note}" class="form-control" rows="4"
+                                    <textarea th:field="*{note}" class="form-control erp-input" rows="4"
                                         th:placeholder="#{placeholder.brand.note}"></textarea>
                                 </div>
                             </div>
@@ -57,8 +60,9 @@
                         <div th:if="${auditInfo != null and auditInfo.id != null}" th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
                     </div>
                     <div class="card-footer text-end">
-                        <div class="d-flex">
-                            <a th:href="@{/inventory/brands}" class="btn btn-link" th:text="#{label.cancel}">Batal</a>
+                        <div class="d-flex align-items-center">
+                            <div id="loading-indicator" class="htmx-indicator spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                            <a th:href="@{/inventory/brands}" class="btn btn-link link-secondary" th:text="#{label.cancel}">Batal</a>
                             <button type="submit" class="btn btn-primary ms-auto">
                                 <i class="ti ti-device-floppy"></i>
                                 <span th:text="#{label.save}">Simpan</span>

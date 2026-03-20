@@ -3,7 +3,7 @@
 
 <head th:replace="~{layout/master :: head(#{label.currency.title})}"></head>
 
-<body th:replace="~{layout/master :: layout(~{:: .currency-list-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .currency-list-content}, ~{})}">
     <div class="currency-list-content">
         <!-- Page Header -->
         <div class="page-header d-print-none">

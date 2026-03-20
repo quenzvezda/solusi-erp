@@ -3,7 +3,7 @@
 
 <head th:replace="~{layout/master :: head(#{label.grid.list})}"></head>
 
-<body th:replace="~{layout/master :: layout(~{:: .grid-list-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .grid-list-content}, ~{})}">
     <div class="grid-list-content">
         <!-- Page Header -->
         <div class="page-header d-print-none">

@@ -3,7 +3,7 @@
 
 <head th:replace="~{layout/master :: head(#{label.product.category.title})}"></head>
 
-<body th:replace="~{layout/master :: layout(~{:: .product-category-list-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .product-category-list-content}, ~{})}">
     <div class="product-category-list-content">
         <!-- Page Header -->
         <div class="page-header d-print-none">

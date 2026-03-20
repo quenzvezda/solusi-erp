@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{layout/master :: head(${request.id == null ? #messages.msg('label.menu.group.add') : #messages.msg('label.menu.group.edit')})}"></head>
-<body th:replace="~{layout/master :: layout(~{:: .pg-form-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .pg-form-content}, ~{})}">
     <div class="pg-form-content">
         <!-- Page Header -->
         <div class="page-header d-print-none">

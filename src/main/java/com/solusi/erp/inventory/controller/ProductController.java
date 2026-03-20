@@ -6,6 +6,8 @@ import com.solusi.erp.inventory.service.BrandService;
 import com.solusi.erp.inventory.service.ProductCategoryService;
 import com.solusi.erp.inventory.service.ProductService;
 import com.solusi.erp.inventory.service.UnitOfMeasureService;
+import com.solusi.erp.util.HtmxResponseUtility;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -54,9 +56,12 @@ public class ProductController {
     @PreAuthorize("hasAuthority('PRODUCT_CREATE')")
     public String create(@Valid @ModelAttribute("productRequest") ProductRequest request,
             BindingResult bindingResult,
+            @RequestHeader(value = "HX-Request", required = false) boolean htmxRequest,
             Model model,
+            HttpServletResponse response,
             RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
+            if (htmxRequest) return HtmxResponseUtility.returnErrorFragment();
             populateSelectOptions(model);
             return "inventory/products/form";
         }
@@ -65,8 +70,11 @@ public class ProductController {
             service.create(request);
             String message = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
             redirectAttributes.addFlashAttribute("successMessage", message);
+            
+            if (htmxRequest) return HtmxResponseUtility.redirect(response, "/inventory/products");
             return "redirect:/inventory/products";
         } catch (Exception e) {
+            if (htmxRequest) return HtmxResponseUtility.handleException(model, e.getMessage());
             model.addAttribute("errorMessage", e.getMessage());
             populateSelectOptions(model);
             return "inventory/products/form";
@@ -91,9 +99,12 @@ public class ProductController {
     public String update(@PathVariable Long id,
             @Valid @ModelAttribute("productRequest") ProductRequest request,
             BindingResult bindingResult,
+            @RequestHeader(value = "HX-Request", required = false) boolean htmxRequest,
             Model model,
+            HttpServletResponse response,
             RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
+            if (htmxRequest) return HtmxResponseUtility.returnErrorFragment();
             populateSelectOptions(model);
             return "inventory/products/form";
         }
@@ -102,8 +113,12 @@ public class ProductController {
             service.update(id, request);
             String message = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
             redirectAttributes.addFlashAttribute("successMessage", message);
+            
+            if (htmxRequest) return HtmxResponseUtility.redirect(response, "/inventory/products");
             return "redirect:/inventory/products";
         } catch (Exception e) {
+            if (htmxRequest) return HtmxResponseUtility.handleException(model, e.getMessage());
+            request.setId(id);
             model.addAttribute("errorMessage", e.getMessage());
             populateSelectOptions(model);
             return "inventory/products/form";

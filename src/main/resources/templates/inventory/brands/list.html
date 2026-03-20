@@ -3,7 +3,7 @@
 
 <head th:replace="~{layout/master :: head(#{label.brand.title})}"></head>
 
-<body th:replace="~{layout/master :: layout(~{:: .brand-list-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .brand-list-content}, ~{})}">
     <div class="brand-list-content">
         <!-- Page Header -->
         <div class="page-header d-print-none">

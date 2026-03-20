@@ -3,7 +3,7 @@
 
 <head th:replace="~{layout/master :: head(#{master.bank-account.title})}"></head>
 
-<body th:replace="~{layout/master :: layout(~{:: .bank-account-list-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .bank-account-list-content}, ~{})}">
     <div class="bank-account-list-content">
         <!-- Page Header -->
         <div class="page-header d-print-none">

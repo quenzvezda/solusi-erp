@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{layout/master :: head(${unitOfMeasureRequest.id == null ? #messages.msg('label.uom.add') : #messages.msg('label.uom.edit')})}"></head>
-<body th:replace="~{layout/master :: layout(~{:: .uom-form-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .uom-form-content}, ~{})}">
     <div class="uom-form-content">
         <!-- Page Header -->
         <div class="page-header d-print-none">
@@ -18,37 +18,34 @@
         <!-- Page Body -->
         <div class="page-body">
             <div class="container-xl">
-                <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}">Error message</div>
+                
+                <!-- Alert Placeholder for HTMX Errors -->
+                <div id="alert-container">
+                    <div th:replace="~{fragments/alerts :: success}"></div>
+                    <div th:replace="~{fragments/alerts :: error}"></div>
+                </div>
 
                 <form th:action="${unitOfMeasureRequest.id == null ? '/inventory/unit-of-measures/create' : '/inventory/unit-of-measures/edit/' + unitOfMeasureRequest.id}" 
-                      th:object="${unitOfMeasureRequest}" method="post" class="card">
+                      th:object="${unitOfMeasureRequest}" 
+                      method="post" 
+                      class="card"
+                      hx-post
+                      hx-target="#alert-container"
+                      hx-swap="innerHTML"
+                      hx-indicator="#loading-indicator">
+
                     <div class="card-body">
-                        <div class="row">
+                        <div class="row g-3">
                             <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label required" th:text="#{label.uom.code}">Kode (Simbol)</label>
-                                    <!-- Unlike ProductCategory, this is manual input -->
-                                    <input type="text" th:field="*{code}" class="form-control" style="text-transform: uppercase;"
-                                           th:classappend="${#fields.hasErrors('code')} ? 'is-invalid'"
-                                           th:placeholder="#{placeholder.uom.code}">
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('code')}" th:errors="*{code}">Error</div>
-                                    <small class="form-hint" th:text="#{label.uom.code.hint}">Digunakan sebagai simbol di aplikasi (contoh: KG, PCS).</small>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label required" th:text="#{label.uom.name}">Nama Lengkap</label>
-                                    <input type="text" th:field="*{name}" class="form-control" 
-                                           th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'"
-                                           th:placeholder="#{placeholder.uom.name}">
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Error</div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label required" th:text="#{label.uom.type}">Tipe</label>
-                                    <select th:field="*{type}" class="form-select" th:classappend="${#fields.hasErrors('type')} ? 'is-invalid'">
-                                        <option value="">-- Pilih Tipe --</option>
-                                        <option th:each="type : ${types}" th:value="${type}" th:text="#{'label.uom.type.' + ${type.name().toLowerCase()}}">TYPE</option>
-                                    </select>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('type')}" th:errors="*{type}">Error</div>
-                                </div>
+                                <!-- UoM Code -->
+                                <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.uom.code}, required=true, placeholder=#{placeholder.uom.code}, extraClass='text-uppercase')}"></div>
+                                <small class="form-hint" th:text="#{label.uom.code.hint}">Digunakan sebagai simbol di aplikasi (contoh: KG, PCS).</small>
+
+                                <!-- UoM Name -->
+                                <div th:replace="~{fragments/inputs :: text(field='name', label=#{label.uom.name}, required=true, placeholder=#{placeholder.uom.name})}"></div>
+
+                                <!-- UoM Type -->
+                                <div th:replace="~{fragments/inputs :: select(field='type', label=#{label.uom.type}, required=true, options=${types})}"></div>
                             </div>
                         </div>
 
@@ -56,9 +53,10 @@
                         <div th:if="${auditInfo != null and auditInfo.id != null}" th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
                     </div>
                     <div class="card-footer text-end">
-                        <div class="d-flex">
-                            <a th:href="@{/inventory/unit-of-measures}" class="btn btn-link" th:text="#{label.cancel}">Batal</a>
-                            <button type="submit" class="btn btn-primary ms-auto" th:text="#{label.save}">Simpan Satuan Ukur</button>
+                        <div class="d-flex align-items-center">
+                            <div id="loading-indicator" class="htmx-indicator spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                            <a th:href="@{/inventory/unit-of-measures}" class="btn btn-link link-secondary" th:text="#{label.cancel}">Batal</a>
+                            <button type="submit" class="btn btn-primary ms-auto" th:text="#{label.save}">Simpan</button>
                         </div>
                     </div>
                 </form>

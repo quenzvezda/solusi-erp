@@ -3,6 +3,8 @@ package com.solusi.erp.inventory.controller;
 import com.solusi.erp.inventory.dto.ProductCategoryRequest;
 import com.solusi.erp.inventory.model.ProductCategoryType;
 import com.solusi.erp.inventory.service.ProductCategoryService;
+import com.solusi.erp.util.HtmxResponseUtility;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -48,9 +50,12 @@ public class ProductCategoryController {
     @PreAuthorize("hasAuthority('PRODUCT-CATEGORY_CREATE')")
     public String create(@Valid @ModelAttribute("productCategoryRequest") ProductCategoryRequest request,
                          BindingResult bindingResult,
+                         @RequestHeader(value = "HX-Request", required = false) boolean htmxRequest,
                          Model model,
+                         HttpServletResponse response,
                          RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
+            if (htmxRequest) return HtmxResponseUtility.returnErrorFragment();
             model.addAttribute("types", ProductCategoryType.values());
             return "inventory/product-categories/form";
         }
@@ -59,8 +64,11 @@ public class ProductCategoryController {
             service.create(request);
             String message = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
             redirectAttributes.addFlashAttribute("successMessage", message);
+            
+            if (htmxRequest) return HtmxResponseUtility.redirect(response, "/inventory/product-categories");
             return "redirect:/inventory/product-categories";
         } catch (Exception e) {
+            if (htmxRequest) return HtmxResponseUtility.handleException(model, e.getMessage());
             model.addAttribute("errorMessage", e.getMessage());
             model.addAttribute("types", ProductCategoryType.values());
             return "inventory/product-categories/form";
@@ -85,9 +93,12 @@ public class ProductCategoryController {
     public String update(@PathVariable Long id,
                          @Valid @ModelAttribute("productCategoryRequest") ProductCategoryRequest request,
                          BindingResult bindingResult,
+                         @RequestHeader(value = "HX-Request", required = false) boolean htmxRequest,
                          Model model,
+                         HttpServletResponse response,
                          RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
+            if (htmxRequest) return HtmxResponseUtility.returnErrorFragment();
             model.addAttribute("types", ProductCategoryType.values());
             return "inventory/product-categories/form";
         }
@@ -96,8 +107,11 @@ public class ProductCategoryController {
             service.update(id, request);
             String message = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
             redirectAttributes.addFlashAttribute("successMessage", message);
+            
+            if (htmxRequest) return HtmxResponseUtility.redirect(response, "/inventory/product-categories");
             return "redirect:/inventory/product-categories";
         } catch (Exception e) {
+            if (htmxRequest) return HtmxResponseUtility.handleException(model, e.getMessage());
             model.addAttribute("errorMessage", e.getMessage());
             model.addAttribute("types", ProductCategoryType.values());
             return "inventory/product-categories/form";

@@ -2,6 +2,8 @@ package com.solusi.erp.inventory.controller;
 
 import com.solusi.erp.inventory.dto.BrandRequest;
 import com.solusi.erp.inventory.service.BrandService;
+import com.solusi.erp.util.HtmxResponseUtility;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -46,9 +48,12 @@ public class BrandController {
     @PreAuthorize("hasAuthority('BRAND_CREATE')")
     public String create(@Valid @ModelAttribute("brandRequest") BrandRequest request,
                          BindingResult bindingResult,
+                         @RequestHeader(value = "HX-Request", required = false) boolean htmxRequest,
                          Model model,
+                         HttpServletResponse response,
                          RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
+            if (htmxRequest) return HtmxResponseUtility.returnErrorFragment();
             return "inventory/brands/form";
         }
 
@@ -56,8 +61,11 @@ public class BrandController {
             service.create(request);
             String message = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
             redirectAttributes.addFlashAttribute("successMessage", message);
+            
+            if (htmxRequest) return HtmxResponseUtility.redirect(response, "/inventory/brands");
             return "redirect:/inventory/brands";
         } catch (Exception e) {
+            if (htmxRequest) return HtmxResponseUtility.handleException(model, e.getMessage());
             model.addAttribute("errorMessage", e.getMessage());
             return "inventory/brands/form";
         }
@@ -80,9 +88,12 @@ public class BrandController {
     public String update(@PathVariable Long id,
                          @Valid @ModelAttribute("brandRequest") BrandRequest request,
                          BindingResult bindingResult,
+                         @RequestHeader(value = "HX-Request", required = false) boolean htmxRequest,
                          Model model,
+                         HttpServletResponse response,
                          RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
+            if (htmxRequest) return HtmxResponseUtility.returnErrorFragment();
             return "inventory/brands/form";
         }
 
@@ -90,8 +101,11 @@ public class BrandController {
             service.update(id, request);
             String message = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
             redirectAttributes.addFlashAttribute("successMessage", message);
+            
+            if (htmxRequest) return HtmxResponseUtility.redirect(response, "/inventory/brands");
             return "redirect:/inventory/brands";
         } catch (Exception e) {
+            if (htmxRequest) return HtmxResponseUtility.handleException(model, e.getMessage());
             model.addAttribute("errorMessage", e.getMessage());
             return "inventory/brands/form";
         }

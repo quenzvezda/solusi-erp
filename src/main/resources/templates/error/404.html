@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{layout/master :: head(#{label.error.404.title})}"></head>
-<body th:replace="~{layout/master :: layout(~{:: .error-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .error-content}, ~{})}">
     <div class="error-content">
         <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 60vh;">
             <div class="empty">

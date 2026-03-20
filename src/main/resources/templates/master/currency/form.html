@@ -5,7 +5,7 @@
     th:replace="~{layout/master :: head(${currency.id == null ? #messages.msg('label.currency.add') : #messages.msg('label.currency.edit')})}">
 </head>
 
-<body th:replace="~{layout/master :: layout(~{:: .currency-form-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .currency-form-content}, ~{})}">
     <div class="currency-form-content">
         <!-- Page Header -->
         <div class="page-header d-print-none">

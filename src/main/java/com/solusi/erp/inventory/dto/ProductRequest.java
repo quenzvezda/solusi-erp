@@ -41,7 +41,19 @@ public class ProductRequest extends BaseAuditResponse {
     @NotNull(message = "{validation.notnull}")
     private Long uomId;
 
+    private String uomName;
+
     private Long brandId;
+
+    private String brandName;
+
+    private String brandCode;
+
+    private String categoryName;
+
+    private String categoryCode;
+
+    private String categoryType;
 
     @Size(max = 50, message = "{validation.size}")
     private String hscode;

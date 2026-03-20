@@ -5,7 +5,7 @@
     th:replace="~{layout/master :: head(${geographic.id == null ? #messages.msg('label.geographic.create') : #messages.msg('label.geographic.edit')})}">
 </head>
 
-<body th:replace="~{layout/master :: layout(~{:: .geographic-form-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .geographic-form-content}, ~{})}">
     <div class="geographic-form-content">
         <!-- Page Header -->
         <div class="page-header d-print-none">

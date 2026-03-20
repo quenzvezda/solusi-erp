@@ -77,9 +77,10 @@ Setiap modul bisnis baru (Inventory, Sales, Purchasing, dll) WAJIB mengikuti pol
 
 ## 6. UI/UX Lookup Standardization
 Untuk menjaga estetika dan konsistensi tampilan pada elemen autocomplete (TomSelect), AI dan Developer WAJIB mengikuti standar berikut:
-*   **Field `name` (Primary Text)**: Selalu gunakan **Nama** saja (contoh: `p.getName()`). DILARANG menggabungkan Code ke dalam field name (seperti `Code - Name`) karena akan membuat teks terlalu panjang dan berpotensi memicu *line-break* pada sel tabel.
+*   **Field `name` (Primary Text)**: Selalu gunakan **Nama** saja (contoh: `p.getName()`). DILARANG menggabungkan Code ke dalam field name (seperti `Code - Name`) karena akan membuat teks terlalu panjang.
 *   **Field `subText` (Secondary Text)**: Gunakan **Code** (contoh: `p.getCode()`). Field ini akan tampil otomatis di bawah nama pada dropdown pencarian.
-*   **Consistency**: Pastikan data yang di-render oleh Thymeleaf saat pertama kali halaman di-muat (mode Edit) menggunakan format yang sama (Hanya Nama) agar tidak terjadi perbedaan visual saat user melakukan pencarian ulang.
+*   **Display Label Persistence**: Setiap Request DTO yang digunakan untuk form Edit **WAJIB** memiliki field tambahan untuk menampung `Name` dan `Code` (contoh: `brandName`, `brandCode`) agar saat halaman di-load ulang (HTMX), label pada Autocomplete tidak hilang.
+*   **Thymeleaf Fragments**: Selalu gunakan parameter `initialValue`, `initialText`, dan `initialSubtext` saat memanggil fragment `autocomplete`.
 
 ## 7. Security & RBAC (Role-Based Access Control)
 Sistem otorisasi menggunakan model **Fine-Grained Authority (Privilege-Based)**.

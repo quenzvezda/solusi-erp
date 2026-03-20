@@ -7,6 +7,7 @@ Folder ini berisi standar teknis horizontal yang berlaku di seluruh aplikasi ERP
 - **[autocomplete-generic.md](autocomplete-generic.md)**: Cara kerja TomSelect asinkron dan pola cascading lookup.
 - **[numeric-standards.md](numeric-standards.md)**: Standar input angka dengan pemisah ribuan (AutoNumeric) dan Spring Formatter.
 - **[htmx-standard.md](htmx-standard.md)**: Pola form submission AJAX menggunakan HTMX untuk menjaga state UI.
+- **[layout-standard.md](layout-standard.md)**: Standar layout utama dengan slot untuk JavaScript per-halaman.
 
 ## Data & Logic Standards
 - **[auditing.md](auditing.md)**: Implementasi audit trail (siapa, kapan) dan penggunaan class `BaseAuditResponse`.

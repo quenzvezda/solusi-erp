@@ -1,9 +1,12 @@
 package com.solusi.erp.inventory.service;
 
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.inventory.dto.ProductCategoryRequest;
 import com.solusi.erp.inventory.dto.ProductCategoryResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 
 /**
  * Service interface for Product Category.
@@ -15,4 +18,6 @@ public interface ProductCategoryService {
     void create(ProductCategoryRequest request);
     void update(Long id, ProductCategoryRequest request);
     void delete(Long id);
+    List<LookupDto> lookupCategories(String keyword, int limit);
+    LookupDto getLookupCategory(Long id);
 }

@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{layout/master :: head(#{label.roles.title})}"></head>
-<body th:replace="~{layout/master :: layout(~{:: .role-list-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .role-list-content}, ~{})}">
     <div class="role-list-content">
         <!-- Page Header -->
         <div class="page-header d-print-none">

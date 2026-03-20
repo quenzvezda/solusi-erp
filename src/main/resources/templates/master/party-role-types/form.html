@@ -5,7 +5,7 @@
     th:replace="~{layout/master :: head(${roleTypeRequest.id == null ? #messages.msg('label.party-role-type.add') : #messages.msg('label.party-role-type.edit')})}">
 </head>
 
-<body th:replace="~{layout/master :: layout(~{:: .prt-form-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .prt-form-content}, ~{})}">
     <div class="prt-form-content">
         <div class="page-header d-print-none">
             <div class="container-xl">

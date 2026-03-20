@@ -3,7 +3,7 @@
 
 <head th:replace="~{layout/master :: head(#{label.tax.title})}"></head>
 
-<body th:replace="~{layout/master :: layout(~{:: .tax-list-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .tax-list-content}, ~{})}">
     <div class="tax-list-content">
         <!-- Page Header -->
         <div class="page-header d-print-none">

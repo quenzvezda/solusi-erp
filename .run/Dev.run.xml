@@ -9,6 +9,7 @@
     <module name="solusi-program-erp" />
     <option name="SPRING_BOOT_MAIN_CLASS" value="com.solusi.erp.SolusiProgramErpApplication" />
     <option name="UPDATE_ACTION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+    <option name="VM_PARAMETERS" value="-Dproject.root=$PROJECT_DIR$" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

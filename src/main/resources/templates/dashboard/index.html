@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{layout/master :: head(#{label.dashboard})}"></head>
-<body th:replace="~{layout/master :: layout(~{:: .dashboard-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .dashboard-content}, ~{})}">
     <div class="dashboard-content">
         <div th:if="${param.resetSuccess}" class="alert alert-success mt-3" th:text="#{msg.password.reset.success}">
             Password Anda telah berhasil diperbarui. Selamat bekerja!

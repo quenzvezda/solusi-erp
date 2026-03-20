@@ -9,46 +9,59 @@ To ensure visual consistency across the Solusi Program ERP, all input elements m
 Used for header fields and standard forms.
 - `.erp-input`: Applied to `<input>`, `<select>`, and `<textarea>`.
 - `.erp-input-ts`: Applied to TomSelect **wrappers** (automatically managed by `initLookup`).
+- `.erp-number-decimal`: AutoNumeric formatting for decimals (2 decimal places).
+- `.erp-number-integer`: AutoNumeric formatting for whole numbers.
 
 ### 2. Table/Dense Inputs (`28px` height)
 Used for inline editing inside tables (e.g., line items).
 - `.erp-input-sm`: Applied to small `<input>` and `<select>`.
-- `.erp-input-ts-sm`: Applied to small TomSelect **wrappers** (automatically managed by `initLookup`).
+- `.erp-input-ts-sm`: Applied to small TomSelect **wrappers**.
 
 ## Thymeleaf Fragments
-Always prefer using the standardized fragments in `templates/fragments/inputs.html` instead of writing raw HTML.
+Always prefer using the standardized fragments in `templates/fragments/inputs.html`.
 
 ### Usage Examples:
 
-#### Standard Text Input
+#### Standard Text & Numeric Input
 ```html
-<div th:replace="~{fragments/inputs :: text(field=*{name}, label='Full Name', placeholder='e.g. John Doe')}"></div>
+<div th:replace="~{fragments/inputs :: text(field='name', label='Full Name')}"></div>
+<div th:replace="~{fragments/inputs :: decimal(field='price', label='Price')}"></div>
 ```
 
-#### TomSelect Autocomplete
+#### HTMX Form Submission
+Setiap form wajib mendukung submit asinkron untuk menjaga UI state:
 ```html
-<!-- fragment inside templates/fragments/inputs.html -->
-<div th:replace="~{fragments/inputs :: autocomplete(field=*{facilityId}, label='Facility', id='header-facility', required=true)}"></div>
+<form th:action="@{...}" method="post" hx-post hx-target="#alert-container" hx-swap="innerHTML">
+    <div id="alert-container">
+        <div th:replace="~{fragments/alerts :: success}"></div>
+        <div th:replace="~{fragments/alerts :: error}"></div>
+    </div>
+    ...
+</form>
 ```
 
 ## Best Practices & JavaScript Initialization
 
-### 1. The Global `initLookup` Function
-All autocompletes **MUST** be initialized using the global `initLookup` function defined in `master.html`. **DILARANG** melakukan inisialisasi `new TomSelect()` secara manual untuk lookup standar.
+### 1. Global Auto-Initialization
+Sistem secara otomatis menginisialisasi komponen berikut tanpa perlu script manual di setiap halaman:
+- **Numeric**: Elemen dengan class `.erp-number-*`.
+- **Autocomplete**: Elemen `.erp-input-ts` yang memiliki atribut `data-lookup-path`.
 
-**Example Implementation:**
+**Aturan Wajib: Trinity Data (ID, Name, SubText)**
+Untuk mencegah dropdown terlihat kosong saat mode Edit atau setelah error validasi, setiap implementasi Autocomplete **WAJIB** menyertakan:
+1.  **ID (Value)**: Disimpan ke database.
+2.  **Name (Text)**: Label utama yang terlihat.
+3.  **SubText (Code)**: Informasi sekunder (kode) di bawah nama.
+
+Developer wajib memastikan Request DTO memiliki field penampung untuk Name dan SubText tersebut (contoh: `brandName`, `brandCode`).
+
+### 2. The Global `initLookup` Function
+Jika butuh inisialisasi manual (misal: cascading), gunakan:
 ```javascript
-window.addEventListener('load', function() {
-    const el = document.getElementById('header-facility');
-    // Global function handles: wrapper classes, SSR sync, and debouncing
-    const ts = initLookup(el, 'inventory/facilities');
-    
-    // Optional: Add custom event listeners
-    if (ts) {
-        ts.on('change', (val) => { ... });
-    }
-});
+const ts = initLookup(element, 'module/path', parentProvider);
 ```
+- `lookupPath`: String path API (contoh: `'inventory/products'`).
+- `parentProvider`: Callback function untuk filter data berdasarkan field lain.
 
 ### 2. Height Consistency
 The `initLookup` function automatically detects if an element is inside a `.line-row` table and applies `.erp-input-ts-sm`, otherwise it applies `.erp-input-ts`. This ensures that the TomSelect component matches the `32px` or `28px` height of adjacent `.erp-input` fields.
