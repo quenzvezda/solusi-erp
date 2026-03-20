@@ -16,6 +16,13 @@ spring:
   config:
     import: "optional:file:.env[.properties]"
   web:
+    resources:
+      chain:
+        enabled: true
+        strategy:
+          content:
+            enabled: true
+            paths: /**
     error:
       whitelabel:
         enabled: false # Mematikan halaman putih bawaan Spring Boot
