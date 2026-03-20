@@ -20,5 +20,6 @@ public interface BrandMapper {
 
     BrandRequest toRequest(Brand entity);
 
+    @org.mapstruct.Mapping(target = "id", ignore = true)
     void updateEntityFromRequest(BrandRequest request, @MappingTarget Brand entity);
 }

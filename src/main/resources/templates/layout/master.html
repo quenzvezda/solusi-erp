@@ -43,6 +43,19 @@
     <!-- TomSelect (Autocomplete) JS -->
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2/dist/js/tom-select.complete.min.js" defer></script>
     
+    <!-- Global i18n for JavaScript -->
+    <script th:inline="javascript">
+        window.ErpI18n = {
+            errorTitle: /*[[#{msg.error.ajax.title}]]*/ 'An Error Occurred',
+            serverError: /*[[#{msg.error.ajax.server}]]*/ 'An unexpected server error occurred.',
+            networkError: /*[[#{msg.error.ajax.network}]]*/ 'Connection error. Please check your network.',
+            successGeneric: /*[[#{msg.success.ajax.generic}]]*/ 'Action completed successfully.'
+        };
+    </script>
+
+    <!-- ERP Form Handler (AJAX) -->
+    <script th:src="@{/js/erp-form-handler.js}" defer></script>
+    
     <!-- Global Utilities & Autocomplete Initialization -->
     <script>
         // Global Debounce Function
@@ -163,7 +176,44 @@
                     ts.clearOptions();
                     ts.load('');
                 });
+            } else {
+                // SMART RE-SEARCH: Optimized to prevent text duplication
+                ts.on('dropdown_open', () => {
+                    const value = ts.getValue();
+                    if (value && ts.options[value]) {
+                        const currentName = ts.options[value].name;
+                        
+                        // Hide the selected item(s) visually to prevent duplication
+                        ts.control.querySelectorAll('.item').forEach(item => {
+                            item.style.display = 'none';
+                        });
+                        
+                        // Set the textbox value for editing
+                        ts.setTextboxValue(currentName);
+                        
+                        // Trigger search with current value
+                        ts.load(currentName);
+                    }
+                });
+
+                ts.on('dropdown_close', () => {
+                    // Restore visual items when closed
+                    ts.control.querySelectorAll('.item').forEach(item => {
+                        item.style.display = '';
+                    });
+                    
+                    // Clear the textbox so it doesn't linger
+                    if (ts.getValue()) {
+                        ts.setTextboxValue('');
+                    }
+                });
             }
+            
+            // Dispatch a custom event so other scripts can hook into it
+            el.dispatchEvent(new CustomEvent('erp:lookup-initialized', { 
+                bubbles: true, 
+                detail: { tomselect: ts } 
+            }));
 
             return ts;
         }

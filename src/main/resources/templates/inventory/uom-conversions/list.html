@@ -10,8 +10,8 @@
             <div class="container-xl">
                 <div class="row g-2 align-items-center">
                     <div class="col">
-                        <h2 class="page-title" th:text="#{label.uom-conversion.title}">Product UoM Conversion</h2>
-                        <div class="text-secondary mt-1" th:text="#{label.uom-conversion.subtitle}">Manage unit conversion factors for specific products.</div>
+                        <h2 class="page-title" th:text="#{label.uom-conversion.title}">Daftar Konversi</h2>
+                        <div class="text-secondary mt-1" th:text="#{label.uom-conversion.subtitle}">Kelola faktor konversi satuan untuk produk tertentu.</div>
                     </div>
                     <!-- Page title actions -->
                     <div class="col-auto ms-auto d-print-none" sec:authorize="hasAuthority('UOM-CONVERSION_CREATE')">
@@ -19,7 +19,7 @@
                             <a th:href="@{/inventory/uom-conversions/create}"
                                 class="btn btn-primary d-none d-sm-inline-block">
                                 <i class="ti ti-plus"></i>
-                                <span th:text="#{label.uom-conversion.add}">Add New Conversion</span>
+                                <span th:text="#{label.uom-conversion.add}">Tambah Konversi</span>
                             </a>
                         </div>
                     </div>
@@ -31,30 +31,19 @@
         <div class="page-body">
             <div class="container-xl">
                 <!-- Alerts -->
-                <div th:if="${successMessage}" class="alert alert-success alert-dismissible" role="alert">
-                    <div class="d-flex">
-                        <div><i class="ti ti-check icon alert-icon"></i></div>
-                        <div th:text="${successMessage}">Success!</div>
-                    </div>
-                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                </div>
-                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
-                    <div class="d-flex">
-                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
-                        <div th:text="${errorMessage}">Error!</div>
-                    </div>
-                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                </div>
+                <div th:replace="~{fragments/alerts :: success}"></div>
+                <div th:replace="~{fragments/alerts :: error}"></div>
 
                 <div class="card">
                     <div class="card-body border-bottom py-3">
-                        <div class="d-flex">
-                            <div class="text-secondary">
-                                <!-- Future: Page Size Selector -->
-                            </div>
+                        <div class="d-flex align-items-center">
                             <div class="ms-auto text-secondary">
-                                <form th:action="@{/inventory/uom-conversions}" method="get" class="input-icon">
-                                    <input type="text" name="keyword" th:value="${keyword}"
+                                <form th:action="@{/inventory/uom-conversions}" method="get" class="input-icon"
+                                      hx-get="/inventory/uom-conversions"
+                                      hx-target="#uom-conversion-table-container"
+                                      hx-trigger="keyup changed delay:500ms from:#search-input"
+                                      hx-push-url="true">
+                                    <input type="text" id="search-input" name="keyword" th:value="${keyword}"
                                         class="form-control form-control-sm" th:placeholder="#{label.search}">
                                     <span class="input-icon-addon">
                                         <i class="ti ti-search"></i>
@@ -63,83 +52,59 @@
                             </div>
                         </div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-vcenter card-table">
-                            <thead>
-                                <tr>
-                                    <th th:replace="~{fragments/table :: sortable('product.name', #{label.uom-conversion.product})}">Product</th>
-                                    <th th:replace="~{fragments/table :: sortable('fromUom.name', #{label.uom-conversion.from-uom})}">From UoM</th>
-                                    <th th:replace="~{fragments/table :: sortable('toUom.name', #{label.uom-conversion.to-uom})}">To UoM (Base)</th>
-                                    <th th:replace="~{fragments/table :: sortable('conversionFactor', #{label.uom-conversion.factor})}">Factor</th>
-                                    <th class="w-1" th:text="#{label.actions}">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="item : ${page.content}">
-                                    <td>
-                                        <div class="font-weight-medium" th:text="${item.productName}">Product Name</div>
-                                        <div class="text-secondary small" th:text="${item.productCode}">CODE</div>
-                                    </td>
-                                    <td th:text="${item.fromUomName}">From UoM</td>
-                                    <td th:text="${item.toUomName}">To UoM</td>
-                                    <td class="font-weight-medium" th:text="${#numbers.formatDecimal(item.conversionFactor, 1, 'POINT', 2, 'COMMA')}">1.00</td>
-                                    <td>
-                                        <div class="btn-list flex-nowrap">
-                                            <a th:href="@{/inventory/uom-conversions/edit/{id}(id=${item.id})}"
-                                                class="btn btn-white btn-sm"
-                                                sec:authorize="hasAuthority('UOM-CONVERSION_UPDATE')"
-                                                th:text="#{label.edit}">
-                                                Edit
-                                            </a>
-                                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                                                th:data-bs-target="'#modal-delete-' + ${item.id}"
-                                                sec:authorize="hasAuthority('UOM-CONVERSION_DELETE')"
-                                                th:text="#{label.delete}">
-                                                Delete
-                                            </button>
-                                        </div>
-
-                                        <!-- Delete Modal -->
-                                        <div class="modal modal-blur fade" th:id="'modal-delete-' + ${item.id}"
-                                            tabindex="-1" role="dialog" aria-hidden="true">
-                                            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-                                                <div class="modal-content">
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                        aria-label="Close"></button>
-                                                    <div class="modal-status bg-danger"></div>
-                                                    <div class="modal-body text-center py-4">
-                                                        <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
-                                                        <h3 th:text="#{label.uom-conversion.delete.confirm.title}">Confirm Delete</h3>
-                                                        <div class="text-secondary"
-                                                            th:text="#{label.uom-conversion.delete.confirm.text(${item.productName + ' (' + item.fromUomName + ')'})}">
-                                                            Are you sure you want to delete conversion?</div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <div class="w-100">
-                                                            <div class="row">
-                                                                <div class="col"><a href="#" class="btn w-100" data-bs-dismiss="modal" th:text="#{label.cancel}">Cancel</a></div>
-                                                                <div class="col">
-                                                                    <form th:action="@{/inventory/uom-conversions/delete/{id}(id=${item.id})}" method="post">
-                                                                        <button type="submit" class="btn btn-danger w-100" th:text="#{label.delete}">Delete</button>
-                                                                    </form>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                    
+                    <div id="uom-conversion-table-container" th:fragment="uom-conversion-table">
+                        <div class="table-responsive">
+                            <table class="table table-vcenter card-table">
+                                <thead>
+                                    <tr>
+                                        <th th:replace="~{fragments/table :: sortable('product.name', #{label.uom-conversion.product})}">Produk</th>
+                                        <th th:replace="~{fragments/table :: sortable('fromUom.name', #{label.uom-conversion.from-uom})}">Satuan Asal</th>
+                                        <th th:replace="~{fragments/table :: sortable('toUom.name', #{label.uom-conversion.to-uom})}">Tujuan (Dasar)</th>
+                                        <th th:replace="~{fragments/table :: sortable('conversionFactor', #{label.uom-conversion.factor})}">Faktor</th>
+                                        <th class="w-1 text-end" th:text="#{label.actions}">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${page.content}">
+                                        <td>
+                                            <div class="font-weight-medium" th:text="${item.productName}">Product Name</div>
+                                            <div class="text-secondary small" th:text="${item.productCode}">CODE</div>
+                                        </td>
+                                        <td th:text="${item.fromUomName}">From UOM</td>
+                                        <td th:text="${item.toUomName}">To UOM</td>
+                                        <td>
+                                            <span class="badge bg-blue-lt" th:text="${item.conversionFactor}">1.00</span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-list flex-nowrap justify-content-end">
+                                                <a th:href="@{/inventory/uom-conversions/edit/{id}(id=${item.id})}"
+                                                    class="btn btn-white btn-sm" sec:authorize="hasAuthority('UOM-CONVERSION_UPDATE')">
+                                                    <i class="ti ti-edit me-1"></i>
+                                                    <span th:text="#{label.edit}">Edit</span>
+                                                </a>
+                                                <form th:action="@{/inventory/uom-conversions/delete/{id}(id=${item.id})}"
+                                                      method="post" 
+                                                      th:data-confirm-msg="#{label.uom-conversion.delete.confirm.text(${item.productName})}"
+                                                      onsubmit="return confirm(this.getAttribute('data-confirm-msg'))"
+                                                      sec:authorize="hasAuthority('UOM-CONVERSION_DELETE')">
+                                                    <button type="submit" class="btn btn-white btn-sm text-danger">
+                                                        <i class="ti ti-trash me-1"></i>
+                                                        <span th:text="#{label.delete}">Delete</span>
+                                                    </button>
+                                                </form>
                                             </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr th:if="${page.totalElements == 0}">
-                                    <td colspan="5" class="text-center text-secondary py-4"
-                                        th:text="#{label.uom-conversion.empty}">No data found.</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${page.totalElements == 0}">
+                                        <td colspan="5" class="text-center text-secondary py-4" th:text="#{label.uom-conversion.empty}">Tidak ada data konversi.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Pagination -->
+                        <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                     </div>
-                    <!-- Pagination -->
-                    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                 </div>
             </div>
         </div>

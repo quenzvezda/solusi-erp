@@ -1,18 +1,19 @@
 package com.solusi.erp.inventory.controller;
 
+import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.inventory.dto.BrandRequest;
+import com.solusi.erp.inventory.dto.BrandResponse;
 import com.solusi.erp.inventory.service.BrandService;
-import com.solusi.erp.util.HtmxResponseUtility;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -46,36 +47,20 @@ public class BrandController {
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('BRAND_CREATE')")
-    public String create(@Valid @ModelAttribute("brandRequest") BrandRequest request,
-                         BindingResult bindingResult,
-                         @RequestHeader(value = "HX-Request", required = false) boolean htmxRequest,
-                         Model model,
-                         HttpServletResponse response,
-                         RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasErrors()) {
-            if (htmxRequest) return HtmxResponseUtility.returnErrorFragment();
-            return "inventory/brands/form";
-        }
-
-        try {
-            service.create(request);
-            String message = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-            
-            if (htmxRequest) return HtmxResponseUtility.redirect(response, "/inventory/brands");
-            return "redirect:/inventory/brands";
-        } catch (Exception e) {
-            if (htmxRequest) return HtmxResponseUtility.handleException(model, e.getMessage());
-            model.addAttribute("errorMessage", e.getMessage());
-            return "inventory/brands/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<BrandResponse>> create(@Valid @RequestBody BrandRequest request) {
+        BrandResponse data = service.create(request);
+        String msg = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(msg, data));
     }
 
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('BRAND_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
         try {
-            model.addAttribute("brandRequest", service.getEditData(id));
+            var viewDto = service.getFormView(id);
+            model.addAttribute("brandRequest", viewDto.getRequest());
+            model.addAttribute("auditInfo", viewDto.getAudit());
             return "inventory/brands/form";
         } catch (Exception e) {
             model.addAttribute("errorMessage", e.getMessage());
@@ -85,30 +70,11 @@ public class BrandController {
 
     @PostMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('BRAND_UPDATE')")
-    public String update(@PathVariable Long id,
-                         @Valid @ModelAttribute("brandRequest") BrandRequest request,
-                         BindingResult bindingResult,
-                         @RequestHeader(value = "HX-Request", required = false) boolean htmxRequest,
-                         Model model,
-                         HttpServletResponse response,
-                         RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasErrors()) {
-            if (htmxRequest) return HtmxResponseUtility.returnErrorFragment();
-            return "inventory/brands/form";
-        }
-
-        try {
-            service.update(id, request);
-            String message = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-            
-            if (htmxRequest) return HtmxResponseUtility.redirect(response, "/inventory/brands");
-            return "redirect:/inventory/brands";
-        } catch (Exception e) {
-            if (htmxRequest) return HtmxResponseUtility.handleException(model, e.getMessage());
-            model.addAttribute("errorMessage", e.getMessage());
-            return "inventory/brands/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<BrandResponse>> update(@PathVariable Long id, @Valid @RequestBody BrandRequest request) {
+        BrandResponse data = service.update(id, request);
+        String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.ok(ApiResponse.success(msg, data));
     }
 
     @PostMapping("/delete/{id}")

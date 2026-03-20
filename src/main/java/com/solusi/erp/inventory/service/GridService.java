@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.service;
 
+import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.inventory.dto.GridRequest;
 import com.solusi.erp.inventory.dto.GridResponse;
@@ -17,7 +18,8 @@ public interface GridService {
     Page<GridResponse> findAll(String keyword, Long facilityId, Pageable pageable);
     GridResponse findById(Long id);
     GridRequest getEditData(Long id);
-    void create(GridRequest request);
-    void update(Long id, GridRequest request);
+    FormViewDto<GridRequest, Void, GridResponse> getFormView(Long id);
+    GridResponse create(GridRequest request);
+    GridResponse update(Long id, GridRequest request);
     void delete(Long id);
 }

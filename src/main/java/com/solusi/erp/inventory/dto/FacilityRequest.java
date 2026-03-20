@@ -20,21 +20,24 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public class FacilityRequest extends BaseAuditResponse {
 
-    @Size(max = 50, message = "{validation.size}")
+    @Size(max = 50, message = "{label.facility.code} {validation.size.suffix}")
     private String code;
 
-    @NotBlank(message = "{validation.notblank}")
-    @Size(max = 150, message = "{validation.size}")
+    @NotBlank(message = "{label.facility.name} {validation.notblank.suffix}")
+    @Size(max = 150, message = "{label.facility.name} {validation.size.suffix}")
     private String name;
 
-    @NotNull(message = "{validation.notnull}")
+    @NotNull(message = "{label.facility.owner} {validation.notnull.suffix}")
     private Long ownerId;
 
+    @NotBlank(message = "{label.party.address} {validation.notblank.suffix}")
     private String addressLine1;
 
+    @NotNull(message = "{label.geographic.city} {validation.notnull.suffix}")
     private Long cityId;
 
-    @Size(max = 20, message = "{validation.size}")
+    @NotBlank(message = "{label.geographic.postal_code} {validation.notblank.suffix}")
+    @Size(max = 20, message = "{label.geographic.postal_code} {validation.size.suffix}")
     private String postalCode;
 
     private String note;

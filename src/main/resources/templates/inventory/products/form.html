@@ -7,7 +7,7 @@
 </head>
 
 <body th:replace="~{layout/master :: layout(~{:: .product-form-content}, ~{:: #page-specific-scripts})}">
-    <div class="product-form-content">
+    <div class="product-form-content" id="product-form-content" th:fragment="product-form-content">
 
         <!-- Page Header -->
         <div class="page-header d-print-none">
@@ -28,83 +28,61 @@
         <div class="page-body">
             <div class="container-xl">
 
-                <!-- Alert Placeholder for HTMX Errors -->
-                <div id="alert-container">
-                    <div th:replace="~{fragments/alerts :: success}"></div>
-                    <div th:replace="~{fragments/alerts :: error}"></div>
-                </div>
-
                 <form th:action="${productRequest.id == null
                         ? '/inventory/products/create'
                         : '/inventory/products/edit/' + productRequest.id}"
-                    th:object="${productRequest}"
-                    method="post"
-                    class="card"
-                    hx-post
-                    hx-target="#alert-container"
-                    hx-swap="innerHTML"
-                    hx-indicator="#loading-indicator">
+                      th:object="${productRequest}"
+                      method="post"
+                      class="card"
+                      id="product-form"
+                      data-ajax-form="true"
+                      data-redirect-on-success="/inventory/products">
+
+                    <!-- CSRF Token (Required for AJAX) -->
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                    <!-- UI Metadata (Used for display initial labels in Edit Mode) -->
+                    <input type="hidden" name="categoryType" id="hidden-category-type" 
+                           th:value="${productUIForm != null ? productUIForm.categoryType : ''}">
 
                     <div class="card-body">
-
-                        <!-- Global Binding Error Alert -->
-                        <div th:if="${#fields.hasAnyErrors()}" class="alert alert-danger" role="alert">
-                            <div class="d-flex">
-                                <div><i class="ti ti-alert-triangle icon alert-icon"></i></div>
-                                <div>
-                                    <h4 class="alert-title" th:text="#{msg.error.validation.title}">Terdapat Kesalahan
-                                    </h4>
-                                    <div class="text-secondary" th:text="#{msg.error.validation.subtitle}">
-                                        Mohon periksa kembali form di bawah ini.
-                                    </div>
-                                    <ul class="mb-0 mt-2">
-                                        <li th:each="err : ${#fields.allErrors()}" th:text="${err}">Input tidak valid
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- Alert Placeholder inside card-body for global errors -->
+                        <div class="alert-container"></div>
 
                         <div class="row">
-
-                            <!-- ===================== -->
-                            <!-- Section: Basic Info   -->
-                            <!-- ===================== -->
+                            <!-- Section: Basic Info -->
                             <div class="col-md-12">
                                 <h3 class="card-title" th:text="#{label.product.section.basic}">Informasi Dasar</h3>
                             </div>
 
-                            <!-- Column 1 -->
                             <div class="col-md-4">
                                 <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.product.code}, isReadonly=true, extraClass='bg-light', placeholder=${productRequest.id == null ? '[ Auto Generated ]' : ''})}"></div>
-
                                 <div th:replace="~{fragments/inputs :: text(field='name', label=#{label.product.name}, required=true)}"></div>
-
                                 <div th:replace="~{fragments/inputs :: text(field='barcode', label=#{label.product.barcode}, placeholder=#{placeholder.product.barcode})}"></div>
                             </div>
 
-                            <!-- Column 2 -->
                             <div class="col-md-4">
-                                <div th:replace="~{fragments/inputs :: autocomplete(field='categoryId', label=#{label.product.category}, required=true, id='category-select', path='inventory/product-categories',
-                                    initialValue=${productRequest.categoryId}, initialText=${productRequest.categoryName}, initialSubtext=${productRequest.categoryCode})}"></div>
+                                <div th:insert="~{fragments/inputs :: autocomplete(field='categoryId', label=#{label.product.category}, required=true, id='category-select', path='inventory/product-categories',
+                                    initialValue=*{categoryId}, 
+                                    initialText=${productUIForm != null ? productUIForm.categoryName : ''}, 
+                                    initialSubtext=${productUIForm != null ? productUIForm.categoryCode : ''}, 
+                                    initialPayload=${productUIForm != null ? productUIForm.categoryType : ''})}"></div>
 
                                 <div class="mb-3">
                                     <label class="form-label required" th:text="#{label.product.uom}">Satuan Ukur (UoM)</label>
-                                    <select th:field="*{uomId}" id="uom-select" class="form-select erp-input"
-                                        th:classappend="${#fields.hasErrors('uomId')} ? 'is-invalid'">
+                                    <select th:field="*{uomId}" id="uom-select" class="form-select erp-input">
                                         <option value="" th:text="#{label.product.select.uom}">-- Pilih UoM --</option>
                                         <option th:each="u : ${uoms}" th:value="${u.id}"
                                             th:text="${u.name + ' (' + u.code + ')'}"></option>
                                     </select>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('uomId')}"
-                                        th:errors="*{uomId}"></div>
                                 </div>
 
-                                <div th:replace="~{fragments/inputs :: autocomplete(field='brandId', label=#{label.brand}, id='brand-select', path='inventory/brands',
-                                    initialValue=${productRequest.brandId}, initialText=${productRequest.brandName}, initialSubtext=${productRequest.brandCode})}"></div>
+                                <div th:insert="~{fragments/inputs :: autocomplete(field='brandId', label=#{label.brand}, id='brand-select', path='inventory/brands',
+                                    initialValue=*{brandId}, 
+                                    initialText=${productUIForm != null ? productUIForm.brandName : ''}, 
+                                    initialSubtext=${productUIForm != null ? productUIForm.brandCode : ''})}"></div>
                             </div>
 
-                            <!-- Column 3 -->
                             <div class="col-md-4">
                                 <div th:replace="~{fragments/inputs :: text(field='hscode', label=#{label.product.hscode})}"></div>
                                 <div class="mb-3">
@@ -115,13 +93,10 @@
                                 </div>
                             </div>
 
-                            <!-- ========================= -->
-                            <!-- Section: Inventory Mgmt  -->
-                            <!-- ========================= -->
+                            <!-- Section: Inventory Mgmt -->
                             <div class="col-md-12 mt-3 section-stock">
                                 <hr class="my-3">
-                                <h3 class="card-title" th:text="#{label.product.section.inventory}">Manajemen Inventori
-                                </h3>
+                                <h3 class="card-title" th:text="#{label.product.section.inventory}">Manajemen Inventori</h3>
                             </div>
 
                             <div class="col-md-4 section-stock">
@@ -133,22 +108,17 @@
                                 <div class="mb-3">
                                     <label class="form-check form-switch mt-4">
                                         <input class="form-check-input" type="checkbox" th:field="*{isSerialized}">
-                                        <span class="form-check-label" th:text="#{label.product.serialized}">Gunakan
-                                            Nomor Serial</span>
+                                        <span class="form-check-label" th:text="#{label.product.serialized}">Gunakan Nomor Serial</span>
                                     </label>
                                 </div>
                             </div>
 
-                            <!-- =========================== -->
                             <!-- Section: Physical/Logistics -->
-                            <!-- =========================== -->
                             <div class="col-md-12 mt-3 section-stock">
                                 <hr class="my-3">
-                                <h3 class="card-title" th:text="#{label.product.section.physical}">Fisik &amp; Logistik
-                                </h3>
+                                <h3 class="card-title" th:text="#{label.product.section.physical}">Fisik &amp; Logistik</h3>
                             </div>
 
-                            <!-- Weight -->
                             <div class="col-md-6 section-stock">
                                 <div class="mb-3">
                                     <div class="row g-2 mb-2">
@@ -159,48 +129,30 @@
                                             <div th:replace="~{fragments/inputs :: decimal(field='weightGross', label=#{label.product.weight.gross})}"></div>
                                         </div>
                                     </div>
-                                    <select th:field="*{weightUomId}" class="form-select erp-input"
-                                        th:classappend="${#fields.hasErrors('weightUomId')} ? 'is-invalid'">
-                                        <option value="" th:text="#{label.product.select.uom.weight}">-- Pilih Satuan
-                                            Berat --</option>
+                                    <select th:field="*{weightUomId}" class="form-select erp-input">
+                                        <option value="" th:text="#{label.product.select.uom.weight}">-- Pilih Satuan Berat --</option>
                                         <option th:each="u : ${weightUoms}" th:value="${u.id}"
                                             th:text="${u.name + ' (' + u.code + ')'}"></option>
                                     </select>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('weightUomId')}"
-                                        th:errors="*{weightUomId}"></div>
                                 </div>
                             </div>
 
-                            <!-- Dimensions -->
                             <div class="col-md-6 section-stock">
                                 <div class="mb-3">
                                     <label class="form-label" th:text="#{label.product.dimensions}">Dimensi (P x L x T)</label>
                                     <div class="row g-2 mb-2">
-                                        <div class="col-4">
-                                            <div th:replace="~{fragments/inputs :: decimal(field='length', label=null)}"></div>
-                                        </div>
-                                        <div class="col-4">
-                                            <div th:replace="~{fragments/inputs :: decimal(field='width', label=null)}"></div>
-                                        </div>
-                                        <div class="col-4">
-                                            <div th:replace="~{fragments/inputs :: decimal(field='height', label=null)}"></div>
-                                        </div>
+                                        <div class="col-4"><div th:replace="~{fragments/inputs :: decimal(field='length', label=null)}"></div></div>
+                                        <div class="col-4"><div th:replace="~{fragments/inputs :: decimal(field='width', label=null)}"></div></div>
+                                        <div class="col-4"><div th:replace="~{fragments/inputs :: decimal(field='height', label=null)}"></div></div>
                                     </div>
-                                    <select th:field="*{dimensionUomId}" class="form-select erp-input"
-                                        th:classappend="${#fields.hasErrors('dimensionUomId')} ? 'is-invalid'">
-                                        <option value="" th:text="#{label.product.select.uom.dimension}">-- Pilih Satuan
-                                            Dimensi --</option>
+                                    <select th:field="*{dimensionUomId}" class="form-select erp-input">
+                                        <option value="" th:text="#{label.product.select.uom.dimension}">-- Pilih Satuan Dimensi --</option>
                                         <option th:each="u : ${lengthUoms}" th:value="${u.id}"
                                             th:text="${u.name + ' (' + u.code + ')'}"></option>
                                     </select>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('dimensionUomId')}"
-                                        th:errors="*{dimensionUomId}"></div>
                                 </div>
                             </div>
 
-                            <!-- ============= -->
-                            <!-- Section: Note -->
-                            <!-- ============= -->
                             <div class="col-md-12 mt-3">
                                 <hr class="my-3">
                                 <div class="mb-3">
@@ -208,7 +160,6 @@
                                     <textarea th:field="*{note}" class="form-control erp-input" rows="3"></textarea>
                                 </div>
                             </div>
-
                         </div>
 
                         <!-- Record Info (Edit Mode only) -->
@@ -217,7 +168,7 @@
 
                     <div class="card-footer text-end">
                         <div class="d-flex align-items-center">
-                            <div id="loading-indicator" class="htmx-indicator spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                            <div id="loading-indicator" class="spinner-border spinner-border-sm text-primary me-2" role="status" style="display: none;"></div>
                             <a th:href="@{/inventory/products}" class="btn btn-link link-secondary" th:text="#{label.cancel}">Batal</a>
                             <button type="submit" class="btn btn-primary ms-auto">
                                 <i class="ti ti-device-floppy"></i>
@@ -225,51 +176,42 @@
                             </button>
                         </div>
                     </div>
-
                 </form>
             </div>
         </div>
 
-    </div>
+        <script id="page-specific-scripts" th:fragment="pageScripts">
+            /*<![CDATA[*/
+            (function () {
+                const formContent = document.getElementById('product-form-content');
+                if (!formContent) return;
 
-    <div id="page-specific-scripts" th:fragment="pageScripts">
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const categorySelect = document.getElementById('category-select');
-                if (!categorySelect) return;
+                const categoryEl = formContent.querySelector('#category-select');
+                const stockSections = formContent.querySelectorAll('.section-stock');
+                const hiddenCategoryType = formContent.querySelector('#hidden-category-type');
 
-                const stockSections = document.querySelectorAll('.section-stock');
-
-                function toggleSections() {
+                const toggleSections = (ts) => {
                     let type = '';
-                    if (categorySelect.tomselect && categorySelect.tomselect.getValue()) {
-                        const value = categorySelect.tomselect.getValue();
-                        const option = categorySelect.tomselect.options[value];
-                        type = (option && option.payload) ? option.payload.type : '';
+                    if (ts && ts.getValue()) {
+                        const opt = ts.options[ts.getValue()];
+                        type = (opt && opt.payload) ? opt.payload.type : '';
+                        if (hiddenCategoryType) hiddenCategoryType.value = type;
                     } else {
-                        const selectedOption = categorySelect.options[categorySelect.selectedIndex];
-                        type = selectedOption ? selectedOption.getAttribute('data-payload-type') : null;
+                        type = hiddenCategoryType ? hiddenCategoryType.value : '';
                     }
-                    
                     const isStock = type === 'STOCK';
-                    stockSections.forEach(el => {
-                        el.style.display = isStock ? 'block' : 'none';
-                    });
-                }
+                    stockSections.forEach(el => el.style.display = isStock ? 'block' : 'none');
+                };
 
-                function setupTomSelectListener() {
-                    if (categorySelect.tomselect) {
-                        categorySelect.tomselect.on('change', toggleSections);
-                        toggleSections(); // Run once on load
-                    } else {
-                        setTimeout(setupTomSelectListener, 50);
-                    }
-                }
-
-                setupTomSelectListener();
-            });
+                // Listen for the signal from master.html
+                categoryEl.addEventListener('erp:lookup-initialized', function (e) {
+                    const ts = e.detail.tomselect;
+                    ts.on('change', () => toggleSections(ts));
+                    toggleSections(ts);
+                });
+            })();
+            /*]]>*/
         </script>
     </div>
 </body>
-
 </html>

@@ -3,6 +3,19 @@
 ## Overview
 To ensure visual consistency across the Solusi Program ERP, all input elements must follow a unified height, padding, and styling pattern. The **Stock Adjustment** page serves as the "Golden Standard" for these implementations.
 
+## UI Layout Standards
+
+### 1. Standard List Page
+Setiap halaman daftar data (List) wajib mengikuti tata letak berikut untuk konsistensi:
+- **Search Bar**: Harus diletakkan di sisi kanan menggunakan utility `ms-auto`.
+- **Input Icon**: Gunakan class `.input-icon` dengan `.ti-search` sebagai dekorator.
+- **Action Buttons**: 
+  - Gunakan class `.btn-white.btn-sm` untuk tombol aksi di dalam tabel.
+  - Bungkus dalam `.btn-list.flex-nowrap.justify-content-end` agar rapi.
+  - Selalu gunakan icon (Tabler Icons) di samping teks label.
+
+---
+
 ## Standard CSS Classes
 
 ### 1. Standard Form Inputs (`32px` height)
@@ -28,17 +41,18 @@ Always prefer using the standardized fragments in `templates/fragments/inputs.ht
 <div th:replace="~{fragments/inputs :: decimal(field='price', label='Price')}"></div>
 ```
 
-#### HTMX Form Submission
-Setiap form wajib mendukung submit asinkron untuk menjaga UI state:
+#### Hybrid Form Submission
+Setiap form transaksi atau master data kompleks wajib menggunakan pola AJAX untuk menjaga UI state:
 ```html
-<form th:action="@{...}" method="post" hx-post hx-target="#alert-container" hx-swap="innerHTML">
-    <div id="alert-container">
-        <div th:replace="~{fragments/alerts :: success}"></div>
-        <div th:replace="~{fragments/alerts :: error}"></div>
-    </div>
+<form id="product-form"
+      th:action="@{...}"
+      method="post"
+      data-ajax-form="true"
+      data-redirect-on-success="/inventory/products">
     ...
 </form>
 ```
+Gunakan HTMX hanya untuk filter pencarian atau interaksi sederhana yang tidak merusak komponen JavaScript. Lihat **[form-submission.md](form-submission.md)** untuk panduan lengkap.
 
 ## Best Practices & JavaScript Initialization
 
@@ -71,3 +85,10 @@ The `initLookup` function reads the `data-subtext` attribute from the initial `<
 
 ### 4. Validation
 Always include `th:errorclass="is-invalid"` (included by default in fragments) for server-side validation feedback.
+
+**Clean Validation Standard:**
+Untuk menjaga tampilan tetap profesional dan bersih, kita menonaktifkan ikon validasi bawaan (seperti ikon "X" merah) di seluruh jenis input.
+- **Visual**: Hanya menggunakan **Border Merah** yang tegas (`#d63939`).
+- **TomSelect**: Menggunakan class `.is-invalid-ts` pada wrapper untuk memberikan efek border merah yang identik dengan input standar.
+- **Feedback**: Pesan error ditampilkan dalam class `.invalid-feedback` di bawah elemen input.
+

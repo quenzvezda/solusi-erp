@@ -1,16 +1,22 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="~{layout/master :: head(${brandRequest.id == null ? #messages.msg('label.brand.add') : #messages.msg('label.brand.edit')})}"></head>
+<head th:replace="~{layout/master :: head(${brandRequest.id == null
+    ? #messages.msg('label.brand.add')
+    : #messages.msg('label.brand.edit')})}">
+</head>
 
-<body th:replace="~{layout/master :: layout(~{:: .brand-form-content}, ~{})}">
-    <div class="brand-form-content">
+<body th:replace="~{layout/master :: layout(~{:: .brand-form-content}, ~{:: #page-specific-scripts})}">
+    <div class="brand-form-content" id="brand-form-content" th:fragment="brand-form-content">
+
         <!-- Page Header -->
         <div class="page-header d-print-none">
             <div class="container-xl">
                 <div class="row g-2 align-items-center">
                     <div class="col">
-                        <h2 class="page-title" th:text="${brandRequest.id == null ? #messages.msg('label.brand.add') : #messages.msg('label.brand.edit')}">
+                        <h2 class="page-title" th:text="${brandRequest.id == null
+                            ? #messages.msg('label.brand.add')
+                            : #messages.msg('label.brand.edit')}">
                             Tambah Brand Baru
                         </h2>
                     </div>
@@ -22,36 +28,34 @@
         <div class="page-body">
             <div class="container-xl">
 
-                <!-- Alert Placeholder for HTMX Errors -->
-                <div id="alert-container">
-                    <div th:replace="~{fragments/alerts :: success}"></div>
-                    <div th:replace="~{fragments/alerts :: error}"></div>
-                </div>
-
-                <form th:action="${brandRequest.id == null ? '/inventory/brands/create' : '/inventory/brands/edit/' + brandRequest.id}"
-                    th:object="${brandRequest}" 
-                    method="post" 
+                <form th:action="${brandRequest.id == null
+                        ? '/inventory/brands/create'
+                        : '/inventory/brands/edit/' + brandRequest.id}"
+                    th:object="${brandRequest}"
+                    method="post"
                     class="card"
-                    hx-post
-                    hx-target="#alert-container"
-                    hx-swap="innerHTML"
-                    hx-indicator="#loading-indicator">
+                    id="brand-form"
+                    data-ajax-form="true"
+                    data-redirect-on-success="/inventory/brands">
+
+                    <!-- CSRF Token -->
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
                     <div class="card-body">
-                        <div class="row g-3">
+                        <!-- Alert Placeholder inside card-body for global errors -->
+                        <div class="alert-container"></div>
+
+                        <div class="row">
                             <div class="col-md-6">
-                                <!-- Brand Code -->
                                 <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.brand.code}, isReadonly=true, extraClass='bg-light', placeholder=${brandRequest.id == null ? '[ Auto Generated ]' : ''})}"></div>
 
-                                <!-- Brand Name -->
-                                <div th:replace="~{fragments/inputs :: text(field='name', label=#{label.brand.name}, required=true, placeholder=#{placeholder.brand.name})}"></div>
+                                <div th:replace="~{fragments/inputs :: text(field='name', label=#{label.brand.name}, required=true)}"></div>
                             </div>
+
                             <div class="col-md-6">
-                                <!-- Note -->
                                 <div class="mb-3">
                                     <label class="form-label" th:text="#{label.brand.note}">Catatan</label>
-                                    <textarea th:field="*{note}" class="form-control erp-input" rows="4"
-                                        th:placeholder="#{placeholder.brand.note}"></textarea>
+                                    <textarea th:field="*{note}" class="form-control erp-input" rows="5" th:placeholder="#{placeholder.brand.note}"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -59,9 +63,10 @@
                         <!-- Record Info (Edit Mode only) -->
                         <div th:if="${auditInfo != null and auditInfo.id != null}" th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
                     </div>
+
                     <div class="card-footer text-end">
                         <div class="d-flex align-items-center">
-                            <div id="loading-indicator" class="htmx-indicator spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                            <div id="loading-indicator" class="spinner-border spinner-border-sm text-primary me-2" role="status" style="display: none;"></div>
                             <a th:href="@{/inventory/brands}" class="btn btn-link link-secondary" th:text="#{label.cancel}">Batal</a>
                             <button type="submit" class="btn btn-primary ms-auto">
                                 <i class="ti ti-device-floppy"></i>
@@ -69,9 +74,14 @@
                             </button>
                         </div>
                     </div>
+
                 </form>
             </div>
         </div>
+
+    </div>
+
+    <div id="page-specific-scripts" th:fragment="pageScripts">
     </div>
 </body>
 

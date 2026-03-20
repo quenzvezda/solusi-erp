@@ -20,5 +20,6 @@ public interface UnitOfMeasureMapper {
 
     UnitOfMeasureRequest toRequest(UnitOfMeasure entity);
 
+    @org.mapstruct.Mapping(target = "id", ignore = true)
     void updateEntityFromRequest(UnitOfMeasureRequest request, @MappingTarget UnitOfMeasure entity);
 }

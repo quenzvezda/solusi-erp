@@ -1,15 +1,24 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{layout/master :: head(${unitOfMeasureRequest.id == null ? #messages.msg('label.uom.add') : #messages.msg('label.uom.edit')})}"></head>
-<body th:replace="~{layout/master :: layout(~{:: .uom-form-content}, ~{})}">
-    <div class="uom-form-content">
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout/master :: head(${unitOfMeasureRequest.id == null
+    ? #messages.msg('label.uom.add')
+    : #messages.msg('label.uom.edit')})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .uom-form-content}, ~{:: #page-specific-scripts})}">
+    <div class="uom-form-content" id="uom-form-content" th:fragment="uom-form-content">
+
         <!-- Page Header -->
         <div class="page-header d-print-none">
             <div class="container-xl">
                 <div class="row g-2 align-items-center">
                     <div class="col">
-                        <h2 class="page-title" th:text="${unitOfMeasureRequest.id == null ? #messages.msg('label.uom.add') : #messages.msg('label.uom.edit') + ': ' + unitOfMeasureRequest.code}">Form Satuan</h2>
+                        <h2 class="page-title" th:text="${unitOfMeasureRequest.id == null
+                            ? #messages.msg('label.uom.add')
+                            : #messages.msg('label.uom.edit')}">
+                            Tambah Satuan Baru
+                        </h2>
                     </div>
                 </div>
             </div>
@@ -18,50 +27,67 @@
         <!-- Page Body -->
         <div class="page-body">
             <div class="container-xl">
-                
-                <!-- Alert Placeholder for HTMX Errors -->
-                <div id="alert-container">
-                    <div th:replace="~{fragments/alerts :: success}"></div>
-                    <div th:replace="~{fragments/alerts :: error}"></div>
-                </div>
 
-                <form th:action="${unitOfMeasureRequest.id == null ? '/inventory/unit-of-measures/create' : '/inventory/unit-of-measures/edit/' + unitOfMeasureRequest.id}" 
-                      th:object="${unitOfMeasureRequest}" 
-                      method="post" 
-                      class="card"
-                      hx-post
-                      hx-target="#alert-container"
-                      hx-swap="innerHTML"
-                      hx-indicator="#loading-indicator">
+                <form th:action="${unitOfMeasureRequest.id == null
+                        ? '/inventory/unit-of-measures/create'
+                        : '/inventory/unit-of-measures/edit/' + unitOfMeasureRequest.id}"
+                    th:object="${unitOfMeasureRequest}"
+                    method="post"
+                    class="card"
+                    id="uom-form"
+                    data-ajax-form="true"
+                    data-redirect-on-success="/inventory/unit-of-measures">
+
+                    <!-- CSRF Token -->
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
                     <div class="card-body">
-                        <div class="row g-3">
+                        <!-- Alert Placeholder inside card-body for global errors -->
+                        <div class="alert-container"></div>
+
+                        <div class="row">
                             <div class="col-md-6">
-                                <!-- UoM Code -->
-                                <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.uom.code}, required=true, placeholder=#{placeholder.uom.code}, extraClass='text-uppercase')}"></div>
-                                <small class="form-hint" th:text="#{label.uom.code.hint}">Digunakan sebagai simbol di aplikasi (contoh: KG, PCS).</small>
+                                <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.uom.code}, required=true, placeholder=#{placeholder.uom.code})}"></div>
+                                <div class="text-secondary small mt-n2 mb-3" th:text="#{label.uom.code.hint}">Dipakai sebagai simbol...</div>
 
-                                <!-- UoM Name -->
                                 <div th:replace="~{fragments/inputs :: text(field='name', label=#{label.uom.name}, required=true, placeholder=#{placeholder.uom.name})}"></div>
+                            </div>
 
-                                <!-- UoM Type -->
-                                <div th:replace="~{fragments/inputs :: select(field='type', label=#{label.uom.type}, required=true, options=${types})}"></div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label required" th:text="#{label.uom.type}">Tipe</label>
+                                    <select th:field="*{type}" class="form-select erp-input">
+                                        <option value="" th:text="#{label.product.select.uom}">-- Pilih Tipe --</option>
+                                        <option th:each="t : ${types}" th:value="${t}"
+                                            th:text="${#messages.msg('label.uom.type.' + t.name().toLowerCase())}"></option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Record Info (Edit Mode only) -->
                         <div th:if="${auditInfo != null and auditInfo.id != null}" th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
                     </div>
+
                     <div class="card-footer text-end">
                         <div class="d-flex align-items-center">
-                            <div id="loading-indicator" class="htmx-indicator spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                            <div id="loading-indicator" class="spinner-border spinner-border-sm text-primary me-2" role="status" style="display: none;"></div>
                             <a th:href="@{/inventory/unit-of-measures}" class="btn btn-link link-secondary" th:text="#{label.cancel}">Batal</a>
-                            <button type="submit" class="btn btn-primary ms-auto" th:text="#{label.save}">Simpan</button>
+                            <button type="submit" class="btn btn-primary ms-auto">
+                                <i class="ti ti-device-floppy"></i>
+                                <span th:text="#{label.save}">Simpan</span>
+                            </button>
                         </div>
                     </div>
+
                 </form>
             </div>
         </div>
+
+    </div>
+
+    <div id="page-specific-scripts" th:fragment="pageScripts">
     </div>
 </body>
+
 </html>

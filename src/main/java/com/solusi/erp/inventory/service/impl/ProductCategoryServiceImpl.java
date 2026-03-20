@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.service.impl;
 
+import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.service.SequenceGeneratorService;
 import com.solusi.erp.inventory.dto.ProductCategoryRequest;
@@ -63,30 +64,45 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public FormViewDto<ProductCategoryRequest, Void, ProductCategoryResponse> getFormView(Long id) {
+        ProductCategory entity = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.product-category.notfound")));
+
+        return FormViewDto.<ProductCategoryRequest, Void, ProductCategoryResponse>builder()
+                .request(mapper.toRequest(entity))
+                .audit(mapper.toResponse(entity))
+                .ui(null)
+                .build();
+    }
+
+    @Override
     @Transactional
-    public void create(ProductCategoryRequest request) {
+    public ProductCategoryResponse create(ProductCategoryRequest request) {
         ProductCategory entity = mapper.toEntity(request);
         
         // Auto-generate code
         String generatedCode = sequenceGeneratorService.generate("PRODUCT_CATEGORY");
         entity.setCode(generatedCode);
         
-        repository.save(entity);
+        ProductCategory savedEntity = repository.save(entity);
+        return mapper.toResponse(savedEntity);
     }
 
     @Override
     @Transactional
-    public void update(Long id, ProductCategoryRequest request) {
+    public ProductCategoryResponse update(Long id, ProductCategoryRequest request) {
         ProductCategory entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.product-category.notfound")));
 
-        // Validate unique code excluding current id if user provided a custom code (optional, currently readonly in UI)
+        // Validate unique code excluding current id
         if (StringUtils.hasText(request.getCode()) && repository.existsByCodeAndIdNot(request.getCode(), id)) {
             throw new RuntimeException(getMessage("msg.error.product-category.duplicate-code"));
         }
 
         mapper.updateEntityFromRequest(request, entity);
-        repository.save(entity);
+        ProductCategory updatedEntity = repository.save(entity);
+        return mapper.toResponse(updatedEntity);
     }
 
     @Override
@@ -101,7 +117,6 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
     @Override
     @Transactional(readOnly = true)
     public List<LookupDto> lookupCategories(String keyword, int limit) {
-        // We use Pageable.ofSize(limit) or simple find with keyword
         return repository.search(keyword, Pageable.ofSize(limit))
                 .getContent()
                 .stream()

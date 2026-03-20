@@ -19,11 +19,11 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public class BrandRequest extends BaseAuditResponse {
 
-    @Size(max = 50, message = "{validation.size}")
+    @Size(max = 50, message = "{label.brand.code} {validation.size.suffix}")
     private String code;
 
-    @NotBlank(message = "{validation.notblank}")
-    @Size(max = 100, message = "{validation.size}")
+    @NotBlank(message = "{label.brand.name} {validation.notblank.suffix}")
+    @Size(max = 100, message = "{label.brand.name} {validation.size.suffix}")
     private String name;
 
     private String note;

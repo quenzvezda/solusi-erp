@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.service.impl;
 
+import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.service.SequenceGeneratorService;
 import com.solusi.erp.inventory.dto.FacilityRequest;
@@ -84,17 +85,31 @@ public class FacilityServiceImpl implements FacilityService {
     }
 
     @Override
-    @Transactional
-    public void create(FacilityRequest request) {
-        Facility entity = mapper.toEntity(request);
-        String code = sequenceGeneratorService.generate("FACILITY");
-        entity.setCode(code);
-        repository.save(entity);
+    @Transactional(readOnly = true)
+    public FormViewDto<FacilityRequest, Void, FacilityResponse> getFormView(Long id) {
+        Facility entity = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.facility.notfound")));
+
+        return FormViewDto.<FacilityRequest, Void, FacilityResponse>builder()
+                .request(mapper.toRequest(entity))
+                .audit(mapper.toResponse(entity))
+                .ui(null)
+                .build();
     }
 
     @Override
     @Transactional
-    public void update(Long id, FacilityRequest request) {
+    public FacilityResponse create(FacilityRequest request) {
+        Facility entity = mapper.toEntity(request);
+        String code = sequenceGeneratorService.generate("FACILITY");
+        entity.setCode(code);
+        Facility savedEntity = repository.save(entity);
+        return mapper.toResponse(savedEntity);
+    }
+
+    @Override
+    @Transactional
+    public FacilityResponse update(Long id, FacilityRequest request) {
         Facility entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.facility.notfound")));
 
@@ -103,7 +118,8 @@ public class FacilityServiceImpl implements FacilityService {
         }
 
         mapper.updateEntityFromRequest(request, entity);
-        repository.save(entity);
+        Facility updatedEntity = repository.save(entity);
+        return mapper.toResponse(updatedEntity);
     }
 
     @Override

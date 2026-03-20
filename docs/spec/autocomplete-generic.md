@@ -64,3 +64,5 @@ const tsChild = initLookup(childEl, 'inventory/bins', () => {
 2.  **SSR Synchronization**: Sinkronisasi otomatis data awal dari server (mencegah teks hilang saat load).
 3.  **Debouncing**: Penundaan request (150ms) untuk menghemat beban server.
 4.  **HTMX Compatibility**: Otomatis re-init setelah swap HTMX selesai.
+5.  **Smart Re-Search UX**: Saat dropdown diklik dan sudah memiliki nilai, label teks otomatis masuk ke kotak pencarian (input) untuk memudahkan edit tanpa harus menghapus pilihan lama.
+

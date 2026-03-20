@@ -1,15 +1,24 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{layout/master :: head(${productCategoryRequest.id == null ? #messages.msg('label.product.category.add') : #messages.msg('label.product.category.edit')})}"></head>
-<body th:replace="~{layout/master :: layout(~{:: .product-category-form-content}, ~{})}">
-    <div class="product-category-form-content">
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout/master :: head(${productCategoryRequest.id == null
+    ? #messages.msg('label.product.category.add')
+    : #messages.msg('label.product.category.edit')})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .product-category-form-content}, ~{:: #page-specific-scripts})}">
+    <div class="product-category-form-content" id="product-category-form-content" th:fragment="product-category-form-content">
+
         <!-- Page Header -->
         <div class="page-header d-print-none">
             <div class="container-xl">
                 <div class="row g-2 align-items-center">
                     <div class="col">
-                        <h2 class="page-title" th:text="${productCategoryRequest.id == null ? #messages.msg('label.product.category.add') : #messages.msg('label.product.category.edit') + ': ' + productCategoryRequest.name}">Form Kategori</h2>
+                        <h2 class="page-title" th:text="${productCategoryRequest.id == null
+                            ? #messages.msg('label.product.category.add')
+                            : #messages.msg('label.product.category.edit')}">
+                            Tambah Kategori Baru
+                        </h2>
                     </div>
                 </div>
             </div>
@@ -18,49 +27,44 @@
         <!-- Page Body -->
         <div class="page-body">
             <div class="container-xl">
-                
-                <!-- Alert Placeholder for HTMX Errors -->
-                <div id="alert-container">
-                    <div th:replace="~{fragments/alerts :: success}"></div>
-                    <div th:replace="~{fragments/alerts :: error}"></div>
-                </div>
 
-                <form th:action="${productCategoryRequest.id == null ? '/inventory/product-categories/create' : '/inventory/product-categories/edit/' + productCategoryRequest.id}" 
-                      th:object="${productCategoryRequest}" 
-                      method="post" 
-                      class="card"
-                      hx-post
-                      hx-target="#alert-container"
-                      hx-swap="innerHTML"
-                      hx-indicator="#loading-indicator">
+                <form th:action="${productCategoryRequest.id == null
+                        ? '/inventory/product-categories/create'
+                        : '/inventory/product-categories/edit/' + productCategoryRequest.id}"
+                    th:object="${productCategoryRequest}"
+                    method="post"
+                    class="card"
+                    id="product-category-form"
+                    data-ajax-form="true"
+                    data-redirect-on-success="/inventory/product-categories">
+
+                    <!-- CSRF Token -->
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
                     <div class="card-body">
-                        <div class="row g-3">
+                        <!-- Alert Placeholder inside card-body for global errors -->
+                        <div class="alert-container"></div>
+
+                        <div class="row">
                             <div class="col-md-6">
-                                <!-- Category Code -->
                                 <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.product.category.code}, isReadonly=true, extraClass='bg-light', placeholder=${productCategoryRequest.id == null ? '[ Auto Generated ]' : ''})}"></div>
 
-                                <!-- Category Name -->
-                                <div th:replace="~{fragments/inputs :: text(field='name', label=#{label.product.category.name}, required=true, placeholder=#{placeholder.product.category.name})}"></div>
+                                <div th:replace="~{fragments/inputs :: text(field='name', label=#{label.product.category.name}, required=true)}"></div>
 
-                                <!-- Category Type -->
                                 <div class="mb-3">
                                     <label class="form-label required" th:text="#{label.product.category.type}">Tipe</label>
-                                    <div class="form-selectgroup">
-                                        <label class="form-selectgroup-item" th:each="type : ${types}">
-                                            <input type="radio" th:field="*{type}" th:value="${type}" class="form-selectgroup-input">
-                                            <span class="form-selectgroup-label" th:text="#{'label.product.category.type.' + ${type.name().toLowerCase()}}">TYPE</span>
-                                        </label>
-                                    </div>
-                                    <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('type')}" th:errors="*{type}">Error</div>
+                                    <select th:field="*{type}" class="form-select erp-input">
+                                        <option value="" th:text="#{label.product.select.category}">-- Pilih Tipe --</option>
+                                        <option th:each="t : ${types}" th:value="${t}"
+                                            th:text="${#messages.msg('label.product.category.type.' + t.name().toLowerCase())}"></option>
+                                    </select>
                                 </div>
                             </div>
-                            <div class="col-md-6 border-start-md">
-                                <!-- Note -->
+
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label" th:text="#{label.product.category.note}">Catatan</label>
-                                    <textarea th:field="*{note}" class="form-control erp-input" rows="6" 
-                                              th:placeholder="#{placeholder.product.category.note}"></textarea>
+                                    <textarea th:field="*{note}" class="form-control erp-input" rows="5" th:placeholder="#{placeholder.product.category.note}"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -68,16 +72,27 @@
                         <!-- Record Info (Edit Mode only) -->
                         <div th:if="${auditInfo != null and auditInfo.id != null}" th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
                     </div>
+
                     <div class="card-footer text-end">
                         <div class="d-flex align-items-center">
-                            <div id="loading-indicator" class="htmx-indicator spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                            <div id="loading-indicator" class="spinner-border spinner-border-sm text-primary me-2" role="status" style="display: none;"></div>
                             <a th:href="@{/inventory/product-categories}" class="btn btn-link link-secondary" th:text="#{label.cancel}">Batal</a>
-                            <button type="submit" class="btn btn-primary ms-auto" th:text="#{label.save}">Simpan</button>
+                            <button type="submit" class="btn btn-primary ms-auto">
+                                <i class="ti ti-device-floppy"></i>
+                                <span th:text="#{label.save}">Simpan</span>
+                            </button>
                         </div>
                     </div>
+
                 </form>
             </div>
         </div>
+
+    </div>
+
+    <div id="page-specific-scripts" th:fragment="pageScripts">
+        <!-- Any page specific logic here, but AJAX is now global -->
     </div>
 </body>
+
 </html>

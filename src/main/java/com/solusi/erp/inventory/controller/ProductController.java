@@ -1,28 +1,26 @@
 package com.solusi.erp.inventory.controller;
 
+import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.inventory.dto.ProductRequest;
+import com.solusi.erp.inventory.dto.ProductResponse;
+import com.solusi.erp.inventory.mapper.ProductMapper;
 import com.solusi.erp.inventory.model.UomType;
 import com.solusi.erp.inventory.service.BrandService;
 import com.solusi.erp.inventory.service.ProductCategoryService;
 import com.solusi.erp.inventory.service.ProductService;
 import com.solusi.erp.inventory.service.UnitOfMeasureService;
-import com.solusi.erp.util.HtmxResponseUtility;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-/**
- * Controller for Product CRUD.
- */
 @Controller
 @RequestMapping("/inventory/products")
 @RequiredArgsConstructor
@@ -32,11 +30,13 @@ public class ProductController {
     private final ProductCategoryService categoryService;
     private final UnitOfMeasureService uomService;
     private final BrandService brandService;
+    private final ProductMapper mapper;
     private final MessageSource messageSource;
 
     @GetMapping
     @PreAuthorize("hasAuthority('PRODUCT_READ')")
-    public String list(@RequestParam(value = "keyword", required = false) String keyword,
+    public String list(
+            @RequestParam(required = false) String keyword,
             Pageable pageable,
             Model model) {
         model.addAttribute("page", service.findAll(keyword, pageable));
@@ -54,38 +54,21 @@ public class ProductController {
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('PRODUCT_CREATE')")
-    public String create(@Valid @ModelAttribute("productRequest") ProductRequest request,
-            BindingResult bindingResult,
-            @RequestHeader(value = "HX-Request", required = false) boolean htmxRequest,
-            Model model,
-            HttpServletResponse response,
-            RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasErrors()) {
-            if (htmxRequest) return HtmxResponseUtility.returnErrorFragment();
-            populateSelectOptions(model);
-            return "inventory/products/form";
-        }
-
-        try {
-            service.create(request);
-            String message = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-            
-            if (htmxRequest) return HtmxResponseUtility.redirect(response, "/inventory/products");
-            return "redirect:/inventory/products";
-        } catch (Exception e) {
-            if (htmxRequest) return HtmxResponseUtility.handleException(model, e.getMessage());
-            model.addAttribute("errorMessage", e.getMessage());
-            populateSelectOptions(model);
-            return "inventory/products/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<ProductResponse>> create(@Valid @RequestBody ProductRequest request) {
+        ProductResponse data = service.create(request);
+        String msg = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(msg, data));
     }
 
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('PRODUCT_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
         try {
-            model.addAttribute("productRequest", service.getEditData(id));
+            var viewDto = service.getProductEditView(id);
+            model.addAttribute("productRequest", viewDto.getRequest());
+            model.addAttribute("productUIForm", viewDto.getUi());
+            model.addAttribute("auditInfo", viewDto.getAudit());
             populateSelectOptions(model);
             return "inventory/products/form";
         } catch (Exception e) {
@@ -96,38 +79,16 @@ public class ProductController {
 
     @PostMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('PRODUCT_UPDATE')")
-    public String update(@PathVariable Long id,
-            @Valid @ModelAttribute("productRequest") ProductRequest request,
-            BindingResult bindingResult,
-            @RequestHeader(value = "HX-Request", required = false) boolean htmxRequest,
-            Model model,
-            HttpServletResponse response,
-            RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasErrors()) {
-            if (htmxRequest) return HtmxResponseUtility.returnErrorFragment();
-            populateSelectOptions(model);
-            return "inventory/products/form";
-        }
-
-        try {
-            service.update(id, request);
-            String message = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-            
-            if (htmxRequest) return HtmxResponseUtility.redirect(response, "/inventory/products");
-            return "redirect:/inventory/products";
-        } catch (Exception e) {
-            if (htmxRequest) return HtmxResponseUtility.handleException(model, e.getMessage());
-            request.setId(id);
-            model.addAttribute("errorMessage", e.getMessage());
-            populateSelectOptions(model);
-            return "inventory/products/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<ProductResponse>> update(@PathVariable Long id, @Valid @RequestBody ProductRequest request) {
+        ProductResponse data = service.update(id, request);
+        String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.ok(ApiResponse.success(msg, data));
     }
 
     @PostMapping("/delete/{id}")
     @PreAuthorize("hasAuthority('PRODUCT_DELETE')")
-    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String delete(@PathVariable Long id, org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
         try {
             service.delete(id);
             String message = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());

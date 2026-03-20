@@ -1,19 +1,20 @@
 package com.solusi.erp.inventory.controller;
 
+import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.inventory.dto.UnitOfMeasureRequest;
+import com.solusi.erp.inventory.dto.UnitOfMeasureResponse;
 import com.solusi.erp.inventory.model.UomType;
 import com.solusi.erp.inventory.service.UnitOfMeasureService;
-import com.solusi.erp.util.HtmxResponseUtility;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -48,38 +49,20 @@ public class UnitOfMeasureController {
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('UNIT-OF-MEASURE_CREATE')")
-    public String create(@Valid @ModelAttribute("unitOfMeasureRequest") UnitOfMeasureRequest request,
-                         BindingResult bindingResult,
-                         @RequestHeader(value = "HX-Request", required = false) boolean htmxRequest,
-                         Model model,
-                         HttpServletResponse response,
-                         RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasErrors()) {
-            if (htmxRequest) return HtmxResponseUtility.returnErrorFragment();
-            model.addAttribute("types", UomType.values());
-            return "inventory/unit-of-measures/form";
-        }
-
-        try {
-            service.create(request);
-            String message = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-            
-            if (htmxRequest) return HtmxResponseUtility.redirect(response, "/inventory/unit-of-measures");
-            return "redirect:/inventory/unit-of-measures";
-        } catch (Exception e) {
-            if (htmxRequest) return HtmxResponseUtility.handleException(model, e.getMessage());
-            model.addAttribute("errorMessage", e.getMessage());
-            model.addAttribute("types", UomType.values());
-            return "inventory/unit-of-measures/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<UnitOfMeasureResponse>> create(@Valid @RequestBody UnitOfMeasureRequest request) {
+        UnitOfMeasureResponse data = service.create(request);
+        String msg = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(msg, data));
     }
 
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('UNIT-OF-MEASURE_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
         try {
-            model.addAttribute("unitOfMeasureRequest", service.getEditData(id));
+            var viewDto = service.getFormView(id);
+            model.addAttribute("unitOfMeasureRequest", viewDto.getRequest());
+            model.addAttribute("auditInfo", viewDto.getAudit());
             model.addAttribute("types", UomType.values());
             return "inventory/unit-of-measures/form";
         } catch (Exception e) {
@@ -90,32 +73,11 @@ public class UnitOfMeasureController {
 
     @PostMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('UNIT-OF-MEASURE_UPDATE')")
-    public String update(@PathVariable Long id,
-                         @Valid @ModelAttribute("unitOfMeasureRequest") UnitOfMeasureRequest request,
-                         BindingResult bindingResult,
-                         @RequestHeader(value = "HX-Request", required = false) boolean htmxRequest,
-                         Model model,
-                         HttpServletResponse response,
-                         RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasErrors()) {
-            if (htmxRequest) return HtmxResponseUtility.returnErrorFragment();
-            model.addAttribute("types", UomType.values());
-            return "inventory/unit-of-measures/form";
-        }
-
-        try {
-            service.update(id, request);
-            String message = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-            
-            if (htmxRequest) return HtmxResponseUtility.redirect(response, "/inventory/unit-of-measures");
-            return "redirect:/inventory/unit-of-measures";
-        } catch (Exception e) {
-            if (htmxRequest) return HtmxResponseUtility.handleException(model, e.getMessage());
-            model.addAttribute("errorMessage", e.getMessage());
-            model.addAttribute("types", UomType.values());
-            return "inventory/unit-of-measures/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<UnitOfMeasureResponse>> update(@PathVariable Long id, @Valid @RequestBody UnitOfMeasureRequest request) {
+        UnitOfMeasureResponse data = service.update(id, request);
+        String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.ok(ApiResponse.success(msg, data));
     }
 
     @PostMapping("/delete/{id}")

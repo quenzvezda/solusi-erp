@@ -1,24 +1,16 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
-<head th:replace="~{layout/master :: head(${facilityRequest.id == null
-    ? #messages.msg('label.facility.create')
-    : #messages.msg('label.facility.edit')})}">
-</head>
+<head th:replace="~{layout/master :: head(${facilityRequest.id == null ? #messages.msg('label.facility.create') : #messages.msg('label.facility.edit')})}"></head>
 
 <body th:replace="~{layout/master :: layout(~{:: .facility-form-content}, ~{})}">
-    <div class="facility-form-content">
-
+    <div class="facility-form-content" id="facility-form-content" th:fragment="facility-form-content">
         <!-- Page Header -->
         <div class="page-header d-print-none">
             <div class="container-xl">
                 <div class="row g-2 align-items-center">
                     <div class="col">
-                        <h2 class="page-title" th:text="${facilityRequest.id == null
-                            ? #messages.msg('label.facility.create')
-                            : #messages.msg('label.facility.edit')}">
-                            Buat Fasilitas Baru
-                        </h2>
+                        <h2 class="page-title" th:text="${facilityRequest.id == null ? #messages.msg('label.facility.create') : #messages.msg('label.facility.edit')}">Tambah Fasilitas</h2>
                     </div>
                 </div>
             </div>
@@ -27,94 +19,79 @@
         <!-- Page Body -->
         <div class="page-body">
             <div class="container-xl">
+                <form th:action="${facilityRequest.id == null ? '/inventory/facilities/create' : '/inventory/facilities/edit/' + facilityRequest.id}"
+                    th:object="${facilityRequest}" method="post" class="card"
+                    id="facility-form"
+                    data-ajax-form="true"
+                    data-redirect-on-success="/inventory/facilities">
 
-                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
-                    <div class="d-flex">
-                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
-                        <div th:text="${errorMessage}">Error!</div>
-                    </div>
-                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                </div>
-
-                <form th:action="${facilityRequest.id == null
-                        ? '/inventory/facilities/create'
-                        : '/inventory/facilities/edit/' + facilityRequest.id}" th:object="${facilityRequest}" method="post"
-                    class="card">
+                    <!-- CSRF Token -->
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
                     <div class="card-body">
-                        <!-- Global Binding Error Alert -->
-                        <div th:if="${#fields.hasAnyErrors()}" class="alert alert-danger" role="alert">
-                            <div class="d-flex">
-                                <div><i class="ti ti-alert-triangle icon alert-icon"></i></div>
-                                <div>
-                                    <h4 class="alert-title" th:text="#{msg.error.validation.title}">Terdapat Kesalahan</h4>
-                                    <ul class="mb-0 mt-2">
-                                        <li th:each="err : ${#fields.allErrors()}" th:text="${err}">Input tidak valid</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- Alert Placeholder inside card-body for global errors -->
+                        <div class="alert-container"></div>
 
                         <div class="row">
+                            <!-- Basic Information -->
+                            <div class="col-md-12">
+                                <h3 class="card-title" th:text="#{label.party.section.basic}">Informasi Dasar</h3>
+                            </div>
                             <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label" th:text="#{label.facility.code}">Kode Fasilitas</label>
-                                    <input type="text" th:field="*{code}" class="form-control bg-light" readonly
-                                        th:placeholder="${facilityRequest.id == null ? '[ Auto Generated ]' : ''}">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label required" th:text="#{label.facility.name}">Nama Fasilitas</label>
-                                    <input type="text" th:field="*{name}" class="form-control"
-                                        th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'">
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
-                                </div>
+                                <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.geographic.code}, isReadonly=true, extraClass='bg-light', placeholder=${facilityRequest.id == null ? '[ Auto Generated ]' : ''})}"></div>
+                                <div th:replace="~{fragments/inputs :: text(field='name', label=#{label.geographic.name}, required=true)}"></div>
                                 <div class="mb-3">
                                     <label class="form-label required" th:text="#{label.facility.owner}">Pemilik</label>
-                                    <select th:field="*{ownerId}" class="form-select" id="owner-ts"
-                                        th:classappend="${#fields.hasErrors('ownerId')} ? 'is-invalid'">
-                                        <option value=""></option>
+                                    <select th:field="*{ownerId}" class="form-select erp-input">
+                                        <option value="" th:text="#{label.facility.select.owner}">-- Pilih Pemilik --</option>
+                                        <option th:each="p : ${owners}" th:value="${p.id}" th:text="${p.name}"></option>
                                     </select>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('ownerId')}" th:errors="*{ownerId}"></div>
                                 </div>
+                            </div>
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-check form-switch mt-4">
                                         <input class="form-check-input" type="checkbox" th:field="*{isActive}">
                                         <span class="form-check-label" th:text="#{label.active}">Aktif</span>
                                     </label>
                                 </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label" th:text="#{label.facility.address}">Alamat Lengkap</label>
-                                    <textarea th:field="*{addressLine1}" class="form-control" rows="2"
-                                        th:placeholder="#{placeholder.party.address}"></textarea>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label" th:text="#{label.geographic.city}">Kota</label>
-                                    <select th:field="*{cityId}" class="form-select" id="city-ts">
-                                        <option value=""></option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label" th:text="#{label.party.address.postal_code}">Kode Pos</label>
-                                    <input type="text" th:field="*{postalCode}" class="form-control">
-                                </div>
                                 <div class="mb-3">
                                     <label class="form-label" th:text="#{label.facility.note}">Catatan</label>
-                                    <textarea th:field="*{note}" class="form-control" rows="2"></textarea>
+                                    <textarea th:field="*{note}" class="form-control erp-input" rows="3"></textarea>
                                 </div>
+                            </div>
+
+                            <!-- Address Section -->
+                            <div class="col-md-12 mt-3">
+                                <hr class="my-3">
+                                <h3 class="card-title" th:text="#{label.party.address}">Alamat</h3>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label required" th:text="#{label.party.address}">Alamat</label>
+                                    <textarea th:field="*{addressLine1}" class="form-control erp-input" rows="3" th:placeholder="#{placeholder.party.address}"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label required" th:text="#{label.geographic.city}">Kota</label>
+                                    <select th:field="*{cityId}" class="form-select erp-input">
+                                        <option value="" th:text="#{label.party.address.select.city}">-- Pilih Kota --</option>
+                                        <option th:each="c : ${cities}" th:value="${c.id}" th:text="${c.name}"></option>
+                                    </select>
+                                </div>
+                                <div th:replace="~{fragments/inputs :: text(field='postalCode', label=#{label.party.address.postal_code}, required=true)}"></div>
                             </div>
                         </div>
 
                         <!-- Record Info (Edit Mode only) -->
-                        <div th:if="${auditInfo != null and auditInfo.id != null}" 
-                             th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
+                        <div th:if="${auditInfo != null and auditInfo.id != null}" th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
                     </div>
 
                     <div class="card-footer text-end">
-                        <div class="d-flex">
-                            <a th:href="@{/inventory/facilities}" class="btn btn-link" th:text="#{label.cancel}">Batal</a>
+                        <div class="d-flex align-items-center">
+                            <div id="loading-indicator" class="spinner-border spinner-border-sm text-primary me-2" role="status" style="display: none;"></div>
+                            <a th:href="@{/inventory/facilities}" class="btn btn-link link-secondary" th:text="#{label.cancel}">Batal</a>
                             <button type="submit" class="btn btn-primary ms-auto">
                                 <i class="ti ti-device-floppy"></i>
                                 <span th:text="#{label.save}">Simpan</span>
@@ -124,77 +101,6 @@
                 </form>
             </div>
         </div>
-
-        <script th:inline="javascript">
-            document.addEventListener('DOMContentLoaded', function () {
-                const LOOKUP_OWNER = '/api/lookup/parties';
-                const LOOKUP_CITY = '/api/lookup/geographics/cities';
-                
-                // Helper to render TomSelect options
-                function renderOption(data, escape) {
-                    const sub = data.subText ? `<small class="text-muted d-block" style="font-size:0.75em;line-height:1.2">${escape(data.subText)}</small>` : '';
-                    return `<div class="py-1">${escape(data.name)}${sub}</div>`;
-                }
-
-                // Debounce function
-                function debounce(fn, delay) {
-                    let timer;
-                    return function (...args) {
-                        clearTimeout(timer);
-                        timer = setTimeout(() => fn.apply(this, args), delay);
-                    };
-                }
-
-                // Owner TomSelect
-                const ownerTs = new TomSelect('#owner-ts', {
-                    valueField: 'id',
-                    labelField: 'name',
-                    searchField: ['name'],
-                    placeholder: [[#{label.facility.select.owner}]],
-                    load: debounce(function (q, callback) {
-                        fetch(`${LOOKUP_OWNER}?q=${encodeURIComponent(q)}&limit=5`)
-                            .then(r => r.json()).then(callback).catch(() => callback([]));
-                    }, 150),
-                    render: {
-                        option: renderOption,
-                        item: (data, escape) => `<span>${escape(data.name)}</span>`
-                    },
-                    onFocus() { this.load(''); }
-                });
-
-                // City TomSelect
-                const cityTs = new TomSelect('#city-ts', {
-                    valueField: 'id',
-                    labelField: 'name',
-                    searchField: ['name'],
-                    placeholder: [[#{label.party.address.select.city}]],
-                    load: debounce(function (q, callback) {
-                        fetch(`${LOOKUP_CITY}?q=${encodeURIComponent(q)}&limit=5`)
-                            .then(r => r.json()).then(callback).catch(() => callback([]));
-                    }, 150),
-                    render: {
-                        option: renderOption,
-                        item: (data, escape) => `<span>${escape(data.name)}</span>`
-                    },
-                    onFocus() { this.load(''); }
-                });
-
-                // Pre-fill for Edit Mode
-                const initialOwnerId = [[${facilityRequest.ownerId}]];
-                const initialOwnerName = [[${facilityResponse?.ownerName}]];
-                if (initialOwnerId) {
-                    ownerTs.addOption({ id: initialOwnerId, name: initialOwnerName || 'Loading...' });
-                    ownerTs.setValue(initialOwnerId, true);
-                }
-
-                const initialCityId = [[${facilityRequest.cityId}]];
-                const initialCityName = [[${facilityResponse?.cityName}]];
-                if (initialCityId) {
-                    cityTs.addOption({ id: initialCityId, name: initialCityName || 'Loading...' });
-                    cityTs.setValue(initialCityId, true);
-                }
-            });
-        </script>
     </div>
 </body>
 

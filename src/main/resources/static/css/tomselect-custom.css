@@ -46,6 +46,16 @@
     white-space: nowrap !important;
 }
 
+/* TomSelect Validation Style (Red Border) */
+.ts-wrapper.is-invalid-ts .ts-control {
+    border-color: #d63939 !important;
+}
+
+.ts-wrapper.is-invalid-ts.focus .ts-control {
+    border-color: #d63939 !important;
+    box-shadow: 0 0 0 0.25rem rgba(214, 57, 57, 0.25) !important;
+}
+
 /* Hide number spinners globally for a cleaner look */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {

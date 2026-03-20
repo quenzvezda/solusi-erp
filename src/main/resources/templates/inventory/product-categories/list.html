@@ -1,26 +1,29 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
-<head th:replace="~{layout/master :: head(#{label.product.category.title})}"></head>
+<head th:replace="~{layout/master :: head(#{label.product.category.title})}">
+</head>
 
-<body th:replace="~{layout/master :: layout(~{:: .product-category-list-content}, ~{})}">
+<body th:replace="~{layout/master :: layout(~{:: .product-category-list-content}, ~{:: #page-specific-scripts})}">
     <div class="product-category-list-content">
+
         <!-- Page Header -->
         <div class="page-header d-print-none">
             <div class="container-xl">
                 <div class="row g-2 align-items-center">
                     <div class="col">
-                        <h2 class="page-title" th:text="#{label.product.category.title}">Kategori Produk</h2>
-                        <div class="text-secondary mt-1" th:text="#{label.product.category.subtitle}">Kelola kategori
-                            produk dan tipenya.</div>
+                        <h2 class="page-title" th:text="#{label.product.category.title}">
+                            Manajemen Kategori Produk
+                        </h2>
+                        <div class="text-secondary mt-1" th:text="#{label.product.category.subtitle}">
+                            Kelola kategori produk dan tipenya.
+                        </div>
                     </div>
-                    <!-- Page title actions -->
                     <div class="col-auto ms-auto d-print-none" sec:authorize="hasAuthority('PRODUCT-CATEGORY_CREATE')">
                         <div class="btn-list">
-                            <a th:href="@{/inventory/product-categories/create}"
-                                class="btn btn-primary d-none d-sm-inline-block">
-                                <i class="ti ti-plus"></i>
-                                <span th:text="#{label.product.category.add}">Tambah Kategori Baru</span>
+                            <a th:href="@{/inventory/product-categories/create}" class="btn btn-primary d-none d-sm-inline-block">
+                                <i class="ti ti-plus icon"></i>
+                                <span th:text="#{label.product.category.add}">Tambah Baru</span>
                             </a>
                         </div>
                     </div>
@@ -31,32 +34,22 @@
         <!-- Page Body -->
         <div class="page-body">
             <div class="container-xl">
-                <!-- Alerts -->
-                <div th:if="${successMessage}" class="alert alert-success alert-dismissible" role="alert">
-                    <div class="d-flex">
-                        <div><i class="ti ti-check icon alert-icon"></i></div>
-                        <div th:text="${successMessage}">Success!</div>
-                    </div>
-                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                </div>
-                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
-                    <div class="d-flex">
-                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
-                        <div th:text="${errorMessage}">Error!</div>
-                    </div>
-                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                </div>
+
+                <div th:replace="~{fragments/alerts :: success}"></div>
+                <div th:replace="~{fragments/alerts :: error}"></div>
 
                 <div class="card">
                     <div class="card-body border-bottom py-3">
-                        <div class="d-flex">
-                            <div class="text-secondary">
-                                <!-- Future: Page Size Selector -->
-                            </div>
+                        <div class="d-flex align-items-center">
                             <div class="ms-auto text-secondary">
-                                <form th:action="@{/inventory/product-categories}" method="get" class="input-icon">
-                                    <input type="text" name="keyword" th:value="${keyword}"
-                                        class="form-control form-control-sm" th:placeholder="#{label.search}">
+                                <form th:action="@{/inventory/product-categories}" method="get" class="input-icon"
+                                      hx-get="/inventory/product-categories"
+                                      hx-target="#product-category-table"
+                                      hx-trigger="keyup changed delay:500ms from:#search-input"
+                                      hx-push-url="true">
+                                    <input type="text" id="search-input" name="keyword" th:value="${keyword}" 
+                                           class="form-control form-control-sm"
+                                           th:placeholder="#{label.search} + '...'">
                                     <span class="input-icon-addon">
                                         <i class="ti ti-search"></i>
                                     </span>
@@ -64,106 +57,67 @@
                             </div>
                         </div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-vcenter card-table">
-                            <thead>
-                                <tr>
-                                    <th
-                                        th:replace="~{fragments/table :: sortable('code', #{label.product.category.column.code})}">
-                                        Kode</th>
-                                    <th
-                                        th:replace="~{fragments/table :: sortable('name', #{label.product.category.column.name})}">
-                                        Nama</th>
-                                    <th
-                                        th:replace="~{fragments/table :: sortable('type', #{label.product.category.column.type})}">
-                                        Tipe</th>
-                                    <th
-                                        th:replace="~{fragments/table :: sortable('note', #{label.product.category.column.note})}">
-                                        Catatan</th>
-                                    <th class="w-1" th:text="#{label.actions}">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="item : ${page.content}">
-                                    <td th:text="${item.code}">CODE</td>
-                                    <td class="font-weight-medium" th:text="${item.name}">Name</td>
-                                    <td>
-                                        <span class="font-weight-medium"
-                                            th:classappend="${item.type.name() == 'STOCK' ? 'text-blue' : (item.type.name() == 'NON_STOCK' ? 'text-azure' : 'text-purple')}"
-                                            th:text="#{'label.product.category.type.' + ${item.type.name().toLowerCase()}}">
-                                            TYPE
-                                        </span>
-                                    </td>
-                                    <td class="text-secondary small" th:text="${#strings.abbreviate(item.note, 50)}">
-                                        Note</td>
-                                    <td>
-                                        <div class="btn-list flex-nowrap">
-                                            <a th:href="@{/inventory/product-categories/edit/{id}(id=${item.id})}"
-                                                class="btn btn-white btn-sm"
-                                                sec:authorize="hasAuthority('PRODUCT-CATEGORY_UPDATE')"
-                                                th:text="#{label.edit}">
-                                                Edit
-                                            </a>
-                                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                                                th:data-bs-target="'#modal-delete-' + ${item.id}"
-                                                sec:authorize="hasAuthority('PRODUCT-CATEGORY_DELETE')"
-                                                th:text="#{label.delete}">
-                                                Hapus
-                                            </button>
-                                        </div>
 
-                                        <!-- Delete Modal -->
-                                        <div class="modal modal-blur fade" th:id="'modal-delete-' + ${item.id}"
-                                            tabindex="-1" role="dialog" aria-hidden="true">
-                                            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-                                                <div class="modal-content">
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                        aria-label="Close"></button>
-                                                    <div class="modal-status bg-danger"></div>
-                                                    <div class="modal-body text-center py-4">
-                                                        <i
-                                                            class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
-                                                        <h3 th:text="#{label.product.category.delete.confirm.title}">
-                                                            Konfirmasi Hapus</h3>
-                                                        <div class="text-secondary"
-                                                            th:text="#{label.product.category.delete.confirm.text(${item.code})}">
-                                                            Apakah Anda yakin ingin menghapus kategori?</div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <div class="w-100">
-                                                            <div class="row">
-                                                                <div class="col"><a href="#" class="btn w-100"
-                                                                        data-bs-dismiss="modal"
-                                                                        th:text="#{label.cancel}">Batal</a></div>
-                                                                <div class="col">
-                                                                    <form
-                                                                        th:action="@{/inventory/product-categories/delete/{id}(id=${item.id})}"
-                                                                        method="post">
-                                                                        <button type="submit"
-                                                                            class="btn btn-danger w-100"
-                                                                            th:text="#{label.delete}">Hapus</button>
-                                                                    </form>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                    <div id="product-category-table" th:fragment="category-table">
+                        <div class="table-responsive">
+                            <table class="table card-table table-vcenter text-nowrap datatable">
+                                <thead>
+                                    <tr>
+                                        <th th:replace="~{fragments/table :: sortable('code', #{label.product.category.column.code})}">Kode</th>
+                                        <th th:replace="~{fragments/table :: sortable('name', #{label.product.category.column.name})}">Nama</th>
+                                        <th th:replace="~{fragments/table :: sortable('type', #{label.product.category.column.type})}">Tipe</th>
+                                        <th th:text="#{label.product.category.column.note}">Catatan</th>
+                                        <th class="text-end" th:text="#{label.actions}">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${page.content}">
+                                        <td>
+                                            <span class="font-weight-medium" th:text="${item.code}">CAT-001</span>
+                                        </td>
+                                        <td th:text="${item.name}">Category Name</td>
+                                        <td>
+                                            <span class="badge badge-outline text-blue" 
+                                                  th:text="${#messages.msg('label.product.category.type.' + item.type.name().toLowerCase())}">Stock</span>
+                                        </td>
+                                        <td class="text-secondary text-truncate" style="max-width: 250px;" th:text="${item.note}">Note content</td>
+                                        <td>
+                                            <div class="btn-list flex-nowrap justify-content-end">
+                                                <a th:href="@{/inventory/product-categories/edit/{id}(id=${item.id})}"
+                                                   class="btn btn-white btn-sm" sec:authorize="hasAuthority('PRODUCT-CATEGORY_UPDATE')">
+                                                    <i class="ti ti-edit me-1"></i>
+                                                    <span th:text="#{label.edit}">Edit</span>
+                                                </a>
+                                                <form th:action="@{/inventory/product-categories/delete/{id}(id=${item.id})}"
+                                                      method="post" 
+                                                      th:data-confirm-msg="#{label.product.category.delete.confirm.text(${item.name})}"
+                                                      onsubmit="return confirm(this.getAttribute('data-confirm-msg'))"
+                                                      sec:authorize="hasAuthority('PRODUCT-CATEGORY_DELETE')">
+                                                    <button type="submit" class="btn btn-white btn-sm text-danger">
+                                                        <i class="ti ti-trash me-1"></i>
+                                                        <span th:text="#{label.delete}">Delete</span>
+                                                    </button>
+                                                </form>
                                             </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr th:if="${page.totalElements == 0}">
-                                    <td colspan="5" class="text-center text-secondary py-4"
-                                        th:text="#{label.product.category.empty}">Tidak ada data.</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${page.empty}">
+                                        <td colspan="5" class="text-center py-4 text-secondary" th:text="#{label.product.category.empty}">
+                                            Tidak ada data kategori produk.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                     </div>
-                    <!-- Pagination -->
-                    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                 </div>
             </div>
         </div>
+
+    </div>
+
+    <div id="page-specific-scripts" th:fragment="pageScripts">
     </div>
 </body>
 

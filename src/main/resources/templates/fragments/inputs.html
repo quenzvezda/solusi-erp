@@ -30,24 +30,26 @@
 </div>
 
 <!-- TomSelect Autocomplete Input -->
-<div th:fragment="autocomplete" class="mb-3">
-    <label th:if="${label}" class="form-label" th:classappend="${required} ? 'required'" th:text="${label}"></label>
-    <select th:field="*{__${field}__}" 
-            th:id="${id}"
-            th:disabled="${isReadonly}" 
-            th:attr="data-lookup-path=${path}"
-            class="form-select erp-input-ts" 
-            th:classappend="${extraClass}"
-            th:errorclass="is-invalid">
-        <option value=""></option>
-        <option th:if="${initialValue != null}" 
-                th:value="${initialValue}" 
-                th:text="${initialText}" 
-                th:attr="data-subtext=${initialSubtext}"
-                th:data-payload-type="${initialPayload}"
-                selected></option>
-    </select>
-</div>
+<th:block th:fragment="autocomplete">
+    <div class="mb-3">
+        <label th:if="${label}" class="form-label" th:classappend="${required} ? 'required'" th:text="${label}"></label>
+        <select th:field="*{__${field}__}"
+                th:id="${id}"
+                th:disabled="${isReadonly}"
+                th:attr="data-lookup-path=${path}"
+                class="form-select erp-input-ts"
+                th:classappend="${extraClass}"
+                th:errorclass="is-invalid">
+            <option value=""></option>
+            <option th:if="${initialValue != null}"
+                    th:value="${initialValue}"
+                    th:text="${initialText}"
+                    th:attr="data-subtext=${initialSubtext}"
+                    th:data-payload-type="${initialPayload}"
+                    selected></option>
+        </select>
+    </div>
+</th:block>
 
 <!-- Date Input -->
 <div th:fragment="date" class="mb-3">

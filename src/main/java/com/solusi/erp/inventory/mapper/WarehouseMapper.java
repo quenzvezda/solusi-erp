@@ -43,6 +43,7 @@ public interface WarehouseMapper {
     @Mapping(target = "address.addressLine1", source = "addressLine1")
     @Mapping(target = "address.city", source = "cityId")
     @Mapping(target = "address.postalCode", source = "postalCode")
+    @Mapping(target = "id", ignore = true)
     void updateEntityFromRequest(FacilityRequest request, @MappingTarget Facility entity);
 
     // --- Grid ---
@@ -56,6 +57,7 @@ public interface WarehouseMapper {
     @Mapping(target = "facilityId", source = "facility.id")
     GridRequest toRequest(Grid entity);
 
+    @org.mapstruct.Mapping(target = "id", ignore = true)
     @Mapping(target = "facility", source = "facilityId")
     void updateEntityFromRequest(GridRequest request, @MappingTarget Grid entity);
 

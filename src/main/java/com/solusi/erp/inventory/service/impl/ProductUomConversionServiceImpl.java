@@ -1,7 +1,9 @@
 package com.solusi.erp.inventory.service.impl;
 
+import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.inventory.dto.ProductUomConversionRequest;
 import com.solusi.erp.inventory.dto.ProductUomConversionResponse;
+import com.solusi.erp.inventory.form.ProductUomUIForm;
 import com.solusi.erp.inventory.mapper.ProductUomConversionMapper;
 import com.solusi.erp.inventory.model.Product;
 import com.solusi.erp.inventory.model.ProductUomConversion;
@@ -56,13 +58,24 @@ public class ProductUomConversionServiceImpl implements ProductUomConversionServ
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public FormViewDto<ProductUomConversionRequest, ProductUomUIForm, ProductUomConversionResponse> getFormView(Long id) {
+        ProductUomConversion entity = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.notfound")));
+
+        return FormViewDto.<ProductUomConversionRequest, ProductUomUIForm, ProductUomConversionResponse>builder()
+                .request(getEditData(id))
+                .ui(mapper.toUIForm(entity))
+                .audit(mapper.toResponse(entity))
+                .build();
+    }
+
+    @Override
     @Transactional
     public ProductUomConversionResponse create(ProductUomConversionRequest request) {
         validateRequest(request, null);
         
         ProductUomConversion entity = mapper.toEntity(request);
-        // Explicitly set factor from request to ensure it's not lost if mapper ignores it, 
-        // and apply rounding.
         BigDecimal factor = request.getConversionFactor();
         if (factor != null) {
             factor = factor.setScale(2, java.math.RoundingMode.HALF_UP);
@@ -81,8 +94,9 @@ public class ProductUomConversionServiceImpl implements ProductUomConversionServ
         
         validateRequest(request, id);
         
-        ProductUomConversion updated = mapper.toEntity(request);
-        BigDecimal factor = updated.getConversionFactor();
+        mapper.updateEntityFromRequest(request, entity);
+        
+        BigDecimal factor = request.getConversionFactor();
         if (factor != null) {
             factor = factor.setScale(2, java.math.RoundingMode.HALF_UP);
         }
@@ -105,17 +119,14 @@ public class ProductUomConversionServiceImpl implements ProductUomConversionServ
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.product.notfound")));
 
-        // 1. Positive Factor (also handled by @DecimalMin but good to have here)
         if (request.getConversionFactor() == null || request.getConversionFactor().compareTo(BigDecimal.ZERO) <= 0) {
             throw new RuntimeException(getMessage("msg.error.uom.conversion.factor_positive"));
         }
 
-        // 2. Prevent Self-Conversion (From UOM == Base UOM)
         if (request.getFromUomId().equals(product.getUom().getId())) {
             throw new RuntimeException(getMessage("msg.error.uom.conversion.self_conversion"));
         }
 
-        // 3. Prevent Duplicates
         boolean exists = (id == null) ? 
                 repository.existsByProductIdAndFromUomId(request.getProductId(), request.getFromUomId()) :
                 repository.existsByProductIdAndFromUomIdAndIdNot(request.getProductId(), request.getFromUomId(), id);
