@@ -25,9 +25,9 @@ spring:
   devtools:
     restart:
       exclude: static/**,public/**,templates/**,**/templates/**
-      enabled: true
+      enabled: false
     livereload:
-      enabled: true
+      enabled: false
   application:
     name: solusi-program-erp
 

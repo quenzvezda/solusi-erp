@@ -1,0 +1,93 @@
+<!-- Reusable input fragments for ERP standardization -->
+
+<!-- Standard Text Input -->
+<div th:fragment="text" class="mb-3">
+    <label th:if="${label}" class="form-label" th:classappend="${required} ? 'required'" th:text="${label}"></label>
+    <input type="text" 
+           th:field="*{__${field}__}" 
+           th:readonly="${isReadonly}" 
+           th:placeholder="${placeholder}"
+           class="form-control erp-input" 
+           th:classappend="${extraClass}"
+           th:errorclass="is-invalid">
+</div>
+
+<!-- Standard Select Input -->
+<div th:fragment="select" class="mb-3">
+    <label th:if="${label}" class="form-label" th:classappend="${required} ? 'required'" th:text="${label}"></label>
+    <select th:field="*{__${field}__}" 
+            th:disabled="${isReadonly}" 
+            class="form-select erp-input" 
+            th:classappend="${extraClass}"
+            th:errorclass="is-invalid">
+        <option th:each="opt : ${options}" 
+                th:value="${opt.id}" 
+                th:text="${opt.name}"></option>
+    </select>
+</div>
+
+<!-- TomSelect Autocomplete Input -->
+<div th:fragment="autocomplete" class="mb-3">
+    <label th:if="${label}" class="form-label" th:classappend="${required} ? 'required'" th:text="${label}"></label>
+    <select th:field="*{__${field}__}" 
+            th:id="${id}"
+            th:disabled="${isReadonly}" 
+            class="form-select erp-input-ts" 
+            th:classappend="${extraClass}"
+            th:errorclass="is-invalid">
+        <option value=""></option>
+        <!-- Initial option for edit mode if provided via attributes -->
+        <option th:if="${initialValue != null}" 
+                th:value="${initialValue}" 
+                th:text="${initialText}" 
+                th:attr="data-subtext=${initialSubtext}"
+                selected></option>
+    </select>
+</div>
+
+<!-- Date Input -->
+<div th:fragment="date" class="mb-3">
+    <label th:if="${label}" class="form-label" th:classappend="${required} ? 'required'" th:text="${label}"></label>
+    <!-- Use th:name and th:value for Date to avoid th:field formatting issues -->
+    <input type="date" 
+           th:value="${value != null ? #temporals.format(value, 'yyyy-MM-dd') : #calendars.format(#calendars.createNow(), 'yyyy-MM-dd')}"
+           th:name="${field}"
+           th:readonly="${isReadonly}" 
+           class="form-control erp-input" 
+           th:classappend="${extraClass}"
+           th:errorclass="is-invalid">
+</div>
+
+<!-- Small Table Inputs (No Label) -->
+<div th:fragment="table-text">
+    <input type="text" 
+           th:name="${name}" 
+           th:value="${value}"
+           th:readonly="${isReadonly}" 
+           class="form-control form-control-sm erp-input-sm" 
+           th:classappend="${extraClass}">
+</div>
+
+<div th:fragment="table-number">
+    <input type="number" step="0.01"
+           th:name="${name}" 
+           th:value="${value}"
+           th:readonly="${isReadonly}" 
+           class="form-control form-control-sm erp-input-sm text-end" 
+           th:classappend="${extraClass}">
+</div>
+
+<div th:fragment="table-autocomplete">
+    <select th:name="${name}" 
+            th:id="${id}"
+            th:disabled="${isReadonly}" 
+            class="form-select form-select-sm erp-input-ts-sm" 
+            th:classappend="${extraClass}">
+        <option value=""></option>
+        <option th:if="${initialValue != null}" 
+                th:value="${initialValue}" 
+                th:text="${initialText}" 
+                th:attr="data-subtext=${initialSubtext}"
+                selected></option>
+    </select>
+</div>
