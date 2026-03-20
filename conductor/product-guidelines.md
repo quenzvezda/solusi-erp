@@ -33,6 +33,7 @@ All implementations MUST strictly adhere to the following technical standards:
 - **Global Search:** [../docs/spec/search-menu.md](../docs/spec/search-menu.md)
 - Code Generation (Sequence): [../docs/spec/sequence-generator.md](../docs/spec/sequence-generator.md)
 - Sorting Logic: [../docs/spec/sorting.md](../docs/spec/sorting.md)
+- Standarize UI: [../docs/spec/ui-standars](../docs/spec/ui-standards.md)
 - Inventory Stock Adjustment: [../docs/modules/inventory/stock-adjustment.md](../docs/modules/inventory/stock-adjustment.md)
 - Inventory Valuation & UOM: [../docs/modules/inventory/valuation-and-uom.md](../docs/modules/inventory/valuation-and-uom.md)
 

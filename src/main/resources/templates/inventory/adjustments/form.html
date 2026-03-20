@@ -243,8 +243,9 @@
 
                     if (parentProvider) {
                         ts.on('dropdown_open', () => {
+                            ts.clearCache();
                             ts.clearOptions();
-                            ts.refreshOptions(false);
+                            ts.load('');
                         });
                     }
 
