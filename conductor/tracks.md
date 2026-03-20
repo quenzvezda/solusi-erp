@@ -26,3 +26,8 @@ This file acts as a central registry for all Conductor tracks in the project.
 
 - [x] **Track: Generic LookupDto Refactor**
 *Link: [./tracks/lookup_dto_refactor_20260319/](./tracks/lookup_dto_refactor_20260319/)*
+
+---
+
+- [ ] **Track: Product UoM Conversion CRUD**
+*Link: [./tracks/uom_conversion_crud_20260320/](./tracks/uom_conversion_crud_20260320/)*

@@ -1,0 +1,8 @@
+{
+  "track_id": "uom_conversion_crud_20260320",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-03-20T00:00:00Z",
+  "updated_at": "2026-03-20T00:00:00Z",
+  "description": "Oke jadi saya mau buat track dengan berapa fitur utama. Untuk saat ini memang service UoMConversion sudah ada tapi menunya belum ada jadi tidak bisa menambah dari pieces ke box. jadi kita fokus buat CRUD untuk menambahkan data UoMConversion ini. anda harus mengikuti standar aplikasi ini dengan membaca @docs/spec/"
+}
