@@ -1,122 +1,91 @@
 # Autocomplete Generic Implementation Guide
 
-Dokumen ini menjelaskan spesifikasi dan panduan untuk mengimplementasikan komponen Autocomplete yang _generic_ dan _hierarchical_, yang telah terstandarisasi melalui pengerjaan modul Stock Adjustment.
-
-Implementasi ini menggunakan library frontend **TomSelect** yang dihubungkan dengan **Spring Boot REST API** di backend, mendukung debouncing, cascading (filtering bertingkat), auto-filling, dan sinkronisasi Server-Side Rendering (Thymeleaf).
+Dokumen ini menjelaskan spesifikasi dan panduan untuk mengimplementasikan komponen Autocomplete yang _generic_ dan _hierarchical_, yang telah terstandarisasi melalui modul Stock Adjustment dan UoM Conversion.
 
 ---
 
 ## 1. Komponen Backend
 
 ### A. Data Transfer Object (`LookupDto`)
-
-Gunakan `LookupDto` standar untuk semua kebutuhan autocomplete. Pastikan mengikuti aturan penamaan field untuk menjaga estetika UI.
+Gunakan `LookupDto` standar untuk semua kebutuhan autocomplete.
 
 ```java
 public record LookupDto(
     Long id, 
     String name,      // WAJIB: Hanya Nama (Tanpa Kode)
     String subText,   // WAJIB: Kode/Informasi Sekunder
-    Map<String, Object> payload // OPTIONAL: Metadata tambahan (e.g., isSerialized)
+    Map<String, Object> payload // OPTIONAL: Metadata tambahan (e.g., isSerialized, uomName)
 ) {}
 ```
 
-**Aturan Estetika:**
-*   **DILARANG** menggabungkan Kode ke dalam field `name` (misal: `Code - Name`).
-*   Field `name` akan menjadi teks utama yang dipilih user. Jika terlalu panjang, akan merusak tata letak tabel (memicu line-break).
-*   Field `subText` akan tampil otomatis di bawah nama pada dropdown pencarian untuk membantu identifikasi unik.
-
 ### B. Controller (Standard Endpoint)
-
 Setiap entitas yang mendukung autocomplete harus memiliki dua jenis endpoint:
-1.  **Search Endpoint**: `/api/lookup/[entities]?q=[keyword]&limit=10`
-2.  **Detail Endpoint**: `/api/lookup/[entities]/{id}` (PENTING untuk mekanisme cascading dan binding data awal yang stabil).
+1.  **Search Endpoint**: `/api/lookup/[module]/[entities]?q=[keyword]&limit=10`
+2.  **Detail Endpoint**: `/api/lookup/[module]/[entities]/{id}`
 
 ---
 
 ## 2. Komponen Frontend (UI)
 
-### A. Inisialisasi Standard dengan Sinkronisasi SSR
+### A. Inisialisasi Standard (Global `initLookup`)
+Semua komponen autocomplete **WAJIB** diinisialisasi melalui fungsi `initLookup(el, type, parentProvider)` yang berada di `layout/master.html`.
 
-Fungsi inisialisasi harus mampu membaca data awal yang dirender oleh Thymeleaf agar informasi `subText` tidak hilang saat halaman pertama kali dimuat (Mode Edit).
+**Fitur Otomatis `initLookup`:**
+1.  **ERP Height Standard**: Menambahkan class `.erp-input-ts` atau `.erp-input-ts-sm` (jika di dalam tabel) ke wrapper TomSelect.
+2.  **SSR Synchronization**: Membaca atribut `data-subtext` dari Thymeleaf untuk menampilkan kode pada saat halaman pertama dimuat (Mode Edit).
+3.  **Search Field**: Mencari berdasarkan `name` (default).
+4.  **Debouncing**: Menunda request ke server sebesar 150ms.
 
-```javascript
-function initLookup(el, type, parentProvider = null) {
-    return new TomSelect(el, {
-        valueField: 'id',
-        labelField: 'name',
-        searchField: ['name'],
-        placeholder: '-- Select --',
-        preload: 'focus',
-        onInitialize: function() {
-            // Sinkronisasi data awal dari atribut data-subtext HTML
-            const initialOption = el.querySelector('option[selected], option[value]:not([value=""])');
-            if (initialOption) {
-                const val = initialOption.value;
-                const subText = initialOption.getAttribute('data-subtext');
-                if (subText && this.options[val]) {
-                    this.options[val].subText = subText;
-                    this.refreshOptions(false);
-                }
-            }
-        },
-        load: debounce(function(q, callback) {
-            let url = `/api/lookup/${type}?q=${encodeURIComponent(q)}&limit=10`;
-            if (parentProvider) {
-                const parent = parentProvider();
-                if (parent.id) url += `&${parent.key}=${parent.id}`;
-            }
-            fetch(url).then(r => r.json()).then(callback);
-        }, 150),
-        render: {
-            option: (data, escape) => {
-                if (!data.id) return '';
-                let sub = data.subText ? `<small class="text-muted d-block" style="font-size:0.75em">${escape(data.subText)}</small>` : '';
-                return `<div class="py-1"><div>${escape(data.name)}</div>${sub}</div>`;
-            },
-            item: (data, escape) => `<span>${escape(data.name)}</span>`
-        }
-    });
-}
-```
-
-### B. Integrasi Thymeleaf (Mode Edit)
-
-Agar informasi Kode tetap tampil di bawah Nama saat halaman pertama kali dibuka, gunakan atribut `data-subtext` pada elemen `<option>`.
+### B. Integrasi Thymeleaf
+Gunakan fragment `fragments/inputs :: autocomplete` atau `table-autocomplete`.
 
 ```html
-<select th:field="*{facilityId}" id="facility">
-    <option value=""></option>
-    <option th:if="${dto.facilityId != null}" 
-            th:value="${dto.facilityId}" 
-            th:text="${dto.facilityName}" 
-            th:attr="data-subtext=${dto.facilityCode}"
-            selected></option>
-</select>
+<div th:replace="~{fragments/inputs :: autocomplete(field='productId', label=#{label.product}, id='product-select', 
+    initialValue=${dto.productId}, initialText=${dto.productName}, initialSubtext=${dto.productCode})}"></div>
 ```
 
 ---
 
-## 3. Pola Cascading & Auto-filling
+## 3. Pola JavaScript di Halaman
 
-### A. Cascading (Parent -> Child)
-Gunakan event `dropdown_open` untuk memastikan data anak selalu segar berdasarkan pilihan induk yang terbaru.
+Inisialisasi dilakukan di dalam `window.addEventListener('load', ...)` untuk memastikan library TomSelect yang di-defer sudah tersedia.
 
 ```javascript
-tsChild.on('dropdown_open', () => {
-    tsChild.clearOptions(); 
-    tsChild.refreshOptions(false);
+window.addEventListener('load', function() {
+    const el = document.getElementById('product-select');
+    
+    // Inisialisasi Standard
+    const ts = initLookup(el, 'inventory/products');
+
+    // Opsional: Custom Logic (misal: mengambil metadata dari payload)
+    if (ts) {
+        // Jika butuh search di field tambahan (subText)
+        ts.settings.searchField = ['name', 'subText'];
+        
+        ts.on('change', function(val) {
+            if (val) {
+                const item = this.options[val];
+                if (item.payload) {
+                    // Logika auto-fill field lain berdasarkan payload
+                    console.log(item.payload.uomName);
+                }
+            }
+        });
+    }
 });
 ```
 
-### B. Auto-filling (Child -> Parent)
-Gunakan metadata dari `payload` atau request Detail Endpoint untuk mengisi field induk secara otomatis jika user memilih data anak terlebih dahulu. Gunakan **Flag Guard** untuk mencegah infinite loop reset.
-
 ---
 
-## Ringkasan Ketentuan
-1.  **Estetika**: Field `name` hanya berisi Nama. Kode wajib di `subText`.
-2.  **Konsistensi**: Gunakan `data-subtext` di Thymeleaf agar UI SSR dan Autocomplete identik.
-3.  **Robust**: Selalu sediakan Detail Endpoint (`/{id}`) untuk setiap Lookup.
-4.  **Performance**: Gunakan debouncing 150ms dan limit query backend.
-5.  **UX**: Sembunyikan opsi kosong (`!data.id`) agar tidak merusak visual dropdown.
+## 4. Pola Cascading (Parent -> Child)
+
+Jika sebuah lookup bergantung pada field lain (misal: Bin bergantung pada Grid), gunakan `parentProvider`.
+
+```javascript
+// Provider mengirimkan data parent saat dipanggil oleh initLookup load()
+const tsChild = initLookup(childEl, 'inventory/bins', () => {
+    return { id: parentTs.getValue(), key: 'gridId' };
+});
+```
+
+`initLookup` akan otomatis membersihkan cache dan opsi setiap kali dropdown dibuka jika `parentProvider` disediakan, menjamin data yang tampil selalu relevan dengan pilihan induk terbaru.

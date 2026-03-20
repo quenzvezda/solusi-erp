@@ -43,20 +43,87 @@
     <!-- TomSelect (Autocomplete) JS -->
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2/dist/js/tom-select.complete.min.js" defer></script>
     
-    <!-- Global Menu Search Initialization -->
+    <!-- Global Utilities & Autocomplete Initialization -->
     <script>
+        // Global Debounce Function
+        function debounce(fn, delay) {
+            let timer;
+            return function (...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+
+        // Global TomSelect Initialization (Golden Standard)
+        function initLookup(el, type, parentProvider = null) {
+            if (!el) return null;
+            if (el.tomselect) el.tomselect.destroy();
+            
+            const ts = new TomSelect(el, {
+                valueField: 'id',
+                labelField: 'name',
+                searchField: ['name'],
+                placeholder: '-- Select --',
+                allowEmptyOption: false,
+                preload: 'focus', 
+                dropdownParent: 'body',
+                onInitialize: function() {
+                    // Apply ERP Standard wrapper class
+                    this.wrapper.classList.add('erp-input-ts');
+                    
+                    // Check if this element is inside a table line
+                    if (el.closest('.line-row')) {
+                        this.wrapper.classList.add('erp-input-ts-sm');
+                    }
+                    this.control.style.width = '100%';
+                    
+                    // Map data-subtext from initial option if exists (SSR Sync)
+                    const initialOption = el.querySelector('option[selected], option[value]:not([value=""])');
+                    if (initialOption) {
+                        const val = initialOption.value;
+                        const subText = initialOption.getAttribute('data-subtext');
+                        if (subText && this.options[val]) {
+                            this.options[val].subText = subText;
+                            this.refreshOptions(false);
+                        }
+                    }
+                },
+                load: debounce(function(q, callback) {
+                    let url = `/api/lookup/${type}?q=${encodeURIComponent(q)}&limit=10`;
+                    if (parentProvider) {
+                        const parent = parentProvider();
+                        if (parent && parent.id) {
+                            url += `&${parent.key || 'parentId'}=${parent.id}`;
+                        }
+                    }
+                    fetch(url).then(r => r.json()).then(callback).catch(() => callback([]));
+                }, 150),
+                render: {
+                    option: (data, escape) => {
+                        if (!data.id) return '';
+                        let sub = data.subText ? `<small class="text-muted d-block" style="font-size:0.75em">${escape(data.subText)}</small>` : '';
+                        return `<div class="py-1"><div>${escape(data.name)}</div>${sub}</div>`;
+                    },
+                    item: (data, escape) => {
+                        return `<span>${escape(data.name)}</span>`;
+                    }
+                }
+            });
+
+            if (parentProvider) {
+                ts.on('dropdown_open', () => {
+                    ts.clearCache();
+                    ts.clearOptions();
+                    ts.load('');
+                });
+            }
+
+            return ts;
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             const menuSearchEl = document.getElementById('global-menu-search');
             if (menuSearchEl) {
-                // Debounce Function
-                function debounce(fn, delay) {
-                    let timer;
-                    return function (...args) {
-                        clearTimeout(timer);
-                        timer = setTimeout(() => fn.apply(this, args), delay);
-                    };
-                }
-
                 new TomSelect('#global-menu-search', {
                     valueField: 'urlPath',
                     labelField: 'name',
