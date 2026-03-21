@@ -113,6 +113,8 @@ const ErpFormHandler = (function () {
     };
 
     const displayFieldErrors = function (form, errors) {
+        let unmappedErrors = [];
+
         for (const field in errors) {
             const input = form.querySelector(`[name="${field}"]`);
             if (input) {
@@ -127,7 +129,14 @@ const ErpFormHandler = (function () {
                 } else {
                     input.parentNode.appendChild(errorDiv);
                 }
+            } else {
+                // Field not found in form (e.g., hidden or server-side only validation)
+                unmappedErrors.push(errors[field]);
             }
+        }
+
+        if (unmappedErrors.length > 0) {
+            displayGlobalError(form, unmappedErrors.join('<br>'));
         }
     };
 

@@ -167,14 +167,43 @@
                                                 <td class="text-secondary" th:text="${p.description}">Description</td>
                                                 <td class="pe-3 text-end">
                                                     <!-- Delete only for non-system permissions -->
-                                                    <form th:if="${!#strings.startsWith(p.name, 'USERS_') && !#strings.startsWith(p.name, 'ROLES_') && !#strings.startsWith(p.name, 'DASHBOARD_') && !#strings.startsWith(p.name, 'PERMISSIONS_')}"
-                                                          th:action="@{/security/permissions/delete/{id}(id=${p.id})}" method="post"
-                                                          sec:authorize="hasAuthority('PERMISSIONS_DELETE')">
-                                                        <button type="submit" class="btn btn-link text-danger p-0" 
-                                                                th:attr="onclick='return confirm(\'' + #{label.permissions.delete.confirm} + '\')'">
+                                                    <th:block th:if="${!#strings.startsWith(p.name, 'USERS_') && !#strings.startsWith(p.name, 'ROLES_') && !#strings.startsWith(p.name, 'DASHBOARD_') && !#strings.startsWith(p.name, 'PERMISSIONS_')}">
+                                                        <button class="btn btn-white btn-sm text-danger" 
+                                                                data-bs-toggle="modal" 
+                                                                th:data-bs-target="'#modal-delete-' + ${p.id}"
+                                                                sec:authorize="hasAuthority('PERMISSIONS_DELETE')">
                                                             <i class="ti ti-trash"></i>
                                                         </button>
-                                                    </form>
+
+                                                        <!-- Delete Modal -->
+                                                        <div class="modal modal-blur fade" th:id="'modal-delete-' + ${p.id}" tabindex="-1" role="dialog" aria-hidden="true">
+                                                            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+                                                                <div class="modal-content text-start">
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                    <div class="modal-status bg-danger"></div>
+                                                                    <div class="modal-body text-center py-4">
+                                                                        <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
+                                                                        <h3 th:text="#{label.delete.confirm.title}">Konfirmasi Hapus</h3>
+                                                                        <div class="text-secondary" th:text="#{label.permissions.delete.confirm}">Apakah Anda yakin ingin menghapus data ini?</div>
+                                                                        <div class="mt-2"><strong><code th:text="${p.name}">PERMISSION_NAME</code></strong></div>
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <div class="w-100">
+                                                                            <div class="row">
+                                                                                <div class="col"><a href="#" class="btn w-100" data-bs-dismiss="modal" th:text="#{label.cancel}">Batal</a></div>
+                                                                                <div class="col">
+                                                                                    <form th:action="@{/security/permissions/delete/{id}(id=${p.id})}" method="post">
+                                                                                        <button type="submit" class="btn btn-danger w-100" th:text="#{label.delete}">Hapus</button>
+                                                                                    </form>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </th:block>
+                                                    
                                                     <span th:if="${#strings.startsWith(p.name, 'USERS_') || #strings.startsWith(p.name, 'ROLES_') || #strings.startsWith(p.name, 'DASHBOARD_') || #strings.startsWith(p.name, 'PERMISSIONS_')}"
                                                           class="text-muted small" th:text="#{label.permissions.delete.system}">System</span>
                                                 </td>

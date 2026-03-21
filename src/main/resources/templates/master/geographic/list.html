@@ -66,7 +66,14 @@
                         </div>
                     </div>
                     
-                    <div id="geographic-table-container" th:fragment="geographic-table-container">
+                    <div id="geographic-table-container" th:fragment="geographic-table-container"
+                         hx-get="/master/geographics"
+                         hx-trigger="refresh-table from:body delay:500ms"
+                         hx-include="[name='keyword'], [name='page'], [name='parentId']">
+                        <!-- State Tracking -->
+                        <input type="hidden" name="page" th:value="${page.number}">
+                        <input type="hidden" name="parentId" th:value="${parentId}">
+
                         <div class="table-responsive">
                             <table class="table table-vcenter card-table">
                                 <thead>
@@ -80,7 +87,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="item : ${page.content}">
+                                    <tr th:each="item : ${page.content}" th:id="'geographic-row-' + ${item.id}">
                                         <td><code th:text="${item.code}">CODE</code></td>
                                         <td class="font-weight-medium" th:text="${item.name}">Name</td>
                                         <td>
@@ -112,7 +119,7 @@
                                                    sec:authorize="hasAuthority('GEOGRAPHIC_UPDATE')">
                                                     <i class="ti ti-edit me-1"></i> <span th:text="#{label.edit}">Edit</span>
                                                 </a>
-                                                <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal"
+                                                <button class="btn btn-white btn-sm text-danger" data-bs-toggle="modal"
                                                     th:data-bs-target="'#modal-delete-' + ${item.id}"
                                                     sec:authorize="hasAuthority('GEOGRAPHIC_DELETE')">
                                                     <i class="ti ti-trash me-1"></i> <span th:text="#{label.delete}">Hapus</span>
@@ -123,7 +130,7 @@
                                             <div class="modal modal-blur fade" th:id="'modal-delete-' + ${item.id}"
                                                 tabindex="-1" role="dialog" aria-hidden="true">
                                                 <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-                                                    <div class="modal-content">
+                                                    <div class="modal-content text-start">
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
                                                             aria-label="Close"></button>
                                                         <div class="modal-status bg-danger"></div>
@@ -141,9 +148,11 @@
                                                                         <a href="#" class="btn w-100" data-bs-dismiss="modal" th:text="#{label.cancel}">Batal</a>
                                                                     </div>
                                                                     <div class="col">
-                                                                        <form th:action="@{/master/geographics/delete/{id}(id=${item.id})}" method="post">
-                                                                            <button type="submit" class="btn btn-danger w-100" th:text="#{label.delete}">Hapus</button>
-                                                                        </form>
+                                                                        <button type="button" class="btn btn-danger w-100"
+                                                                                th:attr="hx-delete=@{/master/geographics/{id}(id=${item.id})}, hx-target='#geographic-row-' + ${item.id}"
+                                                                                hx-swap="outerHTML swap:500ms"
+                                                                                data-bs-dismiss="modal"
+                                                                                th:text="#{label.delete}">Hapus</button>
                                                                     </div>
                                                                 </div>
                                                             </div>

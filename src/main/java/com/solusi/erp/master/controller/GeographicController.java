@@ -113,20 +113,14 @@ public class GeographicController {
         return ResponseEntity.ok(ApiResponse.success(getMessage("msg.success.update"), data));
     }
 
-    @PostMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('GEOGRAPHIC_DELETE')")
-    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        try {
-            GeographicResponse response = geographicService.getById(id);
-            Long parentId = response.getParentId();
-            geographicService.delete(id);
-            redirectAttributes.addFlashAttribute("successMessage", getMessage("msg.success.delete"));
-            return "redirect:/master/geographics" + (parentId != null ? "?parentId=" + parentId : "");
-        } catch (Exception e) {
-            log.error("Error deleting geographic", e);
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/master/geographics";
-        }
+    @ResponseBody
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        geographicService.delete(id);
+        return ResponseEntity.ok()
+                .header("HX-Trigger", "refresh-table")
+                .build();
     }
 
     // ===================================================================

@@ -13,6 +13,25 @@
 
 <body th:fragment="layout(content, pageScripts)" 
       th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+    
+    <!-- Global Error Modal (Rendered Early) -->
+    <div class="modal modal-blur fade" id="modal-global-error" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 9999;">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-status bg-danger"></div>
+                <div class="modal-body text-center py-4">
+                    <i class="ti ti-alert-circle icon mb-2 text-danger icon-lg"></i>
+                    <h3 th:text="#{msg.error.ajax.title}">Terjadi Kesalahan</h3>
+                    <div class="text-secondary" id="global-error-message"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger w-100" data-bs-dismiss="modal" th:text="#{label.close}">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="page">
         <!-- Sidebar Fragment -->
         <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
@@ -268,7 +287,43 @@
             initNumericInputs(evt.detail.target);
             initAllLookups(evt.detail.target);
         });
+
+        /**
+         * Global HTMX Error Listener
+         * Handles non-200 responses and displays error messages from ApiResponse
+         */
+        document.body.addEventListener('htmx:responseError', function(evt) {
+            const xhr = evt.detail.xhr;
+            let errorMessage = window.ErpI18n.serverError;
+
+            try {
+                const response = JSON.parse(xhr.responseText);
+                if (response && response.message) {
+                    errorMessage = response.message;
+                }
+            } catch (e) {
+                if (xhr.responseText && xhr.responseText.length < 200) {
+                    errorMessage = xhr.responseText;
+                } else if (xhr.statusText) {
+                    errorMessage = xhr.statusText;
+                }
+            }
+
+            // Trigger modal using hidden button click (Robust approach)
+            const errorMsgEl = document.getElementById('global-error-message');
+            const triggerBtn = document.getElementById('btn-trigger-global-error');
+            
+            if (errorMsgEl && triggerBtn) {
+                errorMsgEl.innerHTML = errorMessage;
+                triggerBtn.click();
+            } else {
+                alert(errorMessage);
+            }
+        });
     </script>
+
+    <!-- Hidden Trigger for Error Modal -->
+    <button id="btn-trigger-global-error" class="d-none" data-bs-toggle="modal" data-bs-target="#modal-global-error"></button>
 
     <!-- Optional Page-specific scripts -->
     <th:block th:replace="${pageScripts} ?: ~{}"></th:block>

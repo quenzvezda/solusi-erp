@@ -1,5 +1,6 @@
 package com.solusi.erp.master.service.impl;
 
+import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.core.service.SequenceGeneratorService;
 import com.solusi.erp.master.dto.PartyRoleTypeRequest;
 import com.solusi.erp.master.dto.PartyRoleTypeResponse;
@@ -50,34 +51,37 @@ public class PartyRoleTypeServiceImpl implements PartyRoleTypeService {
     }
 
     @Override
-    @Transactional
-    public void create(PartyRoleTypeRequest request) {
-        if (!StringUtils.hasText(request.getName())) {
-            throw new RuntimeException(getMessage("msg.error.party-role-type.name-required"));
-        }
-        PartyRoleType entity = new PartyRoleType();
-        entity.setCode(sequenceGeneratorService.generate("PARTY-ROLE-TYPE"));
-        entity.setName(request.getName());
-        repository.save(entity);
+    @Transactional(readOnly = true)
+    public FormViewDto<PartyRoleTypeRequest, Void, PartyRoleTypeResponse> getEditView(Long id) {
+        PartyRoleType entity = findOrThrow(id);
+        return FormViewDto.<PartyRoleTypeRequest, Void, PartyRoleTypeResponse>builder()
+                .request(mapper.toRequest(entity))
+                .audit(mapper.toResponse(entity))
+                .build();
     }
 
     @Override
     @Transactional
-    public void update(Long id, PartyRoleTypeRequest request) {
+    public PartyRoleTypeResponse create(PartyRoleTypeRequest request) {
+        PartyRoleType entity = mapper.toEntity(request);
+        entity.setCode(sequenceGeneratorService.generate("PARTY-ROLE-TYPE"));
+        PartyRoleType saved = repository.save(entity);
+        return mapper.toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public PartyRoleTypeResponse update(Long id, PartyRoleTypeRequest request) {
         PartyRoleType entity = findOrThrow(id);
-        if (!StringUtils.hasText(request.getName())) {
-            throw new RuntimeException(getMessage("msg.error.party-role-type.name-required"));
-        }
-        entity.setName(request.getName());
-        repository.save(entity);
+        mapper.updateEntity(request, entity);
+        PartyRoleType saved = repository.save(entity);
+        return mapper.toResponse(saved);
     }
 
     @Override
     @Transactional
     public void delete(Long id) {
         findOrThrow(id);
-        // Check if any Party is using this role type
-        // We rely on DB FK constraint to fail here — catch in controller
         repository.deleteById(id);
     }
 

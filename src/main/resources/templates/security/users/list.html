@@ -48,7 +48,13 @@
                     </div>
 
                     <!-- Table Container -->
-                    <div id="user-table-container" th:fragment="user-table-container">
+                    <div id="user-table-container" th:fragment="user-table-container"
+                         hx-get="/security/users" 
+                         hx-trigger="refresh-table from:body delay:500ms"
+                         hx-include="[name='keyword'], [name='page']">
+                        <!-- State Tracking -->
+                        <input type="hidden" name="page" th:value="${page.number}">
+
                         <div class="table-responsive">
                             <table class="table card-table table-vcenter text-nowrap datatable">
                                 <thead>
@@ -61,7 +67,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="user : ${page.content}">
+                                    <tr th:each="user : ${page.content}" th:id="'user-row-' + ${user.id}">
                                         <td>
                                             <div class="d-flex py-1 align-items-center">
                                                 <span class="avatar me-2" th:text="${#strings.substring(user.fullName, 0, 1).toUpperCase()}">U</span>
@@ -113,7 +119,7 @@
                                                 </form>
 
                                                 <button th:if="${user.username != 'admin'}"
-                                                        type="button" class="btn btn-outline-danger btn-sm"
+                                                        type="button" class="btn btn-white btn-sm text-danger"
                                                         data-bs-toggle="modal" 
                                                         th:data-bs-target="'#modal-delete-' + ${user.id}"
                                                         sec:authorize="hasAuthority('USERS_DELETE')">
@@ -124,12 +130,12 @@
                                             <!-- Delete Modal -->
                                             <div th:if="${user.username != 'admin'}" class="modal modal-blur fade" th:id="'modal-delete-' + ${user.id}" tabindex="-1" role="dialog" aria-hidden="true">
                                                 <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-                                                    <div class="modal-content">
+                                                    <div class="modal-content text-start">
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                         <div class="modal-status bg-danger"></div>
                                                         <div class="modal-body text-center py-4">
                                                             <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
-                                                            <h3 th:text="#{label.users.delete.confirm.title}">Konfirmasi Hapus</h3>
+                                                            <h3 th:text="#{label.delete.confirm.title}">Konfirmasi Hapus</h3>
                                                             <div class="text-secondary" th:text="#{label.users.delete.confirm.text(${user.username})}">Apakah Anda yakin?</div>
                                                         </div>
                                                         <div class="modal-footer">
@@ -139,9 +145,11 @@
                                                                         <a href="#" class="btn w-100" data-bs-dismiss="modal" th:text="#{label.cancel}">Batal</a>
                                                                     </div>
                                                                     <div class="col">
-                                                                        <form th:action="@{/security/users/delete/{id}(id=${user.id})}" method="post">
-                                                                            <button type="submit" class="btn btn-danger w-100" th:text="#{label.delete}">Hapus</button>
-                                                                        </form>
+                                                                        <button type="button" class="btn btn-danger w-100"
+                                                                                th:attr="hx-delete=@{/security/users/{id}(id=${user.id})}, hx-target='#user-row-' + ${user.id}"
+                                                                                hx-swap="outerHTML swap:500ms"
+                                                                                data-bs-dismiss="modal"
+                                                                                th:text="#{label.delete}">Hapus</button>
                                                                     </div>
                                                                 </div>
                                                             </div>

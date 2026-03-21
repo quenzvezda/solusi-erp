@@ -17,6 +17,16 @@ Setiap halaman daftar data (List) wajib mengikuti tata letak berikut untuk konsi
   - Bungkus dalam `.btn-list.flex-nowrap.justify-content-end` agar rapi.
   - Selalu gunakan icon (Tabler Icons) di samping teks label.
 
+### 4. Standard Delete Confirmation
+Untuk menjaga keamanan data, setiap aksi penghapusan (Delete) wajib menggunakan **Modal Confirmation** (bukan `window.confirm` bawaan browser). 
+
+**Komponen Modal:**
+- **ID Modal**: Gunakan format `modal-delete-${item.id}`.
+- **Warna Aksen**: Gunakan class `.modal-status.bg-danger` untuk memberikan indikator visual bahaya.
+- **Ikon**: Gunakan `.ti-alert-triangle.text-danger` berukuran besar (`.icon-lg`).
+- **Teks Konfirmasi**: Harus menyebutkan nama atau kode data yang akan dihapus menggunakan i18n (misal: `label.delete.confirm.text(${item.code})`).
+- **Tombol Aksi**: Tombol "Hapus" harus berwarna merah (`.btn-danger`) dan diletakkan di sisi kanan bawah.
+
 ---
 
 ## Standard CSS Classes

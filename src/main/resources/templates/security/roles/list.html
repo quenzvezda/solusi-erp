@@ -67,20 +67,19 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <div class="btn-list flex-nowrap">
+                                        <div class="btn-list flex-nowrap justify-content-end">
                                             <a th:href="@{/security/roles/edit/{id}(id=${role.id})}" 
                                                class="btn btn-white btn-sm"
-                                               sec:authorize="hasAuthority('ROLES_UPDATE')"
-                                               th:text="#{label.edit}">
-                                                Edit
+                                               sec:authorize="hasAuthority('ROLES_UPDATE')">
+                                                <i class="ti ti-edit me-1"></i> <span th:text="#{label.edit}">Edit</span>
                                             </a>
                                             <button th:if="${role.name != 'ROLE_ADMIN'}" 
-                                                    class="btn btn-danger btn-sm"
+                                                    class="btn btn-white btn-sm text-danger"
                                                     data-bs-toggle="modal" 
                                                     th:data-bs-target="'#modal-delete-' + ${role.id}"
                                                     sec:authorize="hasAuthority('ROLES_DELETE')"
-                                                    th:text="#{label.delete}">
-                                                Hapus
+                                                    th:title="#{label.delete}">
+                                                <i class="ti ti-trash me-1"></i> <span th:text="#{label.delete}">Hapus</span>
                                             </button>
                                         </div>
 
@@ -92,8 +91,8 @@
                                                     <div class="modal-status bg-danger"></div>
                                                     <div class="modal-body text-center py-4">
                                                         <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
-                                                        <h3 th:text="#{label.roles.delete.confirm.title}">Konfirmasi Hapus</h3>
-                                                        <div class="text-secondary" th:text="#{label.roles.delete.confirm.text(${role.name})}">Apakah Anda yakin ingin menghapus role <strong th:text="${role.name}"></strong>? Tindakan ini tidak dapat dibatalkan.</div>
+                                                        <h3 th:text="#{label.delete.confirm.title}">Konfirmasi Hapus</h3>
+                                                        <div class="text-secondary" th:text="#{label.roles.delete.confirm.text(${role.name})}">Apakah Anda yakin ingin menghapus role ini?</div>
                                                     </div>
                                                     <div class="modal-footer">
                                                         <div class="w-100">
