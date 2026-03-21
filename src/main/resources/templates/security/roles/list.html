@@ -45,72 +45,59 @@
                 </div>
 
                 <div class="card">
-                    <div class="table-responsive">
-                        <table class="table table-vcenter card-table">
-                            <thead>
-                                <tr>
-                                    <th th:text="#{label.roles.name}">Nama Role</th>
-                                    <th th:text="#{label.roles.description}">Deskripsi</th>
-                                    <th th:text="#{label.roles.permissions}">Permissions</th>
-                                    <th class="w-1" th:text="#{label.actions}">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="role : ${roles}">
-                                    <td class="fw-bold" th:text="${role.name}">ROLE_NAME</td>
-                                    <td class="text-secondary" th:text="${role.description ?: '-'}">Description</td>
-                                    <td>
-                                        <div class="flex-wrap gap-1 d-flex">
-                                            <span th:each="perm : ${role.permissions}" 
-                                                  class="badge badge-outline text-blue" 
-                                                  th:text="${perm.name}">PERM_NAME</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="btn-list flex-nowrap justify-content-end">
-                                            <a th:href="@{/security/roles/edit/{id}(id=${role.id})}" 
-                                               class="btn btn-white btn-sm"
-                                               sec:authorize="hasAuthority('ROLES_UPDATE')">
-                                                <i class="ti ti-edit me-1"></i> <span th:text="#{label.edit}">Edit</span>
-                                            </a>
-                                            <button th:if="${role.name != 'ROLE_ADMIN'}" 
-                                                    class="btn btn-white btn-sm text-danger"
-                                                    data-bs-toggle="modal" 
-                                                    th:data-bs-target="'#modal-delete-' + ${role.id}"
-                                                    sec:authorize="hasAuthority('ROLES_DELETE')"
-                                                    th:title="#{label.delete}">
-                                                <i class="ti ti-trash me-1"></i> <span th:text="#{label.delete}">Hapus</span>
-                                            </button>
-                                        </div>
-
-                                        <!-- Delete Modal -->
-                                        <div th:if="${role.name != 'ROLE_ADMIN'}" class="modal modal-blur fade" th:id="'modal-delete-' + ${role.id}" tabindex="-1" role="dialog" aria-hidden="true">
-                                            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-                                                <div class="modal-content">
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                    <div class="modal-status bg-danger"></div>
-                                                    <div class="modal-body text-center py-4">
-                                                        <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
-                                                        <h3 th:text="#{label.delete.confirm.title}">Konfirmasi Hapus</h3>
-                                                        <div class="text-secondary" th:text="#{label.roles.delete.confirm.text(${role.name})}">Apakah Anda yakin ingin menghapus role ini?</div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <div class="w-100">
-                                                            <div class="row">
-                                                                <div class="col"><a href="#" class="btn w-100" data-bs-dismiss="modal" th:text="#{label.cancel}">Batal</a></div>
-                                                                <div class="col">
-                                                                    <form th:action="@{/security/roles/delete/{id}(id=${role.id})}" method="post">
-                                                                        <button type="submit" class="btn btn-danger w-100" th:text="#{label.delete}">Hapus</button>
-                                                                    </form>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                    <div id="role-table-container" th:fragment="role-table-container"
+                         hx-get="/security/roles"
+                         hx-trigger="refresh-table from:body delay:500ms">
+                        <div class="table-responsive">
+                            <table class="table table-vcenter card-table">
+                                <thead>
+                                    <tr>
+                                        <th th:text="#{label.roles.name}">Nama Role</th>
+                                        <th th:text="#{label.roles.description}">Deskripsi</th>
+                                        <th th:text="#{label.roles.permissions}">Permissions</th>
+                                        <th class="w-1" th:text="#{label.actions}">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="role : ${roles}" th:id="'role-row-' + ${role.id}">
+                                        <td class="fw-bold" th:text="${role.name}">ROLE_NAME</td>
+                                        <td class="text-secondary" th:text="${role.description ?: '-'}">Description</td>
+                                        <td>
+                                            <div class="flex-wrap gap-1 d-flex">
+                                                <span th:each="perm : ${role.permissions}" 
+                                                      class="badge badge-outline text-blue" 
+                                                      th:text="${perm.name}">PERM_NAME</span>
                                             </div>
-                                        </div>
-                                    </td>
-                                </tr>
+                                        </td>
+                                        <td>
+                                            <div class="btn-list flex-nowrap justify-content-end">
+                                                <a th:href="@{/security/roles/edit/{id}(id=${role.id})}" 
+                                                   class="btn btn-white btn-sm"
+                                                   sec:authorize="hasAuthority('ROLES_UPDATE')">
+                                                    <i class="ti ti-edit me-1"></i> <span th:text="#{label.edit}">Edit</span>
+                                                </a>
+                                                <button th:if="${role.name != 'ROLE_ADMIN'}" 
+                                                        class="btn btn-white btn-sm text-danger"
+                                                        data-bs-toggle="modal" 
+                                                        th:data-bs-target="'#modal-delete-' + ${role.id}"
+                                                        sec:authorize="hasAuthority('ROLES_DELETE')"
+                                                        th:title="#{label.delete}">
+                                                    <i class="ti ti-trash me-1"></i> <span th:text="#{label.delete}">Hapus</span>
+                                                </button>
+                                            </div>
+
+                                            <!-- Delete Modal Fragment -->
+                                            <th:block th:if="${role.name != 'ROLE_ADMIN'}">
+                                                <div th:replace="~{fragments/modals :: delete-confirm(
+                                                    id='modal-delete-' + ${role.id},
+                                                    title=#{label.delete.confirm.title},
+                                                    message=#{label.roles.delete.confirm.text(${role.name})},
+                                                    actionUrl='/security/roles/' + ${role.id},
+                                                    targetId='#role-row-' + ${role.id}
+                                                )}"></div>
+                                            </th:block>
+                                        </td>
+                                    </tr>
                                 <tr th:if="${#lists.isEmpty(roles)}">
                                     <td colspan="4" class="text-center text-secondary py-4" th:text="#{label.roles.empty}">Tidak ada data role.</td>
                                 </tr>

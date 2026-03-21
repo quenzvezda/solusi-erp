@@ -84,17 +84,14 @@ public class FacilityController {
         return ResponseEntity.ok(ApiResponse.success(msg, data));
     }
 
-    @PostMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('FACILITY_DELETE')")
-    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        try {
-            service.delete(id);
-            String message = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/inventory/facilities";
+    @ResponseBody
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity.ok()
+                .header("HX-Trigger", "refresh-table")
+                .build();
     }
 
     private void populateSelectOptions(Model model) {

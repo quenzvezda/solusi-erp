@@ -2,6 +2,7 @@ package com.solusi.erp.inventory.mapper;
 
 import com.solusi.erp.core.mapper.AuditMapperHelper;
 import com.solusi.erp.inventory.dto.*;
+import com.solusi.erp.inventory.form.ContainerUIForm;
 import com.solusi.erp.inventory.model.Container;
 import com.solusi.erp.inventory.model.Facility;
 import com.solusi.erp.inventory.model.Grid;
@@ -88,6 +89,10 @@ public interface WarehouseMapper {
     @Mapping(target = "dimensions.width", source = "width")
     @Mapping(target = "dimensions.height", source = "height")
     void updateEntityFromRequest(ContainerRequest request, @MappingTarget Container entity);
+
+    @Mapping(target = "gridName", source = "grid.name")
+    @Mapping(target = "gridCode", source = "grid.code")
+    ContainerUIForm toContainerUIForm(Container entity);
 
     // --- Helper Mappers ---
     default Party mapParty(Long id) {

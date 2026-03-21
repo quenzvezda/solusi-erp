@@ -117,17 +117,24 @@
                                                     <i class="ti ti-edit"></i>
                                                     <span th:text="#{label.edit}">Edit</span>
                                                 </a>
-                                                <!-- HTMX Inline Delete -->
+                                                <!-- Standard Modal Delete -->
                                                 <button type="button" class="btn btn-white btn-sm text-danger"
                                                         sec:authorize="hasAuthority('GRID_DELETE')"
-                                                        th:attr="hx-post=@{/inventory/grids/delete/{id}(id=${item.id})}, hx-target='#grid-row-' + ${item.id}"
-                                                        hx-swap="outerHTML swap:500ms"
-                                                        th:data-confirm-msg="#{msg.confirm.delete}"
-                                                        onclick="if(!confirm(this.getAttribute('data-confirm-msg'))) return false;">
+                                                        data-bs-toggle="modal" 
+                                                        th:data-bs-target="'#modal-delete-' + ${item.id}">
                                                     <i class="ti ti-trash"></i>
                                                     <span th:text="#{label.delete}">Delete</span>
                                                 </button>
                                             </div>
+
+                                            <!-- Delete Modal Fragment -->
+                                            <div th:replace="~{fragments/modals :: delete-confirm(
+                                                id='modal-delete-' + ${item.id},
+                                                title=#{label.delete.confirm.title},
+                                                message=#{label.product.category.delete.confirm.text(${item.code})},
+                                                actionUrl='/inventory/grids/' + ${item.id},
+                                                targetId='#grid-row-' + ${item.id}
+                                            )}"></div>
                                         </td>
                                     </tr>
                                     <tr th:if="${page.totalElements == 0}">

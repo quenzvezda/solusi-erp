@@ -91,17 +91,24 @@
                                                     <i class="ti ti-edit me-1"></i>
                                                     <span th:text="#{label.edit}">Edit</span>
                                                 </a>
-                                                <!-- HTMX Inline Delete -->
+                                                <!-- Standard Modal Delete -->
                                                 <button type="button" class="btn btn-white btn-sm text-danger"
                                                         sec:authorize="hasAuthority('UNIT-OF-MEASURE_DELETE')"
-                                                        th:attr="hx-post=@{/inventory/unit-of-measures/delete/{id}(id=${item.id})}, hx-target='#uom-row-' + ${item.id}"
-                                                        hx-swap="outerHTML swap:500ms"
-                                                        th:data-confirm-msg="#{label.uom.delete.confirm.text(${item.name})}"
-                                                        onclick="if(!confirm(this.getAttribute('data-confirm-msg'))) return false;">
+                                                        data-bs-toggle="modal" 
+                                                        th:data-bs-target="'#modal-delete-' + ${item.id}">
                                                     <i class="ti ti-trash me-1"></i>
                                                     <span th:text="#{label.delete}">Delete</span>
                                                 </button>
                                             </div>
+
+                                            <!-- Delete Modal Fragment -->
+                                            <div th:replace="~{fragments/modals :: delete-confirm(
+                                                id='modal-delete-' + ${item.id},
+                                                title=#{label.delete.confirm.title},
+                                                message=#{label.uom.delete.confirm.text(${item.code})},
+                                                actionUrl='/inventory/unit-of-measures/' + ${item.id},
+                                                targetId='#uom-row-' + ${item.id}
+                                            )}"></div>
                                         </td>
                                     </tr>
                                     <tr th:if="${page.empty}">

@@ -80,16 +80,13 @@ public class ProductCategoryController {
         return ResponseEntity.ok(ApiResponse.success(msg, data));
     }
 
-    @PostMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('PRODUCT-CATEGORY_DELETE')")
-    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        try {
-            service.delete(id);
-            String message = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/inventory/product-categories";
+    @ResponseBody
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity.ok()
+                .header("HX-Trigger", "refresh-table")
+                .build();
     }
 }

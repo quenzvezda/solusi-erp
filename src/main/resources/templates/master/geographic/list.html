@@ -126,40 +126,14 @@
                                                 </button>
                                             </div>
 
-                                            <!-- Delete Modal -->
-                                            <div class="modal modal-blur fade" th:id="'modal-delete-' + ${item.id}"
-                                                tabindex="-1" role="dialog" aria-hidden="true">
-                                                <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-                                                    <div class="modal-content text-start">
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                            aria-label="Close"></button>
-                                                        <div class="modal-status bg-danger"></div>
-                                                        <div class="modal-body text-center py-4">
-                                                            <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
-                                                            <h3 th:text="#{label.delete.confirm.title}">Konfirmasi Hapus</h3>
-                                                            <div class="text-secondary"
-                                                                th:text="#{label.geographic.delete.confirm.text(${item.name})}">
-                                                                Apakah Anda yakin ingin menghapus data ini?</div>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <div class="w-100">
-                                                                <div class="row">
-                                                                    <div class="col">
-                                                                        <a href="#" class="btn w-100" data-bs-dismiss="modal" th:text="#{label.cancel}">Batal</a>
-                                                                    </div>
-                                                                    <div class="col">
-                                                                        <button type="button" class="btn btn-danger w-100"
-                                                                                th:attr="hx-delete=@{/master/geographics/{id}(id=${item.id})}, hx-target='#geographic-row-' + ${item.id}"
-                                                                                hx-swap="outerHTML swap:500ms"
-                                                                                data-bs-dismiss="modal"
-                                                                                th:text="#{label.delete}">Hapus</button>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            <!-- Delete Modal Fragment -->
+                                            <div th:replace="~{fragments/modals :: delete-confirm(
+                                                id='modal-delete-' + ${item.id},
+                                                title=#{label.delete.confirm.title},
+                                                message=#{label.geographic.delete.confirm.text(${item.name})},
+                                                actionUrl='/master/geographics/' + ${item.id},
+                                                targetId='#geographic-row-' + ${item.id}
+                                            )}"></div>
                                         </td>
                                     </tr>
                                     <tr th:if="${page.isEmpty()}">

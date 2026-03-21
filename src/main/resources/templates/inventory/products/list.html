@@ -107,17 +107,24 @@
                                                     <i class="ti ti-edit me-1"></i>
                                                     <span th:text="#{label.edit}">Edit</span>
                                                 </a>
-                                                <!-- HTMX Inline Delete -->
+                                                <!-- HTMX Inline Delete with Standard Modal -->
                                                 <button type="button" class="btn btn-white btn-sm text-danger"
                                                         sec:authorize="hasAuthority('PRODUCT_DELETE')"
-                                                        th:attr="hx-post=@{/inventory/products/delete/{id}(id=${item.id})}, hx-target='#product-row-' + ${item.id}"
-                                                        hx-swap="outerHTML swap:500ms"
-                                                        th:data-confirm-msg="#{label.product.delete.confirm.text(${item.code})}"
-                                                        onclick="if(!confirm(this.getAttribute('data-confirm-msg'))) return false;">
+                                                        data-bs-toggle="modal" 
+                                                        th:data-bs-target="'#modal-delete-' + ${item.id}">
                                                     <i class="ti ti-trash me-1"></i>
                                                     <span th:text="#{label.delete}">Delete</span>
                                                 </button>
                                             </div>
+
+                                            <!-- Delete Modal Fragment -->
+                                            <div th:replace="~{fragments/modals :: delete-confirm(
+                                                id='modal-delete-' + ${item.id},
+                                                title=#{label.delete.confirm.title},
+                                                message=#{label.product.delete.confirm.text(${item.code})},
+                                                actionUrl='/inventory/products/' + ${item.id},
+                                                targetId='#product-row-' + ${item.id}
+                                            )}"></div>
                                         </td>
                                     </tr>
                                     <tr th:if="${page.totalElements == 0}">

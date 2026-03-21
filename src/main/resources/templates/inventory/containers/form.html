@@ -16,8 +16,8 @@
                     <div class="col">
                         <h2 class="page-title" th:text="${containerRequest.id == null
                             ? #messages.msg('label.container.create')
-                            : #messages.msg('label.container.edit')}">
-                            Buat Kontainer Baru
+                            : #messages.msg('label.container.edit') + ': ' + containerRequest.name}">
+                            Form Kontainer
                         </h2>
                     </div>
                 </div>
@@ -27,82 +27,49 @@
         <!-- Page Body -->
         <div class="page-body">
             <div class="container-xl">
-
-                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
-                    <div class="d-flex">
-                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
-                        <div th:text="${errorMessage}">Error!</div>
-                    </div>
-                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                </div>
-
                 <form th:action="${containerRequest.id == null
                         ? '/inventory/containers/create'
                         : '/inventory/containers/edit/' + containerRequest.id}" th:object="${containerRequest}" method="post"
-                    class="card">
+                    class="card"
+                    data-ajax-form="true"
+                    data-redirect-on-success="/inventory/containers">
+                    
+                    <input type="hidden" th:field="*{id}" />
+                    <input type="hidden" th:field="*{version}" />
 
                     <div class="card-body">
-                        <!-- Global Binding Error Alert -->
-                        <div th:if="${#fields.hasAnyErrors()}" class="alert alert-danger" role="alert">
-                            <div class="d-flex">
-                                <div><i class="ti ti-alert-triangle icon alert-icon"></i></div>
-                                <div>
-                                    <h4 class="alert-title" th:text="#{msg.error.validation.title}">Terdapat Kesalahan</h4>
-                                    <ul class="mb-0 mt-2">
-                                        <li th:each="err : ${#fields.allErrors()}" th:text="${err}">Input tidak valid</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
                         <div class="row">
                             <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label class="form-label required" th:text="#{label.container.grid}">Grid / Zona</label>
-                                    <select th:field="*{gridId}" class="form-select"
-                                        th:classappend="${#fields.hasErrors('gridId')} ? 'is-invalid'">
-                                        <option value="" th:text="#{label.container.select.grid}">-- Pilih Grid --</option>
-                                        <option th:each="g : ${grids}" th:value="${g.id}" th:text="${g.name + ' (' + g.facilityName + ')'}"></option>
-                                    </select>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('gridId')}" th:errors="*{gridId}"></div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label" th:text="#{label.container.code}">Kode Kontainer</label>
-                                    <input type="text" th:field="*{code}" class="form-control bg-light" readonly
-                                        th:placeholder="${containerRequest.id == null ? '[ Auto Generated ]' : ''}">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label required" th:text="#{label.container.name}">Nama Kontainer</label>
-                                    <input type="text" th:field="*{name}" class="form-control"
-                                        th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'">
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label" th:text="#{label.container.barcode}">Barcode</label>
-                                    <input type="text" th:field="*{barcode}" class="form-control"
-                                        th:classappend="${#fields.hasErrors('barcode')} ? 'is-invalid'">
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('barcode')}" th:errors="*{barcode}"></div>
-                                </div>
+                                <div th:replace="~{fragments/inputs :: autocomplete(field='gridId', label=#{label.container.grid}, path='inventory/grids', required=true,
+                                    initialValue=${containerRequest.gridId}, 
+                                    initialText=${containerUI != null ? containerUI.gridName : ''}, 
+                                    initialSubtext=${containerUI != null ? containerUI.gridCode : ''})}"></div>
+
+                                <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.container.code}, isReadonly=true, placeholder='[ Auto Generated ]')}"></div>
+                                
+                                <div th:replace="~{fragments/inputs :: text(field='name', label=#{label.container.name}, required=true)}"></div>
+                                
+                                <div th:replace="~{fragments/inputs :: text(field='barcode', label=#{label.container.barcode})}"></div>
                             </div>
 
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label" th:text="#{label.container.dimensions}">Dimensi (P x L x T)</label>
-                                    <div class="input-group">
-                                        <input type="number" step="0.01" th:field="*{length}" class="form-control" placeholder="P">
-                                        <span class="input-group-text">x</span>
-                                        <input type="number" step="0.01" th:field="*{width}" class="form-control" placeholder="L">
-                                        <span class="input-group-text">x</span>
-                                        <input type="number" step="0.01" th:field="*{height}" class="form-control" placeholder="T">
+                                    <div class="row g-2">
+                                        <div class="col-4">
+                                            <input type="text" th:field="*{length}" class="form-control erp-input erp-number-decimal text-end" placeholder="P">
+                                        </div>
+                                        <div class="col-4">
+                                            <input type="text" th:field="*{width}" class="form-control erp-input erp-number-decimal text-end" placeholder="L">
+                                        </div>
+                                        <div class="col-4">
+                                            <input type="text" th:field="*{height}" class="form-control erp-input erp-number-decimal text-end" placeholder="T">
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label" th:text="#{label.container.maxweight}">Berat Maksimal</label>
-                                    <div class="input-group">
-                                        <input type="number" step="0.01" th:field="*{maxWeight}" class="form-control">
-                                        <span class="input-group-text">kg</span>
-                                    </div>
-                                </div>
+                                
+                                <div th:replace="~{fragments/inputs :: decimal(field='maxWeight', label=#{label.container.maxweight})}"></div>
+
                                 <div class="mb-3">
                                     <label class="form-check form-switch mt-4">
                                         <input class="form-check-input" type="checkbox" th:field="*{isActive}">
@@ -114,21 +81,22 @@
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label" th:text="#{label.container.note}">Catatan</label>
-                                    <textarea th:field="*{note}" class="form-control" rows="8"></textarea>
+                                    <textarea th:field="*{note}" class="form-control erp-input" rows="8"></textarea>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Record Info (Edit Mode only) -->
-                        <div th:if="${auditInfo != null and auditInfo.id != null}" 
-                             th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
+                        <!-- Audit Info -->
+                        <th:block th:if="${auditInfo != null and auditInfo.id != null}">
+                             <div th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
+                        </th:block>
                     </div>
 
                     <div class="card-footer text-end">
                         <div class="d-flex">
                             <a th:href="@{/inventory/containers}" class="btn btn-link" th:text="#{label.cancel}">Batal</a>
                             <button type="submit" class="btn btn-primary ms-auto">
-                                <i class="ti ti-device-floppy"></i>
+                                <i class="ti ti-device-floppy me-1"></i>
                                 <span th:text="#{label.save}">Simpan</span>
                             </button>
                         </div>
