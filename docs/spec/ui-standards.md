@@ -27,6 +27,21 @@ Untuk menjaga keamanan data, setiap aksi penghapusan (Delete) wajib menggunakan 
 - **Teks Konfirmasi**: Harus menyebutkan nama atau kode data yang akan dihapus menggunakan i18n (misal: `label.delete.confirm.text(${item.code})`).
 - **Tombol Aksi**: Tombol "Hapus" harus berwarna merah (`.btn-danger`) dan diletakkan di sisi kanan bawah.
 
+**Implementasi Fragment (Mandatory):**
+Gunakan fragment `fragments/modals :: delete-confirm` untuk menjaga konsistensi dan kebersihan kode. 
+
+Contoh pemanggilan:
+```html
+<div th:replace="~{fragments/modals :: delete-confirm(
+    id='modal-delete-' + ${item.id},
+    title=#{label.delete.confirm.title},
+    message=#{label.my.module.delete.confirm(${item.name})},
+    actionUrl='/my-module/' + ${item.id},
+    targetId='#row-' + ${item.id}
+)}"></div>
+```
+*Catatan: Parameter `targetId` adalah selector CSS untuk baris tabel yang akan di-swap/dihapus oleh HTMX.*
+
 ---
 
 ## Standard CSS Classes
