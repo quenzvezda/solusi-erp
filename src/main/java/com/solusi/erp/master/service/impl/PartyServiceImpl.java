@@ -1,5 +1,6 @@
 package com.solusi.erp.master.service.impl;
 
+import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.core.service.SequenceGeneratorService;
 import com.solusi.erp.master.dto.*;
 import com.solusi.erp.master.mapper.PartyMapper;
@@ -75,8 +76,22 @@ public class PartyServiceImpl implements PartyService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public FormViewDto<PartyRequest, Void, PartyResponse> getPartyEditView(Long id) {
+        Party entity = findOrThrow(id);
+        
+        PartyRequest request = getEditData(id); // reuse existing logic for request
+        
+        return FormViewDto.<PartyRequest, Void, PartyResponse>builder()
+                .request(request)
+                .ui(null)
+                .audit(mapper.toResponse(entity))
+                .build();
+    }
+
+    @Override
     @Transactional
-    public void create(PartyRequest request) {
+    public PartyResponse create(PartyRequest request) {
         validateSingleDefault(request);
 
         Party entity = mapper.toEntity(request);
@@ -87,12 +102,13 @@ public class PartyServiceImpl implements PartyService {
         syncAddresses(entity, request.getAddresses());
         syncContacts(entity, request.getContacts());
 
-        repository.save(entity);
+        Party saved = repository.save(entity);
+        return mapper.toResponse(saved);
     }
 
     @Override
     @Transactional
-    public void update(Long id, PartyRequest request) {
+    public PartyResponse update(Long id, PartyRequest request) {
         Party entity = findOrThrow(id);
 
         if (StringUtils.hasText(request.getCode()) && repository.existsByCodeAndIdNot(request.getCode(), id)) {
@@ -107,7 +123,8 @@ public class PartyServiceImpl implements PartyService {
         syncAddresses(entity, request.getAddresses());
         syncContacts(entity, request.getContacts());
 
-        repository.save(entity);
+        Party updated = repository.save(entity);
+        return mapper.toResponse(updated);
     }
 
     @Override

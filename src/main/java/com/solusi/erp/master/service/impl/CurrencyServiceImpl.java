@@ -52,18 +52,19 @@ public class CurrencyServiceImpl implements CurrencyService {
 
     @Override
     @Transactional
-    public void createCurrency(CurrencyRequest request) {
+    public CurrencyResponse createCurrency(CurrencyRequest request) {
         if (currencyRepository.findByAlias(request.getAlias()).isPresent()) {
             throw new RuntimeException("Currency alias already exists");
         }
         Currency currency = currencyMapper.toEntity(request);
         handleDefaultStatus(currency);
-        currencyRepository.save(currency);
+        Currency saved = currencyRepository.save(currency);
+        return currencyMapper.toResponse(saved);
     }
 
     @Override
     @Transactional
-    public void updateCurrency(Long id, CurrencyRequest request) {
+    public CurrencyResponse updateCurrency(Long id, CurrencyRequest request) {
         Currency currency = currencyRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Currency not found"));
 
@@ -76,7 +77,8 @@ public class CurrencyServiceImpl implements CurrencyService {
 
         currencyMapper.updateEntityFromRequest(request, currency);
         handleDefaultStatus(currency);
-        currencyRepository.save(currency);
+        Currency updated = currencyRepository.save(currency);
+        return currencyMapper.toResponse(updated);
     }
 
     @Override

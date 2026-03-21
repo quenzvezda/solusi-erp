@@ -179,7 +179,7 @@
                                                         <div th:replace="~{fragments/modals :: delete-confirm(
                                                             id='modal-delete-' + ${p.id},
                                                             title=#{label.delete.confirm.title},
-                                                            message=#{label.permissions.delete.confirm},
+                                                            message=#{msg.delete.confirm(${p.name})},
                                                             actionUrl='/security/permissions/' + ${p.id},
                                                             targetId='#perm-row-' + ${p.id}
                                                         )}"></div>

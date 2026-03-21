@@ -105,9 +105,9 @@
                                             <div th:replace="~{fragments/modals :: delete-confirm(
                                                 id='modal-delete-' + ${item.id},
                                                 title=#{label.delete.confirm.title},
-                                                message=#{label.uom.delete.confirm.text(${item.code})},
+                                                message=#{msg.delete.confirm(${item.name})},
                                                 actionUrl='/inventory/unit-of-measures/' + ${item.id},
-                                                targetId='#uom-row-' + ${item.id}
+                                                targetId='#row-' + ${item.id}
                                             )}"></div>
                                         </td>
                                     </tr>

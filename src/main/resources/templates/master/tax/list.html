@@ -52,8 +52,11 @@
                                 <!-- Future: Page Size Selector -->
                             </div>
                             <div class="ms-auto text-secondary">
-                                <form th:action="@{/master/taxes}" method="get" class="input-icon">
-                                    <input type="text" name="keyword" th:value="${keyword}"
+                                <form th:action="@{/master/taxes}" method="get" class="input-icon"
+                                      hx-get="/master/taxes" 
+                                      hx-target="#tax-table-container" 
+                                      hx-trigger="keyup changed delay:500ms from:#search-input">
+                                    <input id="search-input" type="text" name="keyword" th:value="${keyword}"
                                         class="form-control form-control-sm" th:placeholder="#{label.search}">
                                     <span class="input-icon-addon">
                                         <i class="ti ti-search"></i>
@@ -62,108 +65,84 @@
                             </div>
                         </div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-vcenter card-table">
-                            <thead>
-                                <tr>
-                                    <th th:replace="~{fragments/table :: sortable('code', #{label.tax.column.code})}">
-                                        Kode</th>
-                                    <th th:replace="~{fragments/table :: sortable('name', #{label.tax.column.name})}">
-                                        Nama</th>
-                                    <th th:replace="~{fragments/table :: sortable('rate', #{label.tax.column.rate})}">
-                                        Rate (%)</th>
-                                    <th
-                                        th:replace="~{fragments/table :: sortable('isSubtract', #{label.tax.is.subtract})}">
-                                        Sifat Mengurangi</th>
-                                    <th th:text="#{label.tax.column.status}">Status</th>
-                                    <th class="w-1" th:text="#{label.actions}">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="item : ${page.content}">
-                                    <td th:text="${item.code}">CODE</td>
-                                    <td class="font-weight-medium" th:text="${item.name}">Name</td>
-                                    <td th:text="${item.rate + '%'}">Rate</td>
-                                    <td>
-                                        <span th:if="${item.isSubtract}" class="badge bg-warning text-warning-fg"
-                                            th:text="#{label.yes}">Ya</span>
-                                        <span th:unless="${item.isSubtract}"
-                                            class="badge bg-secondary text-secondary-fg"
-                                            th:text="#{label.no}">Tidak</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-outline text-green" th:if="${item.isActive}">
-                                            <span class="badge-dot bg-success me-1"></span>
-                                            <span th:text="#{label.active}">Aktif</span>
-                                        </span>
-                                        <span class="badge badge-outline text-red" th:unless="${item.isActive}">
-                                            <span class="badge-dot bg-danger me-1"></span>
-                                            <span th:text="#{label.inactive}">Tidak Aktif</span>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="btn-list flex-nowrap">
-                                            <a th:href="@{/master/taxes/edit/{id}(id=${item.id})}"
-                                                class="btn btn-white btn-sm" sec:authorize="hasAuthority('TAX_UPDATE')"
-                                                th:text="#{label.edit}">
-                                                Edit
-                                            </a>
-                                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                                                th:data-bs-target="'#modal-delete-' + ${item.id}"
-                                                sec:authorize="hasAuthority('TAX_DELETE')" th:text="#{label.delete}">
-                                                Hapus
-                                            </button>
-                                        </div>
-
-                                        <!-- Delete Modal -->
-                                        <div class="modal modal-blur fade" th:id="'modal-delete-' + ${item.id}"
-                                            tabindex="-1" role="dialog" aria-hidden="true">
-                                            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-                                                <div class="modal-content">
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                        aria-label="Close"></button>
-                                                    <div class="modal-status bg-danger"></div>
-                                                    <div class="modal-body text-center py-4">
-                                                        <i
-                                                            class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
-                                                        <h3 th:text="#{label.tax.delete.confirm.title}">Konfirmasi Hapus
-                                                        </h3>
-                                                        <div class="text-secondary"
-                                                            th:text="#{label.tax.delete.confirm.text(${item.code})}">
-                                                            Apakah Anda yakin ingin menghapus pajak?</div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <div class="w-100">
-                                                            <div class="row">
-                                                                <div class="col"><a href="#" class="btn w-100"
-                                                                        data-bs-dismiss="modal"
-                                                                        th:text="#{label.cancel}">Batal</a></div>
-                                                                <div class="col">
-                                                                    <form
-                                                                        th:action="@{/master/taxes/delete/{id}(id=${item.id})}"
-                                                                        method="post">
-                                                                        <button type="submit"
-                                                                            class="btn btn-danger w-100"
-                                                                            th:text="#{label.delete}">Hapus</button>
-                                                                    </form>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                    <div id="tax-table-container" th:fragment="tax-table-container"
+                         hx-get="/master/taxes" 
+                         hx-trigger="refresh-table from:body delay:500ms"
+                         hx-include="[name='keyword'], [name='page']">
+                        <input type="hidden" name="page" th:value="${page.number}">
+                        <div class="table-responsive">
+                            <table class="table table-vcenter card-table">
+                                <thead>
+                                    <tr>
+                                        <th th:replace="~{fragments/table :: sortable('code', #{label.tax.column.code})}">
+                                            Kode</th>
+                                        <th th:replace="~{fragments/table :: sortable('name', #{label.tax.column.name})}">
+                                            Nama</th>
+                                        <th th:replace="~{fragments/table :: sortable('rate', #{label.tax.column.rate})}">
+                                            Rate (%)</th>
+                                        <th
+                                            th:replace="~{fragments/table :: sortable('isSubtract', #{label.tax.is.subtract})}">
+                                            Sifat Mengurangi</th>
+                                        <th th:text="#{label.tax.column.status}">Status</th>
+                                        <th class="w-1" th:text="#{label.actions}">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${page.content}" th:id="'tax-row-' + ${item.id}">
+                                        <td th:text="${item.code}">CODE</td>
+                                        <td class="font-weight-medium" th:text="${item.name}">Name</td>
+                                        <td th:text="${item.rate + '%'}">Rate</td>
+                                        <td>
+                                            <span th:if="${item.isSubtract}" class="badge bg-warning text-warning-fg"
+                                                th:text="#{label.yes}">Ya</span>
+                                            <span th:unless="${item.isSubtract}"
+                                                class="badge bg-secondary text-secondary-fg"
+                                                th:text="#{label.no}">Tidak</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-outline text-green" th:if="${item.isActive}">
+                                                <span class="badge-dot bg-success me-1"></span>
+                                                <span th:text="#{label.active}">Aktif</span>
+                                            </span>
+                                            <span class="badge badge-outline text-red" th:unless="${item.isActive}">
+                                                <span class="badge-dot bg-danger me-1"></span>
+                                                <span th:text="#{label.inactive}">Tidak Aktif</span>
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="btn-list flex-nowrap justify-content-end">
+                                                <a th:href="@{/master/taxes/edit/{id}(id=${item.id})}"
+                                                    class="btn btn-white btn-sm" sec:authorize="hasAuthority('TAX_UPDATE')"
+                                                    th:text="#{label.edit}">
+                                                    Edit
+                                                </a>
+                                                <button class="btn btn-white btn-sm text-danger" data-bs-toggle="modal"
+                                                    th:data-bs-target="'#modal-delete-' + ${item.id}"
+                                                    sec:authorize="hasAuthority('TAX_DELETE')">
+                                                    <i class="ti ti-trash me-1"></i> <span th:text="#{label.delete}">Hapus</span>
+                                                </button>
                                             </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr th:if="${page.totalElements == 0}">
-                                    <td colspan="6" class="text-center text-secondary py-4"
-                                        th:text="#{label.tax.empty}">Tidak ada data.</td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                                            <!-- Delete Modal Fragment -->
+                                            <div th:replace="~{fragments/modals :: delete-confirm(
+                                                id='modal-delete-' + ${item.id},
+                                                title=#{label.delete.confirm.title},
+                                                message=#{msg.delete.confirm(${item.name})},
+                                                actionUrl='/master/taxes/' + ${item.id},
+                                                targetId='#tax-row-' + ${item.id}
+                                            )}"></div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${page.isEmpty()}">
+                                        <td colspan="6" class="text-center py-4 text-secondary"
+                                            th:text="#{label.tax.empty}">Tidak ada data.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Pagination -->
+                        <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                     </div>
-                    <!-- Pagination -->
-                    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                 </div>
             </div>
         </div>

@@ -1,5 +1,7 @@
 package com.solusi.erp.master.controller;
 
+import com.solusi.erp.core.annotation.DefaultRedirectUrl;
+import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.master.dto.TaxRequest;
 import com.solusi.erp.master.dto.TaxResponse;
 import com.solusi.erp.master.service.TaxService;
@@ -10,17 +12,18 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Slf4j
 @Controller
 @RequestMapping("/master/taxes")
 @RequiredArgsConstructor
+@DefaultRedirectUrl
 public class TaxController {
 
     private final TaxService taxService;
@@ -49,64 +52,39 @@ public class TaxController {
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('TAX_CREATE')")
-    public String createTax(@Valid @ModelAttribute("tax") TaxRequest request,
-            BindingResult result,
-            RedirectAttributes redirectAttributes) {
-        if (result.hasErrors()) {
-            return "master/tax/form";
-        }
-        try {
-            taxService.createTax(request);
-            String message = messageSource.getMessage("tax.create.success", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-            return "redirect:/master/taxes";
-        } catch (Exception e) {
-            log.error("Failed to create Tax", e);
-            result.reject("global", e.getMessage());
-            return "master/tax/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<TaxResponse>> createTax(@Valid @RequestBody TaxRequest request) {
+        TaxResponse data = taxService.createTax(request);
+        String message = messageSource.getMessage("tax.create.success", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(message, data));
     }
 
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('TAX_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
-        TaxRequest request = taxService.getEditData(id);
-        model.addAttribute("tax", request);
+        var viewDto = taxService.getTaxEditView(id);
+        model.addAttribute("tax", viewDto.getRequest());
+        model.addAttribute("auditInfo", viewDto.getAudit());
         return "master/tax/form";
     }
 
     @PostMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('TAX_UPDATE')")
-    public String updateTax(@PathVariable Long id,
-            @Valid @ModelAttribute("tax") TaxRequest request,
-            BindingResult result,
-            RedirectAttributes redirectAttributes) {
-        if (result.hasErrors()) {
-            return "master/tax/form";
-        }
-        try {
-            taxService.updateTax(id, request);
-            String message = messageSource.getMessage("tax.update.success", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-            return "redirect:/master/taxes";
-        } catch (Exception e) {
-            log.error("Failed to update Tax", e);
-            result.reject("global", e.getMessage());
-            return "master/tax/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<TaxResponse>> updateTax(@PathVariable Long id,
+            @Valid @RequestBody TaxRequest request) {
+        TaxResponse data = taxService.updateTax(id, request);
+        String message = messageSource.getMessage("tax.update.success", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.ok(ApiResponse.success(message, data));
     }
 
-    @PostMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('TAX_DELETE')")
-    public String deleteTax(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        try {
-            taxService.deleteTax(id);
-            String message = messageSource.getMessage("tax.delete.success", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-        } catch (Exception e) {
-            log.error("Failed to delete Tax", e);
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/master/taxes";
+    @ResponseBody
+    public ResponseEntity<Void> deleteTaxHtmx(@PathVariable Long id) {
+        taxService.deleteTax(id);
+        return ResponseEntity.ok()
+                .header("HX-Trigger", "refresh-table")
+                .build();
     }
 }

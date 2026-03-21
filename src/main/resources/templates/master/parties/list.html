@@ -53,8 +53,11 @@
                                 <!-- Future: Filter by Role -->
                             </div>
                             <div class="ms-auto text-secondary">
-                                <form th:action="@{/master/parties}" method="get" class="input-icon">
-                                    <input type="text" name="keyword" th:value="${keyword}"
+                                <form th:action="@{/master/parties}" method="get" class="input-icon"
+                                      hx-get="/master/parties" 
+                                      hx-target="#party-table-container" 
+                                      hx-trigger="keyup changed delay:500ms from:#search-input">
+                                    <input id="search-input" type="text" name="keyword" th:value="${keyword}"
                                         class="form-control form-control-sm" th:placeholder="#{label.search}">
                                     <span class="input-icon-addon">
                                         <i class="ti ti-search"></i>
@@ -63,110 +66,88 @@
                             </div>
                         </div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-vcenter card-table">
-                            <thead>
-                                <tr>
-                                    <th th:replace="~{fragments/table :: sortable('code', #{label.party.column.code})}">
-                                        Kode</th>
-                                    <th th:replace="~{fragments/table :: sortable('name', #{label.party.column.name})}">
-                                        Nama</th>
-                                    <th th:replace="~{fragments/table :: sortable('type', #{label.party.column.type})}">
-                                        Tipe</th>
-                                    <th th:text="#{label.party.column.roles}">Peran</th>
-                                    <th th:replace="~{fragments/table :: sortable('isActive', #{label.status})}">Status
-                                    </th>
-                                    <th class="w-1" th:text="#{label.actions}">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="item : ${page.content}">
-                                    <td th:text="${item.code}">CODE</td>
-                                    <td class="font-weight-medium" th:text="${item.name}">Name</td>
-                                    <td>
-                                        <span class="badge"
-                                            th:classappend="${item.type.name() == 'PERSON' ? 'bg-info-lt' : 'bg-primary-lt'}"
-                                            th:text="#{'label.party.type.' + ${item.type.name().toLowerCase()}}">TYPE</span>
-                                    </td>
-                                    <td>
-                                        <div class="badges-list">
-                                            <span th:each="roleName : ${item.roleNames}" class="badge bg-secondary-lt"
-                                                th:text="${roleName}">Role</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-outline text-green" th:if="${item.isActive}">
-                                            <span class="badge-dot bg-success me-1"></span>
-                                            <span th:text="#{label.active}">Active</span>
-                                        </span>
-                                        <span class="badge badge-outline text-red" th:unless="${item.isActive}">
-                                            <span class="badge-dot bg-danger me-1"></span>
-                                            <span th:text="#{label.inactive}">Inactive</span>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="btn-list flex-nowrap">
-                                            <a th:href="@{/master/parties/edit/{id}(id=${item.id})}"
-                                                class="btn btn-white btn-sm"
-                                                sec:authorize="hasAuthority('PARTY_UPDATE')" th:text="#{label.edit}">
-                                                Edit
-                                            </a>
-                                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                                                th:data-bs-target="'#modal-delete-' + ${item.id}"
-                                                sec:authorize="hasAuthority('PARTY_DELETE')" th:text="#{label.delete}">
-                                                Hapus
-                                            </button>
-                                        </div>
-
-                                        <!-- Delete Modal -->
-                                        <div class="modal modal-blur fade" th:id="'modal-delete-' + ${item.id}"
-                                            tabindex="-1" role="dialog" aria-hidden="true">
-                                            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-                                                <div class="modal-content">
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                        aria-label="Close"></button>
-                                                    <div class="modal-status bg-danger"></div>
-                                                    <div class="modal-body text-center py-4">
-                                                        <i
-                                                            class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
-                                                        <h3 th:text="#{label.party.delete.confirm.title}">Konfirmasi
-                                                            Hapus</h3>
-                                                        <div class="text-secondary"
-                                                            th:text="#{label.party.delete.confirm.text(${item.code})}">
-                                                            Apakah Anda yakin ingin menghapus partner ini?</div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <div class="w-100">
-                                                            <div class="row">
-                                                                <div class="col"><a href="#" class="btn w-100"
-                                                                        data-bs-dismiss="modal"
-                                                                        th:text="#{label.cancel}">Batal</a></div>
-                                                                <div class="col">
-                                                                    <form
-                                                                        th:action="@{/master/parties/delete/{id}(id=${item.id})}"
-                                                                        method="post">
-                                                                        <button type="submit"
-                                                                            class="btn btn-danger w-100"
-                                                                            th:text="#{label.delete}">Hapus</button>
-                                                                    </form>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                    <div id="party-table-container" th:fragment="party-table-container"
+                         hx-get="/master/parties" 
+                         hx-trigger="refresh-table from:body delay:500ms"
+                         hx-include="[name='keyword'], [name='page']">
+                        <input type="hidden" name="page" th:value="${page.number}">
+                        <div class="table-responsive">
+                            <table class="table table-vcenter card-table">
+                                <thead>
+                                    <tr>
+                                        <th th:replace="~{fragments/table :: sortable('code', #{label.party.column.code})}">
+                                            Kode</th>
+                                        <th th:replace="~{fragments/table :: sortable('name', #{label.party.column.name})}">
+                                            Nama</th>
+                                        <th th:replace="~{fragments/table :: sortable('type', #{label.party.column.type})}">
+                                            Tipe</th>
+                                        <th th:text="#{label.party.column.roles}">Peran</th>
+                                        <th th:replace="~{fragments/table :: sortable('isActive', #{label.status})}">Status
+                                        </th>
+                                        <th class="w-1" th:text="#{label.actions}">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${page.content}" th:id="'party-row-' + ${item.id}">
+                                        <td>
+                                            <div th:text="${item.code}">CODE</div>
+                                        </td>
+                                        <td class="font-weight-medium" th:text="${item.name}">Name</td>
+                                        <td>
+                                            <span class="badge"
+                                                th:classappend="${item.type.name() == 'PERSON' ? 'bg-info-lt' : 'bg-primary-lt'}"
+                                                th:text="#{'label.party.type.' + ${item.type.name().toLowerCase()}}">TYPE</span>
+                                        </td>
+                                        <td>
+                                            <div class="badges-list">
+                                                <span th:each="roleName : ${item.roleNames}" class="badge bg-secondary-lt"
+                                                    th:text="${roleName}">Role</span>
                                             </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr th:if="${page.totalElements == 0}">
-                                    <td colspan="6" class="text-center text-secondary py-4"
-                                        th:text="#{label.party.empty}">Tidak ada data.</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-outline text-green" th:if="${item.isActive}">
+                                                <span class="badge-dot bg-success me-1"></span>
+                                                <span th:text="#{label.active}">Active</span>
+                                            </span>
+                                            <span class="badge badge-outline text-red" th:unless="${item.isActive}">
+                                                <span class="badge-dot bg-danger me-1"></span>
+                                                <span th:text="#{label.inactive}">Inactive</span>
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="btn-list flex-nowrap justify-content-end">
+                                                <a th:href="@{/master/parties/edit/{id}(id=${item.id})}"
+                                                    class="btn btn-white btn-sm"
+                                                    sec:authorize="hasAuthority('PARTY_UPDATE')" th:text="#{label.edit}">
+                                                    Edit
+                                                </a>
+                                                <button class="btn btn-white btn-sm text-danger" data-bs-toggle="modal"
+                                                    th:data-bs-target="'#modal-delete-' + ${item.id}"
+                                                    sec:authorize="hasAuthority('PARTY_DELETE')">
+                                                    <i class="ti ti-trash me-1"></i> <span th:text="#{label.delete}">Hapus</span>
+                                                </button>
+                                            </div>
+
+                                            <!-- Delete Modal Fragment -->
+                                            <div th:replace="~{fragments/modals :: delete-confirm(
+                                                id='modal-delete-' + ${item.id},
+                                                title=#{label.delete.confirm.title},
+                                                message=#{msg.delete.confirm.cascade(${item.name})},
+                                                actionUrl='/master/parties/' + ${item.id},
+                                                targetId='#party-row-' + ${item.id}
+                                            )}"></div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${page.totalElements == 0}">
+                                        <td colspan="6" class="text-center text-secondary py-4"
+                                            th:text="#{label.party.empty}">Tidak ada data.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Pagination -->
+                        <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                     </div>
-                    <!-- Pagination -->
-                    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                 </div>
             </div>
         </div>

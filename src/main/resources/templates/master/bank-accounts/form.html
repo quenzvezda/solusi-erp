@@ -3,8 +3,9 @@
 
 <head th:replace="~{layout/master :: head(${bankAccount.code == null ? #messages.msg('master.bank-account.add') : #messages.msg('master.bank-account.edit')})}"></head>
 
-<body th:replace="~{layout/master :: layout(~{:: .bank-account-form-content}, ~{})}">
+<body th:replace="~{layout/master :: layout(~{:: .bank-account-form-content}, ~{:: #page-scripts})}">
     <div class="bank-account-form-content">
+        <!-- Page Header -->
         <div class="page-header d-print-none">
             <div class="container-xl">
                 <div class="row g-2 align-items-center">
@@ -18,162 +19,88 @@
             </div>
         </div>
 
+        <!-- Page Body -->
         <div class="page-body">
             <div class="container-xl">
-                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible mb-3" role="alert">
-                    <div class="d-flex">
-                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
-                        <div th:text="${errorMessage}"></div>
-                    </div>
-                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                </div>
-
                 <form th:action="${bankAccount.code == null ? '/master/bank-accounts/create' : '/master/bank-accounts/edit/' + id}"
-                    th:object="${bankAccount}" method="post">
+                      th:object="${bankAccount}" method="post"
+                      data-ajax-form="true"
+                      data-redirect-on-success="/master/bank-accounts">
 
-                    <div class="row row-cards">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label" th:text="#{master.bank-account.code}">Code</label>
-                                                <input type="text" th:field="*{code}" class="form-control bg-light" readonly
-                                                    th:placeholder="${bankAccount.code == null ? '[ Auto Generated ]' : ''}">
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label required" th:text="#{master.bank-account.bank-name}">Bank Name</label>
-                                                <input type="text" th:field="*{bankName}" class="form-control"
-                                                    th:classappend="${#fields.hasErrors('bankName')} ? 'is-invalid'">
-                                                <div class="invalid-feedback" th:if="${#fields.hasErrors('bankName')}" th:errors="*{bankName}"></div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label required" th:text="#{master.bank-account.branch}">Branch</label>
-                                                <input type="text" th:field="*{branch}" class="form-control"
-                                                    th:classappend="${#fields.hasErrors('branch')} ? 'is-invalid'">
-                                                <div class="invalid-feedback" th:if="${#fields.hasErrors('branch')}" th:errors="*{branch}"></div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label required" th:text="#{master.bank-account.city}">City</label>
-                                                <select th:field="*{cityId}" class="form-select" id="city-ts"
-                                                    th:classappend="${#fields.hasErrors('cityId')} ? 'is-invalid'">
-                                                    <option th:if="*{cityId != null}" th:value="*{cityId}" th:text="${selectedCity}"></option>
-                                                </select>
-                                                <div class="invalid-feedback" th:if="${#fields.hasErrors('cityId')}" th:errors="*{cityId}"></div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label required" th:text="#{master.bank-account.party}">Holder</label>
-                                                <select th:field="*{partyId}" class="form-select" id="party-ts"
-                                                    th:classappend="${#fields.hasErrors('partyId')} ? 'is-invalid'">
-                                                    <option th:if="*{partyId != null}" th:value="*{partyId}" th:text="${selectedParty}"></option>
-                                                </select>
-                                                <div class="invalid-feedback" th:if="${#fields.hasErrors('partyId')}" th:errors="*{partyId}"></div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label required" th:text="#{master.bank-account.account-name}">Account Name</label>
-                                                <input type="text" th:field="*{accountName}" class="form-control"
-                                                    th:classappend="${#fields.hasErrors('accountName')} ? 'is-invalid'">
-                                                <div class="invalid-feedback" th:if="${#fields.hasErrors('accountName')}" th:errors="*{accountName}"></div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label required" th:text="#{master.bank-account.account-no}">Account No</label>
-                                                <input type="text" th:field="*{accountNo}" class="form-control"
-                                                    th:classappend="${#fields.hasErrors('accountNo')} ? 'is-invalid'">
-                                                <div class="invalid-feedback" th:if="${#fields.hasErrors('accountNo')}" th:errors="*{accountNo}"></div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label required" th:text="#{master.bank-account.type}">Type</label>
-                                                <select th:field="*{accountType}" class="form-select" id="type-select"
-                                                    th:classappend="${#fields.hasErrors('accountType')} ? 'is-invalid'">
-                                                    <option value=""></option>
-                                                    <option th:each="type : ${accountTypes}" th:value="${type}" th:text="${type}"></option>
-                                                </select>
-                                                <div class="invalid-feedback" th:if="${#fields.hasErrors('accountType')}" th:errors="*{accountType}"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <div class="mb-3">
-                                                <label class="form-label" th:text="#{master.bank-account.note}">Note</label>
-                                                <textarea th:field="*{note}" class="form-control" rows="3"></textarea>
-                                            </div>
-                                        </div>
-                                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- Left Column -->
+                                <div class="col-md-6">
+                                    <div th:replace="~{fragments/inputs :: text(field='code', label=#{master.bank-account.code}, isReadonly=true, placeholder='[ Auto Generated ]')}"></div>
+                                    
+                                    <div th:replace="~{fragments/inputs :: text(field='bankName', label=#{master.bank-account.bank-name}, required=true)}"></div>
+                                    
+                                    <div th:replace="~{fragments/inputs :: text(field='branch', label=#{master.bank-account.branch}, required=true)}"></div>
 
-                                    <!-- Record Info (Edit Mode only) -->
-                                    <div th:if="${auditInfo != null and auditInfo.id != null}" th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
+                                    <div th:replace="~{fragments/inputs :: autocomplete(field='cityId', label=#{master.bank-account.city}, path='geographics/cities', required=true,
+                                        initialValue=${bankAccount.cityId}, 
+                                        initialText=${selectedCity}, 
+                                        initialSubtext='')}"></div>
+                                </div>
+
+                                <!-- Right Column -->
+                                <div class="col-md-6 border-start-md">
+                                    <div th:replace="~{fragments/inputs :: autocomplete(field='partyId', label=#{master.bank-account.party}, path='parties', required=true,
+                                        initialValue=${bankAccount.partyId}, 
+                                        initialText=${selectedParty}, 
+                                        initialSubtext='')}"></div>
+
+                                    <div th:replace="~{fragments/inputs :: text(field='accountName', label=#{master.bank-account.account-name}, required=true)}"></div>
+                                    
+                                    <div th:replace="~{fragments/inputs :: text(field='accountNo', label=#{master.bank-account.account-no}, required=true)}"></div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label required" th:text="#{master.bank-account.type}">Type</label>
+                                        <select th:field="*{accountType}" class="form-select erp-input" th:errorclass="is-invalid">
+                                            <option value="">-- Select Type --</option>
+                                            <option th:each="type : ${accountTypes}" th:value="${type}" th:text="${type}"></option>
+                                        </select>
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('accountType')}" th:errors="*{accountType}"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Full Width Note -->
+                                <div class="col-12 mt-3">
+                                    <div class="mb-3">
+                                        <label class="form-label" th:text="#{master.bank-account.note}">Note</label>
+                                        <textarea th:field="*{note}" class="form-control erp-input" rows="3"></textarea>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <div class="card-footer text-end mt-3">
-                        <div class="d-flex">
-                            <a th:href="@{/master/bank-accounts}" class="btn btn-link" th:text="#{label.cancel}">Cancel</a>
-                            <button type="submit" class="btn btn-primary ms-auto">
-                                <i class="ti ti-device-floppy"></i>
-                                <span th:text="#{label.save}">Save</span>
-                            </button>
+                            <!-- Record Info (Edit Mode) -->
+                            <div th:if="${auditInfo != null and auditInfo.id != null}" 
+                                 th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
+                        </div>
+
+                        <!-- Card Footer -->
+                        <div class="card-footer text-end">
+                            <div class="d-flex">
+                                <a th:href="@{/master/bank-accounts}" class="btn btn-link" th:text="#{label.cancel}">Cancel</a>
+                                <button type="submit" class="btn btn-primary ms-auto">
+                                    <i class="ti ti-device-floppy me-1"></i>
+                                    <span th:text="#{label.save}">Save</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </form>
             </div>
         </div>
+    </div>
 
-        <script th:inline="javascript">
-            document.addEventListener('DOMContentLoaded', () => {
-                new TomSelect('#type-select', {
-                    create: false,
-                    sortField: { field: "text", direction: "asc" }
-                });
-
-                new TomSelect('#city-ts', {
-                    valueField: 'id',
-                    labelField: 'name',
-                    searchField: ['name'],
-                    placeholder: '-- Select City --',
-                    openOnFocus: true,
-                    preload: false,
-                    load: function (q, callback) {
-                        fetch(`/api/lookup/geographics/cities?q=${encodeURIComponent(q)}&limit=10`)
-                            .then(r => r.json()).then(callback).catch(() => callback([]));
-                    },
-                    render: {
-                        option: function (data, escape) {
-                            return `<div class="py-1">${escape(data.name)}</div>`;
-                        },
-                        item: function (data, escape) {
-                            return `<span>${escape(data.name)}</span>`;
-                        }
-                    }
-                });
-
-                new TomSelect('#party-ts', {
-                    valueField: 'id',
-                    labelField: 'name',
-                    searchField: ['name', 'subText'],
-                    placeholder: '-- Select Party --',
-                    openOnFocus: true,
-                    preload: false,
-                    load: function (q, callback) {
-                        fetch(`/api/lookup/parties?q=${encodeURIComponent(q)}`)
-                            .then(r => r.json()).then(callback).catch(() => callback([]));
-                    },
-                    render: {
-                        option: function (data, escape) {
-                            const sub = data.subText ? `<small class="text-muted d-block" style="font-size:0.75em">${escape(data.subText)}</small>` : '';
-                            return `<div class="py-1">${escape(data.name)}${sub}</div>`;
-                        },
-                        item: function (data, escape) {
-                            return `<span>${escape(data.name)}</span>`;
-                        }
-                    }
-                });
-            });
+    <!-- Page Specific Scripts Slot -->
+    <div id="page-scripts" th:fragment="pageScripts">
+        <script>
+            // No manual initialization needed! 
+            // fragments/inputs :: autocomplete already uses data-lookup-path
+            // which is automatically handled by the global initLookup in layout/master
         </script>
     </div>
 </body>

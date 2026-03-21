@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 
 /**
  * DTO for creating or updating a Tax.
+ * Following project standard: extends BaseAuditResponse.
  */
 @Data
 @Builder
@@ -34,7 +35,9 @@ public class TaxRequest extends BaseAuditResponse {
 
     private String note;
 
-    private Boolean isSubtract;
+    @Builder.Default
+    private Boolean isSubtract = false;
 
-    private Boolean isActive;
+    @Builder.Default
+    private Boolean isActive = true;
 }

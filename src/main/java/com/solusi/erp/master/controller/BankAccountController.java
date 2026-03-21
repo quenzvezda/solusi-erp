@@ -1,5 +1,6 @@
 package com.solusi.erp.master.controller;
 
+import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.master.dto.BankAccountRequest;
 import com.solusi.erp.master.dto.BankAccountResponse;
 import com.solusi.erp.master.model.AccountType;
@@ -11,12 +12,12 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Slf4j
 @Controller
@@ -48,24 +49,11 @@ public class BankAccountController {
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('BANK-ACCOUNT_CREATE')")
-    public String create(@Valid @ModelAttribute("bankAccount") BankAccountRequest request,
-            BindingResult result,
-            RedirectAttributes redirectAttributes, Model model) {
-        if (result.hasErrors()) {
-            model.addAttribute("accountTypes", AccountType.values());
-            return "master/bank-accounts/form";
-        }
-        try {
-            bankAccountService.create(request);
-            String message = messageSource.getMessage("master.bank-account.create.success", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-            return "redirect:/master/bank-accounts";
-        } catch (Exception e) {
-            log.error("Failed to create Bank Account", e);
-            model.addAttribute("accountTypes", AccountType.values());
-            result.reject("global", e.getMessage());
-            return "master/bank-accounts/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<BankAccountResponse>> create(@Valid @RequestBody BankAccountRequest request) {
+        BankAccountResponse data = bankAccountService.create(request);
+        String msg = messageSource.getMessage("master.bank-account.create.success", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(msg, data));
     }
 
     @GetMapping("/edit/{id}")
@@ -76,53 +64,35 @@ public class BankAccountController {
         // Fetch full entity to populate the view correctly (specifically for party and city names)
         BankAccountResponse responseDto = bankAccountService.findById(id);
         
+        model.addAttribute("id", id);
         model.addAttribute("bankAccount", request);
         model.addAttribute("selectedCity", responseDto.getCityName());
         model.addAttribute("selectedParty", responseDto.getPartyName());
         model.addAttribute("accountTypes", AccountType.values());
+        
+        // Populate auditInfo for fragments/audit-info
+        model.addAttribute("auditInfo", responseDto);
+        
         return "master/bank-accounts/form";
     }
 
     @PostMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('BANK-ACCOUNT_UPDATE')")
-    public String update(@PathVariable Long id,
-            @Valid @ModelAttribute("bankAccount") BankAccountRequest request,
-            BindingResult result,
-            RedirectAttributes redirectAttributes, Model model) {
-        if (result.hasErrors()) {
-            model.addAttribute("accountTypes", AccountType.values());
-            // Need to repopulate selected names
-            try {
-                BankAccountResponse responseDto = bankAccountService.findById(id);
-                model.addAttribute("selectedCity", responseDto.getCityName());
-                model.addAttribute("selectedParty", responseDto.getPartyName());
-            } catch (Exception ignored) {}
-            return "master/bank-accounts/form";
-        }
-        try {
-            bankAccountService.update(id, request);
-            String message = messageSource.getMessage("master.bank-account.update.success", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-            return "redirect:/master/bank-accounts";
-        } catch (Exception e) {
-            log.error("Failed to update Bank Account", e);
-            model.addAttribute("accountTypes", AccountType.values());
-            result.reject("global", e.getMessage());
-            return "master/bank-accounts/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<BankAccountResponse>> update(@PathVariable Long id,
+            @Valid @RequestBody BankAccountRequest request) {
+        BankAccountResponse data = bankAccountService.update(id, request);
+        String msg = messageSource.getMessage("master.bank-account.update.success", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.ok(ApiResponse.success(msg, data));
     }
 
-    @PostMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('BANK-ACCOUNT_DELETE')")
-    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        try {
-            bankAccountService.delete(id);
-            String message = messageSource.getMessage("master.bank-account.delete.success", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-        } catch (Exception e) {
-            log.error("Failed to delete Bank Account", e);
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/master/bank-accounts";
+    @ResponseBody
+    public ResponseEntity<Void> deleteHtmx(@PathVariable Long id) {
+        bankAccountService.delete(id);
+        return ResponseEntity.ok()
+                .header("HX-Trigger", "refresh-table")
+                .build();
     }
 }

@@ -52,8 +52,11 @@
                             <div class="text-secondary">
                             </div>
                             <div class="ms-auto text-secondary">
-                                <form th:action="@{/master/currencies}" method="get" class="input-icon">
-                                    <input type="text" name="keyword" th:value="${keyword}"
+                                <form th:action="@{/master/currencies}" method="get" class="input-icon"
+                                      hx-get="/master/currencies" 
+                                      hx-target="#currency-table-container" 
+                                      hx-trigger="keyup changed delay:500ms from:#search-input">
+                                    <input id="search-input" type="text" name="keyword" th:value="${keyword}"
                                         class="form-control form-control-sm" th:placeholder="#{label.search}">
                                     <span class="input-icon-addon">
                                         <i class="ti ti-search"></i>
@@ -62,109 +65,86 @@
                             </div>
                         </div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-vcenter card-table">
-                            <thead>
-                                <tr>
-                                    <th
-                                        th:replace="~{fragments/table :: sortable('symbol', #{label.currency.column.symbol})}">
-                                        Simbol</th>
-                                    <th
-                                        th:replace="~{fragments/table :: sortable('alias', #{label.currency.column.alias})}">
-                                        Alias</th>
-                                    <th
-                                        th:replace="~{fragments/table :: sortable('name', #{label.currency.column.name})}">
-                                        Nama</th>
-                                    <th th:text="#{label.currency.column.default}">Default</th>
-                                    <th th:text="#{label.currency.column.status}">Status</th>
-                                    <th class="w-1" th:text="#{label.actions}">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="item : ${page.content}">
-                                    <td th:text="${item.symbol}">SYMBOL</td>
-                                    <td th:text="${item.alias}">ALIAS</td>
-                                    <td class="font-weight-medium" th:text="${item.name}">Name</td>
-                                    <td>
-                                        <span th:if="${item.isDefault}" class="badge bg-primary text-primary-fg"
-                                            th:text="#{label.yes}">Ya</span>
-                                        <span th:unless="${item.isDefault}" class="badge bg-secondary text-secondary-fg"
-                                            th:text="#{label.no}">Tidak</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-outline text-green" th:if="${item.isActive}">
-                                            <span class="badge-dot bg-success me-1"></span>
-                                            <span th:text="#{label.active}">Aktif</span>
-                                        </span>
-                                        <span class="badge badge-outline text-red" th:unless="${item.isActive}">
-                                            <span class="badge-dot bg-danger me-1"></span>
-                                            <span th:text="#{label.inactive}">Tidak Aktif</span>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="btn-list flex-nowrap">
-                                            <a th:href="@{/master/currencies/edit/{id}(id=${item.id})}"
-                                                class="btn btn-white btn-sm"
-                                                sec:authorize="hasAuthority('CURRENCY_UPDATE')" th:text="#{label.edit}">
-                                                Edit
-                                            </a>
-                                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                                                th:data-bs-target="'#modal-delete-' + ${item.id}"
-                                                sec:authorize="hasAuthority('CURRENCY_DELETE')"
-                                                th:text="#{label.delete}">
-                                                Hapus
-                                            </button>
-                                        </div>
-
-                                        <!-- Delete Modal -->
-                                        <div class="modal modal-blur fade" th:id="'modal-delete-' + ${item.id}"
-                                            tabindex="-1" role="dialog" aria-hidden="true">
-                                            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-                                                <div class="modal-content">
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                        aria-label="Close"></button>
-                                                    <div class="modal-status bg-danger"></div>
-                                                    <div class="modal-body text-center py-4">
-                                                        <i
-                                                            class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
-                                                        <h3 th:text="#{label.currency.delete.confirm.title}">Konfirmasi
-                                                            Hapus</h3>
-                                                        <div class="text-secondary"
-                                                            th:text="#{label.currency.delete.confirm.text(${item.symbol})}">
-                                                            Apakah Anda yakin ingin menghapus mata uang ini?</div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <div class="w-100">
-                                                            <div class="row">
-                                                                <div class="col"><a href="#" class="btn w-100"
-                                                                        data-bs-dismiss="modal"
-                                                                        th:text="#{label.cancel}">Batal</a></div>
-                                                                <div class="col">
-                                                                    <form
-                                                                        th:action="@{/master/currencies/delete/{id}(id=${item.id})}"
-                                                                        method="post">
-                                                                        <button type="submit"
-                                                                            class="btn btn-danger w-100"
-                                                                            th:text="#{label.delete}">Hapus</button>
-                                                                    </form>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                    <div id="currency-table-container" th:fragment="currency-table-container"
+                         hx-get="/master/currencies" 
+                         hx-trigger="refresh-table from:body delay:500ms"
+                         hx-include="[name='keyword'], [name='page']">
+                        <input type="hidden" name="page" th:value="${page.number}">
+                        <div class="table-responsive">
+                            <table class="table table-vcenter card-table">
+                                <thead>
+                                    <tr>
+                                        <th
+                                            th:replace="~{fragments/table :: sortable('symbol', #{label.currency.column.symbol})}">
+                                            Simbol</th>
+                                        <th
+                                            th:replace="~{fragments/table :: sortable('alias', #{label.currency.column.alias})}">
+                                            Alias</th>
+                                        <th
+                                            th:replace="~{fragments/table :: sortable('name', #{label.currency.column.name})}">
+                                            Nama</th>
+                                        <th th:text="#{label.currency.column.default}">Default</th>
+                                        <th th:text="#{label.currency.column.status}">Status</th>
+                                        <th class="w-1" th:text="#{label.actions}">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${page.content}" th:id="'currency-row-' + ${item.id}">
+                                        <td>
+                                            <span class="badge bg-secondary-lt fw-bold" th:text="${item.symbol}">$</span>
+                                        </td>
+                                        <td><code th:text="${item.alias}">ALIAS</code></td>
+                                        <td class="font-weight-medium" th:text="${item.name}">Name</td>
+                                        <td>
+                                            <span th:if="${item.isDefault}" class="badge bg-primary text-primary-fg"
+                                                th:text="#{label.yes}">Ya</span>
+                                            <span th:unless="${item.isDefault}" class="badge bg-secondary text-secondary-fg"
+                                                th:text="#{label.no}">Tidak</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-outline text-green" th:if="${item.isActive}">
+                                                <span class="badge-dot bg-success me-1"></span>
+                                                <span th:text="#{label.active}">Aktif</span>
+                                            </span>
+                                            <span class="badge badge-outline text-red" th:unless="${item.isActive}">
+                                                <span class="badge-dot bg-danger me-1"></span>
+                                                <span th:text="#{label.inactive}">Tidak Aktif</span>
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="btn-list flex-nowrap justify-content-end">
+                                                <a th:href="@{/master/currencies/edit/{id}(id=${item.id})}"
+                                                    class="btn btn-white btn-sm"
+                                                    sec:authorize="hasAuthority('CURRENCY_UPDATE')" th:text="#{label.edit}">
+                                                    Edit
+                                                </a>
+                                                <button class="btn btn-white btn-sm text-danger" data-bs-toggle="modal"
+                                                    th:data-bs-target="'#modal-delete-' + ${item.id}"
+                                                    sec:authorize="hasAuthority('CURRENCY_DELETE')">
+                                                    <i class="ti ti-trash me-1"></i> <span th:text="#{label.delete}">Hapus</span>
+                                                </button>
                                             </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr th:if="${page.totalElements == 0}">
-                                    <td colspan="6" class="text-center text-secondary py-4"
-                                        th:text="#{label.currency.empty}">Tidak ada data.</td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                                            <!-- Delete Modal Fragment -->
+                                            <div th:replace="~{fragments/modals :: delete-confirm(
+                                                id='modal-delete-' + ${item.id},
+                                                title=#{label.delete.confirm.title},
+                                                message=#{msg.delete.confirm(${item.name})},
+                                                actionUrl='/master/currencies/' + ${item.id},
+                                                targetId='#currency-row-' + ${item.id}
+                                            )}"></div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${page.totalElements == 0}">
+                                        <td colspan="6" class="text-center py-4 text-secondary"
+                                            th:text="#{label.currency.empty}">Tidak ada data.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Pagination -->
+                        <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                     </div>
-                    <!-- Pagination -->
-                    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                 </div>
             </div>
         </div>

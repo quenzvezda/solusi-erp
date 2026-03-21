@@ -103,9 +103,9 @@
                                             <div th:replace="~{fragments/modals :: delete-confirm(
                                                 id='modal-delete-' + ${item.id},
                                                 title=#{label.delete.confirm.title},
-                                                message=#{label.brand.delete.confirm.text(${item.name})},
+                                                message=#{msg.delete.confirm(${item.name})},
                                                 actionUrl='/inventory/brands/' + ${item.id},
-                                                targetId='#brand-row-' + ${item.id}
+                                                targetId='#row-' + ${item.id}
                                             )}"></div>
                                         </td>
                                     </tr>

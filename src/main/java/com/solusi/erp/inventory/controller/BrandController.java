@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.controller;
 
+import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.inventory.dto.BrandRequest;
 import com.solusi.erp.inventory.dto.BrandResponse;
@@ -23,6 +24,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @RequestMapping("/inventory/brands")
 @RequiredArgsConstructor
+@DefaultRedirectUrl
 public class BrandController {
 
     private final BrandService service;
@@ -57,15 +59,10 @@ public class BrandController {
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('BRAND_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
-        try {
-            var viewDto = service.getFormView(id);
-            model.addAttribute("brandRequest", viewDto.getRequest());
-            model.addAttribute("auditInfo", viewDto.getAudit());
-            return "inventory/brands/form";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            return "redirect:/inventory/brands";
-        }
+        var viewDto = service.getFormView(id);
+        model.addAttribute("brandRequest", viewDto.getRequest());
+        model.addAttribute("auditInfo", viewDto.getAudit());
+        return "inventory/brands/form";
     }
 
     @PostMapping("/edit/{id}")

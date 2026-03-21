@@ -130,7 +130,7 @@
                                             <div th:replace="~{fragments/modals :: delete-confirm(
                                                 id='modal-delete-' + ${item.id},
                                                 title=#{label.delete.confirm.title},
-                                                message=#{label.geographic.delete.confirm.text(${item.name})},
+                                                message=#{msg.delete.confirm(${item.name})},
                                                 actionUrl='/master/geographics/' + ${item.id},
                                                 targetId='#geographic-row-' + ${item.id}
                                             )}"></div>

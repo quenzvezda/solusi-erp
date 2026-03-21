@@ -1,5 +1,7 @@
 package com.solusi.erp.security.controller;
 
+import com.solusi.erp.core.annotation.DefaultRedirectUrl;
+import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.security.dto.PermissionResponse;
 import com.solusi.erp.security.dto.RoleRequest;
 import com.solusi.erp.security.dto.RoleResponse;
@@ -8,13 +10,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 @Controller
 @RequestMapping("/security/roles")
 @RequiredArgsConstructor
+@DefaultRedirectUrl
 public class RoleController {
 
     private final RoleService roleService;
@@ -45,68 +47,30 @@ public class RoleController {
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('ROLES_CREATE')")
-    public String create(@Valid @ModelAttribute("roleRequest") RoleRequest request,
-                         BindingResult bindingResult,
-                         Model model,
-                         RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("groupedPermissions", getGroupedPermissions());
-            return "security/roles/form";
-        }
-
-        try {
-            roleService.create(request);
-            redirectAttributes.addFlashAttribute("successMessage", 
-                messageSource.getMessage("msg.roles.success.create", null, LocaleContextHolder.getLocale()));
-            return "redirect:/security/roles";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            model.addAttribute("groupedPermissions", getGroupedPermissions());
-            return "security/roles/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<RoleResponse>> create(@Valid @RequestBody RoleRequest request) {
+        RoleResponse data = roleService.create(request);
+        String msg = messageSource.getMessage("msg.roles.success.create", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(msg, data));
     }
 
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('ROLES_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
-        RoleResponse roleResponse = roleService.findById(id);
-        
-        RoleRequest request = RoleRequest.builder()
-                .name(roleResponse.getName())
-                .description(roleResponse.getDescription())
-                .permissionIds(roleResponse.getPermissions().stream()
-                        .map(p -> p.getId())
-                        .collect(Collectors.toSet()))
-                .build();
-        request.setId(roleResponse.getId());
-
-        model.addAttribute("roleRequest", request);
+        var viewDto = roleService.getRoleEditView(id);
+        model.addAttribute("roleRequest", viewDto.getRequest());
+        model.addAttribute("auditInfo", viewDto.getAudit());
         model.addAttribute("groupedPermissions", getGroupedPermissions());
         return "security/roles/form";
     }
 
     @PostMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('ROLES_UPDATE')")
-    public String update(@PathVariable Long id,
-                         @Valid @ModelAttribute("roleRequest") RoleRequest request,
-                         BindingResult bindingResult,
-                         Model model,
-                         RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("groupedPermissions", getGroupedPermissions());
-            return "security/roles/form";
-        }
-
-        try {
-            roleService.update(id, request);
-            redirectAttributes.addFlashAttribute("successMessage", 
-                messageSource.getMessage("msg.roles.success.update", null, LocaleContextHolder.getLocale()));
-            return "redirect:/security/roles";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            model.addAttribute("groupedPermissions", getGroupedPermissions());
-            return "security/roles/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<RoleResponse>> update(@PathVariable Long id, @Valid @RequestBody RoleRequest request) {
+        RoleResponse data = roleService.update(id, request);
+        String msg = messageSource.getMessage("msg.roles.success.update", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.ok(ApiResponse.success(msg, data));
     }
 
     private Map<String, List<PermissionResponse>> getGroupedPermissions() {
@@ -128,5 +92,4 @@ public class RoleController {
                 .header("HX-Trigger", "refresh-table")
                 .build();
     }
-
 }

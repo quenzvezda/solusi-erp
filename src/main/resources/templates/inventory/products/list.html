@@ -121,9 +121,9 @@
                                             <div th:replace="~{fragments/modals :: delete-confirm(
                                                 id='modal-delete-' + ${item.id},
                                                 title=#{label.delete.confirm.title},
-                                                message=#{label.product.delete.confirm.text(${item.code})},
+                                                message=#{msg.delete.confirm.cascade(${item.name})},
                                                 actionUrl='/inventory/products/' + ${item.id},
-                                                targetId='#product-row-' + ${item.id}
+                                                targetId='#row-' + ${item.id}
                                             )}"></div>
                                         </td>
                                     </tr>

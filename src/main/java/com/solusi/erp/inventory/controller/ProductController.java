@@ -21,9 +21,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import com.solusi.erp.core.annotation.DefaultRedirectUrl;
+
 @Controller
 @RequestMapping("/inventory/products")
 @RequiredArgsConstructor
+@DefaultRedirectUrl
 public class ProductController {
 
     private final ProductService service;
@@ -64,17 +67,12 @@ public class ProductController {
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('PRODUCT_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
-        try {
-            var viewDto = service.getProductEditView(id);
-            model.addAttribute("productRequest", viewDto.getRequest());
-            model.addAttribute("productUIForm", viewDto.getUi());
-            model.addAttribute("auditInfo", viewDto.getAudit());
-            populateSelectOptions(model);
-            return "inventory/products/form";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            return "redirect:/inventory/products";
-        }
+        var viewDto = service.getProductEditView(id);
+        model.addAttribute("productRequest", viewDto.getRequest());
+        model.addAttribute("productUIForm", viewDto.getUi());
+        model.addAttribute("auditInfo", viewDto.getAudit());
+        populateSelectOptions(model);
+        return "inventory/products/form";
     }
 
     @PostMapping("/edit/{id}")
@@ -97,10 +95,8 @@ public class ProductController {
     }
 
     private void populateSelectOptions(Model model) {
-        model.addAttribute("categories", categoryService.findAll(null, Pageable.unpaged()).getContent());
         model.addAttribute("uoms", uomService.findByType(UomType.UNIT));
         model.addAttribute("weightUoms", uomService.findByType(UomType.WEIGHT));
         model.addAttribute("lengthUoms", uomService.findByType(UomType.LENGTH));
-        model.addAttribute("brands", brandService.findAll(null, Pageable.unpaged()).getContent());
     }
 }

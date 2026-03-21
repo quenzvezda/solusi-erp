@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.controller;
 
+import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.inventory.dto.ProductUomConversionRequest;
 import com.solusi.erp.inventory.dto.ProductUomConversionResponse;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 @RequestMapping("/inventory/uom-conversions")
 @RequiredArgsConstructor
+@DefaultRedirectUrl
 public class ProductUomConversionController {
 
     private final ProductUomConversionService service;
@@ -57,17 +59,12 @@ public class ProductUomConversionController {
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('UOM-CONVERSION_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
-        try {
-            var viewDto = service.getFormView(id);
-            model.addAttribute("uomConversionRequest", viewDto.getRequest());
-            model.addAttribute("uomUIForm", viewDto.getUi());
-            model.addAttribute("auditInfo", viewDto.getAudit());
-            populateSelectOptions(model);
-            return "inventory/uom-conversions/form";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            return "redirect:/inventory/uom-conversions";
-        }
+        var viewDto = service.getFormView(id);
+        model.addAttribute("uomConversionRequest", viewDto.getRequest());
+        model.addAttribute("uomUIForm", viewDto.getUi());
+        model.addAttribute("auditInfo", viewDto.getAudit());
+        populateSelectOptions(model);
+        return "inventory/uom-conversions/form";
     }
 
     @PostMapping("/edit/{id}")

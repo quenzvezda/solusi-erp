@@ -1,5 +1,6 @@
 package com.solusi.erp.security.service.impl;
 
+import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.security.dto.PermissionResponse;
 import com.solusi.erp.security.dto.RoleRequest;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -51,20 +53,43 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public FormViewDto<RoleRequest, Void, RoleResponse> getRoleEditView(Long id) {
+        Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.role.notfound")));
+        
+        RoleRequest request = RoleRequest.builder()
+                .name(role.getName())
+                .description(role.getDescription())
+                .permissionIds(role.getPermissions().stream()
+                        .map(Permission::getId)
+                        .collect(Collectors.toSet()))
+                .build();
+        request.setId(role.getId());
+        request.setVersion(role.getVersion());
+
+        return FormViewDto.<RoleRequest, Void, RoleResponse>builder()
+                .request(request)
+                .ui(null)
+                .audit(roleMapper.toResponse(role))
+                .build();
+    }
+
+    @Override
     @Transactional
-    public void create(RoleRequest request) {
+    public RoleResponse create(RoleRequest request) {
         if (roleRepository.findByName(request.getName()).isPresent()) {
             throw new RuntimeException(getMessage("msg.error.role.duplicate"));
         }
 
         Role role = roleMapper.toEntity(request);
         setPermissions(role, request.getPermissionIds());
-        roleRepository.save(role);
+        return roleMapper.toResponse(roleRepository.save(role));
     }
 
     @Override
     @Transactional
-    public void update(Long id, RoleRequest request) {
+    public RoleResponse update(Long id, RoleRequest request) {
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.role.notfound")));
 
@@ -77,7 +102,7 @@ public class RoleServiceImpl implements RoleService {
 
         roleMapper.updateEntity(request, role);
         setPermissions(role, request.getPermissionIds());
-        roleRepository.save(role);
+        return roleMapper.toResponse(roleRepository.save(role));
     }
 
     @Override

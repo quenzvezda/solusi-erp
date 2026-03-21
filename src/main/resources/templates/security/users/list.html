@@ -132,7 +132,7 @@
                                                 <div th:replace="~{fragments/modals :: delete-confirm(
                                                     id='modal-delete-' + ${user.id},
                                                     title=#{label.delete.confirm.title},
-                                                    message=#{label.users.delete.confirm.text(${user.username})},
+                                                    message=#{msg.delete.confirm.cascade(${user.username})},
                                                     actionUrl='/security/users/' + ${user.id},
                                                     targetId='#user-row-' + ${user.id}
                                                 )}"></div>

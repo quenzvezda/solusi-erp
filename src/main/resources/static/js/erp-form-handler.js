@@ -50,7 +50,8 @@ const ErpFormHandler = (function () {
                 } else if (el.classList.contains('erp-number-decimal') || el.classList.contains('erp-number-integer')) {
                     // UNFORMAT NUMERIC DATA
                     if (typeof AutoNumeric !== 'undefined' && AutoNumeric.getAutoNumericElement(el)) {
-                        data[el.name] = AutoNumeric.getAutoNumericElement(el).getNumber();
+                        // FIX: If field is empty string, send null instead of 0
+                        data[el.name] = (el.value === "") ? null : AutoNumeric.getAutoNumericElement(el).getNumber();
                     } else {
                         data[el.name] = value === "" ? null : value.replace(/,/g, '');
                     }

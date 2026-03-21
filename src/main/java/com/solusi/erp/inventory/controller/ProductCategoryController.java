@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.controller;
 
+import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.inventory.dto.ProductCategoryRequest;
 import com.solusi.erp.inventory.dto.ProductCategoryResponse;
@@ -24,6 +25,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @RequestMapping("/inventory/product-categories")
 @RequiredArgsConstructor
+@DefaultRedirectUrl
 public class ProductCategoryController {
 
     private final ProductCategoryService service;
@@ -59,16 +61,11 @@ public class ProductCategoryController {
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('PRODUCT-CATEGORY_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
-        try {
-            var viewDto = service.getFormView(id);
-            model.addAttribute("productCategoryRequest", viewDto.getRequest());
-            model.addAttribute("auditInfo", viewDto.getAudit());
-            model.addAttribute("types", ProductCategoryType.values());
-            return "inventory/product-categories/form";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            return "redirect:/inventory/product-categories";
-        }
+        var viewDto = service.getFormView(id);
+        model.addAttribute("productCategoryRequest", viewDto.getRequest());
+        model.addAttribute("auditInfo", viewDto.getAudit());
+        model.addAttribute("types", ProductCategoryType.values());
+        return "inventory/product-categories/form";
     }
 
     @PostMapping("/edit/{id}")

@@ -1,5 +1,6 @@
 package com.solusi.erp.master.service;
 
+import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.master.dto.PartyRequest;
 import com.solusi.erp.master.dto.PartyResponse;
 import com.solusi.erp.master.model.PartyIdentificationType;
@@ -19,9 +20,11 @@ public interface PartyService {
 
     PartyRequest getEditData(Long id);
 
-    void create(PartyRequest request);
+    FormViewDto<PartyRequest, Void, PartyResponse> getPartyEditView(Long id);
 
-    void update(Long id, PartyRequest request);
+    PartyResponse create(PartyRequest request);
+
+    PartyResponse update(Long id, PartyRequest request);
 
     void delete(Long id);
 

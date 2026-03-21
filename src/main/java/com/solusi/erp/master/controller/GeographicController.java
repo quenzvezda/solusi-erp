@@ -1,5 +1,6 @@
 package com.solusi.erp.master.controller;
 
+import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.master.dto.GeographicRequest;
 import com.solusi.erp.master.dto.GeographicResponse;
@@ -28,6 +29,7 @@ import java.util.List;
 @Controller
 @RequestMapping("/master/geographics")
 @RequiredArgsConstructor
+@DefaultRedirectUrl
 public class GeographicController {
 
     private final GeographicService geographicService;
@@ -91,18 +93,12 @@ public class GeographicController {
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('GEOGRAPHIC_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
-        try {
-            var viewDto = geographicService.getGeographicEditView(id);
-            model.addAttribute("geographic", viewDto.getRequest());
-            model.addAttribute("geographicUI", viewDto.getUi());
-            model.addAttribute("auditInfo", viewDto.getAudit());
-            model.addAttribute("types", GeographicType.values());
-            return "master/geographic/form";
-        } catch (Exception e) {
-            log.error("Error loading geographic edit form", e);
-            model.addAttribute("errorMessage", e.getMessage());
-            return "redirect:/master/geographics";
-        }
+        var viewDto = geographicService.getGeographicEditView(id);
+        model.addAttribute("geographic", viewDto.getRequest());
+        model.addAttribute("geographicUI", viewDto.getUi());
+        model.addAttribute("auditInfo", viewDto.getAudit());
+        model.addAttribute("types", GeographicType.values());
+        return "master/geographic/form";
     }
 
     @PostMapping("/edit/{id}")

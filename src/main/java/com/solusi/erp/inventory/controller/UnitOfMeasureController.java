@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.controller;
 
+import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.inventory.dto.UnitOfMeasureRequest;
 import com.solusi.erp.inventory.dto.UnitOfMeasureResponse;
@@ -24,6 +25,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @RequestMapping("/inventory/unit-of-measures")
 @RequiredArgsConstructor
+@DefaultRedirectUrl
 public class UnitOfMeasureController {
 
     private final UnitOfMeasureService service;
@@ -59,16 +61,11 @@ public class UnitOfMeasureController {
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('UNIT-OF-MEASURE_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
-        try {
-            var viewDto = service.getFormView(id);
-            model.addAttribute("unitOfMeasureRequest", viewDto.getRequest());
-            model.addAttribute("auditInfo", viewDto.getAudit());
-            model.addAttribute("types", UomType.values());
-            return "inventory/unit-of-measures/form";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            return "redirect:/inventory/unit-of-measures";
-        }
+        var viewDto = service.getFormView(id);
+        model.addAttribute("unitOfMeasureRequest", viewDto.getRequest());
+        model.addAttribute("auditInfo", viewDto.getAudit());
+        model.addAttribute("types", UomType.values());
+        return "inventory/unit-of-measures/form";
     }
 
     @PostMapping("/edit/{id}")

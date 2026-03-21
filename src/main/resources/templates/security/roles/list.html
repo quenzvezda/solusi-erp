@@ -91,7 +91,7 @@
                                                 <div th:replace="~{fragments/modals :: delete-confirm(
                                                     id='modal-delete-' + ${role.id},
                                                     title=#{label.delete.confirm.title},
-                                                    message=#{label.roles.delete.confirm.text(${role.name})},
+                                                    message=#{msg.delete.confirm.irreversible(${role.name})},
                                                     actionUrl='/security/roles/' + ${role.id},
                                                     targetId='#role-row-' + ${role.id}
                                                 )}"></div>

@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.controller;
 
+import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.inventory.dto.ContainerRequest;
 import com.solusi.erp.inventory.dto.ContainerResponse;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 @RequestMapping("/inventory/containers")
 @RequiredArgsConstructor
+@DefaultRedirectUrl
 public class ContainerController {
 
     private final ContainerService service;
@@ -67,17 +69,12 @@ public class ContainerController {
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('CONTAINER_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
-        try {
-            var viewDto = service.getFormView(id);
-            model.addAttribute("containerRequest", viewDto.getRequest());
-            model.addAttribute("containerUI", viewDto.getUi());
-            model.addAttribute("auditInfo", viewDto.getAudit());
-            populateSelectOptions(model);
-            return "inventory/containers/form";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            return "redirect:/inventory/containers";
-        }
+        var viewDto = service.getFormView(id);
+        model.addAttribute("containerRequest", viewDto.getRequest());
+        model.addAttribute("containerUI", viewDto.getUi());
+        model.addAttribute("auditInfo", viewDto.getAudit());
+        populateSelectOptions(model);
+        return "inventory/containers/form";
     }
 
     @PostMapping("/edit/{id}")

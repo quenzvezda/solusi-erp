@@ -15,9 +15,9 @@ public interface CurrencyService {
 
     CurrencyRequest getEditData(Long id);
 
-    void createCurrency(CurrencyRequest request);
+    CurrencyResponse createCurrency(CurrencyRequest request);
 
-    void updateCurrency(Long id, CurrencyRequest request);
+    CurrencyResponse updateCurrency(Long id, CurrencyRequest request);
 
     void deleteCurrency(Long id);
 

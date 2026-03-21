@@ -61,7 +61,7 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     @Override
     @Transactional
-    public void create(BankAccountRequest request) {
+    public BankAccountResponse create(BankAccountRequest request) {
         BankAccount entity = mapper.toEntity(request);
         
         Geographic city = geographicRepository.findById(request.getCityId())
@@ -76,12 +76,13 @@ public class BankAccountServiceImpl implements BankAccountService {
         String generatedCode = sequenceGeneratorService.generate("BANK_ACCOUNT");
         entity.setCode(generatedCode);
         
-        repository.save(entity);
+        BankAccount saved = repository.save(entity);
+        return mapper.toResponse(saved);
     }
 
     @Override
     @Transactional
-    public void update(Long id, BankAccountRequest request) {
+    public BankAccountResponse update(Long id, BankAccountRequest request) {
         BankAccount entity = repository.findByIdAndIsActiveTrue(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("master.bank-account.not-found")));
 
@@ -99,7 +100,8 @@ public class BankAccountServiceImpl implements BankAccountService {
             entity.setParty(party);
         }
 
-        repository.save(entity);
+        BankAccount updated = repository.save(entity);
+        return mapper.toResponse(updated);
     }
 
     @Override

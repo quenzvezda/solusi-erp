@@ -1,6 +1,9 @@
 package com.solusi.erp.master.controller;
 
+import com.solusi.erp.core.annotation.DefaultRedirectUrl;
+import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.master.dto.PartyRequest;
+import com.solusi.erp.master.dto.PartyResponse;
 import com.solusi.erp.master.model.AddressType;
 import com.solusi.erp.master.model.PartyType;
 import com.solusi.erp.master.service.PartyService;
@@ -9,12 +12,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * Controller for Party (Business Partner) CRUD.
@@ -22,6 +25,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @RequestMapping("/master/parties")
 @RequiredArgsConstructor
+@DefaultRedirectUrl
 public class PartyController {
 
     private final PartyService service;
@@ -47,75 +51,41 @@ public class PartyController {
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('PARTY_CREATE')")
-    public String create(@Valid @ModelAttribute("partyRequest") PartyRequest request,
-                         BindingResult bindingResult,
-                         Model model,
-                         RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasErrors()) {
-            populateFormOptions(model);
-            return "master/parties/form";
-        }
-
-        try {
-            service.create(request);
-            String message = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-            return "redirect:/master/parties";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            populateFormOptions(model);
-            return "master/parties/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<PartyResponse>> create(@Valid @RequestBody PartyRequest request) {
+        PartyResponse data = service.create(request);
+        String message = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(message, data));
     }
 
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('PARTY_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
-        try {
-            model.addAttribute("partyRequest", service.getEditData(id));
-            populateFormOptions(model);
-            return "master/parties/form";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            return "redirect:/master/parties";
-        }
+        var viewDto = service.getPartyEditView(id);
+        model.addAttribute("partyRequest", viewDto.getRequest());
+        model.addAttribute("auditInfo", viewDto.getAudit());
+        populateFormOptions(model);
+        return "master/parties/form";
     }
 
     @PostMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('PARTY_UPDATE')")
-    public String update(@PathVariable Long id,
-                         @Valid @ModelAttribute("partyRequest") PartyRequest request,
-                         BindingResult bindingResult,
-                         Model model,
-                         RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasErrors()) {
-            populateFormOptions(model);
-            return "master/parties/form";
-        }
-
-        try {
-            service.update(id, request);
-            String message = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-            return "redirect:/master/parties";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            populateFormOptions(model);
-            return "master/parties/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<PartyResponse>> update(@PathVariable Long id,
+                                                             @Valid @RequestBody PartyRequest request) {
+        PartyResponse data = service.update(id, request);
+        String message = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.ok(ApiResponse.success(message, data));
     }
 
-    @PostMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('PARTY_DELETE')")
-    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        try {
-            service.delete(id);
-            String message = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/master/parties";
+    @ResponseBody
+    public ResponseEntity<Void> deleteHtmx(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity.ok()
+                .header("HX-Trigger", "refresh-table")
+                .build();
     }
 
     private void populateFormOptions(Model model) {

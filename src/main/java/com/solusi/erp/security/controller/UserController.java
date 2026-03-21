@@ -1,5 +1,6 @@
 package com.solusi.erp.security.controller;
 
+import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.security.dto.UserRequest;
 import com.solusi.erp.security.dto.UserResponse;
@@ -21,6 +22,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @RequestMapping("/security/users")
 @RequiredArgsConstructor
+@DefaultRedirectUrl
 public class UserController {
 
     private final UserService userService;
@@ -56,17 +58,12 @@ public class UserController {
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('USERS_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
-        try {
-            var viewDto = userService.getUserEditView(id);
-            model.addAttribute("userRequest", viewDto.getRequest());
-            model.addAttribute("userUIForm", viewDto.getUi());
-            model.addAttribute("auditInfo", viewDto.getAudit());
-            populateSelectOptions(model);
-            return "security/users/form";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            return "redirect:/security/users";
-        }
+        var viewDto = userService.getUserEditView(id);
+        model.addAttribute("userRequest", viewDto.getRequest());
+        model.addAttribute("userUIForm", viewDto.getUi());
+        model.addAttribute("auditInfo", viewDto.getAudit());
+        populateSelectOptions(model);
+        return "security/users/form";
     }
 
     @PostMapping("/edit/{id}")
@@ -81,13 +78,9 @@ public class UserController {
     @PostMapping("/toggle/{id}")
     @PreAuthorize("hasAuthority('USERS_UPDATE')")
     public String toggleStatus(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        try {
-            userService.toggleStatus(id);
-            String message = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        }
+        userService.toggleStatus(id);
+        String message = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
+        redirectAttributes.addFlashAttribute("successMessage", message);
         return "redirect:/security/users";
     }
 

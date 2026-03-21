@@ -101,7 +101,7 @@
                                             <div th:replace="~{fragments/modals :: delete-confirm(
                                                 id='modal-delete-' + ${g.id},
                                                 title=#{label.delete.confirm.title},
-                                                message=#{label.menu.group.delete.confirm},
+                                                message=#{msg.delete.confirm.cascade(${g.nameId})},
                                                 actionUrl='/security/menu-groups/' + ${g.id},
                                                 targetId='#menu-group-row-' + ${g.id}
                                             )}"></div>

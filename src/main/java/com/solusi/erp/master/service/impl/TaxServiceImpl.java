@@ -1,5 +1,6 @@
 package com.solusi.erp.master.service.impl;
 
+import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.master.dto.TaxRequest;
 import com.solusi.erp.master.dto.TaxResponse;
 import com.solusi.erp.master.mapper.TaxMapper;
@@ -54,41 +55,47 @@ public class TaxServiceImpl implements TaxService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public FormViewDto<TaxRequest, Void, TaxResponse> getTaxEditView(Long id) {
+        Tax tax = taxRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("error.tax.not.found")));
+
+        return FormViewDto.<TaxRequest, Void, TaxResponse>builder()
+                .request(taxMapper.toRequest(tax))
+                .ui(null)
+                .audit(taxMapper.toResponse(tax))
+                .build();
+    }
+
+    @Override
     @Transactional
-    public void createTax(TaxRequest request) {
-        // Validate duplicate code
+    public TaxResponse createTax(TaxRequest request) {
         if (taxRepository.findByCode(request.getCode()).isPresent()) {
             throw new RuntimeException(getMessage("error.tax.duplicate-code"));
         }
 
         Tax tax = taxMapper.toEntity(request);
-        if (tax.getIsActive() == null) {
-            tax.setIsActive(false);
-        }
-        if (tax.getIsSubtract() == null) {
-            tax.setIsSubtract(false);
-        }
+        if (tax.getIsActive() == null) tax.setIsActive(false);
+        if (tax.getIsSubtract() == null) tax.setIsSubtract(false);
 
-        Tax savedTax = taxRepository.save(tax);
-        log.info("Created Tax with code: {}", savedTax.getCode());
+        Tax saved = taxRepository.save(tax);
+        log.info("Created Tax with code: {}", saved.getCode());
+        return taxMapper.toResponse(saved);
     }
 
     @Override
     @Transactional
-    public void updateTax(Long id, TaxRequest request) {
+    public TaxResponse updateTax(Long id, TaxRequest request) {
         Tax existingTax = taxRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("error.tax.not.found")));
 
         taxMapper.updateEntityFromRequest(request, existingTax);
-        if (existingTax.getIsSubtract() == null) {
-            existingTax.setIsSubtract(false);
-        }
-        if (existingTax.getIsActive() == null) {
-            existingTax.setIsActive(false);
-        }
+        if (existingTax.getIsSubtract() == null) existingTax.setIsSubtract(false);
+        if (existingTax.getIsActive() == null) existingTax.setIsActive(false);
 
-        Tax updatedTax = taxRepository.save(existingTax);
-        log.info("Updated Tax with code: {}", updatedTax.getCode());
+        Tax updated = taxRepository.save(existingTax);
+        log.info("Updated Tax with code: {}", updated.getCode());
+        return taxMapper.toResponse(updated);
     }
 
     @Override

@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +44,7 @@ public class StockAdjustmentRequest extends BaseAuditResponse {
     private String facilityCode; // For display in Edit mode
 
     @NotNull(message = "{validation.notnull}")
-    private java.math.BigDecimal exchangeRate;
+    private BigDecimal exchangeRate;
 
     private AdjustmentStatus status;
 

@@ -1,5 +1,6 @@
 package com.solusi.erp.security.controller;
 
+import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.security.dto.PermissionGroupRequest;
 import com.solusi.erp.security.dto.PermissionGroupResponse;
@@ -20,6 +21,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @RequestMapping("/security/menu-groups")
 @RequiredArgsConstructor
+@DefaultRedirectUrl
 public class PermissionGroupController {
 
     private final PermissionGroupService service;
@@ -53,15 +55,10 @@ public class PermissionGroupController {
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('MENU-GROUP_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
-        try {
-            var viewDto = service.getEditView(id);
-            model.addAttribute("request", viewDto.getRequest());
-            model.addAttribute("auditInfo", viewDto.getAudit());
-            return "security/permission-groups/form";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            return "redirect:/security/menu-groups";
-        }
+        var viewDto = service.getEditView(id);
+        model.addAttribute("request", viewDto.getRequest());
+        model.addAttribute("auditInfo", viewDto.getAudit());
+        return "security/permission-groups/form";
     }
 
     @PostMapping("/edit/{id}")

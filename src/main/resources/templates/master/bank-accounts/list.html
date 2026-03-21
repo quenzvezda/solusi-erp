@@ -73,7 +73,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr th:each="item : ${page.content}">
+                                <tr th:each="item : ${page.content}" th:id="'bank-account-row-' + ${item.id}">
                                     <td th:text="${item.code}">CODE</td>
                                     <td th:text="${item.bankName}">BANK</td>
                                     <td th:text="${item.accountName}">ACCOUNT NAME</td>
@@ -87,42 +87,21 @@
                                                 sec:authorize="hasAuthority('BANK-ACCOUNT_UPDATE')" th:text="#{label.edit}">
                                                 Edit
                                             </a>
-                                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                                            <button class="btn btn-white btn-sm text-danger" data-bs-toggle="modal"
                                                 th:data-bs-target="'#modal-delete-' + ${item.id}"
-                                                sec:authorize="hasAuthority('BANK-ACCOUNT_DELETE')"
-                                                th:text="#{label.delete}">
-                                                Delete
+                                                sec:authorize="hasAuthority('BANK-ACCOUNT_DELETE')">
+                                                <i class="ti ti-trash me-1"></i> <span th:text="#{label.delete}">Hapus</span>
                                             </button>
                                         </div>
 
-                                        <!-- Delete Modal -->
-                                        <div class="modal modal-blur fade" th:id="'modal-delete-' + ${item.id}"
-                                            tabindex="-1" role="dialog" aria-hidden="true">
-                                            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-                                                <div class="modal-content">
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                        aria-label="Close"></button>
-                                                    <div class="modal-status bg-danger"></div>
-                                                    <div class="modal-body text-center py-4">
-                                                        <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
-                                                        <h3 th:text="#{master.bank-account.delete.confirm.title}">Confirm Delete</h3>
-                                                        <div class="text-secondary" th:text="#{master.bank-account.delete.confirm.text(${item.code})}">Are you sure?</div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <div class="w-100">
-                                                            <div class="row">
-                                                                <div class="col"><a href="#" class="btn w-100" data-bs-dismiss="modal" th:text="#{label.cancel}">Cancel</a></div>
-                                                                <div class="col">
-                                                                    <form th:action="@{/master/bank-accounts/delete/{id}(id=${item.id})}" method="post">
-                                                                        <button type="submit" class="btn btn-danger w-100" th:text="#{label.delete}">Delete</button>
-                                                                    </form>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <!-- Delete Modal Fragment -->
+                                        <div th:replace="~{fragments/modals :: delete-confirm(
+                                            id='modal-delete-' + ${item.id},
+                                            title=#{label.delete.confirm.title},
+                                            message=#{msg.delete.confirm(${item.bankName + ' - ' + item.accountNo})},
+                                            actionUrl='/master/bank-accounts/' + ${item.id},
+                                            targetId='#bank-account-row-' + ${item.id}
+                                        )}"></div>
                                     </td>
                                 </tr>
                                 <tr th:if="${page.totalElements == 0}">

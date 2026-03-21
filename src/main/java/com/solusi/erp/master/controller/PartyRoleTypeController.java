@@ -1,5 +1,6 @@
 package com.solusi.erp.master.controller;
 
+import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.master.dto.PartyRoleTypeRequest;
 import com.solusi.erp.master.dto.PartyRoleTypeResponse;
@@ -15,7 +16,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * Controller for PartyRoleType (Party Role Type) CRUD Management.
@@ -23,6 +23,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @RequestMapping("/master/party-role-types")
 @RequiredArgsConstructor
+@DefaultRedirectUrl
 public class PartyRoleTypeController {
 
     private final PartyRoleTypeService service;
@@ -55,15 +56,10 @@ public class PartyRoleTypeController {
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('PARTY-ROLE-TYPE_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
-        try {
-            var viewDto = service.getEditView(id);
-            model.addAttribute("roleTypeRequest", viewDto.getRequest());
-            model.addAttribute("auditInfo", viewDto.getAudit());
-            return "master/party-role-types/form";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            return "redirect:/master/party-role-types";
-        }
+        var viewDto = service.getEditView(id);
+        model.addAttribute("roleTypeRequest", viewDto.getRequest());
+        model.addAttribute("auditInfo", viewDto.getAudit());
+        return "master/party-role-types/form";
     }
 
     @PostMapping("/edit/{id}")

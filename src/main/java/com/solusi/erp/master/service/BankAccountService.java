@@ -9,7 +9,7 @@ public interface BankAccountService {
     Page<BankAccountResponse> findAll(String keyword, Pageable pageable);
     BankAccountResponse findById(Long id);
     BankAccountRequest getEditData(Long id);
-    void create(BankAccountRequest request);
-    void update(Long id, BankAccountRequest request);
+    BankAccountResponse create(BankAccountRequest request);
+    BankAccountResponse update(Long id, BankAccountRequest request);
     void delete(Long id);
 }

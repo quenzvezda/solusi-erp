@@ -1,5 +1,7 @@
 package com.solusi.erp.inventory.controller;
 
+import com.solusi.erp.core.annotation.DefaultRedirectUrl;
+import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.inventory.dto.StockAdjustmentRequest;
 import com.solusi.erp.inventory.dto.StockAdjustmentResponse;
 import com.solusi.erp.inventory.model.StockAdjustment;
@@ -8,18 +10,19 @@ import com.solusi.erp.inventory.service.ProductService;
 import com.solusi.erp.inventory.service.ContainerService;
 import com.solusi.erp.master.dto.CurrencyResponse;
 import com.solusi.erp.master.service.CurrencyService;
-import com.solusi.erp.util.HtmxResponseUtility;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -30,12 +33,14 @@ import java.time.LocalDate;
 @Controller
 @RequestMapping("/inventory/adjustments")
 @RequiredArgsConstructor
+@DefaultRedirectUrl
 public class StockAdjustmentController {
 
     private final StockAdjustmentService service;
     private final ProductService productService;
     private final ContainerService containerService;
     private final CurrencyService currencyService;
+    private final MessageSource messageSource;
 
     @GetMapping
     @PreAuthorize("hasAuthority('STOCK-ADJUSTMENT_READ')")
@@ -66,74 +71,35 @@ public class StockAdjustmentController {
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('STOCK-ADJUSTMENT_CREATE')")
-    public String create(@Valid @ModelAttribute("stockAdjustment") StockAdjustmentRequest request,
-                        BindingResult result, 
-                        @RequestHeader(value = "HX-Request", required = false) boolean htmxRequest,
-                        Model model, 
-                        HttpServletResponse response,
-                        RedirectAttributes ra) {
-        log.info("Creating stock adjustment with {} lines", request.getLines().size());
-        if (result.hasErrors()) {
-            log.warn("Validation errors: {}", result.getAllErrors());
-            if (htmxRequest) return HtmxResponseUtility.returnErrorFragment();
-            populateFormModels(model);
-            return "inventory/adjustments/form";
-        }
-        try {
-            service.create(request);
-            String message = "Stock Adjustment created successfully";
-            ra.addFlashAttribute("message", message);
-            
-            if (htmxRequest) return HtmxResponseUtility.redirect(response, "/inventory/adjustments");
-            return "redirect:/inventory/adjustments";
-        } catch (Exception e) {
-            log.error("Error creating adjustment", e);
-            if (htmxRequest) return HtmxResponseUtility.handleException(model, e.getMessage());
-            ra.addFlashAttribute("error", e.getMessage());
-            populateFormModels(model);
-            return "inventory/adjustments/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<StockAdjustmentResponse>> create(@Valid @RequestBody StockAdjustmentRequest request) {
+        StockAdjustmentResponse data = service.create(request);
+        String message = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(message, data));
     }
 
-    @GetMapping("/{id}/edit")
+    @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('STOCK-ADJUSTMENT_UPDATE')")
     public String editForm(@PathVariable Long id, Model model) {
         StockAdjustmentResponse response = service.findById(id);
         if (response.getStatus() == StockAdjustment.AdjustmentStatus.COMPLETED) {
             return "redirect:/inventory/adjustments/" + id;
         }
+        
         model.addAttribute("stockAdjustment", service.getEditData(id));
+        model.addAttribute("auditInfo", response);
         populateFormModels(model);
         return "inventory/adjustments/form";
     }
 
-    @PostMapping("/{id}/edit")
+    @PostMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('STOCK-ADJUSTMENT_UPDATE')")
-    public String update(@PathVariable Long id,
-                        @Valid @ModelAttribute("stockAdjustment") StockAdjustmentRequest request,
-                        BindingResult result, 
-                        @RequestHeader(value = "HX-Request", required = false) boolean htmxRequest,
-                        Model model, 
-                        HttpServletResponse response,
-                        RedirectAttributes ra) {
-        if (result.hasErrors()) {
-            if (htmxRequest) return HtmxResponseUtility.returnErrorFragment();
-            populateFormModels(model);
-            return "inventory/adjustments/form";
-        }
-        try {
-            service.update(id, request);
-            String message = "Stock Adjustment updated successfully";
-            ra.addFlashAttribute("message", message);
-            
-            if (htmxRequest) return HtmxResponseUtility.redirect(response, "/inventory/adjustments/" + id);
-            return "redirect:/inventory/adjustments/" + id;
-        } catch (Exception e) {
-            if (htmxRequest) return HtmxResponseUtility.handleException(model, e.getMessage());
-            ra.addFlashAttribute("error", e.getMessage());
-            populateFormModels(model);
-            return "inventory/adjustments/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<StockAdjustmentResponse>> update(@PathVariable Long id,
+                                                                       @Valid @RequestBody StockAdjustmentRequest request) {
+        StockAdjustmentResponse data = service.update(id, request);
+        String message = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.ok(ApiResponse.success(message, data));
     }
 
     @GetMapping("/{id}")
@@ -146,13 +112,19 @@ public class StockAdjustmentController {
     @PostMapping("/{id}/process")
     @PreAuthorize("hasAuthority('STOCK-ADJUSTMENT_PROCESS')")
     public String process(@PathVariable Long id, RedirectAttributes ra) {
-        try {
-            service.process(id);
-            ra.addFlashAttribute("message", "Stock Adjustment processed successfully");
-        } catch (Exception e) {
-            ra.addFlashAttribute("error", e.getMessage());
-        }
+        service.process(id);
+        ra.addFlashAttribute("message", "Stock Adjustment processed successfully");
         return "redirect:/inventory/adjustments/" + id;
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('STOCK-ADJUSTMENT_DELETE')")
+    @ResponseBody
+    public ResponseEntity<Void> deleteHtmx(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity.ok()
+                .header("HX-Trigger", "refresh-table")
+                .build();
     }
 
     private void populateFormModels(Model model) {

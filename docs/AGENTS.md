@@ -75,6 +75,10 @@ Setiap modul bisnis baru (Inventory, Sales, Purchasing, dll) WAJIB mengikuti pol
 *   **i18n Implementation**: 
     *   Semua pesan error di Service (yang dilempar via `RuntimeException`) WAJIB di-resolve menggunakan `MessageSource` agar mendukung multi-bahasa.
     *   Gunakan helper method `private String getMessage(String key)` di setiap Service Implementation.
+*   **Global Error Handling & Navigation**:
+    *   Gunakan anotasi `@DefaultRedirectUrl` pada level class Controller untuk mengaktifkan fitur Smart Redirect.
+    *   Fitur ini akan secara otomatis mengalihkan pengguna kembali ke halaman daftar jika terjadi error pada request `GET` di halaman form.
+    *   DILARANG menulis blok `try-catch` manual di Controller hanya untuk melakukan redirect navigasi; percayakan pada `GlobalExceptionHandler`.
 
 ## 6. UI/UX Lookup Standardization
 Untuk menjaga estetika dan konsistensi tampilan pada elemen autocomplete (TomSelect), AI dan Developer WAJIB mengikuti standar berikut:

@@ -15,6 +15,7 @@ Folder ini berisi standar teknis horizontal yang berlaku di seluruh aplikasi ERP
 - **[sequence-generator.md](sequence-generator.md)**: Aturan penomoran otomatis untuk dokumen transaksi dan master data.
 - **[pagination.md](pagination.md)**: Standar paginasi dinamis berdasarkan preferensi user.
 - **[sorting.md](sorting.md)**: Pola pengurutan kolom tabel otomatis terintegrasi dengan JPA.
+- **[error-handling.md](error-handling.md)**: Standar penanganan error dan navigasi otomatis (Smart Redirect).
 
 ## Localization & Navigation
 - **[i18n-guide.md](i18n-guide.md)**: Konvensi penamaan kunci pesan (message keys) untuk multibahasa.

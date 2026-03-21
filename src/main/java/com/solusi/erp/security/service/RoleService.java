@@ -1,5 +1,6 @@
 package com.solusi.erp.security.service;
 
+import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.security.dto.PermissionResponse;
 import com.solusi.erp.security.dto.RoleRequest;
@@ -11,8 +12,9 @@ public interface RoleService {
     List<RoleResponse> findAll();
     RoleResponse findById(Long id);
     List<PermissionResponse> findAllPermissions();
-    void create(RoleRequest request);
-    void update(Long id, RoleRequest request);
+    FormViewDto<RoleRequest, Void, RoleResponse> getRoleEditView(Long id);
+    RoleResponse create(RoleRequest request);
+    RoleResponse update(Long id, RoleRequest request);
     void delete(Long id);
 
     List<LookupDto> lookupRoles(String keyword, int limit);

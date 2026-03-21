@@ -82,7 +82,7 @@
                                             <div th:replace="~{fragments/modals :: delete-confirm(
                                                 id='modal-delete-' + ${item.id},
                                                 title=#{label.delete.confirm.title},
-                                                message=#{label.party-role-type.delete.confirm.text(${item.code})},
+                                                message=#{msg.delete.confirm(${item.name})},
                                                 actionUrl='/master/party-role-types/' + ${item.id},
                                                 targetId='#party-role-type-row-' + ${item.id}
                                             )}"></div>

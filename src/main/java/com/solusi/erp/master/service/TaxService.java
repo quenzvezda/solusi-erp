@@ -1,5 +1,6 @@
 package com.solusi.erp.master.service;
 
+import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.master.dto.TaxRequest;
 import com.solusi.erp.master.dto.TaxResponse;
 import org.springframework.data.domain.Page;
@@ -12,9 +13,11 @@ public interface TaxService {
 
     TaxRequest getEditData(Long id);
 
-    void createTax(TaxRequest request);
+    FormViewDto<TaxRequest, Void, TaxResponse> getTaxEditView(Long id);
 
-    void updateTax(Long id, TaxRequest request);
+    TaxResponse createTax(TaxRequest request);
+
+    TaxResponse updateTax(Long id, TaxRequest request);
 
     void deleteTax(Long id);
 }

@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.controller;
 
+import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.inventory.dto.FacilityRequest;
 import com.solusi.erp.inventory.dto.FacilityResponse;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 @RequestMapping("/inventory/facilities")
 @RequiredArgsConstructor
+@DefaultRedirectUrl
 public class FacilityController {
 
     private final FacilityService service;
@@ -56,16 +58,11 @@ public class FacilityController {
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('FACILITY_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
-        try {
-            var viewDto = service.getFormView(id);
-            model.addAttribute("facilityRequest", viewDto.getRequest());
-            model.addAttribute("facilityUI", viewDto.getUi());
-            model.addAttribute("auditInfo", viewDto.getAudit());
-            return "inventory/facilities/form";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            return "redirect:/inventory/facilities";
-        }
+        var viewDto = service.getFormView(id);
+        model.addAttribute("facilityRequest", viewDto.getRequest());
+        model.addAttribute("facilityUI", viewDto.getUi());
+        model.addAttribute("auditInfo", viewDto.getAudit());
+        return "inventory/facilities/form";
     }
 
     @PostMapping("/edit/{id}")

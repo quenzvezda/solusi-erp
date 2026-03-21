@@ -1,5 +1,6 @@
 package com.solusi.erp.core.exception;
 
+import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.dto.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -9,12 +10,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.ui.Model;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.FlashMap;
+import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import org.springframework.web.servlet.support.RequestContextUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -53,10 +56,43 @@ public class GlobalExceptionHandler {
         log.error("Exception occurred: ", ex);
 
         if (isAjaxRequest(request)) {
-            // Prevent conflicts with preset Content-Type from view resolvers
             response.resetBuffer(); 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(ex.getMessage()));
+        }
+
+        // --- Logic Smart Redirect menggunakan Anotasi ---
+        // Kita ambil HandlerMethod secara manual dari request attribute untuk menghindari IllegalStateException
+        Object handler = request.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
+        
+        if (handler instanceof HandlerMethod handlerMethod && "GET".equalsIgnoreCase(request.getMethod())) {
+            DefaultRedirectUrl annotation = handlerMethod.getMethodAnnotation(DefaultRedirectUrl.class);
+            if (annotation == null) {
+                annotation = handlerMethod.getBeanType().getAnnotation(DefaultRedirectUrl.class);
+            }
+
+            if (annotation != null) {
+                String redirectUrl = annotation.value();
+                
+                // AUTO-DETECT: Jika value kosong, ambil dari @RequestMapping di level Class
+                if (redirectUrl.isEmpty()) {
+                    RequestMapping requestMapping = handlerMethod.getBeanType().getAnnotation(RequestMapping.class);
+                    if (requestMapping != null && requestMapping.value().length > 0) {
+                        redirectUrl = requestMapping.value()[0];
+                    }
+                }
+
+                if (!redirectUrl.isEmpty()) {
+                    log.info("Smart Redirect: Error on page {}, redirecting to: {}", request.getServletPath(), redirectUrl);
+                    
+                    FlashMap flashMap = RequestContextUtils.getOutputFlashMap(request);
+                    if (flashMap != null) {
+                        flashMap.put("errorMessage", ex.getMessage());
+                    }
+                    
+                    return "redirect:" + redirectUrl;
+                }
+            }
         }
 
         model.addAttribute("message", ex.getMessage());
@@ -76,6 +112,22 @@ public class GlobalExceptionHandler {
         }
         
         return "error/403";
+    }
+
+    /**
+     * Handle Method Not Supported (405) errors.
+     */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public Object handleMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
+        log.warn("Method not supported: {}", ex.getMessage());
+        
+        if (isAjaxRequest(request)) {
+            return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                    .body(ApiResponse.error(ex.getMessage()));
+        }
+        
+        // Untuk browser biasa, tampilkan 404 karena user mencoba akses URL yang salah secara fungsional
+        return "error/404";
     }
 
     /**
