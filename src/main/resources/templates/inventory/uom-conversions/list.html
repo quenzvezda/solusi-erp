@@ -44,7 +44,7 @@
                                       hx-trigger="keyup changed delay:500ms from:#search-input"
                                       hx-push-url="true">
                                     <input type="text" id="search-input" name="keyword" th:value="${keyword}"
-                                        class="form-control form-control-sm" th:placeholder="#{label.search}">
+                                        class="form-control form-control-sm" th:placeholder="#{label.search} + '...'">
                                     <span class="input-icon-addon">
                                         <i class="ti ti-search"></i>
                                     </span>
@@ -52,8 +52,8 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <div id="uom-conversion-table-container" th:fragment="uom-conversion-table">
+
+                    <div id="uom-conversion-table-container" th:fragment="uom-conversion-table-container">
                         <div class="table-responsive">
                             <table class="table table-vcenter card-table">
                                 <thead>

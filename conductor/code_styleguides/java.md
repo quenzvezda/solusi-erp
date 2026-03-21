@@ -9,6 +9,9 @@
 - **Controller:** 
   - Use `@Controller` for Thymeleaf views and `@RestController` (or `@ResponseBody`) for APIs.
   - **AJAX CRUD Policy:** For Create/Update operations, use `@RequestBody` and return `ResponseEntity<ApiResponse<T>>`.
+  - **Clean Controller Policy:** 
+    - JANGAN melakukan pengecekan header `HX-Request` atau `HX-Target` secara manual.
+    - Cukup return nama view standar (misal: `"module/list"`). Sistem akan otomatis melakukan routing fragmen via `HtmxViewInterceptor` jika target ID ditemukan.
   - **No Manual Validation:** DO NOT include `BindingResult` in controller parameters. Delegate validation handling to `GlobalExceptionHandler`.
   - Use `RequiredArgsConstructor` for dependency injection.
   - Apply `@PreAuthorize` for method-level security.

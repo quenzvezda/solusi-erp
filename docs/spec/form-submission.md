@@ -72,4 +72,25 @@ public ResponseEntity<ApiResponse<MyResponse>> create(@Valid @RequestBody MyRequ
 }
 ```
 
+## 5. Magic Fragment Routing (HTMX Only)
+
+Sistem menyertakan `HtmxViewInterceptor` yang secara otomatis mendeteksi request HTMX dan menentukan fragmen mana yang harus dirender berdasarkan header `HX-Target`.
+
+### Aturan Konvensi (Mandatory):
+Agar otomatisasi ini bekerja, developer **WAJIB** menyamakan nama fragmen dengan ID target:
+1.  **HTML ID**: `<div id="my-table-container" ...>`
+2.  **Thymeleaf Fragment**: `<div id="my-table-container" th:fragment="my-table-container">`
+3.  **HTMX Target**: `<form hx-target="#my-table-container" ...>`
+
+### Dampak pada Controller:
+Controller tetap bersih dan cukup mengembalikan nama view standar. **DILARANG** melakukan pengecekan header `HX-Request` secara manual untuk urusan pemilihan fragmen tabel.
+
+```java
+@GetMapping
+public String list(Pageable pageable, Model model) {
+    model.addAttribute("page", service.findAll(pageable));
+    return "module/list"; // Interceptor akan otomatis mengubah menjadi "module/list :: my-table-container" jika dipanggil via HTMX
+}
+```
+
 *Catatan: Validasi ditangani secara terpusat oleh `GlobalExceptionHandler`. Jangan lagi menggunakan `BindingResult` di parameter method kecuali sangat terpaksa.*

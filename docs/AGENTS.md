@@ -17,10 +17,11 @@ AI Assistant WAJIB mematuhi versi dan teknologi berikut berdasarkan `pom.xml` ut
 * **Frontend Template Engine:** Thymeleaf (Gunakan **Native Thymeleaf Fragments** `th:fragment`, `th:replace`). DILARANG menggunakan `thymeleaf-layout-dialect` karena masalah stabilitas dengan Spring Boot 4.
 * **UI/CSS Framework:** Bootstrap 5
 * **Admin Template:** Tabler (MIT License) - Gunakan kelas dan struktur HTML bawaan Tabler.
-* **AJAX & Fragments:** HTMX (Wajib untuk Form Submission).
+* **AJAX & Fragments:** Hybrid Approach (**AJAX/JSON** untuk Form CRUD, **HTMX** untuk Search/Filter/Pagination).
+* **Magic Routing:** HtmxViewInterceptor (Otomatis menangani fragmen berdasarkan `HX-Target`).
 * **Numeric Formatting:** AutoNumeric (Untuk ribuan separator & desimal).
-* **Boilerplate Reduction:** Lombok & HtmxResponseUtility.
-* **Mapping:** MapStruct (untuk konversi Entity ke DTO).
+* **Boilerplate Reduction:** Lombok & ApiResponse.
+* **Mapping:** MapStruct (dengan aturan mengabaikan `id` pada update).
 * **Validation:** Hibernate Validator (`spring-boot-starter-validation`).
 * **Reporting:** Apache POI (Excel) & JasperReports (PDF).
 

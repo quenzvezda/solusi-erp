@@ -1,6 +1,7 @@
 package com.solusi.erp.config;
 
 import com.solusi.erp.core.advice.AuditInfoInterceptor;
+import com.solusi.erp.core.config.HtmxViewInterceptor;
 import com.solusi.erp.core.pagination.UserPreferencePageableResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -29,6 +30,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     private final UserPreferencePageableResolver userPreferencePageableResolver;
     private final AuditInfoInterceptor auditInfoInterceptor;
+    private final HtmxViewInterceptor htmxViewInterceptor;
     private final MessageSource messageSource;
 
     @Override
@@ -39,6 +41,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(auditInfoInterceptor);
+        registry.addInterceptor(htmxViewInterceptor);
     }
 
     @Override

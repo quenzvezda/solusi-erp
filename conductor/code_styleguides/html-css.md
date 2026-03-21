@@ -6,6 +6,10 @@
 
 ## Thymeleaf & Templates
 - **Fragments:** Define reusable fragments in `templates/fragments/` and layout templates in `templates/layout/`.
+- **Magic Fragment Convention (Mandatory):** 
+  - Nama `th:fragment` pada kontainer tabel **WAJIB SAMA** dengan atribut `id` elemen tersebut.
+  - Contoh: `<div id="product-table-container" th:fragment="product-table-container">`.
+  - Hal ini memungkinkan `HtmxViewInterceptor` melakukan routing fragmen secara otomatis tanpa kode tambahan di Controller.
 - **Insertion Pattern:** 
   - Use `th:insert` instead of `th:replace` for input fragments (like Autocomplete) to preserve the wrapper `div` and its `id`.
   - Prefer `th:block` inside fragments to avoid redundant nested tags.

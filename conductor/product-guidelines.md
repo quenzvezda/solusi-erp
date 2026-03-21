@@ -9,6 +9,9 @@
 - **Hybrid Experience Pattern:** 
   - Use **HTMX** for passive updates (filtering, sorting, paging) to minimize server overhead.
   - Use **AJAX (JSON)** for active data entry (Forms) to protect client-side component state (TomSelect, AutoNumeric).
+- **Automation & Magic Routing:**
+  - Prioritize reducing boilerplate code by using intelligent interceptors (e.g., `HtmxViewInterceptor`).
+  - Follow mandatory naming conventions (matching IDs with fragment names) to enable zero-config features.
 - **Minimalist & Focused:** Keep the user interface clean, removing unnecessary clutter and focusing on the task at hand.
 - **Standardized ERP Workflows:** Follow established patterns for ERP operations (e.g., list-view to detail-view, standard form layouts).
 - **Reusable & Generic Components:** 
