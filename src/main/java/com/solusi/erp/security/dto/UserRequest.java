@@ -21,24 +21,24 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public class UserRequest extends BaseAuditResponse {
 
-    @NotBlank(message = "Username wajib diisi")
-    @Size(min = 3, max = 50, message = "Username minimal 3 dan maksimal 50 karakter")
+    @NotBlank(message = "{label.users.username} {validation.notblank.suffix}")
+    @Size(min = 3, max = 50, message = "{label.users.username} {validation.size.suffix}")
     private String username;
 
-    @NotBlank(message = "Email wajib diisi")
-    @Email(message = "Format email tidak valid")
+    @NotBlank(message = "{label.users.email} {validation.notblank.suffix}")
+    @Email(message = "{label.users.email} {validation.email.suffix}")
     private String email;
 
     private String password; // Optional on update, validated manually
 
-    @NotNull(message = "Role wajib dipilih")
+    @NotNull(message = "{label.users.role} {validation.notnull.suffix}")
     private Long roleId;
 
-    @NotBlank(message = "Nama lengkap wajib diisi")
-    @Size(max = 100, message = "Nama lengkap maksimal 100 karakter")
+    @NotBlank(message = "{label.users.fullname} {validation.notblank.suffix}")
+    @Size(max = 100, message = "{label.users.fullname} {validation.size.suffix}")
     private String fullName;
 
-    @Size(max = 20, message = "Nomor telepon maksimal 20 karakter")
+    @Size(max = 20, message = "{label.users.phone} {validation.size.suffix}")
     private String phoneNumber;
 
     @Builder.Default

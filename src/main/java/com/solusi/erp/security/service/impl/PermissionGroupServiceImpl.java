@@ -1,5 +1,6 @@
 package com.solusi.erp.security.service.impl;
 
+import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.security.dto.MenuNodeResponse;
 import com.solusi.erp.security.dto.PermissionGroupRequest;
 import com.solusi.erp.security.dto.PermissionGroupResponse;
@@ -8,6 +9,8 @@ import com.solusi.erp.security.model.PermissionGroup;
 import com.solusi.erp.security.repository.PermissionGroupRepository;
 import com.solusi.erp.security.service.PermissionGroupService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -51,6 +54,7 @@ public class PermissionGroupServiceImpl implements PermissionGroupService {
 
     private final PermissionGroupRepository permissionGroupRepository;
     private final PermissionGroupMapper permissionGroupMapper;
+    private final MessageSource messageSource;
 
     @Override
     @Transactional(readOnly = true)
@@ -69,22 +73,35 @@ public class PermissionGroupServiceImpl implements PermissionGroupService {
     @Transactional(readOnly = true)
     public PermissionGroupRequest getById(Long id) {
         PermissionGroup entity = permissionGroupRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Permission Group not found"));
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.notfound")));
         return permissionGroupMapper.toRequest(entity);
     }
 
     @Override
-    @Transactional
-    public void create(PermissionGroupRequest request) {
-        PermissionGroup entity = permissionGroupMapper.toEntity(request);
-        permissionGroupRepository.save(entity);
+    @Transactional(readOnly = true)
+    public FormViewDto<PermissionGroupRequest, Void, PermissionGroupResponse> getEditView(Long id) {
+        PermissionGroup entity = permissionGroupRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.notfound")));
+        
+        return FormViewDto.<PermissionGroupRequest, Void, PermissionGroupResponse>builder()
+                .request(permissionGroupMapper.toRequest(entity))
+                .audit(permissionGroupMapper.toResponse(entity))
+                .build();
     }
 
     @Override
     @Transactional
-    public void update(Long id, PermissionGroupRequest request) {
+    public PermissionGroupResponse create(PermissionGroupRequest request) {
+        PermissionGroup entity = permissionGroupMapper.toEntity(request);
+        PermissionGroup saved = permissionGroupRepository.save(entity);
+        return permissionGroupMapper.toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public PermissionGroupResponse update(Long id, PermissionGroupRequest request) {
         PermissionGroup entity = permissionGroupRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Permission Group not found"));
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.notfound")));
 
         entity.setCode(request.getCode());
         entity.setNameId(request.getNameId());
@@ -96,7 +113,8 @@ public class PermissionGroupServiceImpl implements PermissionGroupService {
         entity.setDescriptionId(request.getDescriptionId());
         entity.setDescriptionEn(request.getDescriptionEn());
 
-        permissionGroupRepository.save(entity);
+        PermissionGroup saved = permissionGroupRepository.save(entity);
+        return permissionGroupMapper.toResponse(saved);
     }
 
     @Override
@@ -148,5 +166,9 @@ public class PermissionGroupServiceImpl implements PermissionGroupService {
             }
         }
         return root;
+    }
+
+    private String getMessage(String key) {
+        return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
     }
 }

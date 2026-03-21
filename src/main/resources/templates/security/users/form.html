@@ -74,8 +74,9 @@
                         </div>
 
                         <!-- Audit Info -->
-                        <div th:if="${auditInfo != null and auditInfo.id != null}" 
-                             th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
+                        <th:block th:if="${auditInfo != null and auditInfo.id != null}">
+                             <div th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
+                        </th:block>
                     </div>
 
                     <div class="card-footer text-end">
