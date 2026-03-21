@@ -3,6 +3,7 @@ package com.solusi.erp.inventory.mapper;
 import com.solusi.erp.core.mapper.AuditMapperHelper;
 import com.solusi.erp.inventory.dto.*;
 import com.solusi.erp.inventory.form.ContainerUIForm;
+import com.solusi.erp.inventory.form.FacilityUIForm;
 import com.solusi.erp.inventory.model.Container;
 import com.solusi.erp.inventory.model.Facility;
 import com.solusi.erp.inventory.model.Grid;
@@ -46,6 +47,12 @@ public interface WarehouseMapper {
     @Mapping(target = "address.postalCode", source = "postalCode")
     @Mapping(target = "id", ignore = true)
     void updateEntityFromRequest(FacilityRequest request, @MappingTarget Facility entity);
+
+    @Mapping(target = "ownerName", source = "owner.name")
+    @Mapping(target = "ownerCode", source = "owner.code")
+    @Mapping(target = "cityName", source = "address.city.name")
+    @Mapping(target = "cityCode", source = "address.city.code")
+    FacilityUIForm toFacilityUIForm(Facility entity);
 
     // --- Grid ---
     @Mapping(target = "facility", source = "facilityId")

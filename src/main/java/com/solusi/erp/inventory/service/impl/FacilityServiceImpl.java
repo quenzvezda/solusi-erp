@@ -5,6 +5,7 @@ import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.service.SequenceGeneratorService;
 import com.solusi.erp.inventory.dto.FacilityRequest;
 import com.solusi.erp.inventory.dto.FacilityResponse;
+import com.solusi.erp.inventory.form.FacilityUIForm;
 import com.solusi.erp.inventory.mapper.WarehouseMapper;
 import com.solusi.erp.inventory.model.Facility;
 import com.solusi.erp.inventory.repository.FacilityRepository;
@@ -86,14 +87,14 @@ public class FacilityServiceImpl implements FacilityService {
 
     @Override
     @Transactional(readOnly = true)
-    public FormViewDto<FacilityRequest, Void, FacilityResponse> getFormView(Long id) {
+    public FormViewDto<FacilityRequest, FacilityUIForm, FacilityResponse> getFormView(Long id) {
         Facility entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.facility.notfound")));
 
-        return FormViewDto.<FacilityRequest, Void, FacilityResponse>builder()
+        return FormViewDto.<FacilityRequest, com.solusi.erp.inventory.form.FacilityUIForm, FacilityResponse>builder()
                 .request(mapper.toRequest(entity))
+                .ui(mapper.toFacilityUIForm(entity))
                 .audit(mapper.toResponse(entity))
-                .ui(null)
                 .build();
     }
 

@@ -36,8 +36,8 @@ public class FacilityRequest extends BaseAuditResponse {
     @NotNull(message = "{label.geographic.city} {validation.notnull.suffix}")
     private Long cityId;
 
-    @NotBlank(message = "{label.geographic.postal_code} {validation.notblank.suffix}")
-    @Size(max = 20, message = "{label.geographic.postal_code} {validation.size.suffix}")
+    @NotBlank(message = "{label.party.address.postal_code} {validation.notblank.suffix}")
+    @Size(max = 20, message = "{label.party.address.postal_code} {validation.size.suffix}")
     private String postalCode;
 
     private String note;
