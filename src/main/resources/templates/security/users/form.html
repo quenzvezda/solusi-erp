@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
 <head th:replace="~{layout/master :: head(${userRequest.id == null ? #messages.msg('label.users.title.add') : #messages.msg('label.users.title.edit')})}"></head>
 <body th:replace="~{layout/master :: layout(~{:: .user-form-content}, ~{})}">
     <div class="user-form-content">
-        <!-- Page Header -->
+        <!-- Page header -->
         <div class="page-header d-print-none">
             <div class="container-xl">
                 <div class="row g-2 align-items-center">
@@ -15,57 +14,46 @@
             </div>
         </div>
 
-        <!-- Page Body -->
+        <!-- Page body -->
         <div class="page-body">
             <div class="container-xl">
-                <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}">Error message</div>
-
-                <form th:action="${userRequest.id == null ? '/security/users/create' : '/security/users/edit/' + userRequest.id}" 
-                      th:object="${userRequest}" method="post" class="card">
+                <form th:action="${userRequest.id == null ? '/security/users/create' : '/security/users/edit/' + userRequest.id}"
+                      th:object="${userRequest}" method="post" class="card"
+                      data-ajax-form="true"
+                      data-redirect-on-success="/security/users">
+                    
                     <div class="card-body">
                         <div class="row">
-                            <!-- Akun Section -->
+                            <!-- Account Information -->
                             <div class="col-md-6">
                                 <h3 class="card-title" th:text="#{label.users.account.info}">Informasi Akun</h3>
-                                <div class="mb-3">
-                                    <label class="form-label required" th:text="#{label.users.username}">Username</label>
-                                    <input type="text" th:field="*{username}" class="form-control" 
-                                           th:classappend="${#fields.hasErrors('username')} ? 'is-invalid'"
-                                           th:placeholder="#{login.username.placeholder}" 
-                                           th:readonly="${userRequest.username == 'admin'}">
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('username')}" th:errors="*{username}">Error</div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label required" th:text="#{label.users.email}">Email</label>
-                                    <input type="email" th:field="*{email}" class="form-control" 
-                                           th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'"
-                                           placeholder="email@example.com">
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Error</div>
-                                </div>
+                                
+                                <div th:replace="~{fragments/inputs :: text(field='username', label=#{label.users.username}, required=true, readonly=${userRequest.username == 'admin'})}"></div>
+                                
+                                <div th:replace="~{fragments/inputs :: text(field='email', label=#{label.users.email}, required=true)}"></div>
+                                
                                 <div class="mb-3">
                                     <label class="form-label" th:classappend="${userRequest.id == null} ? 'required'" th:text="#{label.users.password}">Password</label>
-                                    <input type="password" th:field="*{password}" class="form-control" 
+                                    <input type="password" th:field="*{password}" class="form-control"
                                            th:classappend="${#fields.hasErrors('password')} ? 'is-invalid'"
-                                           placeholder="Minimal 6 karakter"
                                            th:required="${userRequest.id == null}">
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Error</div>
                                     <small class="form-hint" th:if="${userRequest.id != null}" th:text="#{label.users.password.hint.edit}">Kosongkan jika tidak ingin mengubah password.</small>
                                     <small class="form-hint text-warning" th:if="${userRequest.id == null}" th:text="#{label.users.password.hint.create}">User baru akan diminta ganti password saat login pertama kali.</small>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label required" th:text="#{label.users.role}">Role / Peran</label>
-                                    <select th:field="*{roleId}" class="form-select" th:classappend="${#fields.hasErrors('roleId')} ? 'is-invalid'">
-                                        <option value="" th:text="'-- ' + #{label.search} + ' Role --'">-- Pilih Role --</option>
-                                        <option th:each="role : ${roles}" th:value="${role.id}" th:text="${role.name}">Role Name</option>
-                                    </select>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('roleId')}" th:errors="*{roleId}">Error</div>
-                                </div>
+
+                                <div th:replace="~{fragments/inputs :: autocomplete(field='roleId', label=#{label.users.role}, path='security/roles', required=true, 
+                                    initialValue=${userRequest.roleId}, 
+                                    initialText=${userUIForm != null ? userUIForm.roleName : ''}, 
+                                    initialSubtext=${userUIForm != null ? userUIForm.roleDescription : ''})}"></div>
+
                                 <div class="mb-3">
                                     <label class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" th:field="*{enabled}" th:disabled="${userRequest.username == 'admin'}">
-                                        <span class="form-check-label" th:text="#{label.active}">Akun Aktif</span>
+                                        <span class="form-check-label" th:text="#{label.status.active}">Aktif</span>
                                     </label>
                                 </div>
+
                                 <div class="mb-3" th:if="${userRequest.id != null}">
                                     <label class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" th:field="*{passwordChangeRequired}">
@@ -75,33 +63,28 @@
                                 </div>
                             </div>
 
-                            <!-- Profil Section -->
-                            <div class="col-md-6 border-start-md">
+                            <!-- Profile Information -->
+                            <div class="col-md-6">
                                 <h3 class="card-title" th:text="#{label.users.profile.info}">Profil Pengguna</h3>
-                                <div class="mb-3">
-                                    <label class="form-label required" th:text="#{profile.full.name}">Nama Lengkap</label>
-                                    <input type="text" th:field="*{fullName}" class="form-control" 
-                                           th:classappend="${#fields.hasErrors('fullName')} ? 'is-invalid'"
-                                           placeholder="Nama lengkap sesuai identitas">
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}">Error</div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label" th:text="#{profile.phone}">Nomor Telepon</label>
-                                    <input type="text" th:field="*{phoneNumber}" class="form-control" 
-                                           th:classappend="${#fields.hasErrors('phoneNumber')} ? 'is-invalid'"
-                                           placeholder="Contoh: 08123456789">
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}">Error</div>
-                                </div>
+                                
+                                <div th:replace="~{fragments/inputs :: text(field='fullName', label=#{label.users.fullname}, required=true)}"></div>
+                                
+                                <div th:replace="~{fragments/inputs :: text(field='phoneNumber', label=#{label.users.phone})}"></div>
                             </div>
                         </div>
 
-                        <!-- Record Info (Edit Mode only) -->
-                        <div th:if="${auditInfo != null and auditInfo.id != null}" th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
+                        <!-- Audit Info -->
+                        <div th:if="${auditInfo != null and auditInfo.id != null}" 
+                             th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
                     </div>
+
                     <div class="card-footer text-end">
                         <div class="d-flex">
                             <a th:href="@{/security/users}" class="btn btn-link" th:text="#{label.cancel}">Batal</a>
-                            <button type="submit" class="btn btn-primary ms-auto" th:text="#{label.save}">Simpan Data Pengguna</button>
+                            <button type="submit" class="btn btn-primary ms-auto">
+                                <i class="ti ti-device-floppy me-1"></i>
+                                <span th:text="#{label.save}">Simpan</span>
+                            </button>
                         </div>
                     </div>
                 </form>

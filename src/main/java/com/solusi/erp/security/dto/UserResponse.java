@@ -17,7 +17,7 @@ public class UserResponse extends BaseAuditResponse {
     private String email;
     private String roleName;
     private String fullName;
-    private boolean enabled;
-    private boolean passwordChangeRequired;
+    private Boolean enabled;
+    private Boolean passwordChangeRequired;
 }
 

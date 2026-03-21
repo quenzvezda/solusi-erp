@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
 <head th:replace="~{layout/master :: head(#{label.users.title})}"></head>
 <body th:replace="~{layout/master :: layout(~{:: .user-list-content}, ~{})}">
     <div class="user-list-content">
-        <!-- Page Header -->
+        <!-- Page header -->
         <div class="page-header d-print-none">
             <div class="container-xl">
                 <div class="row g-2 align-items-center">
@@ -25,34 +24,19 @@
             </div>
         </div>
 
-        <!-- Page Body -->
+        <!-- Page body -->
         <div class="page-body">
             <div class="container-xl">
-                <!-- Alerts -->
-                <div th:if="${successMessage}" class="alert alert-success alert-dismissible" role="alert">
-                    <div class="d-flex">
-                        <div><i class="ti ti-check icon alert-icon"></i></div>
-                        <div th:text="${successMessage}">Success!</div>
-                    </div>
-                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                </div>
-                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
-                    <div class="d-flex">
-                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
-                        <div th:text="${errorMessage}">Error!</div>
-                    </div>
-                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                </div>
-
                 <div class="card">
                     <div class="card-body border-bottom py-3">
                         <div class="d-flex">
-                            <div class="text-secondary">
-                                <!-- Future: Page Size Selector -->
-                            </div>
                             <div class="ms-auto text-secondary">
-                                <form th:action="@{/security/users}" method="get" class="input-icon">
-                                    <input type="text" name="keyword" th:value="${keyword}" class="form-control form-control-sm" th:placeholder="#{label.search}">
+                                <form th:action="@{/security/users}" method="get" class="input-icon" 
+                                      hx-get="/security/users" 
+                                      hx-target="#user-table-container" 
+                                      hx-trigger="keyup changed delay:500ms from:#search-input">
+                                    <input id="search-input" name="keyword" type="text" th:value="${keyword}" 
+                                           class="form-control" th:placeholder="#{label.search} + '...'">
                                     <span class="input-icon-addon">
                                         <i class="ti ti-search"></i>
                                     </span>
@@ -60,114 +44,119 @@
                             </div>
                         </div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-vcenter card-table">
-                            <thead>
-                                <tr>
-                                    <th th:replace="~{fragments/table :: sortable('username', #{label.users.column.user})}">Pengguna</th>
-                                    <th th:replace="~{fragments/table :: sortable('role.name', #{label.users.column.role})}">Role</th>
-                                    <th th:replace="~{fragments/table :: sortable('enabled', #{label.users.column.status})}">Status</th>
-                                    <th th:replace="~{fragments/table :: sortable('createdDate', #{label.users.column.created})}">Tgl Dibuat</th>
-                                    <th class="w-1" th:text="#{label.actions}">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="user : ${page.content}">
-                                    <td>
-                                        <div class="d-flex py-1 align-items-center">
-                                            <span class="avatar me-2" th:text="${#strings.substring(user.fullName, 0, 1).toUpperCase()}">U</span>
-                                            <div class="flex-fill">
-                                                <div class="font-weight-medium" th:text="${user.fullName}">Full Name</div>
-                                                <div class="text-secondary small">
-                                                    <span th:text="${user.username}">username</span> | <span th:text="${user.email}">email</span>
+
+                    <!-- Table Container -->
+                    <div id="user-table-container" th:fragment="user-table-container">
+                        <div class="table-responsive">
+                            <table class="table card-table table-vcenter text-nowrap datatable">
+                                <thead>
+                                    <tr>
+                                        <th th:replace="~{fragments/table :: sortable('username', #{label.users.column.user})}">Pengguna</th>
+                                        <th th:replace="~{fragments/table :: sortable('role.name', #{label.users.column.role})}">Role</th>
+                                        <th th:replace="~{fragments/table :: sortable('enabled', #{label.users.column.status})}">Status</th>
+                                        <th th:replace="~{fragments/table :: sortable('createdDate', #{label.users.column.created})}">Tgl Dibuat</th>
+                                        <th class="text-end" th:text="#{label.common.actions}">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="user : ${page.content}">
+                                        <td>
+                                            <div class="d-flex py-1 align-items-center">
+                                                <span class="avatar me-2" th:text="${#strings.substring(user.fullName, 0, 1).toUpperCase()}">U</span>
+                                                <div class="flex-fill">
+                                                    <div class="font-weight-medium" th:text="${user.fullName}">Full Name</div>
+                                                    <div class="text-secondary">
+                                                        <span th:text="${user.username}">username</span> | <span th:text="${user.email}">email</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-blue-lt" th:text="${user.roleName}">ROLE</span>
-                                    </td>
-                                    <td>
-                                        <span th:if="${user.enabled}" class="status status-green">
-                                            <span class="status-dot"></span> <span th:text="#{label.users.status.active}">Aktif</span>
-                                        </span>
-                                        <span th:unless="${user.enabled}" class="status status-red">
-                                            <span class="status-dot"></span> <span th:text="#{label.users.status.inactive}">Nonaktif</span>
-                                        </span>
-                                        <div th:if="${user.passwordChangeRequired}" class="mt-1">
-                                            <span class="badge bg-warning-lt small" th:text="#{label.users.status.reset.required}">Wajib Reset Pass</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-secondary" th:text="${#temporals.format(user.createdDate, 'dd MMM yyyy HH:mm')}">
-                                        Date
-                                    </td>
-                                    <td>
-                                        <div class="btn-list flex-nowrap">
-                                            <a th:href="@{/security/users/edit/{id}(id=${user.id})}" 
-                                               class="btn btn-white btn-sm"
-                                               sec:authorize="hasAuthority('USERS_UPDATE')"
-                                               th:text="#{label.edit}">
-                                                Edit
-                                            </a>
-                                            
-                                            <!-- Toggle Status Button -->
-                                            <form th:if="${user.username != 'admin'}" 
-                                                  th:action="@{/security/users/toggle/{id}(id=${user.id})}" 
-                                                  method="post" style="display:inline;"
-                                                  sec:authorize="hasAuthority('USERS_UPDATE')">
-                                                <button type="submit" class="btn btn-sm" 
-                                                        th:classappend="${user.enabled} ? 'btn-outline-warning' : 'btn-outline-success'"
-                                                        th:text="${user.enabled} ? #{label.users.toggle.deactivate} : #{label.users.toggle.activate}">
-                                                    Toggle
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-blue-lt" th:text="${user.roleName}">ROLE</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-outline text-green" th:if="${user.enabled}">
+                                                <span class="badge-dot bg-success me-1"></span>
+                                                <span th:text="#{label.users.status.active}">Aktif</span>
+                                            </span>
+                                            <span class="badge badge-outline text-red" th:unless="${user.enabled}">
+                                                <span class="badge-dot bg-danger me-1"></span>
+                                                <span th:text="#{label.users.status.inactive}">Nonaktif</span>
+                                            </span>
+                                            <div th:if="${user.passwordChangeRequired}" class="mt-1">
+                                                <span class="badge bg-warning-lt small" th:text="#{label.users.status.reset.required}">Wajib Reset Pass</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-secondary" th:text="${#temporals.format(user.createdDate, 'dd MMM yyyy HH:mm')}">
+                                            01 Jan 2024
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="btn-list flex-nowrap justify-content-end">
+                                                <a th:href="@{/security/users/edit/{id}(id=${user.id})}" 
+                                                   class="btn btn-white btn-sm"
+                                                   sec:authorize="hasAuthority('USERS_UPDATE')"
+                                                   th:title="#{label.edit}">
+                                                    <i class="ti ti-edit me-1"></i> <span th:text="#{label.edit}">Edit</span>
+                                                </a>
+                                                
+                                                <form th:if="${user.username != 'admin'}"
+                                                      th:action="@{/security/users/toggle/{id}(id=${user.id})}" 
+                                                      method="post" class="d-inline"
+                                                      sec:authorize="hasAuthority('USERS_UPDATE')">
+                                                    <button type="submit" class="btn btn-sm" 
+                                                            th:classappend="${user.enabled} ? 'btn-outline-warning' : 'btn-outline-success'">
+                                                        <i th:class="${user.enabled} ? 'ti ti-player-pause me-1' : 'ti ti-player-play me-1'"></i>
+                                                        <span th:text="${user.enabled} ? #{label.users.toggle.deactivate} : #{label.users.toggle.activate}">Toggle</span>
+                                                    </button>
+                                                </form>
+
+                                                <button th:if="${user.username != 'admin'}"
+                                                        type="button" class="btn btn-outline-danger btn-sm"
+                                                        data-bs-toggle="modal" 
+                                                        th:data-bs-target="'#modal-delete-' + ${user.id}"
+                                                        sec:authorize="hasAuthority('USERS_DELETE')">
+                                                    <i class="ti ti-trash me-1"></i> <span th:text="#{label.delete}">Hapus</span>
                                                 </button>
-                                            </form>
+                                            </div>
 
-                                            <button th:if="${user.username != 'admin'}" 
-                                                    class="btn btn-danger btn-sm"
-                                                    data-bs-toggle="modal" 
-                                                    th:data-bs-target="'#modal-delete-' + ${user.id}"
-                                                    sec:authorize="hasAuthority('USERS_DELETE')"
-                                                    th:text="#{label.delete}">
-                                                Hapus
-                                            </button>
-                                        </div>
-
-                                        <!-- Delete Modal -->
-                                        <div th:if="${user.username != 'admin'}" class="modal modal-blur fade" th:id="'modal-delete-' + ${user.id}" tabindex="-1" role="dialog" aria-hidden="true">
-                                            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-                                                <div class="modal-content">
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                    <div class="modal-status bg-danger"></div>
-                                                    <div class="modal-body text-center py-4">
-                                                        <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
-                                                        <h3 th:text="#{label.users.delete.confirm.title}">Konfirmasi Hapus</h3>
-                                                        <div class="text-secondary" th:text="#{label.users.delete.confirm.text(${user.username})}">Apakah Anda yakin ingin menghapus user?</div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <div class="w-100">
-                                                            <div class="row">
-                                                                <div class="col"><a href="#" class="btn w-100" data-bs-dismiss="modal" th:text="#{label.cancel}">Batal</a></div>
-                                                                <div class="col">
-                                                                    <form th:action="@{/security/users/delete/{id}(id=${user.id})}" method="post">
-                                                                        <button type="submit" class="btn btn-danger w-100" th:text="#{label.delete}">Hapus</button>
-                                                                    </form>
+                                            <!-- Delete Modal -->
+                                            <div th:if="${user.username != 'admin'}" class="modal modal-blur fade" th:id="'modal-delete-' + ${user.id}" tabindex="-1" role="dialog" aria-hidden="true">
+                                                <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+                                                    <div class="modal-content">
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        <div class="modal-status bg-danger"></div>
+                                                        <div class="modal-body text-center py-4">
+                                                            <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
+                                                            <h3 th:text="#{label.users.delete.confirm.title}">Konfirmasi Hapus</h3>
+                                                            <div class="text-secondary" th:text="#{label.users.delete.confirm.text(${user.username})}">Apakah Anda yakin?</div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <div class="w-100">
+                                                                <div class="row">
+                                                                    <div class="col">
+                                                                        <a href="#" class="btn w-100" data-bs-dismiss="modal" th:text="#{label.cancel}">Batal</a>
+                                                                    </div>
+                                                                    <div class="col">
+                                                                        <form th:action="@{/security/users/delete/{id}(id=${user.id})}" method="post">
+                                                                            <button type="submit" class="btn btn-danger w-100" th:text="#{label.delete}">Hapus</button>
+                                                                        </form>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr th:if="${page.totalElements == 0}">
-                                    <td colspan="5" class="text-center text-secondary py-4" th:text="#{label.users.empty}">Tidak ada data pengguna.</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${page.isEmpty()}">
+                                        <td colspan="5" class="text-center text-secondary py-4" th:text="#{label.users.empty}">Tidak ada data pengguna.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                     </div>
-                    <!-- Pagination -->
-                    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                 </div>
             </div>
         </div>

@@ -1,20 +1,22 @@
 package com.solusi.erp.security.controller;
 
+import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.security.dto.UserRequest;
-
+import com.solusi.erp.security.dto.UserResponse;
 import com.solusi.erp.security.service.RoleService;
 import com.solusi.erp.security.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.data.domain.Pageable;
 
 @Controller
 @RequestMapping("/security/users")
@@ -31,7 +33,6 @@ public class UserController {
             Pageable pageable,
             Model model) {
         model.addAttribute("page", userService.findAll(keyword, pageable));
-        model.addAttribute("keyword", keyword);
         return "security/users/list";
     }
 
@@ -39,63 +40,42 @@ public class UserController {
     @PreAuthorize("hasAuthority('USERS_CREATE')")
     public String showCreateForm(Model model) {
         model.addAttribute("userRequest", new UserRequest());
-        model.addAttribute("roles", roleService.findAll());
+        populateSelectOptions(model);
         return "security/users/form";
     }
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('USERS_CREATE')")
-    public String create(@Valid @ModelAttribute("userRequest") UserRequest request,
-            BindingResult bindingResult,
-            Model model,
-            RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("roles", roleService.findAll());
-            return "security/users/form";
-        }
-
-        try {
-            userService.create(request);
-            String message = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-            return "redirect:/security/users";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            model.addAttribute("roles", roleService.findAll());
-            return "security/users/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<UserResponse>> create(@Valid @RequestBody UserRequest request) {
+        UserResponse data = userService.create(request);
+        String msg = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(msg, data));
     }
 
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('USERS_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
-        model.addAttribute("userRequest", userService.getEditData(id));
-        model.addAttribute("roles", roleService.findAll());
-        return "security/users/form";
+        try {
+            var viewDto = userService.getUserEditView(id);
+            model.addAttribute("userRequest", viewDto.getRequest());
+            model.addAttribute("userUIForm", viewDto.getUi());
+            model.addAttribute("auditInfo", viewDto.getAudit());
+            populateSelectOptions(model);
+            return "security/users/form";
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            return "redirect:/security/users";
+        }
     }
 
     @PostMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('USERS_UPDATE')")
-    public String update(@PathVariable Long id,
-            @Valid @ModelAttribute("userRequest") UserRequest request,
-            BindingResult bindingResult,
-            Model model,
-            RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("roles", roleService.findAll());
-            return "security/users/form";
-        }
-
-        try {
-            userService.update(id, request);
-            String message = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-            return "redirect:/security/users";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            model.addAttribute("roles", roleService.findAll());
-            return "security/users/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<UserResponse>> update(@PathVariable Long id, @Valid @RequestBody UserRequest request) {
+        UserResponse data = userService.update(id, request);
+        String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.ok(ApiResponse.success(msg, data));
     }
 
     @PostMapping("/toggle/{id}")
@@ -122,5 +102,9 @@ public class UserController {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/security/users";
+    }
+
+    private void populateSelectOptions(Model model) {
+        model.addAttribute("roles", roleService.findAll());
     }
 }

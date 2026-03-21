@@ -1,5 +1,6 @@
 package com.solusi.erp.security.service.impl;
 
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.security.dto.PermissionResponse;
 import com.solusi.erp.security.dto.RoleRequest;
 import com.solusi.erp.security.dto.RoleResponse;
@@ -12,6 +13,7 @@ import com.solusi.erp.security.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,7 +40,7 @@ public class RoleServiceImpl implements RoleService {
     @Transactional(readOnly = true)
     public RoleResponse findById(Long id) {
         Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(messageSource.getMessage("msg.error.role.notfound", null, LocaleContextHolder.getLocale())));
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.role.notfound")));
         return roleMapper.toResponse(role);
     }
 
@@ -52,7 +54,7 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     public void create(RoleRequest request) {
         if (roleRepository.findByName(request.getName()).isPresent()) {
-            throw new RuntimeException(messageSource.getMessage("msg.error.role.duplicate", null, LocaleContextHolder.getLocale()));
+            throw new RuntimeException(getMessage("msg.error.role.duplicate"));
         }
 
         Role role = roleMapper.toEntity(request);
@@ -64,12 +66,12 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     public void update(Long id, RoleRequest request) {
         Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(messageSource.getMessage("msg.error.role.notfound", null, LocaleContextHolder.getLocale())));
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.role.notfound")));
 
         roleRepository.findByName(request.getName())
                 .ifPresent(existing -> {
                     if (!existing.getId().equals(id)) {
-                        throw new RuntimeException(messageSource.getMessage("msg.error.role.duplicate", null, LocaleContextHolder.getLocale()));
+                        throw new RuntimeException(getMessage("msg.error.role.duplicate"));
                     }
                 });
 
@@ -82,14 +84,37 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     public void delete(Long id) {
         Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(messageSource.getMessage("msg.error.role.notfound", null, LocaleContextHolder.getLocale())));
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.role.notfound")));
         
         // Prevent deleting essential roles if necessary
         if ("ROLE_ADMIN".equals(role.getName())) {
-            throw new RuntimeException(messageSource.getMessage("msg.error.role.admin.nodelete", null, LocaleContextHolder.getLocale()));
+            throw new RuntimeException(getMessage("msg.error.role.admin.nodelete"));
         }
         
         roleRepository.delete(role);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LookupDto> lookupRoles(String keyword, int limit) {
+        // We need a search method in RoleRepository or just use findAll if small
+        // Let's check RoleRepository
+        return roleRepository.findAll(PageRequest.of(0, limit)).getContent().stream()
+                .filter(r -> keyword == null || r.getName().toLowerCase().contains(keyword.toLowerCase()))
+                .map(r -> new LookupDto(r.getId(), r.getName(), r.getDescription()))
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LookupDto getLookupRole(Long id) {
+        Role r = roleRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.role.notfound")));
+        return new LookupDto(r.getId(), r.getName(), r.getDescription());
+    }
+
+    private String getMessage(String key) {
+        return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
     }
 
     private void setPermissions(Role role, Set<Long> permissionIds) {

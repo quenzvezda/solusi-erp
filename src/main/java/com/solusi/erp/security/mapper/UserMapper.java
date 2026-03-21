@@ -7,6 +7,7 @@ import com.solusi.erp.security.dto.UserRequest;
 import com.solusi.erp.security.dto.UserResponse;
 import com.solusi.erp.security.model.User;
 import com.solusi.erp.security.model.UserProfile;
+import com.solusi.erp.security.form.UserUIForm;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -22,6 +23,10 @@ public interface UserMapper {
     UserResponse toResponse(User user);
 
     List<UserResponse> toResponseList(List<User> users);
+
+    @Mapping(target = "roleName", source = "role.name")
+    @Mapping(target = "roleDescription", source = "role.description")
+    UserUIForm toUIForm(User user);
 
     @Mapping(target = "roleId", source = "role.id")
     @Mapping(target = "fullName", source = "profile.fullName")

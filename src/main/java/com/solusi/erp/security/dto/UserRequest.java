@@ -42,8 +42,8 @@ public class UserRequest extends BaseAuditResponse {
     private String phoneNumber;
 
     @Builder.Default
-    private boolean enabled = true;
+    private Boolean enabled = true;
 
     @Builder.Default
-    private boolean passwordChangeRequired = false;
+    private Boolean passwordChangeRequired = false;
 }
