@@ -59,7 +59,7 @@
                                 </div>
 
                                 <div th:replace="~{fragments/inputs :: decimal(field='conversionFactor', label=#{label.uom-conversion.factor}, required=true)}"></div>
-                                <div class="text-secondary small mt-n2 mb-3">Contoh: 1 Box = 12 Pieces, maka isi 12.00.</div>
+                                <div class="text-secondary small mt-n2 mb-3" th:text="#{label.uom-conversion.help}">Contoh: 1 Box = 12 Pieces, maka isi 12.00.</div>
                             </div>
                         </div>
 
