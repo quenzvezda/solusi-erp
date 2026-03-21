@@ -3,7 +3,7 @@
 
 <head th:replace="~{layout/master :: head(#{label.stock-card.title})}"></head>
 
-<body th:replace="~{layout/master :: layout(~{:: .stock-card-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .stock-card-content}, ~{})}">
     <div class="stock-card-content">
         <div class="page-header d-print-none">
             <div class="container-xl">

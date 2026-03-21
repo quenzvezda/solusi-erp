@@ -3,18 +3,18 @@
 
 <head th:replace="~{layout/master :: head(#{label.party-role-type.title})}"></head>
 
-<body th:replace="~{layout/master :: layout(~{:: .prt-list-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .prt-list-content}, ~{})}">
     <div class="prt-list-content">
         <div class="page-header d-print-none">
             <div class="container-xl">
                 <div class="row g-2 align-items-center">
                     <div class="col">
                         <h2 class="page-title" th:text="#{label.party-role-type.title}">Tipe Peran Partner</h2>
-                        <div class="text-secondary mt-1" th:text="#{label.party-role-type.subtitle}"></div>
+                        <div class="text-secondary mt-1" th:text="#{label.party-role-type.subtitle}">Kelola kategori peran untuk partner bisnis.</div>
                     </div>
                     <div class="col-auto ms-auto d-print-none" sec:authorize="hasAuthority('PARTY-ROLE-TYPE_CREATE')">
                         <a th:href="@{/master/party-role-types/create}" class="btn btn-primary">
-                            <i class="ti ti-plus"></i>
+                            <i class="ti ti-plus me-1"></i>
                             <span th:text="#{label.party-role-type.add}">Tambah</span>
                         </a>
                     </div>
@@ -24,107 +24,80 @@
 
         <div class="page-body">
             <div class="container-xl">
-                <div th:if="${successMessage}" class="alert alert-success alert-dismissible" role="alert">
-                    <div class="d-flex">
-                        <div><i class="ti ti-check icon alert-icon"></i></div>
-                        <div th:text="${successMessage}"></div>
-                    </div>
-                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                </div>
-                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
-                    <div class="d-flex">
-                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
-                        <div th:text="${errorMessage}"></div>
-                    </div>
-                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                </div>
-
                 <div class="card">
                     <div class="card-body border-bottom py-3">
-                        <div class="ms-auto">
-                            <form th:action="@{/master/party-role-types}" method="get" class="input-icon">
-                                <input type="text" name="keyword" th:value="${keyword}"
-                                    class="form-control form-control-sm" th:placeholder="#{label.search}">
-                                <span class="input-icon-addon"><i class="ti ti-search"></i></span>
-                            </form>
+                        <div class="d-flex">
+                            <div class="ms-auto text-secondary">
+                                <form th:action="@{/master/party-role-types}" method="get"
+                                      hx-get="/master/party-role-types"
+                                      hx-target="#party-role-type-table-container"
+                                      hx-trigger="keyup changed delay:500ms from:#search-input">
+                                    <div class="input-icon">
+                                        <input id="search-input" type="text" name="keyword" th:value="${keyword}"
+                                               class="form-control form-control-sm" th:placeholder="#{label.search} + '...'">
+                                        <span class="input-icon-addon">
+                                            <i class="ti ti-search"></i>
+                                        </span>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-vcenter card-table">
-                            <thead>
-                                <tr>
-                                    <th
-                                        th:replace="~{fragments/table :: sortable('code', #{label.party-role-type.column.code})}">
-                                        Kode</th>
-                                    <th
-                                        th:replace="~{fragments/table :: sortable('name', #{label.party-role-type.column.name})}">
-                                        Nama</th>
-                                    <th class="w-1" th:text="#{label.actions}">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="item : ${page.content}">
-                                    <td><span class="badge bg-secondary-lt" th:text="${item.code}"></span></td>
-                                    <td class="font-weight-medium" th:text="${item.name}"></td>
-                                    <td>
-                                        <div class="btn-list flex-nowrap">
-                                            <a th:href="@{/master/party-role-types/edit/{id}(id=${item.id})}"
-                                                class="btn btn-white btn-sm"
-                                                sec:authorize="hasAuthority('PARTY-ROLE-TYPE_UPDATE')"
-                                                th:text="#{label.edit}">Edit</a>
-                                            <button class="btn btn-danger btn-sm"
-                                                th:data-bs-target="'#modal-delete-' + ${item.id}" data-bs-toggle="modal"
-                                                sec:authorize="hasAuthority('PARTY-ROLE-TYPE_DELETE')"
-                                                th:text="#{label.delete}">Hapus</button>
-                                        </div>
-                                        <div class="modal modal-blur fade" th:id="'modal-delete-' + ${item.id}"
-                                            tabindex="-1" role="dialog" aria-hidden="true">
-                                            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-                                                <div class="modal-content">
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                        aria-label="Close"></button>
-                                                    <div class="modal-status bg-danger"></div>
-                                                    <div class="modal-body text-center py-4">
-                                                        <i
-                                                            class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
-                                                        <h3 th:text="#{label.party-role-type.delete.confirm.title}">
-                                                            Konfirmasi Hapus</h3>
-                                                        <div class="text-secondary"
-                                                            th:text="#{label.party-role-type.delete.confirm.text(${item.code})}">
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <div class="w-100">
-                                                            <div class="row">
-                                                                <div class="col"><a href="#" class="btn w-100"
-                                                                        data-bs-dismiss="modal"
-                                                                        th:text="#{label.cancel}">Batal</a></div>
-                                                                <div class="col">
-                                                                    <form
-                                                                        th:action="@{/master/party-role-types/delete/{id}(id=${item.id})}"
-                                                                        method="post">
-                                                                        <button type="submit"
-                                                                            class="btn btn-danger w-100"
-                                                                            th:text="#{label.delete}">Hapus</button>
-                                                                    </form>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                    
+                    <div id="party-role-type-table-container" th:fragment="party-role-type-table-container"
+                         hx-get="/master/party-role-types"
+                         hx-trigger="refresh-table from:body delay:500ms"
+                         hx-include="[name='keyword'], [name='page']">
+                        <!-- State Tracking -->
+                        <input type="hidden" name="page" th:value="${page.number}">
+
+                        <div class="table-responsive">
+                            <table class="table table-vcenter card-table">
+                                <thead>
+                                    <tr>
+                                        <th th:replace="~{fragments/table :: sortable('code', #{label.party-role-type.column.code})}">Kode</th>
+                                        <th th:replace="~{fragments/table :: sortable('name', #{label.party-role-type.column.name})}">Nama</th>
+                                        <th class="w-1 text-end" th:text="#{label.common.actions}">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${page.content}" th:id="'party-role-type-row-' + ${item.id}">
+                                        <td><span class="badge bg-secondary-lt" th:text="${item.code}">CODE</span></td>
+                                        <td class="font-weight-medium" th:text="${item.name}">NAME</td>
+                                        <td class="text-end">
+                                            <div class="btn-list flex-nowrap justify-content-end">
+                                                <a th:href="@{/master/party-role-types/edit/{id}(id=${item.id})}"
+                                                   class="btn btn-white btn-sm"
+                                                   sec:authorize="hasAuthority('PARTY-ROLE-TYPE_UPDATE')">
+                                                    <i class="ti ti-edit me-1"></i> <span th:text="#{label.edit}">Edit</span>
+                                                </a>
+                                                <button class="btn btn-white btn-sm text-danger"
+                                                        th:data-bs-target="'#modal-delete-' + ${item.id}" data-bs-toggle="modal"
+                                                        sec:authorize="hasAuthority('PARTY-ROLE-TYPE_DELETE')">
+                                                    <i class="ti ti-trash me-1"></i> <span th:text="#{label.delete}">Hapus</span>
+                                                </button>
                                             </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr th:if="${page.totalElements == 0}">
-                                    <td colspan="3" class="text-center text-secondary py-4"
-                                        th:text="#{label.party-role-type.empty}">Tidak ada data.</td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                                            <!-- Delete Modal Fragment -->
+                                            <div th:replace="~{fragments/modals :: delete-confirm(
+                                                id='modal-delete-' + ${item.id},
+                                                title=#{label.delete.confirm.title},
+                                                message=#{label.party-role-type.delete.confirm.text(${item.code})},
+                                                actionUrl='/master/party-role-types/' + ${item.id},
+                                                targetId='#party-role-type-row-' + ${item.id}
+                                            )}"></div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${page.isEmpty()}">
+                                        <td colspan="3" class="text-center text-secondary py-4"
+                                            th:text="#{label.party-role-type.empty}">Tidak ada data.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Pagination -->
+                        <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                     </div>
-                    <!-- Pagination -->
-                    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                 </div>
             </div>
         </div>

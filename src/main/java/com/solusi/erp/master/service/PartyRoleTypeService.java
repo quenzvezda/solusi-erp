@@ -1,5 +1,6 @@
 package com.solusi.erp.master.service;
 
+import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.master.dto.PartyRoleTypeRequest;
 import com.solusi.erp.master.dto.PartyRoleTypeResponse;
 import org.springframework.data.domain.Page;
@@ -15,9 +16,11 @@ public interface PartyRoleTypeService {
 
     PartyRoleTypeRequest getEditData(Long id);
 
-    void create(PartyRoleTypeRequest request);
+    FormViewDto<PartyRoleTypeRequest, Void, PartyRoleTypeResponse> getEditView(Long id);
 
-    void update(Long id, PartyRoleTypeRequest request);
+    PartyRoleTypeResponse create(PartyRoleTypeRequest request);
+
+    PartyRoleTypeResponse update(Long id, PartyRoleTypeRequest request);
 
     void delete(Long id);
 }

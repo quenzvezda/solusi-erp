@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{layout/master :: head(${roleRequest.id == null ? #messages.msg('label.roles.add') : #messages.msg('label.roles.edit')})}"></head>
-<body th:replace="~{layout/master :: layout(~{:: .role-form-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .role-form-content}, ~{})}">
     <div class="role-form-content">
         <!-- Page Header -->
         <div class="page-header d-print-none">

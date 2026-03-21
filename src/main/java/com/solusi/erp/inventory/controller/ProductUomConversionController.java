@@ -1,6 +1,8 @@
 package com.solusi.erp.inventory.controller;
 
+import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.inventory.dto.ProductUomConversionRequest;
+import com.solusi.erp.inventory.dto.ProductUomConversionResponse;
 import com.solusi.erp.inventory.model.UomType;
 import com.solusi.erp.inventory.service.ProductUomConversionService;
 import com.solusi.erp.inventory.service.UnitOfMeasureService;
@@ -9,12 +11,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/inventory/uom-conversions")
@@ -45,32 +47,21 @@ public class ProductUomConversionController {
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('UOM-CONVERSION_CREATE')")
-    public String create(@Valid @ModelAttribute("uomConversionRequest") ProductUomConversionRequest request,
-            BindingResult bindingResult,
-            Model model,
-            RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasErrors()) {
-            populateSelectOptions(model);
-            return "inventory/uom-conversions/form";
-        }
-
-        try {
-            service.create(request);
-            String message = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-            return "redirect:/inventory/uom-conversions";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            populateSelectOptions(model);
-            return "inventory/uom-conversions/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<ProductUomConversionResponse>> create(@Valid @RequestBody ProductUomConversionRequest request) {
+        ProductUomConversionResponse data = service.create(request);
+        String msg = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(msg, data));
     }
 
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('UOM-CONVERSION_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
         try {
-            model.addAttribute("uomConversionRequest", service.getEditData(id));
+            var viewDto = service.getFormView(id);
+            model.addAttribute("uomConversionRequest", viewDto.getRequest());
+            model.addAttribute("uomUIForm", viewDto.getUi());
+            model.addAttribute("auditInfo", viewDto.getAudit());
             populateSelectOptions(model);
             return "inventory/uom-conversions/form";
         } catch (Exception e) {
@@ -81,39 +72,21 @@ public class ProductUomConversionController {
 
     @PostMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('UOM-CONVERSION_UPDATE')")
-    public String update(@PathVariable Long id,
-            @Valid @ModelAttribute("uomConversionRequest") ProductUomConversionRequest request,
-            BindingResult bindingResult,
-            Model model,
-            RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasErrors()) {
-            populateSelectOptions(model);
-            return "inventory/uom-conversions/form";
-        }
-
-        try {
-            service.update(id, request);
-            String message = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-            return "redirect:/inventory/uom-conversions";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            populateSelectOptions(model);
-            return "inventory/uom-conversions/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<ProductUomConversionResponse>> update(@PathVariable Long id, @Valid @RequestBody ProductUomConversionRequest request) {
+        ProductUomConversionResponse data = service.update(id, request);
+        String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.ok(ApiResponse.success(msg, data));
     }
 
-    @PostMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('UOM-CONVERSION_DELETE')")
-    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        try {
-            service.delete(id);
-            String message = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/inventory/uom-conversions";
+    @ResponseBody
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity.ok()
+                .header("HX-Trigger", "refresh-table")
+                .build();
     }
 
     private void populateSelectOptions(Model model) {

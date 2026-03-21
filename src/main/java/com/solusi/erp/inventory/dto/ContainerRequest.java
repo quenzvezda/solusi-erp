@@ -21,17 +21,17 @@ import java.math.BigDecimal;
 @EqualsAndHashCode(callSuper = true)
 public class ContainerRequest extends BaseAuditResponse {
 
-    @NotNull(message = "{validation.notnull}")
+    @NotNull(message = "{label.container.grid} {validation.notnull.suffix}")
     private Long gridId;
 
-    @Size(max = 50, message = "{validation.size}")
+    @Size(max = 50, message = "{label.container.code} {validation.size.suffix}")
     private String code;
 
-    @NotBlank(message = "{validation.notblank}")
-    @Size(max = 150, message = "{validation.size}")
+    @NotBlank(message = "{label.container.name} {validation.notblank.suffix}")
+    @Size(max = 150, message = "{label.container.name} {validation.size.suffix}")
     private String name;
 
-    @Size(max = 100, message = "{validation.size}")
+    @Size(max = 100, message = "{label.container.barcode} {validation.size.suffix}")
     private String barcode;
 
     private BigDecimal length;

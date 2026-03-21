@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.service;
 
+import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.inventory.model.UomType;
 import com.solusi.erp.inventory.dto.UnitOfMeasureRequest;
 import com.solusi.erp.inventory.dto.UnitOfMeasureResponse;
@@ -16,7 +17,8 @@ public interface UnitOfMeasureService {
     List<UnitOfMeasureResponse> findByType(UomType type);
     UnitOfMeasureResponse findById(Long id);
     UnitOfMeasureRequest getEditData(Long id);
-    void create(UnitOfMeasureRequest request);
-    void update(Long id, UnitOfMeasureRequest request);
+    FormViewDto<UnitOfMeasureRequest, Void, UnitOfMeasureResponse> getFormView(Long id);
+    UnitOfMeasureResponse create(UnitOfMeasureRequest request);
+    UnitOfMeasureResponse update(Long id, UnitOfMeasureRequest request);
     void delete(Long id);
 }

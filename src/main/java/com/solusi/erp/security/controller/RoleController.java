@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -118,16 +119,14 @@ public class RoleController {
                 }));
     }
 
-    @PostMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLES_DELETE')")
-    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        try {
-            roleService.delete(id);
-            redirectAttributes.addFlashAttribute("successMessage", 
-                messageSource.getMessage("msg.roles.success.delete", null, LocaleContextHolder.getLocale()));
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/security/roles";
+    @ResponseBody
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        roleService.delete(id);
+        return ResponseEntity.ok()
+                .header("HX-Trigger", "refresh-table")
+                .build();
     }
+
 }

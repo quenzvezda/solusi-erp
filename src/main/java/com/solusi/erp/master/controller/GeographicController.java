@@ -1,5 +1,6 @@
 package com.solusi.erp.master.controller;
 
+import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.master.dto.GeographicRequest;
 import com.solusi.erp.master.dto.GeographicResponse;
 import com.solusi.erp.master.model.GeographicType;
@@ -11,10 +12,11 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -51,7 +53,6 @@ public class GeographicController {
         }
 
         model.addAttribute("page", geographics);
-        model.addAttribute("keyword", keyword);
         model.addAttribute("parentId", parentId);
         return "master/geographic/list";
     }
@@ -81,74 +82,45 @@ public class GeographicController {
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('GEOGRAPHIC_CREATE')")
-    public String create(@Valid @ModelAttribute("geographic") GeographicRequest request,
-            BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
-
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("types", GeographicType.values());
-            return "master/geographic/form";
-        }
-
-        try {
-            geographicService.create(request);
-            redirectAttributes.addFlashAttribute("successMessage", getMessage("msg.success.create"));
-            return "redirect:/master/geographics" + (request.getParentId() != null ? "?parentId=" + request.getParentId() : "");
-        } catch (Exception e) {
-            log.error("Error creating geographic", e);
-            model.addAttribute("errorMessage", e.getMessage());
-            model.addAttribute("types", GeographicType.values());
-            return "master/geographic/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<GeographicResponse>> create(@Valid @RequestBody GeographicRequest request) {
+        GeographicResponse data = geographicService.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(getMessage("msg.success.create"), data));
     }
 
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('GEOGRAPHIC_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
-        GeographicRequest request = geographicService.getEditData(id);
-        GeographicResponse response = geographicService.getById(id);
-        
-        model.addAttribute("geographic", request);
-        model.addAttribute("parentName", response.getParentName());
-        model.addAttribute("types", GeographicType.values());
-        return "master/geographic/form";
+        try {
+            var viewDto = geographicService.getGeographicEditView(id);
+            model.addAttribute("geographic", viewDto.getRequest());
+            model.addAttribute("geographicUI", viewDto.getUi());
+            model.addAttribute("auditInfo", viewDto.getAudit());
+            model.addAttribute("types", GeographicType.values());
+            return "master/geographic/form";
+        } catch (Exception e) {
+            log.error("Error loading geographic edit form", e);
+            model.addAttribute("errorMessage", e.getMessage());
+            return "redirect:/master/geographics";
+        }
     }
 
     @PostMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('GEOGRAPHIC_UPDATE')")
-    public String update(@PathVariable Long id, @Valid @ModelAttribute("geographic") GeographicRequest request,
-            BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
-
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("types", GeographicType.values());
-            return "master/geographic/form";
-        }
-
-        try {
-            geographicService.update(id, request);
-            redirectAttributes.addFlashAttribute("successMessage", getMessage("msg.success.update"));
-            return "redirect:/master/geographics" + (request.getParentId() != null ? "?parentId=" + request.getParentId() : "");
-        } catch (Exception e) {
-            log.error("Error updating geographic", e);
-            model.addAttribute("errorMessage", e.getMessage());
-            model.addAttribute("types", GeographicType.values());
-            return "master/geographic/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<GeographicResponse>> update(@PathVariable Long id, @Valid @RequestBody GeographicRequest request) {
+        GeographicResponse data = geographicService.update(id, request);
+        return ResponseEntity.ok(ApiResponse.success(getMessage("msg.success.update"), data));
     }
 
-    @GetMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('GEOGRAPHIC_DELETE')")
-    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        try {
-            GeographicResponse response = geographicService.getById(id);
-            Long parentId = response.getParentId();
-            geographicService.delete(id);
-            redirectAttributes.addFlashAttribute("successMessage", getMessage("msg.success.delete"));
-            return "redirect:/master/geographics" + (parentId != null ? "?parentId=" + parentId : "");
-        } catch (Exception e) {
-            log.error("Error deleting geographic", e);
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/master/geographics";
-        }
+    @ResponseBody
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        geographicService.delete(id);
+        return ResponseEntity.ok()
+                .header("HX-Trigger", "refresh-table")
+                .build();
     }
 
     // ===================================================================

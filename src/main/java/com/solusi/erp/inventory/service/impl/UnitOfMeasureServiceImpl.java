@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.service.impl;
 
+import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.inventory.model.UomType;
 import com.solusi.erp.inventory.dto.UnitOfMeasureRequest;
 import com.solusi.erp.inventory.dto.UnitOfMeasureResponse;
@@ -68,19 +69,33 @@ public class UnitOfMeasureServiceImpl implements UnitOfMeasureService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public FormViewDto<UnitOfMeasureRequest, Void, UnitOfMeasureResponse> getFormView(Long id) {
+        UnitOfMeasure entity = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.uom.notfound")));
+
+        return FormViewDto.<UnitOfMeasureRequest, Void, UnitOfMeasureResponse>builder()
+                .request(mapper.toRequest(entity))
+                .audit(mapper.toResponse(entity))
+                .ui(null)
+                .build();
+    }
+
+    @Override
     @Transactional
-    public void create(UnitOfMeasureRequest request) {
+    public UnitOfMeasureResponse create(UnitOfMeasureRequest request) {
         if (repository.existsByCode(request.getCode())) {
             throw new RuntimeException(getMessage("msg.error.uom.duplicate-code"));
         }
         
         UnitOfMeasure entity = mapper.toEntity(request);
-        repository.save(entity);
+        UnitOfMeasure savedEntity = repository.save(entity);
+        return mapper.toResponse(savedEntity);
     }
 
     @Override
     @Transactional
-    public void update(Long id, UnitOfMeasureRequest request) {
+    public UnitOfMeasureResponse update(Long id, UnitOfMeasureRequest request) {
         UnitOfMeasure entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.uom.notfound")));
 
@@ -89,7 +104,8 @@ public class UnitOfMeasureServiceImpl implements UnitOfMeasureService {
         }
 
         mapper.updateEntityFromRequest(request, entity);
-        repository.save(entity);
+        UnitOfMeasure updatedEntity = repository.save(entity);
+        return mapper.toResponse(updatedEntity);
     }
 
     @Override

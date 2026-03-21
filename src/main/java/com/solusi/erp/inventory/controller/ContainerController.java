@@ -1,6 +1,8 @@
 package com.solusi.erp.inventory.controller;
 
+import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.inventory.dto.ContainerRequest;
+import com.solusi.erp.inventory.dto.ContainerResponse;
 import com.solusi.erp.inventory.service.ContainerService;
 import com.solusi.erp.inventory.service.GridService;
 import jakarta.validation.Valid;
@@ -8,12 +10,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * Controller for Container CRUD.
@@ -34,7 +36,6 @@ public class ContainerController {
             Pageable pageable,
             Model model) {
         model.addAttribute("page", service.findAll(keyword, gridId, pageable));
-        model.addAttribute("keyword", keyword);
         model.addAttribute("gridId", gridId);
         
         if (gridId != null) {
@@ -56,32 +57,21 @@ public class ContainerController {
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('CONTAINER_CREATE')")
-    public String create(@Valid @ModelAttribute("containerRequest") ContainerRequest request,
-            BindingResult bindingResult,
-            Model model,
-            RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasErrors()) {
-            populateSelectOptions(model);
-            return "inventory/containers/form";
-        }
-
-        try {
-            service.create(request);
-            String message = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-            return "redirect:/inventory/containers";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            populateSelectOptions(model);
-            return "inventory/containers/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<ContainerResponse>> create(@Valid @RequestBody ContainerRequest request) {
+        ContainerResponse data = service.create(request);
+        String msg = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(msg, data));
     }
 
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('CONTAINER_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
         try {
-            model.addAttribute("containerRequest", service.getEditData(id));
+            var viewDto = service.getFormView(id);
+            model.addAttribute("containerRequest", viewDto.getRequest());
+            model.addAttribute("containerUI", viewDto.getUi());
+            model.addAttribute("auditInfo", viewDto.getAudit());
             populateSelectOptions(model);
             return "inventory/containers/form";
         } catch (Exception e) {
@@ -92,39 +82,21 @@ public class ContainerController {
 
     @PostMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('CONTAINER_UPDATE')")
-    public String update(@PathVariable Long id,
-            @Valid @ModelAttribute("containerRequest") ContainerRequest request,
-            BindingResult bindingResult,
-            Model model,
-            RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasErrors()) {
-            populateSelectOptions(model);
-            return "inventory/containers/form";
-        }
-
-        try {
-            service.update(id, request);
-            String message = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-            return "redirect:/inventory/containers";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", e.getMessage());
-            populateSelectOptions(model);
-            return "inventory/containers/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<ContainerResponse>> update(@PathVariable Long id, @Valid @RequestBody ContainerRequest request) {
+        ContainerResponse data = service.update(id, request);
+        String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.ok(ApiResponse.success(msg, data));
     }
 
-    @PostMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('CONTAINER_DELETE')")
-    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        try {
-            service.delete(id);
-            String message = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
-            redirectAttributes.addFlashAttribute("successMessage", message);
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/inventory/containers";
+    @ResponseBody
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity.ok()
+                .header("HX-Trigger", "refresh-table")
+                .build();
     }
 
     private void populateSelectOptions(Model model) {

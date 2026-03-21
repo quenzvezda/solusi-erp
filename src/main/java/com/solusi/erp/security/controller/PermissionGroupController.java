@@ -1,16 +1,19 @@
 package com.solusi.erp.security.controller;
 
+import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.security.dto.PermissionGroupRequest;
+import com.solusi.erp.security.dto.PermissionGroupResponse;
 import com.solusi.erp.security.service.PermissionGroupService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -28,7 +31,6 @@ public class PermissionGroupController {
                        Pageable pageable,
                        Model model) {
         model.addAttribute("page", service.findAll(keyword, pageable));
-        model.addAttribute("keyword", keyword);
         return "security/permission-groups/list";
     }
 
@@ -41,29 +43,20 @@ public class PermissionGroupController {
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('MENU-GROUP_CREATE')")
-    public String create(@Valid @ModelAttribute("request") PermissionGroupRequest request,
-                         BindingResult bindingResult,
-                         RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasErrors()) {
-            return "security/permission-groups/form";
-        }
-
-        try {
-            service.create(request);
-            redirectAttributes.addFlashAttribute("successMessage", 
-                messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale()));
-            return "redirect:/security/menu-groups";
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            return "security/permission-groups/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<PermissionGroupResponse>> create(@Valid @RequestBody PermissionGroupRequest request) {
+        PermissionGroupResponse data = service.create(request);
+        String msg = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(msg, data));
     }
 
     @GetMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('MENU-GROUP_UPDATE')")
     public String showEditForm(@PathVariable Long id, Model model) {
         try {
-            model.addAttribute("request", service.getById(id));
+            var viewDto = service.getEditView(id);
+            model.addAttribute("request", viewDto.getRequest());
+            model.addAttribute("auditInfo", viewDto.getAudit());
             return "security/permission-groups/form";
         } catch (Exception e) {
             model.addAttribute("errorMessage", e.getMessage());
@@ -73,35 +66,20 @@ public class PermissionGroupController {
 
     @PostMapping("/edit/{id}")
     @PreAuthorize("hasAuthority('MENU-GROUP_UPDATE')")
-    public String update(@PathVariable Long id,
-                         @Valid @ModelAttribute("request") PermissionGroupRequest request,
-                         BindingResult bindingResult,
-                         RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasErrors()) {
-            return "security/permission-groups/form";
-        }
-
-        try {
-            service.update(id, request);
-            redirectAttributes.addFlashAttribute("successMessage", 
-                messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale()));
-            return "redirect:/security/menu-groups";
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            return "security/permission-groups/form";
-        }
+    @ResponseBody
+    public ResponseEntity<ApiResponse<PermissionGroupResponse>> update(@PathVariable Long id, @Valid @RequestBody PermissionGroupRequest request) {
+        PermissionGroupResponse data = service.update(id, request);
+        String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.ok(ApiResponse.success(msg, data));
     }
 
-    @PostMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('MENU-GROUP_DELETE')")
-    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        try {
-            service.delete(id);
-            redirectAttributes.addFlashAttribute("successMessage", 
-                messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale()));
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/security/menu-groups";
+    @ResponseBody
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity.ok()
+                .header("HX-Trigger", "refresh-table")
+                .build();
     }
 }

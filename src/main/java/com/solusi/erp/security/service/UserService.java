@@ -1,9 +1,11 @@
 package com.solusi.erp.security.service;
 
+import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.security.dto.ProfileRequest;
 import com.solusi.erp.security.dto.ProfileResponse;
 import com.solusi.erp.security.dto.UserRequest;
 import com.solusi.erp.security.dto.UserResponse;
+import com.solusi.erp.security.form.UserUIForm;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,9 +17,11 @@ public interface UserService {
 
     UserRequest getEditData(Long id);
 
-    void create(UserRequest request);
+    FormViewDto<UserRequest, UserUIForm, UserResponse> getUserEditView(Long id);
 
-    void update(Long id, UserRequest request);
+    UserResponse create(UserRequest request);
+
+    UserResponse update(Long id, UserRequest request);
 
     void delete(Long id);
 

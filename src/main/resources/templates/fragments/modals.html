@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+    <!-- Standard Delete Confirmation Modal for HTMX -->
+    <div th:fragment="delete-confirm(id, title, message, actionUrl, targetId)" 
+         class="modal modal-blur fade" th:id="${id}" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content text-start">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-status bg-danger"></div>
+                <div class="modal-body text-center py-4">
+                    <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
+                    <h3 th:text="${title}">Confirm Delete</h3>
+                    <div class="text-secondary" th:text="${message}">Are you sure?</div>
+                </div>
+                <div class="modal-footer">
+                    <div class="w-100">
+                        <div class="row">
+                            <div class="col">
+                                <a href="#" class="btn w-100" data-bs-dismiss="modal" th:text="#{label.cancel}">Cancel</a>
+                            </div>
+                            <div class="col">
+                                <button type="button" class="btn btn-danger w-100"
+                                        th:attr="hx-delete=${actionUrl}, hx-target=${targetId}"
+                                        hx-swap="outerHTML swap:500ms"
+                                        data-bs-dismiss="modal"
+                                        th:text="#{label.delete}">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -5,7 +5,7 @@
     th:replace="~{layout/master :: head(${tax.id == null ? #messages.msg('label.tax.add') : #messages.msg('label.tax.edit')})}">
 </head>
 
-<body th:replace="~{layout/master :: layout(~{:: .tax-form-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .tax-form-content}, ~{})}">
     <div class="tax-form-content">
         <!-- Page Header -->
         <div class="page-header d-print-none">

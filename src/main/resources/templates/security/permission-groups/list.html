@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{layout/master :: head(#{label.menu.group.title})}"></head>
-<body th:replace="~{layout/master :: layout(~{:: .pg-list-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .pg-list-content}, ~{})}">
     <div class="pg-list-content">
         <!-- Page Header -->
         <div class="page-header d-print-none">
@@ -24,32 +24,17 @@
         <!-- Page Body -->
         <div class="page-body">
             <div class="container-xl">
-                <!-- Alerts -->
-                <div th:if="${successMessage}" class="alert alert-success alert-dismissible" role="alert">
-                    <div class="d-flex">
-                        <div><i class="ti ti-check icon alert-icon"></i></div>
-                        <div th:text="${successMessage}">Success!</div>
-                    </div>
-                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                </div>
-                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
-                    <div class="d-flex">
-                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
-                        <div th:text="${errorMessage}">Error!</div>
-                    </div>
-                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                </div>
-
                 <div class="card">
                     <div class="card-body border-bottom py-3">
                         <div class="d-flex">
-                            <div class="text-secondary">
-                            </div>
                             <div class="ms-auto text-secondary">
-                                <form th:action="@{/security/menu-groups}" method="get">
+                                <form th:action="@{/security/menu-groups}" method="get"
+                                      hx-get="/security/menu-groups"
+                                      hx-target="#menu-group-table-container"
+                                      hx-trigger="keyup changed delay:500ms from:#search-input">
                                     <div class="input-icon">
-                                        <input type="text" name="keyword" th:value="${keyword}"
-                                            class="form-control form-control-sm" th:placeholder="#{label.search}">
+                                        <input id="search-input" type="text" name="keyword" th:value="${keyword}"
+                                               class="form-control form-control-sm" th:placeholder="#{label.search} + '...'">
                                         <span class="input-icon-addon">
                                             <i class="ti ti-search"></i>
                                         </span>
@@ -59,99 +44,78 @@
                         </div>
                     </div>
                     
-                    <div class="table-responsive">
-                        <table class="table table-vcenter card-table">
-                            <thead>
-                                <tr>
-                                    <th class="w-1">Icon</th>
-                                    <th th:replace="~{fragments/table :: sortable('code', #{label.menu.group.code})}">Code</th>
-                                    <th th:replace="~{fragments/table :: sortable('nameId', #{label.menu.group.name})}">Name</th>
-                                    <th>URL Path</th>
-                                    <th>Breadcrumb</th>
-                                    <th class="w-1 text-end" th:text="#{label.actions}">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="g : ${page.content}">
-                                    <td>
-                                        <div class="avatar avatar-sm bg-primary-lt">
-                                            <i th:class="'ti ' + (${g.iconClass} ?: 'ti-circle')"></i>
-                                        </div>
-                                    </td>
-                                    <td><code th:text="${g.code}">CODE</code></td>
-                                    <td>
-                                        <div class="d-flex flex-column">
-                                            <strong th:text="${g.nameId}">Indonesian Name</strong>
-                                            <small class="text-secondary" th:text="${g.nameEn}">English Name</small>
-                                        </div>
-                                    </td>
-                                    <td class="text-secondary small" th:text="${g.urlPath}">/url/path</td>
-                                    <td>
-                                        <div class="d-flex flex-column small">
-                                            <span th:text="${g.breadcrumbId}">Keamanan > ...</span>
-                                            <span class="text-secondary" th:text="${g.breadcrumbEn}">Security > ...</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-end">
-                                        <div class="btn-list flex-nowrap justify-content-end">
-                                            <a th:href="@{/security/menu-groups/edit/{id}(id=${g.id})}" 
-                                               class="btn btn-white btn-sm" sec:authorize="hasAuthority('MENU-GROUP_UPDATE')" th:text="#{label.edit}">
-                                                Edit
-                                            </a>
-                                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                                                th:data-bs-target="'#modal-delete-' + ${g.id}"
-                                                sec:authorize="hasAuthority('MENU-GROUP_DELETE')"
-                                                th:text="#{label.delete}">
-                                                Hapus
-                                            </button>
-                                        </div>
+                    <div id="menu-group-table-container" th:fragment="menu-group-table-container"
+                         hx-get="/security/menu-groups"
+                         hx-trigger="refresh-table from:body delay:500ms"
+                         hx-include="[name='keyword'], [name='page']">
+                        <!-- State Tracking -->
+                        <input type="hidden" name="page" th:value="${page.number}">
 
-                                        <!-- Delete Modal -->
-                                        <div class="modal modal-blur fade" th:id="'modal-delete-' + ${g.id}"
-                                            tabindex="-1" role="dialog" aria-hidden="true">
-                                            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-                                                <div class="modal-content">
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                        aria-label="Close"></button>
-                                                    <div class="modal-status bg-danger"></div>
-                                                    <div class="modal-body text-center py-4">
-                                                        <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
-                                                        <h3 th:text="#{label.delete.confirm.title}">Konfirmasi Hapus</h3>
-                                                        <div class="text-secondary"
-                                                            th:text="#{label.menu.group.delete.confirm}">
-                                                            Apakah Anda yakin ingin menghapus data ini?</div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <div class="w-100">
-                                                            <div class="row">
-                                                                <div class="col">
-                                                                    <a href="#" class="btn w-100" data-bs-dismiss="modal" th:text="#{label.cancel}">
-                                                                        Batal
-                                                                    </a>
-                                                                </div>
-                                                                <div class="col">
-                                                                    <form th:action="@{/security/menu-groups/delete/{id}(id=${g.id})}" method="post">
-                                                                        <button type="submit" class="btn btn-danger w-100" th:text="#{label.delete}">
-                                                                            Hapus
-                                                                        </button>
-                                                                    </form>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                        <div class="table-responsive">
+                            <table class="table table-vcenter card-table">
+                                <thead>
+                                    <tr>
+                                        <th class="w-1">Icon</th>
+                                        <th th:replace="~{fragments/table :: sortable('code', #{label.menu.group.code})}">Code</th>
+                                        <th th:replace="~{fragments/table :: sortable('nameId', #{label.menu.group.name})}">Name</th>
+                                        <th>URL Path</th>
+                                        <th>Breadcrumb</th>
+                                        <th class="w-1 text-end" th:text="#{label.common.actions}">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="g : ${page.content}" th:id="'menu-group-row-' + ${g.id}">
+                                        <td>
+                                            <div class="avatar avatar-sm bg-primary-lt">
+                                                <i th:class="'ti ' + (${g.iconClass} ?: 'ti-circle')"></i>
                                             </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr th:if="${page.totalElements == 0}">
-                                    <td colspan="5" class="text-center py-4 text-secondary" th:text="#{label.no.data}">No data found.</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                        </td>
+                                        <td><code th:text="${g.code}">CODE</code></td>
+                                        <td>
+                                            <div class="d-flex flex-column">
+                                                <strong th:text="${g.nameId}">Indonesian Name</strong>
+                                                <small class="text-secondary" th:text="${g.nameEn}">English Name</small>
+                                            </div>
+                                        </td>
+                                        <td class="text-secondary small" th:text="${g.urlPath}">/url/path</td>
+                                        <td>
+                                            <div class="d-flex flex-column small">
+                                                <span th:text="${g.breadcrumbId}">Keamanan > ...</span>
+                                                <span class="text-secondary" th:text="${g.breadcrumbEn}">Security > ...</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="btn-list flex-nowrap justify-content-end">
+                                                <a th:href="@{/security/menu-groups/edit/{id}(id=${g.id})}"
+                                                   class="btn btn-white btn-sm" sec:authorize="hasAuthority('MENU-GROUP_UPDATE')">
+                                                    <i class="ti ti-edit me-1"></i> <span th:text="#{label.edit}">Edit</span>
+                                                </a>
+                                                <button class="btn btn-white btn-sm text-danger" data-bs-toggle="modal"
+                                                    th:data-bs-target="'#modal-delete-' + ${g.id}"
+                                                    sec:authorize="hasAuthority('MENU-GROUP_DELETE')">
+                                                    <i class="ti ti-trash me-1"></i> <span th:text="#{label.delete}">Hapus</span>
+                                                </button>
+                                            </div>
+
+                                            <!-- Delete Modal Fragment -->
+                                            <div th:replace="~{fragments/modals :: delete-confirm(
+                                                id='modal-delete-' + ${g.id},
+                                                title=#{label.delete.confirm.title},
+                                                message=#{label.menu.group.delete.confirm},
+                                                actionUrl='/security/menu-groups/' + ${g.id},
+                                                targetId='#menu-group-row-' + ${g.id}
+                                            )}"></div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${page.isEmpty()}">
+                                        <td colspan="6" class="text-center py-4 text-secondary" th:text="#{label.no.data}">No data found.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Pagination -->
+                        <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                     </div>
-                    <!-- Pagination -->
-                    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                 </div>
             </div>
         </div>

@@ -23,15 +23,15 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = true)
 public class GeographicRequest extends BaseAuditResponse implements Serializable {
 
-    @NotBlank(message = "{validation.geographic.code.notblank}")
-    @Size(max = 50, message = "{validation.geographic.code.size}")
+    @NotBlank(message = "{label.geographic.code} {validation.notblank.suffix}")
+    @Size(max = 50, message = "{label.geographic.code} {validation.size.suffix}")
     private String code;
 
-    @NotBlank(message = "{validation.geographic.name.notblank}")
-    @Size(max = 150, message = "{validation.geographic.name.size}")
+    @NotBlank(message = "{label.geographic.name} {validation.notblank.suffix}")
+    @Size(max = 150, message = "{label.geographic.name} {validation.size.suffix}")
     private String name;
 
-    @NotNull(message = "{validation.geographic.type.notnull}")
+    @NotNull(message = "{label.geographic.type} {validation.notnull.suffix}")
     private GeographicType type;
 
     private Long parentId;

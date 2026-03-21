@@ -6,7 +6,10 @@ import com.solusi.erp.inventory.model.StockAdjustment;
 import com.solusi.erp.inventory.service.StockAdjustmentService;
 import com.solusi.erp.inventory.service.ProductService;
 import com.solusi.erp.inventory.service.ContainerService;
+import com.solusi.erp.master.dto.CurrencyResponse;
 import com.solusi.erp.master.service.CurrencyService;
+import com.solusi.erp.util.HtmxResponseUtility;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +22,9 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Slf4j
 @Controller
@@ -45,13 +51,13 @@ public class StockAdjustmentController {
     @GetMapping("/create")
     @PreAuthorize("hasAuthority('STOCK-ADJUSTMENT_CREATE')")
     public String createForm(Model model) {
-        com.solusi.erp.master.dto.CurrencyResponse defaultCurr = currencyService.getDefaultCurrency();
+        CurrencyResponse defaultCurr = currencyService.getDefaultCurrency();
         StockAdjustmentRequest request = new StockAdjustmentRequest();
         if (defaultCurr != null) {
             request.setCurrencyId(defaultCurr.getId());
         }
-        request.setExchangeRate(java.math.BigDecimal.ONE);
-        request.setTransactionDate(java.time.LocalDate.now());
+        request.setExchangeRate(BigDecimal.ONE);
+        request.setTransactionDate(LocalDate.now());
         
         model.addAttribute("stockAdjustment", request);
         populateFormModels(model);
@@ -61,19 +67,28 @@ public class StockAdjustmentController {
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('STOCK-ADJUSTMENT_CREATE')")
     public String create(@Valid @ModelAttribute("stockAdjustment") StockAdjustmentRequest request,
-                        BindingResult result, Model model, RedirectAttributes ra) {
+                        BindingResult result, 
+                        @RequestHeader(value = "HX-Request", required = false) boolean htmxRequest,
+                        Model model, 
+                        HttpServletResponse response,
+                        RedirectAttributes ra) {
         log.info("Creating stock adjustment with {} lines", request.getLines().size());
         if (result.hasErrors()) {
             log.warn("Validation errors: {}", result.getAllErrors());
+            if (htmxRequest) return HtmxResponseUtility.returnErrorFragment();
             populateFormModels(model);
             return "inventory/adjustments/form";
         }
         try {
             service.create(request);
-            ra.addFlashAttribute("message", "Stock Adjustment created successfully");
+            String message = "Stock Adjustment created successfully";
+            ra.addFlashAttribute("message", message);
+            
+            if (htmxRequest) return HtmxResponseUtility.redirect(response, "/inventory/adjustments");
             return "redirect:/inventory/adjustments";
         } catch (Exception e) {
             log.error("Error creating adjustment", e);
+            if (htmxRequest) return HtmxResponseUtility.handleException(model, e.getMessage());
             ra.addFlashAttribute("error", e.getMessage());
             populateFormModels(model);
             return "inventory/adjustments/form";
@@ -96,16 +111,25 @@ public class StockAdjustmentController {
     @PreAuthorize("hasAuthority('STOCK-ADJUSTMENT_UPDATE')")
     public String update(@PathVariable Long id,
                         @Valid @ModelAttribute("stockAdjustment") StockAdjustmentRequest request,
-                        BindingResult result, Model model, RedirectAttributes ra) {
+                        BindingResult result, 
+                        @RequestHeader(value = "HX-Request", required = false) boolean htmxRequest,
+                        Model model, 
+                        HttpServletResponse response,
+                        RedirectAttributes ra) {
         if (result.hasErrors()) {
+            if (htmxRequest) return HtmxResponseUtility.returnErrorFragment();
             populateFormModels(model);
             return "inventory/adjustments/form";
         }
         try {
             service.update(id, request);
-            ra.addFlashAttribute("message", "Stock Adjustment updated successfully");
+            String message = "Stock Adjustment updated successfully";
+            ra.addFlashAttribute("message", message);
+            
+            if (htmxRequest) return HtmxResponseUtility.redirect(response, "/inventory/adjustments/" + id);
             return "redirect:/inventory/adjustments/" + id;
         } catch (Exception e) {
+            if (htmxRequest) return HtmxResponseUtility.handleException(model, e.getMessage());
             ra.addFlashAttribute("error", e.getMessage());
             populateFormModels(model);
             return "inventory/adjustments/form";

@@ -3,7 +3,7 @@
 
 <head th:replace="~{layout/master :: head(#{label.stock-adjustment.title})}"></head>
 
-<body th:replace="~{layout/master :: layout(~{:: .stock-adjustment-view-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .stock-adjustment-view-content}, ~{})}">
     <div class="stock-adjustment-view-content">
         <div class="page-header d-print-none">
             <div class="container-xl">

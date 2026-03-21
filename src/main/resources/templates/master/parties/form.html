@@ -5,7 +5,7 @@
     th:replace="~{layout/master :: head(${partyRequest.id == null ? #messages.msg('label.party.add') : #messages.msg('label.party.edit')})}">
 </head>
 
-<body th:replace="~{layout/master :: layout(~{:: .party-form-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .party-form-content}, ~{})}">
     <div class="party-form-content">
         <!-- Page Header -->
         <div class="page-header d-print-none">

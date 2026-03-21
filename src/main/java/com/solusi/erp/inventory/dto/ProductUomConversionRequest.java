@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 
 /**
  * Request DTO for Product UOM Conversion.
+ * Cleaned from UI fields to align with Standard API.
  */
 @Data
 @Builder
@@ -21,24 +22,17 @@ import java.math.BigDecimal;
 @EqualsAndHashCode(callSuper = true)
 public class ProductUomConversionRequest extends BaseAuditResponse {
 
-    @NotNull(message = "{validation.notnull}")
+    @NotNull(message = "{label.uom-conversion.product} {validation.notnull.suffix}")
     private Long productId;
-    
-    // For display in UI lookup
-    private String productName;
-    private String productCode;
 
-    @NotNull(message = "{validation.notnull}")
+    @NotNull(message = "{label.uom-conversion.from-uom} {validation.notnull.suffix}")
     private Long fromUomId;
-    
-    private String fromUomName;
 
-    @NotNull(message = "{validation.notnull}")
+    @NotNull(message = "{label.uom-conversion.to-uom} {validation.notnull.suffix}")
     private Long toUomId; // Base UOM
-    
-    private String toUomName;
 
-    @NotNull(message = "{validation.notnull}")
-    @DecimalMin(value = "0.000001", message = "{validation.min}")
-    private BigDecimal conversionFactor;
+    @NotNull(message = "{label.uom-conversion.factor} {validation.notnull.suffix}")
+    @DecimalMin(value = "0.000001", message = "{label.uom-conversion.factor} {validation.value.positive}")
+    @Builder.Default
+    private BigDecimal conversionFactor = new BigDecimal("0.00");
 }

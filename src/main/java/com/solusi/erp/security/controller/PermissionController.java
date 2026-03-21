@@ -6,6 +6,7 @@ import com.solusi.erp.security.service.PermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -72,16 +73,13 @@ public class PermissionController {
         return "redirect:/security/permissions";
     }
 
-    @PostMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('PERMISSIONS_DELETE')")
-    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        try {
-            permissionService.delete(id);
-            redirectAttributes.addFlashAttribute("successMessage", 
-                messageSource.getMessage("msg.permissions.success.delete", null, LocaleContextHolder.getLocale()));
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/security/permissions";
+    @ResponseBody
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        permissionService.delete(id);
+        return ResponseEntity.ok()
+                .header("HX-Trigger", "refresh-table")
+                .build();
     }
 }

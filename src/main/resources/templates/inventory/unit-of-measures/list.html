@@ -1,23 +1,29 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{layout/master :: head(#{label.uom.title})}"></head>
-<body th:replace="~{layout/master :: layout(~{:: .uom-list-content})}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.uom.title})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .uom-list-content}, ~{:: #page-specific-scripts})}">
     <div class="uom-list-content">
+
         <!-- Page Header -->
         <div class="page-header d-print-none">
             <div class="container-xl">
                 <div class="row g-2 align-items-center">
                     <div class="col">
-                        <h2 class="page-title" th:text="#{label.uom.title}">Satuan Ukur</h2>
-                        <div class="text-secondary mt-1" th:text="#{label.uom.subtitle}">Kelola data satuan ukur (UoM).</div>
+                        <h2 class="page-title" th:text="#{label.uom.title}">
+                            Satuan Ukur (UoM)
+                        </h2>
+                        <div class="text-secondary mt-1" th:text="#{label.uom.subtitle}">
+                            Kelola data satuan ukur untuk produk.
+                        </div>
                     </div>
-                    <!-- Page title actions -->
                     <div class="col-auto ms-auto d-print-none" sec:authorize="hasAuthority('UNIT-OF-MEASURE_CREATE')">
                         <div class="btn-list">
                             <a th:href="@{/inventory/unit-of-measures/create}" class="btn btn-primary d-none d-sm-inline-block">
-                                <i class="ti ti-plus"></i>
-                                <span th:text="#{label.uom.add}">Tambah Satuan Baru</span>
+                                <i class="ti ti-plus icon"></i>
+                                <span th:text="#{label.uom.add}">Tambah Baru</span>
                             </a>
                         </div>
                     </div>
@@ -28,31 +34,22 @@
         <!-- Page Body -->
         <div class="page-body">
             <div class="container-xl">
-                <!-- Alerts -->
-                <div th:if="${successMessage}" class="alert alert-success alert-dismissible" role="alert">
-                    <div class="d-flex">
-                        <div><i class="ti ti-check icon alert-icon"></i></div>
-                        <div th:text="${successMessage}">Success!</div>
-                    </div>
-                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                </div>
-                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
-                    <div class="d-flex">
-                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
-                        <div th:text="${errorMessage}">Error!</div>
-                    </div>
-                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                </div>
+
+                <div th:replace="~{fragments/alerts :: success}"></div>
+                <div th:replace="~{fragments/alerts :: error}"></div>
 
                 <div class="card">
                     <div class="card-body border-bottom py-3">
                         <div class="d-flex">
-                            <div class="text-secondary">
-                                <!-- Future: Page Size Selector -->
-                            </div>
                             <div class="ms-auto text-secondary">
-                                <form th:action="@{/inventory/unit-of-measures}" method="get" class="input-icon">
-                                    <input type="text" name="keyword" th:value="${keyword}" class="form-control form-control-sm" th:placeholder="#{label.search}">
+                                <form th:action="@{/inventory/unit-of-measures}" method="get" class="input-icon"
+                                      hx-get="/inventory/unit-of-measures"
+                                      hx-target="#uom-table-container"
+                                      hx-trigger="keyup changed delay:500ms from:#search-input"
+                                      hx-push-url="true">
+                                    <input type="text" id="search-input" name="keyword" th:value="${keyword}" 
+                                           class="form-control form-control-sm"
+                                           th:placeholder="#{label.search} + '...'">
                                     <span class="input-icon-addon">
                                         <i class="ti ti-search"></i>
                                     </span>
@@ -60,81 +57,78 @@
                             </div>
                         </div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-vcenter card-table">
-                            <thead>
-                                <tr>
-                                    <th th:replace="~{fragments/table :: sortable('code', #{label.uom.column.code})}">Kode (Simbol)</th>
-                                    <th th:replace="~{fragments/table :: sortable('name', #{label.uom.column.name})}">Nama Lengkap</th>
-                                    <th th:replace="~{fragments/table :: sortable('type', #{label.uom.column.type})}">Tipe</th>
-                                    <th class="w-1" th:text="#{label.actions}">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="item : ${page.content}">
-                                    <td class="font-weight-bold" th:text="${item.code}">CODE</td>
-                                    <td th:text="${item.name}">Name</td>
-                                    <td>
-                                        <span class="badge bg-blue-lt" th:text="#{'label.uom.type.' + ${item.type.name().toLowerCase()}}">
-                                            TYPE
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="btn-list flex-nowrap">
-                                            <a th:href="@{/inventory/unit-of-measures/edit/{id}(id=${item.id})}" 
-                                               class="btn btn-white btn-sm"
-                                               sec:authorize="hasAuthority('UNIT-OF-MEASURE_UPDATE')"
-                                               th:text="#{label.edit}">
-                                                Edit
-                                            </a>
-                                            <button class="btn btn-danger btn-sm"
-                                                    data-bs-toggle="modal" 
-                                                    th:data-bs-target="'#modal-delete-' + ${item.id}"
-                                                    sec:authorize="hasAuthority('UNIT-OF-MEASURE_DELETE')"
-                                                    th:text="#{label.delete}">
-                                                Hapus
-                                            </button>
-                                        </div>
 
-                                        <!-- Delete Modal -->
-                                        <div class="modal modal-blur fade" th:id="'modal-delete-' + ${item.id}" tabindex="-1" role="dialog" aria-hidden="true">
-                                            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-                                                <div class="modal-content">
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                    <div class="modal-status bg-danger"></div>
-                                                    <div class="modal-body text-center py-4">
-                                                        <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
-                                                        <h3 th:text="#{label.uom.delete.confirm.title}">Konfirmasi Hapus</h3>
-                                                        <div class="text-secondary" th:text="#{label.uom.delete.confirm.text(${item.code})}">Apakah Anda yakin ingin menghapus UoM?</div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <div class="w-100">
-                                                            <div class="row">
-                                                                <div class="col"><a href="#" class="btn w-100" data-bs-dismiss="modal" th:text="#{label.cancel}">Batal</a></div>
-                                                                <div class="col">
-                                                                    <form th:action="@{/inventory/unit-of-measures/delete/{id}(id=${item.id})}" method="post">
-                                                                        <button type="submit" class="btn btn-danger w-100" th:text="#{label.delete}">Hapus</button>
-                                                                    </form>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                    <div id="uom-table-container" th:fragment="uom-table-container"
+                         hx-get="/inventory/unit-of-measures"
+                         hx-trigger="refresh-table from:body delay:500ms"
+                         hx-include="[name='keyword'], [name='page']">
+                        <!-- State Tracking -->
+                        <input type="hidden" name="page" th:value="${page.number}">
+
+                        <div class="table-responsive">
+                            <table class="table card-table table-vcenter text-nowrap datatable">
+                                <thead>
+                                    <tr>
+                                        <th th:replace="~{fragments/table :: sortable('code', #{label.uom.column.code})}">Kode</th>
+                                        <th th:replace="~{fragments/table :: sortable('name', #{label.uom.column.name})}">Nama</th>
+                                        <th th:replace="~{fragments/table :: sortable('type', #{label.uom.column.type})}">Tipe</th>
+                                        <th class="text-end" th:text="#{label.actions}">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${page.content}" th:id="'uom-row-' + ${item.id}">
+                                        <td>
+                                            <span class="badge bg-blue-lt" th:text="${item.code}">KG</span>
+                                        </td>
+                                        <td class="font-weight-medium" th:text="${item.name}">Kilogram</td>
+                                        <td>
+                                            <span th:text="${#messages.msg('label.uom.type.' + item.type.name().toLowerCase())}">Weight</span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-list flex-nowrap justify-content-end">
+                                                <a th:href="@{/inventory/unit-of-measures/edit/{id}(id=${item.id})}"
+                                                   class="btn btn-white btn-sm" sec:authorize="hasAuthority('UNIT-OF-MEASURE_UPDATE')">
+                                                    <i class="ti ti-edit me-1"></i>
+                                                    <span th:text="#{label.edit}">Edit</span>
+                                                </a>
+                                                <!-- Standard Modal Delete -->
+                                                <button type="button" class="btn btn-white btn-sm text-danger"
+                                                        sec:authorize="hasAuthority('UNIT-OF-MEASURE_DELETE')"
+                                                        data-bs-toggle="modal" 
+                                                        th:data-bs-target="'#modal-delete-' + ${item.id}">
+                                                    <i class="ti ti-trash me-1"></i>
+                                                    <span th:text="#{label.delete}">Delete</span>
+                                                </button>
                                             </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr th:if="${page.totalElements == 0}">
-                                    <td colspan="4" class="text-center text-secondary py-4" th:text="#{label.uom.empty}">Tidak ada data.</td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                                            <!-- Delete Modal Fragment -->
+                                            <div th:replace="~{fragments/modals :: delete-confirm(
+                                                id='modal-delete-' + ${item.id},
+                                                title=#{label.delete.confirm.title},
+                                                message=#{label.uom.delete.confirm.text(${item.code})},
+                                                actionUrl='/inventory/unit-of-measures/' + ${item.id},
+                                                targetId='#uom-row-' + ${item.id}
+                                            )}"></div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${page.empty}">
+                                        <td colspan="4" class="text-center py-4 text-secondary" th:text="#{label.uom.empty}">
+                                            Tidak ada data satuan ukur.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                     </div>
-                    <!-- Pagination -->
-                    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                 </div>
             </div>
         </div>
+
+    </div>
+
+    <div id="page-specific-scripts" th:fragment="pageScripts">
     </div>
 </body>
+
 </html>

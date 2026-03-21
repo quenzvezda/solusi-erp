@@ -1,9 +1,12 @@
 package com.solusi.erp.inventory.service.impl;
 
+import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.service.SequenceGeneratorService;
 import com.solusi.erp.inventory.dto.ProductRequest;
 import com.solusi.erp.inventory.dto.ProductResponse;
+import com.solusi.erp.inventory.form.ProductUIForm;
 import com.solusi.erp.inventory.mapper.ProductMapper;
 import com.solusi.erp.inventory.model.Product;
 import com.solusi.erp.inventory.repository.ProductRepository;
@@ -85,6 +88,13 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
+    public Product getEntityById(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.product.notfound")));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ProductRequest getEditData(Long id) {
         Product entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.product.notfound")));
@@ -93,20 +103,34 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public FormViewDto<ProductRequest, ProductUIForm, ProductResponse> getProductEditView(Long id) {
+        Product entity = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.product.notfound")));
+
+        return FormViewDto.<ProductRequest, ProductUIForm, ProductResponse>builder()
+                .request(mapper.toRequest(entity))
+                .ui(mapper.toUIForm(entity))
+                .audit(mapper.toResponse(entity))
+                .build();
+    }
+
+    @Override
     @Transactional
-    public void create(ProductRequest request) {
+    public ProductResponse create(ProductRequest request) {
         Product entity = mapper.toEntity(request);
         
         // Auto-generate code
         String generatedCode = sequenceGeneratorService.generate("PRODUCT");
         entity.setCode(generatedCode);
         
-        repository.save(entity);
+        Product savedEntity = repository.save(entity);
+        return mapper.toResponse(savedEntity);
     }
 
     @Override
     @Transactional
-    public void update(Long id, ProductRequest request) {
+    public ProductResponse update(Long id, ProductRequest request) {
         Product entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.product.notfound")));
 
@@ -116,7 +140,8 @@ public class ProductServiceImpl implements ProductService {
         }
 
         mapper.updateEntityFromRequest(request, entity);
-        repository.save(entity);
+        Product updatedEntity = repository.save(entity);
+        return mapper.toResponse(updatedEntity);
     }
 
     @Override

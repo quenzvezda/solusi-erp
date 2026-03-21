@@ -1,24 +1,16 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
-<head th:replace="~{layout/master :: head(${uomConversionRequest.id == null
-    ? #messages.msg('label.uom-conversion.add')
-    : #messages.msg('label.uom-conversion.edit')})}">
-</head>
+<head th:replace="~{layout/master :: head(${uomConversionRequest.id == null ? #messages.msg('label.uom-conversion.add') : #messages.msg('label.uom-conversion.edit')})}"></head>
 
-<body th:replace="~{layout/master :: layout(~{:: .uom-conversion-form-content})}">
-    <div class="uom-conversion-form-content">
-
+<body th:replace="~{layout/master :: layout(~{:: .uom-conversion-form-content}, ~{:: #page-specific-scripts})}">
+    <div class="uom-conversion-form-content" id="uom-conversion-form-content" th:fragment="uom-conversion-form-content">
         <!-- Page Header -->
         <div class="page-header d-print-none">
             <div class="container-xl">
                 <div class="row g-2 align-items-center">
                     <div class="col">
-                        <h2 class="page-title" th:text="${uomConversionRequest.id == null
-                            ? #messages.msg('label.uom-conversion.add')
-                            : #messages.msg('label.uom-conversion.edit')}">
-                            Add New Conversion
-                        </h2>
+                        <h2 class="page-title" th:text="${uomConversionRequest.id == null ? #messages.msg('label.uom-conversion.add') : #messages.msg('label.uom-conversion.edit')}">Tambah Konversi</h2>
                     </div>
                 </div>
             </div>
@@ -27,135 +19,95 @@
         <!-- Page Body -->
         <div class="page-body">
             <div class="container-xl">
+                <form th:action="${uomConversionRequest.id == null ? '/inventory/uom-conversions/create' : '/inventory/uom-conversions/edit/' + uomConversionRequest.id}"
+                    th:object="${uomConversionRequest}" method="post" class="card"
+                    id="uom-conversion-form"
+                    data-ajax-form="true"
+                    data-redirect-on-success="/inventory/uom-conversions">
 
-                <!-- Exception Error Alert -->
-                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
-                    <div class="d-flex">
-                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
-                        <div th:text="${errorMessage}">Error!</div>
-                    </div>
-                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                </div>
-
-                <form th:action="${uomConversionRequest.id == null
-                        ? '/inventory/uom-conversions/create'
-                        : '/inventory/uom-conversions/edit/' + uomConversionRequest.id}" th:object="${uomConversionRequest}" method="post"
-                    class="card">
+                    <!-- CSRF Token -->
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
                     <div class="card-body">
+                        <!-- Alert Placeholder -->
+                        <div class="alert-container"></div>
 
-                        <!-- Global Binding Error Alert -->
-                        <div th:if="${#fields.hasAnyErrors()}" class="alert alert-danger" role="alert">
-                            <div class="d-flex">
-                                <div><i class="ti ti-alert-triangle icon alert-icon"></i></div>
-                                <div>
-                                    <h4 class="alert-title" th:text="#{msg.error.validation.title}">Validation Error</h4>
-                                    <div class="text-secondary" th:text="#{msg.error.validation.subtitle}">
-                                        Please check the form fields below.
-                                    </div>
-                                    <ul class="mb-0 mt-2">
-                                        <li th:each="err : ${#fields.allErrors()}" th:text="${err}">Invalid input</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row g-3">
+                        <div class="row">
                             <div class="col-md-6">
-                                <div th:replace="~{fragments/inputs :: autocomplete(field='productId', label=#{label.uom-conversion.product}, placeholder='', required=true, id='product-select', 
-                                    initialValue=${uomConversionRequest.productId}, initialText=${uomConversionRequest.productName}, initialSubtext=${uomConversionRequest.productCode})}"></div>
-                            </div>
+                                <div th:insert="~{fragments/inputs :: autocomplete(field='productId', label=#{label.uom-conversion.product}, required=true, id='product-select', path='inventory/products',
+                                    initialValue=*{productId}, 
+                                    initialText=${uomUIForm != null ? uomUIForm.productName : ''}, 
+                                    initialSubtext=${uomUIForm != null ? uomUIForm.productCode : ''})}"></div>
 
-                            <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label required" th:text="#{label.uom-conversion.from-uom}">From UoM</label>
-                                    <select th:field="*{fromUomId}" class="form-select erp-input"
-                                        th:classappend="${#fields.hasErrors('fromUomId')} ? 'is-invalid'">
-                                        <option value="" th:text="#{label.product.select.uom}">-- Select UoM --</option>
-                                        <option th:each="u : ${uoms}" th:value="${u.id}"
-                                            th:text="${u.name + ' (' + u.code + ')'}"></option>
+                                    <label class="form-label required" th:text="#{label.uom-conversion.from-uom}">Satuan Asal</label>
+                                    <select th:field="*{fromUomId}" class="form-select erp-input">
+                                        <option value="" th:text="#{label.product.select.uom}">-- Pilih Satuan --</option>
+                                        <option th:each="u : ${uoms}" th:value="${u.id}" th:text="${u.name + ' (' + u.code + ')'}"></option>
                                     </select>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('fromUomId')}" th:errors="*{fromUomId}"></div>
                                 </div>
                             </div>
 
                             <div class="col-md-6">
+                                <!-- Read Only Base UoM Field -->
                                 <div class="mb-3">
-                                    <label class="form-label" th:text="#{label.uom-conversion.to-uom}">To UoM (Base)</label>
-                                    <input type="text" id="base-uom-display" class="form-control bg-light erp-input" readonly 
-                                        th:value="${uomConversionRequest.toUomName != null ? uomConversionRequest.toUomName : '-'}">
-                                    <!-- Hidden input to store toUomId for the request -->
-                                    <input type="hidden" th:field="*{toUomId}" id="base-uom-id">
+                                    <label class="form-label" th:text="#{label.uom-conversion.to-uom}">Satuan Tujuan (Dasar)</label>
+                                    <!-- Hidden input for data submission, inside mb-3 so errors attach here -->
+                                    <input type="hidden" th:field="*{toUomId}" id="hidden-to-uom-id">
+                                    <input type="text" id="display-to-uom-name" class="form-control erp-input bg-light" readonly 
+                                           th:value="${uomUIForm != null ? uomUIForm.toUomName : ''}">
                                 </div>
-                            </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label required" th:text="#{label.uom-conversion.factor}">Conversion Factor</label>
-                                    <input type="number" step="0.01" th:name="conversionFactor" 
-                                        th:value="${uomConversionRequest.conversionFactor != null ? #numbers.formatDecimal(uomConversionRequest.conversionFactor, 1, 'POINT', 2, 'POINT') : '1.00'}" 
-                                        class="form-control erp-input input-factor"
-                                        th:classappend="${#fields.hasErrors('conversionFactor')} ? 'is-invalid'"
-                                        onkeypress="return (event.charCode >= 48 && event.charCode <= 57) || event.charCode == 46">
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('conversionFactor')}" th:errors="*{conversionFactor}"></div>
-                                </div>
+                                <div th:replace="~{fragments/inputs :: decimal(field='conversionFactor', label=#{label.uom-conversion.factor}, required=true)}"></div>
+                                <div class="text-secondary small mt-n2 mb-3">Contoh: 1 Box = 12 Pieces, maka isi 12.00.</div>
+                            </div>
                         </div>
 
-                        <!-- Record Info (Edit Mode only) -->
+                        <!-- Record Info -->
                         <div th:if="${auditInfo != null and auditInfo.id != null}" th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
                     </div>
 
                     <div class="card-footer text-end">
-                        <div class="d-flex">
-                            <a th:href="@{/inventory/uom-conversions}" class="btn btn-link link-secondary" th:text="#{label.cancel}">Cancel</a>
+                        <div class="d-flex align-items-center">
+                            <div id="loading-indicator" class="spinner-border spinner-border-sm text-primary me-2" role="status" style="display: none;"></div>
+                            <a th:href="@{/inventory/uom-conversions}" class="btn btn-link link-secondary" th:text="#{label.cancel}">Batal</a>
                             <button type="submit" class="btn btn-primary ms-auto">
                                 <i class="ti ti-device-floppy"></i>
-                                <span th:text="#{label.save}">Save</span>
+                                <span th:text="#{label.save}">Simpan</span>
                             </button>
                         </div>
                     </div>
-
                 </form>
             </div>
         </div>
+    </div>
 
+    <div id="page-specific-scripts" th:fragment="pageScripts">
         <script th:inline="javascript">
-            window.addEventListener('load', function() {
+            /*<![CDATA[*/
+            (function() {
                 const productEl = document.getElementById('product-select');
-                const baseUomDisplay = document.getElementById('base-uom-display');
-                const baseUomIdInput = document.getElementById('base-uom-id');
+                if (!productEl) return;
 
-                // Check if initLookup exists (it should be in master.html)
-                if (typeof initLookup === 'function') {
-                    const tsProduct = initLookup(productEl, 'inventory/products');
+                const hiddenToUomId = document.getElementById('hidden-to-uom-id');
+                const displayToUomName = document.getElementById('display-to-uom-name');
 
-                    if (tsProduct) {
-                        tsProduct.on('change', function(value) {
-                            if (value) {
-                                const item = this.options[value];
-                                if (item.payload) {
-                                    if (item.payload.uomName) baseUomDisplay.value = item.payload.uomName;
-                                    if (item.payload.uomId) baseUomIdInput.value = item.payload.uomId;
-                                }
-                            } else {
-                                baseUomDisplay.value = '-';
-                                baseUomIdInput.value = '';
-                            }
-                        });
-                    }
-                } else {
-                    console.error('initLookup function not found! Check master.html');
-                }
-
-                // Auto-format factor to 2 decimal places on blur
-                const factorInput = document.querySelector('.input-factor');
-                if (factorInput) {
-                    factorInput.addEventListener('blur', function() {
-                        if (this.value) {
-                            this.value = parseFloat(this.value).toFixed(2);
+                productEl.addEventListener('erp:lookup-initialized', function(e) {
+                    const ts = e.detail.tomselect;
+                    
+                    ts.on('change', function(val) {
+                        const opt = ts.options[val];
+                        if (opt && opt.payload) {
+                            hiddenToUomId.value = opt.payload.uomId || '';
+                            displayToUomName.value = opt.payload.uomName || '';
+                        } else {
+                            hiddenToUomId.value = '';
+                            displayToUomName.value = '';
                         }
                     });
-                }
-            });
+                });
+            })();
+            /*]]>*/
         </script>
     </div>
 </body>

@@ -20,15 +20,15 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public class GridRequest extends BaseAuditResponse {
 
-    @NotNull(message = "{validation.notnull}")
+    @NotNull(message = "{label.facility} {validation.notnull.suffix}")
     private Long facilityId;
 
-    @NotBlank(message = "{validation.notblank}")
-    @Size(max = 50, message = "{validation.size}")
+    @NotBlank(message = "{label.grid.code} {validation.notblank.suffix}")
+    @Size(max = 50, message = "{label.grid.code} {validation.size.suffix}")
     private String code;
 
-    @NotBlank(message = "{validation.notblank}")
-    @Size(max = 150, message = "{validation.size}")
+    @NotBlank(message = "{label.grid.name} {validation.notblank.suffix}")
+    @Size(max = 150, message = "{label.grid.name} {validation.size.suffix}")
     private String name;
 
     private String note;

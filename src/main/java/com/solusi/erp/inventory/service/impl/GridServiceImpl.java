@@ -1,6 +1,8 @@
 package com.solusi.erp.inventory.service.impl;
 
+import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.core.dto.LookupDto;
+import com.solusi.erp.core.service.SequenceGeneratorService;
 import com.solusi.erp.inventory.dto.GridRequest;
 import com.solusi.erp.inventory.dto.GridResponse;
 import com.solusi.erp.inventory.mapper.WarehouseMapper;
@@ -76,7 +78,12 @@ public class GridServiceImpl implements GridService {
     public Page<GridResponse> findAll(String keyword, Long facilityId, Pageable pageable) {
         Page<Grid> page;
         if (StringUtils.hasText(keyword)) {
-            page = repository.search(keyword, pageable);
+            if (facilityId != null) {
+                // Gunakan pencarian spesifik per fasilitas jika ada facilityId
+                page = repository.searchByFacility(keyword, facilityId, pageable);
+            } else {
+                page = repository.search(keyword, pageable);
+            }
         } else if (facilityId != null) {
             page = repository.findByFacilityId(facilityId, pageable);
         } else {
@@ -102,18 +109,32 @@ public class GridServiceImpl implements GridService {
     }
 
     @Override
-    @Transactional
-    public void create(GridRequest request) {
-        if (repository.existsByFacilityIdAndCode(request.getFacilityId(), request.getCode())) {
-            throw new RuntimeException(getMessage("msg.error.grid.duplicate-code"));
-        }
-        Grid entity = mapper.toEntity(request);
-        repository.save(entity);
+    @Transactional(readOnly = true)
+    public FormViewDto<GridRequest, Void, GridResponse> getFormView(Long id) {
+        Grid entity = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.grid.notfound")));
+
+        return FormViewDto.<GridRequest, Void, GridResponse>builder()
+                .request(mapper.toRequest(entity))
+                .audit(mapper.toResponse(entity))
+                .ui(null)
+                .build();
     }
 
     @Override
     @Transactional
-    public void update(Long id, GridRequest request) {
+    public GridResponse create(GridRequest request) {
+        if (repository.existsByFacilityIdAndCode(request.getFacilityId(), request.getCode())) {
+            throw new RuntimeException(getMessage("msg.error.grid.duplicate-code"));
+        }
+        Grid entity = mapper.toEntity(request);
+        Grid savedEntity = repository.save(entity);
+        return mapper.toResponse(savedEntity);
+    }
+
+    @Override
+    @Transactional
+    public GridResponse update(Long id, GridRequest request) {
         Grid entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.grid.notfound")));
 
@@ -122,7 +143,8 @@ public class GridServiceImpl implements GridService {
         }
 
         mapper.updateEntityFromRequest(request, entity);
-        repository.save(entity);
+        Grid updatedEntity = repository.save(entity);
+        return mapper.toResponse(updatedEntity);
     }
 
     @Override

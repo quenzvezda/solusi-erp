@@ -5,6 +5,7 @@ import com.solusi.erp.inventory.dto.ProductCategoryRequest;
 import com.solusi.erp.inventory.dto.ProductCategoryResponse;
 import com.solusi.erp.inventory.model.ProductCategory;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
 
@@ -20,5 +21,6 @@ public interface ProductCategoryMapper {
 
     ProductCategoryRequest toRequest(ProductCategory entity);
 
+    @Mapping(target = "id", ignore = true)
     void updateEntityFromRequest(ProductCategoryRequest request, @MappingTarget ProductCategory entity);
 }

@@ -1,5 +1,6 @@
 package com.solusi.erp.security.service;
 
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.security.dto.PermissionResponse;
 import com.solusi.erp.security.dto.RoleRequest;
 import com.solusi.erp.security.dto.RoleResponse;
@@ -13,4 +14,7 @@ public interface RoleService {
     void create(RoleRequest request);
     void update(Long id, RoleRequest request);
     void delete(Long id);
+
+    List<LookupDto> lookupRoles(String keyword, int limit);
+    LookupDto getLookupRole(Long id);
 }

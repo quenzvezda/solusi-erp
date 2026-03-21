@@ -2,6 +2,8 @@ package com.solusi.erp.inventory.mapper;
 
 import com.solusi.erp.core.mapper.AuditMapperHelper;
 import com.solusi.erp.inventory.dto.*;
+import com.solusi.erp.inventory.form.ContainerUIForm;
+import com.solusi.erp.inventory.form.FacilityUIForm;
 import com.solusi.erp.inventory.model.Container;
 import com.solusi.erp.inventory.model.Facility;
 import com.solusi.erp.inventory.model.Grid;
@@ -43,7 +45,14 @@ public interface WarehouseMapper {
     @Mapping(target = "address.addressLine1", source = "addressLine1")
     @Mapping(target = "address.city", source = "cityId")
     @Mapping(target = "address.postalCode", source = "postalCode")
+    @Mapping(target = "id", ignore = true)
     void updateEntityFromRequest(FacilityRequest request, @MappingTarget Facility entity);
+
+    @Mapping(target = "ownerName", source = "owner.name")
+    @Mapping(target = "ownerCode", source = "owner.code")
+    @Mapping(target = "cityName", source = "address.city.name")
+    @Mapping(target = "cityCode", source = "address.city.code")
+    FacilityUIForm toFacilityUIForm(Facility entity);
 
     // --- Grid ---
     @Mapping(target = "facility", source = "facilityId")
@@ -56,6 +65,7 @@ public interface WarehouseMapper {
     @Mapping(target = "facilityId", source = "facility.id")
     GridRequest toRequest(Grid entity);
 
+    @org.mapstruct.Mapping(target = "id", ignore = true)
     @Mapping(target = "facility", source = "facilityId")
     void updateEntityFromRequest(GridRequest request, @MappingTarget Grid entity);
 
@@ -86,6 +96,10 @@ public interface WarehouseMapper {
     @Mapping(target = "dimensions.width", source = "width")
     @Mapping(target = "dimensions.height", source = "height")
     void updateEntityFromRequest(ContainerRequest request, @MappingTarget Container entity);
+
+    @Mapping(target = "gridName", source = "grid.name")
+    @Mapping(target = "gridCode", source = "grid.code")
+    ContainerUIForm toContainerUIForm(Container entity);
 
     // --- Helper Mappers ---
     default Party mapParty(Long id) {

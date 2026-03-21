@@ -121,7 +121,7 @@ public class StockAdjustmentServiceImpl implements StockAdjustmentService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public void process(Long id) {
         StockAdjustment entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.notfound")));

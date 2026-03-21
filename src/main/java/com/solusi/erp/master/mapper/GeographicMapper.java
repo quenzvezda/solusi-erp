@@ -3,6 +3,7 @@ package com.solusi.erp.master.mapper;
 import com.solusi.erp.core.mapper.AuditMapperHelper;
 import com.solusi.erp.master.dto.GeographicRequest;
 import com.solusi.erp.master.dto.GeographicResponse;
+import com.solusi.erp.master.form.GeographicUIForm;
 import com.solusi.erp.master.model.Geographic;
 import org.mapstruct.*;
 
@@ -15,6 +16,10 @@ public interface GeographicMapper {
     @Mapping(target = "parentId", source = "parent.id")
     @Mapping(target = "parentName", source = "parent.name")
     GeographicResponse toResponse(Geographic geographic);
+
+    @Mapping(target = "parentName", source = "parent.name")
+    @Mapping(target = "parentCode", source = "parent.code")
+    GeographicUIForm toUIForm(Geographic geographic);
 
     @Mapping(target = "parentId", source = "parent.id")
     GeographicRequest toRequest(Geographic geographic);

@@ -1,9 +1,11 @@
 package com.solusi.erp.inventory.controller;
 
 import com.solusi.erp.core.dto.LookupDto;
+import com.solusi.erp.inventory.service.BrandService;
 import com.solusi.erp.inventory.service.ContainerService;
 import com.solusi.erp.inventory.service.FacilityService;
 import com.solusi.erp.inventory.service.GridService;
+import com.solusi.erp.inventory.service.ProductCategoryService;
 import com.solusi.erp.inventory.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,6 +23,8 @@ public class InventoryLookupController {
     private final FacilityService facilityService;
     private final GridService gridService;
     private final ContainerService containerService;
+    private final ProductCategoryService categoryService;
+    private final BrandService brandService;
 
     @GetMapping("/products/{id}")
     public LookupDto getLookupProduct(@PathVariable Long id) {
@@ -40,6 +44,16 @@ public class InventoryLookupController {
     @GetMapping("/containers/{id}")
     public LookupDto getLookupContainer(@PathVariable Long id) {
         return containerService.getLookupContainer(id);
+    }
+
+    @GetMapping("/product-categories/{id}")
+    public LookupDto getLookupCategory(@PathVariable Long id) {
+        return categoryService.getLookupCategory(id);
+    }
+
+    @GetMapping("/brands/{id}")
+    public LookupDto getLookupBrand(@PathVariable Long id) {
+        return brandService.getLookupBrand(id);
     }
 
     @GetMapping("/products")
@@ -67,5 +81,17 @@ public class InventoryLookupController {
                                            @RequestParam(value = "gridId", required = false) Long gridId,
                                            @RequestParam(value = "limit", defaultValue = "10") int limit) {
         return containerService.lookupContainers(q, facilityId, gridId, limit);
+    }
+
+    @GetMapping("/product-categories")
+    public List<LookupDto> lookupCategories(@RequestParam(value = "q", defaultValue = "") String q,
+                                           @RequestParam(value = "limit", defaultValue = "10") int limit) {
+        return categoryService.lookupCategories(q, limit);
+    }
+
+    @GetMapping("/brands")
+    public List<LookupDto> lookupBrands(@RequestParam(value = "q", defaultValue = "") String q,
+                                       @RequestParam(value = "limit", defaultValue = "10") int limit) {
+        return brandService.lookupBrands(q, limit);
     }
 }

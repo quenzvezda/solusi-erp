@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{layout/master :: head(#{label.permissions.title})}"></head>
-<body th:replace="~{layout/master :: layout(~{:: .perm-list-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .perm-list-content}, ~{})}">
     <div class="perm-list-content">
         <!-- Page Header -->
         <div class="page-header d-print-none">
@@ -167,14 +167,24 @@
                                                 <td class="text-secondary" th:text="${p.description}">Description</td>
                                                 <td class="pe-3 text-end">
                                                     <!-- Delete only for non-system permissions -->
-                                                    <form th:if="${!#strings.startsWith(p.name, 'USERS_') && !#strings.startsWith(p.name, 'ROLES_') && !#strings.startsWith(p.name, 'DASHBOARD_') && !#strings.startsWith(p.name, 'PERMISSIONS_')}"
-                                                          th:action="@{/security/permissions/delete/{id}(id=${p.id})}" method="post"
-                                                          sec:authorize="hasAuthority('PERMISSIONS_DELETE')">
-                                                        <button type="submit" class="btn btn-link text-danger p-0" 
-                                                                th:attr="onclick='return confirm(\'' + #{label.permissions.delete.confirm} + '\')'">
+                                                    <th:block th:if="${!#strings.startsWith(p.name, 'USERS_') && !#strings.startsWith(p.name, 'ROLES_') && !#strings.startsWith(p.name, 'DASHBOARD_') && !#strings.startsWith(p.name, 'PERMISSIONS_')}">
+                                                        <button class="btn btn-white btn-sm text-danger" 
+                                                                data-bs-toggle="modal" 
+                                                                th:data-bs-target="'#modal-delete-' + ${p.id}"
+                                                                sec:authorize="hasAuthority('PERMISSIONS_DELETE')">
                                                             <i class="ti ti-trash"></i>
                                                         </button>
-                                                    </form>
+
+                                                        <!-- Delete Modal Fragment -->
+                                                        <div th:replace="~{fragments/modals :: delete-confirm(
+                                                            id='modal-delete-' + ${p.id},
+                                                            title=#{label.delete.confirm.title},
+                                                            message=#{label.permissions.delete.confirm},
+                                                            actionUrl='/security/permissions/' + ${p.id},
+                                                            targetId='#perm-row-' + ${p.id}
+                                                        )}"></div>
+                                                    </th:block>
+                                                    
                                                     <span th:if="${#strings.startsWith(p.name, 'USERS_') || #strings.startsWith(p.name, 'ROLES_') || #strings.startsWith(p.name, 'DASHBOARD_') || #strings.startsWith(p.name, 'PERMISSIONS_')}"
                                                           class="text-muted small" th:text="#{label.permissions.delete.system}">System</span>
                                                 </td>

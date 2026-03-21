@@ -1,5 +1,7 @@
 package com.solusi.erp.inventory.service.impl;
 
+import com.solusi.erp.core.dto.FormViewDto;
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.service.SequenceGeneratorService;
 import com.solusi.erp.inventory.dto.BrandRequest;
 import com.solusi.erp.inventory.dto.BrandResponse;
@@ -15,6 +17,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of BrandService.
@@ -58,20 +63,34 @@ public class BrandServiceImpl implements BrandService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public FormViewDto<BrandRequest, Void, BrandResponse> getFormView(Long id) {
+        Brand entity = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.brand.notfound")));
+
+        return FormViewDto.<BrandRequest, Void, BrandResponse>builder()
+                .request(mapper.toRequest(entity))
+                .audit(mapper.toResponse(entity))
+                .ui(null)
+                .build();
+    }
+
+    @Override
     @Transactional
-    public void create(BrandRequest request) {
+    public BrandResponse create(BrandRequest request) {
         Brand entity = mapper.toEntity(request);
         
         // Auto-generate code
         String generatedCode = sequenceGeneratorService.generate("BRAND");
         entity.setCode(generatedCode);
         
-        repository.save(entity);
+        Brand savedEntity = repository.save(entity);
+        return mapper.toResponse(savedEntity);
     }
 
     @Override
     @Transactional
-    public void update(Long id, BrandRequest request) {
+    public BrandResponse update(Long id, BrandRequest request) {
         Brand entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.brand.notfound")));
 
@@ -81,7 +100,8 @@ public class BrandServiceImpl implements BrandService {
         }
 
         mapper.updateEntityFromRequest(request, entity);
-        repository.save(entity);
+        Brand updatedEntity = repository.save(entity);
+        return mapper.toResponse(updatedEntity);
     }
 
     @Override
@@ -91,6 +111,32 @@ public class BrandServiceImpl implements BrandService {
             throw new RuntimeException(getMessage("msg.error.brand.notfound"));
         }
         repository.deleteById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LookupDto> lookupBrands(String keyword, int limit) {
+        return repository.search(keyword, Pageable.ofSize(limit))
+                .getContent()
+                .stream()
+                .map(this::mapToLookupDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LookupDto getLookupBrand(Long id) {
+        Brand entity = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.brand.notfound")));
+        return mapToLookupDto(entity);
+    }
+
+    private LookupDto mapToLookupDto(Brand entity) {
+        return new LookupDto(
+                entity.getId(),
+                entity.getName(),
+                entity.getCode()
+        );
     }
 
     private String getMessage(String key) {

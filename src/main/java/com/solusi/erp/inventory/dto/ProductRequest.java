@@ -13,7 +13,8 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 /**
- * DTO for creating or updating a Product.
+ * Pure Persistence DTO for Product.
+ * Contains only fields that are stored in the database.
  */
 @Data
 @Builder
@@ -23,27 +24,27 @@ import java.math.BigDecimal;
 @ValidUomMeasurement
 public class ProductRequest extends BaseAuditResponse {
 
-    @Size(max = 50, message = "{validation.size}")
+    @Size(max = 50, message = "{label.product.code} {validation.size.suffix}")
     private String code;
 
-    @NotBlank(message = "{validation.notblank}")
-    @Size(max = 255, message = "{validation.size}")
+    @NotBlank(message = "{label.product.name} {validation.notblank.suffix}")
+    @Size(max = 255, message = "{label.product.name} {validation.size.suffix}")
     private String name;
 
-    @Size(max = 50, message = "{validation.size}")
+    @Size(max = 50, message = "{label.product.barcode} {validation.size.suffix}")
     private String barcode;
 
     private String note;
 
-    @NotNull(message = "{validation.notnull}")
+    @NotNull(message = "{label.product.category} {validation.notnull.suffix}")
     private Long categoryId;
 
-    @NotNull(message = "{validation.notnull}")
+    @NotNull(message = "{label.product.uom} {validation.notnull.suffix}")
     private Long uomId;
 
     private Long brandId;
 
-    @Size(max = 50, message = "{validation.size}")
+    @Size(max = 50, message = "{label.product.hscode} {validation.size.suffix}")
     private String hscode;
 
     @Builder.Default

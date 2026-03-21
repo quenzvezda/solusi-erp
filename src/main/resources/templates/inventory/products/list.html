@@ -3,7 +3,7 @@
 
 <head th:replace="~{layout/master :: head(#{label.product.title})}"></head>
 
-<body th:replace="~{layout/master :: layout(~{:: .product-list-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .product-list-content}, ~{})}">
     <div class="product-list-content">
         <!-- Page Header -->
         <div class="page-header d-print-none">
@@ -31,132 +31,112 @@
         <div class="page-body">
             <div class="container-xl">
                 <!-- Alerts -->
-                <div th:if="${successMessage}" class="alert alert-success alert-dismissible" role="alert">
-                    <div class="d-flex">
-                        <div><i class="ti ti-check icon alert-icon"></i></div>
-                        <div th:text="${successMessage}">Success!</div>
-                    </div>
-                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                </div>
-                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
-                    <div class="d-flex">
-                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
-                        <div th:text="${errorMessage}">Error!</div>
-                    </div>
-                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                </div>
+                <div th:replace="~{fragments/alerts :: success}"></div>
+                <div th:replace="~{fragments/alerts :: error}"></div>
 
                 <div class="card">
                     <div class="card-body border-bottom py-3">
-                        <div class="d-flex">
-                            <div class="text-secondary">
-                                <!-- Future: Page Size Selector -->
-                            </div>
+                        <div class="d-flex align-items-center">
                             <div class="ms-auto text-secondary">
-                                <form th:action="@{/inventory/products}" method="get" class="input-icon">
-                                    <input type="text" name="keyword" th:value="${keyword}"
-                                        class="form-control form-control-sm" th:placeholder="#{label.search}">
-                                    <span class="input-icon-addon">
-                                        <i class="ti ti-search"></i>
-                                    </span>
+                                <form th:action="@{/inventory/products}" method="get"
+                                      hx-get="/inventory/products"
+                                      hx-target="#product-table-container"
+                                      hx-trigger="keyup changed delay:500ms from:#search-input"
+                                      hx-push-url="true">
+                                    <div class="input-icon">
+                                        <input type="text" id="search-input" name="keyword" th:value="${keyword}"
+                                            class="form-control form-control-sm" th:placeholder="#{label.search} + '...'">
+                                        <span class="input-icon-addon">
+                                            <i class="ti ti-search"></i>
+                                        </span>
+                                    </div>
                                 </form>
                             </div>
                         </div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-vcenter card-table">
-                            <thead>
-                                <tr>
-                                    <th th:replace="~{fragments/table :: sortable('code', #{label.product.column.code})}">Kode</th>
-                                    <th th:replace="~{fragments/table :: sortable('name', #{label.product.column.name})}">Nama</th>
-                                    <th th:replace="~{fragments/table :: sortable('category.name', #{label.product.column.category})}">Kategori</th>
-                                    <th th:replace="~{fragments/table :: sortable('brand.name', #{label.product.column.brand})}">Brand</th>
-                                    <th th:replace="~{fragments/table :: sortable('uom.code', #{label.product.column.uom})}">UoM</th>
-                                    <th th:replace="~{fragments/table :: sortable('isActive', #{label.status})}">Status</th>
-                                    <th class="w-1" th:text="#{label.actions}">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="item : ${page.content}">
-                                    <td>
-                                        <div th:text="${item.code}">CODE</div>
-                                        <div class="text-secondary small" th:text="${item.barcode}">BARCODE</div>
-                                    </td>
-                                    <td class="font-weight-medium" th:text="${item.name}">Name</td>
-                                    <td>
-                                        <div th:text="${item.categoryName}">Category</div>
-                                        <span class="badge" th:classappend="${item.categoryType == 'STOCK' ? 'bg-blue-lt' : (item.categoryType == 'NON_STOCK' ? 'bg-azure-lt' : 'bg-purple-lt')}"
-                                            th:text="#{'label.product.category.type.' + ${item.categoryType.toLowerCase()}}">TYPE</span>
-                                    </td>
-                                    <td th:text="${item.brandName != null ? item.brandName : '-'}">Brand</td>
-                                    <td th:text="${item.uomCode}">UoM</td>
-                                    <td>
-                                        <span class="badge badge-outline text-green" th:if="${item.isActive}">
-                                            <span class="badge-dot bg-success me-1"></span>
-                                            <span th:text="#{label.active}">Active</span>
-                                        </span>
-                                        <span class="badge badge-outline text-red" th:unless="${item.isActive}">
-                                            <span class="badge-dot bg-danger me-1"></span>
-                                            <span th:text="#{label.inactive}">Inactive</span>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="btn-list flex-nowrap">
-                                            <a th:href="@{/inventory/products/edit/{id}(id=${item.id})}"
-                                                class="btn btn-white btn-sm"
-                                                sec:authorize="hasAuthority('PRODUCT_UPDATE')"
-                                                th:text="#{label.edit}">
-                                                Edit
-                                            </a>
-                                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                                                th:data-bs-target="'#modal-delete-' + ${item.id}"
-                                                sec:authorize="hasAuthority('PRODUCT_DELETE')"
-                                                th:text="#{label.delete}">
-                                                Hapus
-                                            </button>
-                                        </div>
+                    
+                    <div id="product-table-container" th:fragment="product-table-container"
+                         hx-get="/inventory/products"
+                         hx-trigger="refresh-table from:body delay:500ms"
+                         hx-include="[name='keyword'], [name='page']">
+                        <!-- State Tracking for HTMX Refresh -->
+                        <input type="hidden" name="page" th:value="${page.number}">
 
-                                        <!-- Delete Modal -->
-                                        <div class="modal modal-blur fade" th:id="'modal-delete-' + ${item.id}"
-                                            tabindex="-1" role="dialog" aria-hidden="true">
-                                            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-                                                <div class="modal-content">
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                        aria-label="Close"></button>
-                                                    <div class="modal-status bg-danger"></div>
-                                                    <div class="modal-body text-center py-4">
-                                                        <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
-                                                        <h3 th:text="#{label.product.delete.confirm.title}">Konfirmasi Hapus</h3>
-                                                        <div class="text-secondary"
-                                                            th:text="#{label.product.delete.confirm.text(${item.code})}">
-                                                            Apakah Anda yakin ingin menghapus produk?</div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <div class="w-100">
-                                                            <div class="row">
-                                                                <div class="col"><a href="#" class="btn w-100" data-bs-dismiss="modal" th:text="#{label.cancel}">Batal</a></div>
-                                                                <div class="col">
-                                                                    <form th:action="@{/inventory/products/delete/{id}(id=${item.id})}" method="post">
-                                                                        <button type="submit" class="btn btn-danger w-100" th:text="#{label.delete}">Hapus</button>
-                                                                    </form>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                        <div class="table-responsive">
+                            <table class="table table-vcenter card-table">
+                                <thead>
+                                    <tr>
+                                        <th th:replace="~{fragments/table :: sortable('code', #{label.product.column.code})}">Kode</th>
+                                        <th th:replace="~{fragments/table :: sortable('name', #{label.product.column.name})}">Nama</th>
+                                        <th th:replace="~{fragments/table :: sortable('category.name', #{label.product.column.category})}">Kategori</th>
+                                        <th th:replace="~{fragments/table :: sortable('brand.name', #{label.product.column.brand})}">Brand</th>
+                                        <th th:replace="~{fragments/table :: sortable('uom.code', #{label.product.column.uom})}">UoM</th>
+                                        <th th:replace="~{fragments/table :: sortable('isActive', #{label.status})}">Status</th>
+                                        <th class="w-1 text-end" th:text="#{label.actions}">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${page.content}" th:id="'product-row-' + ${item.id}">
+                                        <td>
+                                            <div th:text="${item.code}">CODE</div>
+                                            <div class="text-secondary small" th:text="${item.barcode}">BARCODE</div>
+                                        </td>
+                                        <td class="font-weight-medium" th:text="${item.name}">Name</td>
+                                        <td>
+                                            <div th:text="${item.categoryName}">Category</div>
+                                            <span class="badge" th:classappend="${item.categoryType == 'STOCK' ? 'bg-blue-lt' : (item.categoryType == 'NON_STOCK' ? 'bg-azure-lt' : 'bg-purple-lt')}"
+                                                th:text="#{'label.product.category.type.' + ${item.categoryType.toLowerCase()}}">TYPE</span>
+                                        </td>
+                                        <td th:text="${item.brandName != null ? item.brandName : '-'}">Brand</td>
+                                        <td th:text="${item.uomCode}">UoM</td>
+                                        <td>
+                                            <span class="badge badge-outline text-green" th:if="${item.isActive}">
+                                                <span class="badge-dot bg-success me-1"></span>
+                                                <span th:text="#{label.active}">Active</span>
+                                            </span>
+                                            <span class="badge badge-outline text-red" th:unless="${item.isActive}">
+                                                <span class="badge-dot bg-danger me-1"></span>
+                                                <span th:text="#{label.inactive}">Inactive</span>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-list flex-nowrap justify-content-end">
+                                                <a th:href="@{/inventory/products/edit/{id}(id=${item.id})}"
+                                                    class="btn btn-white btn-sm"
+                                                    sec:authorize="hasAuthority('PRODUCT_UPDATE')">
+                                                    <i class="ti ti-edit me-1"></i>
+                                                    <span th:text="#{label.edit}">Edit</span>
+                                                </a>
+                                                <!-- HTMX Inline Delete with Standard Modal -->
+                                                <button type="button" class="btn btn-white btn-sm text-danger"
+                                                        sec:authorize="hasAuthority('PRODUCT_DELETE')"
+                                                        data-bs-toggle="modal" 
+                                                        th:data-bs-target="'#modal-delete-' + ${item.id}">
+                                                    <i class="ti ti-trash me-1"></i>
+                                                    <span th:text="#{label.delete}">Delete</span>
+                                                </button>
                                             </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr th:if="${page.totalElements == 0}">
-                                    <td colspan="7" class="text-center text-secondary py-4"
-                                        th:text="#{label.product.empty}">Tidak ada data.</td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                                            <!-- Delete Modal Fragment -->
+                                            <div th:replace="~{fragments/modals :: delete-confirm(
+                                                id='modal-delete-' + ${item.id},
+                                                title=#{label.delete.confirm.title},
+                                                message=#{label.product.delete.confirm.text(${item.code})},
+                                                actionUrl='/inventory/products/' + ${item.id},
+                                                targetId='#product-row-' + ${item.id}
+                                            )}"></div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${page.totalElements == 0}">
+                                        <td colspan="7" class="text-center text-secondary py-4"
+                                            th:text="#{label.product.empty}">Tidak ada data.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Pagination -->
+                        <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                     </div>
-                    <!-- Pagination -->
-                    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                 </div>
             </div>
         </div>

@@ -1,5 +1,7 @@
 # AGENTS.md / Project Architecture & AI Guidelines
 
+> **PENTING**: Jika Anda baru atau sedang melakukan troubleshooting, harap baca **[Documentation Index](index.md)** untuk melihat peta lengkap dokumentasi teknis dan fungsional proyek ini.
+
 ## 1. Project Overview
 Proyek ini adalah sistem Enterprise Resource Planning (ERP) Monolitik yang dibangun untuk tujuan pembelajaran dan MVP. Aplikasi dirender sepenuhnya di sisi server (Server-Side Rendering/SSR) tanpa memisahkan frontend sebagai Single Page Application (SPA).
 
@@ -15,8 +17,11 @@ AI Assistant WAJIB mematuhi versi dan teknologi berikut berdasarkan `pom.xml` ut
 * **Frontend Template Engine:** Thymeleaf (Gunakan **Native Thymeleaf Fragments** `th:fragment`, `th:replace`). DILARANG menggunakan `thymeleaf-layout-dialect` karena masalah stabilitas dengan Spring Boot 4.
 * **UI/CSS Framework:** Bootstrap 5
 * **Admin Template:** Tabler (MIT License) - Gunakan kelas dan struktur HTML bawaan Tabler.
-* **Boilerplate Reduction:** Lombok (aktif dan dikonfigurasi di `maven-compiler-plugin`).
-* **Mapping:** MapStruct (untuk konversi Entity ke DTO).
+* **AJAX & Fragments:** Hybrid Approach (**AJAX/JSON** untuk Form CRUD, **HTMX** untuk Search/Filter/Pagination).
+* **Magic Routing:** HtmxViewInterceptor (Otomatis menangani fragmen berdasarkan `HX-Target`).
+* **Numeric Formatting:** AutoNumeric (Untuk ribuan separator & desimal).
+* **Boilerplate Reduction:** Lombok & ApiResponse.
+* **Mapping:** MapStruct (dengan aturan mengabaikan `id` pada update).
 * **Validation:** Hibernate Validator (`spring-boot-starter-validation`).
 * **Reporting:** Apache POI (Excel) & JasperReports (PDF).
 
@@ -73,9 +78,10 @@ Setiap modul bisnis baru (Inventory, Sales, Purchasing, dll) WAJIB mengikuti pol
 
 ## 6. UI/UX Lookup Standardization
 Untuk menjaga estetika dan konsistensi tampilan pada elemen autocomplete (TomSelect), AI dan Developer WAJIB mengikuti standar berikut:
-*   **Field `name` (Primary Text)**: Selalu gunakan **Nama** saja (contoh: `p.getName()`). DILARANG menggabungkan Code ke dalam field name (seperti `Code - Name`) karena akan membuat teks terlalu panjang dan berpotensi memicu *line-break* pada sel tabel.
+*   **Field `name` (Primary Text)**: Selalu gunakan **Nama** saja (contoh: `p.getName()`). DILARANG menggabungkan Code ke dalam field name (seperti `Code - Name`) karena akan membuat teks terlalu panjang.
 *   **Field `subText` (Secondary Text)**: Gunakan **Code** (contoh: `p.getCode()`). Field ini akan tampil otomatis di bawah nama pada dropdown pencarian.
-*   **Consistency**: Pastikan data yang di-render oleh Thymeleaf saat pertama kali halaman di-muat (mode Edit) menggunakan format yang sama (Hanya Nama) agar tidak terjadi perbedaan visual saat user melakukan pencarian ulang.
+*   **Display Label Persistence**: Setiap Request DTO yang digunakan untuk form Edit **WAJIB** memiliki field tambahan untuk menampung `Name` dan `Code` (contoh: `brandName`, `brandCode`) agar saat halaman di-load ulang (HTMX), label pada Autocomplete tidak hilang.
+*   **Thymeleaf Fragments**: Selalu gunakan parameter `initialValue`, `initialText`, dan `initialSubtext` saat memanggil fragment `autocomplete`.
 
 ## 7. Security & RBAC (Role-Based Access Control)
 Sistem otorisasi menggunakan model **Fine-Grained Authority (Privilege-Based)**.

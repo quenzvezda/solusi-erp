@@ -21,14 +21,14 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public class ProductCategoryRequest extends BaseAuditResponse {
 
-    @Size(max = 50, message = "{validation.size}")
+    @Size(max = 50, message = "{label.product.category.code} {validation.size.suffix}")
     private String code;
 
-    @NotBlank(message = "{validation.notblank}")
-    @Size(max = 100, message = "{validation.size}")
+    @NotBlank(message = "{label.product.category.name} {validation.notblank.suffix}")
+    @Size(max = 100, message = "{label.product.category.name} {validation.size.suffix}")
     private String name;
 
-    @NotNull(message = "{validation.notnull}")
+    @NotNull(message = "{label.product.category.type} {validation.notnull.suffix}")
     private ProductCategoryType type;
 
     private String note;

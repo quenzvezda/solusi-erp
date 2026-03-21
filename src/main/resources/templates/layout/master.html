@@ -11,7 +11,27 @@
 </head>
 
 
-<body th:fragment="layout(content)">
+<body th:fragment="layout(content, pageScripts)" 
+      th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+    
+    <!-- Global Error Modal (Rendered Early) -->
+    <div class="modal modal-blur fade" id="modal-global-error" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 9999;">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-status bg-danger"></div>
+                <div class="modal-body text-center py-4">
+                    <i class="ti ti-alert-circle icon mb-2 text-danger icon-lg"></i>
+                    <h3 th:text="#{msg.error.ajax.title}">Terjadi Kesalahan</h3>
+                    <div class="text-secondary" id="global-error-message"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger w-100" data-bs-dismiss="modal" th:text="#{label.close}">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="page">
         <!-- Sidebar Fragment -->
         <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
@@ -43,6 +63,19 @@
     <!-- TomSelect (Autocomplete) JS -->
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2/dist/js/tom-select.complete.min.js" defer></script>
     
+    <!-- Global i18n for JavaScript -->
+    <script th:inline="javascript">
+        window.ErpI18n = {
+            errorTitle: /*[[#{msg.error.ajax.title}]]*/ 'An Error Occurred',
+            serverError: /*[[#{msg.error.ajax.server}]]*/ 'An unexpected server error occurred.',
+            networkError: /*[[#{msg.error.ajax.network}]]*/ 'Connection error. Please check your network.',
+            successGeneric: /*[[#{msg.success.ajax.generic}]]*/ 'Action completed successfully.'
+        };
+    </script>
+
+    <!-- ERP Form Handler (AJAX) -->
+    <script th:src="@{/js/erp-form-handler.js}" defer></script>
+    
     <!-- Global Utilities & Autocomplete Initialization -->
     <script>
         // Global Debounce Function
@@ -54,11 +87,50 @@
             };
         }
 
-        // Global TomSelect Initialization (Golden Standard)
-        function initLookup(el, type, parentProvider = null) {
-            if (!el) return null;
+        /**
+         * Initialize AutoNumeric for all inputs with numeric classes
+         */
+        function initNumericInputs(container = document) {
+            if (typeof AutoNumeric === 'undefined') return;
+
+            const decimalOptions = {
+                digitGroupSeparator: ',',
+                decimalCharacter: '.',
+                decimalPlaces: 2,
+                minimumValue: '0',
+                unformatOnSubmit: false,
+                modifyValueOnWheel: false
+            };
+
+            const integerOptions = {
+                digitGroupSeparator: ',',
+                decimalPlaces: 0,
+                minimumValue: '0',
+                unformatOnSubmit: false,
+                modifyValueOnWheel: false
+            };
+
+            container.querySelectorAll('.erp-number-decimal:not([data-autonumeric])').forEach(el => {
+                new AutoNumeric(el, decimalOptions);
+                el.setAttribute('data-autonumeric', 'true');
+            });
+
+            container.querySelectorAll('.erp-number-integer:not([data-autonumeric])').forEach(el => {
+                new AutoNumeric(el, integerOptions);
+                el.setAttribute('data-autonumeric', 'true');
+            });
+        }
+
+        /**
+         * Initialize TomSelect for generic lookups
+         * @param {HTMLElement} el - Select element
+         * @param {string} lookupPath - API path (e.g., 'inventory/products')
+         * @param {function} parentProvider - Callback for cascading lookups
+         */
+        function initLookup(el, lookupPath, parentProvider = null) {
+            if (!el || typeof TomSelect === 'undefined') return null;
             if (el.tomselect) el.tomselect.destroy();
-            
+
             const ts = new TomSelect(el, {
                 valueField: 'id',
                 labelField: 'name',
@@ -68,10 +140,7 @@
                 preload: 'focus', 
                 dropdownParent: 'body',
                 onInitialize: function() {
-                    // Apply ERP Standard wrapper class
                     this.wrapper.classList.add('erp-input-ts');
-                    
-                    // Check if this element is inside a table line
                     if (el.closest('.line-row')) {
                         this.wrapper.classList.add('erp-input-ts-sm');
                     }
@@ -81,15 +150,26 @@
                     const initialOption = el.querySelector('option[selected], option[value]:not([value=""])');
                     if (initialOption) {
                         const val = initialOption.value;
-                        const subText = initialOption.getAttribute('data-subtext');
-                        if (subText && this.options[val]) {
-                            this.options[val].subText = subText;
+                        if (this.options[val]) {
+                            // SubText
+                            const subText = initialOption.getAttribute('data-subtext');
+                            if (subText) this.options[val].subText = subText;
+
+                            // Generic Payload Mapping (data-payload-*)
+                            const payload = {};
+                            Array.from(initialOption.attributes).forEach(attr => {
+                                if (attr.name.startsWith('data-payload-')) {
+                                    const key = attr.name.replace('data-payload-', '');
+                                    payload[key] = attr.value;
+                                }
+                            });
+                            this.options[val].payload = payload;
                             this.refreshOptions(false);
                         }
                     }
                 },
                 load: debounce(function(q, callback) {
-                    let url = `/api/lookup/${type}?q=${encodeURIComponent(q)}&limit=10`;
+                    let url = `/api/lookup/${lookupPath}?q=${encodeURIComponent(q)}&limit=10`;
                     if (parentProvider) {
                         const parent = parentProvider();
                         if (parent && parent.id) {
@@ -116,12 +196,63 @@
                     ts.clearOptions();
                     ts.load('');
                 });
+            } else {
+                // SMART RE-SEARCH: Optimized to prevent text duplication
+                ts.on('dropdown_open', () => {
+                    const value = ts.getValue();
+                    if (value && ts.options[value]) {
+                        const currentName = ts.options[value].name;
+                        
+                        // Hide the selected item(s) visually to prevent duplication
+                        ts.control.querySelectorAll('.item').forEach(item => {
+                            item.style.display = 'none';
+                        });
+                        
+                        // Set the textbox value for editing
+                        ts.setTextboxValue(currentName);
+                        
+                        // Trigger search with current value
+                        ts.load(currentName);
+                    }
+                });
+
+                ts.on('dropdown_close', () => {
+                    // Restore visual items when closed
+                    ts.control.querySelectorAll('.item').forEach(item => {
+                        item.style.display = '';
+                    });
+                    
+                    // Clear the textbox so it doesn't linger
+                    if (ts.getValue()) {
+                        ts.setTextboxValue('');
+                    }
+                });
             }
+            
+            // Dispatch a custom event so other scripts can hook into it
+            el.dispatchEvent(new CustomEvent('erp:lookup-initialized', { 
+                bubbles: true, 
+                detail: { tomselect: ts } 
+            }));
 
             return ts;
         }
 
+        /**
+         * Automatically initialize all lookups with data-lookup-path attribute
+         */
+        function initAllLookups(container = document) {
+            container.querySelectorAll('select.erp-input-ts[data-lookup-path]:not(.tomselect-initialized)').forEach(el => {
+                const path = el.getAttribute('data-lookup-path');
+                initLookup(el, path);
+                el.classList.add('tomselect-initialized');
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
+            initNumericInputs();
+            initAllLookups();
+
             const menuSearchEl = document.getElementById('global-menu-search');
             if (menuSearchEl) {
                 new TomSelect('#global-menu-search', {
@@ -146,14 +277,56 @@
                         }
                     },
                     onChange: function(value) {
-                        if (value) {
-                            window.location.href = value;
-                        }
+                        if (value) window.location.href = value;
                     }
                 });
             }
         });
+
+        document.body.addEventListener('htmx:afterSwap', function (evt) {
+            initNumericInputs(evt.detail.target);
+            initAllLookups(evt.detail.target);
+        });
+
+        /**
+         * Global HTMX Error Listener
+         * Handles non-200 responses and displays error messages from ApiResponse
+         */
+        document.body.addEventListener('htmx:responseError', function(evt) {
+            const xhr = evt.detail.xhr;
+            let errorMessage = window.ErpI18n.serverError;
+
+            try {
+                const response = JSON.parse(xhr.responseText);
+                if (response && response.message) {
+                    errorMessage = response.message;
+                }
+            } catch (e) {
+                if (xhr.responseText && xhr.responseText.length < 200) {
+                    errorMessage = xhr.responseText;
+                } else if (xhr.statusText) {
+                    errorMessage = xhr.statusText;
+                }
+            }
+
+            // Trigger modal using hidden button click (Robust approach)
+            const errorMsgEl = document.getElementById('global-error-message');
+            const triggerBtn = document.getElementById('btn-trigger-global-error');
+            
+            if (errorMsgEl && triggerBtn) {
+                errorMsgEl.innerHTML = errorMessage;
+                triggerBtn.click();
+            } else {
+                alert(errorMessage);
+            }
+        });
     </script>
+
+    <!-- Hidden Trigger for Error Modal -->
+    <button id="btn-trigger-global-error" class="d-none" data-bs-toggle="modal" data-bs-target="#modal-global-error"></button>
+
+    <!-- Optional Page-specific scripts -->
+    <th:block th:replace="${pageScripts} ?: ~{}"></th:block>
 </body>
 
 </html>

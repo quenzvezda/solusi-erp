@@ -1,9 +1,11 @@
 package com.solusi.erp.inventory.service.impl;
 
+import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.service.SequenceGeneratorService;
 import com.solusi.erp.inventory.dto.ContainerRequest;
 import com.solusi.erp.inventory.dto.ContainerResponse;
+import com.solusi.erp.inventory.form.ContainerUIForm;
 import com.solusi.erp.inventory.mapper.WarehouseMapper;
 import com.solusi.erp.inventory.model.Container;
 import com.solusi.erp.inventory.repository.ContainerRepository;
@@ -113,8 +115,21 @@ public class ContainerServiceImpl implements ContainerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public FormViewDto<ContainerRequest, ContainerUIForm, ContainerResponse> getFormView(Long id) {
+        Container entity = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.container.notfound")));
+        
+        return FormViewDto.<ContainerRequest, ContainerUIForm, ContainerResponse>builder()
+                .request(mapper.toRequest(entity))
+                .ui(mapper.toContainerUIForm(entity))
+                .audit(mapper.toResponse(entity))
+                .build();
+    }
+
+    @Override
     @Transactional
-    public void create(ContainerRequest request) {
+    public ContainerResponse create(ContainerRequest request) {
         if (StringUtils.hasText(request.getBarcode()) && repository.existsByBarcode(request.getBarcode())) {
             throw new RuntimeException(getMessage("msg.error.container.duplicate-barcode"));
         }
@@ -123,12 +138,13 @@ public class ContainerServiceImpl implements ContainerService {
         String code = sequenceGeneratorService.generate("CONTAINER");
         entity.setCode(code);
         
-        repository.save(entity);
+        Container saved = repository.save(entity);
+        return mapper.toResponse(saved);
     }
 
     @Override
     @Transactional
-    public void update(Long id, ContainerRequest request) {
+    public ContainerResponse update(Long id, ContainerRequest request) {
         Container entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.container.notfound")));
 
@@ -137,7 +153,8 @@ public class ContainerServiceImpl implements ContainerService {
         }
 
         mapper.updateEntityFromRequest(request, entity);
-        repository.save(entity);
+        Container saved = repository.save(entity);
+        return mapper.toResponse(saved);
     }
 
     @Override

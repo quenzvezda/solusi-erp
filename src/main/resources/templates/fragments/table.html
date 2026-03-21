@@ -9,7 +9,10 @@
     -->
     <th th:fragment="sortable(field, label)" scope="col">
         <a th:href="@{${currentUri}(page=0, keyword=${keyword}, sort=${field + ',' + (sortField == field && sortDir == 'asc' ? 'desc' : 'asc')})}"
-           class="table-sort text-dark text-decoration-none">
+           class="table-sort text-dark text-decoration-none"
+           hx-boost="true"
+           hx-target="closest [id]"
+           hx-params="none">
             <span th:text="${label}">Label</span>
             <span class="ms-1 d-inline-flex">
                 <!-- Sorting Icons -->
@@ -19,12 +22,16 @@
             </span>
         </a>
     </th>
+
     <!-- 
         Generic Pagination Fragment 
         Params:
         - page: The Page<T> object from Spring Data
     -->
-    <div th:fragment="pagination(page)" class="card-footer d-flex align-items-center" th:if="${page.totalPages > 0}">
+    <div th:fragment="pagination(page)" class="card-footer d-flex align-items-center" 
+         th:if="${page.totalPages > 0}" 
+         hx-boost="true" 
+         hx-target="closest [id]">
         <p class="m-0 text-secondary">
             <span th:text="#{label.pagination.showing}">Showing</span>
             <span th:text="${page.number * page.size + 1}">1</span>
@@ -39,6 +46,7 @@
             <li class="page-item" th:classappend="${page.first} ? 'disabled'">
                 <a class="page-link"
                    th:href="${page.first} ? '#' : ${pageUrlBuilder.apply(0)}"
+                   hx-params="none"
                    tabindex="-1" aria-disabled="true" th:title="#{label.pagination.first}">
                     <i class="ti ti-chevrons-left"></i>
                 </a>
@@ -47,17 +55,19 @@
             <li class="page-item" th:classappend="${page.first} ? 'disabled'">
                 <a class="page-link"
                    th:href="${page.first} ? '#' : ${pageUrlBuilder.apply(page.number - 1)}"
+                   hx-params="none"
                    tabindex="-1" aria-disabled="true" th:title="#{label.pagination.previous}">
                     <i class="ti ti-chevron-left"></i>
                 </a>
             </li>
             
-            <!-- Page Numbers (max 3 before, 3 after) -->
+            <!-- Page Numbers -->
             <li class="page-item" 
                 th:each="i : ${#numbers.sequence(page.number - 3 < 0 ? 0 : page.number - 3, page.number + 3 > page.totalPages - 1 ? page.totalPages - 1 : page.number + 3)}"
                 th:classappend="${i == page.number} ? 'active'">
                 <a class="page-link"
                    th:href="${pageUrlBuilder.apply(i)}"
+                   hx-params="none"
                    th:text="${i + 1}">1</a>
             </li>
             
@@ -65,6 +75,7 @@
             <li class="page-item" th:classappend="${page.last} ? 'disabled'">
                 <a class="page-link"
                    th:href="${page.last} ? '#' : ${pageUrlBuilder.apply(page.number + 1)}"
+                   hx-params="none"
                    th:title="#{label.pagination.next}">
                     <i class="ti ti-chevron-right"></i>
                 </a>
@@ -73,6 +84,7 @@
             <li class="page-item" th:classappend="${page.last} ? 'disabled'">
                 <a class="page-link"
                    th:href="${page.last} ? '#' : ${pageUrlBuilder.apply(page.totalPages - 1)}"
+                   hx-params="none"
                    th:title="#{label.pagination.last}">
                     <i class="ti ti-chevrons-right"></i>
                 </a>

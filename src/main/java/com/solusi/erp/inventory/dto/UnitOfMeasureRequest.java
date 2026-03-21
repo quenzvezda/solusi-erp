@@ -21,14 +21,14 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public class UnitOfMeasureRequest extends BaseAuditResponse {
 
-    @NotBlank(message = "{validation.notblank}")
-    @Size(max = 20, message = "{validation.size}")
+    @NotBlank(message = "{label.uom.code} {validation.notblank.suffix}")
+    @Size(max = 20, message = "{label.uom.code} {validation.size.suffix}")
     private String code;
 
-    @NotBlank(message = "{validation.notblank}")
-    @Size(max = 100, message = "{validation.size}")
+    @NotBlank(message = "{label.uom.name} {validation.notblank.suffix}")
+    @Size(max = 100, message = "{label.uom.name} {validation.size.suffix}")
     private String name;
 
-    @NotNull(message = "{validation.notnull}")
+    @NotNull(message = "{label.uom.type} {validation.notnull.suffix}")
     private UomType type;
 }

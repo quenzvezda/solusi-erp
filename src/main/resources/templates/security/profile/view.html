@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{layout/master :: head(#{profile.title})}"></head>
-<body th:replace="~{layout/master :: layout(~{:: .profile-view-content})}">
+<body th:replace="~{layout/master :: layout(~{:: .profile-view-content}, ~{})}">
     <div class="profile-view-content">
         <!-- Page Header -->
         <div class="page-header d-print-none">

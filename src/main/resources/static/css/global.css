@@ -54,6 +54,31 @@
     line-height: 1.5 !important;
 }
 
+/* Remove default Bootstrap/Tabler validation icons (X icon) for a cleaner look */
+.form-control.is-invalid, 
+.form-select.is-invalid,
+.is-invalid-ts,
+.is-invalid-ts .ts-control,
+.was-validated .form-control:invalid,
+.was-validated .form-select:invalid {
+    background-image: none !important;
+    padding-right: 0.5rem !important;
+    border-color: #d63939 !important;
+    --tblr-border-color: #d63939 !important; /* Override Tabler variable */
+}
+
+.invalid-feedback {
+    font-size: 0.75rem !important;
+    margin-top: 0.25rem;
+    color: #d63939;
+}
+
+/* HTMX Animations */
+.htmx-swapping {
+    opacity: 0;
+    transition: opacity 500ms ease-out;
+}
+
 .erp-input-sm {
     height: 28px !important;
     padding: 0.15rem 0.4rem !important;
