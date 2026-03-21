@@ -1,8 +1,10 @@
 package com.solusi.erp.master.service.impl;
 
+import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.master.dto.GeographicRequest;
 import com.solusi.erp.master.dto.GeographicResponse;
+import com.solusi.erp.master.form.GeographicUIForm;
 import com.solusi.erp.master.mapper.GeographicMapper;
 import com.solusi.erp.master.model.Geographic;
 import com.solusi.erp.master.model.GeographicType;
@@ -67,20 +69,34 @@ public class GeographicServiceImpl implements GeographicService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public FormViewDto<GeographicRequest, GeographicUIForm, GeographicResponse> getGeographicEditView(Long id) {
+        Geographic entity = geographicRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.notfound")));
+
+        return FormViewDto.<GeographicRequest, GeographicUIForm, GeographicResponse>builder()
+                .request(geographicMapper.toRequest(entity))
+                .ui(geographicMapper.toUIForm(entity))
+                .audit(geographicMapper.toResponse(entity))
+                .build();
+    }
+
+    @Override
     @Transactional
-    public void create(GeographicRequest request) {
+    public GeographicResponse create(GeographicRequest request) {
         Geographic geographic = geographicMapper.toEntity(request);
         if (request.getParentId() != null) {
             Geographic parent = geographicRepository.findById(request.getParentId())
                     .orElseThrow(() -> new RuntimeException(getMessage("msg.error.notfound")));
             geographic.setParent(parent);
         }
-        geographicRepository.save(geographic);
+        Geographic saved = geographicRepository.save(geographic);
+        return geographicMapper.toResponse(saved);
     }
 
     @Override
     @Transactional
-    public void update(Long id, GeographicRequest request) {
+    public GeographicResponse update(Long id, GeographicRequest request) {
         Geographic geographic = geographicRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.notfound")));
 
@@ -94,7 +110,8 @@ public class GeographicServiceImpl implements GeographicService {
             geographic.setParent(null);
         }
 
-        geographicRepository.save(geographic);
+        Geographic saved = geographicRepository.save(geographic);
+        return geographicMapper.toResponse(saved);
     }
 
     @Override

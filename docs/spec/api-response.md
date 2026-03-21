@@ -34,7 +34,7 @@ Hibernate session seringkali sudah tertutup saat data sampai ke level View (Thym
 
 ### Struktur Class:
 - **`request` (RQ)**: Berisi data binding form (Request DTO).
-- **`ui` (UI)**: Berisi metadata label/display (UI Form DTO). Bisa `null` jika tidak ada autocomplete.
+- **`ui` (UI)**: Berisi metadata label/display (UI Form DTO). **Sangat penting** untuk menyimpan Nama/Code yang akan ditampilkan pada autocomplete (TomSelect) agar label tidak hilang saat mode Edit atau setelah validasi gagal.
 - **`audit` (RP)**: Berisi info audit untuk ditampilkan di UI (Response DTO).
 
 ### Contoh Implementasi:

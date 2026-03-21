@@ -38,16 +38,18 @@
                     <div class="card-body border-bottom py-3">
                         <div class="d-flex align-items-center">
                             <div class="ms-auto text-secondary">
-                                <form th:action="@{/inventory/products}" method="get" class="input-icon"
+                                <form th:action="@{/inventory/products}" method="get"
                                       hx-get="/inventory/products"
                                       hx-target="#product-table-container"
                                       hx-trigger="keyup changed delay:500ms from:#search-input"
                                       hx-push-url="true">
-                                    <input type="text" id="search-input" name="keyword" th:value="${keyword}"
-                                        class="form-control form-control-sm" th:placeholder="#{label.search} + '...'">
-                                    <span class="input-icon-addon">
-                                        <i class="ti ti-search"></i>
-                                    </span>
+                                    <div class="input-icon">
+                                        <input type="text" id="search-input" name="keyword" th:value="${keyword}"
+                                            class="form-control form-control-sm" th:placeholder="#{label.search} + '...'">
+                                        <span class="input-icon-addon">
+                                            <i class="ti ti-search"></i>
+                                        </span>
+                                    </div>
                                 </form>
                             </div>
                         </div>

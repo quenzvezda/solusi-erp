@@ -8,7 +8,9 @@ To ensure visual consistency across the Solusi Program ERP, all input elements m
 ### 1. Standard List Page
 Setiap halaman daftar data (List) wajib mengikuti tata letak berikut untuk konsistensi:
 - **Search Bar**: Harus diletakkan di sisi kanan menggunakan utility `ms-auto`.
-- **Input Icon**: Gunakan class `.input-icon` dengan `.ti-search` sebagai dekorator.
+- **Search Bar Structure**: Gunakan pembungkus `div.input-icon` di dalam form untuk memisahkan input teks dari elemen `input type="hidden"` agar tidak merusak padding CSS.
+- **Search Bar Sizing**: Gunakan class `.form-control-sm` pada input pencarian untuk tampilan yang lebih compact dan seragam di seluruh modul.
+- **Input Icon**: Gunakan `.ti-search` sebagai dekorator di dalam `.input-icon-addon`.
 - **Asynchronous Navigation**: Header tabel (sorting) dan paginasi wajib menggunakan `hx-boost="true"` (sudah termasuk dalam fragment standard).
 - **Action Buttons**: 
   - Gunakan class `.btn-white.btn-sm` untuk tombol aksi di dalam tabel.

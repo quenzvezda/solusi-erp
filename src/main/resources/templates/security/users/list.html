@@ -31,15 +31,17 @@
                     <div class="card-body border-bottom py-3">
                         <div class="d-flex">
                             <div class="ms-auto text-secondary">
-                                <form th:action="@{/security/users}" method="get" class="input-icon" 
+                                <form th:action="@{/security/users}" method="get" 
                                       hx-get="/security/users" 
                                       hx-target="#user-table-container" 
                                       hx-trigger="keyup changed delay:500ms from:#search-input">
-                                    <input id="search-input" name="keyword" type="text" th:value="${keyword}" 
-                                           class="form-control" th:placeholder="#{label.search} + '...'">
-                                    <span class="input-icon-addon">
-                                        <i class="ti ti-search"></i>
-                                    </span>
+                                    <div class="input-icon">
+                                        <input id="search-input" name="keyword" type="text" th:value="${keyword}" 
+                                               class="form-control form-control-sm" th:placeholder="#{label.search} + '...'">
+                                        <span class="input-icon-addon">
+                                            <i class="ti ti-search"></i>
+                                        </span>
+                                    </div>
                                 </form>
                             </div>
                         </div>

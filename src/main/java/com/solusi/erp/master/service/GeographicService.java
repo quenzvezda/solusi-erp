@@ -1,8 +1,10 @@
 package com.solusi.erp.master.service;
 
+import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.master.dto.GeographicRequest;
 import com.solusi.erp.master.dto.GeographicResponse;
+import com.solusi.erp.master.form.GeographicUIForm;
 import com.solusi.erp.master.model.GeographicType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,9 +20,11 @@ public interface GeographicService {
 
     GeographicRequest getEditData(Long id);
 
-    void create(GeographicRequest request);
+    FormViewDto<GeographicRequest, GeographicUIForm, GeographicResponse> getGeographicEditView(Long id);
 
-    void update(Long id, GeographicRequest request);
+    GeographicResponse create(GeographicRequest request);
+
+    GeographicResponse update(Long id, GeographicRequest request);
 
     void delete(Long id);
 

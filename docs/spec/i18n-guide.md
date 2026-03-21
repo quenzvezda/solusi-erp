@@ -38,7 +38,29 @@ Digunakan untuk teks yang sangat spesifik pada satu halaman dan tidak akan digun
     *   `landing.hero.title=ERP Program Solutions`
     *   `profile.subtitle=Your account information and system preferences.`
 
-## 3. Implementation in Thymeleaf
+### 2.5. Validations (`validation.*`)
+Digunakan untuk pesan error pada form (Jakarta Validation). Gunakan pola **Suffix** untuk mempermudah penggabungan dengan label field.
+*   **Format Suffix:** `validation.[constraint].suffix`
+*   **Contoh Keys:**
+    *   `validation.notblank.suffix=tidak boleh kosong`
+    *   `validation.notnull.suffix=harus dipilih`
+    *   `validation.size.suffix=panjang harus antara {min} dan {max} karakter`
+    *   `validation.email.suffix=format email tidak valid`
+
+---
+
+## 3. Implementation in Java (DTO)
+Untuk pesan validasi yang dinamis dan ter-lokalisasi, gunakan interpolasi pesan di anotasi DTO:
+
+```java
+@NotBlank(message = "{label.user.username} {validation.notblank.suffix}")
+private String username;
+
+@Size(max = 100, message = "{label.product.name} {validation.size.suffix}")
+private String name;
+```
+
+## 4. Implementation in Thymeleaf
 Selalu gunakan operator `#{...}`.
 *   **Text:** `<span th:text="#{label.dashboard}">Dashboard</span>`
 *   **Placeholder:** `<input th:placeholder="#{placeholder.login.username}" ...>`

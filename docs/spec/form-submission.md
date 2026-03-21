@@ -49,11 +49,17 @@ Sistem menggunakan `erp-form-handler.js` (global) yang secara otomatis:
 ### A. Passive Updates (Search / Filter)
 Gunakan HTMX untuk update UI parsial yang tidak melibatkan inisialisasi library JS yang rumit.
 
+**Struktur Penting**: Selalu bungkus input pencarian dan ikon di dalam `div.input-icon` tersendiri (di dalam form) jika terdapat elemen `input type="hidden"`. Hal ini untuk memastikan padding CSS ikon tetap konsisten.
+
 ```html
 <form hx-get="/module/list" 
       hx-target="#table-result" 
       hx-trigger="keyup changed delay:500ms from:#search-input">
-    <input id="search-input" name="q" type="text">
+    <input type="hidden" name="parentId" th:value="...">
+    <div class="input-icon">
+        <input id="search-input" name="q" type="text" class="form-control form-control-sm">
+        <span class="input-icon-addon"><i class="ti ti-search"></i></span>
+    </div>
 </form>
 ```
 
