@@ -186,7 +186,7 @@ public class GeographicServiceImpl implements GeographicService {
         Geographic g = geographicRepository.findByIdAndIsActiveTrue(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.notfound")));
         
-        String subText = "";
+        String subText;
         if (g.getType() == GeographicType.STATE_PROVINCE) {
             subText = g.getParent() != null ? g.getParent().getName() : g.getCode();
         } else if (g.getType() == GeographicType.CITY_MUNICIPALITY) {

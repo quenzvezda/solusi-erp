@@ -1,7 +1,6 @@
 package com.solusi.erp.core.auditing;
 
 import com.solusi.erp.security.model.SecurityUser;
-import com.solusi.erp.security.model.User;
 import com.solusi.erp.security.repository.UserRepository;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.core.Authentication;

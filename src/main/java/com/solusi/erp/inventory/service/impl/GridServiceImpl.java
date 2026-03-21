@@ -2,7 +2,6 @@ package com.solusi.erp.inventory.service.impl;
 
 import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.core.dto.LookupDto;
-import com.solusi.erp.core.service.SequenceGeneratorService;
 import com.solusi.erp.inventory.dto.GridRequest;
 import com.solusi.erp.inventory.dto.GridResponse;
 import com.solusi.erp.inventory.mapper.WarehouseMapper;

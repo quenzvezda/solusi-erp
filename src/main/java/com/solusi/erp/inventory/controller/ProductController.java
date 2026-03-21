@@ -30,10 +30,7 @@ import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 public class ProductController {
 
     private final ProductService service;
-    private final ProductCategoryService categoryService;
     private final UnitOfMeasureService uomService;
-    private final BrandService brandService;
-    private final ProductMapper mapper;
     private final MessageSource messageSource;
 
     @GetMapping

@@ -447,15 +447,15 @@
     <script>
         /* ── Immediate init (before paint) ── */
         (function () {
-            var narrow   = localStorage.getItem('sidebar-narrow') === 'true';
-            var width    = localStorage.getItem('sidebar-width')  || '260px';
+            const narrow = localStorage.getItem('sidebar-narrow') === 'true';
+            const width = localStorage.getItem('sidebar-width') || '260px';
             if (narrow) document.body.classList.add('sidebar-narrow');
             document.documentElement.style.setProperty('--sidebar-width', width);
         }());
 
         /* ── Toggle collapse ── */
         function toggleSidebar() {
-            var isNarrow = document.body.classList.toggle('sidebar-narrow');
+            const isNarrow = document.body.classList.toggle('sidebar-narrow');
             if (isNarrow) {
                 /* 1. Close all open collapse panels */
                 document.querySelectorAll('#sidebar .collapse.show').forEach(function (el) {
@@ -464,7 +464,7 @@
                     
                     // Destroy the Bootstrap instance to prevent internal state desync
                     // so the next time it's opened, it initializes cleanly from the closed state
-                    var bsCollapse = bootstrap.Collapse.getInstance(el);
+                    const bsCollapse = bootstrap.Collapse.getInstance(el);
                     if (bsCollapse) {
                         bsCollapse.dispose();
                     }
@@ -497,14 +497,14 @@
         /* ── Resizer ── */
         document.addEventListener('DOMContentLoaded', function () {
 
-            var resizer = document.getElementById('sidebar-resizer');
-            var tooltip = document.createElement('div');
+            const resizer = document.getElementById('sidebar-resizer');
+            const tooltip = document.createElement('div');
             tooltip.id  = 'sidebar-width-tooltip';
             document.body.appendChild(tooltip);
 
             if (!resizer) return;
 
-            var startX, startWidth, dragging = false;
+            let startX, startWidth, dragging = false;
 
             resizer.addEventListener('mousedown', function (e) {
                 if (document.body.classList.contains('sidebar-narrow')) return;
@@ -528,8 +528,8 @@
             function onMouseMove(e) {
                 if (!dragging) return;
 
-                var delta    = e.clientX - startX;
-                var newWidth = Math.min(
+                const delta = e.clientX - startX;
+                const newWidth = Math.min(
                     Math.max(startWidth + delta, parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-min-width')) || 220),
                     parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-max-width')) || 480
                 );
@@ -545,7 +545,7 @@
                 document.body.classList.remove('sidebar-resizing');
                 tooltip.classList.remove('visible');
 
-                var finalWidth = getComputedStyle(document.documentElement)
+                const finalWidth = getComputedStyle(document.documentElement)
                     .getPropertyValue('--sidebar-width').trim();
                 localStorage.setItem('sidebar-width', finalWidth);
 
@@ -560,16 +560,16 @@
             }
 
             /* ── Highlight active nav link ── */
-            var currentPath = window.location.pathname;
+            const currentPath = window.location.pathname;
             document.querySelectorAll('#sidebar .nav-link').forEach(function (link) {
-                var href = link.getAttribute('href');
+                const href = link.getAttribute('href');
                 if (href && href !== '#' && (currentPath === href || currentPath.startsWith(href + '/'))) {
                     link.classList.add('active');
                     /* Open all ancestor collapse panels */
-                    var panel = link.closest('.collapse');
+                    let panel = link.closest('.collapse');
                     while (panel) {
                         panel.classList.add('show');
-                        var trigger = document.querySelector('[data-bs-target="#' + panel.id + '"]');
+                        const trigger = document.querySelector('[data-bs-target="#' + panel.id + '"]');
                         if (trigger) trigger.setAttribute('aria-expanded', 'true');
                         panel = panel.parentElement && panel.parentElement.closest('.collapse');
                     }

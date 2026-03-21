@@ -1,6 +1,5 @@
 package com.solusi.erp.inventory.service.impl;
 
-import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.service.SequenceGeneratorService;
