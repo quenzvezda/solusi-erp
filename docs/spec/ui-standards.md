@@ -9,6 +9,7 @@ To ensure visual consistency across the Solusi Program ERP, all input elements m
 Setiap halaman daftar data (List) wajib mengikuti tata letak berikut untuk konsistensi:
 - **Search Bar**: Harus diletakkan di sisi kanan menggunakan utility `ms-auto`.
 - **Input Icon**: Gunakan class `.input-icon` dengan `.ti-search` sebagai dekorator.
+- **Asynchronous Navigation**: Header tabel (sorting) dan paginasi wajib menggunakan `hx-boost="true"` (sudah termasuk dalam fragment standard).
 - **Action Buttons**: 
   - Gunakan class `.btn-white.btn-sm` untuk tombol aksi di dalam tabel.
   - Bungkus dalam `.btn-list.flex-nowrap.justify-content-end` agar rapi.

@@ -53,7 +53,13 @@
                         </div>
                     </div>
 
-                    <div id="uom-conversion-table-container" th:fragment="uom-conversion-table-container">
+                    <div id="uom-conversion-table-container" th:fragment="uom-conversion-table-container"
+                         hx-get="/inventory/uom-conversions"
+                         hx-trigger="refresh-table from:body delay:500ms"
+                         hx-include="[name='keyword'], [name='page']">
+                        <!-- State Tracking -->
+                        <input type="hidden" name="page" th:value="${page.number}">
+
                         <div class="table-responsive">
                             <table class="table table-vcenter card-table">
                                 <thead>
@@ -66,7 +72,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="item : ${page.content}">
+                                    <tr th:each="item : ${page.content}" th:id="'uom-conv-row-' + ${item.id}">
                                         <td>
                                             <div class="font-weight-medium" th:text="${item.productName}">Product Name</div>
                                             <div class="text-secondary small" th:text="${item.productCode}">CODE</div>
@@ -83,16 +89,16 @@
                                                     <i class="ti ti-edit me-1"></i>
                                                     <span th:text="#{label.edit}">Edit</span>
                                                 </a>
-                                                <form th:action="@{/inventory/uom-conversions/delete/{id}(id=${item.id})}"
-                                                      method="post" 
-                                                      th:data-confirm-msg="#{label.uom-conversion.delete.confirm.text(${item.productName})}"
-                                                      onsubmit="return confirm(this.getAttribute('data-confirm-msg'))"
-                                                      sec:authorize="hasAuthority('UOM-CONVERSION_DELETE')">
-                                                    <button type="submit" class="btn btn-white btn-sm text-danger">
-                                                        <i class="ti ti-trash me-1"></i>
-                                                        <span th:text="#{label.delete}">Delete</span>
-                                                    </button>
-                                                </form>
+                                                <!-- HTMX Inline Delete -->
+                                                <button type="button" class="btn btn-white btn-sm text-danger"
+                                                        sec:authorize="hasAuthority('UOM-CONVERSION_DELETE')"
+                                                        th:attr="hx-post=@{/inventory/uom-conversions/delete/{id}(id=${item.id})}, hx-target='#uom-conv-row-' + ${item.id}"
+                                                        hx-swap="outerHTML swap:500ms"
+                                                        th:data-confirm-msg="#{label.uom-conversion.delete.confirm.text(${item.productName})}"
+                                                        onclick="if(!confirm(this.getAttribute('data-confirm-msg'))) return false;">
+                                                    <i class="ti ti-trash me-1"></i>
+                                                    <span th:text="#{label.delete}">Delete</span>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>

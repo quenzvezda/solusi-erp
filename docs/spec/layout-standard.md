@@ -10,7 +10,8 @@ Untuk mengatasi ini, `layout/master.html` telah dimodifikasi untuk menyediakan "
 
 ### Implementasi di `master.html`
 ```html
-<body th:fragment="layout(content, pageScripts)">
+<body th:fragment="layout(content, pageScripts)"
+      th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
     ...
     <!-- Global Scripts -->
     <script>...</script>
@@ -19,8 +20,10 @@ Untuk mengatasi ini, `layout/master.html` telah dimodifikasi untuk menyediakan "
     <th:block th:replace="${pageScripts} ?: ~{}"></th:block>
 </body>
 ```
--   `layout(content, pageScripts)`: Fragmen `layout` sekarang menerima dua parameter.
--   `th:block th:replace="${pageScripts} ?: ~{}"`: Blok ini akan merender fragmen `pageScripts` yang dikirim dari halaman anak. Jika tidak ada, ia akan merender fragmen kosong (`~{}`) untuk mencegah error.
+-   `layout(content, pageScripts)`: Fragmen `layout` menerima dua parameter (konten dan script).
+-   **Global HTMX CSRF**: Setiap request HTMX secara otomatis menyertakan token CSRF via header, mencegah error 403 Forbidden.
+-   **Lifecycle Re-initialization**: `master.html` mendengarkan event `htmx:afterSwap` untuk secara otomatis melakukan inisialisasi ulang AutoNumeric dan TomSelect pada konten yang baru dimuat via HTMX.
+-   `th:block th:replace="${pageScripts} ?: ~{}"`: Blok ini merender fragmen script dari halaman anak.
 
 ### Implementasi di Halaman Anak (Contoh: `form.html`)
 Setiap halaman yang membutuhkan JavaScript-nya sendiri **WAJIB** mengikuti pola ini:

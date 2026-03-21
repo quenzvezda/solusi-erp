@@ -53,7 +53,13 @@
                         </div>
                     </div>
                     
-                    <div id="product-table-container" th:fragment="product-table-container">
+                    <div id="product-table-container" th:fragment="product-table-container"
+                         hx-get="/inventory/products"
+                         hx-trigger="refresh-table from:body delay:500ms"
+                         hx-include="[name='keyword'], [name='page']">
+                        <!-- State Tracking for HTMX Refresh -->
+                        <input type="hidden" name="page" th:value="${page.number}">
+
                         <div class="table-responsive">
                             <table class="table table-vcenter card-table">
                                 <thead>
@@ -68,7 +74,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="item : ${page.content}">
+                                    <tr th:each="item : ${page.content}" th:id="'product-row-' + ${item.id}">
                                         <td>
                                             <div th:text="${item.code}">CODE</div>
                                             <div class="text-secondary small" th:text="${item.barcode}">BARCODE</div>
@@ -99,16 +105,16 @@
                                                     <i class="ti ti-edit me-1"></i>
                                                     <span th:text="#{label.edit}">Edit</span>
                                                 </a>
-                                                <form th:action="@{/inventory/products/delete/{id}(id=${item.id})}"
-                                                      method="post"
-                                                      th:data-confirm-msg="#{label.product.delete.confirm.text(${item.code})}"
-                                                      onsubmit="return confirm(this.getAttribute('data-confirm-msg'))"
-                                                      sec:authorize="hasAuthority('PRODUCT_DELETE')">
-                                                    <button type="submit" class="btn btn-white btn-sm text-danger">
-                                                        <i class="ti ti-trash me-1"></i>
-                                                        <span th:text="#{label.delete}">Delete</span>
-                                                    </button>
-                                                </form>
+                                                <!-- HTMX Inline Delete -->
+                                                <button type="button" class="btn btn-white btn-sm text-danger"
+                                                        sec:authorize="hasAuthority('PRODUCT_DELETE')"
+                                                        th:attr="hx-post=@{/inventory/products/delete/{id}(id=${item.id})}, hx-target='#product-row-' + ${item.id}"
+                                                        hx-swap="outerHTML swap:500ms"
+                                                        th:data-confirm-msg="#{label.product.delete.confirm.text(${item.code})}"
+                                                        onclick="if(!confirm(this.getAttribute('data-confirm-msg'))) return false;">
+                                                    <i class="ti ti-trash me-1"></i>
+                                                    <span th:text="#{label.delete}">Delete</span>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>

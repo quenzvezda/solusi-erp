@@ -44,9 +44,10 @@ Sistem menggunakan `erp-form-handler.js` (global) yang secara otomatis:
 
 ---
 
-## 3. Implementasi HTMX (Non-CRUD / Filter)
+## 3. Implementasi HTMX (Passive & In-place Actions)
 
-Gunakan HTMX hanya untuk update UI parsial yang tidak melibatkan inisialisasi ulang library JS yang rumit.
+### A. Passive Updates (Search / Filter)
+Gunakan HTMX untuk update UI parsial yang tidak melibatkan inisialisasi library JS yang rumit.
 
 ```html
 <form hx-get="/module/list" 
@@ -54,6 +55,31 @@ Gunakan HTMX hanya untuk update UI parsial yang tidak melibatkan inisialisasi ul
       hx-trigger="keyup changed delay:500ms from:#search-input">
     <input id="search-input" name="q" type="text">
 </form>
+```
+
+### B. Inline Actions (Delete - Always Fresh)
+Gunakan pola ini untuk menghapus baris tabel secara instan dengan animasi, namun tetap menjaga jumlah data di layar tetap konsisten (misal tetap 10 data).
+
+**Frontend (Button):**
+Targetkan ID baris tabel secara spesifik agar Interceptor bisa mendeteksi aksi in-place.
+```html
+<tr th:id="'row-' + ${item.id}">
+    <button type="button"
+            th:attr="hx-post=@{/module/delete/{id}(id=${item.id})}, hx-target='#row-' + ${item.id}"
+            hx-swap="outerHTML swap:500ms">
+        Delete
+    </button>
+</tr>
+```
+
+**Frontend (Table Container):**
+Tambahkan trigger untuk mendengarkan sinyal refresh dari server dengan delay untuk memberi waktu animasi.
+```html
+<div id="table-container" 
+     hx-trigger="refresh-table from:body delay:500ms" 
+     hx-include="[name='keyword'], [name='page']">
+     ...
+</div>
 ```
 
 ---

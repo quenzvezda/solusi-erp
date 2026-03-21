@@ -17,6 +17,9 @@ Pengurutan dilakukan secara otomatis oleh Spring Data JPA selama parameter `sort
 ### 3.1. Sortable Fragment
 Gunakan fragment generic di `fragments/table.html` untuk setiap header tabel yang ingin didukung fitur sorting.
 
+**HTMX Support:**
+Header sorting secara default menggunakan `hx-boost="true"` dan `hx-target="closest [id]"` untuk memastikan transisi urutan kolom berjalan asinkron tanpa mengganggu komponen UI lainnya di luar tabel.
+
 **Contoh Penggunaan:**
 ```html
 <th th:replace="~{fragments/table :: sortable('name', #{label.name})}">Nama</th>

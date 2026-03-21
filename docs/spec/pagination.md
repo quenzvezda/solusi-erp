@@ -33,11 +33,18 @@ public String list(@RequestParam(required = false) String keyword,
 *   **Boilerplate Reduction**: Menghilangkan logika manual pengambilan session/profil di setiap Controller.
 *   **Maintainability**: Perubahan logika paginasi global cukup dilakukan di satu file (`UserPreferencePageableResolver`).
 
-## 5. Frontend Implementation (Thymeleaf)
+### 5. Frontend Implementation (Thymeleaf)
 Untuk merender navigasi paginasi di *view*, DILARANG keras menulis blok HTML (`<ul class="pagination">...`) secara manual. Selalu gunakan fragment terpusat yang sudah disediakan.
+
+**HTMX Integration (Standard):**
+Fragment paginasi standar sudah dilengkapi dengan atribut HTMX untuk navigasi asinkron:
+1.  **`hx-boost="true"`**: Mengubah link navigasi standar menjadi request AJAX secara otomatis.
+2.  **`hx-target="closest [id]"`**: Memastikan hanya kontainer tabel yang diperbarui. Hal ini krusial agar komponen global (Header, Sidebar, Search Menu) tidak tertimpa dan tidak kehilangan state JavaScript-nya.
+3.  **`hx-params="none"`**: Mencegah duplikasi parameter URL (seperti ganda keyword/page) yang bisa terjadi jika link paginasi berada di dalam elemen yang memiliki `hx-include`.
 
 **PENTING (UI Consistency):** 
 Fragment paginasi harus diletakkan **langsung di bawah** `div.table-responsive` (masih di dalam `div.card`). 
+
 **DILARANG** membungkus fragment ini dengan `<div class="card-footer">` karena fragment tersebut sudah memiliki struktur styling internal yang sesuai untuk template ini.
 
 ```html

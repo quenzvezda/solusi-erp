@@ -11,7 +11,8 @@
 </head>
 
 
-<body th:fragment="layout(content, pageScripts)">
+<body th:fragment="layout(content, pageScripts)" 
+      th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
     <div class="page">
         <!-- Sidebar Fragment -->
         <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>

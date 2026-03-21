@@ -2,6 +2,7 @@ package com.solusi.erp.core.exception;
 
 import com.solusi.erp.core.dto.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,10 +49,12 @@ public class GlobalExceptionHandler {
      * Cerdas: Mengembalikan JSON jika request adalah AJAX/API, atau View jika request browser biasa.
      */
     @ExceptionHandler({RuntimeException.class, Throwable.class})
-    public Object handleAllExceptions(Throwable ex, HttpServletRequest request, Model model) {
+    public Object handleAllExceptions(Throwable ex, HttpServletRequest request, HttpServletResponse response, Model model) {
         log.error("Exception occurred: ", ex);
 
         if (isAjaxRequest(request)) {
+            // Prevent conflicts with preset Content-Type from view resolvers
+            response.resetBuffer(); 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(ex.getMessage()));
         }

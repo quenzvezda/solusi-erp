@@ -73,6 +73,12 @@
     color: #d63939;
 }
 
+/* HTMX Animations */
+.htmx-swapping {
+    opacity: 0;
+    transition: opacity 500ms ease-out;
+}
+
 .erp-input-sm {
     height: 28px !important;
     padding: 0.15rem 0.4rem !important;
