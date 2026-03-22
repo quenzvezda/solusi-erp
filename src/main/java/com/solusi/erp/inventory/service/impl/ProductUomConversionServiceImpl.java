@@ -3,6 +3,7 @@ package com.solusi.erp.inventory.service.impl;
 import com.solusi.erp.core.dto.FormViewDto;
 import com.solusi.erp.inventory.dto.ProductUomConversionRequest;
 import com.solusi.erp.inventory.dto.ProductUomConversionResponse;
+import com.solusi.erp.inventory.dto.UomConversionLookupDto;
 import com.solusi.erp.inventory.form.ProductUomUIForm;
 import com.solusi.erp.inventory.mapper.ProductUomConversionMapper;
 import com.solusi.erp.inventory.model.Product;
@@ -20,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -113,6 +116,37 @@ public class ProductUomConversionServiceImpl implements ProductUomConversionServ
             throw new RuntimeException(getMessage("msg.error.notfound"));
         }
         repository.deleteById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UomConversionLookupDto> getConversions(Long productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.product.notfound")));
+
+        List<UomConversionLookupDto> results = new ArrayList<>();
+
+        // 1. Add Base UOM
+        results.add(new UomConversionLookupDto(
+                product.getUom().getId(),
+                product.getUom().getName(),
+                product.getUom().getCode(),
+                BigDecimal.ONE.setScale(4, java.math.RoundingMode.HALF_UP),
+                true
+        ));
+
+        // 2. Add Other Conversions
+        repository.findByProductId(productId).forEach(conv -> 
+            results.add(new UomConversionLookupDto(
+                    conv.getFromUom().getId(),
+                    conv.getFromUom().getName(),
+                    conv.getFromUom().getCode(),
+                    conv.getConversionFactor().setScale(4, java.math.RoundingMode.HALF_UP),
+                    false
+            ))
+        );
+
+        return results;
     }
 
     private void validateRequest(ProductUomConversionRequest request, Long id) {

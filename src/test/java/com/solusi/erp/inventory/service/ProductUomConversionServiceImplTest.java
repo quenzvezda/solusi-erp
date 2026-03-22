@@ -42,13 +42,12 @@ class ProductUomConversionServiceImplTest {
     private ProductUomConversionServiceImpl service;
 
     private Product product;
-    private UnitOfMeasure baseUom;
-    private UnitOfMeasure boxUom;
+	private UnitOfMeasure boxUom;
     private ProductUomConversionRequest request;
 
     @BeforeEach
     void setUp() {
-        baseUom = new UnitOfMeasure();
+	    UnitOfMeasure baseUom = new UnitOfMeasure();
         baseUom.setId(1L);
         baseUom.setName("Pieces");
 

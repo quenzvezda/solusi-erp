@@ -7,6 +7,8 @@ import com.solusi.erp.inventory.service.FacilityService;
 import com.solusi.erp.inventory.service.GridService;
 import com.solusi.erp.inventory.service.ProductCategoryService;
 import com.solusi.erp.inventory.service.ProductService;
+import com.solusi.erp.inventory.dto.UomConversionLookupDto;
+import com.solusi.erp.inventory.service.ProductUomConversionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +27,7 @@ public class InventoryLookupController {
     private final ContainerService containerService;
     private final ProductCategoryService categoryService;
     private final BrandService brandService;
+    private final ProductUomConversionService uomConversionService;
 
     @GetMapping("/products/{id}")
     public LookupDto getLookupProduct(@PathVariable Long id) {
@@ -93,5 +96,10 @@ public class InventoryLookupController {
     public List<LookupDto> lookupBrands(@RequestParam(value = "q", defaultValue = "") String q,
                                        @RequestParam(value = "limit", defaultValue = "10") int limit) {
         return brandService.lookupBrands(q, limit);
+    }
+
+    @GetMapping("/uom-conversions")
+    public List<UomConversionLookupDto> lookupUomConversions(@RequestParam(value = "productId") Long productId) {
+        return uomConversionService.getConversions(productId);
     }
 }

@@ -1,11 +1,9 @@
 package com.solusi.erp.inventory.dto;
 
-import com.solusi.erp.core.dto.BaseAuditResponse;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
@@ -17,14 +15,17 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class StockAdjustmentLineRequest extends BaseAuditResponse {
+public class StockAdjustmentLineRequest {
+
+    private Long id;
+    private Integer version;
 
     @NotNull(message = "{validation.notnull}")
     private Long productId;
     
     private String productCode; // For display in Edit mode
     private String productName; // For display in Edit mode
+    private String uomName;     // For display in UI
 
     @NotNull(message = "{validation.notnull}")
     private Long gridId;
