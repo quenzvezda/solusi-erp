@@ -6,6 +6,7 @@ import com.solusi.erp.security.dto.PermissionResponse;
 import com.solusi.erp.security.dto.RoleRequest;
 import com.solusi.erp.security.dto.RoleResponse;
 import com.solusi.erp.security.service.RoleService;
+import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -88,8 +89,7 @@ public class RoleController {
     @ResponseBody
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         roleService.delete(id);
-        return ResponseEntity.ok()
-                .header("HX-Trigger", "refresh-table")
-                .build();
+        String msg = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
+        return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
     }
 }

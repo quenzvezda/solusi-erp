@@ -7,6 +7,7 @@ import com.solusi.erp.master.dto.PartyResponse;
 import com.solusi.erp.master.model.AddressType;
 import com.solusi.erp.master.model.PartyType;
 import com.solusi.erp.master.service.PartyService;
+import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -83,9 +84,8 @@ public class PartyController {
     @ResponseBody
     public ResponseEntity<Void> deleteHtmx(@PathVariable Long id) {
         service.delete(id);
-        return ResponseEntity.ok()
-                .header("HX-Trigger", "refresh-table")
-                .build();
+        String message = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
+        return HtmxResponseUtility.okWithRefreshTableAndSuccess(message);
     }
 
     private void populateFormOptions(Model model) {

@@ -5,6 +5,7 @@ import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.master.dto.PartyRoleTypeRequest;
 import com.solusi.erp.master.dto.PartyRoleTypeResponse;
 import com.solusi.erp.master.service.PartyRoleTypeService;
+import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -75,9 +76,7 @@ public class PartyRoleTypeController {
     @ResponseBody
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
-        return ResponseEntity.ok()
-                .header("HX-Trigger", "refresh-table")
-                .build();
+        return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg("msg.success.delete"));
     }
 
     private String msg(String key) {

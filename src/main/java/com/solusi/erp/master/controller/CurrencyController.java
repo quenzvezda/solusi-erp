@@ -4,6 +4,7 @@ import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.master.dto.CurrencyRequest;
 import com.solusi.erp.master.dto.CurrencyResponse;
 import com.solusi.erp.master.service.CurrencyService;
+import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -85,8 +86,7 @@ public class CurrencyController {
     @ResponseBody
     public ResponseEntity<Void> deleteCurrencyHtmx(@PathVariable Long id) {
         currencyService.deleteCurrency(id);
-        return ResponseEntity.ok()
-                .header("HX-Trigger", "refresh-table")
-                .build();
+        String msg = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
+        return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
     }
 }

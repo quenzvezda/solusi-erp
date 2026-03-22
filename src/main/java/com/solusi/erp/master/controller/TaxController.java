@@ -5,6 +5,7 @@ import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.master.dto.TaxRequest;
 import com.solusi.erp.master.dto.TaxResponse;
 import com.solusi.erp.master.service.TaxService;
+import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -83,8 +84,7 @@ public class TaxController {
     @ResponseBody
     public ResponseEntity<Void> deleteTaxHtmx(@PathVariable Long id) {
         taxService.deleteTax(id);
-        return ResponseEntity.ok()
-                .header("HX-Trigger", "refresh-table")
-                .build();
+        String message = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
+        return HtmxResponseUtility.okWithRefreshTableAndSuccess(message);
     }
 }

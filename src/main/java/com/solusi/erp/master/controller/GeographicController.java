@@ -6,6 +6,7 @@ import com.solusi.erp.master.dto.GeographicRequest;
 import com.solusi.erp.master.dto.GeographicResponse;
 import com.solusi.erp.master.model.GeographicType;
 import com.solusi.erp.master.service.GeographicService;
+import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -113,9 +114,7 @@ public class GeographicController {
     @ResponseBody
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         geographicService.delete(id);
-        return ResponseEntity.ok()
-                .header("HX-Trigger", "refresh-table")
-                .build();
+        return HtmxResponseUtility.okWithRefreshTableAndSuccess(getMessage("msg.success.delete"));
     }
 
     // ===================================================================

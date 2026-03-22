@@ -6,6 +6,7 @@ import com.solusi.erp.inventory.dto.ProductCategoryRequest;
 import com.solusi.erp.inventory.dto.ProductCategoryResponse;
 import com.solusi.erp.inventory.model.ProductCategoryType;
 import com.solusi.erp.inventory.service.ProductCategoryService;
+import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -81,8 +82,7 @@ public class ProductCategoryController {
     @ResponseBody
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
-        return ResponseEntity.ok()
-                .header("HX-Trigger", "refresh-table")
-                .build();
+        String msg = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
+        return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
     }
 }

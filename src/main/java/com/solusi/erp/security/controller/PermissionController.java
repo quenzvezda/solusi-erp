@@ -3,6 +3,7 @@ package com.solusi.erp.security.controller;
 import com.solusi.erp.security.dto.PermissionRequest;
 import com.solusi.erp.security.dto.PermissionResponse;
 import com.solusi.erp.security.service.PermissionService;
+import com.solusi.erp.util.HtmxResponseUtility;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -78,8 +79,7 @@ public class PermissionController {
     @ResponseBody
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         permissionService.delete(id);
-        return ResponseEntity.ok()
-                .header("HX-Trigger", "refresh-table")
-                .build();
+        String msg = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
+        return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
     }
 }

@@ -76,7 +76,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="item : ${page.content}" th:id="'brand-row-' + ${item.id}">
+                                    <tr th:each="item : ${page.content}" th:id="'row-' + ${item.id}">
                                         <td>
                                             <span class="font-weight-medium" th:text="${item.code}">BRD-001</span>
                                         </td>

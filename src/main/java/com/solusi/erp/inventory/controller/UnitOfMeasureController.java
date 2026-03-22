@@ -6,6 +6,7 @@ import com.solusi.erp.inventory.dto.UnitOfMeasureRequest;
 import com.solusi.erp.inventory.dto.UnitOfMeasureResponse;
 import com.solusi.erp.inventory.model.UomType;
 import com.solusi.erp.inventory.service.UnitOfMeasureService;
+import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -81,8 +82,7 @@ public class UnitOfMeasureController {
     @ResponseBody
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
-        return ResponseEntity.ok()
-                .header("HX-Trigger", "refresh-table")
-                .build();
+        String msg = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
+        return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
     }
 }

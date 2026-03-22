@@ -10,6 +10,7 @@ import com.solusi.erp.inventory.service.ProductService;
 import com.solusi.erp.inventory.service.ContainerService;
 import com.solusi.erp.master.dto.CurrencyResponse;
 import com.solusi.erp.master.service.CurrencyService;
+import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -122,9 +123,8 @@ public class StockAdjustmentController {
     @ResponseBody
     public ResponseEntity<Void> deleteHtmx(@PathVariable Long id) {
         service.delete(id);
-        return ResponseEntity.ok()
-                .header("HX-Trigger", "refresh-table")
-                .build();
+        String msg = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
+        return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
     }
 
     private void populateFormModels(Model model) {

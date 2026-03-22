@@ -7,6 +7,7 @@ import com.solusi.erp.inventory.dto.ProductUomConversionResponse;
 import com.solusi.erp.inventory.model.UomType;
 import com.solusi.erp.inventory.service.ProductUomConversionService;
 import com.solusi.erp.inventory.service.UnitOfMeasureService;
+import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -81,9 +82,8 @@ public class ProductUomConversionController {
     @ResponseBody
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
-        return ResponseEntity.ok()
-                .header("HX-Trigger", "refresh-table")
-                .build();
+        String msg = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
+        return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
     }
 
     private void populateSelectOptions(Model model) {

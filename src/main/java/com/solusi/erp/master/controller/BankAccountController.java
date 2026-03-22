@@ -5,6 +5,7 @@ import com.solusi.erp.master.dto.BankAccountRequest;
 import com.solusi.erp.master.dto.BankAccountResponse;
 import com.solusi.erp.master.model.AccountType;
 import com.solusi.erp.master.service.BankAccountService;
+import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -91,8 +92,7 @@ public class BankAccountController {
     @ResponseBody
     public ResponseEntity<Void> deleteHtmx(@PathVariable Long id) {
         bankAccountService.delete(id);
-        return ResponseEntity.ok()
-                .header("HX-Trigger", "refresh-table")
-                .build();
+        String msg = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
+        return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
     }
 }

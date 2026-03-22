@@ -6,6 +6,7 @@ import com.solusi.erp.security.dto.UserRequest;
 import com.solusi.erp.security.dto.UserResponse;
 import com.solusi.erp.security.service.RoleService;
 import com.solusi.erp.security.service.UserService;
+import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -89,9 +90,8 @@ public class UserController {
     @ResponseBody
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         userService.delete(id);
-        return ResponseEntity.ok()
-                .header("HX-Trigger", "refresh-table")
-                .build();
+        String msg = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
+        return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
     }
 
     private void populateSelectOptions(Model model) {

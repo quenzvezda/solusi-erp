@@ -1,7 +1,7 @@
 /**
  * ERP Standard Form Handler for AJAX Submissions.
  * Automatically initializes any form with data-ajax-form="true".
- * Uses global ErpI18n for localized user messages.
+ * Uses sessionStorage to persist success messages across manual redirects.
  */
 const ErpFormHandler = (function () {
     
@@ -19,7 +19,48 @@ const ErpFormHandler = (function () {
             form.classList.add('ajax-initialized');
             console.log(`[ERP-FORM] Initialized AJAX form: ${form.id || 'unnamed'}`);
         });
+
+        // CHECK FOR PENDING SUCCESS MESSAGE FROM PREVIOUS PAGE (REDIRECT)
+        checkPendingSuccess();
     };
+
+    /**
+     * Display a success message manually. Useful for external triggers (like HTMX events).
+     */
+    const showSuccess = function(message) {
+        // Find appropriate container for alerts (Same logic as checkPendingSuccess)
+        let alertContainer = document.querySelector('.alert-container') || 
+                             document.querySelector('.page-body .page-body .container-xl') ||
+                             document.querySelector('.page-body .container-xl');
+        
+        if (alertContainer) {
+            // Remove existing ajax alerts to prevent stacking
+            const existingAlerts = alertContainer.querySelectorAll('.alert-ajax-global');
+            existingAlerts.forEach(el => el.remove());
+
+            const alertHtml = `
+                <div class="alert alert-success alert-dismissible fade show alert-ajax-global" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-check icon alert-icon"></i></div>
+                        <div>${message}</div>
+                    </div>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                </div>`;
+            
+            alertContainer.insertAdjacentHTML('afterbegin', alertHtml);
+            alertContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    const checkPendingSuccess = function() {
+        const pendingMsg = sessionStorage.getItem('erp_pending_success');
+        if (pendingMsg) {
+            console.log('[ERP-FORM] Found pending success message, displaying...');
+            showSuccess(pendingMsg);
+            // Clear so it doesn't show again on F5
+            sessionStorage.removeItem('erp_pending_success');
+        }
+    }
 
     const handleFormSubmit = async function (event) {
         event.preventDefault();
@@ -34,35 +75,24 @@ const ErpFormHandler = (function () {
 
         try {
             const data = {};
-            
-            // Iterate through all form elements to get clean data
             const elements = form.querySelectorAll('input, select, textarea');
             elements.forEach(el => {
                 if (!el.name || el.disabled || el.type === 'file' || el.name === '_csrf') return;
-
                 let value = el.value;
-
                 if (el.type === 'checkbox') {
-                    // Specific checkbox handling for Spring
-                    if (!el.name.startsWith('_')) {
-                        data[el.name] = el.checked;
-                    }
+                    if (!el.name.startsWith('_')) data[el.name] = el.checked;
                 } else if (el.classList.contains('erp-number-decimal') || el.classList.contains('erp-number-integer')) {
-                    // UNFORMAT NUMERIC DATA
                     if (typeof AutoNumeric !== 'undefined' && AutoNumeric.getAutoNumericElement(el)) {
-                        // FIX: If field is empty string, send null instead of 0
                         data[el.name] = (el.value === "") ? null : AutoNumeric.getAutoNumericElement(el).getNumber();
                     } else {
                         data[el.name] = value === "" ? null : value.replace(/,/g, '');
                     }
                 } else {
-                    // CONVERT EMPTY STRING TO NULL: Crucial for Jackson Enum/Long parsing
                     data[el.name] = value === "" ? null : value;
                 }
             });
 
             const csrfToken = document.querySelector('input[name="_csrf"]')?.value;
-
             const response = await fetch(form.action, {
                 method: 'POST',
                 headers: {
@@ -72,7 +102,6 @@ const ErpFormHandler = (function () {
                 body: JSON.stringify(data)
             });
 
-            // Robust JSON parsing
             let result = {};
             const contentType = response.headers.get("content-type");
             if (contentType && contentType.indexOf("application/json") !== -1) {
@@ -84,11 +113,12 @@ const ErpFormHandler = (function () {
 
             if (response.ok && result.success) {
                 if (redirectUrl) {
+                    sessionStorage.setItem('erp_pending_success', result.message || i18n.successGeneric);
                     setTimeout(() => {
                         window.location.href = redirectUrl;
-                    }, 300);
+                    }, 100);
                 } else {
-                    alert(result.message || i18n.successGeneric);
+                    showSuccess(result.message || i18n.successGeneric);
                 }
             } else if (response.status === 400 && result.validationErrors) {
                 displayFieldErrors(form, result.validationErrors);
@@ -115,7 +145,6 @@ const ErpFormHandler = (function () {
 
     const displayFieldErrors = function (form, errors) {
         let unmappedErrors = [];
-
         for (const field in errors) {
             const input = form.querySelector(`[name="${field}"]`);
             if (input) {
@@ -123,7 +152,6 @@ const ErpFormHandler = (function () {
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'invalid-feedback invalid-feedback-ajax d-block';
                 errorDiv.textContent = errors[field];
-
                 if (input.tomselect && input.tomselect.wrapper) {
                     input.tomselect.wrapper.classList.add('is-invalid-ts');
                     input.tomselect.wrapper.parentNode.appendChild(errorDiv);
@@ -131,11 +159,9 @@ const ErpFormHandler = (function () {
                     input.parentNode.appendChild(errorDiv);
                 }
             } else {
-                // Field not found in form (e.g., hidden or server-side only validation)
                 unmappedErrors.push(errors[field]);
             }
         }
-
         if (unmappedErrors.length > 0) {
             displayGlobalError(form, unmappedErrors.join('<br>'));
         }
@@ -162,9 +188,24 @@ const ErpFormHandler = (function () {
     };
 
     return {
-        init: init
+        init: init,
+        showSuccess: showSuccess
     };
 })();
 
-document.addEventListener('DOMContentLoaded', ErpFormHandler.init);
-document.body.addEventListener('htmx:afterSwap', ErpFormHandler.init);
+/**
+ * GLOBAL EVENT LISTENERS for HTMX & Shared Actions
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    ErpFormHandler.init();
+
+    // Listen for custom "erp:show-success" events (can be triggered by server via HX-Trigger)
+    document.body.addEventListener('erp:show-success', function(evt) {
+        const message = evt.detail.value || evt.detail.message || "Action successful";
+        ErpFormHandler.showSuccess(message);
+    });
+});
+
+document.body.addEventListener('htmx:afterSwap', function() {
+    ErpFormHandler.init();
+});

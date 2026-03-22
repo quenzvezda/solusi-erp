@@ -6,6 +6,7 @@ import com.solusi.erp.inventory.dto.GridRequest;
 import com.solusi.erp.inventory.dto.GridResponse;
 import com.solusi.erp.inventory.service.FacilityService;
 import com.solusi.erp.inventory.service.GridService;
+import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -100,9 +101,8 @@ public class GridController {
     @ResponseBody
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
-        return ResponseEntity.ok()
-                .header("HX-Trigger", "refresh-table")
-                .build();
+        String msg = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
+        return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
     }
 
     private void populateSelectOptions(Model model) {
