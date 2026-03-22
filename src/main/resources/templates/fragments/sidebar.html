@@ -218,7 +218,7 @@
             }
 
             /* ── Narrow / Collapsed Mode ──────────────────────── */
-            body.sidebar-narrow .navbar-vertical {
+            body.sidebar-narrow #sidebar.navbar-vertical {
                 width: var(--sidebar-narrow-width) !important;
             }
 
@@ -226,27 +226,27 @@
                 margin-left: var(--sidebar-narrow-width) !important;
             }
 
-            body.sidebar-narrow .nav-link-title,
-            body.sidebar-narrow .dropdown-toggle::after,
-            body.sidebar-narrow #sidebar-toggle-text,
-            body.sidebar-narrow .nav-section-label {
+            body.sidebar-narrow #sidebar .nav-link-title,
+            body.sidebar-narrow #sidebar .dropdown-toggle::after,
+            body.sidebar-narrow #sidebar #sidebar-toggle-text,
+            body.sidebar-narrow #sidebar .nav-section-label {
                 display: none !important;
             }
 
             /* Reset ALL padding so icons land exactly in the centre of the narrow width */
-            body.sidebar-narrow .navbar-vertical,
-            body.sidebar-narrow .navbar-vertical .container-fluid {
+            body.sidebar-narrow #sidebar.navbar-vertical,
+            body.sidebar-narrow #sidebar.navbar-vertical .container-fluid {
                 padding-left: 0 !important;
                 padding-right: 0 !important;
             }
 
             /* Center .nav-item list inside the ul */
-            body.sidebar-narrow .navbar-nav {
+            body.sidebar-narrow #sidebar .navbar-nav {
                 width: 100% !important;
                 padding: 0 !important;
                 margin: 0 !important;
             }
-            body.sidebar-narrow .nav-item {
+            body.sidebar-narrow #sidebar .nav-item {
                 width: 100% !important;
                 margin: 0 !important;
                 padding: 0 !important;
@@ -256,7 +256,7 @@
             }
 
             /* Force perfectly square links with absolute positioning for the icon */
-            body.sidebar-narrow .nav-link {
+            body.sidebar-narrow #sidebar .nav-link {
                 width: 3rem !important;
                 height: 3rem !important;
                 margin: 0 auto !important; /* Ultimate block-level horizontal centering */
@@ -266,7 +266,7 @@
                 border-radius: 8px; /* Ensure uniform active state shape */
             }
 
-            body.sidebar-narrow .nav-link-icon {
+            body.sidebar-narrow #sidebar .nav-link-icon {
                 margin: 0 !important;
                 padding: 0 !important;
                 font-size: 1.25rem;
@@ -281,24 +281,24 @@
             }
 
             /* Hide leaf dots & nested menus in narrow mode */
-            body.sidebar-narrow .nav-leaf-dot,
-            body.sidebar-narrow .nav-nested {
+            body.sidebar-narrow #sidebar .nav-leaf-dot,
+            body.sidebar-narrow #sidebar .nav-nested {
                 display: none !important;
             }
 
-            body.sidebar-narrow .logo-full  { display: none !important; }
-            body.sidebar-narrow .logo-icon  { display: block !important; margin: 0 auto; }
+            body.sidebar-narrow #sidebar .logo-full  { display: none !important; }
+            body.sidebar-narrow #sidebar .logo-icon  { display: block !important; margin: 0 auto; }
 
             /* Fix sidebar footer collapse button centering */
-            body.sidebar-narrow .sidebar-footer { 
+            body.sidebar-narrow #sidebar .sidebar-footer { 
                 padding: 0.5rem 0 !important; 
                 display: flex !important;
                 justify-content: center !important;
             }
 
-            body.sidebar-narrow .btn-sidebar-toggle {
-                width: 3rem !important;
-                height: 3rem !important;
+            body.sidebar-narrow #sidebar .btn-sidebar-toggle {
+                width: 2.2rem !important;
+                height: 2.2rem !important;
                 margin: 0 auto !important; /* Ultimate block-level horizontal centering */
                 padding: 0 !important;
                 position: relative !important;
@@ -306,7 +306,7 @@
                 border-radius: 8px;
             }
 
-            body.sidebar-narrow .btn-sidebar-toggle .toggle-icon-wrap {
+            body.sidebar-narrow #sidebar .btn-sidebar-toggle .toggle-icon-wrap {
                 position: absolute !important;
                 top: 50% !important;
                 left: 50% !important;
@@ -389,6 +389,7 @@
             cursor: pointer;
             transition: background 0.18s, color 0.18s, border-color 0.18s;
             width: 100%;
+            height: 2.2rem; /* Standard button height ~35px */
             gap: 0.5rem;
         }
 
