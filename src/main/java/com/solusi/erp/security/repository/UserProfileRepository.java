@@ -16,4 +16,11 @@ public interface UserProfileRepository extends JpaRepository<UserProfile, Long> 
      * @return Optional UserProfile.
      */
     Optional<UserProfile> findByUserId(Long userId);
+    /**
+     * Find profile by the associated user username.
+     * 
+     * @param username The username of the User.
+     * @return Optional UserProfile.
+     */
+    Optional<UserProfile> findByUserUsername(String username);
 }

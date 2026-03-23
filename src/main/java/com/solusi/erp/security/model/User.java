@@ -1,6 +1,7 @@
 package com.solusi.erp.security.model;
 
 import com.solusi.erp.core.model.BaseModel;
+import com.solusi.erp.master.model.Party;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -47,4 +48,8 @@ public class User extends BaseModel {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private UserProfile profile;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "party_id", unique = true)
+    private Party party;
 }

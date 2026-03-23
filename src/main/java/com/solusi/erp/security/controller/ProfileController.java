@@ -1,22 +1,22 @@
 package com.solusi.erp.security.controller;
 
+import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.security.dto.ProfileRequest;
+import com.solusi.erp.security.dto.ProfileResponse;
 import com.solusi.erp.security.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.LocaleResolver;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.support.RequestContextUtils;
 
 import java.util.Locale;
@@ -27,6 +27,7 @@ import java.util.Locale;
 public class ProfileController {
 
     private final UserService userService;
+    private final MessageSource messageSource;
 
     @GetMapping
     public String showProfile(@AuthenticationPrincipal UserDetails userDetails, Model model) {
@@ -36,38 +37,28 @@ public class ProfileController {
 
     @GetMapping("/edit")
     public String showEditForm(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        if (!model.containsAttribute("profileRequest")) {
-            model.addAttribute("profileRequest", userService.getProfileUpdateData(userDetails.getUsername()));
-        }
+        var viewDto = userService.getProfileEditView(userDetails.getUsername());
+        model.addAttribute("profileRequest", viewDto.getRequest());
+        model.addAttribute("auditInfo", viewDto.getAudit());
         return "security/profile/form";
     }
 
     @PostMapping("/edit")
-    public String updateProfile(@AuthenticationPrincipal UserDetails userDetails,
-            @Valid @ModelAttribute("profileRequest") ProfileRequest request,
-            BindingResult bindingResult,
+    @ResponseBody
+    public ResponseEntity<ApiResponse<ProfileResponse>> updateProfile(@AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody ProfileRequest request,
             HttpServletRequest httpServletRequest,
-            HttpServletResponse httpServletResponse,
-            RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasErrors()) {
-            return "security/profile/form";
+            HttpServletResponse httpServletResponse) {
+        
+        ProfileResponse data = userService.updateProfile(userDetails.getUsername(), request);
+
+        // Update locale in browser (Cookie)
+        LocaleResolver localeResolver = RequestContextUtils.getLocaleResolver(httpServletRequest);
+        if (localeResolver != null) {
+            localeResolver.setLocale(httpServletRequest, httpServletResponse, Locale.of(request.getLanguageCode()));
         }
 
-        try {
-            userService.updateProfile(userDetails.getUsername(), request);
-
-            // Update locale in session
-            LocaleResolver localeResolver = RequestContextUtils.getLocaleResolver(httpServletRequest);
-            if (localeResolver != null) {
-                localeResolver.setLocale(httpServletRequest, httpServletResponse, Locale.of(request.getLanguageCode()));
-            }
-
-            redirectAttributes.addFlashAttribute("successMessage", "Profil berhasil diperbarui");
-            return "redirect:/profile";
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            redirectAttributes.addFlashAttribute("profileRequest", request);
-            return "redirect:/profile/edit";
-        }
+        String msg = messageSource.getMessage("msg.profile.success.update", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.ok(ApiResponse.success(msg, data));
     }
 }

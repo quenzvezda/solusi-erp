@@ -9,7 +9,7 @@
         </div>
         <div class="offcanvas-body p-0 d-flex flex-column">
             <!-- Header Konversi (Standard) -->
-            <div class="p-3 border-bottom bg-light-lt">
+            <div class="p-3 border-bottom bg-body-tertiary">
                 <div class="row g-3 align-items-end">
                     <div class="col-7">
                         <label class="form-label xsmall text-uppercase text-secondary required">Target UoM & Qty</label>
@@ -20,8 +20,8 @@
                     </div>
                     <div class="col-5 text-end">
                         <div class="text-secondary xsmall text-uppercase">Total Base Qty</div>
-                        <div class="h2 mb-0 text-dark font-weight-bold">
-                            <span class="input-qty-base-display">0.00</span> <span class="txt-base-uom" style="font-size: 0.6em; color: #666;">Unit</span>
+                        <div class="h2 mb-0 font-weight-bold">
+                            <span class="input-qty-base-display">0.00</span> <span class="txt-base-uom" style="font-size: 0.6em;">Unit</span>
                         </div>
                         <!-- Hidden input for AutoNumeric calculation -->
                         <input type="hidden" class="input-qty-base erp-number-decimal">
@@ -33,14 +33,14 @@
             </div>
 
             <!-- Body Area -->
-            <div class="p-4 text-center flex-fill d-flex flex-column justify-content-center bg-white">
+            <div class="p-4 text-center flex-fill d-flex flex-column justify-content-center">
                 <div class="mb-3">
-                    <i class="ti ti-box text-light" style="font-size: 4rem;"></i>
+                    <i class="ti ti-box text-secondary-lt" style="font-size: 4rem;"></i>
                 </div>
                 <p class="text-secondary small">This item does not require serial number tracking. <br>All adjustments will be applied to the base inventory directly.</p>
             </div>
         </div>
-        <div class="offcanvas-footer p-3 border-top bg-light-lt">
+        <div class="offcanvas-footer p-3 border-top bg-body-tertiary">
             <div class="row g-2">
                 <div class="col">
                     <button type="button" class="btn btn-white w-100" data-bs-dismiss="offcanvas" th:text="#{label.cancel}">Cancel</button>
@@ -62,7 +62,7 @@
         </div>
         <div class="offcanvas-body p-0 d-flex flex-column">
             <!-- Header Konversi di Serial -->
-            <div class="p-3 border-bottom bg-light-lt">
+            <div class="p-3 border-bottom bg-body-tertiary">
                 <div class="row g-3 align-items-end">
                     <div class="col-6">
                         <label class="form-label xsmall text-uppercase text-secondary required">Target UoM & Qty</label>
@@ -73,8 +73,8 @@
                     </div>
                     <div class="col-6 text-end">
                         <div class="text-secondary xsmall text-uppercase">Total Base Quantity</div>
-                        <div class="h2 mb-0 text-dark font-weight-bold">
-                            <span class="txt-total-qty">0</span> <span class="txt-base-uom" style="font-size: 0.6em; color: #666;">Unit</span>
+                        <div class="h2 mb-0 font-weight-bold">
+                            <span class="txt-total-qty">0</span> <span class="txt-base-uom" style="font-size: 0.6em;">Unit</span>
                         </div>
                         <input type="hidden" class="input-qty-base erp-number-decimal">
                     </div>
@@ -90,9 +90,9 @@
                 <table class="table table-vcenter card-table table-striped">
                     <thead>
                         <tr>
-                            <th class="bg-white sticky-top" style="width: 50px; z-index: 10;">No</th>
-                            <th class="bg-white sticky-top" style="z-index: 10;">Serial Number</th>
-                            <th class="bg-white sticky-top text-end" style="width: 80px; z-index: 10;">Qty</th>
+                            <th class="sticky-top" style="width: 50px; z-index: 10;">No</th>
+                            <th class="sticky-top" style="z-index: 10;">Serial Number</th>
+                            <th class="sticky-top text-end" style="width: 80px; z-index: 10;">Qty</th>
                         </tr>
                     </thead>
                     <tbody class="serial-input-container">
@@ -101,7 +101,7 @@
                 </table>
             </div>
         </div>
-        <div class="offcanvas-footer p-3 border-top bg-light-lt">
+        <div class="offcanvas-footer p-3 border-top bg-body-tertiary">
             <div class="row g-2">
                 <div class="col">
                     <button type="button" class="btn btn-white w-100" data-bs-dismiss="offcanvas" th:text="#{label.cancel}">Cancel</button>

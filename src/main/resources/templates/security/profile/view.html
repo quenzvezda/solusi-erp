@@ -67,12 +67,6 @@
                                         <div class="datagrid-title" th:text="#{profile.phone}">Nomor Telepon</div>
                                         <div class="datagrid-content" th:text="${profile.phoneNumber ?: '-'}">08123456789</div>
                                     </div>
-                                    <div class="datagrid-item">
-                                        <div class="datagrid-title" th:text="#{label.roles}">Role / Peran</div>
-                                        <div class="datagrid-content">
-                                            <span class="badge bg-blue-lt" th:text="${profile.roleName}">ADMIN</span>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -93,7 +87,12 @@
                                     </div>
                                     <div class="datagrid-item">
                                         <div class="datagrid-title" th:text="#{profile.theme}">Tema Visual</div>
-                                        <div class="datagrid-content" th:text="${profile.theme == 'light' ? 'Terang' : 'Gelap'}">Terang</div>
+                                        <div class="datagrid-content">
+                                            <span th:if="${profile.theme == 'light'}" th:text="#{profile.theme.light}">Terang</span>
+                                            <span th:if="${profile.theme == 'dark'}" th:text="#{profile.theme.dark}">Gelap</span>
+                                            <span th:if="${profile.theme == 'warm'}" th:text="#{profile.theme.warm}">Hangat</span>
+                                            <span th:if="${profile.theme == 'green'}" th:text="#{profile.theme.green}">Hijau</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

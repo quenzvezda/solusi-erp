@@ -1,8 +1,9 @@
 /* TomSelect overrides: ensure solid background and proper z-index */
 .ts-wrapper .ts-control {
-    border: 1px solid #dce1e7;
-    border-radius: 4px;
-    background-color: #fff;
+    border: 1px solid var(--tblr-border-color);
+    border-radius: var(--tblr-border-radius);
+    background-color: var(--tblr-bg-surface);
+    color: var(--tblr-body-color);
     min-height: 32px;
     padding: 3px 8px;
     transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
@@ -48,12 +49,69 @@
 
 /* TomSelect Validation Style (Red Border) */
 .ts-wrapper.is-invalid-ts .ts-control {
-    border-color: #d63939 !important;
+    border-color: var(--tblr-danger) !important;
 }
 
 .ts-wrapper.is-invalid-ts.focus .ts-control {
-    border-color: #d63939 !important;
-    box-shadow: 0 0 0 0.25rem rgba(214, 57, 57, 0.25) !important;
+    border-color: var(--tblr-danger) !important;
+    box-shadow: 0 0 0 0.25rem rgba(var(--tblr-danger-rgb), 0.25) !important;
+}
+
+.ts-wrapper.focus .ts-control {
+    border-color: var(--tblr-primary-border-subtle);
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(var(--tblr-primary-rgb), 0.25);
+}
+
+.ts-wrapper.single .ts-control {
+    cursor: text;
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.ts-wrapper.single .ts-control > input {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0 !important;
+    color: inherit; /* Ensure input text color matches wrapper */
+    background: transparent !important;
+}
+
+.ts-dropdown {
+    background-color: var(--tblr-bg-surface) !important;
+    color: var(--tblr-body-color) !important;
+    z-index: 2000 !important; /* Above modals and sticky headers */
+    border: 1px solid var(--tblr-border-color);
+    box-shadow: var(--tblr-shadow-card);
+}
+
+/* Ensure dropdowns are not cut off by responsive tables */
+.table-responsive {
+    overflow: visible !important;
+}
+
+.ts-dropdown .option {
+    background-color: transparent;
+    color: inherit;
+}
+
+/* Fix: active/highlighted option in dropdown */
+.ts-dropdown .option.active,
+.ts-dropdown .option:hover {
+    background-color: var(--tblr-primary) !important;
+    color: var(--tblr-primary-fg) !important;
+}
+
+.ts-dropdown .option.active small,
+.ts-dropdown .option:hover small {
+    color: rgba(var(--tblr-primary-fg-rgb), 0.8) !important;
+}
+
+/* TomSelect Input placeholder color */
+.ts-control > input::placeholder {
+    color: var(--tblr-secondary-color);
+    opacity: 0.5;
 }
 
 /* Hide number spinners globally for a cleaner look */
@@ -64,45 +122,4 @@ input::-webkit-inner-spin-button {
 }
 input[type=number] {
     -moz-appearance: textfield;
-}
-
-.ts-wrapper.focus .ts-control {
-    border-color: #90b5e2;
-    outline: 0;
-    box-shadow: 0 0 0 0.25rem rgba(32, 107, 196, 0.25);
-}
-.ts-wrapper.single .ts-control {
-    cursor: text;
-    display: flex;
-    align-items: center;
-    flex-wrap: nowrap;
-}
-.ts-wrapper.single .ts-control > input {
-    flex: 1 1 auto;
-    min-width: 0;
-    margin: 0 !important;
-}
-.ts-dropdown {
-    background-color: #fff !important;
-    z-index: 2000 !important; /* Above modals and sticky headers */
-    border: 1px solid rgba(0,0,0,.15);
-    box-shadow: 0 4px 12px rgba(0,0,0,.1);
-}
-
-/* Ensure dropdowns are not cut off by responsive tables */
-.table-responsive {
-    overflow: visible !important;
-}
-.ts-dropdown .option {
-    background-color: #fff;
-}
-/* Fix: active/highlighted option in dropdown */
-.ts-dropdown .option.active,
-.ts-dropdown .option:hover {
-    background-color: #206bc4 !important;
-    color: #fff !important;
-}
-.ts-dropdown .option.active small,
-.ts-dropdown .option:hover small {
-    color: rgba(255,255,255,0.8) !important;
 }

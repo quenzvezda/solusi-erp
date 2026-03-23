@@ -21,7 +21,9 @@
                 <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}">Error message</div>
 
                 <form th:action="${roleRequest.id == null ? '/security/roles/create' : '/security/roles/edit/' + roleRequest.id}" 
-                      th:object="${roleRequest}" method="post" class="card">
+                      th:object="${roleRequest}" method="post" class="card"
+                      data-ajax-form="true"
+                      data-redirect-on-success="/security/roles">
                     <div class="card-body">
                         <div class="row row-cards">
                             <!-- Role Info -->

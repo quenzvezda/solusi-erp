@@ -55,8 +55,43 @@ Used for header fields and standard forms.
 
 ### 2. Table/Dense Inputs (`28px` height)
 Used for inline editing inside tables (e.g., line items).
-- `.erp-input-sm`: Applied to small `<input>` and `<select>`.
+- `.erp-input-sm`: Applied to small `<input>` and `.erp-input-sm`.
 - `.erp-input-ts-sm`: Applied to small TomSelect **wrappers**.
+
+## Visual Themes & Branding
+
+Sistem mendukung tema visual dinamis yang dapat diatur per-user melalui profil. Tema ini mengontrol atmosfer aplikasi tanpa merusak kegunaan (usability).
+
+### 1. Mekanisme Penerapan Tema
+Tema diterapkan pada tag `<body>` di `master.html` menggunakan atribut `data-bs-theme`. Atribut ini diisi secara dinamis dari objek `userProfile` yang disuntikkan oleh `GlobalModelAttributeAdvice`.
+
+### 2. Daftar Tema Standar
+- **`light` (Default)**: Tampilan putih bersih standar Tabler/Bootstrap.
+- **`dark`**: Mode gelap penuh untuk kenyamanan mata di lingkungan minim cahaya.
+- **`warm`**: Menggunakan rona *Cream* halus pada latar belakang dan aksen *Amber* untuk memberikan kesan hangat dan rileks.
+- **`green`**: Menggunakan rona *Mint* tipis pada latar belakang dan aksen *Emerald* untuk kesan segar dan modern.
+
+### 3. Sidebar Persistence
+Terlepas dari tema yang dipilih (Light/Warm/Green), komponen **Sidebar** tetap menggunakan `data-bs-theme="dark"` secara permanen untuk menjaga kontras tinggi dan identitas brand ERP.
+
+### 4. Dark Mode & Theme Compatibility (CRITICAL)
+Untuk memastikan UI tetap terbaca dan profesional di semua tema (Dark, Warm, Green), Developer **WAJIB** mengikuti aturan class berikut:
+
+1.  **Avoid Fixed Backgrounds**: 
+    - **DILARANG** menggunakan class `bg-light` atau `bg-white` secara eksplisit pada elemen input, kartu, atau header tabel karena warna ini tidak akan berubah di Mode Gelap.
+    - **GUNAKAN** class `bg-body-tertiary` untuk latar belakang abu-abu halus yang adaptif, atau `bg-secondary-lt` untuk area rekap/highlight yang tetap kontras di semua tema.
+    
+2.  **Adaptive Text Colors**:
+    - **DILARANG** menggunakan `text-dark` untuk teks konten utama (seperti angka total atau label) karena akan menjadi tidak terbaca di Mode Gelap.
+    - **GUNAKAN** `text-body` (default) atau `text-reset` agar warna teks otomatis menyesuaikan dengan tema yang aktif.
+    
+3.  **Readonly Inputs**:
+    - Untuk input yang bersifat `readonly` atau `disabled`, biarkan browser/Bootstrap menanganinya atau gunakan `isReadonly=true` pada fragment tanpa menambahkan `bg-light` manual.
+    
+4.  **Sticky Headers**:
+    - Saat membuat tabel dengan `sticky-top`, pastikan **TIDAK** menambahkan `bg-white`. Gunakan `bg-body` atau biarkan transparan jika pembungkusnya sudah memiliki warna latar belakang yang tepat.
+
+---
 
 ## Global Programmatic Modals (ErpModal)
 Untuk menghindari ketergantungan langsung pada objek `bootstrap` di level JavaScript halaman (yang seringkali tidak terdefinisi karena masalah loading), sistem menyediakan helper global **`ErpModal`**.

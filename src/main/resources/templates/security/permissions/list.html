@@ -51,7 +51,9 @@
                                 <div class="tab-content">
                                     <!-- Tab 1: Batch Generator -->
                                     <div class="tab-pane active show" id="tabs-batch">
-                                        <form th:action="@{/security/permissions/batch}" th:object="${permissionRequest}" method="post">
+                                        <form th:action="@{/security/permissions/batch}" th:object="${permissionRequest}" method="post"
+                                              data-ajax-form="true"
+                                              data-redirect-on-success="/security/permissions">
                                             <div class="row g-3">
                                                 <div class="col-md-4">
                                                     <label class="form-label required" th:text="#{label.permissions.batch.module}">Nama Modul / Fitur</label>
@@ -87,7 +89,9 @@
                                     </div>
                                     <!-- Tab 2: Manual Entry -->
                                     <div class="tab-pane" id="tabs-manual">
-                                        <form th:action="@{/security/permissions/create}" th:object="${permissionRequest}" method="post">
+                                        <form th:action="@{/security/permissions/create}" th:object="${permissionRequest}" method="post"
+                                              data-ajax-form="true"
+                                              data-redirect-on-success="/security/permissions">
                                             <div class="row g-3">
                                                 <div class="col-md-4">
                                                     <label class="form-label required" th:text="#{label.permissions.manual.name}">Nama Permission Lengkap</label>

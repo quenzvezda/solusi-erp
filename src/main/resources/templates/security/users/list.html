@@ -60,6 +60,7 @@
                                 <thead>
                                     <tr>
                                         <th th:replace="~{fragments/table :: sortable('username', #{label.users.column.user})}">Pengguna</th>
+                                        <th th:replace="~{fragments/table :: sortable('party.name', #{label.party})}">Party</th>
                                         <th th:replace="~{fragments/table :: sortable('role.name', #{label.users.column.role})}">Role</th>
                                         <th th:replace="~{fragments/table :: sortable('enabled', #{label.users.column.status})}">Status</th>
                                         <th th:replace="~{fragments/table :: sortable('createdDate', #{label.users.column.created})}">Tgl Dibuat</th>
@@ -78,6 +79,13 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                        </td>
+                                        <td>
+                                            <span th:if="${user.partyId != null}">
+                                                <span class="font-weight-medium" th:text="${user.partyName}">Party Name</span>
+                                                <div class="text-secondary small" th:text="${user.partyCode}">CODE</div>
+                                            </span>
+                                            <span th:if="${user.partyId == null}" class="text-muted small">---</span>
                                         </td>
                                         <td>
                                             <span class="badge bg-blue-lt" th:text="${user.roleName}">ROLE</span>
@@ -140,7 +148,7 @@
                                         </td>
                                     </tr>
                                     <tr th:if="${page.isEmpty()}">
-                                        <td colspan="5" class="text-center text-secondary py-4" th:text="#{label.users.empty}">Tidak ada data pengguna.</td>
+                                        <td colspan="6" class="text-center text-secondary py-4" th:text="#{label.users.empty}">Tidak ada data pengguna.</td>
                                     </tr>
                                 </tbody>
                             </table>

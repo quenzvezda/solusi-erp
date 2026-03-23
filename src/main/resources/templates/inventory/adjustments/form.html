@@ -38,7 +38,7 @@
                                 <div class="col-md-9 border-end">
                                     <div class="row g-3">
                                         <div class="col-md-3">
-                                            <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.stock-adjustment.code}, placeholder='AUTO', isReadonly=true, extraClass='bg-light')}"></div>
+                                            <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.stock-adjustment.code}, placeholder='AUTO', isReadonly=true)}"></div>
                                         </div>
                                         <div class="col-md-3">
                                             <div th:replace="~{fragments/inputs :: date(field='transactionDate', value=*{transactionDate}, label=#{label.stock-adjustment.date}, isReadonly=${isLocked}, required=true)}"></div>
@@ -66,12 +66,12 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-3 d-flex flex-column justify-content-center bg-light-lt rounded-end">
+                                <div class="col-md-3 d-flex flex-column justify-content-center bg-secondary-lt rounded-end">
                                     <div class="px-3 text-center">
                                         <div class="text-uppercase text-secondary font-weight-bold mb-3" style="font-size: 0.65rem; letter-spacing: 0.05em;">Grand Total</div>
                                         <div class="mb-3">
                                             <div class="text-muted mb-1" id="label-recap-original" style="font-size: 0.7rem; text-transform: uppercase;">Total (Original)</div>
-                                            <div class="h3 mb-0 text-dark font-weight-bold" id="recap-total-original">0.00</div>
+                                            <div class="h3 mb-0 font-weight-bold" id="recap-total-original">0.00</div>
                                         </div>
                                         <div class="pt-2 border-top">
                                             <div class="text-muted mb-1" id="label-recap-local" style="font-size: 0.7rem; text-transform: uppercase;" th:text="${'Total (' + (defaultCurrency != null ? defaultCurrency.alias : 'Local') + ')'}">Total (Local)</div>
@@ -121,7 +121,7 @@
                                         </td>
                                         <td><div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[' + __${stat.index}__ + '].gridId', isReadonly=${isLocked}, extraClass='select-grid', initialValue=${line.gridId}, initialText=${line.gridName}, initialSubtext=${line.gridCode})}"></div></td>
                                         <td><div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[' + __${stat.index}__ + '].containerId', isReadonly=${isLocked}, extraClass='select-container', initialValue=${line.containerId}, initialText=${line.containerName}, initialSubtext=${line.containerCode})}"></div></td>
-                                        <td><input type="text" th:name="'lines[' + ${stat.index} + '].quantity'" th:value="${line.quantity}" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-qty bg-light" readonly></td>
+                                        <td><input type="text" th:name="'lines[' + ${stat.index} + '].quantity'" th:value="${line.quantity}" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-qty" readonly></td>
                                         <td><input type="text" th:name="'lines[' + ${stat.index} + '].unitCost'" th:value="${line.unitCost}" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-price" th:readonly="${isLocked}"></td>
                                         <td class="text-end font-weight-medium line-total">0.00</td>
                                         <td th:if="!${isLocked}">
@@ -157,7 +157,7 @@
                     </td>
                     <td><div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[INDEX].gridId', id='', isReadonly=false, extraClass='select-grid')}"></div></td>
                     <td><div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[INDEX].containerId', id='', isReadonly=false, extraClass='select-container')}"></div></td>
-                    <td><input type="text" name="lines[INDEX].quantity" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-qty bg-light" value="0.00" readonly></td>
+                    <td><input type="text" name="lines[INDEX].quantity" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-qty" value="0.00" readonly></td>
                     <td><input type="text" name="lines[INDEX].unitCost" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-price" value="0.00"></td>
                     <td class="text-end font-weight-medium line-total">0.00</td>
                     <td><div class="btn-list flex-nowrap"><button type="button" class="btn btn-white btn-icon btn-edit-detail"><i class="ti ti-pencil"></i></button><button type="button" class="btn btn-white btn-icon btn-remove-line text-danger"><i class="ti ti-trash"></i></button></div></td>

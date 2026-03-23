@@ -72,7 +72,8 @@ Setiap modul bisnis baru (Inventory, Sales, Purchasing, dll) WAJIB mengikuti pol
     *   DILARANG menginput kode manual di form `create`.
     *   UI field `code` WAJIB diset `readonly` dan `bg-light`.
 *   **Collection Validation**: Jika entitas memiliki *nested collection* (seperti `contacts`, `addresses`) yang dilengkapi flag `isDefault`, pastikan membuat validasi backend (toleransi maksimal 1 data default) dan validasi frontend (menggunakan *radio button*).
-*   **i18n Implementation**: 
+* **i18n Implementation**: 
+    *   **Tool Usage (CRITICAL)**: DILARANG menggunakan `echo` untuk menambah entry i18n. Gunakan `replace` tool dengan mengikuti protokol di [docs/spec/i18n-guide.md](spec/i18n-guide.md#7-ai-guidelines-for-updating-i18n-files-critical).
     *   Semua pesan error di Service (yang dilempar via `RuntimeException`) WAJIB di-resolve menggunakan `MessageSource` agar mendukung multi-bahasa.
     *   Gunakan helper method `private String getMessage(String key)` di setiap Service Implementation.
 *   **Global Error Handling & Navigation**:

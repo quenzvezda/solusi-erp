@@ -66,14 +66,25 @@ Selalu gunakan operator `#{...}`.
 *   **Placeholder:** `<input th:placeholder="#{placeholder.login.username}" ...>`
 *   **With Arguments:** `<h2 th:text="#{msg.welcome(${username})}">Welcome</h2>`
 
-## 4. Implementation in Controller
+## 5. Implementation in Controller
 Gunakan `MessageSource` jika perlu mengirim pesan dari backend.
 ```java
 String message = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
 redirectAttributes.addFlashAttribute("successMessage", message);
 ```
 
-## 5. Configuration Architecture (For AI & Developers)
+## 6. Configuration Architecture (For AI & Developers)
 **PENTING:** Arsitektur i18n pada project ini sudah final dan terbagi menjadi dua bagian utama:
 1.  **`I18nConfig.java`**: Bertanggung jawab penuh atas manajemen `LocaleResolver` (menggunakan `CookieLocaleResolver`) dan `LocaleChangeInterceptor`. **DILARANG** menambahkan bean `localeResolver` di tempat/file config lain.
-2.  **`WebMvcConfig.java`**: Bertugas me-register interceptor dari *I18nConfig* dan mendefinisikan `LocalValidatorFactoryBean` agar anomali/pesan error dari `@Valid` DTO tersinkronisasi murni dengan file `messages_id.properties`.
+2.  **`LocaleSyncInterceptor.java`**: **[NEW]** Sinkronisasi otomatis saat user mengganti bahasa melalui header (`?lang=`). Jika user sudah login, perubahan di header akan langsung memperbarui kolom `language_code` di tabel `user_profiles` secara asinkron agar sinkron dengan UI Form Profil.
+3.  **`WebMvcConfig.java`**: Bertugas me-register interceptor dari *I18nConfig* dan mendefinisikan `LocalValidatorFactoryBean` agar anomali/pesan error dari `@Valid` DTO tersinkronisasi murni dengan file `messages_id.properties`.
+
+## 7. AI Guidelines for Updating i18n Files (CRITICAL)
+Untuk AI Assistant, ikuti protokol berikut saat menambah atau memperbarui file `.properties`:
+
+1. **DILARANG KERAS menggunakan `echo` atau `run_shell_command("echo ... >> ...")`**: Teknik ini seringkali gagal menangani karakter Unicode/encoding dengan benar pada file `.properties` dan merusak format file.
+2. **Gunakan `replace` tool**: Selalu gunakan tool `replace` dengan strategi pencarian yang spesifik:
+   - **Cari Section Header**: Cari baris yang dimulai dengan `#` (contoh: `# Profile`, `# Stock Adjustment`) untuk menyisipkan entry baru di bawah pengelompokan tersebut.
+   - **Cari Prefix**: Jika header tidak ditemukan, cari key dengan prefix yang sama (contoh: `profile.*`) untuk menemukan lokasi baris yang relevan.
+   - **Append di Akhir**: Jika membuat fitur/modul baru yang belum ada pengelompokannya, tambahkan section header baru di baris paling bawah file.
+3. **Validasi Encoding**: Pastikan hasil akhir tetap menggunakan format `.properties` yang valid tanpa merusak karakter non-ASCII.

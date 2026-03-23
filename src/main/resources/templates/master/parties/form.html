@@ -34,7 +34,9 @@
 
                 <form
                     th:action="${partyRequest.id == null ? '/master/parties/create' : '/master/parties/edit/' + partyRequest.id}"
-                    th:object="${partyRequest}" method="post" id="partyForm">
+                    th:object="${partyRequest}" method="post" id="partyForm"
+                    data-ajax-form="true"
+                    data-redirect-on-success="/master/parties">
 
                     <div class="row row-cards">
                         <!-- Left Column: Core Info + Roles -->

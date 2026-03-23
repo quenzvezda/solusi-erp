@@ -11,6 +11,8 @@ import com.solusi.erp.security.model.Role;
 import com.solusi.erp.security.model.User;
 import com.solusi.erp.security.model.UserProfile;
 import com.solusi.erp.security.repository.RoleRepository;
+import com.solusi.erp.master.model.Party;
+import com.solusi.erp.master.repository.PartyRepository;
 
 import com.solusi.erp.security.repository.UserRepository;
 import com.solusi.erp.security.service.UserService;
@@ -31,6 +33,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final PartyRepository partyRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final MessageSource messageSource;
@@ -99,6 +102,12 @@ public class UserServiceImpl implements UserService {
         user.setRole(role);
         user.setPasswordChangeRequired(true); // Always force change for new users
 
+        if (request.getPartyId() != null) {
+            Party party = partyRepository.findById(request.getPartyId())
+                    .orElseThrow(() -> new RuntimeException(getMessage("msg.error.party.notfound")));
+            user.setParty(party);
+        }
+
         UserProfile profile = userMapper.toProfileEntity(request);
         profile.setUser(user);
         user.setProfile(profile);
@@ -128,6 +137,19 @@ public class UserServiceImpl implements UserService {
 
         userMapper.updateEntity(request, user);
         user.setRole(role);
+
+        // Party immutability logic
+        if (user.getParty() != null) {
+            if (request.getPartyId() != null && !request.getPartyId().equals(user.getParty().getId())) {
+                throw new RuntimeException(getMessage("msg.error.user.party-immutable"));
+            }
+            // If request.getPartyId() is null, we keep the current party (immutable)
+        } else if (request.getPartyId() != null) {
+            // Party can be set for the first time
+            Party party = partyRepository.findById(request.getPartyId())
+                    .orElseThrow(() -> new RuntimeException(getMessage("msg.error.party.notfound")));
+            user.setParty(party);
+        }
 
         if (StringUtils.hasText(request.getPassword())) {
             if (request.getPassword().length() < 6) {
@@ -187,8 +209,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public FormViewDto<ProfileRequest, Void, ProfileResponse> getProfileEditView(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.user.notfound")));
+
+        return FormViewDto.<ProfileRequest, Void, ProfileResponse>builder()
+                .request(userMapper.toProfileRequest(user))
+                .audit(userMapper.toProfileResponse(user))
+                .build();
+    }
+
+    @Override
     @Transactional
-    public void updateProfile(String username, ProfileRequest request) {
+    public ProfileResponse updateProfile(String username, ProfileRequest request) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.user.notfound")));
 
@@ -219,7 +253,8 @@ public class UserServiceImpl implements UserService {
             user.setPasswordChangeRequired(false);
         }
 
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        return userMapper.toProfileResponse(savedUser);
     }
 
     private String getMessage(String key) {

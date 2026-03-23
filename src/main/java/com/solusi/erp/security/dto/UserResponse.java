@@ -19,5 +19,8 @@ public class UserResponse extends BaseAuditResponse {
     private String fullName;
     private Boolean enabled;
     private Boolean passwordChangeRequired;
+    private Long partyId;
+    private String partyCode;
+    private String partyName;
 }
 

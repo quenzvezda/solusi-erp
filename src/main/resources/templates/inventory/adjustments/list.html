@@ -69,7 +69,7 @@
                                     <th th:replace="~{fragments/table :: sortable('status', #{label.stock-adjustment.status})}">Status</th>
                                     <th th:text="#{label.stock-adjustment.total.local}">Total (Local)</th>
                                     <th th:text="#{label.stock-adjustment.note}">Note</th>
-                                    <th class="w-1" th:text="#{label.actions}">Actions</th>
+                                    <th class="w-1 text-end" th:text="#{label.actions}">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -90,18 +90,18 @@
                                     </td>
                                     <td class="text-secondary small" th:text="${#strings.abbreviate(item.note, 50)}">Note</td>
                                     <td>
-                                        <div class="btn-list flex-nowrap">
+                                        <div class="btn-list flex-nowrap justify-content-end">
                                             <a th:if="${item.status.name() == 'DRAFT'}" 
                                                th:href="@{/inventory/adjustments/edit/{id}(id=${item.id})}"
                                                class="btn btn-white btn-sm"
-                                               sec:authorize="hasAuthority('STOCK-ADJUSTMENT_UPDATE')"
-                                               th:text="#{label.edit}">
-                                                Edit
+                                               sec:authorize="hasAuthority('STOCK-ADJUSTMENT_UPDATE')">
+                                                <i class="ti ti-edit me-1"></i>
+                                                <span th:text="#{label.edit}">Edit</span>
                                             </a>
                                             <a th:href="@{/inventory/adjustments/view/{id}(id=${item.id})}"
-                                               class="btn btn-white btn-sm"
-                                               th:text="#{label.view}">
-                                                View
+                                               class="btn btn-white btn-sm">
+                                                <i class="ti ti-eye me-1"></i>
+                                                <span th:text="#{label.view}">View</span>
                                             </a>
                                         </div>
                                     </td>

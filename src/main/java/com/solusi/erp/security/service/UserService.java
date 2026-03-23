@@ -32,5 +32,7 @@ public interface UserService {
 
     ProfileRequest getProfileUpdateData(String username);
 
-    void updateProfile(String username, ProfileRequest request);
+    FormViewDto<ProfileRequest, Void, ProfileResponse> getProfileEditView(String username);
+
+    ProfileResponse updateProfile(String username, ProfileRequest request);
 }
