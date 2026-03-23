@@ -229,8 +229,9 @@
                     row.querySelector('.btn-edit-detail').onclick = () => {
                         const isSerialized = row.querySelector('.input-serialized').value === 'true';
                         const drawerId = isSerialized ? 'drawer-serial' : 'drawer-non-serial';
-                        ErpInventory.setupUomLogic(document.getElementById(drawerId), row, isSerialized, calculateTotals);
-                        ErpDrawer.open(drawerId);
+                        if (ErpInventory.setupUomLogic(document.getElementById(drawerId), row, isSerialized, calculateTotals)) {
+                            ErpDrawer.open(drawerId);
+                        }
                     };
                     row.querySelector('.btn-remove-line').onclick = () => lineManager.removeRow(row);
                 }

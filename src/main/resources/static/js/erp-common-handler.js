@@ -86,8 +86,20 @@ const ErpDrawer = (function() {
                 const titleEl = drawerEl.querySelector('.offcanvas-title');
                 if (titleEl) titleEl.textContent = title;
             }
+            
             const triggerBtn = document.getElementById('btn-trigger-' + id);
-            if (triggerBtn) triggerBtn.click();
+            if (triggerBtn) {
+                triggerBtn.click();
+            } else {
+                // Generic Bootstrap 5 Offcanvas Trigger
+                const btn = document.createElement('button');
+                btn.setAttribute('data-bs-toggle', 'offcanvas');
+                btn.setAttribute('data-bs-target', '#' + id);
+                btn.style.display = 'none';
+                document.body.appendChild(btn);
+                btn.click();
+                btn.remove();
+            }
         },
         close: function(id) {
             const drawerEl = document.getElementById(id);
@@ -167,11 +179,16 @@ class ErpLineManager {
  */
 const ErpInventory = {
     setupUomLogic: function(drawer, row, isSerial = false, onSave = null) {
+        const tsProd = row.querySelector('.select-product').tomselect;
+        const productId = tsProd.getValue();
+        if (!productId) {
+            ErpModal.showWarning("Please select a product first.");
+            return false;
+        }
+
         const uomEl = drawer.querySelector('.select-uom-target');
         const qtyTargetEl = drawer.querySelector('.input-qty-target');
         const qtyBaseEl = drawer.querySelector('.input-qty-base');
-        const tsProd = row.querySelector('.select-product').tomselect;
-        const productId = tsProd.getValue();
         const prodData = tsProd.options[productId];
         const baseUomAlias = prodData?.payload?.uomName || '-';
         const baseUomId = prodData?.payload?.uomId;
@@ -234,6 +251,7 @@ const ErpInventory = {
 
         drawer.querySelector('.btn-save-drawer').onclick = () => {
             const opt = uomEl.options[uomEl.selectedIndex];
+            if (!opt) return;
             row.querySelector('.input-uom-id').value = uomEl.value;
             row.querySelector('.input-uom-alias').value = opt.text;
             row.querySelector('.input-uom-factor').value = opt.getAttribute('data-factor');
@@ -246,6 +264,8 @@ const ErpInventory = {
             if (onSave) onSave();
             ErpDrawer.close(drawer.id);
         };
+
+        return true;
     },
 
     syncSerialRows: function(drawer, count, row) {
