@@ -21,12 +21,19 @@ classDiagram
         -String password
         -String email
         -boolean enabled
-        -boolean passwordChangeRequired
+        -boolean password_change_required
         -Role role
         -UserProfile profile
+        -Party party
+    }
+
+    class Party {
+        -String code
+        -String name
     }
 
     class UserProfile {
+
         -String fullName
         -String phoneNumber
         -String avatarPath
@@ -52,13 +59,14 @@ classDiagram
     BaseModel <|-- Permission
 
     User "1" -- "1" UserProfile : Has 1 Profile
+    User "1" -- "0..1" Party : Linked to 1 Party
     User "n" --> "1" Role : Has 1 Role
     Role "n" o-- "m" Permission : Has many Permissions
 ```
 
 ## Penjelasan Struktur:
 1.  **BaseModel**: Menyediakan kolom audit untuk semua entitas bisnis.
-2.  **User**: Entitas utama pengguna. Sesuai mandat (1 User hanya memiliki 1 Role).
+2.  **User**: Entitas utama pengguna. Memiliki relasi 1-to-1 opsional ke **Party** untuk identifikasi identitas bisnis (misal: untuk alur Approver).
 3.  **Role**: Grup akses (Contoh: `ADMIN`, `MANAGER`).
 4.  **Permission**: Hak akses halus (Contoh: `INVENTORY_READ`, `SALES_WRITE`).
 5.  **Relasi Role-Permission**: Many-to-Many (Gunakan tabel perantara `role_permissions` di database).

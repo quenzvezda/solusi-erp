@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
 <head th:replace="~{layout/master :: head(${userRequest.id == null ? #messages.msg('label.users.title.add') : #messages.msg('label.users.title.edit')})}"></head>
-<body th:replace="~{layout/master :: layout(~{:: .user-form-content}, ~{})}">
+<body th:replace="~{layout/master :: layout(~{:: .user-form-content}, ~{:: script})}">
     <div class="user-form-content">
         <!-- Page header -->
         <div class="page-header d-print-none">
@@ -16,81 +16,138 @@
 
         <!-- Page body -->
         <div class="page-body">
-            <div class="container-xl">
-                <form th:action="${userRequest.id == null ? '/security/users/create' : '/security/users/edit/' + userRequest.id}"
-                      th:object="${userRequest}" method="post" class="card"
-                      data-ajax-form="true"
-                      data-redirect-on-success="/security/users">
-                    
-                    <div class="card-body">
-                        <div class="row">
-                            <!-- Account Information -->
-                            <div class="col-md-6">
-                                <h3 class="card-title" th:text="#{label.users.account.info}">Informasi Akun</h3>
-                                
-                                <div th:replace="~{fragments/inputs :: text(field='username', label=#{label.users.username}, required=true, readonly=${userRequest.username == 'admin'})}"></div>
-                                
-                                <div th:replace="~{fragments/inputs :: text(field='email', label=#{label.users.email}, required=true)}"></div>
-                                
-                                <div class="mb-3">
-                                    <label class="form-label" th:classappend="${userRequest.id == null} ? 'required'" th:text="#{label.users.password}">Password</label>
-                                    <input type="password" th:field="*{password}" class="form-control"
-                                           th:classappend="${#fields.hasErrors('password')} ? 'is-invalid'"
-                                           th:required="${userRequest.id == null}">
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Error</div>
-                                    <small class="form-hint" th:if="${userRequest.id != null}" th:text="#{label.users.password.hint.edit}">Kosongkan jika tidak ingin mengubah password.</small>
-                                    <small class="form-hint text-warning" th:if="${userRequest.id == null}" th:text="#{label.users.password.hint.create}">User baru akan diminta ganti password saat login pertama kali.</small>
-                                </div>
-
-                                <div th:replace="~{fragments/inputs :: autocomplete(field='roleId', label=#{label.users.role}, path='security/roles', required=true, 
-                                    initialValue=${userRequest.roleId}, 
-                                    initialText=${userUIForm != null ? userUIForm.roleName : ''}, 
-                                    initialSubtext=${userUIForm != null ? userUIForm.roleDescription : ''})}"></div>
-
-                                <div class="mb-3">
-                                    <label class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" th:field="*{enabled}" th:disabled="${userRequest.username == 'admin'}">
-                                        <span class="form-check-label" th:text="#{label.status.active}">Aktif</span>
-                                    </label>
-                                </div>
-
-                                <div class="mb-3" th:if="${userRequest.id != null}">
-                                    <label class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" th:field="*{passwordChangeRequired}">
-                                        <span class="form-check-label" th:text="#{label.users.password.change.required}">Wajib Ganti Password</span>
-                                    </label>
-                                    <small class="form-hint" th:text="#{label.users.password.change.required.hint}">User akan diminta ganti password saat login berikutnya.</small>
-                                </div>
+            <form th:action="${userRequest.id == null ? '/security/users/create' : '/security/users/edit/' + userRequest.id}"
+                  th:object="${userRequest}" method="post" class="card"
+                  data-ajax-form="true"
+                  data-redirect-on-success="/security/users">
+                
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Account Information -->
+                        <div class="col-md-6">
+                            <h3 class="card-title" th:text="#{label.users.account.info}">Informasi Akun</h3>
+                            
+                            <div th:replace="~{fragments/inputs :: text(field='username', label=#{label.users.username}, required=true, readonly=${userRequest.username == 'admin'})}"></div>
+                            
+                            <div th:replace="~{fragments/inputs :: text(field='email', label=#{label.users.email}, required=true)}"></div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label" th:classappend="${userRequest.id == null} ? 'required'" th:text="#{label.users.password}">Password</label>
+                                <input type="password" th:field="*{password}" class="form-control"
+                                       th:classappend="${#fields.hasErrors('password')} ? 'is-invalid'"
+                                       th:required="${userRequest.id == null}">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Error</div>
+                                <small class="form-hint" th:if="${userRequest.id != null}" th:text="#{label.users.password.hint.edit}">Kosongkan jika tidak ingin mengubah password.</small>
+                                <small class="form-hint text-warning" th:if="${userRequest.id == null}" th:text="#{label.users.password.hint.create}">User baru akan diminta ganti password saat login pertama kali.</small>
                             </div>
 
-                            <!-- Profile Information -->
-                            <div class="col-md-6">
-                                <h3 class="card-title" th:text="#{label.users.profile.info}">Profil Pengguna</h3>
-                                
-                                <div th:replace="~{fragments/inputs :: text(field='fullName', label=#{label.users.fullname}, required=true)}"></div>
-                                
-                                <div th:replace="~{fragments/inputs :: text(field='phoneNumber', label=#{label.users.phone})}"></div>
+                            <div th:replace="~{fragments/inputs :: autocomplete(field='roleId', label=#{label.users.role}, path='security/roles', required=true, 
+                                initialValue=${userRequest.roleId}, 
+                                initialText=${userUIForm != null ? userUIForm.roleName : ''}, 
+                                initialSubtext=${userUIForm != null ? userUIForm.roleDescription : ''})}"></div>
+
+                            <div th:replace="~{fragments/inputs :: autocomplete(field='partyId', label=#{label.party}, 
+                                path='parties/available-for-user' + (${userRequest.partyId != null} ? '?excludePartyId=' + ${userRequest.partyId} : ''), 
+                                initialValue=${userRequest.partyId}, 
+                                initialText=${userRequest.partyName}, 
+                                initialSubtext=${userRequest.partyCode},
+                                isReadonly=${userRequest.partyId != null})}"></div>
+                            <div class="mb-3" th:if="${userRequest.partyId != null}">
+                                <small class="form-hint text-warning">
+                                    <i class="ti ti-alert-triangle me-1"></i>
+                                    <span th:text="#{label.users.party.immutable.hint}">Party yang sudah di-set tidak dapat diubah lagi.</span>
+                                </small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" th:field="*{enabled}" th:disabled="${userRequest.username == 'admin'}">
+                                    <span class="form-check-label" th:text="#{label.status.active}">Aktif</span>
+                                </label>
+                            </div>
+
+                            <div class="mb-3" th:if="${userRequest.id != null}">
+                                <label class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" th:field="*{passwordChangeRequired}">
+                                    <span class="form-check-label" th:text="#{label.users.password.change.required}">Wajib Ganti Password</span>
+                                </label>
+                                <small class="form-hint" th:text="#{label.users.password.change.required.hint}">User akan diminta ganti password saat login berikutnya.</small>
                             </div>
                         </div>
 
-                        <!-- Audit Info -->
-                        <th:block th:if="${auditInfo != null and auditInfo.id != null}">
-                             <div th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
-                        </th:block>
-                    </div>
-
-                    <div class="card-footer text-end">
-                        <div class="d-flex">
-                            <a th:href="@{/security/users}" class="btn btn-link" th:text="#{label.cancel}">Batal</a>
-                            <button type="submit" class="btn btn-primary ms-auto">
-                                <i class="ti ti-device-floppy me-1"></i>
-                                <span th:text="#{label.save}">Simpan</span>
-                            </button>
+                        <!-- Profile Information -->
+                        <div class="col-md-6">
+                            <h3 class="card-title" th:text="#{label.users.profile.info}">Profil Pengguna</h3>
+                            
+                            <div th:replace="~{fragments/inputs :: text(field='fullName', label=#{label.users.fullname}, required=true)}"></div>
+                            
+                            <div th:replace="~{fragments/inputs :: text(field='phoneNumber', label=#{label.users.phone})}"></div>
                         </div>
                     </div>
-                </form>
-            </div>
+
+                    <!-- Audit Info -->
+                    <th:block th:if="${auditInfo != null and auditInfo.id != null}">
+                         <div th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
+                    </th:block>
+                </div>
+
+                <div class="card-footer text-end">
+                    <div class="d-flex">
+                        <a th:href="@{/security/users}" class="btn btn-link" th:text="#{label.cancel}">Batal</a>
+                        <button type="submit" class="btn btn-primary ms-auto">
+                            <i class="ti ti-device-floppy me-1"></i>
+                            <span th:text="#{label.save}">Simpan</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
+
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const partySelect = document.getElementById('partyId');
+            if (!partySelect) return;
+
+            // Listen for custom initialization event from erp-common-handler.js
+            document.addEventListener('erp:lookup-initialized', function(e) {
+                if (e.target.id === 'partyId') {
+                    const ts = e.detail.tomselect;
+                    let lastValue = ts.getValue();
+                    let isConfirming = false;
+
+                    ts.on('change', function(value) {
+                        if (isConfirming) return;
+                        if (!value || value === lastValue) return;
+
+                        isConfirming = true;
+                        const msg = /*[[#{msg.users.party.confirm}]]*/ 'Apakah Anda yakin ingin memilih Party ini? Sekali disimpan, Party tidak dapat diubah lagi.';
+                        
+                        ErpModal.confirm(msg, function() {
+                            // User clicked Yes
+                            lastValue = value;
+                            isConfirming = false;
+                        }, /*[[#{label.warning.exclamation.mark}]]*/ 'Peringatan!');
+
+                        // Immediately revert UI until confirmed (or keep it and revert on cancel)
+                        // The callback above handles the 'Yes' case. 
+                        // To handle 'No', we need to hook into the cancel button or just revert now and set back on Yes.
+                        
+                        // Revert value for now
+                        ts.setValue(lastValue, true); 
+                        isConfirming = false;
+
+                        // Improved logic: show modal, if yes set value
+                        ErpModal.confirm(msg, function() {
+                            isConfirming = true;
+                            ts.setValue(value, true);
+                            lastValue = value;
+                            isConfirming = false;
+                        }, /*[[#{label.warning.exclamation.mark}]]*/ 'Peringatan!');
+                    });
+                }
+            });
+        });
+    </script>
 </body>
 </html>

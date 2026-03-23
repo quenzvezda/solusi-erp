@@ -46,4 +46,8 @@ public class UserRequest extends BaseAuditResponse {
 
     @Builder.Default
     private Boolean passwordChangeRequired = false;
+
+    private Long partyId;
+    private String partyCode;
+    private String partyName;
 }

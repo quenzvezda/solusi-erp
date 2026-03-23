@@ -13,11 +13,18 @@ erDiagram
         boolean password_change_required "default: true"
         datetime last_password_change
         bigint role_id FK
+        bigint party_id FK "Unique (1-to-1), Nullable"
         varchar created_by
         datetime created_date
         varchar updated_by
         datetime updated_date
         int version
+    }
+
+    parties {
+        bigint id PK
+        varchar code UK
+        varchar name
     }
 
     user_profiles {
@@ -65,6 +72,7 @@ erDiagram
 
     users }o--|| roles : "Belongs to 1 Role"
     users ||--|| user_profiles : "Has 1 Profile (1-to-1)"
+    users ||--o| parties : "Linked to 1 Party (1-to-1)"
     roles ||--o{ role_permissions : "Has many permissions"
     permissions ||--o{ role_permissions : "Assigned to many roles"
 ```
