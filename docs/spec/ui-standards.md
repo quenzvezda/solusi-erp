@@ -74,6 +74,23 @@ Tema diterapkan pada tag `<body>` di `master.html` menggunakan atribut `data-bs-
 ### 3. Sidebar Persistence
 Terlepas dari tema yang dipilih (Light/Warm/Green), komponen **Sidebar** tetap menggunakan `data-bs-theme="dark"` secara permanen untuk menjaga kontras tinggi dan identitas brand ERP.
 
+### 4. Dark Mode & Theme Compatibility (CRITICAL)
+Untuk memastikan UI tetap terbaca dan profesional di semua tema (Dark, Warm, Green), Developer **WAJIB** mengikuti aturan class berikut:
+
+1.  **Avoid Fixed Backgrounds**: 
+    - **DILARANG** menggunakan class `bg-light` atau `bg-white` secara eksplisit pada elemen input, kartu, atau header tabel karena warna ini tidak akan berubah di Mode Gelap.
+    - **GUNAKAN** class `bg-body-tertiary` untuk latar belakang abu-abu halus yang adaptif, atau `bg-secondary-lt` untuk area rekap/highlight yang tetap kontras di semua tema.
+    
+2.  **Adaptive Text Colors**:
+    - **DILARANG** menggunakan `text-dark` untuk teks konten utama (seperti angka total atau label) karena akan menjadi tidak terbaca di Mode Gelap.
+    - **GUNAKAN** `text-body` (default) atau `text-reset` agar warna teks otomatis menyesuaikan dengan tema yang aktif.
+    
+3.  **Readonly Inputs**:
+    - Untuk input yang bersifat `readonly` atau `disabled`, biarkan browser/Bootstrap menanganinya atau gunakan `isReadonly=true` pada fragment tanpa menambahkan `bg-light` manual.
+    
+4.  **Sticky Headers**:
+    - Saat membuat tabel dengan `sticky-top`, pastikan **TIDAK** menambahkan `bg-white`. Gunakan `bg-body` atau biarkan transparan jika pembungkusnya sudah memiliki warna latar belakang yang tepat.
+
 ---
 
 ## Global Programmatic Modals (ErpModal)
