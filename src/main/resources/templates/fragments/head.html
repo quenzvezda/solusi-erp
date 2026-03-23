@@ -41,6 +41,11 @@
         <!-- HTMX (AJAX for SSR) -->
         <script src="https://unpkg.com/htmx.org@2.0.4"></script>
 
+        <!-- CSRF Meta Tags for JavaScript -->
+        <meta name="_csrf" th:content="${_csrf.token}"/>
+        <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+        <meta name="_csrf_parameter" th:content="${_csrf.parameterName}"/>
+
         <!-- AutoNumeric (Instant Numeric Formatting) -->
         <script src="https://cdn.jsdelivr.net/npm/autonumeric@4.8.1"></script>
 

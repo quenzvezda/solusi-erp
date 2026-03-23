@@ -29,8 +29,14 @@ public class StockAdjustmentLineResponse {
     private String containerCode;
     private String containerName;
     private String facilityName;
-    
+
+    private Long uomId;
+    private String uomName;
+    private Boolean isSerialized;
+    private BigDecimal conversionFactor;
+
     private BigDecimal quantity;
+
     private BigDecimal unitCost;
     private BigDecimal totalAmount;
     private String serialNumber;

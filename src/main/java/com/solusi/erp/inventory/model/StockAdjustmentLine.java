@@ -32,6 +32,13 @@ public class StockAdjustmentLine extends BaseModel {
     @JoinColumn(name = "container_id", nullable = false)
     private Container container;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "uom_id")
+    private UnitOfMeasure uom;
+
+    @Column(name = "conversion_factor", precision = 19, scale = 4)
+    private BigDecimal conversionFactor;
+
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal quantity;
 

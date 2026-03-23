@@ -13,6 +13,28 @@ const ErpFormHandler = (function () {
         successGeneric: 'Action completed successfully.'
     };
 
+    /**
+     * Sets a value in an object based on a path (e.g., "lines[0].productId").
+     */
+    const setDeepValue = function(obj, path, value) {
+        const parts = path.split(/[\[\].]+/).filter(p => p !== '');
+        let current = obj;
+        for (let i = 0; i < parts.length; i++) {
+            const part = parts[i];
+            const nextPart = parts[i + 1];
+            const isNextArray = nextPart !== undefined && !isNaN(parseInt(nextPart));
+
+            if (i === parts.length - 1) {
+                current[part] = value;
+            } else {
+                if (!current[part]) {
+                    current[part] = isNextArray ? [] : {};
+                }
+                current = current[part];
+            }
+        }
+    };
+
     const init = function () {
         document.querySelectorAll('form[data-ajax-form="true"]:not(.ajax-initialized)').forEach(form => {
             form.addEventListener('submit', handleFormSubmit);
@@ -78,17 +100,22 @@ const ErpFormHandler = (function () {
             const elements = form.querySelectorAll('input, select, textarea');
             elements.forEach(el => {
                 if (!el.name || el.disabled || el.type === 'file' || el.name === '_csrf') return;
+                
                 let value = el.value;
                 if (el.type === 'checkbox') {
-                    if (!el.name.startsWith('_')) data[el.name] = el.checked;
+                    if (!el.name.startsWith('_')) setDeepValue(data, el.name, el.checked);
                 } else if (el.classList.contains('erp-number-decimal') || el.classList.contains('erp-number-integer')) {
-                    if (typeof AutoNumeric !== 'undefined' && AutoNumeric.getAutoNumericElement(el)) {
-                        data[el.name] = (el.value === "") ? null : AutoNumeric.getAutoNumericElement(el).getNumber();
+                    let numericValue = null;
+                    // Always try AutoNumeric first
+                    const instance = typeof AutoNumeric !== 'undefined' ? AutoNumeric.getAutoNumericElement(el) : null;
+                    if (instance) {
+                        numericValue = instance.getNumber();
                     } else {
-                        data[el.name] = value === "" ? null : value.replace(/,/g, '');
+                        numericValue = value === "" ? null : parseFloat(value.replace(/,/g, ''));
                     }
+                    setDeepValue(data, el.name, numericValue);
                 } else {
-                    data[el.name] = value === "" ? null : value;
+                    setDeepValue(data, el.name, value === "" ? null : value);
                 }
             });
 
@@ -146,12 +173,15 @@ const ErpFormHandler = (function () {
     const displayFieldErrors = function (form, errors) {
         let unmappedErrors = [];
         for (const field in errors) {
-            const input = form.querySelector(`[name="${field}"]`);
+            // Use CSS.escape for fields with brackets like lines[0].quantity
+            const input = form.querySelector(`[name="${field}"]`) || form.querySelector(`[name="${CSS.escape(field)}"]`);
             if (input) {
                 input.classList.add('is-invalid');
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'invalid-feedback invalid-feedback-ajax d-block';
                 errorDiv.textContent = errors[field];
+                
+                // Handle TomSelect wrapper if exists
                 if (input.tomselect && input.tomselect.wrapper) {
                     input.tomselect.wrapper.classList.add('is-invalid-ts');
                     input.tomselect.wrapper.parentNode.appendChild(errorDiv);
@@ -159,7 +189,7 @@ const ErpFormHandler = (function () {
                     input.parentNode.appendChild(errorDiv);
                 }
             } else {
-                unmappedErrors.push(errors[field]);
+                unmappedErrors.push(`${field}: ${errors[field]}`);
             }
         }
         if (unmappedErrors.length > 0) {

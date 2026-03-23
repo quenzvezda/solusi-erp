@@ -17,6 +17,7 @@ import com.solusi.erp.inventory.repository.ProductRepository;
 import com.solusi.erp.inventory.repository.StockAdjustmentRepository;
 import com.solusi.erp.inventory.service.StockAdjustmentService;
 import com.solusi.erp.inventory.service.StockService;
+import com.solusi.erp.inventory.util.SerialNumberGenerator;
 import com.solusi.erp.master.repository.CurrencyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -25,8 +26,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +44,7 @@ public class StockAdjustmentServiceImpl implements StockAdjustmentService {
     private final CurrencyRepository currencyRepository;
     private final FacilityRepository facilityRepository;
     private final GridRepository gridRepository;
+    private final com.solusi.erp.inventory.repository.UnitOfMeasureRepository uomRepository;
     private final MessageSource messageSource;
 
     private String getMessage(String key, Object... args) {
@@ -121,7 +125,7 @@ public class StockAdjustmentServiceImpl implements StockAdjustmentService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public void process(Long id) {
         StockAdjustment entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.notfound")));
@@ -131,26 +135,74 @@ public class StockAdjustmentServiceImpl implements StockAdjustmentService {
         }
 
         for (StockAdjustmentLine line : entity.getLines()) {
-            StockMovementPayload payload = StockMovementPayload.builder()
-                    .productId(line.getProduct().getId())
-                    .containerId(line.getContainer().getId())
-                    .serialNumber(line.getSerialNumber())
-                    .quantity(line.getQuantity())
-                    .movementType(MovementType.ADJUSTMENT)
-                    .referenceType(ReferenceType.STOCK_ADJUSTMENT)
-                    .referenceId(entity.getId())
-                    .referenceCode(entity.getCode())
-                    .currencyId(entity.getTotalCost().getCurrency() != null ? entity.getTotalCost().getCurrency().getId() : null)
-                    .exchangeRate(entity.getTotalCost().getExchangeRate())
-                    .netPrice(line.getUnitCost())
-                    .transactionDate(entity.getTransactionDate().atStartOfDay())
-                    .build();
-
-            stockService.adjust(payload);
+            if (Boolean.TRUE.equals(line.getProduct().getIsSerialized())) {
+                processSerializedLine(entity, line);
+            } else {
+                processStandardLine(entity, line);
+            }
         }
 
         entity.setStatus(AdjustmentStatus.COMPLETED);
         repository.save(entity);
+    }
+
+    private void processSerializedLine(StockAdjustment entity, StockAdjustmentLine line) {
+        // Explode into 1.0 units
+        int totalUnits = line.getQuantity().abs().intValue();
+        if (totalUnits == 0) return;
+
+        String[] providedSns = StringUtils.hasText(line.getSerialNumber())
+                ? line.getSerialNumber().split(",") 
+                : new String[0];
+        
+        List<String> finalSns = new java.util.ArrayList<>();
+
+        for (int i = 0; i < totalUnits; i++) {
+            String sn = null;
+            if (i < providedSns.length) {
+                sn = providedSns[i].trim();
+            } else if (line.getQuantity().signum() > 0) {
+                // Auto-generate if adding stock and SN is missing
+                sn = SerialNumberGenerator.generate();
+            }
+
+            if (sn != null) finalSns.add(sn);
+
+            BigDecimal unitQty = line.getQuantity().signum() < 0 ? new BigDecimal("-1") : BigDecimal.ONE;
+            
+            StockMovementPayload payload = buildBasePayload(entity, line);
+            payload.setQuantity(unitQty);
+            payload.setSerialNumber(sn);
+            
+            stockService.adjust(payload);
+        }
+
+        // Back-fill the generated serial numbers into the adjustment line
+        if (!finalSns.isEmpty()) {
+            line.setSerialNumber(String.join(",", finalSns));
+        }
+    }
+
+    private void processStandardLine(StockAdjustment entity, StockAdjustmentLine line) {
+        StockMovementPayload payload = buildBasePayload(entity, line);
+        payload.setQuantity(line.getQuantity());
+        payload.setSerialNumber(line.getSerialNumber());
+        stockService.adjust(payload);
+    }
+
+    private StockMovementPayload buildBasePayload(StockAdjustment entity, StockAdjustmentLine line) {
+        return StockMovementPayload.builder()
+                .productId(line.getProduct().getId())
+                .containerId(line.getContainer().getId())
+                .movementType(MovementType.ADJUSTMENT)
+                .referenceType(ReferenceType.STOCK_ADJUSTMENT)
+                .referenceId(entity.getId())
+                .referenceCode(entity.getCode())
+                .currencyId(entity.getTotalCost().getCurrency() != null ? entity.getTotalCost().getCurrency().getId() : null)
+                .exchangeRate(entity.getTotalCost().getExchangeRate())
+                .netPrice(line.getUnitCost())
+                .transactionDate(entity.getTransactionDate().atStartOfDay())
+                .build();
     }
 
     private void populateLines(StockAdjustment entity, StockAdjustmentRequest request) {
@@ -167,6 +219,9 @@ public class StockAdjustmentServiceImpl implements StockAdjustmentService {
             line.setContainer(containerRepository.getReferenceById(lineReq.getContainerId()));
             if (lineReq.getGridId() != null) {
                 line.setGrid(gridRepository.getReferenceById(lineReq.getGridId()));
+            }
+            if (lineReq.getUomId() != null) {
+                line.setUom(uomRepository.getReferenceById(lineReq.getUomId()));
             }
             line.setTotalAmount(line.getQuantity().multiply(line.getUnitCost()));
             entity.getLines().add(line);

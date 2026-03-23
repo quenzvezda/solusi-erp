@@ -33,6 +33,9 @@ public interface StockAdjustmentMapper {
     @Mapping(target = "containerCode", source = "container.code")
     @Mapping(target = "containerName", source = "container.name")
     @Mapping(target = "facilityName", source = "container.grid.facility.name")
+    @Mapping(target = "uomId", source = "uom.id")
+    @Mapping(target = "uomName", source = "uom.name")
+    @Mapping(target = "isSerialized", source = "product.isSerialized")
     @Mapping(target = "id", source = "id")
     @Mapping(target = "version", source = "version")
     StockAdjustmentLineResponse toLineResponse(StockAdjustmentLine entity);
@@ -59,12 +62,15 @@ public interface StockAdjustmentMapper {
     @Mapping(target = "product", ignore = true)
     @Mapping(target = "grid", ignore = true)
     @Mapping(target = "container", ignore = true)
+    @Mapping(target = "uom", ignore = true)
     StockAdjustmentLine toLineEntity(StockAdjustmentLineRequest request);
 
     @Mapping(target = "productId", source = "product.id")
     @Mapping(target = "productCode", source = "product.code")
     @Mapping(target = "productName", source = "product.name")
-    @Mapping(target = "uomName", source = "product.uom.name")
+    @Mapping(target = "isSerialized", source = "product.isSerialized")
+    @Mapping(target = "uomId", source = "uom.id")
+    @Mapping(target = "uomName", source = "uom.name")
     @Mapping(target = "gridId", source = "grid.id")
     @Mapping(target = "gridCode", source = "grid.code")
     @Mapping(target = "gridName", source = "grid.name")

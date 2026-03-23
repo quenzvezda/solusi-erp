@@ -48,21 +48,58 @@ Untuk menjaga konsistensi UI, setiap penggunaan autocomplete **WAJIB** menyertak
 Hal ini berlaku untuk semua Request DTO yang dikirim kembali ke View. Jika salah satu kosong, maka UI akan terlihat tidak konsisten saat mode Edit.
 
 ### C. Inisialisasi Manual (Cascading)
-Jika sebuah lookup bergantung pada field lain (misal: Bin bergantung pada Grid), gunakan fungsi `initLookup` secara manual di JavaScript halaman tersebut.
+Jika sebuah lookup bergantung pada field lain (misal: Bin bergantung pada Grid), gunakan fungsi **`initLookup`** yang tersedia secara global di **`erp-common-handler.js`**.
 
 ```javascript
-// initLookup(element, lookupPath, parentProvider)
+// Pola 1: Standar (Parent -> Child)
 const tsChild = initLookup(childEl, 'inventory/bins', () => {
     return { id: parentTs.getValue(), key: 'gridId' };
 });
+
+// Pola 2: Complex Path (Parameter Statis)
+// initLookup sekarang cerdas menangani URL yang sudah memiliki '?' 
+const tsGrid = initLookup(gridEl, `inventory/grids?facilityId=${facilityId}`);
 ```
 
 ---
 
-## 3. Fitur Otomatis `initLookup`
-1.  **ERP Height Standard**: Menyesuaikan tinggi input (32px atau 28px).
+## 3. Fitur Lanjutan & Best Practices
+
+### A. Pola "Inverse Auto-populate" (Child -> Parent)
+Seringkali user ingin memilih **Container** langsung tanpa mengisi **Grid**. Untuk mendukung ini, backend harus mengirimkan info parent di dalam `payload` dan frontend melakukan update manual.
+
+**Backend Requirement (`LookupDto`):**
+Gunakan nama field spesifik entitas, jangan gunakan generic `parentId` agar memudahkan pemetaan.
+```json
+{
+  "id": 10,
+  "name": "Rak A-01",
+  "payload": {
+    "gridId": 1,
+    "gridName": "Area Elektronik",
+    "gridCode": "GRD-001"
+  }
+}
+```
+
+**Frontend Implementation:**
+```javascript
+tsBin.on('change', (val) => {
+    if (!val) return;
+    const data = tsBin.options[val];
+    const p = data.payload;
+    
+    if (p.gridId && tsGrid.getValue() != p.gridId) {
+        tsGrid.addOption({ id: p.gridId, name: p.gridName, subText: p.gridCode });
+        tsGrid.setValue(p.gridId);
+    }
+});
+```
+
+### B. Fitur Otomatis `initLookup`
+1.  **ERP Height Standard**: Menyesuaikan tinggi input (32px atau 28px) secara otomatis dengan mendeteksi elemen induk `.line-row`.
 2.  **SSR Synchronization**: Sinkronisasi otomatis data awal dari server (mencegah teks hilang saat load).
 3.  **Debouncing**: Penundaan request (150ms) untuk menghemat beban server.
-4.  **HTMX Compatibility**: Otomatis re-init setelah swap HTMX selesai.
+4.  **HTMX Compatibility**: Otomatis re-init setelah swap HTMX selesai (diatur di `master.html`).
 5.  **Smart Re-Search UX**: Saat dropdown diklik dan sudah memiliki nilai, label teks otomatis masuk ke kotak pencarian (input) untuk memudahkan edit tanpa harus menghapus pilihan lama.
 

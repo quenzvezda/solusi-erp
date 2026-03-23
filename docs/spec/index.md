@@ -5,9 +5,13 @@ Folder ini berisi standar teknis horizontal yang berlaku di seluruh aplikasi ERP
 ## UI & Component Standards
 - **[ui-standards.md](ui-standards.md)**: Standar visual, tinggi input (32px/28px), dan class CSS ERP.
 - **[autocomplete-generic.md](autocomplete-generic.md)**: Cara kerja TomSelect asinkron dan pola cascading lookup.
-- **[numeric-standards.md](numeric-standards.md)**: Standar input angka dengan pemisah ribuan (AutoNumeric) dan Spring Formatter.
+- **[numeric-standards.md](numeric-standards.md)**: Standar input angka dengan pemisah ribuan (AutoNumeric), helper `ErpNumeric`, dan Spring Formatter.
+- **[header-lines-form.md](header-lines-form.md)**: Standar pola form Header-Lines (PO, SO, Inventory).
 - **[form-submission.md](form-submission.md)**: Pola pengiriman form (Hybrid Approach: HTMX vs AJAX).
 - **[layout-standard.md](layout-standard.md)**: Standar layout utama dengan slot untuk JavaScript per-halaman.
+
+## Developer Guides (Implementation)
+- **[../architecture/form-guide.md](../architecture/form-guide.md)**: Panduan praktis implementasi form dinamis (`ErpLineManager`, `ErpInventory`).
 
 ## Data & Logic Standards
 - **[api-response.md](api-response.md)**: Standar respons API (`ApiResponse`) dan pembungkus data form (`FormViewDto`).

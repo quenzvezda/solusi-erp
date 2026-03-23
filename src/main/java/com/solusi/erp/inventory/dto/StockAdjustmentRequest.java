@@ -28,27 +28,27 @@ public class StockAdjustmentRequest extends BaseAuditResponse {
 
     private String code; // Read-only in UI
 
-    @NotNull(message = "{validation.notnull}")
+    @NotNull(message = "{label.stock-adjustment.date} {validation.notnull.suffix}")
     @Builder.Default
     private LocalDate transactionDate = LocalDate.now();
 
     private String note;
 
-    @NotNull(message = "{validation.notnull}")
+    @NotNull(message = "{label.stock-adjustment.currency} {validation.notnull.suffix}")
     private Long currencyId;
 
-    @NotNull(message = "{validation.notnull}")
+    @NotNull(message = "{label.facility} {validation.notnull.suffix}")
     private Long facilityId;
     
     private String facilityName; // For display in Edit mode
     private String facilityCode; // For display in Edit mode
 
-    @NotNull(message = "{validation.notnull}")
+    @NotNull(message = "{label.stock-adjustment.rate} {validation.notnull.suffix}")
     private BigDecimal exchangeRate;
 
     private AdjustmentStatus status;
 
-    @NotEmpty(message = "{validation.notempty}")
+    @NotEmpty(message = "{label.stock-adjustment.lines} {validation.notempty.suffix}")
     @Valid
     @Builder.Default
     private List<StockAdjustmentLineRequest> lines = new ArrayList<>();

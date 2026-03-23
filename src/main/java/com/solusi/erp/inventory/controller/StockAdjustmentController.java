@@ -113,7 +113,8 @@ public class StockAdjustmentController {
     @PreAuthorize("hasAuthority('STOCK-ADJUSTMENT_PROCESS')")
     public String process(@PathVariable Long id, RedirectAttributes ra) {
         service.process(id);
-        ra.addFlashAttribute("message", "Stock Adjustment processed successfully");
+        String message = messageSource.getMessage("msg.success.ajax.generic", null, LocaleContextHolder.getLocale());
+        ra.addFlashAttribute("message", message);
         return "redirect:/inventory/adjustments/view/" + id;
     }
 

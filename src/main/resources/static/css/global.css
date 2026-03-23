@@ -91,3 +91,10 @@ input[type="date"].erp-input {
     padding-top: 0 !important;
     padding-bottom: 0 !important;
 }
+
+/* Red Asterisk for Mandatory Fields */
+.required::after {
+    content: " *";
+    color: #d63939; /* Standard Bootstrap/Tabler red */
+    font-weight: bold;
+}
