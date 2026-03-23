@@ -30,10 +30,13 @@ Digunakan untuk angka bulat (misal: Urutan, Stok Barang tanpa pecahan).
 
 Sistem menggunakan library **AutoNumeric** untuk melakukan format *real-time* saat user mengetik.
 
-### Aturan Inisialisasi:
+### Aturan Inisialisasi & Helper:
 1.  Setiap elemen numeric ditandai dengan class `.erp-number-decimal` atau `.erp-number-integer`.
 2.  Inisialisasi dilakukan secara global via fungsi `initNumericInputs()`.
-3.  **Unformat**: Sistem men-set `unformatOnSubmit: false` karena pembersihan karakter separator dilakukan di sisi server (Spring Formatter).
+3.  **Generic Helper (`ErpNumeric`)**: Selalu gunakan helper ini di JavaScript untuk memanipulasi nilai:
+    - `ErpNumeric.get(el)`: Mengambil angka murni (float) dari input yang terformat.
+    - `ErpNumeric.set(el, val)`: Mengisi angka ke input dan otomatis memformat tampilannya.
+4.  **Unformat**: Sistem men-set `unformatOnSubmit: false` karena pembersihan karakter separator dilakukan di sisi server (Spring Formatter).
 
 ---
 

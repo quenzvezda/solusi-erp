@@ -26,6 +26,13 @@ Tandai form dengan atribut `data-ajax-form="true"` dan tentukan URL tujuan setel
       method="post"
       data-ajax-form="true"
       data-redirect-on-success="/module/list">
+    
+    <!-- Container untuk Alert AJAX -->
+    <div class="alert-container">
+        <div th:replace="~{fragments/alerts :: success}"></div>
+        <div th:replace="~{fragments/alerts :: error}"></div>
+    </div>
+    
     ...
     <div id="loading-indicator" class="spinner-border" style="display:none;"></div>
 </form>
@@ -38,9 +45,9 @@ Sistem menggunakan `erp-form-handler.js` (global) yang secara otomatis:
     *   **Empty to Null**: Mengonversi string kosong (`""`) menjadi `null` agar kompatibel dengan Jackson (Enum/Long).
     *   **Numeric Unformat**: Otomatis mengambil nilai murni dari field AutoNumeric menggunakan `.getNumber()`.
 3.  Mengirim data sebagai JSON (otomatis menangani CSRF via header `X-CSRF-TOKEN`).
-4.  **Sukses**: Melakukan redirect setelah jeda 300ms (untuk keperluan debug network).
+4.  **Sukses**: Melakukan redirect setelah jeda 300ms (untuk keperluan debug network). Pesan sukses disimpan di `sessionStorage` dan ditampilkan otomatis di halaman tujuan.
 5.  **Validasi Gagal (400)**: Menampilkan pesan error di bawah field masing-masing tanpa merusak state TomSelect.
-6.  **Server Error (500)**: Menampilkan alert merah global di dalam `.alert-container`.
+6.  **Server Error (500)**: Menampilkan modal error global menggunakan **`ErpModal.showError()`**.
 
 ---
 
@@ -109,7 +116,7 @@ public ResponseEntity<ApiResponse<MyResponse>> create(@Valid @RequestBody MyRequ
 Sistem menyertakan `HtmxViewInterceptor` yang secara otomatis mendeteksi request HTMX dan menentukan fragmen mana yang harus dirender berdasarkan header `HX-Target`.
 
 ### Aturan Konvensi (Mandatory):
-Agar otomatisasi ini bekerja, developer **WAJIB** menyamakan nama fragmen dengan ID target:
+Agar otomatisasi ini bekerja, developer **WAJIB** menyama kan nama fragmen dengan ID target:
 1.  **HTML ID**: `<div id="my-table-container" ...>`
 2.  **Thymeleaf Fragment**: `<div id="my-table-container" th:fragment="my-table-container">`
 3.  **HTMX Target**: `<form hx-target="#my-table-container" ...>`

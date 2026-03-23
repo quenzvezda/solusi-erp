@@ -84,11 +84,10 @@ public class StockAdjustmentController {
     public String editForm(@PathVariable Long id, Model model) {
         StockAdjustmentResponse response = service.findById(id);
         if (response.getStatus() == StockAdjustment.AdjustmentStatus.COMPLETED) {
-            return "redirect:/inventory/adjustments/" + id;
+            return "redirect:/inventory/adjustments/view/" + id;
         }
         
         model.addAttribute("stockAdjustment", service.getEditData(id));
-        model.addAttribute("auditInfo", response);
         populateFormModels(model);
         return "inventory/adjustments/form";
     }
@@ -103,19 +102,20 @@ public class StockAdjustmentController {
         return ResponseEntity.ok(ApiResponse.success(message, data));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/view/{id}")
     @PreAuthorize("hasAuthority('STOCK-ADJUSTMENT_READ')")
     public String view(@PathVariable Long id, Model model) {
         model.addAttribute("stockAdjustment", service.findById(id));
         return "inventory/adjustments/view";
     }
 
-    @PostMapping("/{id}/process")
+    @PostMapping("/process/{id}")
     @PreAuthorize("hasAuthority('STOCK-ADJUSTMENT_PROCESS')")
     public String process(@PathVariable Long id, RedirectAttributes ra) {
         service.process(id);
-        ra.addFlashAttribute("message", "Stock Adjustment processed successfully");
-        return "redirect:/inventory/adjustments/" + id;
+        String message = messageSource.getMessage("msg.success.ajax.generic", null, LocaleContextHolder.getLocale());
+        ra.addFlashAttribute("message", message);
+        return "redirect:/inventory/adjustments/view/" + id;
     }
 
     @DeleteMapping("/{id}")

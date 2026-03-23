@@ -1,0 +1,118 @@
+<!-- Module specific drawers for Stock Adjustment -->
+<div th:fragment="adjustment-drawers">
+    
+    <!-- 1. Drawer for Non-Serial Items -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="drawer-non-serial" style="width: 550px;">
+        <div class="offcanvas-header border-bottom">
+            <h2 class="offcanvas-title">Item Detail (Standard)</h2>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-0 d-flex flex-column">
+            <!-- Header Konversi (Standard) -->
+            <div class="p-3 border-bottom bg-light-lt">
+                <div class="row g-3 align-items-end">
+                    <div class="col-7">
+                        <label class="form-label xsmall text-uppercase text-secondary required">Target UoM & Qty</label>
+                        <div class="input-group input-group-flat border">
+                            <input type="text" class="form-control form-control-sm erp-number-decimal input-qty-target border-0" style="width: 70px;">
+                            <select class="form-select form-select-sm select-uom-target border-0 border-start" style="flex: 1;"></select>
+                        </div>
+                    </div>
+                    <div class="col-5 text-end">
+                        <div class="text-secondary xsmall text-uppercase">Total Base Qty</div>
+                        <div class="h2 mb-0 text-dark font-weight-bold">
+                            <span class="input-qty-base-display">0.00</span> <span class="txt-base-uom" style="font-size: 0.6em; color: #666;">Unit</span>
+                        </div>
+                        <!-- Hidden input for AutoNumeric calculation -->
+                        <input type="hidden" class="input-qty-base erp-number-decimal">
+                    </div>
+                </div>
+                <div class="mt-2 xsmall text-muted border-top pt-2">
+                    <i class="ti ti-info-circle"></i> Conversion: 1 <span class="txt-target-uom">?</span> = <span class="txt-factor">1.00</span> <span class="txt-base-uom">?</span>
+                </div>
+            </div>
+
+            <!-- Body Area -->
+            <div class="p-4 text-center flex-fill d-flex flex-column justify-content-center bg-white">
+                <div class="mb-3">
+                    <i class="ti ti-box text-light" style="font-size: 4rem;"></i>
+                </div>
+                <p class="text-secondary small">This item does not require serial number tracking. <br>All adjustments will be applied to the base inventory directly.</p>
+            </div>
+        </div>
+        <div class="offcanvas-footer p-3 border-top bg-light-lt">
+            <div class="row g-2">
+                <div class="col">
+                    <button type="button" class="btn btn-white w-100" data-bs-dismiss="offcanvas" th:text="#{label.cancel}">Cancel</button>
+                </div>
+                <div class="col">
+                    <button type="button" class="btn btn-primary w-100 btn-save-drawer">
+                        <i class="ti ti-check me-1"></i> <span th:text="#{label.apply}">Apply</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Drawer for Serialized Items -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="drawer-serial" style="width: 550px;">
+        <div class="offcanvas-header border-bottom">
+            <h2 class="offcanvas-title">Item Detail (Serialized)</h2>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-0 d-flex flex-column">
+            <!-- Header Konversi di Serial -->
+            <div class="p-3 border-bottom bg-light-lt">
+                <div class="row g-3 align-items-end">
+                    <div class="col-6">
+                        <label class="form-label xsmall text-uppercase text-secondary required">Target UoM & Qty</label>
+                        <div class="input-group input-group-flat border">
+                            <input type="text" class="form-control form-control-sm erp-number-decimal input-qty-target border-0" style="width: 60px;">
+                            <select class="form-select form-select-sm select-uom-target border-0 border-start" style="flex: 1;"></select>
+                        </div>
+                    </div>
+                    <div class="col-6 text-end">
+                        <div class="text-secondary xsmall text-uppercase">Total Base Quantity</div>
+                        <div class="h2 mb-0 text-dark font-weight-bold">
+                            <span class="txt-total-qty">0</span> <span class="txt-base-uom" style="font-size: 0.6em; color: #666;">Unit</span>
+                        </div>
+                        <input type="hidden" class="input-qty-base erp-number-decimal">
+                    </div>
+                </div>
+                <div class="mt-2 xsmall text-muted border-top pt-2">
+                    <i class="ti ti-info-circle"></i> Each row below represents 1.00 <span class="txt-base-uom">Unit</span>. 
+                    Conversion: 1 <span class="txt-target-uom">?</span> = <span class="txt-factor">1.00</span> <span class="txt-base-uom">?</span>
+                </div>
+            </div>
+            
+            <!-- Tabel Serial -->
+            <div class="flex-fill overflow-auto" style="max-height: 60vh;">
+                <table class="table table-vcenter card-table table-striped">
+                    <thead>
+                        <tr>
+                            <th class="bg-white sticky-top" style="width: 50px; z-index: 10;">No</th>
+                            <th class="bg-white sticky-top" style="z-index: 10;">Serial Number</th>
+                            <th class="bg-white sticky-top text-end" style="width: 80px; z-index: 10;">Qty</th>
+                        </tr>
+                    </thead>
+                    <tbody class="serial-input-container">
+                        <!-- Rows generated via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="offcanvas-footer p-3 border-top bg-light-lt">
+            <div class="row g-2">
+                <div class="col">
+                    <button type="button" class="btn btn-white w-100" data-bs-dismiss="offcanvas" th:text="#{label.cancel}">Cancel</button>
+                </div>
+                <div class="col">
+                    <button type="button" class="btn btn-primary w-100 btn-save-drawer">
+                        <i class="ti ti-check me-1"></i> <span th:text="#{label.apply}">Apply</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

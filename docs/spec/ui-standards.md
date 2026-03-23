@@ -58,6 +58,28 @@ Used for inline editing inside tables (e.g., line items).
 - `.erp-input-sm`: Applied to small `<input>` and `<select>`.
 - `.erp-input-ts-sm`: Applied to small TomSelect **wrappers**.
 
+## Global Programmatic Modals (ErpModal)
+Untuk menghindari ketergantungan langsung pada objek `bootstrap` di level JavaScript halaman (yang seringkali tidak terdefinisi karena masalah loading), sistem menyediakan helper global **`ErpModal`**.
+
+### 1. Cara Pemanggilan
+DILARANG menggunakan `new bootstrap.Modal()` secara langsung. Gunakan fungsi berikut:
+- **Error**: `ErpModal.showError(message, optionalTitle)`
+- **Warning**: `ErpModal.showWarning(message, optionalTitle)`
+- **Confirm**: `ErpModal.confirm(message, callbackFunction, optionalTitle)`
+
+Contoh Penggunaan:
+```javascript
+if (!facilityId) {
+    ErpModal.showWarning("Harap pilih gudang terlebih dahulu!");
+    return;
+}
+
+ErpModal.confirm("Yakin ingin memproses data?", function() {
+    // Logika jika user klik 'Ya'
+    form.submit();
+});
+```
+
 ## Thymeleaf Fragments
 Always prefer using the standardized fragments in `templates/fragments/inputs.html`.
 
@@ -85,7 +107,7 @@ Gunakan HTMX hanya untuk filter pencarian atau interaksi sederhana yang tidak me
 ## Best Practices & JavaScript Initialization
 
 ### 1. Global Auto-Initialization
-Sistem secara otomatis menginisialisasi komponen berikut tanpa perlu script manual di setiap halaman:
+Sistem secara otomatis menginisialisasi komponen berikut melalui **`erp-common-handler.js`**:
 - **Numeric**: Elemen dengan class `.erp-number-*`.
 - **Autocomplete**: Elemen `.erp-input-ts` yang memiliki atribut `data-lookup-path`.
 
@@ -98,11 +120,11 @@ Untuk mencegah dropdown terlihat kosong saat mode Edit atau setelah error valida
 Developer wajib memastikan Request DTO memiliki field penampung untuk Name dan SubText tersebut (contoh: `brandName`, `brandCode`).
 
 ### 2. The Global `initLookup` Function
-Jika butuh inisialisasi manual (misal: cascading), gunakan:
+Jika butuh inisialisasi manual (misal: cascading), gunakan fungsi yang tersedia di `erp-common-handler.js`:
 ```javascript
 const ts = initLookup(element, 'module/path', parentProvider);
 ```
-- `lookupPath`: String path API (contoh: `'inventory/products'`).
+- `lookupPath`: String path API tanpa `/api/lookup/` (contoh: `'inventory/products'`).
 - `parentProvider`: Callback function untuk filter data berdasarkan field lain.
 
 ### 2. Height Consistency

@@ -84,9 +84,14 @@ input[type=number] {
 }
 .ts-dropdown {
     background-color: #fff !important;
-    z-index: 1055;
+    z-index: 2000 !important; /* Above modals and sticky headers */
     border: 1px solid rgba(0,0,0,.15);
     box-shadow: 0 4px 12px rgba(0,0,0,.1);
+}
+
+/* Ensure dropdowns are not cut off by responsive tables */
+.table-responsive {
+    overflow: visible !important;
 }
 .ts-dropdown .option {
     background-color: #fff;

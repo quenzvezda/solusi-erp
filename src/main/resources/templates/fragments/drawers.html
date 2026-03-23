@@ -1,0 +1,37 @@
+<!-- Reusable drawer fragments for ERP standardization -->
+
+<!-- Generic Item Detail Drawer -->
+<div th:fragment="item-detail-drawer(id, title)" 
+     class="offcanvas offcanvas-end" 
+     tabindex="-1" 
+     th:id="${id}" 
+     aria-labelledby="drawer-title"
+     style="width: 450px;">
+    
+    <div class="offcanvas-header border-bottom">
+        <h2 class="offcanvas-title" id="drawer-title" th:text="${title}">Item Detail</h2>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    
+    <div class="offcanvas-body">
+        <!-- Content will be injected here via JS or standard form elements -->
+        <div id="drawer-error-container"></div>
+        
+        <div class="drawer-content-area">
+            <!-- Content will be injected here via JS -->
+        </div>
+    </div>
+    
+    <div class="offcanvas-footer p-3 border-top bg-light-lt">
+        <div class="row g-2">
+            <div class="col">
+                <button type="button" class="btn btn-white w-100" data-bs-dismiss="offcanvas" th:text="#{label.cancel}">Cancel</button>
+            </div>
+            <div class="col">
+                <button type="button" class="btn btn-primary w-100" id="drawer-btn-save">
+                    <i class="ti ti-check me-1"></i> <span th:text="#{label.save}">Save Changes</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

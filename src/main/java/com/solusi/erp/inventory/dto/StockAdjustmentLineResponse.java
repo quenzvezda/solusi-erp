@@ -1,10 +1,8 @@
 package com.solusi.erp.inventory.dto;
 
-import com.solusi.erp.core.dto.BaseAuditResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
@@ -16,8 +14,9 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class StockAdjustmentLineResponse extends BaseAuditResponse {
+public class StockAdjustmentLineResponse {
+    private Long id;
+    private Integer version;
     private Long productId;
     private String productCode;
     private String productName;
@@ -30,8 +29,14 @@ public class StockAdjustmentLineResponse extends BaseAuditResponse {
     private String containerCode;
     private String containerName;
     private String facilityName;
-    
+
+    private Long uomId;
+    private String uomName;
+    private Boolean isSerialized;
+    private BigDecimal conversionFactor;
+
     private BigDecimal quantity;
+
     private BigDecimal unitCost;
     private BigDecimal totalAmount;
     private String serialNumber;

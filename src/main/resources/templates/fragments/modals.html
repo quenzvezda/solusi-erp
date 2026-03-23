@@ -2,37 +2,113 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
-    <!-- Standard Delete Confirmation Modal for HTMX -->
-    <div th:fragment="delete-confirm(id, title, message, actionUrl, targetId)" 
-         class="modal modal-blur fade" th:id="${id}" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-            <div class="modal-content text-start">
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                <div class="modal-status bg-danger"></div>
-                <div class="modal-body text-center py-4">
-                    <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
-                    <h3 th:text="${title}">Confirm Delete</h3>
-                    <div class="text-secondary text-wrap" th:text="${message}">Are you sure?</div>
-                </div>
-                <div class="modal-footer">
-                    <div class="w-100">
-                        <div class="row">
-                            <div class="col">
-                                <a href="#" class="btn w-100" data-bs-dismiss="modal" th:text="#{label.cancel}">Cancel</a>
-                            </div>
-                            <div class="col">
-                                <button type="button" class="btn btn-danger w-100"
-                                        th:attr="hx-delete=${actionUrl}, hx-target=${targetId}"
-                                        hx-swap="outerHTML swap:500ms"
-                                        data-bs-dismiss="modal"
-                                        th:text="#{label.delete}">Delete</button>
-                            </div>
+<!-- Fragment induk untuk memuat semua modal sekaligus -->
+<div th:fragment="standard-modals">
+    <div th:replace="~{:: error-modal}"></div>
+    <div th:replace="~{:: warning-modal}"></div>
+    <div th:replace="~{:: confirm-modal}"></div>
+    
+    <!-- Hidden Triggers for Programmatic Access -->
+    <button id="btn-trigger-error-modal" class="d-none" data-bs-toggle="modal" data-bs-target="#modal-global-error"></button>
+    <button id="btn-trigger-warning-modal" class="d-none" data-bs-toggle="modal" data-bs-target="#modal-global-warning"></button>
+    <button id="btn-trigger-confirm-modal" class="d-none" data-bs-toggle="modal" data-bs-target="#modal-global-confirm"></button>
+</div>
+
+<!-- 1. Global Error Modal (Red) -->
+<div th:fragment="error-modal" class="modal modal-blur fade" id="modal-global-error" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 9999;">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-danger"></div>
+            <div class="modal-body text-center py-4">
+                <i class="ti ti-alert-circle icon mb-2 text-danger icon-lg"></i>
+                <h3 th:text="#{msg.error.ajax.title}">Terjadi Kesalahan</h3>
+                <div class="text-secondary" id="error-modal-message"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger w-100" data-bs-dismiss="modal" th:text="#{label.close}">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 2. Global Warning Modal (Yellow) -->
+<div th:fragment="warning-modal" class="modal modal-blur fade" id="modal-global-warning" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 9998;">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-warning"></div>
+            <div class="modal-body text-center py-4">
+                <i class="ti ti-alert-triangle icon mb-2 text-warning icon-lg"></i>
+                <h3 id="warning-modal-title" th:text="#{label.warning.exclamation.mark}">Peringatan</h3>
+                <div class="text-secondary" id="warning-modal-message"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning w-100" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. Global Confirmation Modal -->
+<!-- TODO: Modal ini digunakan untuk konfirmasi via JavaScript ErpModal.confirm(msg, callback). 
+     Callback (lambda) akan dijalankan saat tombol 'Ya' diklik. -->
+<div th:fragment="confirm-modal" class="modal modal-blur fade" id="modal-global-confirm" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 9997;">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-status bg-primary"></div>
+            <div class="modal-body text-center py-4">
+                <i class="ti ti-help-circle icon mb-2 text-primary icon-lg"></i>
+                <h3 id="confirm-modal-title">Konfirmasi</h3>
+                <div class="text-secondary" id="confirm-modal-message">Apakah Anda yakin?</div>
+            </div>
+            <div class="modal-footer">
+                <div class="w-100">
+                    <div class="row">
+                        <div class="col">
+                            <button type="button" class="btn btn-white w-100" data-bs-dismiss="modal" th:text="#{label.no}">Tidak</button>
+                        </div>
+                        <div class="col">
+                            <button type="button" class="btn btn-primary w-100" id="confirm-modal-btn-yes" th:text="#{label.yes}">Ya</button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
+
+<!-- Standard Delete Confirmation Modal for HTMX -->
+<div th:fragment="delete-confirm(id, title, message, actionUrl, targetId)" 
+     class="modal modal-blur fade" th:id="${id}" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content text-start">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-danger"></div>
+            <div class="modal-body text-center py-4">
+                <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
+                <h3 th:text="${title}">Confirm Delete</h3>
+                <div class="text-secondary text-wrap" th:text="${message}">Are you sure?</div>
+            </div>
+            <div class="modal-footer">
+                <div class="w-100">
+                    <div class="row">
+                        <div class="col">
+                            <a href="#" class="btn w-100" data-bs-dismiss="modal" th:text="#{label.cancel}">Cancel</a>
+                        </div>
+                        <div class="col">
+                            <button type="button" class="btn btn-danger w-100"
+                                    th:attr="hx-delete=${actionUrl}, hx-target=${targetId}"
+                                    hx-swap="outerHTML swap:500ms"
+                                    data-bs-dismiss="modal"
+                                    th:text="#{label.delete}">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>

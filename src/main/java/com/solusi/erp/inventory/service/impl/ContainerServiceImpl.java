@@ -45,8 +45,9 @@ public class ContainerServiceImpl implements ContainerService {
                 c.getName(),
                 c.getCode(),
                 Map.of(
-                        "parentId", c.getGrid().getId(),
-                        "parentName", c.getGrid().getName()
+                        "gridId", c.getGrid().getId(),
+                        "gridName", c.getGrid().getName(),
+                        "gridCode", c.getGrid().getCode()
                 )
         );
     }
@@ -77,8 +78,9 @@ public class ContainerServiceImpl implements ContainerService {
                         c.getName(),
                         c.getCode(),
                         Map.of(
-                                "parentId", c.getGrid().getId(),
-                                "parentName", c.getGrid().getName()
+                                "gridId", c.getGrid().getId(),
+                                "gridName", c.getGrid().getName(),
+                                "gridCode", c.getGrid().getCode()
                         )
                 ))
                 .toList();

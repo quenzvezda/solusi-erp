@@ -38,11 +38,17 @@ Stock Adjustment digunakan untuk melakukan koreksi jumlah stok fisik secara manu
 - Penyesuaian stok positif akan membuat **Valuation Layer** baru dengan harga `unitCost` yang diinput.
 - Penyesuaian stok negatif akan mengonsumsi stok menggunakan logika **FIFO** (First-In, First-Out).
 
-## 4. Standar UI/UX
+### C. Integritas Lokasi (Gudang)
+- **Facility Change**: Jika user mengubah *Facility* (Gudang) saat item sudah ada di tabel, sistem akan menampilkan konfirmasi dan **menghapus seluruh item** jika disetujui. Hal ini dilakukan karena Grid dan Container bergantung pada Facility yang dipilih.
+
+## 4. Standar UI/UX (Technical Standard)
+- **Generic Helpers**: Menggunakan arsitektur `erp-common-handler.js` untuk konsistensi antar modul:
+    - `ErpLineManager`: Otomasi penambahan/penghapusan baris dan penataan index `lines[n]`.
+    - `ErpNumeric`: Penanganan input angka ribuan dan desimal yang aman.
+    - `ErpInventory`: Mesin konversi UoM (Unit of Measure) dan Serial Number yang terintegrasi dengan drawer.
 - **Autocomplete**: Menggunakan standar `Autocomplete Generic` dengan cascading Facility -> Grid -> Container.
 - **Dynamic Recap**: Menampilkan ringkasan total nilai dokumen secara real-time di sisi kanan atas form.
 - **Fixed Table Layout**: Tabel item menggunakan layout tetap untuk mencegah horizontal scrollbar pada input data yang padat.
-- **Auto-Date**: Tanggal transaksi otomatis terisi dengan tanggal hari ini saat pembuatan dokumen baru.
 
 ## 5. Keamanan (Security)
 Fitur ini dilindungi oleh otoritas berikut:

@@ -75,7 +75,7 @@
                             <tbody>
                                 <tr th:each="item : ${page.content}">
                                     <td>
-                                        <a th:href="@{/inventory/adjustments/{id}(id=${item.id})}" th:text="${item.code}">CODE</a>
+                                        <a th:href="@{/inventory/adjustments/view/{id}(id=${item.id})}" th:text="${item.code}">CODE</a>
                                     </td>
                                     <td th:text="${#temporals.format(item.transactionDate, 'dd MMM yyyy')}">DATE</td>
                                     <td>
@@ -92,13 +92,13 @@
                                     <td>
                                         <div class="btn-list flex-nowrap">
                                             <a th:if="${item.status.name() == 'DRAFT'}" 
-                                               th:href="@{/inventory/adjustments/{id}/edit(id=${item.id})}"
+                                               th:href="@{/inventory/adjustments/edit/{id}(id=${item.id})}"
                                                class="btn btn-white btn-sm"
                                                sec:authorize="hasAuthority('STOCK-ADJUSTMENT_UPDATE')"
                                                th:text="#{label.edit}">
                                                 Edit
                                             </a>
-                                            <a th:href="@{/inventory/adjustments/{id}(id=${item.id})}"
+                                            <a th:href="@{/inventory/adjustments/view/{id}(id=${item.id})}"
                                                class="btn btn-white btn-sm"
                                                th:text="#{label.view}">
                                                 View
