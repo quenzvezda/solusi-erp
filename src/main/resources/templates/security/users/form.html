@@ -46,7 +46,7 @@
                                 initialText=${userUIForm != null ? userUIForm.roleName : ''}, 
                                 initialSubtext=${userUIForm != null ? userUIForm.roleDescription : ''})}"></div>
 
-                            <div th:replace="~{fragments/inputs :: autocomplete(field='partyId', label=#{label.party}, 
+                            <div th:replace="~{fragments/inputs :: autocomplete(field='partyId', id='partyId', label=#{label.party}, 
                                 path='parties/available-for-user' + (${userRequest.partyId != null} ? '?excludePartyId=' + ${userRequest.partyId} : ''), 
                                 initialValue=${userRequest.partyId}, 
                                 initialText=${userRequest.partyName}, 
@@ -105,49 +105,78 @@
     </div>
 
     <script th:inline="javascript">
-        document.addEventListener('DOMContentLoaded', function() {
-            const partySelect = document.getElementById('partyId');
-            if (!partySelect) return;
+        (function() {
+            function setupPartyConfirmation(ts) {
+                console.log('[DEBUG-PARTY] Setting up confirmation for TomSelect instance', ts);
+                let lastValue = ts.getValue();
+                let isConfirming = false;
 
-            // Listen for custom initialization event from erp-common-handler.js
-            document.addEventListener('erp:lookup-initialized', function(e) {
-                if (e.target.id === 'partyId') {
-                    const ts = e.detail.tomselect;
-                    let lastValue = ts.getValue();
-                    let isConfirming = false;
+                ts.on('change', function(value) {
+                    console.log('[DEBUG-PARTY] Change detected. New value:', value, 'Last value:', lastValue, 'isConfirming:', isConfirming);
+                    
+                    if (isConfirming) {
+                        console.log('[DEBUG-PARTY] Change ignored because isConfirming is true');
+                        return;
+                    }
+                    
+                    if (!value || value === lastValue) {
+                        console.log('[DEBUG-PARTY] Change ignored (empty or same value)');
+                        lastValue = value;
+                        return;
+                    }
 
-                    ts.on('change', function(value) {
-                        if (isConfirming) return;
-                        if (!value || value === lastValue) return;
+                    const newValue = value;
+                    const msg = /*[[#{msg.users.party.confirm}]]*/ 'Apakah Anda yakin ingin memilih Party ini? Sekali disimpan, Party tidak dapat diubah lagi.';
+                    const title = /*[[#{label.warning.exclamation.mark}]]*/ 'Peringatan!';
 
+                    console.log('[DEBUG-PARTY] Triggering ErpModal.confirm for value:', newValue);
+
+                    // Revert UI ke nilai sebelumnya secara instan sebelum modal muncul
+                    isConfirming = true;
+                    ts.setValue(lastValue, true);
+                    isConfirming = false;
+
+                    // Tampilkan konfirmasi
+                    ErpModal.confirm(msg, function() {
+                        console.log('[DEBUG-PARTY] User confirmed. Setting value to:', newValue);
                         isConfirming = true;
-                        const msg = /*[[#{msg.users.party.confirm}]]*/ 'Apakah Anda yakin ingin memilih Party ini? Sekali disimpan, Party tidak dapat diubah lagi.';
-                        
-                        ErpModal.confirm(msg, function() {
-                            // User clicked Yes
-                            lastValue = value;
-                            isConfirming = false;
-                        }, /*[[#{label.warning.exclamation.mark}]]*/ 'Peringatan!');
-
-                        // Immediately revert UI until confirmed (or keep it and revert on cancel)
-                        // The callback above handles the 'Yes' case. 
-                        // To handle 'No', we need to hook into the cancel button or just revert now and set back on Yes.
-                        
-                        // Revert value for now
-                        ts.setValue(lastValue, true); 
+                        ts.setValue(newValue, true); 
+                        lastValue = newValue;
                         isConfirming = false;
+                    }, title);
+                });
+            }
 
-                        // Improved logic: show modal, if yes set value
-                        ErpModal.confirm(msg, function() {
-                            isConfirming = true;
-                            ts.setValue(value, true);
-                            lastValue = value;
-                            isConfirming = false;
-                        }, /*[[#{label.warning.exclamation.mark}]]*/ 'Peringatan!');
+            function init() {
+                console.log('[DEBUG-PARTY] Initializing confirmation logic...');
+                const partyEl = document.getElementById('partyId');
+                if (!partyEl) {
+                    console.warn('[DEBUG-PARTY] Element #partyId not found!');
+                    return;
+                }
+
+                console.log('[DEBUG-PARTY] Element #partyId found');
+
+                if (partyEl.tomselect) {
+                    console.log('[DEBUG-PARTY] TomSelect already initialized on #partyId');
+                    setupPartyConfirmation(partyEl.tomselect);
+                } else {
+                    console.log('[DEBUG-PARTY] TomSelect not yet initialized, waiting for erp:lookup-initialized...');
+                    document.addEventListener('erp:lookup-initialized', function(e) {
+                        console.log('[DEBUG-PARTY] Event erp:lookup-initialized received for:', e.target.id);
+                        if (e.target.id === 'partyId') {
+                            setupPartyConfirmation(e.detail.tomselect);
+                        }
                     });
                 }
-            });
-        });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        })();
     </script>
 </body>
 </html>

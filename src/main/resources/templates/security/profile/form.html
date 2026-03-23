@@ -18,35 +18,20 @@
         <!-- Page Body -->
         <div class="page-body">
             <div class="container-xl">
-                <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}">Error message</div>
-                
-                <form th:action="@{/profile/edit}" th:object="${profileRequest}" method="post" class="card">
+                <form th:action="@{/profile/edit}" th:object="${profileRequest}" method="post" class="card"
+                      data-ajax-form="true"
+                      data-redirect-on-success="/profile">
                     <div class="card-body">
                         <div class="row">
                             <!-- Informasi Dasar Section -->
                             <div class="col-md-6">
                                 <h3 class="card-title" th:text="#{profile.basic.info}">Informasi Dasar</h3>
-                                <div class="mb-3">
-                                    <label class="form-label required" th:text="#{profile.full.name}">Nama Lengkap</label>
-                                    <input type="text" th:field="*{fullName}" class="form-control" 
-                                           th:classappend="${#fields.hasErrors('fullName')} ? 'is-invalid'"
-                                           placeholder="Masukkan nama lengkap Anda">
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}">Error</div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label required" th:text="#{profile.email}">Email</label>
-                                    <input type="email" th:field="*{email}" class="form-control" 
-                                           th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'"
-                                           placeholder="email@example.com">
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Error</div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label" th:text="#{profile.phone}">Nomor Telepon</label>
-                                    <input type="text" th:field="*{phoneNumber}" class="form-control" 
-                                           th:classappend="${#fields.hasErrors('phoneNumber')} ? 'is-invalid'"
-                                           placeholder="Contoh: 08123456789">
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}">Error</div>
-                                </div>
+                                
+                                <div th:replace="~{fragments/inputs :: text(field='fullName', label=#{profile.full.name}, required=true, placeholder='Masukkan nama lengkap Anda')}"></div>
+                                
+                                <div th:replace="~{fragments/inputs :: text(field='email', label=#{profile.email}, required=true, placeholder='email@example.com')}"></div>
+                                
+                                <div th:replace="~{fragments/inputs :: text(field='phoneNumber', label=#{profile.phone}, placeholder='Contoh: 08123456789')}"></div>
                             </div>
 
                             <!-- Preferensi & Keamanan Section -->
@@ -56,23 +41,21 @@
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label required" th:text="#{profile.language}">Bahasa</label>
-                                            <select th:field="*{languageCode}" class="form-select" th:classappend="${#fields.hasErrors('languageCode')} ? 'is-invalid'">
+                                            <select th:field="*{languageCode}" class="form-select erp-input">
                                                 <option value="id">Bahasa Indonesia</option>
                                                 <option value="en">English</option>
                                             </select>
-                                            <div class="invalid-feedback" th:if="${#fields.hasErrors('languageCode')}" th:errors="*{languageCode}">Error</div>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label required" th:text="#{profile.page.size}">Ukuran Halaman Default</label>
-                                            <select th:field="*{defaultPageSize}" class="form-select" th:classappend="${#fields.hasErrors('defaultPageSize')} ? 'is-invalid'">
+                                            <select th:field="*{defaultPageSize}" class="form-select erp-input">
                                                 <option value="10">10 Baris</option>
                                                 <option value="25">25 Baris</option>
                                                 <option value="50">50 Baris</option>
                                                 <option value="100">100 Baris</option>
                                             </select>
-                                            <div class="invalid-feedback" th:if="${#fields.hasErrors('defaultPageSize')}" th:errors="*{defaultPageSize}">Error</div>
                                         </div>
                                     </div>
                                 </div>
@@ -88,7 +71,6 @@
                                             <span class="form-selectgroup-label" th:text="#{profile.theme.dark}">Gelap</span>
                                         </label>
                                     </div>
-                                    <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('theme')}" th:errors="*{theme}">Error</div>
                                 </div>
 
                                 <hr class="my-3">

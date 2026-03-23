@@ -377,14 +377,21 @@ function initLookup(el, lookupPath, parentProvider = null) {
         ts.on('dropdown_open', () => {
             const value = ts.getValue();
             if (value && ts.options[value]) {
-                const currentName = ts.options[value].name;
+                const currentOption = ts.options[value];
+                // Sembunyikan label yang terpilih agar tidak dobel dengan teks input
                 ts.control.querySelectorAll('.item').forEach(item => { item.style.display = 'none'; });
-                ts.setTextboxValue(currentName);
-                ts.load(currentName);
+                
+                if (!ts.control_input.value) {
+                    ts.setTextboxValue(currentOption.name);
+                    // Refresh options agar dropdown muncul tanpa mengunci query ke server secara paksa
+                    ts.refreshOptions(false);
+                }
             }
         });
         ts.on('dropdown_close', () => {
+            // Kembalikan tampilan label yang terpilih
             ts.control.querySelectorAll('.item').forEach(item => { item.style.display = ''; });
+            // Kosongkan teks input agar saat diklik lagi dimulai dari kondisi bersih/placeholder
             if (ts.getValue()) ts.setTextboxValue('');
         });
     }

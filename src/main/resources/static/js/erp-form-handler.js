@@ -15,6 +15,7 @@ const ErpFormHandler = (function () {
 
     /**
      * Sets a value in an object based on a path (e.g., "lines[0].productId").
+     * Supports merging into existing arrays if the target is an array.
      */
     const setDeepValue = function(obj, path, value) {
         const parts = path.split(/[\[\].]+/).filter(p => p !== '');
@@ -98,25 +99,59 @@ const ErpFormHandler = (function () {
         try {
             const data = {};
             const elements = form.querySelectorAll('input, select, textarea');
+            
+            // Temporary storage for aggregating multi-value fields (checkboxes with same name, multi-select)
+            const multiValueFields = new Map();
+
             elements.forEach(el => {
                 if (!el.name || el.disabled || el.type === 'file' || el.name === '_csrf') return;
                 
-                let value = el.value;
-                if (el.type === 'checkbox') {
-                    if (!el.name.startsWith('_')) setDeepValue(data, el.name, el.checked);
+                // Determine if this field should be part of a collection
+                const isMultiSelect = el.tagName === 'SELECT' && el.multiple;
+                const isCheckbox = el.type === 'checkbox';
+                
+                // We check if there are other elements with the same name to treat it as a collection
+                // Or if the name explicitly ends with []
+                const sameNameCount = form.querySelectorAll(`[name="${CSS.escape(el.name)}"]`).length;
+                const isExplicitArray = el.name.endsWith('[]');
+                const cleanName = isExplicitArray ? el.name.slice(0, -2) : el.name;
+
+                if (isMultiSelect) {
+                    const values = Array.from(el.selectedOptions).map(opt => opt.value === "" ? null : opt.value);
+                    setDeepValue(data, cleanName, values);
+                } else if (isCheckbox) {
+                    if (el.name.startsWith('_')) return; // Ignore spring hidden helper fields
+
+                    if (sameNameCount > 1 || isExplicitArray) {
+                        if (!multiValueFields.has(cleanName)) multiValueFields.set(cleanName, []);
+                        if (el.checked) {
+                            multiValueFields.get(cleanName).push(el.value);
+                        }
+                    } else {
+                        // Single checkbox acts as boolean
+                        setDeepValue(data, cleanName, el.checked);
+                    }
+                } else if (el.type === 'radio') {
+                    if (el.checked) {
+                        setDeepValue(data, cleanName, el.value === "" ? null : el.value);
+                    }
                 } else if (el.classList.contains('erp-number-decimal') || el.classList.contains('erp-number-integer')) {
                     let numericValue = null;
-                    // Always try AutoNumeric first
                     const instance = typeof AutoNumeric !== 'undefined' ? AutoNumeric.getAutoNumericElement(el) : null;
                     if (instance) {
                         numericValue = instance.getNumber();
                     } else {
-                        numericValue = value === "" ? null : parseFloat(value.replace(/,/g, ''));
+                        numericValue = el.value === "" ? null : parseFloat(el.value.replace(/,/g, ''));
                     }
-                    setDeepValue(data, el.name, numericValue);
+                    setDeepValue(data, cleanName, numericValue);
                 } else {
-                    setDeepValue(data, el.name, value === "" ? null : value);
+                    setDeepValue(data, cleanName, el.value === "" ? null : el.value);
                 }
+            });
+
+            // Merge aggregated multi-value fields into the final data object
+            multiValueFields.forEach((values, name) => {
+                setDeepValue(data, name, values);
             });
 
             const csrfToken = document.querySelector('input[name="_csrf"]')?.value;

@@ -209,8 +209,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public FormViewDto<ProfileRequest, Void, ProfileResponse> getProfileEditView(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.user.notfound")));
+
+        return FormViewDto.<ProfileRequest, Void, ProfileResponse>builder()
+                .request(userMapper.toProfileRequest(user))
+                .audit(userMapper.toProfileResponse(user))
+                .build();
+    }
+
+    @Override
     @Transactional
-    public void updateProfile(String username, ProfileRequest request) {
+    public ProfileResponse updateProfile(String username, ProfileRequest request) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.user.notfound")));
 
@@ -241,7 +253,8 @@ public class UserServiceImpl implements UserService {
             user.setPasswordChangeRequired(false);
         }
 
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        return userMapper.toProfileResponse(savedUser);
     }
 
     private String getMessage(String key) {
