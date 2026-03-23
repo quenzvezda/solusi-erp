@@ -12,7 +12,7 @@
 
 
 <body th:fragment="layout(content, pageScripts)" 
-      th:attr="hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+      th:attr="data-bs-theme=${userProfile != null ? userProfile.theme : 'light'}, hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
     
     <!-- Global Modals -->
     <div th:replace="~{fragments/modals :: standard-modals}"></div>

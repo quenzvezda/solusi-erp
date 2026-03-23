@@ -92,6 +92,25 @@ input[type="date"].erp-input {
     padding-bottom: 0 !important;
 }
 
+/* Custom ERP Themes */
+[data-bs-theme="warm"] {
+    --tblr-primary: #d97706; /* Amber 600 - Lebih tajam untuk teks/tombol */
+    --tblr-primary-rgb: 217, 119, 6;
+    --tblr-link-color: #d97706;
+    --tblr-body-bg: #fdfaf3; /* Cream sangat tipis */
+    --tblr-card-bg: #ffffff; /* Tetap putih agar konten menonjol */
+    --tblr-border-color: #f1e3c4; /* Border sedikit kecokelatan halus */
+}
+
+[data-bs-theme="green"] {
+    --tblr-primary: #059669; /* Emerald 600 */
+    --tblr-primary-rgb: 5, 150, 105;
+    --tblr-link-color: #059669;
+    --tblr-body-bg: #f0fdf4; /* Mint sangat tipis */
+    --tblr-card-bg: #ffffff;
+    --tblr-border-color: #dcfce7; /* Border kehijauan halus */
+}
+
 /* Red Asterisk for Mandatory Fields */
 .required::after {
     content: " *";

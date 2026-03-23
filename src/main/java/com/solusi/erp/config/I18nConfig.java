@@ -7,12 +7,16 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.CookieLocaleResolver;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
+import lombok.RequiredArgsConstructor;
 
 import java.time.Duration;
 import java.util.Locale;
 
 @Configuration
+@RequiredArgsConstructor
 public class I18nConfig implements WebMvcConfigurer {
+
+    private final com.solusi.erp.security.interceptor.LocaleSyncInterceptor localeSyncInterceptor;
 
     @Bean
     public LocaleResolver localeResolver() {
@@ -33,5 +37,6 @@ public class I18nConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(localeChangeInterceptor());
+        registry.addInterceptor(localeSyncInterceptor);
     }
 }

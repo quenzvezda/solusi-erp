@@ -55,8 +55,26 @@ Used for header fields and standard forms.
 
 ### 2. Table/Dense Inputs (`28px` height)
 Used for inline editing inside tables (e.g., line items).
-- `.erp-input-sm`: Applied to small `<input>` and `<select>`.
+- `.erp-input-sm`: Applied to small `<input>` and `.erp-input-sm`.
 - `.erp-input-ts-sm`: Applied to small TomSelect **wrappers**.
+
+## Visual Themes & Branding
+
+Sistem mendukung tema visual dinamis yang dapat diatur per-user melalui profil. Tema ini mengontrol atmosfer aplikasi tanpa merusak kegunaan (usability).
+
+### 1. Mekanisme Penerapan Tema
+Tema diterapkan pada tag `<body>` di `master.html` menggunakan atribut `data-bs-theme`. Atribut ini diisi secara dinamis dari objek `userProfile` yang disuntikkan oleh `GlobalModelAttributeAdvice`.
+
+### 2. Daftar Tema Standar
+- **`light` (Default)**: Tampilan putih bersih standar Tabler/Bootstrap.
+- **`dark`**: Mode gelap penuh untuk kenyamanan mata di lingkungan minim cahaya.
+- **`warm`**: Menggunakan rona *Cream* halus pada latar belakang dan aksen *Amber* untuk memberikan kesan hangat dan rileks.
+- **`green`**: Menggunakan rona *Mint* tipis pada latar belakang dan aksen *Emerald* untuk kesan segar dan modern.
+
+### 3. Sidebar Persistence
+Terlepas dari tema yang dipilih (Light/Warm/Green), komponen **Sidebar** tetap menggunakan `data-bs-theme="dark"` secara permanen untuk menjaga kontras tinggi dan identitas brand ERP.
+
+---
 
 ## Global Programmatic Modals (ErpModal)
 Untuk menghindari ketergantungan langsung pada objek `bootstrap` di level JavaScript halaman (yang seringkali tidak terdefinisi karena masalah loading), sistem menyediakan helper global **`ErpModal`**.
