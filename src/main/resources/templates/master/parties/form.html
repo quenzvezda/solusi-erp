@@ -54,11 +54,8 @@
                                             th:placeholder="#{placeholder.party.salutation}">
                                     </div>
                                     <!-- Code (readonly) -->
-                                    <div class="mb-3">
-                                        <label class="form-label" th:text="#{label.party.code}">Kode Partner</label>
-                                        <input type="text" th:field="*{code}" class="form-control bg-light" readonly
-                                            th:placeholder="${partyRequest.id == null ? '[ Auto Generated ]' : ''}">
-                                    </div>
+                                    <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.party.code}, isReadonly=true, 
+                                         placeholder=${partyRequest.id == null ? '[ Auto Generated ]' : ''})}"></div>
                                     <!-- Name -->
                                     <div class="mb-3">
                                         <label class="form-label required" th:text="#{label.party.name}">Nama
@@ -250,7 +247,7 @@
                                 </div>
                                 <div id="address-container">
                                     <div th:each="addr, stat : *{addresses}" class="card-body border-bottom address-row"
-                                        th:classappend="${!addr.isActive} ? 'bg-light opacity-75'">
+                                        th:classappend="${!addr.isActive} ? 'bg-body-tertiary opacity-75'">
                                         <input type="hidden" th:field="*{addresses[__${stat.index}__].id}">
                                         <div class="row align-items-start">
                                             <div class="col-md-3">

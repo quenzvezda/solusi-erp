@@ -56,7 +56,7 @@
                             </div>
 
                             <div class="col-md-4">
-                                <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.product.code}, isReadonly=true, extraClass='bg-light', placeholder=${productRequest.id == null ? '[ Auto Generated ]' : ''})}"></div>
+                                <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.product.code}, isReadonly=true, placeholder=${productRequest.id == null ? '[ Auto Generated ]' : ''})}"></div>
                                 <div th:replace="~{fragments/inputs :: text(field='name', label=#{label.product.name}, required=true)}"></div>
                                 <div th:replace="~{fragments/inputs :: text(field='barcode', label=#{label.product.barcode}, placeholder=#{placeholder.product.barcode})}"></div>
                             </div>

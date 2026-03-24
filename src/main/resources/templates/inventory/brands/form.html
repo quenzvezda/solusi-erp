@@ -47,7 +47,7 @@
 
                         <div class="row">
                             <div class="col-md-6">
-                                <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.brand.code}, isReadonly=true, extraClass='bg-light', placeholder=${brandRequest.id == null ? '[ Auto Generated ]' : ''})}"></div>
+                                <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.brand.code}, isReadonly=true, placeholder=${brandRequest.id == null ? '[ Auto Generated ]' : ''})}"></div>
 
                                 <div th:replace="~{fragments/inputs :: text(field='name', label=#{label.brand.name}, required=true)}"></div>
                             </div>

@@ -54,7 +54,7 @@
                                     <label class="form-label" th:text="#{label.uom-conversion.to-uom}">Satuan Tujuan (Dasar)</label>
                                     <!-- Hidden input for data submission, inside mb-3 so errors attach here -->
                                     <input type="hidden" th:field="*{toUomId}" id="hidden-to-uom-id">
-                                    <input type="text" id="display-to-uom-name" class="form-control erp-input bg-light" readonly 
+                                    <input type="text" id="display-to-uom-name" class="form-control erp-input bg-body-tertiary" readonly 
                                            th:value="${uomUIForm != null ? uomUIForm.toUomName : ''}">
                                 </div>
 

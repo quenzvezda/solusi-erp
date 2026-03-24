@@ -8,7 +8,7 @@
            th:readonly="${isReadonly}" 
            th:placeholder="${placeholder}"
            class="form-control erp-input" 
-           th:classappend="${extraClass}"
+           th:classappend="(${isReadonly} ? 'bg-body-tertiary ' : '') + ${extraClass}"
            th:errorclass="is-invalid"
            th:id="${id}">
 </div>
