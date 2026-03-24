@@ -13,6 +13,7 @@ Dokumentasi dikelompokkan ke dalam folder berikut berdasarkan konteksnya:
 - **[/modules](modules/)**: Penjelasan fungsional dan aturan bisnis untuk setiap fitur spesifik (Inventory, Master Data, dll).
 - **[/spec](spec/)**: **[PENTING]** Spesifikasi teknis horizontal/shared yang digunakan di seluruh aplikasi. Lihat **[Spec Index](spec/index.md)**.
 - **[/roadmap](roadmap/)**: Rencana pengembangan masa depan dan pelacakan standardisasi arsitektur.
+- **[/workflow](workflow/)**: Panduan prosedur kerja agen (seperti tugas repetitif, troubleshooting, dll).
 
 ## 3. How to Use
 Jika Anda baru bergabung dengan proyek ini atau sedang melakukan troubleshooting:
