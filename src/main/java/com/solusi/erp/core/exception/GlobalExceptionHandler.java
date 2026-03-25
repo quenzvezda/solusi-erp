@@ -4,7 +4,10 @@ import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.dto.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -28,7 +31,10 @@ import java.util.Map;
  */
 @Slf4j
 @ControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
+    private final MessageSource messageSource;
 
     /**
      * Handle validation errors for AJAX/API requests (@RequestBody).
@@ -48,6 +54,27 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle domain logic exceptions (DDD).
+     * Automatically resolves the i18n key provided by the Domain Model.
+     */
+    @ExceptionHandler(DomainException.class)
+    @ResponseBody
+    public ResponseEntity<ApiResponse<Void>> handleDomainException(DomainException ex) {
+        log.warn("Domain exception: {}", ex.getKey());
+        
+        String localizedMessage;
+        try {
+            localizedMessage = messageSource.getMessage(ex.getKey(), ex.getArgs(), LocaleContextHolder.getLocale());
+        } catch (org.springframework.context.NoSuchMessageException e) {
+            log.warn("Missing i18n message key for DomainException: {}", ex.getKey());
+            localizedMessage = ex.getKey(); // Fallback to raw key if not found
+        }
+        
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(localizedMessage));
+    }
+
+    /**
      * Handle business logic and unexpected exceptions.
      * Cerdas: Mengembalikan JSON jika request adalah AJAX/API, atau View jika request browser biasa.
      */
@@ -62,7 +89,6 @@ public class GlobalExceptionHandler {
         }
 
         // --- Logic Smart Redirect menggunakan Anotasi ---
-        // Kita ambil HandlerMethod secara manual dari request attribute untuk menghindari IllegalStateException
         Object handler = request.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
         
         if (handler instanceof HandlerMethod handlerMethod && "GET".equalsIgnoreCase(request.getMethod())) {
@@ -73,8 +99,6 @@ public class GlobalExceptionHandler {
 
             if (annotation != null) {
                 String redirectUrl = annotation.value();
-                
-                // AUTO-DETECT: Jika value kosong, ambil dari @RequestMapping di level Class
                 if (redirectUrl.isEmpty()) {
                     RequestMapping requestMapping = handlerMethod.getBeanType().getAnnotation(RequestMapping.class);
                     if (requestMapping != null && requestMapping.value().length > 0) {
@@ -126,7 +150,6 @@ public class GlobalExceptionHandler {
                     .body(ApiResponse.error(ex.getMessage()));
         }
         
-        // Untuk browser biasa, tampilkan 404 karena user mencoba akses URL yang salah secara fungsional
         return "error/404";
     }
 
