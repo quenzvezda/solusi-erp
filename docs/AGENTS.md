@@ -26,8 +26,9 @@ AI Assistant WAJIB mematuhi versi dan teknologi berikut berdasarkan `pom.xml` ut
 * **Reporting:** Apache POI (Excel) & JasperReports (PDF).
 
 ## 3. Architecture & Coding Standards
-* **Package Structure:** Gunakan **Package by Feature/Module** (Contoh: `com.solusi.erp.inventory`, `com.solusi.erp.sales`, `com.solusi.erp.security`). Di dalam setiap modul tersebut baru terdapat `controller`, `service`, `repository`, `entity`, dan `dto`.
-* **Data Transfer Object (DTO):** 
+*   **Package Structure:** Gunakan **Package by Feature/Module**. 
+*   **Advanced Architecture (Prototype):** Sebagian modul (dimulai dari `com.solusi.erp.common.news`) menggunakan **Pure Clean Architecture + DDD + CQRS**. Developer sangat disarankan merujuk ke modul tersebut sebagai standar tertinggi untuk skalabilitas. Lihat detailnya di [docs/architecture/clean-ddd-cqrs-standard.md](docs/architecture/clean-ddd-cqrs-standard.md).
+*   **DTO (Data Transfer Object):** 
     * JANGAN PERNAH mengirimkan JPA Entity secara langsung ke Thymeleaf (Controller to View).
     * JANGAN PERNAH menerima form submission langsung ke JPA Entity.
     * Selalu gunakan DTO untuk *request* (form) dan *response* (view), dan gunakan MapStruct untuk *mapping*.

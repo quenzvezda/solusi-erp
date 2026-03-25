@@ -8,8 +8,10 @@ Selamat datang di pusat dokumentasi sistem Solusi ERP. Gunakan dokumen ini sebag
 ## 2. Documentation Folders
 Dokumentasi dikelompokkan ke dalam folder berikut berdasarkan konteksnya:
 
-- **[/architecture](architecture/)**: Berisi Class Diagram dan pola desain tingkat tinggi (seperti `BaseModel`).
-- **[/database](database/)**: Berisi ERD (Entity Relationship Diagram) dan script dummy data (Seeder).
+- **[/architecture](architecture/)**: Berisi Class Diagram dan pola desain tingkat tinggi.
+    - [Clean Architecture + DDD + CQRS Standard](architecture/clean-ddd-cqrs-standard.md) (Standard Baru)
+    - [Base Model Pattern](architecture/base-model-pattern.md)
+- **[/database](database/)**: Berisi ERD dan script dummy data.
 - **[/modules](modules/)**: Penjelasan fungsional dan aturan bisnis untuk setiap fitur spesifik (Inventory, Master Data, dll).
 - **[/spec](spec/)**: **[PENTING]** Spesifikasi teknis horizontal/shared yang digunakan di seluruh aplikasi. Lihat **[Spec Index](spec/index.md)**.
 - **[/roadmap](roadmap/)**: Rencana pengembangan masa depan dan pelacakan standardisasi arsitektur.
