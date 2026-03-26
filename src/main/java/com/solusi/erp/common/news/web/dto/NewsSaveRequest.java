@@ -13,14 +13,15 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * Request DTO untuk News (Web Layer).
+ * Request DTO untuk Menyimpan/Mengupdate News (Web Layer).
+ * Menggunakan Intent-Based Naming: "Save" mencakup Create dan Update.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class NewsRequest extends BaseAuditResponse {
+public class NewsSaveRequest extends BaseAuditResponse {
 
     @NotBlank(message = "{label.news.title} {validation.notnull.suffix}")
     @Size(min = 10, message = "{label.news.title.minlength}")

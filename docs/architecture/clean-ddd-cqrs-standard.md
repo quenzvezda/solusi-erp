@@ -45,5 +45,20 @@ Registrasi Bean dilakukan secara eksplisit di `infrastructure.config.[Module]Con
 1.  **Unit Test (Domain/Application)**: Murni JUnit 5 + Mockito. Tanpa Spring Context. Sangat Cepat.
 2.  **Surgical Integration Test**: Menggunakan `@ContextConfiguration` untuk memuat HANYA file Config modul terkait. Membuktikan registrasi Bean dan aspek framework (seperti transaksi) berjalan benar.
 
+## 6. Intent-Based Naming (DTO Standard)
+Untuk menghindari kekakuan nama (seperti `ApprovalRequestRequest`) dan meningkatkan keterbacaan, setiap DTO di layer `web` wajib menggunakan penamaan berbasis intensi (Intent-Based Naming):
+
+*   **Request (Write/Command)**: Gunakan kata kerja atau aksi.
+    *   `[Action][Entity]Request`
+    *   Contoh: `NewsSaveRequest` (untuk Create/Update), `ApprovalDecisionRequest` (untuk Approve/Reject).
+*   **Response (Read/Query)**: Gunakan deskripsi output.
+    *   `[Entity][Type]Response`
+    *   Contoh: `NewsDetailResponse`, `NewsSummaryResponse` (untuk list view).
+
+Keuntungan:
+1.  **Menghindari Naming Stuttering**: Tidak ada lagi `RequestRequest`.
+2.  **Validasi Spesifik**: Setiap DTO hanya berisi field yang diperlukan untuk aksi tersebut.
+3.  **UI Alignment**: Nama DTO mencerminkan tugas (task) yang sedang dikerjakan user di layar.
+
 ---
 **Reference Implementation**: `com.solusi.erp.common.news`

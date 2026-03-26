@@ -11,14 +11,15 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * Response DTO untuk News (Web Layer).
+ * Detail Response DTO untuk News (Web Layer).
+ * Menggunakan Intent-Based Naming: "Detail" mencerminkan view lengkap objek News.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class NewsResponse extends BaseAuditResponse {
+public class NewsDetailResponse extends BaseAuditResponse {
     private String title;
     private String content;
     private NewsStatus status;

@@ -3,8 +3,8 @@ package com.solusi.erp.common.news.web.controller;
 import com.solusi.erp.common.news.application.usecase.command.CreateNewsUseCase;
 import com.solusi.erp.common.news.application.usecase.command.UpdateNewsUseCase;
 import com.solusi.erp.common.news.domain.model.News;
-import com.solusi.erp.common.news.web.dto.NewsRequest;
-import com.solusi.erp.common.news.web.dto.NewsResponse;
+import com.solusi.erp.common.news.web.dto.NewsSaveRequest;
+import com.solusi.erp.common.news.web.dto.NewsDetailResponse;
 import com.solusi.erp.common.news.web.mapper.NewsWebMapper;
 import com.solusi.erp.core.dto.ApiResponse;
 import jakarta.validation.Valid;
@@ -35,14 +35,14 @@ public class NewsController {
     @GetMapping("/create")
     @PreAuthorize("hasAuthority('NEWS_CREATE')")
     public String createForm(Model model) {
-        model.addAttribute("news", new NewsRequest());
+        model.addAttribute("news", new NewsSaveRequest());
         return "common/news/form";
     }
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('NEWS_CREATE')")
     @ResponseBody
-    public ResponseEntity<ApiResponse<NewsResponse>> create(@Valid @RequestBody NewsRequest request) {
+    public ResponseEntity<ApiResponse<NewsDetailResponse>> create(@Valid @RequestBody NewsSaveRequest request) {
         String author = SecurityContextHolder.getContext().getAuthentication().getName();
         
         // Panggil Use Case
@@ -52,7 +52,7 @@ public class NewsController {
                 author
         );
         
-        NewsResponse response = webMapper.toResponse(domain);
+        NewsDetailResponse response = webMapper.toResponse(domain);
         String msg = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
         
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(msg, response));
@@ -61,13 +61,13 @@ public class NewsController {
     @PostMapping("/update/{id}")
     @PreAuthorize("hasAuthority('NEWS_UPDATE')")
     @ResponseBody
-    public ResponseEntity<ApiResponse<NewsResponse>> update(
+    public ResponseEntity<ApiResponse<NewsDetailResponse>> update(
             @PathVariable Long id, 
-            @Valid @RequestBody NewsRequest request) {
+            @Valid @RequestBody NewsSaveRequest request) {
         
         News domain = updateNewsUseCase.execute(id, request.getTitle(), request.getContent());
         
-        NewsResponse response = webMapper.toResponse(domain);
+        NewsDetailResponse response = webMapper.toResponse(domain);
         String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
         
         return ResponseEntity.ok(ApiResponse.success(msg, response));
