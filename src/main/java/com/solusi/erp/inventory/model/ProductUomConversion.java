@@ -12,6 +12,8 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 
+import com.solusi.erp.inventory.product.infrastructure.persistence.ProductEntity;
+
 /**
  * Product UOM Conversion entity.
  * Defines factors to convert units to the product's Base UOM.
@@ -24,7 +26,7 @@ public class ProductUomConversion extends BaseModel {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    private ProductEntity product;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "from_uom_id", nullable = false)

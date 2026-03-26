@@ -1,24 +1,23 @@
-package com.solusi.erp.inventory.model;
+package com.solusi.erp.inventory.product.infrastructure.persistence;
 
 import com.solusi.erp.core.model.BaseModel;
+import com.solusi.erp.inventory.model.Brand;
+import com.solusi.erp.inventory.model.ProductCategory;
+import com.solusi.erp.inventory.model.UnitOfMeasure;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import java.math.BigDecimal;
 
 /**
- * Product Entity.
- * Mandate: AGENTS.md Section 4 (Auditing via BaseModel)
+ * JPA Entity for Product.
+ * Part of Infrastructure Layer.
  */
 @Entity
 @Table(name = "products")
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class Product extends BaseModel {
+public class ProductEntity extends BaseModel {
 
     @Column(nullable = false, unique = true, length = 50)
     private String code;

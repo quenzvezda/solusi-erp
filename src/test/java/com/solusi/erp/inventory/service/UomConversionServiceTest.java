@@ -1,9 +1,9 @@
 package com.solusi.erp.inventory.service;
 
-import com.solusi.erp.inventory.model.Product;
+import com.solusi.erp.inventory.product.infrastructure.persistence.ProductEntity;
 import com.solusi.erp.inventory.model.ProductUomConversion;
 import com.solusi.erp.inventory.model.UnitOfMeasure;
-import com.solusi.erp.inventory.repository.ProductRepository;
+import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import com.solusi.erp.inventory.repository.ProductUomConversionRepository;
 import com.solusi.erp.inventory.service.impl.UomConversionServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 class UomConversionServiceTest {
 
     @Mock
-    private ProductRepository productRepository;
+    private JpaProductRepository productRepository;
 
     @Mock
     private ProductUomConversionRepository conversionRepository;
@@ -36,22 +36,22 @@ class UomConversionServiceTest {
     @InjectMocks
     private UomConversionServiceImpl uomConversionService;
 
-    private Product product;
+    private ProductEntity product;
     private UnitOfMeasure baseUom;
-    private UnitOfMeasure boxUom;
+    private UnitOfMeasure sourceUom;
 
     @BeforeEach
     void setUp() {
         baseUom = new UnitOfMeasure();
-        baseUom.setId(1L);
-        baseUom.setCode("PCS");
+        baseUom.setId(10L);
+        baseUom.setName("Pieces");
 
-        boxUom = new UnitOfMeasure();
-        boxUom.setId(2L);
-        boxUom.setCode("BOX");
+        sourceUom = new UnitOfMeasure();
+        sourceUom.setId(20L);
+        sourceUom.setName("Box");
 
-        product = new Product();
-        product.setId(100L);
+        product = new ProductEntity();
+        product.setId(1L);
         product.setCode("P001");
         product.setUom(baseUom);
     }

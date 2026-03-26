@@ -4,10 +4,10 @@ import com.solusi.erp.core.model.CurrencyAmount;
 import com.solusi.erp.inventory.dto.StockMovementPayload;
 import com.solusi.erp.inventory.model.InventoryMovement;
 import com.solusi.erp.inventory.model.MovementType;
-import com.solusi.erp.inventory.model.Product;
+import com.solusi.erp.inventory.product.infrastructure.persistence.ProductEntity;
+import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import com.solusi.erp.inventory.model.StockBalance;
 import com.solusi.erp.inventory.repository.InventoryMovementRepository;
-import com.solusi.erp.inventory.repository.ProductRepository;
 import com.solusi.erp.inventory.repository.StockBalanceRepository;
 import com.solusi.erp.inventory.repository.ContainerRepository;
 import com.solusi.erp.master.repository.CurrencyRepository;
@@ -34,7 +34,7 @@ public class StockServiceImpl implements StockService {
 
     private final StockBalanceRepository stockBalanceRepository;
     private final InventoryMovementRepository inventoryMovementRepository;
-    private final ProductRepository productRepository;
+    private final JpaProductRepository productRepository;
     private final ContainerRepository containerRepository;
     private final CurrencyRepository currencyRepository;
     private final UomConversionService uomConversionService;
@@ -50,7 +50,7 @@ public class StockServiceImpl implements StockService {
                     payload.getProductId(), payload.getUomId(), payload.getQuantity());
         }
 
-        Product product = productRepository.getReferenceById(payload.getProductId());
+        ProductEntity product = productRepository.getReferenceById(payload.getProductId());
         
         // 2. Resolve Serial Number
         final String serialNumber = resolveSerialNumber(product, payload);
@@ -116,9 +116,9 @@ public class StockServiceImpl implements StockService {
         };
     }
 
-    private String resolveSerialNumber(Product product, StockMovementPayload payload) {
+    private String resolveSerialNumber(ProductEntity product, StockMovementPayload payload) {
         String sn = payload.getSerialNumber();
-        if (product.getIsSerialized() && !StringUtils.hasText(sn) && isPositiveAdjustment(payload)) {
+        if (Boolean.TRUE.equals(product.getIsSerialized()) && !StringUtils.hasText(sn) && isPositiveAdjustment(payload)) {
             return SerialNumberGenerator.generate();
         }
         return sn;

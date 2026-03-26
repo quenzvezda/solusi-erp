@@ -1,6 +1,7 @@
 package com.solusi.erp.inventory.model;
 
 import com.solusi.erp.core.model.BaseModel;
+import com.solusi.erp.inventory.product.infrastructure.persistence.ProductEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,7 +24,7 @@ public class StockBalance extends BaseModel {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    private ProductEntity product;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "container_id", nullable = false)

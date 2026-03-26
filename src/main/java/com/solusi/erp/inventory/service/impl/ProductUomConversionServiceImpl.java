@@ -6,9 +6,9 @@ import com.solusi.erp.inventory.dto.ProductUomConversionResponse;
 import com.solusi.erp.inventory.dto.UomConversionLookupDto;
 import com.solusi.erp.inventory.form.ProductUomUIForm;
 import com.solusi.erp.inventory.mapper.ProductUomConversionMapper;
-import com.solusi.erp.inventory.model.Product;
+import com.solusi.erp.inventory.product.infrastructure.persistence.ProductEntity;
 import com.solusi.erp.inventory.model.ProductUomConversion;
-import com.solusi.erp.inventory.repository.ProductRepository;
+import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import com.solusi.erp.inventory.repository.ProductUomConversionRepository;
 import com.solusi.erp.inventory.repository.UnitOfMeasureRepository;
 import com.solusi.erp.inventory.service.ProductUomConversionService;
@@ -29,7 +29,7 @@ import java.util.List;
 public class ProductUomConversionServiceImpl implements ProductUomConversionService {
 
     private final ProductUomConversionRepository repository;
-    private final ProductRepository productRepository;
+    private final JpaProductRepository productRepository;
     private final UnitOfMeasureRepository uomRepository;
     private final ProductUomConversionMapper mapper;
     private final MessageSource messageSource;
@@ -121,7 +121,7 @@ public class ProductUomConversionServiceImpl implements ProductUomConversionServ
     @Override
     @Transactional(readOnly = true)
     public List<UomConversionLookupDto> getConversions(Long productId) {
-        Product product = productRepository.findById(productId)
+        ProductEntity product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.product.notfound")));
 
         List<UomConversionLookupDto> results = new ArrayList<>();
@@ -150,7 +150,7 @@ public class ProductUomConversionServiceImpl implements ProductUomConversionServ
     }
 
     private void validateRequest(ProductUomConversionRequest request, Long id) {
-        Product product = productRepository.findById(request.getProductId())
+        ProductEntity product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.product.notfound")));
 
         if (request.getConversionFactor() == null || request.getConversionFactor().compareTo(BigDecimal.ZERO) <= 0) {
@@ -171,7 +171,7 @@ public class ProductUomConversionServiceImpl implements ProductUomConversionServ
     }
 
     private void populateAssociations(ProductUomConversion entity, ProductUomConversionRequest request) {
-        Product product = productRepository.getReferenceById(request.getProductId());
+        ProductEntity product = productRepository.getReferenceById(request.getProductId());
         entity.setProduct(product);
         entity.setFromUom(uomRepository.getReferenceById(request.getFromUomId()));
         entity.setToUom(product.getUom()); // Always convert to Base UOM

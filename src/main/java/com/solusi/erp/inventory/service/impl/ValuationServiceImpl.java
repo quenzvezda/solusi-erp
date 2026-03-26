@@ -3,7 +3,7 @@ package com.solusi.erp.inventory.service.impl;
 import com.solusi.erp.core.model.CurrencyAmount;
 import com.solusi.erp.inventory.model.ValuationLayer;
 import com.solusi.erp.inventory.repository.ContainerRepository;
-import com.solusi.erp.inventory.repository.ProductRepository;
+import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import com.solusi.erp.inventory.repository.ValuationLayerRepository;
 import com.solusi.erp.inventory.service.ValuationService;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ import java.util.List;
 public class ValuationServiceImpl implements ValuationService {
 
     private final ValuationLayerRepository valuationLayerRepository;
-    private final ProductRepository productRepository;
+    private final JpaProductRepository productRepository;
     private final ContainerRepository containerRepository;
     private final MessageSource messageSource;
 

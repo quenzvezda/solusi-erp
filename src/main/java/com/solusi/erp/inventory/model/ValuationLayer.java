@@ -17,6 +17,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import com.solusi.erp.inventory.product.infrastructure.persistence.ProductEntity;
 
 /**
  * Valuation Layer entity for FIFO costing.
@@ -30,7 +31,7 @@ public class ValuationLayer extends BaseModel {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    private ProductEntity product;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "container_id", nullable = false)

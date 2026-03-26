@@ -2,10 +2,10 @@ package com.solusi.erp.inventory.service;
 
 import com.solusi.erp.core.model.CurrencyAmount;
 import com.solusi.erp.inventory.model.Container;
-import com.solusi.erp.inventory.model.Product;
+import com.solusi.erp.inventory.product.infrastructure.persistence.ProductEntity;
 import com.solusi.erp.inventory.model.ValuationLayer;
 import com.solusi.erp.inventory.repository.ContainerRepository;
-import com.solusi.erp.inventory.repository.ProductRepository;
+import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import com.solusi.erp.inventory.repository.ValuationLayerRepository;
 import com.solusi.erp.inventory.service.impl.ValuationServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +32,7 @@ class ValuationServiceTest {
     private ValuationLayerRepository valuationLayerRepository;
 
     @Mock
-    private ProductRepository productRepository;
+    private JpaProductRepository productRepository;
 
     @Mock
     private ContainerRepository containerRepository;
@@ -43,12 +43,12 @@ class ValuationServiceTest {
     @InjectMocks
     private ValuationServiceImpl valuationService;
 
-    private Product product;
+    private ProductEntity product;
     private Container container;
 
     @BeforeEach
     void setUp() {
-        product = new Product();
+        product = new ProductEntity();
         product.setId(1L);
         container = new Container();
         container.setId(1L);

@@ -3,10 +3,10 @@ package com.solusi.erp.inventory.service;
 import com.solusi.erp.inventory.dto.ProductUomConversionRequest;
 import com.solusi.erp.inventory.dto.ProductUomConversionResponse;
 import com.solusi.erp.inventory.mapper.ProductUomConversionMapper;
-import com.solusi.erp.inventory.model.Product;
+import com.solusi.erp.inventory.product.infrastructure.persistence.ProductEntity;
 import com.solusi.erp.inventory.model.ProductUomConversion;
 import com.solusi.erp.inventory.model.UnitOfMeasure;
-import com.solusi.erp.inventory.repository.ProductRepository;
+import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import com.solusi.erp.inventory.repository.ProductUomConversionRepository;
 import com.solusi.erp.inventory.repository.UnitOfMeasureRepository;
 import com.solusi.erp.inventory.service.impl.ProductUomConversionServiceImpl;
@@ -30,7 +30,7 @@ class ProductUomConversionServiceImplTest {
     @Mock
     private ProductUomConversionRepository repository;
     @Mock
-    private ProductRepository productRepository;
+    private JpaProductRepository productRepository;
     @Mock
     private UnitOfMeasureRepository uomRepository;
     @Mock
@@ -41,7 +41,7 @@ class ProductUomConversionServiceImplTest {
     @InjectMocks
     private ProductUomConversionServiceImpl service;
 
-    private Product product;
+    private ProductEntity product;
 	private UnitOfMeasure boxUom;
     private ProductUomConversionRequest request;
 
@@ -55,7 +55,7 @@ class ProductUomConversionServiceImplTest {
         boxUom.setId(2L);
         boxUom.setName("Box");
 
-        product = new Product();
+        product = new ProductEntity();
         product.setId(10L);
         product.setName("Test Product");
         product.setUom(baseUom);

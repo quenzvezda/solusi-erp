@@ -2,8 +2,9 @@ package com.solusi.erp.inventory.service;
 
 import com.solusi.erp.inventory.dto.StockMovementPayload;
 import com.solusi.erp.inventory.model.*;
+import com.solusi.erp.inventory.product.infrastructure.persistence.ProductEntity;
+import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import com.solusi.erp.inventory.repository.InventoryMovementRepository;
-import com.solusi.erp.inventory.repository.ProductRepository;
 import com.solusi.erp.inventory.repository.StockBalanceRepository;
 import com.solusi.erp.inventory.repository.ContainerRepository;
 import com.solusi.erp.inventory.service.impl.StockServiceImpl;
@@ -32,7 +33,7 @@ public class StockServiceTest {
     private InventoryMovementRepository inventoryMovementRepository;
 
     @Mock
-    private ProductRepository productRepository;
+    private JpaProductRepository productRepository;
 
     @Mock
     private ContainerRepository containerRepository;
@@ -49,12 +50,12 @@ public class StockServiceTest {
     @InjectMocks
     private StockServiceImpl stockService;
 
-    private Product product;
+    private ProductEntity product;
     private Container container;
 
     @BeforeEach
     void setUp() {
-        product = new Product();
+        product = new ProductEntity();
         product.setId(1L);
         product.setCode("P001");
 

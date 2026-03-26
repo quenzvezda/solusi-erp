@@ -13,7 +13,7 @@ import com.solusi.erp.inventory.model.StockAdjustmentLine;
 import com.solusi.erp.inventory.repository.ContainerRepository;
 import com.solusi.erp.inventory.repository.FacilityRepository;
 import com.solusi.erp.inventory.repository.GridRepository;
-import com.solusi.erp.inventory.repository.ProductRepository;
+import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import com.solusi.erp.inventory.repository.StockAdjustmentRepository;
 import com.solusi.erp.inventory.service.StockAdjustmentService;
 import com.solusi.erp.inventory.service.StockService;
@@ -39,7 +39,7 @@ public class StockAdjustmentServiceImpl implements StockAdjustmentService {
     private final StockAdjustmentMapper mapper;
     private final SequenceGeneratorService sequenceGeneratorService;
     private final StockService stockService;
-    private final ProductRepository productRepository;
+    private final JpaProductRepository productRepository;
     private final ContainerRepository containerRepository;
     private final CurrencyRepository currencyRepository;
     private final FacilityRepository facilityRepository;

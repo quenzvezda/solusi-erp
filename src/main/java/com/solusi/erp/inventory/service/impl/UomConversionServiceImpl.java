@@ -1,8 +1,8 @@
 package com.solusi.erp.inventory.service.impl;
 
-import com.solusi.erp.inventory.model.Product;
+import com.solusi.erp.inventory.product.infrastructure.persistence.ProductEntity;
 import com.solusi.erp.inventory.model.ProductUomConversion;
-import com.solusi.erp.inventory.repository.ProductRepository;
+import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import com.solusi.erp.inventory.repository.ProductUomConversionRepository;
 import com.solusi.erp.inventory.service.UomConversionService;
 import lombok.RequiredArgsConstructor;
@@ -16,13 +16,13 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class UomConversionServiceImpl implements UomConversionService {
 
-    private final ProductRepository productRepository;
+    private final JpaProductRepository productRepository;
     private final ProductUomConversionRepository conversionRepository;
     private final MessageSource messageSource;
 
     @Override
     public BigDecimal convertToBaseUom(Long productId, Long sourceUomId, BigDecimal quantity) {
-        Product product = productRepository.findById(productId)
+        ProductEntity product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.product.notfound")));
 
         Long baseUomId = product.getUom().getId();
