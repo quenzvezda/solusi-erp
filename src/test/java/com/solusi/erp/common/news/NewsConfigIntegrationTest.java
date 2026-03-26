@@ -1,5 +1,6 @@
 package com.solusi.erp.common.news;
 
+import com.solusi.erp.common.news.application.port.NewsEventPublisher;
 import com.solusi.erp.common.news.application.usecase.command.CreateNewsUseCase;
 import com.solusi.erp.common.news.application.usecase.command.CreateNewsUseCaseImpl;
 import com.solusi.erp.common.news.application.usecase.query.FindPublishedNewsUseCase;
@@ -40,6 +41,11 @@ class NewsConfigIntegrationTest {
         @Bean
         public NewsRepository newsRepository() { 
             return mock(NewsRepository.class); 
+        }
+
+        @Bean
+        public NewsEventPublisher newsEventPublisher() {
+            return mock(NewsEventPublisher.class);
         }
 
         @Bean

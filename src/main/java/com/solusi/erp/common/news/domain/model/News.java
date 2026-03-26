@@ -1,5 +1,6 @@
 package com.solusi.erp.common.news.domain.model;
 
+import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.exception.DomainException;
 
 import java.time.LocalDateTime;
@@ -8,15 +9,15 @@ import java.time.LocalDateTime;
  * Aggregate Root: News.
  */
 public class News {
-    private final Long id;
-    private NewsContent content; // Value Object
+    private final AuditMetadata metadata;
+    private NewsContent content;
     private NewsStatus status;
     private LocalDateTime publishDate;
     private LocalDateTime expiryDate;
-    private String author;
+    private final String author;
 
-    public News(Long id, NewsContent content, NewsStatus status, LocalDateTime publishDate, LocalDateTime expiryDate, String author) {
-        this.id = id;
+    public News(AuditMetadata metadata, NewsContent content, NewsStatus status, LocalDateTime publishDate, LocalDateTime expiryDate, String author) {
+        this.metadata = metadata;
         this.content = content;
         this.status = status;
         this.publishDate = publishDate;
@@ -26,7 +27,7 @@ public class News {
 
     public static News createNew(String title, String content, String author) {
         return new News(
-            null,
+            AuditMetadata.empty(),
             new NewsContent(title, content),
             NewsStatus.DRAFT,
             null,
@@ -35,9 +36,17 @@ public class News {
         );
     }
 
-    public void publish(LocalDateTime publishDate, LocalDateTime expiryDate) {
+
+    public void submitForApproval() {
         if (this.status != NewsStatus.DRAFT) {
-            throw new DomainException("msg.error.news.publish.not-draft");
+            throw new DomainException("msg.error.news.submit.not-draft");
+        }
+        this.status = NewsStatus.PENDING_APPROVAL;
+    }
+
+    public void publish(LocalDateTime publishDate, LocalDateTime expiryDate) {
+        if (this.status != NewsStatus.PENDING_APPROVAL) {
+            throw new DomainException("msg.error.news.publish.not-pending");
         }
         
         if (publishDate == null) {
@@ -68,10 +77,12 @@ public class News {
     public String getTitle() { return content.title(); }
     public String getContentText() { return content.content(); }
     
-    public Long getId() { return id; }
+    public Long getId() { return metadata.id(); }
     public NewsContent getContent() { return content; }
     public NewsStatus getStatus() { return status; }
     public LocalDateTime getPublishDate() { return publishDate; }
     public LocalDateTime getExpiryDate() { return expiryDate; }
     public String getAuthor() { return author; }
+    public Long getVersion() { return metadata.version(); }
+    public AuditMetadata getMetadata() { return metadata; }
 }

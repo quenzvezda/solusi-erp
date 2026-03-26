@@ -1,5 +1,6 @@
 package com.solusi.erp.common.news.infrastructure.config;
 
+import com.solusi.erp.common.news.application.port.NewsEventPublisher;
 import com.solusi.erp.common.news.application.usecase.command.*;
 import com.solusi.erp.common.news.application.usecase.query.*;
 import com.solusi.erp.common.news.domain.repository.NewsRepository;
@@ -37,6 +38,25 @@ public class NewsConfig {
         UpdateNewsUseCase pureUseCase = new UpdateNewsUseCaseImpl(newsRepository);
         return (id, title, content) -> 
             transactionTemplate.execute(status -> pureUseCase.execute(id, title, content));
+    }
+
+    @Bean
+    public SubmitNewsForApprovalUseCase submitNewsForApprovalUseCase(
+            NewsRepository newsRepository,
+            NewsEventPublisher eventPublisher,
+            TransactionTemplate transactionTemplate) {
+        SubmitNewsForApprovalUseCase pureUseCase = new SubmitNewsForApprovalUseCaseImpl(newsRepository, eventPublisher);
+        return (id, requester) ->
+            transactionTemplate.execute(status -> pureUseCase.execute(id, requester));
+    }
+
+    @Bean
+    public PublishNewsUseCase publishNewsUseCase(
+            NewsRepository newsRepository,
+            TransactionTemplate transactionTemplate) {
+        PublishNewsUseCase pureUseCase = new PublishNewsUseCaseImpl(newsRepository);
+        return (id, publishDate, expiryDate) ->
+            transactionTemplate.execute(status -> pureUseCase.execute(id, publishDate, expiryDate));
     }
 
     // QUERIES (Read Side)

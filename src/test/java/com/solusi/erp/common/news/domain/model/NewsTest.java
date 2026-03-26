@@ -31,15 +31,27 @@ class NewsTest {
         News news = News.createNew("Valid Title for ERP", "Valid Content", "Admin");
         LocalDateTime now = LocalDateTime.now();
         
-        news.publish(now, now.plusDays(7));
+        news.submitForApproval(); // Step 1: Submit
+        news.publish(now, now.plusDays(7)); // Step 2: Publish
         
         assertEquals(NewsStatus.PUBLISHED, news.getStatus());
         assertEquals(now, news.getPublishDate());
     }
 
     @Test
+    void shouldThrowExceptionIfPublishedWithoutApproval() {
+        News news = News.createNew("Valid Title for ERP", "Valid Content", "Admin");
+        
+        DomainException ex = assertThrows(DomainException.class, () -> 
+            news.publish(LocalDateTime.now(), null)
+        );
+        assertEquals("msg.error.news.publish.not-pending", ex.getKey());
+    }
+
+    @Test
     void shouldThrowExceptionIfPublishedTwice() {
         News news = News.createNew("Valid Title for ERP", "Valid Content", "Admin");
+        news.submitForApproval();
         news.publish(LocalDateTime.now(), null);
         
         assertThrows(DomainException.class, () -> 
@@ -58,7 +70,7 @@ class NewsTest {
     @Test
     void shouldThrowExceptionWhenUpdateNonDraft() {
         News news = News.createNew("Valid Title for ERP", "Valid Content", "Admin");
-        news.publish(LocalDateTime.now(), null);
+        news.submitForApproval(); // Change to PENDING
         
         DomainException ex = assertThrows(DomainException.class, () -> 
             news.updateContent("New Title", "New Content")

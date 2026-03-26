@@ -1,77 +1,62 @@
-# Rancangan Arsitektur Generic Approval System
+# Arsitektur Generic Approval System
 
-Sistem Approval yang dirancang agar *generic* dan dapat diimplementasikan ke berbagai modul transaksi (seperti Stock Adjustment, Purchase Order, dll) tanpa memerlukan *hard-coding* relasi database antar modul (mencegah *tight-coupling*).
+Status: **Core Implemented (Fase 1 Selesai)**
 
-## 1. Desain Database (Entity Model)
+Sistem Approval yang dirancang agar *generic* dan dapat diimplementasikan ke berbagai modul transaksi tanpa memerlukan *hard-coding* relasi database antar modul (mencegah *tight-coupling*).
 
-Menggunakan pendekatan **Polymorphic Relation** melalui `referenceType` dan `referenceId`.
+## 1. Desain Database (Polymorphic Relation)
+
+Modul ini menggunakan pendekatan **Polymorphic Relation** melalui `referenceType` dan `referenceId`.
 
 **A. `appr_requests` (Approval Request)**
 Menyimpan status terkini dari proses persetujuan sebuah dokumen.
-*   `id`: UUID / Long
-*   `referenceType`: String (Contoh: `"STOCK_ADJUSTMENT"`, `"PURCHASE_ORDER"`) -> Kunci generic-nya.
-*   `referenceId`: String / Long (ID dari dokumen transaksi terkait).
+*   `id`: BIGINT (PK)
+*   `referenceType`: String (Contoh: `"NEWS"`, `"STOCK_ADJUSTMENT"`) -> Kunci generic.
+*   `referenceId`: BIGINT (ID dari dokumen transaksi terkait).
 *   `status`: Enum (`PENDING`, `COMPLETED`, `REJECTED`, `CANCELLED`).
-*   `currentApproverId`: Relasi ke tabel `Party` (Menandakan giliran siapa yang harus memproses saat ini).
-*   *Audit fields dari `BaseModel`* (`createdBy`, `createdDate`, dll).
+*   `currentApproverId`: Relasi ke tabel `Party`.
+*   `version`: BIGINT (Optimistic Locking).
 
-**B. `appr_histories` (Approval History / Log)**
+**B. `appr_histories` (Approval History)**
 Menyimpan jejak langkah (log) persetujuan dokumen.
-*   `id`: UUID / Long
+*   `id`: BIGINT (PK)
 *   `requestId`: FK ke `appr_requests`.
-*   `action`: Enum (`REQUESTED`, `APPROVE_AND_FINISH`, `FORWARD`, `REJECTED`, `APPROVE_AND_FORWARD`).
-*   `actorId`: Relasi ke `Party` (Siapa yang melakukan aksi pada log ini).
-*   `targetApproverId`: Relasi ke `Party` (Opsional, diisi jika *action*-nya `FORWARD` atau `APPROVE_AND_FORWARD`).
-*   `notes`: Text (Alasan *reject* atau catatan *forward*).
-*   `actionDate`: LocalDateTime (Sama dengan `createdDate` BaseModel).
+*   `action`: Enum (`REQUESTED`, `APPROVE_AND_FINISH`, `REJECTED`).
+*   `actorId`: Relasi ke `Party`.
+*   `notes`: Text (Alasan reject atau catatan).
+*   `actionDate`: LocalDateTime.
 
-## 2. Strategi Integrasi Backend (Event-Driven)
+## 2. Kemurnian Domain & AuditMetadata
 
-Menggunakan **Spring Application Events (`ApplicationEventPublisher`)** agar modul persetujuan dan modul bisnis dapat berkomunikasi tanpa saling mengetahui detail masing-masing.
+Untuk menjaga prinsip **Clean Architecture & DDD**, field teknis (`id`, `version`, audit fields) tidak diletakkan sebagai atribut utama di level Aggregate Root, melainkan dibungkus dalam objek **`AuditMetadata`**.
 
-1.  **Request:** User klik "Request Approval". Status transaksi berubah menjadi `WAITING_APPROVAL`.
-2.  **Approve:** Approver memproses dokumen (Approve & Finish).
-3.  **Event Diterbitkan:** `ApprovalService` mencatat history, mengubah status request menjadi `COMPLETED`, lalu mem-publish event:
-    ```java
-    applicationEventPublisher.publishEvent(new ApprovalCompletedEvent("STOCK_ADJUSTMENT", id));
-    ```
-4.  **Listener Bereaksi:** Modul transaksi (`StockAdjustmentService`) menangkap event tersebut dan mengeksekusi logika bisnisnya (contoh: memotong/menambah stok):
-    ```java
-    @EventListener(condition = "#event.referenceType == 'STOCK_ADJUSTMENT'")
-    public void onStockAdjustmentApproved(ApprovalCompletedEvent event) {
-        stockAdjustmentService.processAdjustmentToInventory(event.getReferenceId());
-    }
-    ```
-
-## 3. Desain UI/UX Frontend (Generic Fragment)
-
-Karena proyek menggunakan arsitektur Thymeleaf + HTMX, UI approval akan dibuat sebagai **Satu Buah Fragment Universal** yang bisa disematkan di halaman detail modul apapun.
-
-```html
-<!-- Fragment: templates/fragments/approval.html -->
-<div th:fragment="timeline(refType, refId)">
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Approval Workflow</h3>
-        </div>
-        
-        <!-- Diload asinkron via HTMX agar halaman utama tidak lambat -->
-        <div class="card-body" 
-             th:attr="hx-get=@{/api/approvals/history(refType=${refType}, refId=${refId})}" 
-             hx-trigger="load">
-             <div class="spinner-border"></div> Loading history...
-        </div>
-    </div>
-</div>
+```java
+// domain.model.ApprovalRequest
+public class ApprovalRequest {
+    private final AuditMetadata metadata; // Berisi ID dan Version
+    private final String referenceType;
+    private final Long referenceId;
+    private ApprovalStatus status;
+    // ...
+}
 ```
 
-**Cara Implementasi di Halaman Transaksi (contoh: Stock Adjustment):**
+## 3. Strategi Integrasi (Event-Driven)
+
+Integrasi antar modul dilakukan sepenuhnya secara **Asinkron/Decoupled** menggunakan Spring Application Events.
+
+1.  **Pemicu (Modul Bisnis):** Menerbitkan `ApprovalRequestedEvent(refType, refId, requester)`.
+2.  **Penerima (Modul Approval):** Mendengarkan event tersebut dan membuat data di `appr_requests`.
+3.  **Penyelesaian (Modul Approval):** Setelah diproses, menerbitkan `ApprovalCompletedEvent(refType, refId)`.
+4.  **Reaksi (Modul Bisnis):** Mendengarkan event penyelesaian (filter berdasarkan `refType`) dan mengeksekusi logika finalisasi (misal: Publish berita atau Update stok).
+
+## 4. Desain UI/UX (HTMX + Thymeleaf)
+
+UI approval akan dibuat sebagai **Generic Fragment** yang dapat disematkan di halaman detail modul apapun.
+
 ```html
-<div th:replace="~{fragments/approval :: timeline('STOCK_ADJUSTMENT', ${adjustment.id})}"></div>
+<!-- Implementasi di Halaman Detail -->
+<div th:replace="~{fragments/approval :: timeline('NEWS', ${news.id})}"></div>
 ```
 
-## 4. Peningkatan Fitur (Future Roadmap / Standard ERP Profesional)
-
-*   **Role/Jabatan vs Person (Party):** Dokumen idealnya di-approve berdasarkan *Jabatan* (Party Role) alih-alih orang spesifik (Party), sehingga jika karyawan cuti, orang dengan jabatan yang sama dapat mengambil alih.
-*   **Approval Template / Matrix:** Otomatisasi penentuan approver berdasarkan kriteria transaksi (contoh: Jika nilai Stock Adjustment di atas Rp 10.000.000, maka Approver-nya otomatis Manager Finance).
-*   **Notification System:** Penambahan notifikasi (Email atau Lonceng UI) kepada `targetApprover` ketika terjadi *action* `REQUESTED` atau `FORWARD`.
+History akan dimuat secara asinkron menggunakan HTMX untuk menjaga performa loading halaman utama.

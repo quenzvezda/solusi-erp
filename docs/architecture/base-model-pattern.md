@@ -67,3 +67,18 @@ Untuk mendukung tampilan audit di UI secara otomatis, seluruh DTO (baik `*Reques
 
 ## 4. Optimistic Locking
 `BaseModel` menyertakan atribut `version` dengan anotasi `@Version`. Ini digunakan untuk mencegah **Lost Updates** jika dua user mencoba mengedit data yang sama secara bersamaan. Jika terjadi konflik, Spring akan melempar `ObjectOptimisticLockingFailureException`.
+
+## 5. Pola Metadata pada Modul DDD (Advanced)
+
+Pada modul yang menggunakan **Pure DDD + Clean Architecture** (seperti `news` dan `approval`), kita menghindari penggunaan inheritance `BaseModel` secara langsung di level Domain untuk menjaga **Domain Purity**.
+
+Sebagai gantinya, kita menggunakan pola **Metadata Object** melalui class `com.solusi.erp.core.domain.model.AuditMetadata`.
+
+### Cara Kerja:
+1.  **Domain Layer**: Entity Domain memiliki atribut `private final AuditMetadata metadata` yang membungkus `id`, `version`, dan field audit lainnya.
+2.  **Infrastructure Layer**: `PersistenceMapper` bertanggung jawab memetakan field-field dari `BaseModel` (di class Entity JPA) ke dalam objek `AuditMetadata` (di class Entity Domain).
+
+### Keuntungan:
+- **Persistence Ignorance**: Objek Domain tidak perlu tahu tentang anotasi `@Version` atau `@CreatedBy`.
+- **Consistency**: Aturan *Optimistic Locking* tetap ditegakkan karena `version` dibawa dari database ke domain dan kembali lagi saat proses simpan.
+- **Ubiquitous Language**: Atribut teknis terisolasi dari atribut bisnis murni.

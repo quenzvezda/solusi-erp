@@ -5,6 +5,7 @@ package com.solusi.erp.common.news.domain.model;
  */
 public enum NewsStatus {
     DRAFT,
+    PENDING_APPROVAL,
     PUBLISHED,
     ARCHIVED,
     EXPIRED

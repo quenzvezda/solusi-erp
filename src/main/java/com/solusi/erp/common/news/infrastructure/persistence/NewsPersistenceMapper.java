@@ -10,9 +10,11 @@ import org.mapstruct.ReportingPolicy;
 public interface NewsPersistenceMapper {
 
     @Mapping(target = "content", expression = "java(new com.solusi.erp.common.news.domain.model.NewsContent(entity.getTitle(), entity.getContent()))")
+    @Mapping(target = "metadata", expression = "java(new com.solusi.erp.core.domain.model.AuditMetadata(entity.getId(), entity.getVersion() != null ? entity.getVersion().longValue() : null, entity.getCreatedDate(), entity.getCreatedBy(), entity.getUpdatedDate(), entity.getUpdatedBy()))")
     News toDomain(NewsEntity entity);
 
-    @Mapping(target = "id", source = "id")
+    @Mapping(target = "id", source = "metadata.id")
+    @Mapping(target = "version", source = "metadata.version")
     @Mapping(target = "title", source = "content.title")
     @Mapping(target = "content", source = "content.content")
     @Mapping(target = "status", source = "status")
