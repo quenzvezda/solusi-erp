@@ -1,8 +1,8 @@
 {
   "track_id": "refactor-product_20260326",
   "type": "refactor",
-  "status": "new",
+  "status": "completed",
   "created_at": "2026-03-26T10:00:00Z",
-  "updated_at": "2026-03-26T10:00:00Z",
+  "updated_at": "2026-03-26T16:31:08Z",
   "description": "refactor agar menggunakan standard baru @docs/architecture/clean-ddd-cqrs-standard.md pada @src/main/java/com/solusi/erp/inventory/controller/ProductController.java syarat-syarat task selesai yaitu sudah mengikuti pola seperti news dan sudah implementasi unit test dari domain, application, infra, kalau bisa web juga dibuat dengan coverage perkiraan (estimasi mandiri) 80%+. jangan lupa kita gunakan pattern 1 fitur / model bisnis 1 package jadi packagenya jadi inventory.product baru di dalamnya ada domain, application, infra dan web. dokumentasi pendukung @docs/AGENTS.md baca mandiri sesuai index jika diperlukan @docs/index.md @docs/spec/index.md"
 }

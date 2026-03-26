@@ -33,4 +33,4 @@
 
 ## Phase 5: Cleanup
 - [x] Task: Remove old `Product`, `ProductService`, and legacy `ProductController`.
-- [ ] Task: Conductor - User Manual Verification 'Phase 5' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 5' (Protocol in workflow.md)

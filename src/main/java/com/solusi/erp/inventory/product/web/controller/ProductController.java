@@ -1,8 +1,6 @@
 package com.solusi.erp.inventory.product.web.controller;
 
 import com.solusi.erp.core.dto.ApiResponse;
-import com.solusi.erp.core.dto.FormViewDto;
-import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.inventory.model.UomType;
 import com.solusi.erp.inventory.product.application.usecase.command.*;

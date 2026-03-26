@@ -32,10 +32,19 @@ public class ProductSaveRequest extends BaseAuditResponse {
     @NotNull(message = "{label.product.category} {validation.notnull.suffix}")
     private Long categoryId;
 
+    // Display-only fields for TomSelect label persistence (AGENTS.md §6)
+    private String categoryName;
+    private String categoryCode;
+    private String categoryType;
+
     @NotNull(message = "{label.product.uom} {validation.notnull.suffix}")
     private Long uomId;
 
     private Long brandId;
+
+    // Display-only fields for TomSelect label persistence (AGENTS.md §6)
+    private String brandName;
+    private String brandCode;
 
     @Size(max = 50, message = "{label.product.hscode} {validation.size.suffix}")
     private String hscode;

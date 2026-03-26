@@ -32,6 +32,8 @@ public interface ProductPersistenceMapper {
     @Mapping(target = "brand", source = "brandId", qualifiedByName = "toBrand")
     @Mapping(target = "weightUom", source = "weightUomId", qualifiedByName = "toUom")
     @Mapping(target = "dimensionUom", source = "dimensionUomId", qualifiedByName = "toUom")
+    @Mapping(target = "isActive", source = "active")
+    @Mapping(target = "isSerialized", source = "serialized")
     ProductEntity toEntity(Product domain);
 
     default AuditMetadata toAuditMetadata(ProductEntity entity) {

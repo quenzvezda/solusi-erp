@@ -3,6 +3,7 @@ package com.solusi.erp.inventory.service;
 import com.solusi.erp.core.model.CurrencyAmount;
 import com.solusi.erp.inventory.dto.StockMovementPayload;
 import com.solusi.erp.inventory.model.*;
+import com.solusi.erp.inventory.product.infrastructure.persistence.ProductEntity;
 import com.solusi.erp.inventory.model.StockAdjustment.AdjustmentStatus;
 import com.solusi.erp.inventory.repository.StockAdjustmentRepository;
 import com.solusi.erp.inventory.service.impl.StockAdjustmentServiceImpl;
@@ -51,7 +52,7 @@ class StockAdjustmentServiceTest {
 
         List<StockAdjustmentLine> lines = new ArrayList<>();
         StockAdjustmentLine line = new StockAdjustmentLine();
-        line.setProduct(mock(Product.class));
+        line.setProduct(mock(ProductEntity.class));
         line.setContainer(mock(Container.class));
         line.setQuantity(BigDecimal.TEN);
         line.setUnitCost(new BigDecimal("100"));
@@ -94,7 +95,7 @@ class StockAdjustmentServiceTest {
     @Test
     void shouldProcessMultipleLinesInOrder() {
         StockAdjustmentLine line2 = new StockAdjustmentLine();
-        line2.setProduct(mock(Product.class));
+        line2.setProduct(mock(ProductEntity.class));
         line2.setContainer(mock(Container.class));
         line2.setQuantity(new BigDecimal("20"));
         line2.setUnitCost(new BigDecimal("50"));

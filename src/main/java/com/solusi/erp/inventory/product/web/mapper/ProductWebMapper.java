@@ -35,6 +35,8 @@ public abstract class ProductWebMapper {
     @Mapping(target = "uomName", source = "uomId", qualifiedByName = "getUomName")
     @Mapping(target = "uomCode", source = "uomId", qualifiedByName = "getUomCode")
     @Mapping(target = "brandName", source = "brandId", qualifiedByName = "getBrandName")
+    @Mapping(target = "isActive", source = "active")
+    @Mapping(target = "isSerialized", source = "serialized")
     public abstract ProductSummaryResponse toSummaryResponse(Product domain);
 
     @Mapping(target = "categoryName", source = "categoryId", qualifiedByName = "getCategoryName")
@@ -44,8 +46,17 @@ public abstract class ProductWebMapper {
     @Mapping(target = "brandName", source = "brandId", qualifiedByName = "getBrandName")
     @Mapping(target = "weightUomCode", source = "weightUomId", qualifiedByName = "getUomCode")
     @Mapping(target = "dimensionUomCode", source = "dimensionUomId", qualifiedByName = "getUomCode")
+    @Mapping(target = "isActive", source = "active")
+    @Mapping(target = "isSerialized", source = "serialized")
     public abstract ProductDetailResponse toDetailResponse(Product domain);
 
+    @Mapping(target = "isActive", source = "active")
+    @Mapping(target = "isSerialized", source = "serialized")
+    @Mapping(target = "categoryName", source = "categoryId", qualifiedByName = "getCategoryName")
+    @Mapping(target = "categoryCode", source = "categoryId", qualifiedByName = "getCategoryCode")
+    @Mapping(target = "categoryType", source = "categoryId", qualifiedByName = "getCategoryType")
+    @Mapping(target = "brandName", source = "brandId", qualifiedByName = "getBrandName")
+    @Mapping(target = "brandCode", source = "brandId", qualifiedByName = "getBrandCode")
     public abstract ProductSaveRequest toSaveRequest(Product domain);
 
     @AfterMapping
@@ -64,6 +75,12 @@ public abstract class ProductWebMapper {
     protected String getCategoryName(Long id) {
         if (id == null) return null;
         return categoryRepository.findById(id).map(c -> c.getName()).orElse(null);
+    }
+
+    @Named("getCategoryCode")
+    protected String getCategoryCode(Long id) {
+        if (id == null) return null;
+        return categoryRepository.findById(id).map(c -> c.getCode()).orElse(null);
     }
 
     @Named("getCategoryType")
@@ -88,5 +105,11 @@ public abstract class ProductWebMapper {
     protected String getBrandName(Long id) {
         if (id == null) return null;
         return brandRepository.findById(id).map(b -> b.getName()).orElse(null);
+    }
+
+    @Named("getBrandCode")
+    protected String getBrandCode(Long id) {
+        if (id == null) return null;
+        return brandRepository.findById(id).map(b -> b.getCode()).orElse(null);
     }
 }
