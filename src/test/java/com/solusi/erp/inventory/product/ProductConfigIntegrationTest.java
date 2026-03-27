@@ -42,6 +42,8 @@ class ProductConfigIntegrationTest {
         public SequenceGeneratorService sequenceGeneratorService() { return mock(SequenceGeneratorService.class); }
         @Bean
         public TransactionTemplate transactionTemplate() { return mock(TransactionTemplate.class); }
+        @Bean
+        public org.springframework.transaction.PlatformTransactionManager platformTransactionManager() { return mock(org.springframework.transaction.PlatformTransactionManager.class); }
     }
 
     @Test

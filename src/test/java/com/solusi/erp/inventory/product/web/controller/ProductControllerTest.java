@@ -1,4 +1,4 @@
-package com.solusi.erp.inventory.product;
+package com.solusi.erp.inventory.product.web.controller;
 
 import com.solusi.erp.inventory.product.web.controller.ProductController;
 import com.solusi.erp.inventory.product.application.usecase.command.CreateProductUseCase;

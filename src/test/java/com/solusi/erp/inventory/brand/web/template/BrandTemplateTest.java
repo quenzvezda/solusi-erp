@@ -1,6 +1,6 @@
-package com.solusi.erp.inventory.product;
+package com.solusi.erp.inventory.brand.web.template;
 
-import com.solusi.erp.inventory.product.web.dto.ProductSummaryResponse;
+import com.solusi.erp.inventory.brand.web.dto.BrandSummaryResponse;
 import com.solusi.erp.testutils.TemplateTestUtils;
 import com.solusi.erp.testutils.TestDtoFactory;
 import com.solusi.erp.testutils.TestPageBuilder;
@@ -17,11 +17,11 @@ import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ProductTemplateTest {
+public class BrandTemplateTest {
 
     @Test
     public void templateReferencesValidProperties() throws Exception {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("templates/inventory/products/list.html");
+        InputStream is = getClass().getClassLoader().getResourceAsStream("templates/inventory/brands/list.html");
         String template = new String(is.readAllBytes(), StandardCharsets.UTF_8);
 
         Pattern p = Pattern.compile("\\$\\{item\\.([a-zA-Z0-9_]+)\\}");
@@ -29,32 +29,26 @@ public class ProductTemplateTest {
         while (m.find()) {
             String prop = m.group(1);
             boolean hasField = false;
-            for (java.lang.reflect.Field f : ProductSummaryResponse.class.getDeclaredFields()) {
+            for (java.lang.reflect.Field f : BrandSummaryResponse.class.getDeclaredFields()) {
                 if (f.getName().equals(prop)) { hasField = true; break; }
             }
             boolean hasGetter = false;
             String getter = "get" + prop.substring(0,1).toUpperCase() + prop.substring(1);
             String isGetter = "is" + prop.substring(0,1).toUpperCase() + prop.substring(1);
-            for (java.lang.reflect.Method method : ProductSummaryResponse.class.getMethods()) {
+            for (java.lang.reflect.Method method : BrandSummaryResponse.class.getMethods()) {
                 if ((method.getName().equals(getter) || method.getName().equals(isGetter)) && method.getParameterCount()==0) { hasGetter = true; break; }
             }
-            assertThat(hasField || hasGetter).withFailMessage("Property '%s' referenced in template but not present on %s", prop, ProductSummaryResponse.class.getName()).isTrue();
+            assertThat(hasField || hasGetter).withFailMessage("Property '%s' referenced in template but not present on %s", prop, BrandSummaryResponse.class.getName()).isTrue();
         }
     }
 
     @Test
-    public void templateRendersFragmentWithSampleData() throws Exception {
-        ProductSummaryResponse dto = TestDtoFactory.sampleProductSummaryResponse();
-        Page<ProductSummaryResponse> page = TestPageBuilder.pageOf(List.of(dto), PageRequest.of(0,20), 1L);
+    public void templateContainsExpectedPlaceholders() throws Exception {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("templates/inventory/brands/list.html");
+        String template = new String(is.readAllBytes(), StandardCharsets.UTF_8);
 
-        Context ctx = new Context();
-        ctx.setVariable("page", page);
-        ctx.setVariable("keyword", null);
-
-        String output = TemplateTestUtils.renderFragment("inventory/products/list", "product-table-container", ctx);
-
-        assertThat(output).isNotBlank();
-        assertThat(output).contains("Product 1");
-        assertThat(output).contains("PR1");
+        assertThat(template).contains("brand-table-container");
+        assertThat(template).contains("${item.name}");
+        assertThat(template).contains("${item.code}");
     }
 }

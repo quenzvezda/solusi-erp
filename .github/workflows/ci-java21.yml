@@ -1,0 +1,85 @@
+name: CI - Java 21
+
+on:
+  push:
+    branches: [ main, master, 'feature/**', 'fix/**' ]
+  pull_request:
+    branches: [ main, master ]
+  schedule:
+    # Nightly full run — setiap hari pukul 02:00 UTC (09:00 WIB)
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      run_full:
+        description: 'Jalankan full test suite termasuk integration-template?'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  JAVA_VERSION: '21'
+  JAVA_DISTRIBUTION: 'temurin'
+
+jobs:
+  # ──────────────────────────────────────────────────────────────────────────
+  # Job 1: Fast — dijalankan setiap push / PR
+  # Mencakup: unit tests, static template checks, domain/application usecases
+  # Tidak mencakup: @Tag("integration-template") (Thymeleaf sec:authorize tests)
+  # Target waktu: < 60 detik
+  # ──────────────────────────────────────────────────────────────────────────
+  fast-tests:
+    name: Fast Tests (unit + static)
+    runs-on: ubuntu-latest
+    if: github.event_name != 'schedule'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Run fast tests (exclude integration-template tag)
+        run: mvn -B -e test -DexcludedGroups=integration-template
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fast-test-reports
+          path: target/surefire-reports/
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Job 2: Full — dijalankan secara terjadwal (nightly) atau manual dispatch
+  # Mencakup: SEMUA tests termasuk @Tag("integration-template")
+  # Target waktu: < 3 menit
+  # ──────────────────────────────────────────────────────────────────────────
+  full-tests:
+    name: Full Tests (unit + integration-template)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_full == 'true')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Run full test suite
+        run: mvn -B -e test
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-test-reports
+          path: target/surefire-reports/

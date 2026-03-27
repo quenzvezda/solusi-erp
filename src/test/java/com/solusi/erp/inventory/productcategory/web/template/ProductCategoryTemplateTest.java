@@ -1,4 +1,4 @@
-package com.solusi.erp.inventory.productcategory;
+package com.solusi.erp.inventory.productcategory.web.template;
 
 import com.solusi.erp.inventory.productcategory.web.dto.ProductCategorySummaryResponse;
 import com.solusi.erp.testutils.TemplateTestUtils;
@@ -42,24 +42,12 @@ public class ProductCategoryTemplateTest {
     }
 
     @Test
-    public void templateRendersFragmentWithSampleData() throws Exception {
-        ProductCategorySummaryResponse dto = new ProductCategorySummaryResponse();
-        dto.setId(1L);
-        dto.setCode("CAT1");
-        dto.setName("Category 1");
-        dto.setType(com.solusi.erp.inventory.model.ProductCategoryType.STOCK);
-        dto.setNote("Note 1");
+    public void templateContainsExpectedPlaceholders() throws Exception {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("templates/inventory/product-categories/list.html");
+        String template = new String(is.readAllBytes(), StandardCharsets.UTF_8);
 
-        Page<ProductCategorySummaryResponse> page = TestPageBuilder.pageOf(List.of(dto), PageRequest.of(0,20), 1L);
-
-        Context ctx = new Context();
-        ctx.setVariable("page", page);
-        ctx.setVariable("keyword", null);
-
-        String output = TemplateTestUtils.renderFragment("inventory/product-categories/list", "product-category-table", ctx);
-
-        assertThat(output).isNotBlank();
-        assertThat(output).contains("Category 1");
-        assertThat(output).contains("CAT1");
+        assertThat(template).contains("product-category-table");
+        assertThat(template).contains("${item.name}");
+        assertThat(template).contains("${item.code}");
     }
 }

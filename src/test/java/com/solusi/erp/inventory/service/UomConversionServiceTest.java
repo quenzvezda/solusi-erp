@@ -60,7 +60,7 @@ class UomConversionServiceTest {
     void shouldReturnSameQuantityIfSourceIsBaseUom() {
         when(productRepository.findById(100L)).thenReturn(Optional.of(product));
 
-        BigDecimal result = uomConversionService.convertToBaseUom(100L, 1L, new BigDecimal("10"));
+        BigDecimal result = uomConversionService.convertToBaseUom(100L, 10L, new BigDecimal("10"));
 
         assertEquals(0, result.compareTo(new BigDecimal("10")));
     }
@@ -71,7 +71,7 @@ class UomConversionServiceTest {
         conv.setConversionFactor(new BigDecimal("24"));
 
         when(productRepository.findById(100L)).thenReturn(Optional.of(product));
-        when(conversionRepository.findByProductIdAndFromUomIdAndToUomId(100L, 2L, 1L))
+        when(conversionRepository.findByProductIdAndFromUomIdAndToUomId(100L, 2L, 10L))
                 .thenReturn(Optional.of(conv));
 
         BigDecimal result = uomConversionService.convertToBaseUom(100L, 2L, new BigDecimal("2"));
@@ -82,7 +82,7 @@ class UomConversionServiceTest {
     @Test
     void shouldThrowExceptionIfConversionNotFound() {
         when(productRepository.findById(100L)).thenReturn(Optional.of(product));
-        when(conversionRepository.findByProductIdAndFromUomIdAndToUomId(100L, 2L, 1L))
+        when(conversionRepository.findByProductIdAndFromUomIdAndToUomId(100L, 2L, 10L))
                 .thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () -> 

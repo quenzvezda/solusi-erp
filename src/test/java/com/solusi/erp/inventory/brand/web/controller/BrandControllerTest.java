@@ -1,4 +1,4 @@
-package com.solusi.erp.inventory.brand;
+package com.solusi.erp.inventory.brand.web.controller;
 
 import com.solusi.erp.inventory.brand.web.controller.BrandController;
 import com.solusi.erp.inventory.brand.application.usecase.command.CreateBrandUseCase;
