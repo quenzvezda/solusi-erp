@@ -6,7 +6,6 @@ import com.solusi.erp.inventory.dto.StockAdjustmentRequest;
 import com.solusi.erp.inventory.dto.StockAdjustmentResponse;
 import com.solusi.erp.inventory.model.StockAdjustment;
 import com.solusi.erp.inventory.service.StockAdjustmentService;
-import com.solusi.erp.inventory.service.ContainerService;
 import com.solusi.erp.master.dto.CurrencyResponse;
 import com.solusi.erp.master.service.CurrencyService;
 import com.solusi.erp.util.HtmxResponseUtility;
@@ -37,7 +36,6 @@ import java.time.LocalDate;
 public class StockAdjustmentController {
 
     private final StockAdjustmentService service;
-    private final ContainerService containerService;
     private final CurrencyService currencyService;
     private final MessageSource messageSource;
 

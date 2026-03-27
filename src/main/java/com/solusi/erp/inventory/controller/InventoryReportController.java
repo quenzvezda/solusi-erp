@@ -5,7 +5,7 @@ import com.solusi.erp.inventory.product.application.usecase.query.FindProductsUs
 import com.solusi.erp.inventory.product.application.usecase.query.GetProductUseCase;
 import com.solusi.erp.inventory.product.web.mapper.ProductWebMapper;
 import com.solusi.erp.inventory.service.InventoryReportService;
-import com.solusi.erp.inventory.service.ContainerService;
+import com.solusi.erp.inventory.container.application.usecase.query.GetContainerLookupUseCase;
 import com.solusi.erp.core.domain.model.Pageable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.web.PageableDefault;
@@ -24,7 +24,7 @@ public class InventoryReportController {
     private final InventoryReportService reportService;
     private final GetProductUseCase getProductUseCase;
     private final FindProductsUseCase findProductsUseCase;
-    private final ContainerService containerService;
+    private final GetContainerLookupUseCase getContainerLookupUseCase;
     private final ProductWebMapper webMapper;
 
     @GetMapping("/on-hand")
@@ -60,7 +60,7 @@ public class InventoryReportController {
             .collect(Collectors.toList());
             
         model.addAttribute("products", products);
-        model.addAttribute("containers", containerService.findAll());
+        model.addAttribute("containers", getContainerLookupUseCase.findAll());
         return "inventory/reports/stock-card/list";
     }
 }

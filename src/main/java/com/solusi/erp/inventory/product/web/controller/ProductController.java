@@ -7,7 +7,7 @@ import com.solusi.erp.inventory.product.application.usecase.command.*;
 import com.solusi.erp.inventory.product.application.usecase.query.*;
 import com.solusi.erp.inventory.product.web.dto.*;
 import com.solusi.erp.inventory.product.web.mapper.ProductWebMapper;
-import com.solusi.erp.inventory.service.UnitOfMeasureService;
+import com.solusi.erp.inventory.uom.application.usecase.query.GetUomLookupUseCase;
 import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +40,7 @@ public class ProductController {
     private final GetProductEditViewUseCase getProductEditViewUseCase;
     private final GetProductLookupUseCase getProductLookupUseCase;
     
-    private final UnitOfMeasureService uomService;
+    private final GetUomLookupUseCase getUomLookupUseCase;
     private final ProductWebMapper webMapper;
     private final MessageSource messageSource;
 
@@ -139,8 +139,8 @@ public class ProductController {
     }
 
     private void populateSelectOptions(Model model) {
-        model.addAttribute("uoms", uomService.findByType(UomType.UNIT));
-        model.addAttribute("weightUoms", uomService.findByType(UomType.WEIGHT));
-        model.addAttribute("lengthUoms", uomService.findByType(UomType.LENGTH));
+        model.addAttribute("uoms", getUomLookupUseCase.findByType(UomType.UNIT));
+        model.addAttribute("weightUoms", getUomLookupUseCase.findByType(UomType.WEIGHT));
+        model.addAttribute("lengthUoms", getUomLookupUseCase.findByType(UomType.LENGTH));
     }
 }

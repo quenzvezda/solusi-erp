@@ -12,6 +12,8 @@ Dokumentasi dikelompokkan ke dalam folder berikut berdasarkan konteksnya:
     - [Clean Architecture + DDD + CQRS Standard](architecture/clean-ddd-cqrs-standard.md) (Standard Baru)
     - [Base Model Pattern](architecture/base-model-pattern.md)
 - **[/database](database/)**: Berisi ERD dan script dummy data.
+- **[/tests](tests/)**: Panduan dan utilitas pengujian level web (Controller + Thymeleaf).
+    - [Web-layer Testing Guidelines](tests/web-layer-testing.md)
 - **[/modules](modules/)**: Penjelasan fungsional dan aturan bisnis untuk setiap fitur spesifik (Inventory, Master Data, dll).
 - **[/spec](spec/)**: **[PENTING]** Spesifikasi teknis horizontal/shared yang digunakan di seluruh aplikasi. Lihat **[Spec Index](spec/index.md)**.
 - **[/roadmap](roadmap/)**: Rencana pengembangan masa depan dan pelacakan standardisasi arsitektur.
