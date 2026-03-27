@@ -1,10 +1,17 @@
 package com.solusi.erp.inventory.brand;
 
 import com.solusi.erp.inventory.brand.web.dto.BrandSummaryResponse;
+import com.solusi.erp.testutils.TemplateTestUtils;
+import com.solusi.erp.testutils.TestDtoFactory;
+import com.solusi.erp.testutils.TestPageBuilder;
 import org.junit.jupiter.api.Test;
+import org.thymeleaf.context.Context;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,5 +40,21 @@ public class BrandTemplateTest {
             }
             assertThat(hasField || hasGetter).withFailMessage("Property '%s' referenced in template but not present on %s", prop, BrandSummaryResponse.class.getName()).isTrue();
         }
+    }
+
+    @Test
+    public void templateRendersFragmentWithSampleData() throws Exception {
+        BrandSummaryResponse dto = TestDtoFactory.sampleBrandSummaryResponse();
+        Page<BrandSummaryResponse> page = TestPageBuilder.pageOf(List.of(dto), PageRequest.of(0,20), 1L);
+
+        Context ctx = new Context();
+        ctx.setVariable("page", page);
+        ctx.setVariable("keyword", null);
+
+        String output = TemplateTestUtils.renderFragment("inventory/brands/list", "brand-table-container", ctx);
+
+        assertThat(output).isNotBlank();
+        assertThat(output).contains("Brand 1");
+        assertThat(output).contains("BR1");
     }
 }
