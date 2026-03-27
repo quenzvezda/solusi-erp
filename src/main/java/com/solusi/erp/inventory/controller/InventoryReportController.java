@@ -4,7 +4,9 @@ import com.solusi.erp.inventory.dto.StockCardFilter;
 import com.solusi.erp.inventory.product.application.usecase.query.FindProductsUseCase;
 import com.solusi.erp.inventory.product.application.usecase.query.GetProductUseCase;
 import com.solusi.erp.inventory.product.web.mapper.ProductWebMapper;
-import com.solusi.erp.inventory.service.InventoryReportService;
+import com.solusi.erp.inventory.report.application.usecase.query.GetOnHandDetailUseCase;
+import com.solusi.erp.inventory.report.application.usecase.query.GetOnHandSummaryUseCase;
+import com.solusi.erp.inventory.report.application.usecase.query.GetStockCardUseCase;
 import com.solusi.erp.inventory.container.application.usecase.query.GetContainerLookupUseCase;
 import com.solusi.erp.core.domain.model.Pageable;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +23,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class InventoryReportController {
 
-    private final InventoryReportService reportService;
+    private final GetOnHandSummaryUseCase getOnHandSummaryUseCase;
+    private final GetOnHandDetailUseCase getOnHandDetailUseCase;
+    private final GetStockCardUseCase getStockCardUseCase;
     private final GetProductUseCase getProductUseCase;
     private final FindProductsUseCase findProductsUseCase;
     private final GetContainerLookupUseCase getContainerLookupUseCase;
@@ -32,7 +36,7 @@ public class InventoryReportController {
     public String onHandList(@RequestParam(value = "search", required = false) String keyword,
                             @PageableDefault(size = 10) org.springframework.data.domain.Pageable springPageable,
                             Model model) {
-        model.addAttribute("page", reportService.getOnHandSummary(keyword, springPageable));
+        model.addAttribute("page", getOnHandSummaryUseCase.execute(keyword, springPageable));
         model.addAttribute("search", keyword);
         return "inventory/reports/on-hand/list";
     }
@@ -43,7 +47,7 @@ public class InventoryReportController {
         model.addAttribute("product", getProductUseCase.execute(productId)
             .map(webMapper::toDetailResponse)
             .orElseThrow(() -> new RuntimeException("Product not found")));
-        model.addAttribute("details", reportService.getOnHandDetail(productId));
+        model.addAttribute("details", getOnHandDetailUseCase.execute(productId));
         return "inventory/reports/on-hand/detail";
     }
 
@@ -52,7 +56,7 @@ public class InventoryReportController {
     public String stockCard(@ModelAttribute("filter") StockCardFilter filter,
                            @PageableDefault(size = 20) org.springframework.data.domain.Pageable springPageable,
                            Model model) {
-        model.addAttribute("page", reportService.getStockCard(filter, springPageable));
+        model.addAttribute("page", getStockCardUseCase.execute(filter, springPageable));
         
         // Use lookup or unpaged find for dropdown
         var products = findProductsUseCase.execute(null, Pageable.of(0, 1000)).content().stream()

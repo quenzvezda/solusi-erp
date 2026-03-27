@@ -9,8 +9,9 @@
             <div class="container-xl">
                 <div class="row g-2 align-items-center">
                     <div class="col">
-                        <h2 class="page-title" th:text="${stockAdjustment.id == null ? #messages.msg('label.stock-adjustment.add') : #messages.msg('label.stock-adjustment.edit')}">
-                            Add New Adjustment
+                        <h2 class="page-title">
+                            <span th:if="${stockAdjustment.id == null}" th:text="#{label.stock-adjustment.add}">Add New Adjustment</span>
+                            <span th:if="${stockAdjustment.id != null}" th:text="${stockAdjustment.code}">ADJ-001</span>
                         </h2>
                     </div>
                 </div>
@@ -91,7 +92,7 @@
                     <div class="card">
                         <div class="card-header">
                             <h3 class="card-title" th:text="#{label.stock-adjustment.lines}">Items</h3>
-                            <div class="card-actions" th:if="!${isLocked}">
+                            <div class="card-actions" th:if="${stockAdjustment.status == null || stockAdjustment.status.name() != 'COMPLETED'}">
                                 <button type="button" class="btn btn-primary btn-sm" id="btn-add-line"><i class="ti ti-plus"></i> Add Line</button>
                             </div>
                         </div>
