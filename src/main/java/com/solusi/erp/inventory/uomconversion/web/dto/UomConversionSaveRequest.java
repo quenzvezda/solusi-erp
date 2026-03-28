@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.uomconversion.web.dto;
 
+import com.solusi.erp.core.dto.BaseAuditResponse;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -12,9 +13,7 @@ import java.math.BigDecimal;
  */
 @Data
 @NoArgsConstructor
-public class UomConversionSaveRequest {
-
-    private Long id;
+public class UomConversionSaveRequest extends BaseAuditResponse {
 
     @NotNull(message = "{label.uom-conversion.product} {validation.notblank.suffix}")
     private Long productId;
