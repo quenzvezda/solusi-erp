@@ -2,6 +2,7 @@ package com.solusi.erp.inventory.container.web.controller;
 
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
+import com.solusi.erp.core.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.inventory.container.application.usecase.command.*;
@@ -53,7 +54,7 @@ public class ContainerController {
                        @RequestParam(required = false) Long gridId,
                        org.springframework.data.domain.Pageable springPageable,
                        Model model) {
-        Pageable domainPageable = Pageable.of(springPageable.getPageNumber(), springPageable.getPageSize());
+        Pageable domainPageable = PageableMapper.toDomain(springPageable);
         com.solusi.erp.core.domain.model.Page<Container> domainPage =
             findContainersUseCase.execute(keyword, gridId, domainPageable);
 

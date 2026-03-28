@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
-<head th:replace="~{layout/master :: head(${currency.id == null ? #messages.msg('label.currency.add') : #messages.msg('label.currency.edit')})}"></head>
+<head th:replace="~{layout/master :: head(${currencyRequest.id == null ? #messages.msg('label.currency.add') : #messages.msg('label.currency.edit')})}"></head>
 
 <body th:replace="~{layout/master :: layout(~{:: .currency-form-content}, ~{})}">
     <div class="currency-form-content">
@@ -11,7 +11,7 @@
                 <div class="row g-2 align-items-center">
                     <div class="col">
                         <h2 class="page-title"
-                            th:text="${currency.id == null ? #messages.msg('label.currency.add') : #messages.msg('label.currency.edit') + ': ' + currency.name}">
+                            th:text="${currencyRequest.id == null ? #messages.msg('label.currency.add') : #messages.msg('label.currency.edit') + ': ' + currencyRequest.name}">
                             Form Mata Uang
                         </h2>
                     </div>
@@ -22,8 +22,8 @@
         <!-- Page Body -->
         <div class="page-body">
             <div class="container-xl">
-                <form th:action="${currency.id == null ? '/master/currencies/create' : '/master/currencies/edit/' + currency.id}"
-                      th:object="${currency}" method="post" class="card"
+                <form th:action="${currencyRequest.id == null ? '/master/currencies/create' : '/master/currencies/edit/' + currencyRequest.id}"
+                      th:object="${currencyRequest}" method="post" class="card"
                       data-ajax-form="true"
                       data-redirect-on-success="/master/currencies">
                     

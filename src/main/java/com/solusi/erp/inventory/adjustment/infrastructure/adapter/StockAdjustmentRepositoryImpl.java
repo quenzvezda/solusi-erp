@@ -2,6 +2,7 @@ package com.solusi.erp.inventory.adjustment.infrastructure.adapter;
 
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
+import com.solusi.erp.core.util.PageableMapper;
 import com.solusi.erp.inventory.adjustment.domain.model.StockAdjustment;
 import com.solusi.erp.inventory.adjustment.domain.model.StockAdjustmentLineItem;
 import com.solusi.erp.inventory.adjustment.domain.repository.StockAdjustmentRepository;
@@ -47,7 +48,7 @@ public class StockAdjustmentRepositoryImpl implements StockAdjustmentRepository 
 
     @Override
     public Page<StockAdjustment> findAll(String keyword, Pageable pageable) {
-        org.springframework.data.domain.Pageable springPageable = PageRequest.of(pageable.page(), pageable.size());
+        org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
         org.springframework.data.domain.Page<com.solusi.erp.inventory.model.StockAdjustment> springPage =
                 (keyword != null && !keyword.isBlank())
                         ? jpaRepository.search(keyword, springPageable)

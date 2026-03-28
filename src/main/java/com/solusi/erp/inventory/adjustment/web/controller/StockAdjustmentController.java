@@ -2,6 +2,7 @@ package com.solusi.erp.inventory.adjustment.web.controller;
 
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
+import com.solusi.erp.core.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.inventory.adjustment.application.usecase.command.*;
 import com.solusi.erp.inventory.adjustment.application.usecase.query.*;
@@ -9,8 +10,11 @@ import com.solusi.erp.inventory.adjustment.domain.model.AdjustmentStatus;
 import com.solusi.erp.inventory.adjustment.domain.model.StockAdjustment;
 import com.solusi.erp.inventory.adjustment.web.dto.*;
 import com.solusi.erp.inventory.adjustment.web.mapper.StockAdjustmentWebMapper;
-import com.solusi.erp.master.dto.CurrencyResponse;
-import com.solusi.erp.master.service.CurrencyService;
+import com.solusi.erp.master.currency.application.usecase.query.FindActiveCurrenciesUseCase;
+import com.solusi.erp.master.currency.application.usecase.query.GetDefaultCurrencyUseCase;
+import com.solusi.erp.master.currency.domain.model.Currency;
+import com.solusi.erp.master.currency.web.dto.CurrencySummaryResponse;
+import com.solusi.erp.master.currency.web.mapper.CurrencyWebMapper;
 import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -52,7 +56,9 @@ public class StockAdjustmentController {
     private final GetStockAdjustmentUseCase getUseCase;
     private final GetStockAdjustmentEditViewUseCase getEditViewUseCase;
     private final StockAdjustmentWebMapper webMapper;
-    private final CurrencyService currencyService;
+    private final FindActiveCurrenciesUseCase findActiveCurrenciesUseCase;
+    private final GetDefaultCurrencyUseCase getDefaultCurrencyUseCase;
+    private final CurrencyWebMapper currencyWebMapper;
     private final MessageSource messageSource;
 
     @GetMapping
@@ -60,7 +66,7 @@ public class StockAdjustmentController {
     public String list(@RequestParam(value = "search", required = false) String keyword,
                        @PageableDefault(size = 10) org.springframework.data.domain.Pageable springPageable,
                        Model model) {
-        Pageable domainPageable = Pageable.of(springPageable.getPageNumber(), springPageable.getPageSize());
+        Pageable domainPageable = PageableMapper.toDomain(springPageable);
         com.solusi.erp.core.domain.model.Page<StockAdjustment> domainPage = findUseCase.execute(keyword, domainPageable);
 
         List<StockAdjustmentSummaryResponse> content = domainPage.content().stream()
@@ -78,7 +84,7 @@ public class StockAdjustmentController {
     @GetMapping("/create")
     @PreAuthorize("hasAuthority('STOCK-ADJUSTMENT_CREATE')")
     public String createForm(Model model) {
-        CurrencyResponse defaultCurr = currencyService.getDefaultCurrency();
+        Currency defaultCurr = getDefaultCurrencyUseCase.execute().orElse(null);
         StockAdjustmentSaveRequest request = new StockAdjustmentSaveRequest();
         if (defaultCurr != null) {
             request.setCurrencyId(defaultCurr.getId());
@@ -161,7 +167,13 @@ public class StockAdjustmentController {
     }
 
     private void populateFormModels(Model model) {
-        model.addAttribute("currencies", currencyService.findAllActive());
-        model.addAttribute("defaultCurrency", currencyService.getDefaultCurrency());
+        List<CurrencySummaryResponse> currencies = findActiveCurrenciesUseCase.execute().stream()
+                .map(currencyWebMapper::toSummaryResponse)
+                .collect(Collectors.toList());
+        CurrencySummaryResponse defaultCurrency = getDefaultCurrencyUseCase.execute()
+                .map(currencyWebMapper::toSummaryResponse)
+                .orElse(null);
+        model.addAttribute("currencies", currencies);
+        model.addAttribute("defaultCurrency", defaultCurrency);
     }
 }

@@ -2,6 +2,7 @@ package com.solusi.erp.inventory.productcategory.infrastructure.adapter;
 
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
+import com.solusi.erp.core.util.PageableMapper;
 import com.solusi.erp.inventory.productcategory.domain.model.ProductCategory;
 import com.solusi.erp.inventory.productcategory.domain.repository.ProductCategoryRepository;
 import com.solusi.erp.inventory.productcategory.infrastructure.persistence.ProductCategoryPersistenceMapper;
@@ -37,7 +38,7 @@ public class ProductCategoryRepositoryImpl implements ProductCategoryRepository 
 
     @Override
     public Page<ProductCategory> findAll(String keyword, Pageable pageable) {
-        org.springframework.data.domain.Pageable springPageable = PageRequest.of(pageable.page(), pageable.size());
+        org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
         org.springframework.data.domain.Page<com.solusi.erp.inventory.model.ProductCategory> springPage =
             (keyword != null && !keyword.isBlank())
                 ? jpaRepository.search(keyword, springPageable)

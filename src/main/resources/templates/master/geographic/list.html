@@ -95,7 +95,7 @@
                                             <span th:if="${item.type.name() == 'STATE_PROVINCE'}" class="badge bg-green-lt" th:text="${item.type}">PROVINCE</span>
                                             <span th:if="${item.type.name() == 'CITY_MUNICIPALITY'}" class="badge bg-yellow-lt" th:text="${item.type}">CITY</span>
                                         </td>
-                                        <td th:text="${item.parentName ?: '-'}">Parent</td>
+                                        <td th:text="${item.parentName != null ? item.parentName : '-'}">Parent</td>
                                         <td>
                                             <span class="badge badge-outline text-green" th:if="${item.isActive}">
                                                 <span class="badge-dot bg-success me-1"></span>

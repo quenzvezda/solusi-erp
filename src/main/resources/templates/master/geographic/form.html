@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
 
 <head
-    th:replace="~{layout/master :: head(${geographic.id == null ? #messages.msg('label.geographic.create') : #messages.msg('label.geographic.edit')})}">
+    th:replace="~{layout/master :: head(${geographicRequest.id == null ? #messages.msg('label.geographic.create') : #messages.msg('label.geographic.edit')})}">
 </head>
 
 <body th:replace="~{layout/master :: layout(~{:: .geographic-form-content}, ~{:: #page-scripts})}">
@@ -13,7 +13,7 @@
                 <div class="row g-2 align-items-center">
                     <div class="col">
                         <h2 class="page-title"
-                            th:text="${geographic.id == null ? #messages.msg('label.geographic.create') : #messages.msg('label.geographic.edit') + ': ' + geographic.name}">
+                            th:text="${geographicRequest.id == null ? #messages.msg('label.geographic.create') : #messages.msg('label.geographic.edit') + ': ' + geographicRequest.name}">
                             Form Geographic</h2>
                     </div>
                 </div>
@@ -24,8 +24,8 @@
         <div class="page-body">
             <div class="container-xl">
                 <form id="geographic-form"
-                    th:action="${geographic.id == null ? '/master/geographics/create' : '/master/geographics/edit/' + geographic.id}"
-                    th:object="${geographic}" method="post" class="card"
+                    th:action="${geographicRequest.id == null ? '/master/geographics/create' : '/master/geographics/edit/' + geographicRequest.id}"
+                    th:object="${geographicRequest}" method="post" class="card"
                     data-ajax-form="true"
                     data-redirect-on-success="/master/geographics">
                     
@@ -51,10 +51,10 @@
 
                                 <!-- Parent Selection (Dynamic Autocomplete) -->
                                 <div class="mb-3" id="parent-container" th:style="*{type != null and type.name() == 'COUNTRY' ? 'display: none;' : ''}">
-                                    <div th:replace="~{fragments/inputs :: autocomplete(field='parentId', label=#{label.geographic.parent}, path='geographics', 
-                                        initialValue=${geographic.parentId}, 
-                                        initialText=${geographicUI != null ? geographicUI.parentName : parentName}, 
-                                        initialSubtext=${geographicUI != null ? geographicUI.parentCode : ''})}"></div>
+                                    <div th:replace="~{fragments/inputs :: autocomplete(field='parentId', label=#{label.geographic.parent}, path=${geographicRequest.type != null and geographicRequest.type.name() == 'CITY_MUNICIPALITY' ? 'geographics/provinces' : 'geographics/countries'}, 
+                                          initialValue=${geographicRequest.parentId}, 
+                                          initialText=${geographicRequest.parentName}, 
+                                          initialSubtext='')}"></div>
                                 </div>
                             </div>
                             <div class="col-md-6 border-start-md">
@@ -98,35 +98,56 @@
             document.addEventListener('DOMContentLoaded', function() {
                 const typeRadios = document.querySelectorAll('.geographic-type-radio');
                 const parentContainer = document.getElementById('parent-container');
-                const parentSelectEl = document.getElementById('parentId'); // id from autocomplete fragment
-                
-                function updateLookupPath(selectedType) {
+                const parentSelectEl = document.getElementById('parentId');
+
+                if (!parentContainer || !parentSelectEl) {
+                    return;
+                }
+
+                function getLookupPath(selectedType) {
+                    if (selectedType === 'STATE_PROVINCE') return 'geographics/countries';
+                    if (selectedType === 'CITY_MUNICIPALITY') return 'geographics/provinces';
+                    return 'geographics';
+                }
+
+                function initParentLookup(selectedType, preserveSelection) {
                     if (selectedType === 'COUNTRY') {
                         parentContainer.style.display = 'none';
+                        if (parentSelectEl.tomselect) {
+                            parentSelectEl.tomselect.clear(true);
+                            parentSelectEl.tomselect.clearOptions();
+                        }
                         return;
                     }
 
                     parentContainer.style.display = 'block';
-                    
-                    let lookupPath = '';
-                    if (selectedType === 'STATE_PROVINCE') {
-                        lookupPath = 'geographics/countries';
-                    } else if (selectedType === 'CITY_MUNICIPALITY') {
-                        lookupPath = 'geographics/provinces';
+                    const lookupPath = getLookupPath(selectedType);
+                    const currentValue = parentSelectEl.value;
+                    const currentOption = parentSelectEl.querySelector(`option[value="${currentValue}"]`);
+
+                    parentSelectEl.setAttribute('data-lookup-path', lookupPath);
+                    parentSelectEl.classList.remove('tomselect-initialized');
+
+                    if (!preserveSelection) {
+                        parentSelectEl.value = '';
+                        parentSelectEl.querySelectorAll('option').forEach(opt => {
+                            if (opt.value !== '') opt.remove();
+                        });
+                    } else if (currentOption) {
+                        parentSelectEl.querySelectorAll('option').forEach(opt => {
+                            if (opt.value !== '' && opt !== currentOption) opt.remove();
+                        });
                     }
 
-                    // Update path and re-init if TomSelect exists
-                    if (parentSelectEl.tomselect) {
-                        const ts = parentSelectEl.tomselect;
-                        ts.settings.load = function(query, callback) {
-                            fetch(`/api/lookup/${lookupPath}?q=${encodeURIComponent(query)}&limit=10`)
-                                .then(response => response.json())
-                                .then(json => callback(json))
-                                .catch(() => callback());
-                        };
-                        // Clear current value if type changed manually (not on load)
-                        if (!parentSelectEl.dataset.initialLoad) {
-                            ts.clear();
+                    if (typeof initLookup === 'function') {
+                        const ts = initLookup(parentSelectEl, lookupPath);
+                        if (ts) {
+                            parentSelectEl.classList.add('tomselect-initialized');
+                            if (preserveSelection && currentValue) {
+                                ts.setValue(currentValue, true);
+                            } else {
+                                ts.clear(true);
+                            }
                         }
                     }
                 }
@@ -134,17 +155,14 @@
                 typeRadios.forEach(radio => {
                     radio.addEventListener('change', function() {
                         if (this.checked) {
-                            delete parentSelectEl.dataset.initialLoad;
-                            updateLookupPath(this.value);
+                            initParentLookup(this.value, false);
                         }
                     });
                 });
 
-                // Set initial state
                 const checkedType = document.querySelector('.geographic-type-radio:checked');
                 if (checkedType) {
-                    parentSelectEl.dataset.initialLoad = "true";
-                    updateLookupPath(checkedType.value);
+                    initParentLookup(checkedType.value, true);
                 }
             });
         </script>

@@ -2,6 +2,8 @@ package com.solusi.erp.testutils;
 
 import com.solusi.erp.inventory.brand.web.dto.BrandSummaryResponse;
 import com.solusi.erp.inventory.product.web.dto.ProductSummaryResponse;
+import com.solusi.erp.master.geographic.web.dto.GeographicSummaryResponse;
+import com.solusi.erp.master.model.GeographicType;
 
 public class TestDtoFactory {
 
@@ -28,6 +30,16 @@ public class TestDtoFactory {
         dto.setBrandName("Brand 1");
         dto.setIsActive(Boolean.TRUE);
         dto.setIsSerialized(Boolean.FALSE);
+        return dto;
+    }
+
+    public static GeographicSummaryResponse sampleGeographicSummaryResponse() {
+        GeographicSummaryResponse dto = new GeographicSummaryResponse();
+        dto.setId(1L);
+        dto.setCode("ID");
+        dto.setName("Indonesia");
+        dto.setType(GeographicType.COUNTRY);
+        dto.setIsActive(Boolean.TRUE);
         return dto;
     }
 }

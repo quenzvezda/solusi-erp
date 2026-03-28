@@ -2,6 +2,7 @@ package com.solusi.erp.inventory.uom.web.controller;
 
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
+import com.solusi.erp.core.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.inventory.model.UomType;
@@ -51,7 +52,7 @@ public class UomController {
     public String list(@RequestParam(required = false) String keyword,
                        org.springframework.data.domain.Pageable springPageable,
                        Model model) {
-        Pageable domainPageable = Pageable.of(springPageable.getPageNumber(), springPageable.getPageSize());
+        Pageable domainPageable = PageableMapper.toDomain(springPageable);
         com.solusi.erp.core.domain.model.Page<UnitOfMeasure> domainPage =
             findUomsUseCase.execute(keyword, domainPageable);
 

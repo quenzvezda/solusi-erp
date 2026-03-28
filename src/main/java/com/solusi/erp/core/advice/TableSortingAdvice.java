@@ -29,6 +29,14 @@ public class TableSortingAdvice {
                 .toUriString();
         model.addAttribute("pageUrlBuilder", pageUrlBuilder);
 
+        // Helper to build sort URL while preserving all other query parameters
+        Function<String, String> sortUrlBuilder = sortParam ->
+                ServletUriComponentsBuilder.fromRequest(request)
+                        .replaceQueryParam("sort", sortParam)
+                        .replaceQueryParam("page", 0)
+                        .toUriString();
+        model.addAttribute("sortUrlBuilder", sortUrlBuilder);
+
         if (pageable != null && pageable.getSort().isSorted()) {
             Sort.Order order = pageable.getSort().iterator().next();
             model.addAttribute("sortField", order.getProperty());

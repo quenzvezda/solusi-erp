@@ -2,6 +2,7 @@ package com.solusi.erp.inventory.facility.infrastructure.adapter;
 
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
+import com.solusi.erp.core.util.PageableMapper;
 import com.solusi.erp.inventory.facility.domain.model.Facility;
 import com.solusi.erp.inventory.facility.domain.repository.FacilityRepository;
 import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityPersistenceMapper;
@@ -39,7 +40,7 @@ public class FacilityRepositoryImpl implements FacilityRepository {
 
     @Override
     public Page<Facility> findAll(String keyword, Pageable pageable) {
-        org.springframework.data.domain.Pageable springPageable = PageRequest.of(pageable.page(), pageable.size());
+        org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
         org.springframework.data.domain.Page<com.solusi.erp.inventory.model.Facility> springPage =
             (keyword != null && !keyword.isBlank())
                 ? jpaRepository.search(keyword, springPageable)

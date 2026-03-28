@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head
-    th:replace="~{layout/master :: head(${roleTypeRequest.id == null ? #messages.msg('label.party-role-type.add') : #messages.msg('label.party-role-type.edit')})}">
+    th:replace="~{layout/master :: head(${partyRoleTypeRequest.id == null ? #messages.msg('label.party-role-type.add') : #messages.msg('label.party-role-type.edit')})}">
 </head>
 
 <body th:replace="~{layout/master :: layout(~{:: .prt-form-content}, ~{})}">
@@ -12,7 +12,7 @@
                 <div class="row g-2 align-items-center">
                     <div class="col">
                         <h2 class="page-title"
-                            th:text="${roleTypeRequest.id == null ? #messages.msg('label.party-role-type.add') : #messages.msg('label.party-role-type.edit')}">
+                            th:text="${partyRoleTypeRequest.id == null ? #messages.msg('label.party-role-type.add') : #messages.msg('label.party-role-type.edit')}">
                             Tambah Tipe Peran
                         </h2>
                     </div>
@@ -23,8 +23,8 @@
         <div class="page-body">
             <div class="container-xl">
                 <form
-                    th:action="${roleTypeRequest.id == null ? '/master/party-role-types/create' : '/master/party-role-types/edit/' + roleTypeRequest.id}"
-                    th:object="${roleTypeRequest}" method="post"
+                    th:action="${partyRoleTypeRequest.id == null ? '/master/party-role-types/create' : '/master/party-role-types/edit/' + partyRoleTypeRequest.id}"
+                    th:object="${partyRoleTypeRequest}" method="post"
                     data-ajax-form="true"
                     data-redirect-on-success="/master/party-role-types">
                     
@@ -34,7 +34,7 @@
                     <div class="card" style="max-width: 540px;">
                         <div class="card-header">
                             <h3 class="card-title"
-                                th:text="${roleTypeRequest.id == null ? #messages.msg('label.party-role-type.add') : #messages.msg('label.party-role-type.edit')}">
+                                th:text="${partyRoleTypeRequest.id == null ? #messages.msg('label.party-role-type.add') : #messages.msg('label.party-role-type.edit')}">
                             </h3>
                         </div>
                         <div class="card-body">

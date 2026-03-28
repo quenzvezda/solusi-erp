@@ -2,7 +2,7 @@ package com.solusi.erp.inventory.adjustment.web.template.integration;
 
 import com.solusi.erp.inventory.adjustment.domain.model.AdjustmentStatus;
 import com.solusi.erp.inventory.adjustment.web.dto.StockAdjustmentSaveRequest;
-import com.solusi.erp.inventory.adjustment.web.dto.StockAdjustmentSaveLineRequest;
+import com.solusi.erp.master.currency.web.dto.CurrencySummaryResponse;
 import com.solusi.erp.testutils.TemplateTestUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -50,18 +50,22 @@ class StockAdjustmentFormIntegrationTest {
     }
 
     private Map<String, Object> modelForDraft() {
+        CurrencySummaryResponse defaultCurrency = new CurrencySummaryResponse();
+        defaultCurrency.setAlias("IDR");
         return Map.of(
                 "stockAdjustment", draftRequest(),
                 "currencies", List.of(),
-                "defaultCurrency", new com.solusi.erp.master.dto.CurrencyResponse()
+                "defaultCurrency", defaultCurrency
         );
     }
 
     private Map<String, Object> modelForCompleted() {
+        CurrencySummaryResponse defaultCurrency = new CurrencySummaryResponse();
+        defaultCurrency.setAlias("IDR");
         return Map.of(
                 "stockAdjustment", completedRequest(),
                 "currencies", List.of(),
-                "defaultCurrency", new com.solusi.erp.master.dto.CurrencyResponse()
+                "defaultCurrency", defaultCurrency
         );
     }
 

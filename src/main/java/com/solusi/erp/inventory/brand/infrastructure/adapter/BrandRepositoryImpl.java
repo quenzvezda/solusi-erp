@@ -2,6 +2,7 @@ package com.solusi.erp.inventory.brand.infrastructure.adapter;
 
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
+import com.solusi.erp.core.util.PageableMapper;
 import com.solusi.erp.inventory.brand.domain.model.Brand;
 import com.solusi.erp.inventory.brand.domain.repository.BrandRepository;
 import com.solusi.erp.inventory.brand.infrastructure.persistence.BrandPersistenceMapper;
@@ -41,7 +42,7 @@ public class BrandRepositoryImpl implements BrandRepository {
 
     @Override
     public Page<Brand> findAll(String keyword, Pageable pageable) {
-        org.springframework.data.domain.Pageable springPageable = PageRequest.of(pageable.page(), pageable.size());
+        org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
         org.springframework.data.domain.Page<com.solusi.erp.inventory.model.Brand> springPage =
             (keyword != null && !keyword.isBlank())
                 ? jpaRepository.search(keyword, springPageable)

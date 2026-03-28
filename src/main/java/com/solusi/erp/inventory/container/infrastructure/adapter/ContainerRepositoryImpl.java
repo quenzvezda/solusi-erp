@@ -2,6 +2,7 @@ package com.solusi.erp.inventory.container.infrastructure.adapter;
 
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
+import com.solusi.erp.core.util.PageableMapper;
 import com.solusi.erp.inventory.container.domain.model.Container;
 import com.solusi.erp.inventory.container.domain.repository.ContainerRepository;
 import com.solusi.erp.inventory.container.infrastructure.persistence.ContainerPersistenceMapper;
@@ -38,7 +39,7 @@ public class ContainerRepositoryImpl implements ContainerRepository {
 
     @Override
     public Page<Container> findAll(String keyword, Long gridId, Pageable pageable) {
-        org.springframework.data.domain.Pageable springPageable = PageRequest.of(pageable.page(), pageable.size());
+        org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
         org.springframework.data.domain.Page<com.solusi.erp.inventory.model.Container> springPage;
         if (keyword != null && !keyword.isBlank() && gridId != null) {
             springPage = jpaRepository.searchByGrid(keyword, gridId, springPageable);

@@ -2,6 +2,7 @@ package com.solusi.erp.inventory.uom.infrastructure.adapter;
 
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
+import com.solusi.erp.core.util.PageableMapper;
 import com.solusi.erp.inventory.model.UomType;
 import com.solusi.erp.inventory.uom.domain.model.UnitOfMeasure;
 import com.solusi.erp.inventory.uom.domain.repository.UomRepository;
@@ -42,7 +43,7 @@ public class UomRepositoryImpl implements UomRepository {
 
     @Override
     public Page<UnitOfMeasure> findAll(String keyword, Pageable pageable) {
-        org.springframework.data.domain.Pageable springPageable = PageRequest.of(pageable.page(), pageable.size());
+        org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
         org.springframework.data.domain.Page<com.solusi.erp.inventory.model.UnitOfMeasure> springPage =
             (keyword != null && !keyword.isBlank())
                 ? jpaRepository.search(keyword, springPageable)

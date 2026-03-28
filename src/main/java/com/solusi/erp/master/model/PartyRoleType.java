@@ -25,4 +25,10 @@ public class PartyRoleType extends BaseModel {
 
     @Column(nullable = false, length = 100)
     private String name;
+
+    @Column(columnDefinition = "TEXT")
+    private String note;
+
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
 }

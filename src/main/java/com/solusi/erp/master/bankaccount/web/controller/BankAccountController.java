@@ -1,0 +1,123 @@
+package com.solusi.erp.master.bankaccount.web.controller;
+
+import com.solusi.erp.core.annotation.DefaultRedirectUrl;
+import com.solusi.erp.core.domain.model.Pageable;
+import com.solusi.erp.core.util.PageableMapper;
+import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.master.bankaccount.application.usecase.command.*;
+import com.solusi.erp.master.bankaccount.application.usecase.query.*;
+import com.solusi.erp.master.bankaccount.domain.model.BankAccount;
+import com.solusi.erp.master.bankaccount.web.dto.*;
+import com.solusi.erp.master.bankaccount.web.mapper.BankAccountWebMapper;
+import com.solusi.erp.master.model.AccountType;
+import com.solusi.erp.util.HtmxResponseUtility;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * Controller for BankAccount CRUD.
+ * Replaces legacy com.solusi.erp.master.controller.BankAccountController.
+ */
+@Controller
+@RequestMapping("/master/bank-accounts")
+@RequiredArgsConstructor
+@DefaultRedirectUrl
+public class BankAccountController {
+
+    private final CreateBankAccountUseCase createBankAccountUseCase;
+    private final UpdateBankAccountUseCase updateBankAccountUseCase;
+    private final DeleteBankAccountUseCase deleteBankAccountUseCase;
+    private final FindBankAccountsUseCase findBankAccountsUseCase;
+    private final GetBankAccountEditViewUseCase getBankAccountEditViewUseCase;
+    private final BankAccountWebMapper webMapper;
+    private final MessageSource messageSource;
+
+    @GetMapping
+    @PreAuthorize("hasAuthority('BANK-ACCOUNT_READ')")
+    public String list(@RequestParam(required = false) String keyword,
+                       org.springframework.data.domain.Pageable springPageable,
+                       Model model) {
+        Pageable domainPageable = PageableMapper.toDomain(springPageable);
+        com.solusi.erp.core.domain.model.Page<BankAccount> domainPage =
+                findBankAccountsUseCase.execute(keyword, domainPageable);
+
+        List<BankAccountSummaryResponse> content = domainPage.content().stream()
+                .map(webMapper::toSummaryResponse)
+                .collect(Collectors.toList());
+
+        Page<BankAccountSummaryResponse> springPage = new PageImpl<>(content, springPageable, domainPage.totalElements());
+        model.addAttribute("page", springPage);
+        model.addAttribute("keyword", keyword);
+        return "master/bank-accounts/list";
+    }
+
+    @GetMapping("/create")
+    @PreAuthorize("hasAuthority('BANK-ACCOUNT_CREATE')")
+    public String showCreateForm(Model model) {
+        model.addAttribute("bankAccountRequest", new BankAccountSaveRequest());
+        model.addAttribute("accountTypes", AccountType.values());
+        return "master/bank-accounts/form";
+    }
+
+    @PostMapping("/create")
+    @PreAuthorize("hasAuthority('BANK-ACCOUNT_CREATE')")
+    @ResponseBody
+    public ResponseEntity<ApiResponse<BankAccountDetailResponse>> create(
+            @Valid @RequestBody BankAccountSaveRequest request) {
+        BankAccount domain = createBankAccountUseCase.execute(
+                request.getBankName(), request.getBranch(), request.getAccountName(),
+                request.getAccountNo(), request.getAccountType(), request.getNote(),
+                request.getCityId(), request.getPartyId(), request.getIsActive());
+        BankAccountDetailResponse data = webMapper.toDetailResponse(domain);
+        String msg = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(msg, data));
+    }
+
+    @GetMapping("/edit/{id}")
+    @PreAuthorize("hasAuthority('BANK-ACCOUNT_UPDATE')")
+    public String showEditForm(@PathVariable Long id, Model model) {
+        BankAccount domain = getBankAccountEditViewUseCase.execute(id)
+                .orElseThrow(() -> new RuntimeException("BankAccount not found"));
+        model.addAttribute("bankAccountRequest", webMapper.toSaveRequest(domain));
+        model.addAttribute("auditInfo", webMapper.toDetailResponse(domain));
+        model.addAttribute("accountTypes", AccountType.values());
+        return "master/bank-accounts/form";
+    }
+
+    @PostMapping("/edit/{id}")
+    @PreAuthorize("hasAuthority('BANK-ACCOUNT_UPDATE')")
+    @ResponseBody
+    public ResponseEntity<ApiResponse<BankAccountDetailResponse>> update(
+            @PathVariable Long id,
+            @Valid @RequestBody BankAccountSaveRequest request) {
+        BankAccount domain = updateBankAccountUseCase.execute(
+                id, request.getBankName(), request.getBranch(), request.getAccountName(),
+                request.getAccountNo(), request.getAccountType(), request.getNote(),
+                request.getCityId(), request.getPartyId(), request.getIsActive());
+        BankAccountDetailResponse data = webMapper.toDetailResponse(domain);
+        String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.ok(ApiResponse.success(msg, data));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('BANK-ACCOUNT_DELETE')")
+    @ResponseBody
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        deleteBankAccountUseCase.execute(id);
+        String msg = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
+        return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
+    }
+}

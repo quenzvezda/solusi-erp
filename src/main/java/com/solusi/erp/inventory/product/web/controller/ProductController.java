@@ -2,6 +2,7 @@ package com.solusi.erp.inventory.product.web.controller;
 
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.core.domain.model.Pageable;
+import com.solusi.erp.core.util.PageableMapper;
 import com.solusi.erp.inventory.model.UomType;
 import com.solusi.erp.inventory.product.application.usecase.command.*;
 import com.solusi.erp.inventory.product.application.usecase.query.*;
@@ -51,7 +52,7 @@ public class ProductController {
             org.springframework.data.domain.Pageable springPageable,
             Model model) {
         
-        Pageable domainPageable = Pageable.of(springPageable.getPageNumber(), springPageable.getPageSize());
+        Pageable domainPageable = PageableMapper.toDomain(springPageable);
         com.solusi.erp.core.domain.model.Page<com.solusi.erp.inventory.product.domain.model.Product> domainPage = 
             findProductsUseCase.execute(keyword, domainPageable);
             

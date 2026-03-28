@@ -8,11 +8,11 @@
         - label: Text to display in the header
     -->
     <th th:fragment="sortable(field, label)" scope="col">
-        <a th:href="@{${currentUri}(page=0, keyword=${keyword}, sort=${field + ',' + (sortField == field && sortDir == 'asc' ? 'desc' : 'asc')})}"
+        <a th:href="${sortUrlBuilder.apply(field + ',' + (sortField == field && sortDir == 'asc' ? 'desc' : 'asc'))}"
            class="table-sort text-dark text-decoration-none"
-           hx-boost="true"
-           hx-target="closest [id]"
-           hx-params="none">
+            hx-boost="true"
+            hx-target="closest [id]"
+            hx-params="none">
             <span th:text="${label}">Label</span>
             <span class="ms-1 d-inline-flex">
                 <!-- Sorting Icons -->

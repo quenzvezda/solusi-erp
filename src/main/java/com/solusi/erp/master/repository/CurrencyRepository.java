@@ -20,4 +20,6 @@ public interface CurrencyRepository extends JpaRepository<Currency, Long> {
     Optional<Currency> findByAlias(String alias);
 
     List<Currency> findByIsDefaultTrue();
+
+    List<Currency> findByIsActiveTrue();
 }

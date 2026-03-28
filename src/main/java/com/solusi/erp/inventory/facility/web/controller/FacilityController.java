@@ -2,6 +2,7 @@ package com.solusi.erp.inventory.facility.web.controller;
 
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
+import com.solusi.erp.core.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.inventory.facility.application.usecase.command.*;
@@ -48,7 +49,7 @@ public class FacilityController {
     public String list(@RequestParam(required = false) String keyword,
                        org.springframework.data.domain.Pageable springPageable,
                        Model model) {
-        Pageable domainPageable = Pageable.of(springPageable.getPageNumber(), springPageable.getPageSize());
+        Pageable domainPageable = PageableMapper.toDomain(springPageable);
         com.solusi.erp.core.domain.model.Page<Facility> domainPage =
             findFacilitiesUseCase.execute(keyword, domainPageable);
 

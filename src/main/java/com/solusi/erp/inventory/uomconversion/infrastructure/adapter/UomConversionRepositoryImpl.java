@@ -2,6 +2,7 @@ package com.solusi.erp.inventory.uomconversion.infrastructure.adapter;
 
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
+import com.solusi.erp.core.util.PageableMapper;
 import com.solusi.erp.inventory.model.ProductUomConversion;
 import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import com.solusi.erp.inventory.product.infrastructure.persistence.ProductEntity;
@@ -72,7 +73,7 @@ public class UomConversionRepositoryImpl implements UomConversionRepository {
     @Override
     public Page<UomConversion> findAll(String keyword, Pageable pageable) {
         org.springframework.data.domain.Pageable springPageable =
-            PageRequest.of(pageable.page(), pageable.size());
+            PageableMapper.toSpring(pageable);
         org.springframework.data.domain.Page<ProductUomConversion> springPage =
             jpaRepo.search(keyword, springPageable);
         return new Page<>(

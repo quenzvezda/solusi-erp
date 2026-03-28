@@ -8,8 +8,11 @@ import com.solusi.erp.inventory.adjustment.domain.model.StockAdjustment;
 import com.solusi.erp.inventory.adjustment.web.controller.StockAdjustmentController;
 import com.solusi.erp.inventory.adjustment.web.dto.*;
 import com.solusi.erp.inventory.adjustment.web.mapper.StockAdjustmentWebMapper;
-import com.solusi.erp.master.dto.CurrencyResponse;
-import com.solusi.erp.master.service.CurrencyService;
+import com.solusi.erp.master.currency.application.usecase.query.FindActiveCurrenciesUseCase;
+import com.solusi.erp.master.currency.application.usecase.query.GetDefaultCurrencyUseCase;
+import com.solusi.erp.master.currency.domain.model.Currency;
+import com.solusi.erp.master.currency.web.dto.CurrencySummaryResponse;
+import com.solusi.erp.master.currency.web.mapper.CurrencyWebMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,7 +42,9 @@ class StockAdjustmentControllerTest {
     private GetStockAdjustmentUseCase getUseCase;
     private GetStockAdjustmentEditViewUseCase getEditViewUseCase;
     private StockAdjustmentWebMapper webMapper;
-    private CurrencyService currencyService;
+    private FindActiveCurrenciesUseCase findActiveCurrenciesUseCase;
+    private GetDefaultCurrencyUseCase getDefaultCurrencyUseCase;
+    private CurrencyWebMapper currencyWebMapper;
     private MessageSource messageSource;
 
     private StockAdjustmentController controller;
@@ -54,12 +59,14 @@ class StockAdjustmentControllerTest {
         getUseCase = mock(GetStockAdjustmentUseCase.class);
         getEditViewUseCase = mock(GetStockAdjustmentEditViewUseCase.class);
         webMapper = mock(StockAdjustmentWebMapper.class);
-        currencyService = mock(CurrencyService.class);
+        findActiveCurrenciesUseCase = mock(FindActiveCurrenciesUseCase.class);
+        getDefaultCurrencyUseCase = mock(GetDefaultCurrencyUseCase.class);
+        currencyWebMapper = mock(CurrencyWebMapper.class);
         messageSource = mock(MessageSource.class);
 
         controller = new StockAdjustmentController(createUseCase, updateUseCase, deleteUseCase,
                 processUseCase, findUseCase, getUseCase, getEditViewUseCase,
-                webMapper, currencyService, messageSource);
+                webMapper, findActiveCurrenciesUseCase, getDefaultCurrencyUseCase, currencyWebMapper, messageSource);
     }
 
     private StockAdjustment draftDomain() {
@@ -95,8 +102,8 @@ class StockAdjustmentControllerTest {
     @Test
     @DisplayName("createForm returns form view with stockAdjustment in model")
     void createForm_returnsFormWithModel() {
-        when(currencyService.getDefaultCurrency()).thenReturn(null);
-        when(currencyService.findAllActive()).thenReturn(List.of());
+        when(getDefaultCurrencyUseCase.execute()).thenReturn(Optional.empty());
+        when(findActiveCurrenciesUseCase.execute()).thenReturn(List.of());
 
         Model model = new ExtendedModelMap();
         String view = controller.createForm(model);
@@ -111,8 +118,8 @@ class StockAdjustmentControllerTest {
     void editForm_draft_returnsFormView() {
         when(getEditViewUseCase.execute(1L)).thenReturn(Optional.of(draftDomain()));
         when(webMapper.toSaveRequest(any())).thenReturn(new StockAdjustmentSaveRequest());
-        when(currencyService.findAllActive()).thenReturn(List.of());
-        when(currencyService.getDefaultCurrency()).thenReturn(null);
+        when(findActiveCurrenciesUseCase.execute()).thenReturn(List.of());
+        when(getDefaultCurrencyUseCase.execute()).thenReturn(Optional.empty());
 
         Model model = new ExtendedModelMap();
         String view = controller.editForm(1L, model);
@@ -168,5 +175,29 @@ class StockAdjustmentControllerTest {
 
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
         verify(deleteUseCase).execute(1L);
+    }
+
+    @Test
+    @DisplayName("createForm sets currencyId when default currency exists")
+    void createForm_setsCurrencyIdFromDefaultCurrency() {
+        Currency defaultCurrency = new Currency(
+                new AuditMetadata(99L, 1L, null, null, null, null),
+                "Rp", "IDR", "Rupiah", null, true, true);
+        when(getDefaultCurrencyUseCase.execute()).thenReturn(Optional.of(defaultCurrency));
+        when(findActiveCurrenciesUseCase.execute()).thenReturn(List.of(defaultCurrency));
+
+        CurrencySummaryResponse summary = new CurrencySummaryResponse();
+        summary.setId(99L);
+        summary.setAlias("IDR");
+        when(currencyWebMapper.toSummaryResponse(defaultCurrency)).thenReturn(summary);
+
+        Model model = new ExtendedModelMap();
+        controller.createForm(model);
+
+        StockAdjustmentSaveRequest request = (StockAdjustmentSaveRequest) model.getAttribute("stockAdjustment");
+        assertThat(request).isNotNull();
+        assertThat(request.getCurrencyId()).isEqualTo(99L);
+        assertThat(model.getAttribute("currencies")).isNotNull();
+        assertThat(model.getAttribute("defaultCurrency")).isEqualTo(summary);
     }
 }
