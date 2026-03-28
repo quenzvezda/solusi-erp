@@ -1,7 +1,7 @@
 package com.solusi.erp.master.party.web.template.integration;
 
-import com.solusi.erp.master.model.AddressType;
-import com.solusi.erp.master.model.PartyType;
+import com.solusi.erp.master.shared.model.AddressType;
+import com.solusi.erp.master.shared.model.PartyType;
 import com.solusi.erp.master.party.web.dto.PartySaveRequest;
 import com.solusi.erp.testutils.TemplateTestUtils;
 import org.junit.jupiter.api.DisplayName;
@@ -73,3 +73,4 @@ class PartyFormIntegrationTest {
         assertThat(html).contains("/master/parties/edit/");
     }
 }
+

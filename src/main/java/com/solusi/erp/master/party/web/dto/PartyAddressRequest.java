@@ -1,6 +1,6 @@
 package com.solusi.erp.master.party.web.dto;
 
-import com.solusi.erp.master.model.AddressType;
+import com.solusi.erp.master.shared.model.AddressType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,3 +20,4 @@ public class PartyAddressRequest {
     private Boolean isActive = true;
     private Boolean isDefault = false;
 }
+

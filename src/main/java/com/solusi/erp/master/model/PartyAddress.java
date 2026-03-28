@@ -1,6 +1,7 @@
 package com.solusi.erp.master.model;
 
 import com.solusi.erp.core.model.BaseModel;
+import com.solusi.erp.master.shared.model.AddressType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

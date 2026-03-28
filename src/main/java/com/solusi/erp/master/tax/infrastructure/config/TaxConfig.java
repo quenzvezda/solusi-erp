@@ -19,7 +19,7 @@ public class TaxConfig {
 
     @Bean
     public TaxRepository taxDomainRepository(
-            com.solusi.erp.master.repository.TaxRepository jpaRepository,
+            com.solusi.erp.master.tax.infrastructure.persistence.TaxJpaRepository jpaRepository,
             TaxPersistenceMapper mapper) {
         return new TaxRepositoryImpl(jpaRepository, mapper);
     }
@@ -73,3 +73,4 @@ public class TaxConfig {
         return (id) -> tx.execute(status -> pure.execute(id));
     }
 }
+

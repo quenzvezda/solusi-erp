@@ -1,7 +1,7 @@
 package com.solusi.erp.master.party.application.usecase.command;
 
 import com.solusi.erp.core.exception.DomainException;
-import com.solusi.erp.master.model.PartyType;
+import com.solusi.erp.master.shared.model.PartyType;
 import com.solusi.erp.master.party.domain.model.Party;
 import com.solusi.erp.master.party.domain.model.PartyAddressData;
 import com.solusi.erp.master.party.domain.model.PartyContactData;
@@ -31,3 +31,4 @@ public class UpdatePartyUseCaseImpl implements UpdatePartyUseCase {
         return repository.save(updated);
     }
 }
+

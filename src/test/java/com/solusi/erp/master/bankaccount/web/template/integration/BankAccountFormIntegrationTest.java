@@ -1,7 +1,7 @@
 package com.solusi.erp.master.bankaccount.web.template.integration;
 
 import com.solusi.erp.master.bankaccount.web.dto.BankAccountSaveRequest;
-import com.solusi.erp.master.model.AccountType;
+import com.solusi.erp.master.shared.model.AccountType;
 import com.solusi.erp.testutils.TemplateTestUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -68,3 +68,4 @@ class BankAccountFormIntegrationTest {
         assertThat(html).contains("/master/bank-accounts/edit/");
     }
 }
+

@@ -8,8 +8,8 @@ import com.solusi.erp.master.bankaccount.domain.repository.BankAccountRepository
 import com.solusi.erp.master.bankaccount.infrastructure.persistence.BankAccountPersistenceMapper;
 import com.solusi.erp.master.model.Geographic;
 import com.solusi.erp.master.model.Party;
-import com.solusi.erp.master.repository.GeographicRepository;
-import com.solusi.erp.master.repository.PartyRepository;
+import com.solusi.erp.master.geographic.infrastructure.persistence.GeographicJpaRepository;
+import com.solusi.erp.master.party.infrastructure.persistence.PartyJpaRepository;
 import org.springframework.data.domain.PageRequest;
 
 import java.util.Optional;
@@ -21,16 +21,16 @@ import java.util.stream.Collectors;
  */
 public class BankAccountRepositoryImpl implements BankAccountRepository {
 
-    private final com.solusi.erp.master.repository.BankAccountRepository jpaRepository;
+    private final com.solusi.erp.master.bankaccount.infrastructure.persistence.BankAccountJpaRepository jpaRepository;
     private final BankAccountPersistenceMapper mapper;
-    private final GeographicRepository geographicRepository;
-    private final PartyRepository partyRepository;
+    private final GeographicJpaRepository geographicRepository;
+    private final PartyJpaRepository partyRepository;
 
     public BankAccountRepositoryImpl(
-            com.solusi.erp.master.repository.BankAccountRepository jpaRepository,
+            com.solusi.erp.master.bankaccount.infrastructure.persistence.BankAccountJpaRepository jpaRepository,
             BankAccountPersistenceMapper mapper,
-            GeographicRepository geographicRepository,
-            PartyRepository partyRepository) {
+            GeographicJpaRepository geographicRepository,
+            PartyJpaRepository partyRepository) {
         this.jpaRepository = jpaRepository;
         this.mapper = mapper;
         this.geographicRepository = geographicRepository;
@@ -81,3 +81,5 @@ public class BankAccountRepositoryImpl implements BankAccountRepository {
         });
     }
 }
+
+

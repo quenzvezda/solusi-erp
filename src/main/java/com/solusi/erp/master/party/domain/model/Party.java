@@ -1,7 +1,7 @@
 package com.solusi.erp.master.party.domain.model;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
-import com.solusi.erp.master.model.PartyType;
+import com.solusi.erp.master.shared.model.PartyType;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -77,3 +77,4 @@ public class Party {
     public List<PartyAddressData> getAddresses() { return addresses; }
     public List<PartyIdentificationData> getIdentifications() { return identifications; }
 }
+

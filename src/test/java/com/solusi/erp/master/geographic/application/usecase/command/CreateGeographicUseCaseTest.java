@@ -4,7 +4,7 @@ import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.exception.DomainException;
 import com.solusi.erp.master.geographic.domain.model.Geographic;
 import com.solusi.erp.master.geographic.domain.repository.GeographicRepository;
-import com.solusi.erp.master.model.GeographicType;
+import com.solusi.erp.master.shared.model.GeographicType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -70,3 +70,4 @@ class CreateGeographicUseCaseTest {
                 useCase.execute("ID", "Indonesia", GeographicType.COUNTRY, null, null, Boolean.TRUE));
     }
 }
+

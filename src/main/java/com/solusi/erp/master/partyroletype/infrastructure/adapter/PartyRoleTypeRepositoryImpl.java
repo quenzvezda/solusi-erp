@@ -17,11 +17,11 @@ import java.util.stream.Collectors;
  */
 public class PartyRoleTypeRepositoryImpl implements PartyRoleTypeRepository {
 
-    private final com.solusi.erp.master.repository.PartyRoleTypeRepository jpaRepository;
+    private final com.solusi.erp.master.partyroletype.infrastructure.persistence.PartyRoleTypeJpaRepository jpaRepository;
     private final PartyRoleTypePersistenceMapper mapper;
 
     public PartyRoleTypeRepositoryImpl(
-            com.solusi.erp.master.repository.PartyRoleTypeRepository jpaRepository,
+            com.solusi.erp.master.partyroletype.infrastructure.persistence.PartyRoleTypeJpaRepository jpaRepository,
             PartyRoleTypePersistenceMapper mapper) {
         this.jpaRepository = jpaRepository;
         this.mapper = mapper;
@@ -59,3 +59,4 @@ public class PartyRoleTypeRepositoryImpl implements PartyRoleTypeRepository {
         jpaRepository.deleteById(id);
     }
 }
+

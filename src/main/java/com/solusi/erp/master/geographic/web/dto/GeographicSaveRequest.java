@@ -1,7 +1,7 @@
 package com.solusi.erp.master.geographic.web.dto;
 
 import com.solusi.erp.core.dto.BaseAuditResponse;
-import com.solusi.erp.master.model.GeographicType;
+import com.solusi.erp.master.shared.model.GeographicType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -34,3 +34,4 @@ public class GeographicSaveRequest extends BaseAuditResponse {
 
     private Boolean isActive = Boolean.TRUE;
 }
+

@@ -8,7 +8,7 @@ import com.solusi.erp.master.geographic.application.usecase.query.GetGeographicE
 import com.solusi.erp.master.geographic.domain.model.Geographic;
 import com.solusi.erp.master.geographic.web.dto.GeographicSummaryResponse;
 import com.solusi.erp.master.geographic.web.mapper.GeographicWebMapper;
-import com.solusi.erp.master.model.GeographicType;
+import com.solusi.erp.master.shared.model.GeographicType;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.PageRequest;
@@ -67,3 +67,4 @@ public class GeographicControllerTest {
         assertEquals("ID", ((GeographicSummaryResponse) first).getCode());
     }
 }
+

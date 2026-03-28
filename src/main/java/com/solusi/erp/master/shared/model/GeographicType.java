@@ -1,4 +1,4 @@
-package com.solusi.erp.master.model;
+package com.solusi.erp.master.shared.model;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -15,3 +15,4 @@ public enum GeographicType {
 
     private final String value;
 }
+

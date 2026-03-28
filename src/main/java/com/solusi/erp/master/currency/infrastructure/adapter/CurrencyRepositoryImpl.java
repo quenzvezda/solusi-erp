@@ -18,11 +18,11 @@ import java.util.stream.Collectors;
  */
 public class CurrencyRepositoryImpl implements CurrencyRepository {
 
-    private final com.solusi.erp.master.repository.CurrencyRepository jpaRepository;
+    private final com.solusi.erp.master.currency.infrastructure.persistence.CurrencyJpaRepository jpaRepository;
     private final CurrencyPersistenceMapper mapper;
 
     public CurrencyRepositoryImpl(
-            com.solusi.erp.master.repository.CurrencyRepository jpaRepository,
+            com.solusi.erp.master.currency.infrastructure.persistence.CurrencyJpaRepository jpaRepository,
             CurrencyPersistenceMapper mapper) {
         this.jpaRepository = jpaRepository;
         this.mapper = mapper;
@@ -79,3 +79,4 @@ public class CurrencyRepositoryImpl implements CurrencyRepository {
                 .collect(Collectors.toList());
     }
 }
+

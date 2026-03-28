@@ -1,7 +1,7 @@
 package com.solusi.erp.master.party.web.dto;
 
 import com.solusi.erp.core.dto.BaseAuditResponse;
-import com.solusi.erp.master.model.PartyType;
+import com.solusi.erp.master.shared.model.PartyType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -49,3 +49,4 @@ public class PartySaveRequest extends BaseAuditResponse {
 
     private List<PartyIdentificationRequest> identifications = new ArrayList<>();
 }
+

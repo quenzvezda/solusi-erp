@@ -1,7 +1,7 @@
-package com.solusi.erp.master.repository;
+package com.solusi.erp.master.geographic.infrastructure.persistence;
 
 import com.solusi.erp.master.model.Geographic;
-import com.solusi.erp.master.model.GeographicType;
+import com.solusi.erp.master.shared.model.GeographicType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface GeographicRepository extends JpaRepository<Geographic, Long> {
+public interface GeographicJpaRepository extends JpaRepository<Geographic, Long> {
 
         @Query("SELECT g FROM Geographic g WHERE " +
                         "LOWER(g.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
@@ -65,3 +65,5 @@ public interface GeographicRepository extends JpaRepository<Geographic, Long> {
 
         boolean existsByCode(String code);
 }
+
+

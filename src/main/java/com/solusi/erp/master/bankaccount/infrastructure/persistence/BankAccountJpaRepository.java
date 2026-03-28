@@ -1,4 +1,4 @@
-package com.solusi.erp.master.repository;
+package com.solusi.erp.master.bankaccount.infrastructure.persistence;
 
 import com.solusi.erp.master.model.BankAccount;
 import org.springframework.data.domain.Page;
@@ -10,7 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface BankAccountRepository extends JpaRepository<BankAccount, Long>, JpaSpecificationExecutor<BankAccount> {
+public interface BankAccountJpaRepository extends JpaRepository<BankAccount, Long>, JpaSpecificationExecutor<BankAccount> {
 
     Page<BankAccount> findByIsActiveTrue(Pageable pageable);
 
@@ -19,3 +19,4 @@ public interface BankAccountRepository extends JpaRepository<BankAccount, Long>,
 
     Optional<BankAccount> findByIdAndIsActiveTrue(Long id);
 }
+

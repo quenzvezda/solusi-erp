@@ -1,4 +1,4 @@
-package com.solusi.erp.master.repository;
+package com.solusi.erp.master.party.infrastructure.persistence;
 
 import com.solusi.erp.master.model.Party;
 import org.springframework.data.domain.Page;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
  * Repository for Party.
  */
 @Repository
-public interface PartyRepository extends JpaRepository<Party, Long> {
+public interface PartyJpaRepository extends JpaRepository<Party, Long> {
 
     @Query("SELECT p FROM Party p " +
            "LEFT JOIN p.roles r " +
@@ -32,3 +32,4 @@ public interface PartyRepository extends JpaRepository<Party, Long> {
 
     boolean existsByCodeAndIdNot(String code, Long id);
 }
+

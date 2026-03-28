@@ -30,7 +30,7 @@ public class StockAdjustmentConfig {
             StockAdjustmentPersistenceMapper mapper,
             com.solusi.erp.inventory.repository.StockAdjustmentRepository jpaStockAdjustmentRepository,
             com.solusi.erp.inventory.repository.FacilityRepository facilityRepository,
-            com.solusi.erp.master.repository.CurrencyRepository currencyRepository,
+            com.solusi.erp.master.currency.infrastructure.persistence.CurrencyJpaRepository currencyRepository,
             com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository productRepository,
             com.solusi.erp.inventory.repository.ContainerRepository containerRepository,
             com.solusi.erp.inventory.repository.GridRepository gridRepository,
@@ -43,7 +43,7 @@ public class StockAdjustmentConfig {
     public CreateStockAdjustmentUseCase createStockAdjustmentUseCase(
             StockAdjustmentRepository stockAdjustmentDomainRepository,
             com.solusi.erp.inventory.repository.FacilityRepository facilityRepository,
-            com.solusi.erp.master.repository.CurrencyRepository currencyRepository,
+            com.solusi.erp.master.currency.infrastructure.persistence.CurrencyJpaRepository currencyRepository,
             SequenceGeneratorService sequenceGeneratorService,
             MessageSource messageSource,
             PlatformTransactionManager txManager) {
@@ -58,7 +58,7 @@ public class StockAdjustmentConfig {
     public UpdateStockAdjustmentUseCase updateStockAdjustmentUseCase(
             StockAdjustmentRepository stockAdjustmentDomainRepository,
             com.solusi.erp.inventory.repository.FacilityRepository facilityRepository,
-            com.solusi.erp.master.repository.CurrencyRepository currencyRepository,
+            com.solusi.erp.master.currency.infrastructure.persistence.CurrencyJpaRepository currencyRepository,
             MessageSource messageSource,
             PlatformTransactionManager txManager) {
         UpdateStockAdjustmentUseCase pure = new UpdateStockAdjustmentUseCaseImpl(
@@ -120,3 +120,4 @@ public class StockAdjustmentConfig {
         return (id) -> tx.execute(s -> pure.execute(id));
     }
 }
+

@@ -1,4 +1,4 @@
-package com.solusi.erp.master.repository;
+package com.solusi.erp.master.partyroletype.infrastructure.persistence;
 
 import com.solusi.erp.master.model.PartyRoleType;
 import org.springframework.data.domain.Page;
@@ -14,7 +14,7 @@ import java.util.Optional;
  * Repository for PartyRoleType.
  */
 @Repository
-public interface PartyRoleTypeRepository extends JpaRepository<PartyRoleType, Long> {
+public interface PartyRoleTypeJpaRepository extends JpaRepository<PartyRoleType, Long> {
     Optional<PartyRoleType> findByCode(String code);
 
     @Query("SELECT r FROM PartyRoleType r WHERE LOWER(r.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(r.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
@@ -24,3 +24,4 @@ public interface PartyRoleTypeRepository extends JpaRepository<PartyRoleType, Lo
 
     boolean existsByCodeAndIdNot(String code, Long id);
 }
+

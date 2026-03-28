@@ -1,6 +1,6 @@
 package com.solusi.erp.master.party.domain.model;
 
-import com.solusi.erp.master.model.AddressType;
+import com.solusi.erp.master.shared.model.AddressType;
 import java.util.Set;
 
 public record PartyAddressData(
@@ -12,3 +12,4 @@ public record PartyAddressData(
         Boolean isActive,
         Boolean isDefault
 ) {}
+

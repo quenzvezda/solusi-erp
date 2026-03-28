@@ -29,7 +29,7 @@ public interface BankAccountPersistenceMapper {
     @Mapping(target = "updatedBy", source = "metadata.updatedBy")
     @Mapping(target = "city", ignore = true)
     @Mapping(target = "party", ignore = true)
-    @Mapping(target = "accountType", expression = "java(domain.getAccountType() != null ? com.solusi.erp.master.model.AccountType.valueOf(domain.getAccountType()) : null)")
+    @Mapping(target = "accountType", expression = "java(domain.getAccountType() != null ? com.solusi.erp.master.shared.model.AccountType.valueOf(domain.getAccountType()) : null)")
     com.solusi.erp.master.model.BankAccount toEntity(BankAccount domain);
 
     default AuditMetadata toAuditMetadata(com.solusi.erp.master.model.BankAccount entity) {
@@ -43,3 +43,4 @@ public interface BankAccountPersistenceMapper {
         );
     }
 }
+

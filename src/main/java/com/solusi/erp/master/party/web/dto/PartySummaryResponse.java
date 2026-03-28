@@ -1,7 +1,7 @@
 package com.solusi.erp.master.party.web.dto;
 
 import com.solusi.erp.core.dto.BaseAuditResponse;
-import com.solusi.erp.master.model.PartyType;
+import com.solusi.erp.master.shared.model.PartyType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -18,3 +18,4 @@ public class PartySummaryResponse extends BaseAuditResponse {
     private List<String> roleNames;
     private Boolean isActive;
 }
+

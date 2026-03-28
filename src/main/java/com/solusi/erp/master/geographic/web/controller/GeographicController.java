@@ -9,7 +9,7 @@ import com.solusi.erp.master.geographic.application.usecase.query.*;
 import com.solusi.erp.master.geographic.domain.model.Geographic;
 import com.solusi.erp.master.geographic.web.dto.*;
 import com.solusi.erp.master.geographic.web.mapper.GeographicWebMapper;
-import com.solusi.erp.master.model.GeographicType;
+import com.solusi.erp.master.shared.model.GeographicType;
 import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -171,3 +171,4 @@ public class GeographicController {
     ) {
     }
 }
+

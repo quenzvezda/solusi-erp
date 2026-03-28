@@ -6,8 +6,8 @@ import com.solusi.erp.master.bankaccount.application.usecase.query.*;
 import com.solusi.erp.master.bankaccount.domain.repository.BankAccountRepository;
 import com.solusi.erp.master.bankaccount.infrastructure.adapter.BankAccountRepositoryImpl;
 import com.solusi.erp.master.bankaccount.infrastructure.persistence.BankAccountPersistenceMapper;
-import com.solusi.erp.master.repository.GeographicRepository;
-import com.solusi.erp.master.repository.PartyRepository;
+import com.solusi.erp.master.geographic.infrastructure.persistence.GeographicJpaRepository;
+import com.solusi.erp.master.party.infrastructure.persistence.PartyJpaRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -22,10 +22,10 @@ public class BankAccountConfig {
 
     @Bean
     public BankAccountRepository bankAccountDomainRepository(
-            com.solusi.erp.master.repository.BankAccountRepository jpaRepository,
+            com.solusi.erp.master.bankaccount.infrastructure.persistence.BankAccountJpaRepository jpaRepository,
             BankAccountPersistenceMapper mapper,
-            GeographicRepository geographicRepository,
-            PartyRepository partyRepository) {
+            GeographicJpaRepository geographicRepository,
+            PartyJpaRepository partyRepository) {
         return new BankAccountRepositoryImpl(jpaRepository, mapper, geographicRepository, partyRepository);
     }
 
@@ -79,3 +79,5 @@ public class BankAccountConfig {
         return (id) -> tx.execute(status -> pure.execute(id));
     }
 }
+
+

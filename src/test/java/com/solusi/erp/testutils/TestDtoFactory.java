@@ -3,7 +3,7 @@ package com.solusi.erp.testutils;
 import com.solusi.erp.inventory.brand.web.dto.BrandSummaryResponse;
 import com.solusi.erp.inventory.product.web.dto.ProductSummaryResponse;
 import com.solusi.erp.master.geographic.web.dto.GeographicSummaryResponse;
-import com.solusi.erp.master.model.GeographicType;
+import com.solusi.erp.master.shared.model.GeographicType;
 
 public class TestDtoFactory {
 
@@ -43,3 +43,4 @@ public class TestDtoFactory {
         return dto;
     }
 }
+

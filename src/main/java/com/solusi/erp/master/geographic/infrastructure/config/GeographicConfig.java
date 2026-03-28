@@ -19,7 +19,7 @@ public class GeographicConfig {
 
     @Bean
     public GeographicRepository geographicDomainRepository(
-            com.solusi.erp.master.repository.GeographicRepository jpaRepository,
+            com.solusi.erp.master.geographic.infrastructure.persistence.GeographicJpaRepository jpaRepository,
             GeographicPersistenceMapper mapper) {
         return new GeographicRepositoryImpl(jpaRepository, mapper);
     }
@@ -104,3 +104,4 @@ public class GeographicConfig {
         return (provinceId, keyword, limit) -> tx.execute(status -> pure.execute(provinceId, keyword, limit));
     }
 }
+

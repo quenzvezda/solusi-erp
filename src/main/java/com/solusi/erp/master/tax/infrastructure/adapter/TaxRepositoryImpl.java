@@ -17,11 +17,11 @@ import java.util.stream.Collectors;
  */
 public class TaxRepositoryImpl implements TaxRepository {
 
-    private final com.solusi.erp.master.repository.TaxRepository jpaRepository;
+    private final com.solusi.erp.master.tax.infrastructure.persistence.TaxJpaRepository jpaRepository;
     private final TaxPersistenceMapper mapper;
 
     public TaxRepositoryImpl(
-            com.solusi.erp.master.repository.TaxRepository jpaRepository,
+            com.solusi.erp.master.tax.infrastructure.persistence.TaxJpaRepository jpaRepository,
             TaxPersistenceMapper mapper) {
         this.jpaRepository = jpaRepository;
         this.mapper = mapper;
@@ -64,3 +64,4 @@ public class TaxRepositoryImpl implements TaxRepository {
         return jpaRepository.findByCode(code).isPresent();
     }
 }
+

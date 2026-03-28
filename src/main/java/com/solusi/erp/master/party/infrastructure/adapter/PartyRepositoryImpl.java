@@ -12,9 +12,9 @@ import com.solusi.erp.master.party.domain.model.PartyContactData;
 import com.solusi.erp.master.party.domain.model.PartyIdentificationData;
 import com.solusi.erp.master.party.domain.repository.PartyRepository;
 import com.solusi.erp.master.party.infrastructure.persistence.PartyPersistenceMapper;
-import com.solusi.erp.master.repository.GeographicRepository;
-import com.solusi.erp.master.repository.PartyIdentificationTypeRepository;
-import com.solusi.erp.master.repository.PartyRoleTypeRepository;
+import com.solusi.erp.master.geographic.infrastructure.persistence.GeographicJpaRepository;
+import com.solusi.erp.master.party.infrastructure.persistence.PartyIdentificationTypeJpaRepository;
+import com.solusi.erp.master.partyroletype.infrastructure.persistence.PartyRoleTypeJpaRepository;
 import org.springframework.data.domain.PageRequest;
 
 import java.util.HashMap;
@@ -27,17 +27,17 @@ import java.util.stream.Collectors;
 
 public class PartyRepositoryImpl implements PartyRepository {
 
-    private final com.solusi.erp.master.repository.PartyRepository jpaPartyRepo;
-    private final PartyRoleTypeRepository roleTypeRepository;
-    private final GeographicRepository geographicRepository;
-    private final PartyIdentificationTypeRepository idTypeRepository;
+    private final com.solusi.erp.master.party.infrastructure.persistence.PartyJpaRepository jpaPartyRepo;
+    private final PartyRoleTypeJpaRepository roleTypeRepository;
+    private final GeographicJpaRepository geographicRepository;
+    private final PartyIdentificationTypeJpaRepository idTypeRepository;
     private final PartyPersistenceMapper persistenceMapper;
 
     public PartyRepositoryImpl(
-            com.solusi.erp.master.repository.PartyRepository jpaPartyRepo,
-            PartyRoleTypeRepository roleTypeRepository,
-            GeographicRepository geographicRepository,
-            PartyIdentificationTypeRepository idTypeRepository,
+            com.solusi.erp.master.party.infrastructure.persistence.PartyJpaRepository jpaPartyRepo,
+            PartyRoleTypeJpaRepository roleTypeRepository,
+            GeographicJpaRepository geographicRepository,
+            PartyIdentificationTypeJpaRepository idTypeRepository,
             PartyPersistenceMapper persistenceMapper) {
         this.jpaPartyRepo = jpaPartyRepo;
         this.roleTypeRepository = roleTypeRepository;
@@ -236,3 +236,5 @@ public class PartyRepositoryImpl implements PartyRepository {
         });
     }
 }
+
+

@@ -1,4 +1,4 @@
-package com.solusi.erp.master.repository;
+package com.solusi.erp.master.tax.infrastructure.persistence;
 
 import com.solusi.erp.master.model.Tax;
 import org.springframework.data.domain.Page;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface TaxRepository extends JpaRepository<Tax, Long> {
+public interface TaxJpaRepository extends JpaRepository<Tax, Long> {
     @Query("SELECT t FROM Tax t WHERE " +
             "(LOWER(t.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(t.name) LIKE LOWER(CONCAT('%', :keyword, '%')))")
@@ -21,3 +21,4 @@ public interface TaxRepository extends JpaRepository<Tax, Long> {
 
     Optional<Tax> findByCode(String code);
 }
+

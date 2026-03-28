@@ -6,9 +6,9 @@ import com.solusi.erp.master.party.application.usecase.query.*;
 import com.solusi.erp.master.party.domain.repository.PartyRepository;
 import com.solusi.erp.master.party.infrastructure.adapter.PartyRepositoryImpl;
 import com.solusi.erp.master.party.infrastructure.persistence.PartyPersistenceMapper;
-import com.solusi.erp.master.repository.GeographicRepository;
-import com.solusi.erp.master.repository.PartyIdentificationTypeRepository;
-import com.solusi.erp.master.repository.PartyRoleTypeRepository;
+import com.solusi.erp.master.geographic.infrastructure.persistence.GeographicJpaRepository;
+import com.solusi.erp.master.party.infrastructure.persistence.PartyIdentificationTypeJpaRepository;
+import com.solusi.erp.master.partyroletype.infrastructure.persistence.PartyRoleTypeJpaRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -19,10 +19,10 @@ public class PartyConfig {
 
     @Bean
     public PartyRepository partyDomainRepository(
-            com.solusi.erp.master.repository.PartyRepository partyRepository,
-            PartyRoleTypeRepository partyRoleTypeRepository,
-            GeographicRepository geographicRepository,
-            PartyIdentificationTypeRepository partyIdentificationTypeRepository,
+            com.solusi.erp.master.party.infrastructure.persistence.PartyJpaRepository partyRepository,
+            PartyRoleTypeJpaRepository partyRoleTypeRepository,
+            GeographicJpaRepository geographicRepository,
+            PartyIdentificationTypeJpaRepository partyIdentificationTypeRepository,
             PartyPersistenceMapper partyPersistenceMapper) {
         return new PartyRepositoryImpl(
                 partyRepository,
@@ -94,3 +94,5 @@ public class PartyConfig {
         return (keyword) -> tx.execute(status -> pure.execute(keyword));
     }
 }
+
+

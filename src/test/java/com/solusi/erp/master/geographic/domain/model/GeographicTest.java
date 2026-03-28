@@ -1,7 +1,7 @@
 package com.solusi.erp.master.geographic.domain.model;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
-import com.solusi.erp.master.model.GeographicType;
+import com.solusi.erp.master.shared.model.GeographicType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -66,3 +66,4 @@ class GeographicTest {
         assertThat(geo.getIsActive()).isFalse();
     }
 }
+

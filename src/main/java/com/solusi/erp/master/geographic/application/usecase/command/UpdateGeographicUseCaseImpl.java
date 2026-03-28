@@ -3,7 +3,7 @@ package com.solusi.erp.master.geographic.application.usecase.command;
 import com.solusi.erp.core.exception.DomainException;
 import com.solusi.erp.master.geographic.domain.model.Geographic;
 import com.solusi.erp.master.geographic.domain.repository.GeographicRepository;
-import com.solusi.erp.master.model.GeographicType;
+import com.solusi.erp.master.shared.model.GeographicType;
 
 public class UpdateGeographicUseCaseImpl implements UpdateGeographicUseCase {
 
@@ -23,3 +23,4 @@ public class UpdateGeographicUseCaseImpl implements UpdateGeographicUseCase {
                 name, type, parentId, parentName, isActive));
     }
 }
+

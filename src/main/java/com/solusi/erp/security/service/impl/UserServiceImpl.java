@@ -12,7 +12,7 @@ import com.solusi.erp.security.model.User;
 import com.solusi.erp.security.model.UserProfile;
 import com.solusi.erp.security.repository.RoleRepository;
 import com.solusi.erp.master.model.Party;
-import com.solusi.erp.master.repository.PartyRepository;
+import com.solusi.erp.master.party.infrastructure.persistence.PartyJpaRepository;
 
 import com.solusi.erp.security.repository.UserRepository;
 import com.solusi.erp.security.service.UserService;
@@ -33,7 +33,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final PartyRepository partyRepository;
+    private final PartyJpaRepository partyRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final MessageSource messageSource;
@@ -261,3 +261,5 @@ public class UserServiceImpl implements UserService {
         return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
     }
 }
+
+

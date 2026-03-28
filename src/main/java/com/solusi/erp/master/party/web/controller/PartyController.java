@@ -4,8 +4,8 @@ import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
-import com.solusi.erp.master.model.AddressType;
-import com.solusi.erp.master.model.PartyType;
+import com.solusi.erp.master.shared.model.AddressType;
+import com.solusi.erp.master.shared.model.PartyType;
 import com.solusi.erp.master.party.application.usecase.command.CreatePartyUseCase;
 import com.solusi.erp.master.party.application.usecase.command.DeletePartyUseCase;
 import com.solusi.erp.master.party.application.usecase.command.UpdatePartyUseCase;
@@ -22,8 +22,8 @@ import com.solusi.erp.master.party.web.dto.PartyIdentificationRequest;
 import com.solusi.erp.master.party.web.dto.PartySaveRequest;
 import com.solusi.erp.master.party.web.dto.PartySummaryResponse;
 import com.solusi.erp.master.party.web.mapper.PartyWebMapper;
-import com.solusi.erp.master.repository.PartyIdentificationTypeRepository;
-import com.solusi.erp.master.repository.PartyRoleTypeRepository;
+import com.solusi.erp.master.party.infrastructure.persistence.PartyIdentificationTypeJpaRepository;
+import com.solusi.erp.master.partyroletype.infrastructure.persistence.PartyRoleTypeJpaRepository;
 import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -62,8 +62,8 @@ public class PartyController {
     private final GetPartyEditViewUseCase getPartyEditViewUseCase;
     private final PartyWebMapper webMapper;
     private final MessageSource messageSource;
-    private final PartyRoleTypeRepository roleTypeRepository;
-    private final PartyIdentificationTypeRepository idTypeRepository;
+    private final PartyRoleTypeJpaRepository roleTypeRepository;
+    private final PartyIdentificationTypeJpaRepository idTypeRepository;
 
     @GetMapping
     @PreAuthorize("hasAuthority('PARTY_READ')")
@@ -162,3 +162,5 @@ public class PartyController {
                 r.getIssuedDate(), r.getExpiryDate(), r.getIsActive(), r.getIsDefault())).collect(Collectors.toList());
     }
 }
+
+

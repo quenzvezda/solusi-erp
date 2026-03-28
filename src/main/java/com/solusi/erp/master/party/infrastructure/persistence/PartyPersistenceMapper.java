@@ -1,7 +1,7 @@
 package com.solusi.erp.master.party.infrastructure.persistence;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
-import com.solusi.erp.master.model.AddressType;
+import com.solusi.erp.master.shared.model.AddressType;
 import com.solusi.erp.master.model.PartyRoleType;
 import com.solusi.erp.master.party.domain.model.Party;
 import com.solusi.erp.master.party.domain.model.PartyAddressData;
@@ -68,3 +68,4 @@ public class PartyPersistenceMapper {
                 i.getExpiryDate(), i.getIsActive(), i.getIsDefault());
     }
 }
+

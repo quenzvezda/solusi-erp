@@ -1,7 +1,7 @@
 package com.solusi.erp.master.geographic.domain.model;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
-import com.solusi.erp.master.model.GeographicType;
+import com.solusi.erp.master.shared.model.GeographicType;
 
 /**
  * Aggregate Root: Geographic.
@@ -55,3 +55,4 @@ public class Geographic {
     public String getParentName() { return parentName; }
     public Boolean getIsActive()  { return isActive; }
 }
+

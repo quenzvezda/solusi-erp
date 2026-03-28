@@ -16,13 +16,13 @@ public class UpdateStockAdjustmentUseCaseImpl implements UpdateStockAdjustmentUs
 
     private final StockAdjustmentRepository repository;
     private final com.solusi.erp.inventory.repository.FacilityRepository facilityRepository;
-    private final com.solusi.erp.master.repository.CurrencyRepository currencyRepository;
+    private final com.solusi.erp.master.currency.infrastructure.persistence.CurrencyJpaRepository currencyRepository;
     private final MessageSource messageSource;
 
     public UpdateStockAdjustmentUseCaseImpl(
             StockAdjustmentRepository repository,
             com.solusi.erp.inventory.repository.FacilityRepository facilityRepository,
-            com.solusi.erp.master.repository.CurrencyRepository currencyRepository,
+            com.solusi.erp.master.currency.infrastructure.persistence.CurrencyJpaRepository currencyRepository,
             MessageSource messageSource) {
         this.repository = repository;
         this.facilityRepository = facilityRepository;
@@ -70,3 +70,4 @@ public class UpdateStockAdjustmentUseCaseImpl implements UpdateStockAdjustmentUs
         }).collect(Collectors.toList());
     }
 }
+

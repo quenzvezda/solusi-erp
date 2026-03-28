@@ -1,4 +1,4 @@
-package com.solusi.erp.master.repository;
+package com.solusi.erp.master.party.infrastructure.persistence;
 
 import com.solusi.erp.master.model.PartyContact;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,9 +10,10 @@ import java.util.List;
  * Repository for PartyContact (ContactMechanism).
  */
 @Repository
-public interface PartyContactRepository extends JpaRepository<PartyContact, Long> {
+public interface PartyContactJpaRepository extends JpaRepository<PartyContact, Long> {
 
     List<PartyContact> findByPartyIdAndIsActiveTrue(Long partyId);
 
     boolean existsByPartyIdAndIsDefaultTrueAndIdNot(Long partyId, Long excludeId);
 }
+

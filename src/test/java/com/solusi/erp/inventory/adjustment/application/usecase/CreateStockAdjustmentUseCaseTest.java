@@ -34,7 +34,7 @@ class CreateStockAdjustmentUseCaseTest {
     @Mock
     private com.solusi.erp.inventory.repository.FacilityRepository facilityRepository;
     @Mock
-    private com.solusi.erp.master.repository.CurrencyRepository currencyRepository;
+    private com.solusi.erp.master.currency.infrastructure.persistence.CurrencyJpaRepository currencyRepository;
     @Mock
     private com.solusi.erp.core.service.SequenceGeneratorService sequenceGeneratorService;
     @Mock
@@ -91,3 +91,4 @@ class CreateStockAdjustmentUseCaseTest {
                 .isInstanceOf(RuntimeException.class);
     }
 }
+

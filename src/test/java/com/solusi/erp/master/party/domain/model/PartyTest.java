@@ -1,7 +1,7 @@
 package com.solusi.erp.master.party.domain.model;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
-import com.solusi.erp.master.model.PartyType;
+import com.solusi.erp.master.shared.model.PartyType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -64,3 +64,4 @@ class PartyTest {
         assertThat(party.getRoleNames()).containsExactly("Vendor");
     }
 }
+

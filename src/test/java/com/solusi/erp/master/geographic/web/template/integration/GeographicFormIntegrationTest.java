@@ -1,7 +1,7 @@
 package com.solusi.erp.master.geographic.web.template.integration;
 
 import com.solusi.erp.master.geographic.web.dto.GeographicSaveRequest;
-import com.solusi.erp.master.model.GeographicType;
+import com.solusi.erp.master.shared.model.GeographicType;
 import com.solusi.erp.testutils.TemplateTestUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -66,3 +66,4 @@ class GeographicFormIntegrationTest {
         assertThat(html).contains("/master/geographics/edit/");
     }
 }
+

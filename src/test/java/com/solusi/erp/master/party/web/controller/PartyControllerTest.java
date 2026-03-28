@@ -1,8 +1,8 @@
 package com.solusi.erp.master.party.web.controller;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
-import com.solusi.erp.master.model.AddressType;
-import com.solusi.erp.master.model.PartyType;
+import com.solusi.erp.master.shared.model.AddressType;
+import com.solusi.erp.master.shared.model.PartyType;
 import com.solusi.erp.master.party.application.usecase.command.CreatePartyUseCase;
 import com.solusi.erp.master.party.application.usecase.command.DeletePartyUseCase;
 import com.solusi.erp.master.party.application.usecase.command.UpdatePartyUseCase;
@@ -12,8 +12,8 @@ import com.solusi.erp.master.party.domain.model.Party;
 import com.solusi.erp.master.party.web.dto.PartySaveRequest;
 import com.solusi.erp.master.party.web.dto.PartySummaryResponse;
 import com.solusi.erp.master.party.web.mapper.PartyWebMapper;
-import com.solusi.erp.master.repository.PartyIdentificationTypeRepository;
-import com.solusi.erp.master.repository.PartyRoleTypeRepository;
+import com.solusi.erp.master.party.infrastructure.persistence.PartyIdentificationTypeJpaRepository;
+import com.solusi.erp.master.partyroletype.infrastructure.persistence.PartyRoleTypeJpaRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.MessageSource;
 import org.springframework.ui.ExtendedModelMap;
@@ -40,8 +40,8 @@ class PartyControllerTest {
         GetPartyEditViewUseCase getPartyEditViewUseCase = mock(GetPartyEditViewUseCase.class);
         PartyWebMapper webMapper = mock(PartyWebMapper.class);
         MessageSource messageSource = mock(MessageSource.class);
-        PartyRoleTypeRepository roleTypeRepository = mock(PartyRoleTypeRepository.class);
-        PartyIdentificationTypeRepository idTypeRepository = mock(PartyIdentificationTypeRepository.class);
+        PartyRoleTypeJpaRepository roleTypeRepository = mock(PartyRoleTypeJpaRepository.class);
+        PartyIdentificationTypeJpaRepository idTypeRepository = mock(PartyIdentificationTypeJpaRepository.class);
 
         PartyController controller = new PartyController(
                 createPartyUseCase, updatePartyUseCase, deletePartyUseCase,
@@ -91,8 +91,8 @@ class PartyControllerTest {
         GetPartyEditViewUseCase getPartyEditViewUseCase = mock(GetPartyEditViewUseCase.class);
         PartyWebMapper webMapper = mock(PartyWebMapper.class);
         MessageSource messageSource = mock(MessageSource.class);
-        PartyRoleTypeRepository roleTypeRepository = mock(PartyRoleTypeRepository.class);
-        PartyIdentificationTypeRepository idTypeRepository = mock(PartyIdentificationTypeRepository.class);
+        PartyRoleTypeJpaRepository roleTypeRepository = mock(PartyRoleTypeJpaRepository.class);
+        PartyIdentificationTypeJpaRepository idTypeRepository = mock(PartyIdentificationTypeJpaRepository.class);
         when(roleTypeRepository.findAll()).thenReturn(List.of());
         when(idTypeRepository.findAll()).thenReturn(List.of());
 
@@ -111,3 +111,4 @@ class PartyControllerTest {
         assertThat(model.getAttribute("addressTypes")).isEqualTo(AddressType.values());
     }
 }
+

@@ -7,7 +7,7 @@ import com.solusi.erp.core.exception.DomainException;
 import com.solusi.erp.master.geographic.domain.model.Geographic;
 import com.solusi.erp.master.geographic.domain.repository.GeographicRepository;
 import com.solusi.erp.master.geographic.infrastructure.persistence.GeographicPersistenceMapper;
-import com.solusi.erp.master.model.GeographicType;
+import com.solusi.erp.master.shared.model.GeographicType;
 import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
@@ -20,11 +20,11 @@ import java.util.stream.Collectors;
  */
 public class GeographicRepositoryImpl implements GeographicRepository {
 
-    private final com.solusi.erp.master.repository.GeographicRepository jpaRepository;
+    private final com.solusi.erp.master.geographic.infrastructure.persistence.GeographicJpaRepository jpaRepository;
     private final GeographicPersistenceMapper mapper;
 
     public GeographicRepositoryImpl(
-            com.solusi.erp.master.repository.GeographicRepository jpaRepository,
+            com.solusi.erp.master.geographic.infrastructure.persistence.GeographicJpaRepository jpaRepository,
             GeographicPersistenceMapper mapper) {
         this.jpaRepository = jpaRepository;
         this.mapper = mapper;
@@ -113,3 +113,4 @@ public class GeographicRepositoryImpl implements GeographicRepository {
                 .getContent().stream().map(mapper::toDomain).collect(Collectors.toList());
     }
 }
+

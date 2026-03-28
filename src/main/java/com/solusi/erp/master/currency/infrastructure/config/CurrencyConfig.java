@@ -19,7 +19,7 @@ public class CurrencyConfig {
 
     @Bean
     public CurrencyRepository currencyDomainRepository(
-            com.solusi.erp.master.repository.CurrencyRepository jpaRepository,
+            com.solusi.erp.master.currency.infrastructure.persistence.CurrencyJpaRepository jpaRepository,
             CurrencyPersistenceMapper mapper) {
         return new CurrencyRepositoryImpl(jpaRepository, mapper);
     }
@@ -93,3 +93,4 @@ public class CurrencyConfig {
         return () -> tx.execute(status -> pure.execute());
     }
 }
+

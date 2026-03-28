@@ -1,4 +1,4 @@
-package com.solusi.erp.master.repository;
+package com.solusi.erp.master.currency.infrastructure.persistence;
 
 import com.solusi.erp.master.model.Currency;
 import org.springframework.data.domain.Page;
@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface CurrencyRepository extends JpaRepository<Currency, Long> {
+public interface CurrencyJpaRepository extends JpaRepository<Currency, Long> {
 
     @Query("SELECT c FROM Currency c WHERE LOWER(c.symbol) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(c.alias) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<Currency> search(@Param("keyword") String keyword, Pageable pageable);
@@ -23,3 +23,4 @@ public interface CurrencyRepository extends JpaRepository<Currency, Long> {
 
     List<Currency> findByIsActiveTrue();
 }
+

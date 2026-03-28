@@ -1,6 +1,7 @@
 package com.solusi.erp.master.model;
 
 import com.solusi.erp.core.model.BaseModel;
+import com.solusi.erp.master.shared.model.AccountType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

@@ -20,7 +20,7 @@ public class PartyRoleTypeConfig {
 
     @Bean
     public PartyRoleTypeRepository partyRoleTypeDomainRepository(
-            com.solusi.erp.master.repository.PartyRoleTypeRepository jpaRepository,
+            com.solusi.erp.master.partyroletype.infrastructure.persistence.PartyRoleTypeJpaRepository jpaRepository,
             PartyRoleTypePersistenceMapper mapper) {
         return new PartyRoleTypeRepositoryImpl(jpaRepository, mapper);
     }
@@ -74,3 +74,4 @@ public class PartyRoleTypeConfig {
         return (id) -> tx.execute(status -> pure.execute(id));
     }
 }
+

@@ -2,7 +2,7 @@ package com.solusi.erp.master.party.application.usecase.query;
 
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
-import com.solusi.erp.master.model.PartyType;
+import com.solusi.erp.master.shared.model.PartyType;
 import com.solusi.erp.master.party.domain.model.Party;
 import com.solusi.erp.master.party.domain.repository.PartyRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,3 +50,4 @@ class FindPartiesUseCaseTest {
         assertThat(result).isEqualTo(expected);
     }
 }
+

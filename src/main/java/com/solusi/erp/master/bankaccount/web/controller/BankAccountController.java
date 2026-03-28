@@ -9,7 +9,7 @@ import com.solusi.erp.master.bankaccount.application.usecase.query.*;
 import com.solusi.erp.master.bankaccount.domain.model.BankAccount;
 import com.solusi.erp.master.bankaccount.web.dto.*;
 import com.solusi.erp.master.bankaccount.web.mapper.BankAccountWebMapper;
-import com.solusi.erp.master.model.AccountType;
+import com.solusi.erp.master.shared.model.AccountType;
 import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -121,3 +121,4 @@ public class BankAccountController {
         return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
     }
 }
+

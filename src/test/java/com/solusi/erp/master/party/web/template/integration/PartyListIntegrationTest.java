@@ -1,6 +1,6 @@
 package com.solusi.erp.master.party.web.template.integration;
 
-import com.solusi.erp.master.model.PartyType;
+import com.solusi.erp.master.shared.model.PartyType;
 import com.solusi.erp.master.party.web.dto.PartySummaryResponse;
 import com.solusi.erp.testutils.TemplateTestUtils;
 import org.junit.jupiter.api.DisplayName;
@@ -118,3 +118,4 @@ class PartyListIntegrationTest {
     }
 
 }
+

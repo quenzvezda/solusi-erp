@@ -1,4 +1,4 @@
-package com.solusi.erp.master.repository;
+package com.solusi.erp.master.party.infrastructure.persistence;
 
 import com.solusi.erp.master.model.PartyIdentificationType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,6 +10,7 @@ import java.util.Optional;
  * Repository for PartyIdentificationType.
  */
 @Repository
-public interface PartyIdentificationTypeRepository extends JpaRepository<PartyIdentificationType, Long> {
+public interface PartyIdentificationTypeJpaRepository extends JpaRepository<PartyIdentificationType, Long> {
     Optional<PartyIdentificationType> findByCode(String code);
 }
+

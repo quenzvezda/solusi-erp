@@ -1,7 +1,7 @@
 package com.solusi.erp.master.party.application.usecase.command;
 
 import com.solusi.erp.core.service.SequenceGeneratorService;
-import com.solusi.erp.master.model.PartyType;
+import com.solusi.erp.master.shared.model.PartyType;
 import com.solusi.erp.master.party.domain.model.Party;
 import com.solusi.erp.master.party.domain.model.PartyAddressData;
 import com.solusi.erp.master.party.domain.model.PartyContactData;
@@ -32,3 +32,4 @@ public class CreatePartyUseCaseImpl implements CreatePartyUseCase {
         return repository.save(party);
     }
 }
+
