@@ -1,0 +1,10 @@
+Goal: run test commands and summarize results.
+
+Input: repo root.
+
+Tasks:
+- Run `mvn clean test`.
+- Capture test summary: total tests, failures, errors, skipped.
+- If failures > 0, produce a short diagnostic: first failing test name and exception message.
+
+Output: JSON {testsRun, failures, errors, skipped, diagnostics}.

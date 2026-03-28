@@ -1,0 +1,9 @@
+Committer rules (for the skill):
+
+- Stage only code changes and tests by default. Do NOT stage or commit docs unless `allow_commit_docs` is true.
+- Commit message format: <short summary>\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+- Create one commit per feature iteration.
+- Do not push. Ask user before pushing.
+- After commit, append report entry to docs/REPORT.md (but do not commit docs unless allowed).
+
+When encountering a potential breaking change, create a local branch named `skill/<todo-id>` and stop; do not commit to main branch without human approval.

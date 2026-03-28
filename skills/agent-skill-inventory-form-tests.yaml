@@ -1,0 +1,36 @@
+name: inventory-form-tests
+version: 1.0
+description: |
+  Agentic skill to run the discover→plan→review→implement→verify→report workflow for inventory form template tests.
+  Designed to be human-in-the-loop at plan approval and when breaking changes are detected.
+inputs:
+  - repo_root: F:\\solusi-program-erp
+  - plan_path: docs/PLAN.md
+  - allow_commit_docs: false
+outputs:
+  - commits: list of commit SHAs created
+  - report_path: docs/REPORT.md
+checkpoints:
+  - discover
+  - plan_generated
+  - plan_approved
+  - implement_iteration
+  - all_tests_green
+  - done
+policy:
+  - always_run_full_test: true
+  - auto_fix_non_breaking: true
+  - stop_on_breaking: true
+  - no_push_without_explicit_user: true
+sub_agents:
+  - discover
+  - plan_generator
+  - implementer
+  - tester
+  - fixer
+  - committer
+human_checkpoints:
+  - plan_approved
+  - approve_breaking_fix
+notes: |
+  Use templates in skills/templates and skills/prompts. Follow repo commit rules (Co-authored-by trailer).

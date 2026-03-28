@@ -1,0 +1,11 @@
+Goal: produce a context bundle for the skill-run.
+
+Inputs: repo root, docs/NOTES.md, docs/index.md, docs/spec, templates/ inventory module.
+
+Tasks:
+1. Read docs/NOTES.md, docs/PLAN.md (if present), docs/spec/index.md and summarize business intent and important constraints (fields used, DTO names, known issues).
+2. List all templates under templates/inventory/**/form.html and map to controller and DTO classes (by scanning controller methods that return view names or by naming convention).
+3. Identify helper utilities used by template tests (TemplateTestUtils, TestDtoFactory, etc) and note their location and capabilities.
+4. Produce a JSON context bundle with: templates list, DTOs used per template, helper utilities, previously-known template issues (e.g., CSRF, th:replace handling), recommended quick fixes.
+
+Output format: JSON with keys: docsSummary, templates, dtos, helpers, recommendations.

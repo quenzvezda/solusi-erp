@@ -1,0 +1,13 @@
+Goal: attempt safe, non-breaking fixes for common template-test failures.
+
+Input: failing test diagnostics, context bundle.
+
+Non-breaking fix strategies (in order):
+1. Missing DTO property referenced by template: add field with appropriate type and Lombok annotations (e.g., private String code;) if safe.
+2. CSRF expressions failing in WebContext: add preprocessing to TemplateTestUtils to strip th:name/th:value referencing _csrf.
+3. Fragment inclusions that are intentionally preprocessed: ensure TemplateTestUtils strips th:replace/th:insert before render.
+4. Messages missing: optionally add lightweight MessageSource in test utils.
+
+If any fix touches production code beyond simple DTO field additions, validate by running full test suite. If tests still fail and changes are invasive, stop and surface to human with patch suggestion.
+
+Output: patch summary and status (fixed/stopped).
