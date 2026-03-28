@@ -148,6 +148,13 @@ public class TemplateTestUtils {
                     "@\\{(/[^}{(]*)(?:\\{[^}]*\\})?[^){(]*(?:\\([^)]*\\))?\\}", "'$1'");
             preprocessed = preprocessed.replaceAll("th:replace\\s*=\\s*\"[^\"]*\"", "");
             preprocessed = preprocessed.replaceAll("th:replace\\s*=\\s*'[^']*'", "");
+            // Strip th:insert (same as th:replace for our purposes)
+            preprocessed = preprocessed.replaceAll("th:insert\\s*=\\s*\"[^\"]*\"", "");
+            preprocessed = preprocessed.replaceAll("th:insert\\s*=\\s*'[^']*'", "");
+            // Strip CSRF token attributes — _csrf is null in the test WebContext (no Spring Security
+            // RequestDataValueProcessor wired). Without stripping, OGNL throws on _csrf.parameterName.
+            preprocessed = preprocessed.replaceAll("th:name\\s*=\\s*\"\\$\\{_csrf[^\"]*\\}\"", "");
+            preprocessed = preprocessed.replaceAll("th:value\\s*=\\s*\"\\$\\{_csrf[^\"]*\\}\"", "");
             // sec:authorize intentionally kept for runtime evaluation
 
             // Build engine with SpringSecurityDialect + StringTemplateResolver

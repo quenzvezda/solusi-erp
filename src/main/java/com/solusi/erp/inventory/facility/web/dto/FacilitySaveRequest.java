@@ -13,6 +13,9 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public class FacilitySaveRequest extends BaseAuditResponse {
 
+    // auto-generated, readonly in form
+    private String code;
+
     @NotBlank(message = "{label.facility.name} {validation.notblank.suffix}")
     @Size(max = 150, message = "{label.facility.name} {validation.size.suffix}")
     private String name;
