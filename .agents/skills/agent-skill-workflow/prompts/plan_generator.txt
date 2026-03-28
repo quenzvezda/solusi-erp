@@ -1,6 +1,6 @@
 Goal: produce a Plan.md draft from a context bundle.
 
-Input: context bundle JSON from discover agent, user constraints (allow_commit_docs boolean), default test package layout.
+Input: context bundle JSON from discover agent, user constraints (allow_commit_docs boolean), inputs: run_id, artifact_dir, test_scope.
 
 Tasks:
 1. Generate a Plan.md with sections: Overview, Scope, Acceptance criteria, Test package layout, Implementation steps (detailed), Todos with ids, and REPORT.md instructions.

@@ -1,0 +1,14 @@
+Goal: run test commands and summarize results.
+
+Input: repo root, test_scope, artifact_dir, run_id.
+
+Tasks:
+- Resolve `test_scope` and execute appropriate Maven commands (see implementer for patterns). Examples:
+  - full: `mvn clean test`.
+  - changed: detect changed modules and run `mvn -pl <module> -am test` per module.
+  - module:<name>: `mvn -pl <name> -am test`.
+  - smoke: `mvn -Dtest=*Smoke* test`.
+- Capture test summary: total tests, failures, errors, skipped.
+- If failures > 0, produce a short diagnostic: first failing test name and exception message.
+
+Output: JSON {testsRun, failures, errors, skipped, diagnostics}.

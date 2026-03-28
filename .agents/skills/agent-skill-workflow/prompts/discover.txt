@@ -1,6 +1,6 @@
 Goal: produce a context bundle for the skill-run.
 
-Inputs: repo root, docs/NOTES.md, docs/index.md, docs/spec, templates/ inventory module.
+Inputs: repo root, notes_path_template (docs/NOTES-{run_id}.md), docs/index.md, docs/spec, templates.
 
 Tasks:
 1. Read docs/NOTES.md, docs/PLAN.md (if present), docs/spec/index.md and summarize business intent and important constraints (fields used, DTO names, known issues).
