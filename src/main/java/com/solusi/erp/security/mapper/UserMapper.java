@@ -20,9 +20,9 @@ public interface UserMapper {
 
     @Mapping(target = "roleName", source = "role.name")
     @Mapping(target = "fullName", source = "profile.fullName")
-    @Mapping(target = "partyId", source = "party.id")
-    @Mapping(target = "partyCode", source = "party.code")
-    @Mapping(target = "partyName", source = "party.name")
+    @Mapping(target = "partyId", source = "partyId")
+    @Mapping(target = "partyCode", source = "partyCode")
+    @Mapping(target = "partyName", source = "partyName")
     UserResponse toResponse(User user);
 
     List<UserResponse> toResponseList(List<User> users);
@@ -34,16 +34,18 @@ public interface UserMapper {
     @Mapping(target = "roleId", source = "role.id")
     @Mapping(target = "fullName", source = "profile.fullName")
     @Mapping(target = "phoneNumber", source = "profile.phoneNumber")
-    @Mapping(target = "partyId", source = "party.id")
-    @Mapping(target = "partyCode", source = "party.code")
-    @Mapping(target = "partyName", source = "party.name")
+    @Mapping(target = "partyId", source = "partyId")
+    @Mapping(target = "partyCode", source = "partyCode")
+    @Mapping(target = "partyName", source = "partyName")
     @Mapping(target = "password", ignore = true)
     UserRequest toRequest(User user);
 
     @Mapping(target = "password", ignore = true)
     @Mapping(target = "role", ignore = true)
     @Mapping(target = "profile", ignore = true)
-    @Mapping(target = "party", ignore = true)
+    @Mapping(target = "partyId", ignore = true)
+    @Mapping(target = "partyCode", ignore = true)
+    @Mapping(target = "partyName", ignore = true)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
@@ -64,6 +66,9 @@ public interface UserMapper {
     @Mapping(target = "password", ignore = true)
     @Mapping(target = "role", ignore = true)
     @Mapping(target = "profile", ignore = true)
+    @Mapping(target = "partyId", ignore = true)
+    @Mapping(target = "partyCode", ignore = true)
+    @Mapping(target = "partyName", ignore = true)
     @Mapping(target = "id", ignore = true)
     void updateEntity(UserRequest request, @MappingTarget User user);
 

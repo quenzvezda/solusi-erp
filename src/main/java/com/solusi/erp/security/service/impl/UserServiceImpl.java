@@ -11,9 +11,8 @@ import com.solusi.erp.security.model.Role;
 import com.solusi.erp.security.model.User;
 import com.solusi.erp.security.model.UserProfile;
 import com.solusi.erp.security.repository.RoleRepository;
-import com.solusi.erp.master.model.Party;
-import com.solusi.erp.master.party.infrastructure.persistence.PartyJpaRepository;
-
+import com.solusi.erp.master.party.application.usecase.query.GetPartyEditViewUseCase;
+import com.solusi.erp.master.party.domain.model.Party;
 import com.solusi.erp.security.repository.UserRepository;
 import com.solusi.erp.security.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +32,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final PartyJpaRepository partyRepository;
+    private final GetPartyEditViewUseCase getPartyEditViewUseCase;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final MessageSource messageSource;
@@ -47,7 +46,7 @@ public class UserServiceImpl implements UserService {
         } else {
             page = userRepository.findAll(pageable);
         }
-        return page.map(userMapper::toResponse);
+        return page.map(user -> userMapper.toResponse(enrichPartyInfo(user)));
     }
 
     @Override
@@ -55,7 +54,7 @@ public class UserServiceImpl implements UserService {
     public UserResponse findById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.user.notfound")));
-        return userMapper.toResponse(user);
+        return userMapper.toResponse(enrichPartyInfo(user));
     }
 
     @Override
@@ -64,7 +63,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.user.notfound")));
 
-        return userMapper.toRequest(user);
+        return userMapper.toRequest(enrichPartyInfo(user));
     }
 
     @Override
@@ -74,9 +73,9 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.user.notfound")));
 
         return FormViewDto.<UserRequest, UserUIForm, UserResponse>builder()
-                .request(userMapper.toRequest(user))
-                .ui(userMapper.toUIForm(user))
-                .audit(userMapper.toResponse(user))
+                .request(userMapper.toRequest(enrichPartyInfo(user)))
+                .ui(userMapper.toUIForm(enrichPartyInfo(user)))
+                .audit(userMapper.toResponse(enrichPartyInfo(user)))
                 .build();
     }
 
@@ -102,11 +101,7 @@ public class UserServiceImpl implements UserService {
         user.setRole(role);
         user.setPasswordChangeRequired(true); // Always force change for new users
 
-        if (request.getPartyId() != null) {
-            Party party = partyRepository.findById(request.getPartyId())
-                    .orElseThrow(() -> new RuntimeException(getMessage("msg.error.party.notfound")));
-            user.setParty(party);
-        }
+        applyPartyReference(user, request.getPartyId());
 
         UserProfile profile = userMapper.toProfileEntity(request);
         profile.setUser(user);
@@ -139,16 +134,14 @@ public class UserServiceImpl implements UserService {
         user.setRole(role);
 
         // Party immutability logic
-        if (user.getParty() != null) {
-            if (request.getPartyId() != null && !request.getPartyId().equals(user.getParty().getId())) {
+        if (user.getPartyId() != null) {
+            if (request.getPartyId() != null && !request.getPartyId().equals(user.getPartyId())) {
                 throw new RuntimeException(getMessage("msg.error.user.party-immutable"));
             }
             // If request.getPartyId() is null, we keep the current party (immutable)
         } else if (request.getPartyId() != null) {
             // Party can be set for the first time
-            Party party = partyRepository.findById(request.getPartyId())
-                    .orElseThrow(() -> new RuntimeException(getMessage("msg.error.party.notfound")));
-            user.setParty(party);
+            applyPartyReference(user, request.getPartyId());
         }
 
         if (StringUtils.hasText(request.getPassword())) {
@@ -161,7 +154,7 @@ public class UserServiceImpl implements UserService {
         userMapper.updateProfileEntity(request, user.getProfile());
 
         User updatedUser = userRepository.save(user);
-        return userMapper.toResponse(updatedUser);
+        return userMapper.toResponse(enrichPartyInfo(updatedUser));
     }
 
     @Override
@@ -196,7 +189,7 @@ public class UserServiceImpl implements UserService {
     public ProfileResponse getProfile(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.user.notfound")));
-        return userMapper.toProfileResponse(user);
+        return userMapper.toProfileResponse(enrichPartyInfo(user));
     }
 
     @Override
@@ -205,7 +198,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.user.notfound")));
 
-        return userMapper.toProfileRequest(user);
+        return userMapper.toProfileRequest(enrichPartyInfo(user));
     }
 
     @Override
@@ -254,7 +247,36 @@ public class UserServiceImpl implements UserService {
         }
 
         User savedUser = userRepository.save(user);
-        return userMapper.toProfileResponse(savedUser);
+        return userMapper.toProfileResponse(enrichPartyInfo(savedUser));
+    }
+
+    private User enrichPartyInfo(User user) {
+        if (user.getPartyId() == null) {
+            user.setPartyCode(null);
+            user.setPartyName(null);
+            return user;
+        }
+
+        Party party = getPartyEditViewUseCase.execute(user.getPartyId())
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.party.notfound")));
+        user.setPartyCode(party.getCode());
+        user.setPartyName(party.getName());
+        return user;
+    }
+
+    private void applyPartyReference(User user, Long partyId) {
+        if (partyId == null) {
+            user.setPartyId(null);
+            user.setPartyCode(null);
+            user.setPartyName(null);
+            return;
+        }
+
+        Party party = getPartyEditViewUseCase.execute(partyId)
+                .orElseThrow(() -> new RuntimeException(getMessage("msg.error.party.notfound")));
+        user.setPartyId(party.getMetadata().id());
+        user.setPartyCode(party.getCode());
+        user.setPartyName(party.getName());
     }
 
     private String getMessage(String key) {

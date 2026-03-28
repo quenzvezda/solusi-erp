@@ -7,7 +7,8 @@ import com.solusi.erp.inventory.adjustment.domain.model.AdjustmentStatus;
 import com.solusi.erp.inventory.adjustment.domain.model.StockAdjustment;
 import com.solusi.erp.inventory.adjustment.domain.repository.StockAdjustmentRepository;
 import com.solusi.erp.inventory.model.Facility;
-import com.solusi.erp.master.model.Currency;
+import com.solusi.erp.master.currency.domain.model.Currency;
+import com.solusi.erp.master.currency.domain.repository.CurrencyRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +35,7 @@ class CreateStockAdjustmentUseCaseTest {
     @Mock
     private com.solusi.erp.inventory.repository.FacilityRepository facilityRepository;
     @Mock
-    private com.solusi.erp.master.currency.infrastructure.persistence.CurrencyJpaRepository currencyRepository;
+    private CurrencyRepository currencyRepository;
     @Mock
     private com.solusi.erp.core.service.SequenceGeneratorService sequenceGeneratorService;
     @Mock

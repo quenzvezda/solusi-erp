@@ -20,7 +20,6 @@ public class StockAdjustmentRepositoryImpl implements StockAdjustmentRepository 
 
     private final com.solusi.erp.inventory.repository.StockAdjustmentRepository jpaRepository;
     private final com.solusi.erp.inventory.repository.FacilityRepository facilityRepository;
-    private final com.solusi.erp.master.currency.infrastructure.persistence.CurrencyJpaRepository currencyRepository;
     private final com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository productRepository;
     private final com.solusi.erp.inventory.repository.ContainerRepository containerRepository;
     private final com.solusi.erp.inventory.repository.GridRepository gridRepository;
@@ -30,7 +29,6 @@ public class StockAdjustmentRepositoryImpl implements StockAdjustmentRepository 
     public StockAdjustmentRepositoryImpl(
             com.solusi.erp.inventory.repository.StockAdjustmentRepository jpaRepository,
             com.solusi.erp.inventory.repository.FacilityRepository facilityRepository,
-            com.solusi.erp.master.currency.infrastructure.persistence.CurrencyJpaRepository currencyRepository,
             com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository productRepository,
             com.solusi.erp.inventory.repository.ContainerRepository containerRepository,
             com.solusi.erp.inventory.repository.GridRepository gridRepository,
@@ -38,7 +36,6 @@ public class StockAdjustmentRepositoryImpl implements StockAdjustmentRepository 
             StockAdjustmentPersistenceMapper mapper) {
         this.jpaRepository = jpaRepository;
         this.facilityRepository = facilityRepository;
-        this.currencyRepository = currencyRepository;
         this.productRepository = productRepository;
         this.containerRepository = containerRepository;
         this.gridRepository = gridRepository;
@@ -89,7 +86,7 @@ public class StockAdjustmentRepositoryImpl implements StockAdjustmentRepository 
         entity.setNote(domain.getNote());
         entity.setFacility(facilityRepository.getReferenceById(domain.getFacilityId()));
 
-        entity.getTotalCost().setCurrency(currencyRepository.getReferenceById(domain.getCurrencyId()));
+        entity.getTotalCost().setCurrencyId(domain.getCurrencyId());
         entity.getTotalCost().setExchangeRate(domain.getExchangeRate());
         entity.getTotalCost().setOriginalAmount(domain.getTotalAmountOriginal());
         entity.getTotalCost().setLocalAmount(domain.getTotalAmountLocal());

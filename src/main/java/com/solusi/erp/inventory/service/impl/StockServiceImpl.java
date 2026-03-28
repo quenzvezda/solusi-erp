@@ -10,7 +10,6 @@ import com.solusi.erp.inventory.model.StockBalance;
 import com.solusi.erp.inventory.repository.InventoryMovementRepository;
 import com.solusi.erp.inventory.repository.StockBalanceRepository;
 import com.solusi.erp.inventory.repository.ContainerRepository;
-import com.solusi.erp.master.currency.infrastructure.persistence.CurrencyJpaRepository;
 import com.solusi.erp.inventory.service.StockService;
 import com.solusi.erp.inventory.service.UomConversionService;
 import com.solusi.erp.inventory.service.ValuationService;
@@ -36,7 +35,6 @@ public class StockServiceImpl implements StockService {
     private final InventoryMovementRepository inventoryMovementRepository;
     private final JpaProductRepository productRepository;
     private final ContainerRepository containerRepository;
-    private final CurrencyJpaRepository currencyRepository;
     private final UomConversionService uomConversionService;
     private final ValuationService valuationService;
     private final MessageSource messageSource;
@@ -89,7 +87,7 @@ public class StockServiceImpl implements StockService {
         BigDecimal localAmount = originalAmount.multiply(exchangeRate);
 
         return CurrencyAmount.builder()
-                .currency(payload.getCurrencyId() != null ? currencyRepository.getReferenceById(payload.getCurrencyId()) : null)
+                .currencyId(payload.getCurrencyId())
                 .exchangeRate(exchangeRate)
                 .originalAmount(originalAmount)
                 .localAmount(localAmount)

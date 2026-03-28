@@ -55,12 +55,10 @@ public class InventoryMovement extends BaseModel {
 
     @Embedded
     @AttributeOverrides({
+        @AttributeOverride(name = "currencyId", column = @Column(name = "unit_cost_currency_id")),
         @AttributeOverride(name = "exchangeRate", column = @Column(name = "unit_cost_exchange_rate")),
         @AttributeOverride(name = "originalAmount", column = @Column(name = "unit_cost_amount_original")),
         @AttributeOverride(name = "localAmount", column = @Column(name = "unit_cost_amount_local"))
-    })
-    @AssociationOverrides({
-        @AssociationOverride(name = "currency", joinColumns = @JoinColumn(name = "unit_cost_currency_id"))
     })
     private CurrencyAmount unitCost;
 }

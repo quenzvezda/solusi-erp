@@ -4,6 +4,7 @@ import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.inventory.adjustment.domain.model.AdjustmentStatus;
 import com.solusi.erp.inventory.adjustment.domain.model.StockAdjustment;
 import com.solusi.erp.inventory.adjustment.domain.model.StockAdjustmentLineItem;
+import com.solusi.erp.master.currency.domain.repository.CurrencyRepository;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -15,6 +16,12 @@ import java.util.stream.Collectors;
  * Uses plain Java navigation with null-safety for optional associations.
  */
 public class StockAdjustmentPersistenceMapper {
+
+    private final CurrencyRepository currencyRepository;
+
+    public StockAdjustmentPersistenceMapper(CurrencyRepository currencyRepository) {
+        this.currencyRepository = currencyRepository;
+    }
 
     public StockAdjustment toDomain(com.solusi.erp.inventory.model.StockAdjustment e) {
         if (e == null) return null;
@@ -33,10 +40,8 @@ public class StockAdjustmentPersistenceMapper {
         BigDecimal totalOriginal = null;
         BigDecimal totalLocal = null;
         if (e.getTotalCost() != null) {
-            if (e.getTotalCost().getCurrency() != null) {
-                currencyId = e.getTotalCost().getCurrency().getId();
-                currencyAlias = e.getTotalCost().getCurrency().getAlias();
-            }
+            currencyId = e.getTotalCost().getCurrencyId();
+            currencyAlias = resolveCurrencyAlias(currencyId);
             exchangeRate = e.getTotalCost().getExchangeRate();
             totalOriginal = e.getTotalCost().getOriginalAmount();
             totalLocal = e.getTotalCost().getLocalAmount();
@@ -53,6 +58,13 @@ public class StockAdjustmentPersistenceMapper {
         return new StockAdjustment(metadata, e.getCode(), e.getTransactionDate(), status, e.getNote(),
                 facilityId, facilityName, currencyId, currencyAlias, exchangeRate,
                 totalOriginal, totalLocal, lines);
+    }
+
+    private String resolveCurrencyAlias(Long currencyId) {
+        if (currencyId == null) {
+            return null;
+        }
+        return currencyRepository.findById(currencyId).map(c -> c.getAlias()).orElse(null);
     }
 
     private StockAdjustmentLineItem toLineItemDomain(com.solusi.erp.inventory.model.StockAdjustmentLine l) {

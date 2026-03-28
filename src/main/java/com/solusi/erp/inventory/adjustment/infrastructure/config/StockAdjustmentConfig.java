@@ -21,8 +21,9 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class StockAdjustmentConfig {
 
     @Bean
-    public StockAdjustmentPersistenceMapper stockAdjustmentPersistenceMapper() {
-        return new StockAdjustmentPersistenceMapper();
+    public StockAdjustmentPersistenceMapper stockAdjustmentPersistenceMapper(
+            com.solusi.erp.master.currency.domain.repository.CurrencyRepository currencyRepository) {
+        return new StockAdjustmentPersistenceMapper(currencyRepository);
     }
 
     @Bean
@@ -30,20 +31,19 @@ public class StockAdjustmentConfig {
             StockAdjustmentPersistenceMapper mapper,
             com.solusi.erp.inventory.repository.StockAdjustmentRepository jpaStockAdjustmentRepository,
             com.solusi.erp.inventory.repository.FacilityRepository facilityRepository,
-            com.solusi.erp.master.currency.infrastructure.persistence.CurrencyJpaRepository currencyRepository,
             com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository productRepository,
             com.solusi.erp.inventory.repository.ContainerRepository containerRepository,
             com.solusi.erp.inventory.repository.GridRepository gridRepository,
             com.solusi.erp.inventory.repository.UnitOfMeasureRepository uomRepository) {
         return new StockAdjustmentRepositoryImpl(jpaStockAdjustmentRepository, facilityRepository,
-                currencyRepository, productRepository, containerRepository, gridRepository, uomRepository, mapper);
+                productRepository, containerRepository, gridRepository, uomRepository, mapper);
     }
 
     @Bean
     public CreateStockAdjustmentUseCase createStockAdjustmentUseCase(
             StockAdjustmentRepository stockAdjustmentDomainRepository,
             com.solusi.erp.inventory.repository.FacilityRepository facilityRepository,
-            com.solusi.erp.master.currency.infrastructure.persistence.CurrencyJpaRepository currencyRepository,
+            com.solusi.erp.master.currency.domain.repository.CurrencyRepository currencyRepository,
             SequenceGeneratorService sequenceGeneratorService,
             MessageSource messageSource,
             PlatformTransactionManager txManager) {
@@ -58,7 +58,7 @@ public class StockAdjustmentConfig {
     public UpdateStockAdjustmentUseCase updateStockAdjustmentUseCase(
             StockAdjustmentRepository stockAdjustmentDomainRepository,
             com.solusi.erp.inventory.repository.FacilityRepository facilityRepository,
-            com.solusi.erp.master.currency.infrastructure.persistence.CurrencyJpaRepository currencyRepository,
+            com.solusi.erp.master.currency.domain.repository.CurrencyRepository currencyRepository,
             MessageSource messageSource,
             PlatformTransactionManager txManager) {
         UpdateStockAdjustmentUseCase pure = new UpdateStockAdjustmentUseCaseImpl(

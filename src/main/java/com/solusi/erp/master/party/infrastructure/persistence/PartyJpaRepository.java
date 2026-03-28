@@ -22,10 +22,10 @@ public interface PartyJpaRepository extends JpaRepository<Party, Long> {
     Page<Party> search(@Param("keyword") String keyword, Pageable pageable);
 
     @Query("SELECT p FROM Party p " +
-           "WHERE p.isActive = true AND " +
-           "(p.id NOT IN (SELECT u.party.id FROM User u WHERE u.party IS NOT NULL) OR p.id = :excludePartyId) AND " +
-           "(LOWER(p.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+            "WHERE p.isActive = true AND " +
+            "(p.id NOT IN (SELECT u.partyId FROM User u WHERE u.partyId IS NOT NULL) OR p.id = :excludePartyId) AND " +
+            "(LOWER(p.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<Party> searchAvailableForUser(@Param("keyword") String keyword, @Param("excludePartyId") Long excludePartyId, Pageable pageable);
 
     boolean existsByCode(String code);

@@ -38,12 +38,10 @@ public class StockAdjustment extends BaseModel {
 
     @Embedded
     @AttributeOverrides({
+        @AttributeOverride(name = "currencyId", column = @Column(name = "currency_id")),
         @AttributeOverride(name = "exchangeRate", column = @Column(name = "total_exchange_rate")),
         @AttributeOverride(name = "originalAmount", column = @Column(name = "total_amount_original")),
         @AttributeOverride(name = "localAmount", column = @Column(name = "total_amount_local"))
-    })
-    @AssociationOverrides({
-        @AssociationOverride(name = "currency", joinColumns = @JoinColumn(name = "currency_id"))
     })
     private CurrencyAmount totalCost;
 
