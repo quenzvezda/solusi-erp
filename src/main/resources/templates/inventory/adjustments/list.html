@@ -86,9 +86,9 @@
                                         </span>
                                     </td>
                                     <td class="text-end font-weight-medium">
-                                        <span th:text="${#numbers.formatDecimal(item.totalAmountLocal, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                                        <span th:text="${#numbers.formatDecimal(item.totalAmountLocal, 1, 'COMMA', 2, 'POINT')}" th:data-value="${item.totalAmountLocal}">0.00</span>
                                     </td>
-                                    <td class="text-secondary small" th:text="${#strings.abbreviate(item.note, 50)}">Note</td>
+                                    <td class="text-secondary small" th:text="${item.note}" th:title="${#strings.abbreviate(item.note, 100)}">Note</td>
                                     <td>
                                         <div class="btn-list flex-nowrap justify-content-end">
                                             <a th:if="${item.status.name() == 'DRAFT'}" 
