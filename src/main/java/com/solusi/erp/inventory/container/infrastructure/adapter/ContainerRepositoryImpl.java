@@ -65,6 +65,21 @@ public class ContainerRepositoryImpl implements ContainerRepository {
     }
 
     @Override
+    public List<Container> search(String keyword, Long gridId, Long facilityId, int limit) {
+        String kw = keyword != null ? keyword : "";
+        if (gridId != null) {
+            return jpaRepository.searchByGrid(kw, gridId, PageRequest.of(0, limit))
+                .getContent().stream().map(mapper::toDomain).collect(Collectors.toList());
+        }
+        if (facilityId != null) {
+            return jpaRepository.searchByFacility(kw, facilityId, PageRequest.of(0, limit))
+                .getContent().stream().map(mapper::toDomain).collect(Collectors.toList());
+        }
+        return jpaRepository.search(kw, PageRequest.of(0, limit))
+            .getContent().stream().map(mapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
     public void delete(Long id) {
         jpaRepository.deleteById(id);
     }

@@ -32,6 +32,13 @@ public class GetContainerLookupUseCaseImpl implements GetContainerLookupUseCase 
     }
 
     @Override
+    public List<LookupDto> search(String keyword, Long gridId, Long facilityId, int limit) {
+        return repository.search(keyword, gridId, facilityId, limit).stream()
+            .map(this::toLookupDto)
+            .collect(Collectors.toList());
+    }
+
+    @Override
     public List<LookupDto> findAll() {
         return repository.search("", 10000).stream()
             .map(this::toLookupDto)

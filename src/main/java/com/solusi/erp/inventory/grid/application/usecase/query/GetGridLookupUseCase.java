@@ -6,4 +6,5 @@ import java.util.List;
 public interface GetGridLookupUseCase {
     LookupDto getById(Long id);
     List<LookupDto> search(String keyword, int limit);
+    List<LookupDto> search(String keyword, Long facilityId, int limit);
 }

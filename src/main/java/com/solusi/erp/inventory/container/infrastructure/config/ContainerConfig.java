@@ -89,6 +89,10 @@ public class ContainerConfig {
                 return tx.execute(status -> pure.search(keyword, limit));
             }
             @Override
+            public java.util.List<com.solusi.erp.core.dto.LookupDto> search(String keyword, Long gridId, Long facilityId, int limit) {
+                return tx.execute(status -> pure.search(keyword, gridId, facilityId, limit));
+            }
+            @Override
             public java.util.List<com.solusi.erp.core.dto.LookupDto> findAll() {
                 return tx.execute(status -> pure.findAll());
             }

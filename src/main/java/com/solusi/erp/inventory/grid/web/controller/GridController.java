@@ -85,7 +85,6 @@ public class GridController {
             request.setFacilityId(facilityId);
         }
         model.addAttribute("gridRequest", request);
-        populateFacilities(model);
         return "inventory/grids/form";
     }
 
@@ -107,7 +106,6 @@ public class GridController {
             .orElseThrow(() -> new RuntimeException("Grid not found"));
         model.addAttribute("gridRequest", webMapper.toSaveRequest(domain));
         model.addAttribute("auditInfo", webMapper.toDetailResponse(domain));
-        populateFacilities(model);
         return "inventory/grids/form";
     }
 

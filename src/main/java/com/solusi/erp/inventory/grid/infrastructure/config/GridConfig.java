@@ -86,6 +86,10 @@ public class GridConfig {
             public java.util.List<com.solusi.erp.core.dto.LookupDto> search(String keyword, int limit) {
                 return tx.execute(status -> pure.search(keyword, limit));
             }
+            @Override
+            public java.util.List<com.solusi.erp.core.dto.LookupDto> search(String keyword, Long facilityId, int limit) {
+                return tx.execute(status -> pure.search(keyword, facilityId, limit));
+            }
         };
     }
 }

@@ -31,13 +31,9 @@
 
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="mb-3">
-                            <label class="form-label required" th:text="#{label.grid.facility}">Fasilitas</label>
-                            <select th:field="*{facilityId}" class="form-select erp-input">
-                                <option value="" th:text="#{label.grid.select.facility}">-- Pilih Fasilitas --</option>
-                                <option th:each="f : ${facilities}" th:value="${f.id}" th:text="${f.name + ' (' + f.code + ')'}"></option>
-                            </select>
-                        </div>
+                        <div th:replace="~{fragments/inputs :: autocomplete(field='facilityId', label=#{label.grid.facility}, required=true, placeholder=#{label.grid.select.facility}, isReadonly=false, id='grid-facility',
+                            path='inventory/facilities',
+                            initialValue=${gridRequest.facilityId}, initialText=${gridRequest.facilityName})}"></div>
 
                         <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.grid.code}, required=true, placeholder=#{placeholder.grid.code})}"></div>
                         <div th:replace="~{fragments/inputs :: text(field='name', label=#{label.grid.name}, required=true, placeholder=#{placeholder.grid.name})}"></div>

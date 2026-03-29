@@ -12,6 +12,7 @@ public interface ContainerRepository {
     Optional<Container> findById(Long id);
     Page<Container> findAll(String keyword, Long gridId, Pageable pageable);
     List<Container> search(String keyword, int limit);
+    List<Container> search(String keyword, Long gridId, Long facilityId, int limit);
     void delete(Long id);
     boolean existsByBarcode(String barcode);
     boolean existsByBarcodeAndIdNot(String barcode, Long id);

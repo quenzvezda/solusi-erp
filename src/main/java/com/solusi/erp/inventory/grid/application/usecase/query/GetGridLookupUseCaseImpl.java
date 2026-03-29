@@ -30,6 +30,13 @@ public class GetGridLookupUseCaseImpl implements GetGridLookupUseCase {
             .collect(Collectors.toList());
     }
 
+    @Override
+    public List<LookupDto> search(String keyword, Long facilityId, int limit) {
+        return repository.search(keyword, facilityId, limit).stream()
+            .map(this::toLookupDto)
+            .collect(Collectors.toList());
+    }
+
     private LookupDto toLookupDto(Grid grid) {
         return new LookupDto(grid.getId(), grid.getName(), grid.getCode());
     }

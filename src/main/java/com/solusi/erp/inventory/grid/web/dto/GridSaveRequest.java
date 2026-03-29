@@ -16,6 +16,8 @@ public class GridSaveRequest extends BaseAuditResponse {
     @NotNull(message = "{label.grid.facility} {validation.notblank.suffix}")
     private Long facilityId;
 
+    private String facilityName;
+
     @NotBlank(message = "{label.grid.code} {validation.notblank.suffix}")
     @Size(max = 50, message = "{label.grid.code} {validation.size.suffix}")
     private String code;
