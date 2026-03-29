@@ -2,7 +2,6 @@ package com.solusi.erp.inventory.model;
 
 import com.solusi.erp.core.model.Address;
 import com.solusi.erp.core.model.BaseModel;
-import com.solusi.erp.master.model.Party;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,9 +26,8 @@ public class Facility extends BaseModel {
     @Column(length = 150, nullable = false)
     private String name;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id", nullable = false)
-    private Party owner;
+    @Column(name = "owner_id", nullable = false)
+    private Long ownerId;
 
     @Embedded
     private Address address;

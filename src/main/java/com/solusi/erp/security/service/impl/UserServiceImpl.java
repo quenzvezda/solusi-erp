@@ -11,8 +11,8 @@ import com.solusi.erp.security.model.Role;
 import com.solusi.erp.security.model.User;
 import com.solusi.erp.security.model.UserProfile;
 import com.solusi.erp.security.repository.RoleRepository;
-import com.solusi.erp.master.party.application.usecase.query.GetPartyEditViewUseCase;
-import com.solusi.erp.master.party.domain.model.Party;
+import com.solusi.erp.master.party.application.dto.PartyReference;
+import com.solusi.erp.master.party.application.usecase.query.GetPartyReferenceUseCase;
 import com.solusi.erp.security.repository.UserRepository;
 import com.solusi.erp.security.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final GetPartyEditViewUseCase getPartyEditViewUseCase;
+    private final GetPartyReferenceUseCase getPartyReferenceUseCase;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final MessageSource messageSource;
@@ -257,10 +257,10 @@ public class UserServiceImpl implements UserService {
             return user;
         }
 
-        Party party = getPartyEditViewUseCase.execute(user.getPartyId())
+        PartyReference party = getPartyReferenceUseCase.execute(user.getPartyId())
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.party.notfound")));
-        user.setPartyCode(party.getCode());
-        user.setPartyName(party.getName());
+        user.setPartyCode(party.code());
+        user.setPartyName(party.name());
         return user;
     }
 
@@ -272,11 +272,11 @@ public class UserServiceImpl implements UserService {
             return;
         }
 
-        Party party = getPartyEditViewUseCase.execute(partyId)
+        PartyReference party = getPartyReferenceUseCase.execute(partyId)
                 .orElseThrow(() -> new RuntimeException(getMessage("msg.error.party.notfound")));
-        user.setPartyId(party.getMetadata().id());
-        user.setPartyCode(party.getCode());
-        user.setPartyName(party.getName());
+        user.setPartyId(party.id());
+        user.setPartyCode(party.code());
+        user.setPartyName(party.name());
     }
 
     private String getMessage(String key) {

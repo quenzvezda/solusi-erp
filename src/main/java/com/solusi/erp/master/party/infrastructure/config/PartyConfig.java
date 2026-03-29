@@ -85,6 +85,16 @@ public class PartyConfig {
     }
 
     @Bean
+    public GetPartyReferenceUseCase getPartyReferenceUseCase(
+            PartyRepository partyDomainRepository,
+            PlatformTransactionManager txManager) {
+        GetPartyReferenceUseCase pure = new GetPartyReferenceUseCaseImpl(partyDomainRepository);
+        TransactionTemplate tx = new TransactionTemplate(txManager);
+        tx.setReadOnly(true);
+        return (id) -> tx.execute(status -> pure.execute(id));
+    }
+
+    @Bean
     public FindPartiesForLookupUseCase findPartiesForLookupUseCase(
             PartyRepository partyDomainRepository,
             PlatformTransactionManager txManager) {
