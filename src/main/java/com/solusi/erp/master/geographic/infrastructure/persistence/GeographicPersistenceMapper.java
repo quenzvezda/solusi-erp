@@ -8,7 +8,7 @@ import org.mapstruct.ReportingPolicy;
 
 /**
  * MapStruct Persistence Mapper for Geographic module.
- * Maps between JPA entity (com.solusi.erp.master.model.Geographic) and pure domain model.
+ * Maps between JPA entity (com.solusi.erp.master.geographic.infrastructure.persistence.Geographic) and pure domain model.
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface GeographicPersistenceMapper {
@@ -16,7 +16,7 @@ public interface GeographicPersistenceMapper {
     @Mapping(target = "metadata", expression = "java(toAuditMetadata(entity))")
     @Mapping(target = "parentId",   expression = "java(entity.getParent() != null ? entity.getParent().getId()   : null)")
     @Mapping(target = "parentName", expression = "java(entity.getParent() != null ? entity.getParent().getName() : null)")
-    Geographic toDomain(com.solusi.erp.master.model.Geographic entity);
+    Geographic toDomain(com.solusi.erp.master.geographic.infrastructure.persistence.Geographic entity);
 
     @Mapping(target = "id",          source = "metadata.id")
     @Mapping(target = "version",     source = "metadata.version")
@@ -28,9 +28,9 @@ public interface GeographicPersistenceMapper {
     @Mapping(target = "children",        ignore = true)
     @Mapping(target = "createdByUser",   ignore = true)
     @Mapping(target = "updatedByUser",   ignore = true)
-    com.solusi.erp.master.model.Geographic toEntity(Geographic domain);
+    com.solusi.erp.master.geographic.infrastructure.persistence.Geographic toEntity(Geographic domain);
 
-    default AuditMetadata toAuditMetadata(com.solusi.erp.master.model.Geographic entity) {
+    default AuditMetadata toAuditMetadata(com.solusi.erp.master.geographic.infrastructure.persistence.Geographic entity) {
         return new AuditMetadata(
                 entity.getId(),
                 entity.getVersion() != null ? entity.getVersion().longValue() : null,

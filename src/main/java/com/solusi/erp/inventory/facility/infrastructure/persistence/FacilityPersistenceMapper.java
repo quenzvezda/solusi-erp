@@ -59,14 +59,14 @@ public class FacilityPersistenceMapper {
     private String findOwnerName(Long ownerId) {
         if (ownerId == null) return null;
         return partyRepository.findById(ownerId)
-                .map(com.solusi.erp.master.model.Party::getName)
+                .map(com.solusi.erp.master.party.infrastructure.persistence.Party::getName)
                 .orElse(null);
     }
 
     private String findCityName(Long cityId) {
         if (cityId == null) return null;
         return geographicRepository.findById(cityId)
-                .map(com.solusi.erp.master.model.Geographic::getName)
+                .map(com.solusi.erp.master.geographic.infrastructure.persistence.Geographic::getName)
                 .orElse(null);
     }
 }

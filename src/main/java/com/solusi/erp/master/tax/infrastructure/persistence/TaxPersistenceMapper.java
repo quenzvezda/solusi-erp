@@ -8,13 +8,13 @@ import org.mapstruct.ReportingPolicy;
 
 /**
  * MapStruct Persistence Mapper for Tax module.
- * Maps between JPA entity (com.solusi.erp.master.model.Tax) and pure domain model.
+ * Maps between JPA entity (com.solusi.erp.master.tax.infrastructure.persistence.Tax) and pure domain model.
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface TaxPersistenceMapper {
 
     @Mapping(target = "metadata", expression = "java(toAuditMetadata(entity))")
-    Tax toDomain(com.solusi.erp.master.model.Tax entity);
+    Tax toDomain(com.solusi.erp.master.tax.infrastructure.persistence.Tax entity);
 
     @Mapping(target = "id", source = "metadata.id")
     @Mapping(target = "version", expression = "java(domain.getMetadata().version() != null ? domain.getMetadata().version().intValue() : null)")
@@ -22,9 +22,9 @@ public interface TaxPersistenceMapper {
     @Mapping(target = "createdBy", source = "metadata.createdBy")
     @Mapping(target = "updatedDate", source = "metadata.updatedDate")
     @Mapping(target = "updatedBy", source = "metadata.updatedBy")
-    com.solusi.erp.master.model.Tax toEntity(Tax domain);
+    com.solusi.erp.master.tax.infrastructure.persistence.Tax toEntity(Tax domain);
 
-    default AuditMetadata toAuditMetadata(com.solusi.erp.master.model.Tax entity) {
+    default AuditMetadata toAuditMetadata(com.solusi.erp.master.tax.infrastructure.persistence.Tax entity) {
         return new AuditMetadata(
                 entity.getId(),
                 entity.getVersion() != null ? entity.getVersion().longValue() : null,

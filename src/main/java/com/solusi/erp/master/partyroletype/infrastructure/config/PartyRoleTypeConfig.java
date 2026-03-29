@@ -1,6 +1,6 @@
 package com.solusi.erp.master.partyroletype.infrastructure.config;
 
-import com.solusi.erp.core.service.SequenceGeneratorService;
+import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.master.partyroletype.application.usecase.command.*;
 import com.solusi.erp.master.partyroletype.application.usecase.query.*;
 import com.solusi.erp.master.partyroletype.domain.repository.PartyRoleTypeRepository;

@@ -1,6 +1,5 @@
 package com.solusi.erp.master.bankaccount.infrastructure.persistence;
 
-import com.solusi.erp.master.model.BankAccount;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

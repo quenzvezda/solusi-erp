@@ -2,7 +2,7 @@ package com.solusi.erp.inventory.facility.infrastructure.adapter;
 
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
-import com.solusi.erp.core.util.PageableMapper;
+import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.inventory.facility.domain.model.Facility;
 import com.solusi.erp.inventory.facility.domain.repository.FacilityRepository;
 import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityPersistenceMapper;

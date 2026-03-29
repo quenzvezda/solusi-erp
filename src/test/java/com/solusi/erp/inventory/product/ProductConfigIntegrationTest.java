@@ -1,6 +1,6 @@
 package com.solusi.erp.inventory.product;
 
-import com.solusi.erp.core.service.SequenceGeneratorService;
+import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.inventory.product.application.usecase.command.*;
 import com.solusi.erp.inventory.product.application.usecase.query.*;
 import com.solusi.erp.inventory.product.domain.repository.ProductRepository;

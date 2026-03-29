@@ -1,7 +1,7 @@
 package com.solusi.erp.master.party.application.usecase.command;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
-import com.solusi.erp.core.service.SequenceGeneratorService;
+import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.master.shared.model.PartyType;
 import com.solusi.erp.master.party.domain.model.Party;
 import com.solusi.erp.master.party.domain.repository.PartyRepository;

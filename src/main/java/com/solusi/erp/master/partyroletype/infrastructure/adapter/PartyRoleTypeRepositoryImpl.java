@@ -2,7 +2,7 @@ package com.solusi.erp.master.partyroletype.infrastructure.adapter;
 
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
-import com.solusi.erp.core.util.PageableMapper;
+import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.master.partyroletype.domain.model.PartyRoleType;
 import com.solusi.erp.master.partyroletype.domain.repository.PartyRoleTypeRepository;
 import com.solusi.erp.master.partyroletype.infrastructure.persistence.PartyRoleTypePersistenceMapper;
@@ -29,8 +29,8 @@ public class PartyRoleTypeRepositoryImpl implements PartyRoleTypeRepository {
 
     @Override
     public PartyRoleType save(PartyRoleType domain) {
-        com.solusi.erp.master.model.PartyRoleType entity = mapper.toEntity(domain);
-        com.solusi.erp.master.model.PartyRoleType saved = jpaRepository.save(entity);
+        com.solusi.erp.master.partyroletype.infrastructure.persistence.PartyRoleType entity = mapper.toEntity(domain);
+        com.solusi.erp.master.partyroletype.infrastructure.persistence.PartyRoleType saved = jpaRepository.save(entity);
         return mapper.toDomain(saved);
     }
 
@@ -42,7 +42,7 @@ public class PartyRoleTypeRepositoryImpl implements PartyRoleTypeRepository {
     @Override
     public Page<PartyRoleType> findAll(String keyword, Pageable pageable) {
         org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
-        org.springframework.data.domain.Page<com.solusi.erp.master.model.PartyRoleType> springPage =
+        org.springframework.data.domain.Page<com.solusi.erp.master.partyroletype.infrastructure.persistence.PartyRoleType> springPage =
                 (keyword != null && !keyword.isBlank())
                         ? jpaRepository.search(keyword, springPageable)
                         : jpaRepository.findAll(springPageable);

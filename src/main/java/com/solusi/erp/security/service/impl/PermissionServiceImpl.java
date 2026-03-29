@@ -3,10 +3,10 @@ package com.solusi.erp.security.service.impl;
 import com.solusi.erp.security.dto.PermissionRequest;
 import com.solusi.erp.security.dto.PermissionResponse;
 import com.solusi.erp.security.mapper.PermissionMapper;
-import com.solusi.erp.security.model.Permission;
-import com.solusi.erp.security.model.PermissionGroup;
-import com.solusi.erp.security.repository.PermissionGroupRepository;
-import com.solusi.erp.security.repository.PermissionRepository;
+import com.solusi.erp.security.permission.infrastructure.persistence.Permission;
+import com.solusi.erp.security.permission.infrastructure.persistence.PermissionJpaRepository;
+import com.solusi.erp.security.permissiongroup.infrastructure.persistence.PermissionGroup;
+import com.solusi.erp.security.permissiongroup.infrastructure.persistence.PermissionGroupJpaRepository;
 import com.solusi.erp.security.service.PermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -21,8 +21,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PermissionServiceImpl implements PermissionService {
 
-    private final PermissionRepository permissionRepository;
-    private final PermissionGroupRepository permissionGroupRepository;
+    private final PermissionJpaRepository permissionRepository;
+    private final PermissionGroupJpaRepository permissionGroupRepository;
     private final PermissionMapper permissionMapper;
     private final MessageSource messageSource;
 

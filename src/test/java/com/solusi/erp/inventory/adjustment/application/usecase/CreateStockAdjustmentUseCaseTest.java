@@ -37,7 +37,7 @@ class CreateStockAdjustmentUseCaseTest {
     @Mock
     private CurrencyRepository currencyRepository;
     @Mock
-    private com.solusi.erp.core.service.SequenceGeneratorService sequenceGeneratorService;
+    private com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService sequenceGeneratorService;
     @Mock
     private MessageSource messageSource;
 

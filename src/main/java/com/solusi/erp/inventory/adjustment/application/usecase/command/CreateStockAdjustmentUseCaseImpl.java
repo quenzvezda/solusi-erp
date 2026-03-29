@@ -17,14 +17,14 @@ public class CreateStockAdjustmentUseCaseImpl implements CreateStockAdjustmentUs
     private final StockAdjustmentRepository repository;
     private final com.solusi.erp.inventory.repository.FacilityRepository facilityRepository;
     private final CurrencyRepository currencyRepository;
-    private final com.solusi.erp.core.service.SequenceGeneratorService sequenceGeneratorService;
+    private final com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService sequenceGeneratorService;
     private final MessageSource messageSource;
 
     public CreateStockAdjustmentUseCaseImpl(
             StockAdjustmentRepository repository,
             com.solusi.erp.inventory.repository.FacilityRepository facilityRepository,
             CurrencyRepository currencyRepository,
-            com.solusi.erp.core.service.SequenceGeneratorService sequenceGeneratorService,
+            com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService sequenceGeneratorService,
             MessageSource messageSource) {
         this.repository = repository;
         this.facilityRepository = facilityRepository;

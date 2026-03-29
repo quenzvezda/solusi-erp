@@ -1,6 +1,6 @@
 package com.solusi.erp.inventory.brand.infrastructure.config;
 
-import com.solusi.erp.core.service.SequenceGeneratorService;
+import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.inventory.brand.application.usecase.command.*;
 import com.solusi.erp.inventory.brand.application.usecase.query.*;
 import com.solusi.erp.inventory.brand.domain.repository.BrandRepository;

@@ -1,8 +1,8 @@
 package com.solusi.erp.config;
 
-import com.solusi.erp.core.advice.AuditInfoInterceptor;
-import com.solusi.erp.core.config.HtmxViewInterceptor;
-import com.solusi.erp.core.pagination.UserPreferencePageableResolver;
+import com.solusi.erp.core.infrastructure.web.interceptor.AuditInfoInterceptor;
+import com.solusi.erp.core.infrastructure.web.interceptor.HtmxViewInterceptor;
+import com.solusi.erp.core.infrastructure.web.resolver.UserPreferencePageableResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;

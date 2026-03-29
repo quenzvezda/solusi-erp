@@ -5,8 +5,8 @@ import com.solusi.erp.security.dto.MenuNodeResponse;
 import com.solusi.erp.security.dto.PermissionGroupRequest;
 import com.solusi.erp.security.dto.PermissionGroupResponse;
 import com.solusi.erp.security.mapper.PermissionGroupMapper;
-import com.solusi.erp.security.model.PermissionGroup;
-import com.solusi.erp.security.repository.PermissionGroupRepository;
+import com.solusi.erp.security.permissiongroup.infrastructure.persistence.PermissionGroup;
+import com.solusi.erp.security.permissiongroup.infrastructure.persistence.PermissionGroupJpaRepository;
 import com.solusi.erp.security.service.PermissionGroupService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -52,7 +52,7 @@ public class PermissionGroupServiceImpl implements PermissionGroupService {
             Map.entry("Production", "ti-assembly")
     );
 
-    private final PermissionGroupRepository permissionGroupRepository;
+    private final PermissionGroupJpaRepository permissionGroupRepository;
     private final PermissionGroupMapper permissionGroupMapper;
     private final MessageSource messageSource;
 

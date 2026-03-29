@@ -1,6 +1,6 @@
 package com.solusi.erp.inventory.adjustment.infrastructure.config;
 
-import com.solusi.erp.core.service.SequenceGeneratorService;
+import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.inventory.adjustment.application.usecase.command.*;
 import com.solusi.erp.inventory.adjustment.application.usecase.query.*;
 import com.solusi.erp.inventory.adjustment.domain.repository.StockAdjustmentRepository;

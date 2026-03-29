@@ -3,7 +3,7 @@ package com.solusi.erp.security.mapper;
 import com.solusi.erp.core.mapper.AuditMapperHelper;
 import com.solusi.erp.security.dto.PermissionResponse;
 import com.solusi.erp.security.dto.PermissionRequest;
-import com.solusi.erp.security.model.Permission;
+import com.solusi.erp.security.permission.infrastructure.persistence.Permission;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;

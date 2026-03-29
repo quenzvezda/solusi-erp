@@ -2,7 +2,7 @@ package com.solusi.erp.inventory.container.application.usecase.command;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.exception.DomainException;
-import com.solusi.erp.core.service.SequenceGeneratorService;
+import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.inventory.container.domain.model.Container;
 import com.solusi.erp.inventory.container.domain.repository.ContainerRepository;
 import org.junit.jupiter.api.BeforeEach;

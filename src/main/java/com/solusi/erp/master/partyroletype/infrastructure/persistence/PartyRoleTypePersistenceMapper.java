@@ -8,13 +8,13 @@ import org.mapstruct.ReportingPolicy;
 
 /**
  * MapStruct Persistence Mapper for PartyRoleType module.
- * Maps between JPA entity (com.solusi.erp.master.model.PartyRoleType) and pure domain model.
+ * Maps between JPA entity (com.solusi.erp.master.partyroletype.infrastructure.persistence.PartyRoleType) and pure domain model.
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PartyRoleTypePersistenceMapper {
 
     @Mapping(target = "metadata", expression = "java(toAuditMetadata(entity))")
-    PartyRoleType toDomain(com.solusi.erp.master.model.PartyRoleType entity);
+    PartyRoleType toDomain(com.solusi.erp.master.partyroletype.infrastructure.persistence.PartyRoleType entity);
 
     @Mapping(target = "id", source = "metadata.id")
     @Mapping(target = "version", expression = "java(domain.getMetadata().version() != null ? domain.getMetadata().version().intValue() : null)")
@@ -22,9 +22,9 @@ public interface PartyRoleTypePersistenceMapper {
     @Mapping(target = "createdBy", source = "metadata.createdBy")
     @Mapping(target = "updatedDate", source = "metadata.updatedDate")
     @Mapping(target = "updatedBy", source = "metadata.updatedBy")
-    com.solusi.erp.master.model.PartyRoleType toEntity(PartyRoleType domain);
+    com.solusi.erp.master.partyroletype.infrastructure.persistence.PartyRoleType toEntity(PartyRoleType domain);
 
-    default AuditMetadata toAuditMetadata(com.solusi.erp.master.model.PartyRoleType entity) {
+    default AuditMetadata toAuditMetadata(com.solusi.erp.master.partyroletype.infrastructure.persistence.PartyRoleType entity) {
         return new AuditMetadata(
                 entity.getId(),
                 entity.getVersion() != null ? entity.getVersion().longValue() : null,

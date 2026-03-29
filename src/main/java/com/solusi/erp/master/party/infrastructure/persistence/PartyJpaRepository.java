@@ -1,6 +1,5 @@
 package com.solusi.erp.master.party.infrastructure.persistence;
 
-import com.solusi.erp.master.model.Party;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

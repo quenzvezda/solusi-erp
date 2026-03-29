@@ -2,7 +2,7 @@ package com.solusi.erp.inventory.uomconversion.web.controller;
 
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
-import com.solusi.erp.core.util.PageableMapper;
+import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.inventory.model.UomType;
 import com.solusi.erp.inventory.uom.application.usecase.query.GetUomLookupUseCase;

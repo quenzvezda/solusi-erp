@@ -1,7 +1,7 @@
 package com.solusi.erp.inventory.productcategory.application.usecase.command;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
-import com.solusi.erp.core.service.SequenceGeneratorService;
+import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.inventory.model.ProductCategoryType;
 import com.solusi.erp.inventory.productcategory.domain.model.ProductCategory;
 import com.solusi.erp.inventory.productcategory.domain.repository.ProductCategoryRepository;

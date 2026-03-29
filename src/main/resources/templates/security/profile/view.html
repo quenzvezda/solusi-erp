@@ -65,7 +65,7 @@
                                     </div>
                                     <div class="datagrid-item">
                                         <div class="datagrid-title" th:text="#{profile.phone}">Nomor Telepon</div>
-                                        <div class="datagrid-content" th:text="${profile.phoneNumber ?: '-'}">08123456789</div>
+                                        <div class="datagrid-content" th:text="${profile.phoneNumber != null ? profile.phoneNumber : '-'}">08123456789</div>
                                     </div>
                                 </div>
                             </div>

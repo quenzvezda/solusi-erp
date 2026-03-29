@@ -2,7 +2,7 @@ package com.solusi.erp.master.partyroletype.web.controller;
 
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
-import com.solusi.erp.core.util.PageableMapper;
+import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.master.partyroletype.application.usecase.command.CreatePartyRoleTypeUseCase;
 import com.solusi.erp.master.partyroletype.application.usecase.command.DeletePartyRoleTypeUseCase;

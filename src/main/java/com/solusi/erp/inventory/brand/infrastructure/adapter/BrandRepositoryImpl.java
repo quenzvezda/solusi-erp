@@ -2,7 +2,7 @@ package com.solusi.erp.inventory.brand.infrastructure.adapter;
 
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
-import com.solusi.erp.core.util.PageableMapper;
+import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.inventory.brand.domain.model.Brand;
 import com.solusi.erp.inventory.brand.domain.repository.BrandRepository;
 import com.solusi.erp.inventory.brand.infrastructure.persistence.BrandPersistenceMapper;

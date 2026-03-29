@@ -155,6 +155,10 @@ public class TemplateTestUtils {
             // RequestDataValueProcessor wired). Without stripping, OGNL throws on _csrf.parameterName.
             preprocessed = preprocessed.replaceAll("th:name\\s*=\\s*\"\\$\\{_csrf[^\"]*\\}\"", "");
             preprocessed = preprocessed.replaceAll("th:value\\s*=\\s*\"\\$\\{_csrf[^\"]*\\}\"", "");
+            // Strip Spring MVC binding error expressions (th:if with #fields, th:errors)
+            // These require Spring BindingResult which is unavailable in test context
+            preprocessed = preprocessed.replaceAll("th:if\\s*=\\s*\"\\$\\{#fields\\.hasErrors[^\"]*\\}\"", "");
+            preprocessed = preprocessed.replaceAll("th:errors\\s*=\\s*\"[^\"]*\"", "");
             // sec:authorize intentionally kept for runtime evaluation
 
             // Build engine with SpringSecurityDialect + StringTemplateResolver

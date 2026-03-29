@@ -1,7 +1,7 @@
 package com.solusi.erp.master.bankaccount.application.usecase.command;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
-import com.solusi.erp.core.service.SequenceGeneratorService;
+import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.master.bankaccount.domain.model.BankAccount;
 import com.solusi.erp.master.bankaccount.domain.repository.BankAccountRepository;
 import org.junit.jupiter.api.BeforeEach;

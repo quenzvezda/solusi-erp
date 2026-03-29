@@ -1,6 +1,5 @@
 package com.solusi.erp.master.geographic.infrastructure.persistence;
 
-import com.solusi.erp.master.model.Geographic;
 import com.solusi.erp.master.shared.model.GeographicType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

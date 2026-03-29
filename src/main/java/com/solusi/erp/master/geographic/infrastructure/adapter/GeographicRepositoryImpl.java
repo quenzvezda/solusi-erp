@@ -2,7 +2,7 @@ package com.solusi.erp.master.geographic.infrastructure.adapter;
 
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
-import com.solusi.erp.core.util.PageableMapper;
+import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.core.exception.DomainException;
 import com.solusi.erp.master.geographic.domain.model.Geographic;
 import com.solusi.erp.master.geographic.domain.repository.GeographicRepository;
@@ -32,13 +32,13 @@ public class GeographicRepositoryImpl implements GeographicRepository {
 
     @Override
     public Geographic save(Geographic domain) {
-        com.solusi.erp.master.model.Geographic entity = mapper.toEntity(domain);
+        com.solusi.erp.master.geographic.infrastructure.persistence.Geographic entity = mapper.toEntity(domain);
         if (domain.getParentId() != null) {
-            com.solusi.erp.master.model.Geographic parent = jpaRepository.findById(domain.getParentId())
+            com.solusi.erp.master.geographic.infrastructure.persistence.Geographic parent = jpaRepository.findById(domain.getParentId())
                     .orElseThrow(() -> new DomainException("msg.error.geographic.parent.notfound"));
             entity.setParent(parent);
         }
-        com.solusi.erp.master.model.Geographic saved = jpaRepository.save(entity);
+        com.solusi.erp.master.geographic.infrastructure.persistence.Geographic saved = jpaRepository.save(entity);
         return mapper.toDomain(saved);
     }
 
@@ -50,7 +50,7 @@ public class GeographicRepositoryImpl implements GeographicRepository {
     @Override
     public Page<Geographic> findAll(String keyword, Long parentId, Pageable pageable) {
         org.springframework.data.domain.Pageable sp = PageableMapper.toSpring(pageable);
-        org.springframework.data.domain.Page<com.solusi.erp.master.model.Geographic> springPage;
+        org.springframework.data.domain.Page<com.solusi.erp.master.geographic.infrastructure.persistence.Geographic> springPage;
 
         if (parentId != null) {
             springPage = jpaRepository.findByParentId(parentId, sp);
@@ -70,7 +70,7 @@ public class GeographicRepositoryImpl implements GeographicRepository {
 
     @Override
     public void delete(Long id) {
-        com.solusi.erp.master.model.Geographic entity = jpaRepository.findById(id)
+        com.solusi.erp.master.geographic.infrastructure.persistence.Geographic entity = jpaRepository.findById(id)
                 .orElseThrow(() -> new DomainException("msg.error.geographic.notfound"));
         entity.setIsActive(false);
         jpaRepository.save(entity);

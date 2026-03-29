@@ -8,13 +8,13 @@ import org.mapstruct.ReportingPolicy;
 
 /**
  * MapStruct Persistence Mapper for Currency module.
- * Maps between JPA entity (com.solusi.erp.master.model.Currency) and pure domain model.
+ * Maps between JPA entity (com.solusi.erp.master.currency.infrastructure.persistence.Currency) and pure domain model.
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface CurrencyPersistenceMapper {
 
     @Mapping(target = "metadata", expression = "java(toAuditMetadata(entity))")
-    Currency toDomain(com.solusi.erp.master.model.Currency entity);
+    Currency toDomain(com.solusi.erp.master.currency.infrastructure.persistence.Currency entity);
 
     @Mapping(target = "id", source = "metadata.id")
     @Mapping(target = "version", expression = "java(domain.getMetadata().version() != null ? domain.getMetadata().version().intValue() : null)")
@@ -22,9 +22,9 @@ public interface CurrencyPersistenceMapper {
     @Mapping(target = "createdBy", source = "metadata.createdBy")
     @Mapping(target = "updatedDate", source = "metadata.updatedDate")
     @Mapping(target = "updatedBy", source = "metadata.updatedBy")
-    com.solusi.erp.master.model.Currency toEntity(Currency domain);
+    com.solusi.erp.master.currency.infrastructure.persistence.Currency toEntity(Currency domain);
 
-    default AuditMetadata toAuditMetadata(com.solusi.erp.master.model.Currency entity) {
+    default AuditMetadata toAuditMetadata(com.solusi.erp.master.currency.infrastructure.persistence.Currency entity) {
         return new AuditMetadata(
                 entity.getId(),
                 entity.getVersion() != null ? entity.getVersion().longValue() : null,

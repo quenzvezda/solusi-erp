@@ -2,7 +2,7 @@ package com.solusi.erp.master.currency.infrastructure.adapter;
 
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
-import com.solusi.erp.core.util.PageableMapper;
+import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.master.currency.domain.model.Currency;
 import com.solusi.erp.master.currency.domain.repository.CurrencyRepository;
 import com.solusi.erp.master.currency.infrastructure.persistence.CurrencyPersistenceMapper;
@@ -30,8 +30,8 @@ public class CurrencyRepositoryImpl implements CurrencyRepository {
 
     @Override
     public Currency save(Currency domain) {
-        com.solusi.erp.master.model.Currency entity = mapper.toEntity(domain);
-        com.solusi.erp.master.model.Currency saved = jpaRepository.save(entity);
+        com.solusi.erp.master.currency.infrastructure.persistence.Currency entity = mapper.toEntity(domain);
+        com.solusi.erp.master.currency.infrastructure.persistence.Currency saved = jpaRepository.save(entity);
         return mapper.toDomain(saved);
     }
 
@@ -43,7 +43,7 @@ public class CurrencyRepositoryImpl implements CurrencyRepository {
     @Override
     public Page<Currency> findAll(String keyword, Pageable pageable) {
         org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
-        org.springframework.data.domain.Page<com.solusi.erp.master.model.Currency> springPage =
+        org.springframework.data.domain.Page<com.solusi.erp.master.currency.infrastructure.persistence.Currency> springPage =
                 (keyword != null && !keyword.isBlank())
                         ? jpaRepository.search(keyword, springPageable)
                         : jpaRepository.findAll(springPageable);

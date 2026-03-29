@@ -2,7 +2,7 @@ package com.solusi.erp.inventory.productcategory.infrastructure.adapter;
 
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
-import com.solusi.erp.core.util.PageableMapper;
+import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.inventory.productcategory.domain.model.ProductCategory;
 import com.solusi.erp.inventory.productcategory.domain.repository.ProductCategoryRepository;
 import com.solusi.erp.inventory.productcategory.infrastructure.persistence.ProductCategoryPersistenceMapper;

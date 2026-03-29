@@ -1,6 +1,6 @@
 package com.solusi.erp.master.bankaccount.infrastructure.config;
 
-import com.solusi.erp.core.service.SequenceGeneratorService;
+import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.master.bankaccount.application.usecase.command.*;
 import com.solusi.erp.master.bankaccount.application.usecase.query.*;
 import com.solusi.erp.master.bankaccount.domain.repository.BankAccountRepository;

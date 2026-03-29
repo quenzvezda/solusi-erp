@@ -2,7 +2,7 @@ package com.solusi.erp.master.tax.infrastructure.adapter;
 
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
-import com.solusi.erp.core.util.PageableMapper;
+import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.master.tax.domain.model.Tax;
 import com.solusi.erp.master.tax.domain.repository.TaxRepository;
 import com.solusi.erp.master.tax.infrastructure.persistence.TaxPersistenceMapper;
@@ -29,8 +29,8 @@ public class TaxRepositoryImpl implements TaxRepository {
 
     @Override
     public Tax save(Tax domain) {
-        com.solusi.erp.master.model.Tax entity = mapper.toEntity(domain);
-        com.solusi.erp.master.model.Tax saved = jpaRepository.save(entity);
+        com.solusi.erp.master.tax.infrastructure.persistence.Tax entity = mapper.toEntity(domain);
+        com.solusi.erp.master.tax.infrastructure.persistence.Tax saved = jpaRepository.save(entity);
         return mapper.toDomain(saved);
     }
 
@@ -42,7 +42,7 @@ public class TaxRepositoryImpl implements TaxRepository {
     @Override
     public Page<Tax> findAll(String keyword, Pageable pageable) {
         org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
-        org.springframework.data.domain.Page<com.solusi.erp.master.model.Tax> springPage =
+        org.springframework.data.domain.Page<com.solusi.erp.master.tax.infrastructure.persistence.Tax> springPage =
                 (keyword != null && !keyword.isBlank())
                         ? jpaRepository.search(keyword, springPageable)
                         : jpaRepository.findAll(springPageable);

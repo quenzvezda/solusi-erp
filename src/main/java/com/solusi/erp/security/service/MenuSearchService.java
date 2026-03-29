@@ -1,8 +1,8 @@
 package com.solusi.erp.security.service;
 
 import com.solusi.erp.core.dto.MenuSearchDto;
-import com.solusi.erp.security.model.PermissionGroup;
-import com.solusi.erp.security.repository.PermissionGroupRepository;
+import com.solusi.erp.security.permissiongroup.infrastructure.persistence.PermissionGroup;
+import com.solusi.erp.security.permissiongroup.infrastructure.persistence.PermissionGroupJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MenuSearchService {
 
-    private final PermissionGroupRepository permissionGroupRepository;
+    private final PermissionGroupJpaRepository permissionGroupRepository;
 
     @Transactional(readOnly = true)
     public List<MenuSearchDto> searchMenus(String keyword, int limit) {

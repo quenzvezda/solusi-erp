@@ -2,7 +2,7 @@ package com.solusi.erp.inventory.uom.infrastructure.adapter;
 
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
-import com.solusi.erp.core.util.PageableMapper;
+import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.inventory.model.UomType;
 import com.solusi.erp.inventory.uom.domain.model.UnitOfMeasure;
 import com.solusi.erp.inventory.uom.domain.repository.UomRepository;

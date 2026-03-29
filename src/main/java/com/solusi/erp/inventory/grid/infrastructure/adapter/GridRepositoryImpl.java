@@ -2,7 +2,7 @@ package com.solusi.erp.inventory.grid.infrastructure.adapter;
 
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
-import com.solusi.erp.core.util.PageableMapper;
+import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.inventory.grid.domain.model.Grid;
 import com.solusi.erp.inventory.grid.domain.repository.GridRepository;
 import com.solusi.erp.inventory.grid.infrastructure.persistence.GridPersistenceMapper;

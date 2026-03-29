@@ -1,7 +1,7 @@
 package com.solusi.erp.inventory.brand.application.usecase.command;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
-import com.solusi.erp.core.service.SequenceGeneratorService;
+import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.inventory.brand.domain.model.Brand;
 import com.solusi.erp.inventory.brand.domain.repository.BrandRepository;
 import org.junit.jupiter.api.BeforeEach;

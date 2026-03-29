@@ -6,10 +6,10 @@ import com.solusi.erp.security.dto.PermissionResponse;
 import com.solusi.erp.security.dto.RoleRequest;
 import com.solusi.erp.security.dto.RoleResponse;
 import com.solusi.erp.security.mapper.RoleMapper;
-import com.solusi.erp.security.model.Permission;
-import com.solusi.erp.security.model.Role;
-import com.solusi.erp.security.repository.PermissionRepository;
-import com.solusi.erp.security.repository.RoleRepository;
+import com.solusi.erp.security.permission.infrastructure.persistence.Permission;
+import com.solusi.erp.security.permission.infrastructure.persistence.PermissionJpaRepository;
+import com.solusi.erp.security.role.infrastructure.persistence.Role;
+import com.solusi.erp.security.role.infrastructure.persistence.RoleJpaRepository;
 import com.solusi.erp.security.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -27,8 +27,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RoleServiceImpl implements RoleService {
 
-    private final RoleRepository roleRepository;
-    private final PermissionRepository permissionRepository;
+    private final RoleJpaRepository roleRepository;
+    private final PermissionJpaRepository permissionRepository;
     private final RoleMapper roleMapper;
     private final MessageSource messageSource;
 

@@ -2,7 +2,7 @@ package com.solusi.erp.master.party.infrastructure.persistence;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.master.shared.model.AddressType;
-import com.solusi.erp.master.model.PartyRoleType;
+import com.solusi.erp.master.partyroletype.infrastructure.persistence.PartyRoleType;
 import com.solusi.erp.master.party.domain.model.Party;
 import com.solusi.erp.master.party.domain.model.PartyAddressData;
 import com.solusi.erp.master.party.domain.model.PartyContactData;
@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 @Component
 public class PartyPersistenceMapper {
 
-    public Party toDomain(com.solusi.erp.master.model.Party e) {
+    public Party toDomain(com.solusi.erp.master.party.infrastructure.persistence.Party e) {
         if (e == null) return null;
 
         Long versionLong = e.getVersion() != null ? e.getVersion().longValue() : null;
@@ -47,13 +47,13 @@ public class PartyPersistenceMapper {
                 roleIds, roleNames, contacts, addresses, identifications);
     }
 
-    private PartyContactData toContactData(com.solusi.erp.master.model.PartyContact c) {
+    private PartyContactData toContactData(com.solusi.erp.master.party.infrastructure.persistence.PartyContact c) {
         if (c == null) return null;
         return new PartyContactData(c.getId(), c.getLabel(), c.getMobile(), c.getPhone(), c.getEmail(),
                 c.getIsActive(), c.getIsDefault());
     }
 
-    private PartyAddressData toAddressData(com.solusi.erp.master.model.PartyAddress a) {
+    private PartyAddressData toAddressData(com.solusi.erp.master.party.infrastructure.persistence.PartyAddress a) {
         if (a == null) return null;
         Long cityId = a.getCity() != null ? a.getCity().getId() : null;
         Set<AddressType> types = a.getTypes() != null ? new HashSet<>(a.getTypes()) : new HashSet<>();
@@ -61,7 +61,7 @@ public class PartyPersistenceMapper {
                 a.getIsActive(), a.getIsDefault());
     }
 
-    private PartyIdentificationData toIdentificationData(com.solusi.erp.master.model.PartyIdentification i) {
+    private PartyIdentificationData toIdentificationData(com.solusi.erp.master.party.infrastructure.persistence.PartyIdentification i) {
         if (i == null) return null;
         Long typeId = i.getType() != null ? i.getType().getId() : null;
         return new PartyIdentificationData(i.getId(), typeId, i.getIdNumber(), i.getIssuedDate(),

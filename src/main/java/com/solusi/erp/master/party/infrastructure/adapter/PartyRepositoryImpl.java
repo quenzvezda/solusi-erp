@@ -2,10 +2,10 @@ package com.solusi.erp.master.party.infrastructure.adapter;
 
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
-import com.solusi.erp.core.util.PageableMapper;
-import com.solusi.erp.master.model.PartyAddress;
-import com.solusi.erp.master.model.PartyContact;
-import com.solusi.erp.master.model.PartyIdentification;
+import com.solusi.erp.core.infrastructure.util.PageableMapper;
+import com.solusi.erp.master.party.infrastructure.persistence.PartyAddress;
+import com.solusi.erp.master.party.infrastructure.persistence.PartyContact;
+import com.solusi.erp.master.party.infrastructure.persistence.PartyIdentification;
 import com.solusi.erp.master.party.domain.model.Party;
 import com.solusi.erp.master.party.domain.model.PartyAddressData;
 import com.solusi.erp.master.party.domain.model.PartyContactData;
@@ -48,11 +48,11 @@ public class PartyRepositoryImpl implements PartyRepository {
 
     @Override
     public Party save(Party domain) {
-        com.solusi.erp.master.model.Party entity;
+        com.solusi.erp.master.party.infrastructure.persistence.Party entity;
         Long domainId = domain.getMetadata().id();
 
         if (domainId == null) {
-            entity = new com.solusi.erp.master.model.Party();
+            entity = new com.solusi.erp.master.party.infrastructure.persistence.Party();
         } else {
             entity = jpaPartyRepo.findById(domainId)
                     .orElseThrow(() -> new RuntimeException("Party not found: " + domainId));
@@ -72,7 +72,7 @@ public class PartyRepositoryImpl implements PartyRepository {
         syncAddresses(entity, domain.getAddresses());
         syncIdentifications(entity, domain.getIdentifications());
 
-        com.solusi.erp.master.model.Party saved = jpaPartyRepo.save(entity);
+        com.solusi.erp.master.party.infrastructure.persistence.Party saved = jpaPartyRepo.save(entity);
         return persistenceMapper.toDomain(saved);
     }
 
@@ -84,7 +84,7 @@ public class PartyRepositoryImpl implements PartyRepository {
     @Override
     public Page<Party> findAll(String keyword, Pageable pageable) {
         org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
-        org.springframework.data.domain.Page<com.solusi.erp.master.model.Party> springPage =
+        org.springframework.data.domain.Page<com.solusi.erp.master.party.infrastructure.persistence.Party> springPage =
                 (keyword != null && !keyword.isBlank())
                         ? jpaPartyRepo.search(keyword, springPageable)
                         : jpaPartyRepo.findAll(springPageable);
@@ -109,7 +109,7 @@ public class PartyRepositoryImpl implements PartyRepository {
         jpaPartyRepo.deleteById(id);
     }
 
-    private void syncRoles(com.solusi.erp.master.model.Party entity, Set<Long> roleIds) {
+    private void syncRoles(com.solusi.erp.master.party.infrastructure.persistence.Party entity, Set<Long> roleIds) {
         if (roleIds == null || roleIds.isEmpty()) {
             entity.setRoles(new HashSet<>());
             return;
@@ -117,7 +117,7 @@ public class PartyRepositoryImpl implements PartyRepository {
         entity.setRoles(new HashSet<>(roleTypeRepository.findAllById(roleIds)));
     }
 
-    private void syncContacts(com.solusi.erp.master.model.Party entity, List<PartyContactData> requests) {
+    private void syncContacts(com.solusi.erp.master.party.infrastructure.persistence.Party entity, List<PartyContactData> requests) {
         Map<Long, PartyContact> existingById = entity.getContacts().stream()
                 .filter(c -> c.getId() != null)
                 .collect(Collectors.toMap(PartyContact::getId, c -> c));
@@ -154,7 +154,7 @@ public class PartyRepositoryImpl implements PartyRepository {
         });
     }
 
-    private void syncAddresses(com.solusi.erp.master.model.Party entity, List<PartyAddressData> requests) {
+    private void syncAddresses(com.solusi.erp.master.party.infrastructure.persistence.Party entity, List<PartyAddressData> requests) {
         Map<Long, PartyAddress> existingById = entity.getAddresses().stream()
                 .filter(a -> a.getId() != null)
                 .collect(Collectors.toMap(PartyAddress::getId, a -> a));
@@ -197,7 +197,7 @@ public class PartyRepositoryImpl implements PartyRepository {
         });
     }
 
-    private void syncIdentifications(com.solusi.erp.master.model.Party entity, List<PartyIdentificationData> requests) {
+    private void syncIdentifications(com.solusi.erp.master.party.infrastructure.persistence.Party entity, List<PartyIdentificationData> requests) {
         Map<Long, PartyIdentification> existingById = entity.getIdentifications().stream()
                 .filter(i -> i.getId() != null)
                 .collect(Collectors.toMap(PartyIdentification::getId, i -> i));
