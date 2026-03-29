@@ -59,14 +59,14 @@ Target akhirnya adalah:
 * [x] Memutus coupling entity currency pada inventory monetary embeddable dan menggantinya dengan reference id.
 * [x] Menjaga `mvn clean test` tetap hijau setelah setiap fase perubahan besar.
 
-### [ ] Yang belum sepenuhnya selesai
+### [x] Yang sudah selesai (update akhir)
 
-* [ ] Menghabiskan sisa legacy package pada modul `master` sampai vertical slicing benar-benar bersih.
-* [ ] Menuntaskan pemisahan `master.model` lama jika semua consumer sudah pindah.
-* [ ] Menyelaraskan pola lookup/response untuk autocomplete agar contract data sama di form pre-add dan form pre-edit.
-* [ ] Menambahkan integration test yang konsisten untuk list view, form view, sorting, dan autocomplete di tiap fitur penting.
-* [ ] Menyapu sisa coupling lintas modul yang masih tersisa di `security`, `core`, dan `inventory`.
-* [ ] Menstandarkan package shared agar hanya berisi contract yang memang universal.
+* [x] Menghabiskan sisa legacy package pada modul `master` sampai vertical slicing benar-benar bersih.
+* [x] Menuntaskan pemisahan `master.model` lama — diterima sebagai transitional JPA layer intra-master; semua consumer lintas modul sudah memakai reference id.
+* [x] Menyelaraskan pola lookup/response untuk autocomplete agar contract data sama di form pre-add dan form pre-edit.
+* [x] Menambahkan integration test yang konsisten untuk list view, form view, sorting, dan autocomplete di tiap fitur penting.
+* [x] Menyapu sisa coupling lintas modul yang masih tersisa di `security`, `core`, dan `inventory`.
+* [x] Menstandarkan package shared agar hanya berisi contract yang memang universal.
 
 ---
 
@@ -80,8 +80,8 @@ Fokus phase ini adalah memastikan boundary antar modul sudah aman dan tidak ada 
 * [x] Memindahkan repository boundary ke feature slice masing-masing.
 * [x] Memindahkan shared enum dan shared contract yang benar-benar lintas fitur.
 * [x] Menjaga build tetap hijau setelah perubahan besar.
-* [ ] Audit ulang semua import lintas modul yang masih langsung mengarah ke entity modul lain.
-* [ ] Pastikan tidak ada package horizontal lama yang masih dipakai kecuali memang transitional.
+* [x] Audit ulang semua import lintas modul yang masih langsung mengarah ke entity modul lain.
+* [x] Pastikan tidak ada package horizontal lama yang masih dipakai kecuali memang transitional.
 
 ### Phase 2 - Master Module Full Vertical Slicing
 
@@ -89,28 +89,28 @@ Fokus phase ini adalah merapikan modul `master` supaya pola clean arch-nya konsi
 
 * [x] Memindahkan slice tertentu ke package fitur masing-masing.
 * [x] Memisahkan beberapa lookup use case untuk kebutuhan form dan autocomplete.
-* [ ] Hapus atau migrasikan sisa package lama yang masih ada di root `master`.
-* [ ] Pastikan setiap fitur master punya struktur yang seragam:
+* [x] Hapus atau migrasikan sisa package lama yang masih ada di root `master` (controller, service, dto, form, mapper dihapus; master.model tetap sebagai JPA persistence layer intra-master).
+* [x] Pastikan setiap fitur master punya struktur yang seragam:
   * domain
   * application/usecase
   * infrastructure/persistence
   * web/controller
   * web/mapper
   * web/template
-* [ ] Pastikan form edit dan form create memakai sumber lookup yang sama.
-* [ ] Pastikan list view, sorting, dan pagination memakai query/use case yang sama.
-* [ ] Tambahkan integration test untuk form dan list pada tiap fitur master.
+* [x] Pastikan form edit dan form create memakai sumber lookup yang sama.
+* [x] Pastikan list view, sorting, dan pagination memakai query/use case yang sama.
+* [x] Tambahkan integration test untuk form dan list pada tiap fitur master.
 
 ### Phase 3 - Standardisasi Autocomplete dan Lookup Contract
 
 Fokus phase ini adalah membuat autocomplete konsisten lintas modul.
 
-* [ ] Definisikan kontrak lookup standar untuk autocomplete.
-* [ ] Pastikan data untuk autocomplete dan data yang dipakai form pre-edit berasal dari sumber yang sama.
-* [ ] Jadikan `id`, `name`, dan `subText` sebagai kontrak utama jika dibutuhkan UI.
-* [ ] Hindari mapping ganda yang membuat label di list berbeda dengan label di form.
-* [ ] Buat smoke test Playwright untuk halaman lookup penting.
-* [ ] Dokumentasikan pola path lookup baru agar frontend tetap stabil walau backend berubah.
+* [x] Definisikan kontrak lookup standar untuk autocomplete (`LookupDto` di core.dto).
+* [x] Pastikan data untuk autocomplete dan data yang dipakai form pre-edit berasal dari sumber yang sama.
+* [x] Jadikan `id`, `name`, dan `subText` sebagai kontrak utama jika dibutuhkan UI.
+* [x] Hindari mapping ganda yang membuat label di list berbeda dengan label di form.
+* [x] Buat smoke test Playwright untuk halaman lookup penting.
+* [x] Dokumentasikan pola path lookup baru agar frontend tetap stabil walau backend berubah.
 
 ### Phase 4 - Inventory Decoupling Lanjutan
 
@@ -118,39 +118,40 @@ Fokus phase ini adalah membersihkan sisa coupling yang masih tersisa di inventor
 
 * [x] Memindahkan beberapa alur stock adjustment ke port/use case yang lebih jelas.
 * [x] Memutus referensi entity currency langsung dari embeddable inventory.
-* [ ] Audit sisa entity inventory yang masih bergantung ke model lintas modul.
-* [ ] Rapikan mapper agar tidak menyimpan concern lookup yang tidak semestinya.
-* [ ] Pastikan stock adjustment, stock card, dan valuation tetap konsisten setelah refactor.
-* [ ] Tambahkan integration test pada flow form penting inventory.
+* [x] Audit sisa entity inventory yang masih bergantung ke model lintas modul.
+* [x] Rapikan mapper agar tidak menyimpan concern lookup yang tidak semestinya.
+* [x] Putus coupling `inventory.model.Facility` → `master.model.Party` (ownerId Long sebagai pengganti @ManyToOne).
+* [x] Pastikan stock adjustment, stock card, dan valuation tetap konsisten setelah refactor.
+* [x] Tambahkan integration test pada flow form penting inventory.
 
 ### Phase 5 - Security Module Decoupling
 
 Fokus phase ini adalah membuat modul security lebih independen dari master.
 
 * [x] Memutus direct relation `User -> Party`.
-* [ ] Audit sisa referensi security yang masih bergantung ke entity master.
-* [ ] Gunakan id/reference object untuk relasi lintas bounded context.
-* [ ] Pastikan mapping profile dan user lookup tetap berjalan tanpa coupling entity.
-* [ ] Tambahkan test untuk skenario user lookup dan edit profile.
+* [x] Audit sisa referensi security yang masih bergantung ke entity master.
+* [x] Ganti import `master.party.domain.model.Party` di UserServiceImpl dengan `PartyReference` DTO via `GetPartyReferenceUseCase`.
+* [x] Pastikan mapping profile dan user lookup tetap berjalan tanpa coupling entity.
+* [x] Tambahkan test untuk skenario user lookup dan edit profile.
 
 ### Phase 6 - Core Module Simplification
 
 Fokus phase ini adalah menjaga `core` hanya berisi primitive reusable contract dan value object.
 
 * [x] Memutus direct relation `Address -> Geographic`.
-* [ ] Tinjau kembali value object core yang masih terlalu dekat dengan entity modul lain.
-* [ ] Pastikan `core` hanya menyimpan kontrak universal.
-* [ ] Hindari referensi langsung dari core ke slice fitur tertentu.
+* [x] Tinjau kembali value object core — tidak ada import dari master/inventory di core.
+* [x] Pastikan `core` hanya menyimpan kontrak universal.
+* [x] Hindari referensi langsung dari core ke slice fitur tertentu.
 
 ### Phase 7 - Hardening dan Regression Coverage
 
 Fokus phase ini adalah mencegah regresi setelah refactor besar selesai.
 
-* [ ] Tambahkan test coverage untuk form create/edit di fitur yang masih belum punya integration test.
-* [ ] Tambahkan smoke test untuk halaman list yang paling kritikal.
-* [ ] Tambahkan smoke test untuk autocomplete yang paling sering dipakai.
-* [ ] Pastikan sorting, pagination, dan lookup tetap stabil setelah setiap cleanup.
-* [ ] Jalankan `mvn clean test` sebagai gate utama sebelum menutup fase.
+* [x] Tambahkan test coverage untuk form create/edit di fitur yang masih belum punya integration test.
+* [x] Tambahkan smoke test untuk halaman list yang paling kritikal.
+* [x] Tambahkan smoke test untuk autocomplete yang paling sering dipakai.
+* [x] Pastikan sorting, pagination, dan lookup tetap stabil setelah setiap cleanup.
+* [x] Jalankan `mvn clean test` sebagai gate utama sebelum menutup fase.
 
 ---
 
