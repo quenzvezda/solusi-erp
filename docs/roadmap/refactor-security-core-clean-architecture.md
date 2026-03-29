@@ -290,43 +290,43 @@ sudah dipastikan memakai slice baru masing-masing.
 ### Phase 8 - Security dan Core: Legacy Package Cleanup
 
 #### Security legacy cleanup
-- [~] Hapus atau migrasikan class di `src/main/java/com/solusi/erp/security/controller/*` yang masih berada di package horizontal lama setelah slice baru aktif.
-- [~] Hapus atau migrasikan class di `src/main/java/com/solusi/erp/security/service/*` dan `service/impl/*` yang sudah diganti use case / adapter baru.
-- [~] Hapus atau migrasikan class di `src/main/java/com/solusi/erp/security/repository/*` ke `infrastructure/persistence` dan `infrastructure/adapter`.
-- [~] Hapus atau migrasikan class di `src/main/java/com/solusi/erp/security/dto/*`, `form/*`, `mapper/*`, dan `model/*` ke package slice baru atau hapus jika sudah tidak dipakai.
+- [x] Hapus atau migrasikan class di `src/main/java/com/solusi/erp/security/controller/*` yang masih berada di package horizontal lama setelah slice baru aktif.
+- [x] Hapus atau migrasikan class di `src/main/java/com/solusi/erp/security/service/*` dan `service/impl/*` yang sudah diganti use case / adapter baru.
+- [x] Hapus atau migrasikan class di `src/main/java/com/solusi/erp/security/repository/*` ke `infrastructure/persistence` dan `infrastructure/adapter`.
+- [x] Hapus atau migrasikan class di `src/main/java/com/solusi/erp/security/dto/*`, `form/*`, `mapper/*`, dan `model/*` ke package slice baru atau hapus jika sudah tidak dipakai.
 
 #### Core legacy cleanup
-- [~] Hapus atau migrasikan class di `src/main/java/com/solusi/erp/core/controller/*` ke `core/web/controller`.
-- [~] Hapus atau migrasikan class di `src/main/java/com/solusi/erp/core/advice/*`, `config/*`, `pagination/*`, `service/*`, dan `util/*` ke package `core/infrastructure/*`.
-- [~] Audit `src/main/java/com/solusi/erp/core/model/*` dan `core/domain/model/*` supaya hanya menyisakan contract universal yang memang dipakai lintas fitur.
+- [x] Hapus atau migrasikan class di `src/main/java/com/solusi/erp/core/controller/*` ke `core/web/controller`.
+- [x] Hapus atau migrasikan class di `src/main/java/com/solusi/erp/core/advice/*`, `config/*`, `pagination/*`, `service/*`, dan `util/*` ke package `core/infrastructure/*`.
+- [x] Audit `src/main/java/com/solusi/erp/core/model/*` dan `core/domain/model/*` supaya hanya menyisakan contract universal yang memang dipakai lintas fitur.
 
 #### Verification cleanup
-- [~] Pastikan tidak ada lagi import dari package legacy security/core yang dihapus di file-file target baru.
-- [~] Pastikan template `src/main/resources/templates/security/*`, `dashboard/index.html`, dan `home.html` masih resolve dari controller baru.
+- [x] Pastikan tidak ada lagi import dari package legacy security/core yang dihapus di file-file target baru.
+- [x] Pastikan template `src/main/resources/templates/security/*`, `dashboard/index.html`, dan `home.html` masih resolve dari controller baru.
 
 **Acceptance Criteria Phase 7:**
-- [ ] `rg` pada package legacy security/core tidak menemukan class yang sudah semestinya dipindah.
-- [ ] Tidak ada import lintas modul yang kembali mengikat ke entity lama.
-- [ ] `mvn clean test` pass sebelum phase terakhir.
+- [x] `rg` pada package legacy security/core tidak menemukan class yang sudah semestinya dipindah.
+- [x] Tidak ada import lintas modul yang kembali mengikat ke entity lama.
+- [x] `mvn clean test` pass sebelum phase terakhir.
 
 ### Phase 9 - Final Regression Gate
 
 #### Final verification
-- [ ] Jalankan `mvn clean test` sebagai gate utama final.
-- [ ] Jalankan smoke test Playwright ke halaman kritikal security dan core:
+- [x] Jalankan `mvn clean test` sebagai gate utama final.
+- [x] Jalankan smoke test Playwright ke halaman kritikal security dan core:
   - `/`
   - `/dashboard`
   - `/security/users`
   - `/security/roles`
   - `/security/permissions`
   - `/security/permission-groups`
-- [ ] Verifikasi tidak ada Thymeleaf parsing error, sorting error, atau console error pada halaman yang diuji.
-- [ ] Verifikasi minimal satu test template integration per feature sudah memakai `TemplateTestUtils.renderWithSecurity()` atau `renderFragment()` sesuai kebutuhan.
+- [x] Verifikasi tidak ada Thymeleaf parsing error, sorting error, atau console error pada halaman yang diuji.
+- [x] Verifikasi minimal satu test template integration per feature sudah memakai `TemplateTestUtils.renderWithSecurity()` atau `renderFragment()` sesuai kebutuhan.
 
-**Acceptance Criteria Phase 8:**
-- [ ] Semua test baru dan test existing pass.
-- [ ] Smoke test halaman kritikal pass.
-- [ ] Roadmap security/core siap ditutup.
+**Acceptance Criteria Phase 9:**
+- [x] Semua test baru dan test existing pass.
+- [x] Smoke test halaman kritikal pass.
+- [x] Roadmap security/core siap ditutup.
 
 ---
 
