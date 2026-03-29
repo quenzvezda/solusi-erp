@@ -71,5 +71,24 @@ public class RoleConfig {
         tx.setReadOnly(true);
         return id -> tx.execute(status -> pure.execute(id));
     }
+
+    @Bean
+    public GetRoleLookupUseCase getRoleLookupUseCase(
+            RoleRepository roleDomainRepository,
+            PlatformTransactionManager txManager) {
+        GetRoleLookupUseCaseImpl pure = new GetRoleLookupUseCaseImpl(roleDomainRepository);
+        TransactionTemplate tx = new TransactionTemplate(txManager);
+        tx.setReadOnly(true);
+        return new GetRoleLookupUseCase() {
+            @Override
+            public com.solusi.erp.core.dto.LookupDto getById(Long id) {
+                return tx.execute(status -> pure.getById(id));
+            }
+            @Override
+            public java.util.List<com.solusi.erp.core.dto.LookupDto> search(String keyword, int limit) {
+                return tx.execute(status -> pure.search(keyword, limit));
+            }
+        };
+    }
 }
 

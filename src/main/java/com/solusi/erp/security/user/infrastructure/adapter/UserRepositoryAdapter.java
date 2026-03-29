@@ -69,6 +69,9 @@ public class UserRepositoryAdapter implements UserRepository {
                 userJpaRepository.findById(entity.getId()).ifPresent(existing -> {
                     if (existing.getProfile() != null) {
                         profile.setId(existing.getProfile().getId());
+                        profile.setVersion(existing.getProfile().getVersion());
+                        profile.setCreatedDate(existing.getProfile().getCreatedDate());
+                        profile.setCreatedBy(existing.getProfile().getCreatedBy());
                     }
                 });
             }

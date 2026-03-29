@@ -2,7 +2,7 @@ package com.solusi.erp.security.user.security;
 
 import com.solusi.erp.security.shared.model.SecurityUser;
 import com.solusi.erp.security.user.infrastructure.persistence.UserProfile;
-import com.solusi.erp.security.service.PermissionGroupService;
+import com.solusi.erp.security.menusearch.application.usecase.BuildMenuTreeUseCase;
 import com.solusi.erp.security.user.infrastructure.persistence.UserProfileJpaRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,12 +22,12 @@ import java.util.stream.Collectors;
 public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
 
     private final UserProfileJpaRepository userProfileRepository;
-    private final PermissionGroupService permissionGroupService;
+    private final BuildMenuTreeUseCase buildMenuTreeUseCase;
 
     public CustomAuthenticationSuccessHandler(UserProfileJpaRepository userProfileRepository,
-                                              PermissionGroupService permissionGroupService) {
+                                              BuildMenuTreeUseCase buildMenuTreeUseCase) {
         this.userProfileRepository = userProfileRepository;
-        this.permissionGroupService = permissionGroupService;
+        this.buildMenuTreeUseCase = buildMenuTreeUseCase;
     }
 
     @Override
@@ -39,7 +39,7 @@ public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthent
         Set<String> authorities = authentication.getAuthorities().stream()
                 .map(org.springframework.security.core.GrantedAuthority::getAuthority)
                 .collect(Collectors.toSet());
-        request.getSession().setAttribute("userMenu", permissionGroupService.buildMenuTree(authorities));
+        request.getSession().setAttribute("userMenu", buildMenuTreeUseCase.execute(authorities));
 
         if (profile != null) {
             LocaleResolver localeResolver = RequestContextUtils.getLocaleResolver(request);

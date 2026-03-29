@@ -1,4 +1,4 @@
-package com.solusi.erp.security.dto;
+package com.solusi.erp.security.menusearch.web.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

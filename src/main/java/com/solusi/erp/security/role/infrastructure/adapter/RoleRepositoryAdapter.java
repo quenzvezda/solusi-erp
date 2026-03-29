@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.PageRequest;
+
 public class RoleRepositoryAdapter implements RoleRepository {
 
     private final RoleJpaRepository roleJpaRepository;
@@ -53,6 +55,16 @@ public class RoleRepositoryAdapter implements RoleRepository {
     @Override
     public List<Role> findAll() {
         return roleJpaRepository.findAll().stream().map(mapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Role> search(String keyword, int limit) {
+        if (keyword == null || keyword.isBlank()) {
+            return roleJpaRepository.findAll(PageRequest.of(0, limit))
+                    .getContent().stream().map(mapper::toDomain).collect(Collectors.toList());
+        }
+        return roleJpaRepository.searchByKeyword(keyword, PageRequest.of(0, limit))
+                .stream().map(mapper::toDomain).collect(Collectors.toList());
     }
 
     @Override

@@ -14,6 +14,8 @@ public interface RoleRepository {
 
     List<Role> findAll();
 
+    List<Role> search(String keyword, int limit);
+
     void delete(Role role);
 
     boolean existsByName(String name);
