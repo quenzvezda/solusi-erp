@@ -1,6 +1,7 @@
 package com.solusi.erp.master.party.web.controller;
 
 import com.solusi.erp.core.dto.LookupDto;
+import com.solusi.erp.master.party.application.usecase.query.FindPartiesAvailableForUserUseCase;
 import com.solusi.erp.master.party.application.usecase.query.FindPartiesForLookupUseCase;
 import com.solusi.erp.master.party.domain.model.Party;
 import lombok.RequiredArgsConstructor;
@@ -24,12 +25,24 @@ import java.util.stream.Collectors;
 public class PartyLookupController {
 
     private final FindPartiesForLookupUseCase findPartiesForLookupUseCase;
+    private final FindPartiesAvailableForUserUseCase findPartiesAvailableForUserUseCase;
     private final MessageSource messageSource;
 
     @GetMapping
     public List<LookupDto> search(@RequestParam(value = "q", defaultValue = "") String q) {
         Locale locale = LocaleContextHolder.getLocale();
         return findPartiesForLookupUseCase.execute(q).stream()
+                .map(p -> mapToLookupDto(p, locale))
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/available-for-user")
+    public List<LookupDto> availableForUser(
+            @RequestParam(value = "q", defaultValue = "") String q,
+            @RequestParam(value = "excludePartyId", required = false) Long excludePartyId,
+            @RequestParam(value = "limit", defaultValue = "10") int limit) {
+        Locale locale = LocaleContextHolder.getLocale();
+        return findPartiesAvailableForUserUseCase.execute(q, excludePartyId).stream()
                 .map(p -> mapToLookupDto(p, locale))
                 .collect(Collectors.toList());
     }

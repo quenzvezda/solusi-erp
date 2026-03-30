@@ -27,6 +27,13 @@ public interface PartyJpaRepository extends JpaRepository<Party, Long> {
             "LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<Party> searchAvailableForUser(@Param("keyword") String keyword, @Param("excludePartyId") Long excludePartyId, Pageable pageable);
 
+    @Query("SELECT p FROM Party p " +
+            "WHERE p.isActive = true AND " +
+            "p.id NOT IN (SELECT u.partyId FROM User u WHERE u.partyId IS NOT NULL) AND " +
+            "(LOWER(p.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<Party> searchUnassigned(@Param("keyword") String keyword, Pageable pageable);
+
     boolean existsByCode(String code);
 
     boolean existsByCodeAndIdNot(String code, Long id);

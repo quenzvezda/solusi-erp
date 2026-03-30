@@ -105,6 +105,20 @@ public class PartyRepositoryImpl implements PartyRepository {
     }
 
     @Override
+    public List<Party> findAvailableForUser(String keyword, Long excludePartyId) {
+        String kw = keyword != null ? keyword : "";
+        org.springframework.data.domain.Page<com.solusi.erp.master.party.infrastructure.persistence.Party> page;
+        if (excludePartyId != null) {
+            page = jpaPartyRepo.searchAvailableForUser(kw, excludePartyId, PageRequest.of(0, 10));
+        } else {
+            page = jpaPartyRepo.searchUnassigned(kw, PageRequest.of(0, 10));
+        }
+        return page.getContent().stream()
+                .map(persistenceMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public void delete(Long id) {
         jpaPartyRepo.deleteById(id);
     }

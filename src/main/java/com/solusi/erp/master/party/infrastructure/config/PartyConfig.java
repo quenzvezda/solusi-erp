@@ -103,6 +103,16 @@ public class PartyConfig {
         tx.setReadOnly(true);
         return (keyword) -> tx.execute(status -> pure.execute(keyword));
     }
+
+    @Bean
+    public FindPartiesAvailableForUserUseCase findPartiesAvailableForUserUseCase(
+            PartyRepository partyDomainRepository,
+            PlatformTransactionManager txManager) {
+        FindPartiesAvailableForUserUseCase pure = new FindPartiesAvailableForUserUseCaseImpl(partyDomainRepository);
+        TransactionTemplate tx = new TransactionTemplate(txManager);
+        tx.setReadOnly(true);
+        return (keyword, excludePartyId) -> tx.execute(status -> pure.execute(keyword, excludePartyId));
+    }
 }
 
 

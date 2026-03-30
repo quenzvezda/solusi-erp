@@ -150,12 +150,14 @@ public class UserConfig {
                                    GetProfileUpdateDataUseCase getProfileUpdateDataUseCase,
                                    com.solusi.erp.security.role.application.usecase.query.FindRolesUseCase findRolesUseCase,
                                    FindPermissionGroupsUseCase findPermissionGroupsUseCase,
+                                   PartyReferenceGateway partyReferenceGateway,
                                    UserWebMapper userWebMapper,
                                    PermissionGroupWebMapper permissionGroupWebMapper,
                                    MessageSource messageSource) {
         return new UserServiceImpl(createUserUseCase, updateUserUseCase, deleteUserUseCase,
                 toggleUserStatusUseCase, updateProfileUseCase, findUsersUseCase, findUserByIdUseCase,
                 getUserEditViewUseCase, getProfileUseCase, getProfileUpdateDataUseCase,
-                findRolesUseCase, findPermissionGroupsUseCase, userWebMapper, permissionGroupWebMapper, messageSource);
+                findRolesUseCase, findPermissionGroupsUseCase, partyReferenceGateway,
+                userWebMapper, permissionGroupWebMapper, messageSource);
     }
 }
