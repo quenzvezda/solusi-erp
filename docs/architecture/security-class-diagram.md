@@ -9,9 +9,11 @@ classDiagram
     class BaseModel {
         <<abstract>>
         -Long id
-        -String createdBy
+        -Long createdBy
+        -User createdByUser
         -LocalDateTime createdDate
-        -String updatedBy
+        -Long updatedBy
+        -User updatedByUser
         -LocalDateTime updatedDate
         -Integer version
     }
@@ -22,9 +24,11 @@ classDiagram
         -String email
         -boolean enabled
         -boolean password_change_required
+        -Long partyId
+        -String partyCode
+        -String partyName
         -Role role
         -UserProfile profile
-        -Party party
     }
 
     class Party {
@@ -59,10 +63,12 @@ classDiagram
     BaseModel <|-- Permission
 
     User "1" -- "1" UserProfile : Has 1 Profile
-    User "1" -- "0..1" Party : Linked to 1 Party
     User "n" --> "1" Role : Has 1 Role
     Role "n" o-- "m" Permission : Has many Permissions
+    User "n" ..> "0..1" Party : partyId reference (decoupled)
 ```
+
+> **Catatan Arsitektur:** `User` tidak lagi memiliki `@ManyToOne Party`. Relasi ke `Party` sudah didekopel menggunakan reference ID (`partyId`, `partyCode`, `partyName`) untuk memutus coupling langsung antara modul `security` dan `master`. Detail lihat di `security.user.domain.model.User`.
 
 ## Penjelasan Struktur:
 1.  **BaseModel**: Menyediakan kolom audit untuk semua entitas bisnis.

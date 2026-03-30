@@ -27,7 +27,7 @@ AI Assistant WAJIB mematuhi versi dan teknologi berikut berdasarkan `pom.xml` ut
 
 ## 3. Architecture & Coding Standards
 *   **Package Structure:** Gunakan **Package by Feature/Module**. 
-*   **Advanced Architecture (Prototype):** Sebagian modul (dimulai dari `com.solusi.erp.common.news`) menggunakan **Pure Clean Architecture + DDD + CQRS**. Developer sangat disarankan merujuk ke modul tersebut sebagai standar tertinggi untuk skalabilitas. Lihat detailnya di [docs/architecture/clean-ddd-cqrs-standard.md](docs/architecture/clean-ddd-cqrs-standard.md).
+*   **Advanced Architecture (Standard):** **Seluruh modul utama** menggunakan **Pure Clean Architecture + DDD + CQRS** dengan pendekatan vertical slicing per feature. Ini adalah standar wajib untuk semua pengembangan baru. Lihat detailnya di [docs/architecture/clean-ddd-cqrs-standard.md](docs/architecture/clean-ddd-cqrs-standard.md). Modul referensi yang stabil dan lengkap: `master.tax`, `master.currency`, `security.permissiongroup`, `security.role`, `inventory.brand`.
 *   **DTO (Data Transfer Object):** 
     * JANGAN PERNAH mengirimkan JPA Entity secara langsung ke Thymeleaf (Controller to View).
     * JANGAN PERNAH menerima form submission langsung ke JPA Entity.

@@ -61,4 +61,19 @@ Keuntungan:
 3.  **UI Alignment**: Nama DTO mencerminkan tugas (task) yang sedang dikerjakan user di layar.
 
 ---
-**Reference Implementation**: `com.solusi.erp.common.news`
+## 7. Reference Implementations
+
+Berikut modul-modul yang bisa dijadikan referensi implementasi Clean Architecture + DDD:
+
+| Modul | Package | Kompleksitas | Cocok untuk mempelajari |
+|-------|---------|-------------|------------------------|
+| **Tax** | `master.tax` | Sederhana | CRUD dasar, use case command/query, MapStruct mapper |
+| **Brand** | `inventory.brand` | Sederhana | CRUD + lookup use case, golden reference untuk web-layer test |
+| **Currency** | `master.currency` | Sedang | Business logic di domain (default currency), aggregate method |
+| **PermissionGroup** | `security.permissiongroup` | Sedang | Localized fields, integration dengan search menu |
+| **Role** | `security.role` | Sedang | Many-to-many relation via reference ID, lookup use case |
+| **User** | `security.user` | Kompleks | Cross-module reference (party, role), profile management, security integration |
+| **News** | `common.news` | Sederhana | Prototype awal — masih valid sebagai contoh minimal |
+| **Approval** | `common.approval` | Kompleks | Event-driven, polymorphic reference, domain service |
+
+> **Catatan:** Untuk modul baru, mulailah dari `master.tax` atau `inventory.brand` sebagai template, lalu lihat `security.role` untuk pola many-to-many.

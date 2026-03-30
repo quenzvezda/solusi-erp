@@ -75,8 +75,8 @@ Sidebar dan Global Search saat ini mendukung **Dynamic Dual-Language** (ID dan E
 
 ### Arsitektur Render Menu
 1. **Pembangunan Hirarki (Saat Login)**:
-    - Ketika user login, `CustomAuthenticationSuccessHandler` memanggil `PermissionGroupServiceImpl.buildMenuTree()`.
-    - Sistem mengambil `permission_groups` dari database, lalu melakukan *split* pada `breadcrumb_id` dan `breadcrumb_en` secara bersamaan.
+    - Ketika user login, `CustomAuthenticationSuccessHandler` mengekstrak daftar `authorities` dari principal, lalu memanggil `BuildMenuTreeUseCase.execute(authorities)` di `security.menusearch.application.usecase`.
+    - Use case mengambil `permission_groups` dari database via `MenuQueryPort`, lalu melakukan *split* pada `breadcrumb_id` dan `breadcrumb_en` secara bersamaan.
     - DTO `MenuNodeResponse` yang dihasilkan akan menyimpan **kedua bahasa tersebut** (`nameId` dan `nameEn`) sekaligus.
     - *Tree* DTO utuh ini kemudian disimpan ke dalam HTTP Session atribut `userMenu`.
 
@@ -95,7 +95,7 @@ Caching dilakukan pada level *Dual-Language Object*, dan penentuan bahasa dieval
 Menu utama tingkat atas (seperti *Company Admin, Operations, Security*) tidak benar-benar eksis sebagai entri terpisah (baris) di tabel `permission_groups`. Mereka di-generate secara *on-the-fly* dari hasil pemotongan (*split*) string `breadcrumb`.
 
 Karena menu parent tidak tersimpan di database, mereka tidak memiliki kolom `icon_class`. Untuk menyelesaikan isu ini tanpa membuat relasi database *Parent-Child Recursive* yang memperberat query:
-1. Kita me-mapping *Ikon kustom* secara Hardcode lewat sebuah struktur Map **`PARENT_ICONS`** di dalam `PermissionGroupServiceImpl.java`.
+1. Kita me-mapping *Ikon kustom* secara Hardcode lewat sebuah struktur Map **`PARENT_ICONS`** di dalam `BuildMenuTreeUseCaseImpl.java` (`security.menusearch.application.usecase`).
 2. Map Kamus (*Dictionary*) ini menggunakan **English Breadcrumb Name** (cth: "Company Admin", "Security") sebagai Key (*Kata Kunci Pencarian*), dan nama kelas Tabler Icon memanjang (cth: "ti-building-skyscraper") sebagai Nilai (*Value*).
 3. Penggunaan *English Name* sebagai Key **DIWAJIBKAN** karena hal tersebut menjamin bahwa nama rujukan bersifat absolut/statis, tanpa peduli apakah sesi browser user saat itu sedang berbahasa Indonesia atau Inggris.
-4. **Agentic/Developer Instruction**: Jika di masa depan Modul baru ditambahkan (Misal: "Human Resources"), developer atau AI Assistant **DIWAJIBKAN** membuka `PermissionGroupServiceImpl.java` dan menambahkan mapping ikon baru pada `PARENT_ICONS` map. Jika tidak, folder parent baru tersebut akan otomatis ber-ikon generik `ti-folder`.
+4. **Agentic/Developer Instruction**: Jika di masa depan Modul baru ditambahkan (Misal: "Human Resources"), developer atau AI Assistant **DIWAJIBKAN** membuka `BuildMenuTreeUseCaseImpl.java` dan menambahkan mapping ikon baru pada `PARENT_ICONS` map. Jika tidak, folder parent baru tersebut akan otomatis ber-ikon generik `ti-folder`.
