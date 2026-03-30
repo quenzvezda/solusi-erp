@@ -1,15 +1,21 @@
 package com.solusi.erp.inventory.grid.infrastructure.persistence;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
+import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityEntity;
+import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityJpaRepository;
 import com.solusi.erp.inventory.grid.domain.model.Grid;
-import com.solusi.erp.inventory.model.Facility;
-import org.mapstruct.Mapper;
-import org.mapstruct.ReportingPolicy;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
-public interface GridPersistenceMapper {
+@Component
+public class GridPersistenceMapper {
 
-    default Grid toDomain(com.solusi.erp.inventory.model.Grid entity) {
+    private final FacilityJpaRepository facilityJpaRepository;
+
+    public GridPersistenceMapper(FacilityJpaRepository facilityJpaRepository) {
+        this.facilityJpaRepository = facilityJpaRepository;
+    }
+
+    public Grid toDomain(GridEntity entity) {
         if (entity == null) return null;
         AuditMetadata metadata = new AuditMetadata(
             entity.getId(),
@@ -19,26 +25,24 @@ public interface GridPersistenceMapper {
             entity.getUpdatedDate(),
             entity.getUpdatedBy()
         );
-        Long facilityId = entity.getFacility() != null ? entity.getFacility().getId() : null;
-        String facilityName = entity.getFacility() != null ? entity.getFacility().getName() : null;
-        return new Grid(metadata, facilityId, facilityName, entity.getCode(),
+        String facilityName = entity.getFacilityId() != null
+            ? facilityJpaRepository.findById(entity.getFacilityId())
+                .map(FacilityEntity::getName).orElse(null)
+            : null;
+        return new Grid(metadata, entity.getFacilityId(), facilityName, entity.getCode(),
             entity.getName(), entity.getNote(), entity.getIsActive());
     }
 
-    default com.solusi.erp.inventory.model.Grid toEntity(Grid domain) {
+    public GridEntity toEntity(Grid domain) {
         if (domain == null) return null;
-        com.solusi.erp.inventory.model.Grid entity = new com.solusi.erp.inventory.model.Grid();
+        GridEntity entity = new GridEntity();
         if (domain.getMetadata().id() != null) entity.setId(domain.getMetadata().id());
         if (domain.getMetadata().version() != null) entity.setVersion(domain.getMetadata().version().intValue());
+        entity.setFacilityId(domain.getFacilityId());
         entity.setCode(domain.getCode());
         entity.setName(domain.getName());
         entity.setNote(domain.getNote());
         entity.setIsActive(domain.getIsActive() != null ? domain.getIsActive() : Boolean.TRUE);
-        if (domain.getFacilityId() != null) {
-            Facility facility = new Facility();
-            facility.setId(domain.getFacilityId());
-            entity.setFacility(facility);
-        }
         return entity;
     }
 }

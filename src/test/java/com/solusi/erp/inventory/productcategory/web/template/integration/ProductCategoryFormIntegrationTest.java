@@ -1,6 +1,6 @@
 package com.solusi.erp.inventory.productcategory.web.template.integration;
 
-import com.solusi.erp.inventory.model.ProductCategoryType;
+import com.solusi.erp.inventory.productcategory.domain.model.ProductCategoryType;
 import com.solusi.erp.inventory.productcategory.web.dto.ProductCategorySaveRequest;
 import com.solusi.erp.testutils.TemplateTestUtils;
 import org.junit.jupiter.api.DisplayName;

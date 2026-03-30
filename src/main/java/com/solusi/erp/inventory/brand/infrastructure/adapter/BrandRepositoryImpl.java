@@ -5,6 +5,8 @@ import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.inventory.brand.domain.model.Brand;
 import com.solusi.erp.inventory.brand.domain.repository.BrandRepository;
+import com.solusi.erp.inventory.brand.infrastructure.persistence.BrandEntity;
+import com.solusi.erp.inventory.brand.infrastructure.persistence.BrandJpaRepository;
 import com.solusi.erp.inventory.brand.infrastructure.persistence.BrandPersistenceMapper;
 import org.springframework.data.domain.PageRequest;
 
@@ -12,26 +14,20 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/**
- * Adapter implementation of BrandRepository.
- * Bridges Domain and Infrastructure Persistence.
- */
 public class BrandRepositoryImpl implements BrandRepository {
 
-    private final com.solusi.erp.inventory.repository.BrandRepository jpaRepository;
+    private final BrandJpaRepository jpaRepository;
     private final BrandPersistenceMapper mapper;
 
-    public BrandRepositoryImpl(
-            com.solusi.erp.inventory.repository.BrandRepository jpaRepository,
-            BrandPersistenceMapper mapper) {
+    public BrandRepositoryImpl(BrandJpaRepository jpaRepository, BrandPersistenceMapper mapper) {
         this.jpaRepository = jpaRepository;
         this.mapper = mapper;
     }
 
     @Override
     public Brand save(Brand domain) {
-        com.solusi.erp.inventory.model.Brand entity = mapper.toEntity(domain);
-        com.solusi.erp.inventory.model.Brand saved = jpaRepository.save(entity);
+        BrandEntity entity = mapper.toEntity(domain);
+        BrandEntity saved = jpaRepository.save(entity);
         return mapper.toDomain(saved);
     }
 
@@ -43,7 +39,7 @@ public class BrandRepositoryImpl implements BrandRepository {
     @Override
     public Page<Brand> findAll(String keyword, Pageable pageable) {
         org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
-        org.springframework.data.domain.Page<com.solusi.erp.inventory.model.Brand> springPage =
+        org.springframework.data.domain.Page<BrandEntity> springPage =
             (keyword != null && !keyword.isBlank())
                 ? jpaRepository.search(keyword, springPageable)
                 : jpaRepository.findAll(springPageable);

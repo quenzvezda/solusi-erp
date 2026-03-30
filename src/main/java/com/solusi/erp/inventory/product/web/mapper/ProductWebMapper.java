@@ -5,9 +5,9 @@ import com.solusi.erp.inventory.product.web.dto.ProductDetailResponse;
 import com.solusi.erp.inventory.product.web.dto.ProductSaveRequest;
 import com.solusi.erp.inventory.product.web.dto.ProductSummaryResponse;
 import com.solusi.erp.core.mapper.AuditMapperHelper;
-import com.solusi.erp.inventory.repository.ProductCategoryRepository;
-import com.solusi.erp.inventory.repository.UnitOfMeasureRepository;
-import com.solusi.erp.inventory.repository.BrandRepository;
+import com.solusi.erp.inventory.productcategory.infrastructure.persistence.ProductCategoryJpaRepository;
+import com.solusi.erp.inventory.uom.infrastructure.persistence.UomJpaRepository;
+import com.solusi.erp.inventory.brand.infrastructure.persistence.BrandJpaRepository;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -24,11 +24,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 public abstract class ProductWebMapper {
 
     @Autowired
-    protected ProductCategoryRepository categoryRepository;
+    protected ProductCategoryJpaRepository categoryRepository;
     @Autowired
-    protected UnitOfMeasureRepository uomRepository;
+    protected UomJpaRepository uomRepository;
     @Autowired
-    protected BrandRepository brandRepository;
+    protected BrandJpaRepository brandRepository;
 
     @Mapping(target = "categoryName", source = "categoryId", qualifiedByName = "getCategoryName")
     @Mapping(target = "categoryType", source = "categoryId", qualifiedByName = "getCategoryType")

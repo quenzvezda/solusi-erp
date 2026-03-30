@@ -4,6 +4,7 @@ import com.solusi.erp.inventory.grid.application.usecase.command.*;
 import com.solusi.erp.inventory.grid.application.usecase.query.*;
 import com.solusi.erp.inventory.grid.domain.repository.GridRepository;
 import com.solusi.erp.inventory.grid.infrastructure.adapter.GridRepositoryImpl;
+import com.solusi.erp.inventory.grid.infrastructure.persistence.GridJpaRepository;
 import com.solusi.erp.inventory.grid.infrastructure.persistence.GridPersistenceMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +16,7 @@ public class GridConfig {
 
     @Bean
     public GridRepository gridDomainRepository(
-            com.solusi.erp.inventory.repository.GridRepository jpaRepository,
+            GridJpaRepository jpaRepository,
             GridPersistenceMapper mapper) {
         return new GridRepositoryImpl(jpaRepository, mapper);
     }

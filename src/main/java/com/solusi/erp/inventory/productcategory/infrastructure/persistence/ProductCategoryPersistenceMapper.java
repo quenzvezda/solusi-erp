@@ -10,17 +10,17 @@ import org.mapstruct.ReportingPolicy;
 public interface ProductCategoryPersistenceMapper {
 
     @Mapping(target = "metadata", expression = "java(toAuditMetadata(entity))")
-    ProductCategory toDomain(com.solusi.erp.inventory.model.ProductCategory entity);
+    ProductCategory toDomain(ProductCategoryEntity entity);
 
     @Mapping(target = "id", source = "metadata.id")
-    @Mapping(target = "version", source = "metadata.version")
+    @Mapping(target = "version", expression = "java(domain.getMetadata().version() != null ? domain.getMetadata().version().intValue() : null)")
     @Mapping(target = "createdDate", source = "metadata.createdDate")
     @Mapping(target = "createdBy", source = "metadata.createdBy")
     @Mapping(target = "updatedDate", source = "metadata.updatedDate")
     @Mapping(target = "updatedBy", source = "metadata.updatedBy")
-    com.solusi.erp.inventory.model.ProductCategory toEntity(ProductCategory domain);
+    ProductCategoryEntity toEntity(ProductCategory domain);
 
-    default AuditMetadata toAuditMetadata(com.solusi.erp.inventory.model.ProductCategory entity) {
+    default AuditMetadata toAuditMetadata(ProductCategoryEntity entity) {
         return new AuditMetadata(
             entity.getId(),
             entity.getVersion() != null ? entity.getVersion().longValue() : null,

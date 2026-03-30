@@ -1,8 +1,8 @@
 package com.solusi.erp.inventory.uomconversion.application.usecase.command;
 
 import com.solusi.erp.core.exception.DomainException;
-import com.solusi.erp.inventory.model.UnitOfMeasure;
-import com.solusi.erp.inventory.repository.UnitOfMeasureRepository;
+import com.solusi.erp.inventory.uom.infrastructure.persistence.UomEntity;
+import com.solusi.erp.inventory.uom.infrastructure.persistence.UomJpaRepository;
 import com.solusi.erp.inventory.uomconversion.domain.model.UomConversion;
 import com.solusi.erp.inventory.uomconversion.domain.repository.UomConversionRepository;
 
@@ -11,10 +11,10 @@ import java.math.BigDecimal;
 public class UpdateUomConversionUseCaseImpl implements UpdateUomConversionUseCase {
 
     private final UomConversionRepository repository;
-    private final UnitOfMeasureRepository uomRepo;
+    private final UomJpaRepository uomRepo;
 
     public UpdateUomConversionUseCaseImpl(UomConversionRepository repository,
-                                          UnitOfMeasureRepository uomRepo) {
+                                          UomJpaRepository uomRepo) {
         this.repository = repository;
         this.uomRepo = uomRepo;
     }
@@ -28,7 +28,7 @@ public class UpdateUomConversionUseCaseImpl implements UpdateUomConversionUseCas
             throw new DomainException("msg.error.uom-conversion.duplicate");
         }
 
-        UnitOfMeasure fromUom = uomRepo.findById(fromUomId)
+        UomEntity fromUom = uomRepo.findById(fromUomId)
             .orElseThrow(() -> new DomainException("msg.error.uom.not-found"));
 
         existing.update(fromUomId, fromUom.getName(), conversionFactor);

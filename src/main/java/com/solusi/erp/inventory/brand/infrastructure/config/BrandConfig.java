@@ -5,6 +5,7 @@ import com.solusi.erp.inventory.brand.application.usecase.command.*;
 import com.solusi.erp.inventory.brand.application.usecase.query.*;
 import com.solusi.erp.inventory.brand.domain.repository.BrandRepository;
 import com.solusi.erp.inventory.brand.infrastructure.adapter.BrandRepositoryImpl;
+import com.solusi.erp.inventory.brand.infrastructure.persistence.BrandJpaRepository;
 import com.solusi.erp.inventory.brand.infrastructure.persistence.BrandPersistenceMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,7 +21,7 @@ public class BrandConfig {
 
     @Bean
     public BrandRepository brandDomainRepository(
-            com.solusi.erp.inventory.repository.BrandRepository jpaRepository,
+            BrandJpaRepository jpaRepository,
             BrandPersistenceMapper mapper) {
         return new BrandRepositoryImpl(jpaRepository, mapper);
     }

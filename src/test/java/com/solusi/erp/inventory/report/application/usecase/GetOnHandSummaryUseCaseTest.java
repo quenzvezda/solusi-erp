@@ -1,8 +1,8 @@
 package com.solusi.erp.inventory.report.application.usecase;
 
-import com.solusi.erp.inventory.dto.ProductStockSummaryResponse;
+import com.solusi.erp.inventory.report.web.dto.ProductStockSummaryResponse;
 import com.solusi.erp.inventory.report.application.usecase.query.GetOnHandSummaryUseCaseImpl;
-import com.solusi.erp.inventory.repository.StockBalanceRepository;
+import com.solusi.erp.inventory.stock.infrastructure.persistence.StockBalanceJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 class GetOnHandSummaryUseCaseTest {
 
     @Mock
-    private StockBalanceRepository stockBalanceRepository;
+    private StockBalanceJpaRepository stockBalanceRepository;
 
     private GetOnHandSummaryUseCaseImpl useCase;
 

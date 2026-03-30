@@ -5,6 +5,8 @@ import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.inventory.productcategory.domain.model.ProductCategory;
 import com.solusi.erp.inventory.productcategory.domain.repository.ProductCategoryRepository;
+import com.solusi.erp.inventory.productcategory.infrastructure.persistence.ProductCategoryEntity;
+import com.solusi.erp.inventory.productcategory.infrastructure.persistence.ProductCategoryJpaRepository;
 import com.solusi.erp.inventory.productcategory.infrastructure.persistence.ProductCategoryPersistenceMapper;
 import org.springframework.data.domain.PageRequest;
 
@@ -14,20 +16,18 @@ import java.util.stream.Collectors;
 
 public class ProductCategoryRepositoryImpl implements ProductCategoryRepository {
 
-    private final com.solusi.erp.inventory.repository.ProductCategoryRepository jpaRepository;
+    private final ProductCategoryJpaRepository jpaRepository;
     private final ProductCategoryPersistenceMapper mapper;
 
-    public ProductCategoryRepositoryImpl(
-            com.solusi.erp.inventory.repository.ProductCategoryRepository jpaRepository,
-            ProductCategoryPersistenceMapper mapper) {
+    public ProductCategoryRepositoryImpl(ProductCategoryJpaRepository jpaRepository, ProductCategoryPersistenceMapper mapper) {
         this.jpaRepository = jpaRepository;
         this.mapper = mapper;
     }
 
     @Override
     public ProductCategory save(ProductCategory domain) {
-        com.solusi.erp.inventory.model.ProductCategory entity = mapper.toEntity(domain);
-        com.solusi.erp.inventory.model.ProductCategory saved = jpaRepository.save(entity);
+        ProductCategoryEntity entity = mapper.toEntity(domain);
+        ProductCategoryEntity saved = jpaRepository.save(entity);
         return mapper.toDomain(saved);
     }
 
@@ -39,7 +39,7 @@ public class ProductCategoryRepositoryImpl implements ProductCategoryRepository 
     @Override
     public Page<ProductCategory> findAll(String keyword, Pageable pageable) {
         org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
-        org.springframework.data.domain.Page<com.solusi.erp.inventory.model.ProductCategory> springPage =
+        org.springframework.data.domain.Page<ProductCategoryEntity> springPage =
             (keyword != null && !keyword.isBlank())
                 ? jpaRepository.search(keyword, springPageable)
                 : jpaRepository.findAll(springPageable);

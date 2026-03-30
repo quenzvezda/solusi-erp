@@ -1,7 +1,7 @@
 package com.solusi.erp.inventory.productcategory.domain.model;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
-import com.solusi.erp.inventory.model.ProductCategoryType;
+import com.solusi.erp.inventory.productcategory.domain.model.ProductCategoryType;
 
 public class ProductCategory {
     private final AuditMetadata metadata;

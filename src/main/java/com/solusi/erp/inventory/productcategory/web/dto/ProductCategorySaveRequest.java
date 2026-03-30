@@ -1,7 +1,7 @@
 package com.solusi.erp.inventory.productcategory.web.dto;
 
 import com.solusi.erp.core.dto.BaseAuditResponse;
-import com.solusi.erp.inventory.model.ProductCategoryType;
+import com.solusi.erp.inventory.productcategory.domain.model.ProductCategoryType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

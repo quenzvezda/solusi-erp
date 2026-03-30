@@ -1,7 +1,7 @@
 package com.solusi.erp.inventory.uom.domain.model;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
-import com.solusi.erp.inventory.model.UomType;
+import com.solusi.erp.inventory.uom.domain.model.UomType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

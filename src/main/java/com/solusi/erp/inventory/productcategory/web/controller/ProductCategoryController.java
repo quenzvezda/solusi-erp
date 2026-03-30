@@ -5,7 +5,7 @@ import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.core.dto.LookupDto;
-import com.solusi.erp.inventory.model.ProductCategoryType;
+import com.solusi.erp.inventory.productcategory.domain.model.ProductCategoryType;
 import com.solusi.erp.inventory.productcategory.application.usecase.command.*;
 import com.solusi.erp.inventory.productcategory.application.usecase.query.*;
 import com.solusi.erp.inventory.productcategory.domain.model.ProductCategory;

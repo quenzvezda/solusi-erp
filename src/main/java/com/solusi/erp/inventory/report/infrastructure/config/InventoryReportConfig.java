@@ -1,14 +1,14 @@
 package com.solusi.erp.inventory.report.infrastructure.config;
 
-import com.solusi.erp.inventory.mapper.InventoryMovementMapper;
+import com.solusi.erp.inventory.report.web.mapper.InventoryMovementMapper;
 import com.solusi.erp.inventory.report.application.usecase.query.GetOnHandDetailUseCase;
 import com.solusi.erp.inventory.report.application.usecase.query.GetOnHandDetailUseCaseImpl;
 import com.solusi.erp.inventory.report.application.usecase.query.GetOnHandSummaryUseCase;
 import com.solusi.erp.inventory.report.application.usecase.query.GetOnHandSummaryUseCaseImpl;
 import com.solusi.erp.inventory.report.application.usecase.query.GetStockCardUseCase;
 import com.solusi.erp.inventory.report.application.usecase.query.GetStockCardUseCaseImpl;
-import com.solusi.erp.inventory.repository.InventoryMovementRepository;
-import com.solusi.erp.inventory.repository.StockBalanceRepository;
+import com.solusi.erp.inventory.stock.infrastructure.persistence.InventoryMovementJpaRepository;
+import com.solusi.erp.inventory.stock.infrastructure.persistence.StockBalanceJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,8 +23,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 @RequiredArgsConstructor
 public class InventoryReportConfig {
 
-    private final StockBalanceRepository stockBalanceRepository;
-    private final InventoryMovementRepository inventoryMovementRepository;
+    private final StockBalanceJpaRepository stockBalanceRepository;
+    private final InventoryMovementJpaRepository inventoryMovementRepository;
     private final InventoryMovementMapper inventoryMovementMapper;
     private final PlatformTransactionManager txManager;
 

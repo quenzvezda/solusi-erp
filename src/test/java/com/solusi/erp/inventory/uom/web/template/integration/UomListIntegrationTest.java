@@ -1,7 +1,7 @@
 package com.solusi.erp.inventory.uom.web.template.integration;
 
 import com.solusi.erp.inventory.uom.web.dto.UomSummaryResponse;
-import com.solusi.erp.inventory.model.UomType;
+import com.solusi.erp.inventory.uom.domain.model.UomType;
 import com.solusi.erp.testutils.TemplateTestUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;

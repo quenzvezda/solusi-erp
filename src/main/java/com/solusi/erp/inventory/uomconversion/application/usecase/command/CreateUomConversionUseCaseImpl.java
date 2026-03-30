@@ -1,10 +1,10 @@
 package com.solusi.erp.inventory.uomconversion.application.usecase.command;
 
 import com.solusi.erp.core.exception.DomainException;
-import com.solusi.erp.inventory.model.UnitOfMeasure;
+import com.solusi.erp.inventory.uom.infrastructure.persistence.UomEntity;
+import com.solusi.erp.inventory.uom.infrastructure.persistence.UomJpaRepository;
 import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import com.solusi.erp.inventory.product.infrastructure.persistence.ProductEntity;
-import com.solusi.erp.inventory.repository.UnitOfMeasureRepository;
 import com.solusi.erp.inventory.uomconversion.domain.model.UomConversion;
 import com.solusi.erp.inventory.uomconversion.domain.repository.UomConversionRepository;
 
@@ -14,11 +14,11 @@ public class CreateUomConversionUseCaseImpl implements CreateUomConversionUseCas
 
     private final UomConversionRepository repository;
     private final JpaProductRepository productRepo;
-    private final UnitOfMeasureRepository uomRepo;
+    private final UomJpaRepository uomRepo;
 
     public CreateUomConversionUseCaseImpl(UomConversionRepository repository,
                                           JpaProductRepository productRepo,
-                                          UnitOfMeasureRepository uomRepo) {
+                                          UomJpaRepository uomRepo) {
         this.repository = repository;
         this.productRepo = productRepo;
         this.uomRepo = uomRepo;
@@ -29,8 +29,8 @@ public class CreateUomConversionUseCaseImpl implements CreateUomConversionUseCas
         ProductEntity product = productRepo.findById(productId)
             .orElseThrow(() -> new DomainException("msg.error.product.not-found"));
 
-        UnitOfMeasure baseUom = product.getUom();
-        if (fromUomId.equals(baseUom.getId())) {
+        Long baseUomId = product.getUomId();
+        if (fromUomId.equals(baseUomId)) {
             throw new DomainException("msg.error.uom-conversion.self-conversion");
         }
 
@@ -38,13 +38,16 @@ public class CreateUomConversionUseCaseImpl implements CreateUomConversionUseCas
             throw new DomainException("msg.error.uom-conversion.duplicate");
         }
 
-        UnitOfMeasure fromUom = uomRepo.findById(fromUomId)
+        UomEntity baseUom = uomRepo.findById(baseUomId)
+            .orElseThrow(() -> new DomainException("msg.error.uom.not-found"));
+
+        UomEntity fromUom = uomRepo.findById(fromUomId)
             .orElseThrow(() -> new DomainException("msg.error.uom.not-found"));
 
         UomConversion domain = UomConversion.createNew(
             productId, product.getCode(), product.getName(),
             fromUomId, fromUom.getName(),
-            baseUom.getId(), baseUom.getName(),
+            baseUomId, baseUom.getName(),
             conversionFactor
         );
 

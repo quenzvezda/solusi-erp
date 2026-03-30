@@ -6,25 +6,21 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
-/**
- * MapStruct Persistence Mapper for UnitOfMeasure module.
- * Maps between JPA entity (com.solusi.erp.inventory.model.UnitOfMeasure) and pure domain model.
- */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UomPersistenceMapper {
 
     @Mapping(target = "metadata", expression = "java(toAuditMetadata(entity))")
-    UnitOfMeasure toDomain(com.solusi.erp.inventory.model.UnitOfMeasure entity);
+    UnitOfMeasure toDomain(UomEntity entity);
 
     @Mapping(target = "id", source = "metadata.id")
-    @Mapping(target = "version", source = "metadata.version")
+    @Mapping(target = "version", expression = "java(domain.getMetadata().version() != null ? domain.getMetadata().version().intValue() : null)")
     @Mapping(target = "createdDate", source = "metadata.createdDate")
     @Mapping(target = "createdBy", source = "metadata.createdBy")
     @Mapping(target = "updatedDate", source = "metadata.updatedDate")
     @Mapping(target = "updatedBy", source = "metadata.updatedBy")
-    com.solusi.erp.inventory.model.UnitOfMeasure toEntity(UnitOfMeasure domain);
+    UomEntity toEntity(UnitOfMeasure domain);
 
-    default AuditMetadata toAuditMetadata(com.solusi.erp.inventory.model.UnitOfMeasure entity) {
+    default AuditMetadata toAuditMetadata(UomEntity entity) {
         return new AuditMetadata(
             entity.getId(),
             entity.getVersion() != null ? entity.getVersion().longValue() : null,

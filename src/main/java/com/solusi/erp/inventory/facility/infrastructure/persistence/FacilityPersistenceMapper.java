@@ -18,7 +18,7 @@ public class FacilityPersistenceMapper {
         this.partyRepository = partyRepository;
     }
 
-    public Facility toDomain(com.solusi.erp.inventory.model.Facility entity) {
+    public Facility toDomain(FacilityEntity entity) {
         if (entity == null) return null;
         AuditMetadata metadata = new AuditMetadata(
             entity.getId(),
@@ -38,9 +38,9 @@ public class FacilityPersistenceMapper {
             addressLine1, cityId, cityName, postalCode, entity.getNote(), entity.getIsActive());
     }
 
-    public com.solusi.erp.inventory.model.Facility toEntity(Facility domain) {
+    public FacilityEntity toEntity(Facility domain) {
         if (domain == null) return null;
-        com.solusi.erp.inventory.model.Facility entity = new com.solusi.erp.inventory.model.Facility();
+        FacilityEntity entity = new FacilityEntity();
         if (domain.getMetadata().id() != null) entity.setId(domain.getMetadata().id());
         if (domain.getMetadata().version() != null) entity.setVersion(domain.getMetadata().version().intValue());
         entity.setCode(domain.getCode());

@@ -4,6 +4,8 @@ import com.solusi.erp.inventory.adjustment.domain.model.AdjustmentStatus;
 import com.solusi.erp.inventory.adjustment.domain.model.StockAdjustment;
 import com.solusi.erp.inventory.adjustment.domain.model.StockAdjustmentLineItem;
 import com.solusi.erp.inventory.adjustment.domain.repository.StockAdjustmentRepository;
+import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityEntity;
+import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityJpaRepository;
 import com.solusi.erp.master.currency.domain.repository.CurrencyRepository;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -16,17 +18,17 @@ import java.util.stream.Collectors;
 public class UpdateStockAdjustmentUseCaseImpl implements UpdateStockAdjustmentUseCase {
 
     private final StockAdjustmentRepository repository;
-    private final com.solusi.erp.inventory.repository.FacilityRepository facilityRepository;
+    private final FacilityJpaRepository facilityJpaRepository;
     private final CurrencyRepository currencyRepository;
     private final MessageSource messageSource;
 
     public UpdateStockAdjustmentUseCaseImpl(
             StockAdjustmentRepository repository,
-            com.solusi.erp.inventory.repository.FacilityRepository facilityRepository,
+            FacilityJpaRepository facilityJpaRepository,
             CurrencyRepository currencyRepository,
             MessageSource messageSource) {
         this.repository = repository;
-        this.facilityRepository = facilityRepository;
+        this.facilityJpaRepository = facilityJpaRepository;
         this.currencyRepository = currencyRepository;
         this.messageSource = messageSource;
     }
@@ -43,7 +45,7 @@ public class UpdateStockAdjustmentUseCaseImpl implements UpdateStockAdjustmentUs
                     messageSource.getMessage("msg.error.stock-adjustment.already-completed", null, LocaleContextHolder.getLocale()));
         }
 
-        com.solusi.erp.inventory.model.Facility facility = facilityRepository.findById(facilityId)
+        FacilityEntity facility = facilityJpaRepository.findById(facilityId)
                 .orElseThrow(() -> new RuntimeException(
                         messageSource.getMessage("msg.error.notfound", null, LocaleContextHolder.getLocale())));
         String facilityName = facility.getName();

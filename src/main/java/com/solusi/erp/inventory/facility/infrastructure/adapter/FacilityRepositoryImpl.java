@@ -5,6 +5,8 @@ import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.inventory.facility.domain.model.Facility;
 import com.solusi.erp.inventory.facility.domain.repository.FacilityRepository;
+import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityEntity;
+import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityJpaRepository;
 import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityPersistenceMapper;
 import org.springframework.data.domain.PageRequest;
 
@@ -14,11 +16,11 @@ import java.util.stream.Collectors;
 
 public class FacilityRepositoryImpl implements FacilityRepository {
 
-    private final com.solusi.erp.inventory.repository.FacilityRepository jpaRepository;
+    private final FacilityJpaRepository jpaRepository;
     private final FacilityPersistenceMapper mapper;
 
     public FacilityRepositoryImpl(
-            com.solusi.erp.inventory.repository.FacilityRepository jpaRepository,
+            FacilityJpaRepository jpaRepository,
             FacilityPersistenceMapper mapper) {
         this.jpaRepository = jpaRepository;
         this.mapper = mapper;
@@ -26,9 +28,8 @@ public class FacilityRepositoryImpl implements FacilityRepository {
 
     @Override
     public Facility save(Facility domain) {
-        com.solusi.erp.inventory.model.Facility entity = mapper.toEntity(domain);
-        com.solusi.erp.inventory.model.Facility saved = jpaRepository.saveAndFlush(entity);
-        // Reload to ensure lazy associations (owner, address.city) are available
+        FacilityEntity entity = mapper.toEntity(domain);
+        FacilityEntity saved = jpaRepository.saveAndFlush(entity);
         return jpaRepository.findById(saved.getId()).map(mapper::toDomain)
             .orElseThrow(() -> new IllegalStateException("Failed to reload saved Facility"));
     }
@@ -41,7 +42,7 @@ public class FacilityRepositoryImpl implements FacilityRepository {
     @Override
     public Page<Facility> findAll(String keyword, Pageable pageable) {
         org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
-        org.springframework.data.domain.Page<com.solusi.erp.inventory.model.Facility> springPage =
+        org.springframework.data.domain.Page<FacilityEntity> springPage =
             (keyword != null && !keyword.isBlank())
                 ? jpaRepository.search(keyword, springPageable)
                 : jpaRepository.findAll(springPageable);

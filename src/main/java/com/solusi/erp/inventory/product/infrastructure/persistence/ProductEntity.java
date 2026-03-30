@@ -1,9 +1,6 @@
 package com.solusi.erp.inventory.product.infrastructure.persistence;
 
 import com.solusi.erp.core.model.BaseModel;
-import com.solusi.erp.inventory.model.Brand;
-import com.solusi.erp.inventory.model.ProductCategory;
-import com.solusi.erp.inventory.model.UnitOfMeasure;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,17 +28,14 @@ public class ProductEntity extends BaseModel {
     @Column(columnDefinition = "TEXT")
     private String note;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
-    private ProductCategory category;
+    @Column(name = "category_id", nullable = false)
+    private Long categoryId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "uom_id", nullable = false)
-    private UnitOfMeasure uom;
+    @Column(name = "uom_id", nullable = false)
+    private Long uomId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "brand_id")
-    private Brand brand;
+    @Column(name = "brand_id")
+    private Long brandId;
 
     @Column(length = 50)
     private String hscode;
@@ -64,9 +58,8 @@ public class ProductEntity extends BaseModel {
     @Column(name = "weight_gross", precision = 19, scale = 4)
     private BigDecimal weightGross = BigDecimal.ZERO;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "weight_uom_id")
-    private UnitOfMeasure weightUom;
+    @Column(name = "weight_uom_id")
+    private Long weightUomId;
 
     @Column(name = "dim_length", precision = 19, scale = 4)
     private BigDecimal length = BigDecimal.ZERO;
@@ -77,7 +70,6 @@ public class ProductEntity extends BaseModel {
     @Column(name = "dim_height", precision = 19, scale = 4)
     private BigDecimal height = BigDecimal.ZERO;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "dim_uom_id")
-    private UnitOfMeasure dimensionUom;
+    @Column(name = "dim_uom_id")
+    private Long dimensionUomId;
 }

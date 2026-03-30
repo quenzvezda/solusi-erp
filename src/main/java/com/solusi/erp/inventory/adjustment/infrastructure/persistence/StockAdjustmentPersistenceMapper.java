@@ -4,6 +4,16 @@ import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.inventory.adjustment.domain.model.AdjustmentStatus;
 import com.solusi.erp.inventory.adjustment.domain.model.StockAdjustment;
 import com.solusi.erp.inventory.adjustment.domain.model.StockAdjustmentLineItem;
+import com.solusi.erp.inventory.container.infrastructure.persistence.ContainerEntity;
+import com.solusi.erp.inventory.container.infrastructure.persistence.ContainerJpaRepository;
+import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityEntity;
+import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityJpaRepository;
+import com.solusi.erp.inventory.grid.infrastructure.persistence.GridEntity;
+import com.solusi.erp.inventory.grid.infrastructure.persistence.GridJpaRepository;
+import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
+import com.solusi.erp.inventory.product.infrastructure.persistence.ProductEntity;
+import com.solusi.erp.inventory.uom.infrastructure.persistence.UomEntity;
+import com.solusi.erp.inventory.uom.infrastructure.persistence.UomJpaRepository;
 import com.solusi.erp.master.currency.domain.repository.CurrencyRepository;
 
 import java.math.BigDecimal;
@@ -13,17 +23,32 @@ import java.util.stream.Collectors;
 
 /**
  * Manual persistence mapper — bidirectional between JPA entity and domain model.
- * Uses plain Java navigation with null-safety for optional associations.
+ * Uses Long IDs and resolves names via local slice JPA repositories.
  */
 public class StockAdjustmentPersistenceMapper {
 
     private final CurrencyRepository currencyRepository;
+    private final FacilityJpaRepository facilityJpaRepository;
+    private final JpaProductRepository productJpaRepository;
+    private final GridJpaRepository gridJpaRepository;
+    private final ContainerJpaRepository containerJpaRepository;
+    private final UomJpaRepository uomJpaRepository;
 
-    public StockAdjustmentPersistenceMapper(CurrencyRepository currencyRepository) {
+    public StockAdjustmentPersistenceMapper(CurrencyRepository currencyRepository,
+                                            FacilityJpaRepository facilityJpaRepository,
+                                            JpaProductRepository productJpaRepository,
+                                            GridJpaRepository gridJpaRepository,
+                                            ContainerJpaRepository containerJpaRepository,
+                                            UomJpaRepository uomJpaRepository) {
         this.currencyRepository = currencyRepository;
+        this.facilityJpaRepository = facilityJpaRepository;
+        this.productJpaRepository = productJpaRepository;
+        this.gridJpaRepository = gridJpaRepository;
+        this.containerJpaRepository = containerJpaRepository;
+        this.uomJpaRepository = uomJpaRepository;
     }
 
-    public StockAdjustment toDomain(com.solusi.erp.inventory.model.StockAdjustment e) {
+    public StockAdjustment toDomain(StockAdjustmentEntity e) {
         if (e == null) return null;
 
         Long versionLong = (e.getVersion() != null) ? e.getVersion().longValue() : null;
@@ -31,8 +56,7 @@ public class StockAdjustmentPersistenceMapper {
                 e.getId(), versionLong, e.getCreatedDate(), e.getCreatedBy(),
                 e.getUpdatedDate(), e.getUpdatedBy());
 
-        Long facilityId = (e.getFacility() != null) ? e.getFacility().getId() : null;
-        String facilityName = (e.getFacility() != null) ? e.getFacility().getName() : null;
+        String facilityName = resolveFacilityName(e.getFacilityId());
 
         Long currencyId = null;
         String currencyAlias = null;
@@ -48,7 +72,7 @@ public class StockAdjustmentPersistenceMapper {
         }
 
         AdjustmentStatus status = (e.getStatus() != null)
-                ? AdjustmentStatus.valueOf(e.getStatus().name())
+                ? e.getStatus()
                 : AdjustmentStatus.DRAFT;
 
         List<StockAdjustmentLineItem> lines = (e.getLines() != null)
@@ -56,47 +80,72 @@ public class StockAdjustmentPersistenceMapper {
                 : new ArrayList<>();
 
         return new StockAdjustment(metadata, e.getCode(), e.getTransactionDate(), status, e.getNote(),
-                facilityId, facilityName, currencyId, currencyAlias, exchangeRate,
+                e.getFacilityId(), facilityName, currencyId, currencyAlias, exchangeRate,
                 totalOriginal, totalLocal, lines);
     }
 
+    private String resolveFacilityName(Long facilityId) {
+        if (facilityId == null) return null;
+        return facilityJpaRepository.findById(facilityId).map(FacilityEntity::getName).orElse(null);
+    }
+
     private String resolveCurrencyAlias(Long currencyId) {
-        if (currencyId == null) {
-            return null;
-        }
+        if (currencyId == null) return null;
         return currencyRepository.findById(currencyId).map(c -> c.getAlias()).orElse(null);
     }
 
-    private StockAdjustmentLineItem toLineItemDomain(com.solusi.erp.inventory.model.StockAdjustmentLine l) {
+    private StockAdjustmentLineItem toLineItemDomain(StockAdjustmentLineEntity l) {
         if (l == null) return null;
 
-        Long productId = l.getProduct() != null ? l.getProduct().getId() : null;
-        String productCode = l.getProduct() != null ? l.getProduct().getCode() : null;
-        String productName = l.getProduct() != null ? l.getProduct().getName() : null;
-        Boolean isSerialized = l.getProduct() != null ? l.getProduct().getIsSerialized() : null;
-
-        Long gridId = l.getGrid() != null ? l.getGrid().getId() : null;
-        String gridCode = l.getGrid() != null ? l.getGrid().getCode() : null;
-        String gridName = l.getGrid() != null ? l.getGrid().getName() : null;
-
-        Long containerId = l.getContainer() != null ? l.getContainer().getId() : null;
-        String containerCode = l.getContainer() != null ? l.getContainer().getCode() : null;
-        String containerName = l.getContainer() != null ? l.getContainer().getName() : null;
-
-        String facilityName = null;
-        if (l.getContainer() != null && l.getContainer().getGrid() != null
-                && l.getContainer().getGrid().getFacility() != null) {
-            facilityName = l.getContainer().getGrid().getFacility().getName();
+        String productCode = null;
+        String productName = null;
+        Boolean isSerialized = null;
+        if (l.getProductId() != null) {
+            ProductEntity p = productJpaRepository.findById(l.getProductId()).orElse(null);
+            if (p != null) {
+                productCode = p.getCode();
+                productName = p.getName();
+                isSerialized = p.getIsSerialized();
+            }
         }
 
-        Long uomId = l.getUom() != null ? l.getUom().getId() : null;
-        String uomName = l.getUom() != null ? l.getUom().getName() : null;
+        String gridCode = null;
+        String gridName = null;
+        if (l.getGridId() != null) {
+            GridEntity g = gridJpaRepository.findById(l.getGridId()).orElse(null);
+            if (g != null) {
+                gridCode = g.getCode();
+                gridName = g.getName();
+            }
+        }
 
-        Long lineVersion = l.getVersion() != null ? l.getVersion().longValue() : null;
+        String containerCode = null;
+        String containerName = null;
+        String facilityName = null;
+        if (l.getContainerId() != null) {
+            ContainerEntity c = containerJpaRepository.findById(l.getContainerId()).orElse(null);
+            if (c != null) {
+                containerCode = c.getCode();
+                containerName = c.getName();
+                if (c.getGridId() != null) {
+                    GridEntity cg = gridJpaRepository.findById(c.getGridId()).orElse(null);
+                    if (cg != null && cg.getFacilityId() != null) {
+                        facilityName = facilityJpaRepository.findById(cg.getFacilityId())
+                                .map(FacilityEntity::getName).orElse(null);
+                    }
+                }
+            }
+        }
 
-        return new StockAdjustmentLineItem(l.getId(), l.getVersion(), productId, productCode, productName,
-                isSerialized, gridId, gridCode, gridName, containerId, containerCode, containerName,
-                facilityName, uomId, uomName, l.getConversionFactor(), l.getQuantity(),
-                l.getUnitCost(), l.getTotalAmount(), l.getSerialNumber());
+        String uomName = null;
+        if (l.getUomId() != null) {
+            uomName = uomJpaRepository.findById(l.getUomId()).map(UomEntity::getName).orElse(null);
+        }
+
+        return new StockAdjustmentLineItem(l.getId(), l.getVersion(), l.getProductId(), productCode,
+                productName, isSerialized, l.getGridId(), gridCode, gridName, l.getContainerId(),
+                containerCode, containerName, facilityName, l.getUomId(), uomName,
+                l.getConversionFactor(), l.getQuantity(), l.getUnitCost(), l.getTotalAmount(),
+                l.getSerialNumber());
     }
 }

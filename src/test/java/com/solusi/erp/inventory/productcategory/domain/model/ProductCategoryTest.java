@@ -1,7 +1,7 @@
 package com.solusi.erp.inventory.productcategory.domain.model;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
-import com.solusi.erp.inventory.model.ProductCategoryType;
+import com.solusi.erp.inventory.productcategory.domain.model.ProductCategoryType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

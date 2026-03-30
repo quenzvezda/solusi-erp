@@ -2,11 +2,10 @@ package com.solusi.erp.inventory.uomconversion.application.usecase;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.exception.DomainException;
-import com.solusi.erp.inventory.model.UnitOfMeasure;
-import com.solusi.erp.inventory.model.UomType;
+import com.solusi.erp.inventory.uom.infrastructure.persistence.UomEntity;
+import com.solusi.erp.inventory.uom.infrastructure.persistence.UomJpaRepository;
 import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import com.solusi.erp.inventory.product.infrastructure.persistence.ProductEntity;
-import com.solusi.erp.inventory.repository.UnitOfMeasureRepository;
 import com.solusi.erp.inventory.uomconversion.application.usecase.command.CreateUomConversionUseCaseImpl;
 import com.solusi.erp.inventory.uomconversion.domain.model.UomConversion;
 import com.solusi.erp.inventory.uomconversion.domain.repository.UomConversionRepository;
@@ -29,35 +28,40 @@ class CreateUomConversionUseCaseTest {
 
     @Mock UomConversionRepository repository;
     @Mock JpaProductRepository productRepo;
-    @Mock UnitOfMeasureRepository uomRepo;
+    @Mock UomJpaRepository uomRepo;
 
     CreateUomConversionUseCaseImpl useCase;
 
     private ProductEntity mockProduct;
-    private UnitOfMeasure baseUom;
-    private UnitOfMeasure fromUom;
+    private UomEntity baseUom;
+    private UomEntity fromUom;
 
     @BeforeEach
     void setUp() {
         useCase = new CreateUomConversionUseCaseImpl(repository, productRepo, uomRepo);
 
-        baseUom = new UnitOfMeasure("PCS", "Pieces", UomType.UNIT);
+        baseUom = new UomEntity();
         setField(baseUom, "id", 10L);
+        baseUom.setCode("PCS");
+        baseUom.setName("Pieces");
 
-        fromUom = new UnitOfMeasure("BOX", "Box", UomType.UNIT);
+        fromUom = new UomEntity();
         setField(fromUom, "id", 20L);
+        fromUom.setCode("BOX");
+        fromUom.setName("Box");
 
         mockProduct = new ProductEntity();
         setField(mockProduct, "id", 1L);
         mockProduct.setCode("PRD-001");
         mockProduct.setName("Product 1");
-        mockProduct.setUom(baseUom);
+        mockProduct.setUomId(10L);
     }
 
     @Test
     void execute_success() {
         when(productRepo.findById(1L)).thenReturn(Optional.of(mockProduct));
         when(repository.existsByProductIdAndFromUomId(1L, 20L)).thenReturn(false);
+        when(uomRepo.findById(10L)).thenReturn(Optional.of(baseUom));
         when(uomRepo.findById(20L)).thenReturn(Optional.of(fromUom));
 
         UomConversion saved = new UomConversion(
@@ -95,6 +99,7 @@ class CreateUomConversionUseCaseTest {
     void execute_invalidFactor_shouldThrow() {
         when(productRepo.findById(1L)).thenReturn(Optional.of(mockProduct));
         when(repository.existsByProductIdAndFromUomId(1L, 20L)).thenReturn(false);
+        when(uomRepo.findById(10L)).thenReturn(Optional.of(baseUom));
         when(uomRepo.findById(20L)).thenReturn(Optional.of(fromUom));
 
         assertThatThrownBy(() -> useCase.execute(1L, 20L, BigDecimal.ZERO))

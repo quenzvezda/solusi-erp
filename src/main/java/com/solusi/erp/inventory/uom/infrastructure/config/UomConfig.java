@@ -1,10 +1,11 @@
 package com.solusi.erp.inventory.uom.infrastructure.config;
 
-import com.solusi.erp.inventory.model.UomType;
+import com.solusi.erp.inventory.uom.domain.model.UomType;
 import com.solusi.erp.inventory.uom.application.usecase.command.*;
 import com.solusi.erp.inventory.uom.application.usecase.query.*;
 import com.solusi.erp.inventory.uom.domain.repository.UomRepository;
 import com.solusi.erp.inventory.uom.infrastructure.adapter.UomRepositoryImpl;
+import com.solusi.erp.inventory.uom.infrastructure.persistence.UomJpaRepository;
 import com.solusi.erp.inventory.uom.infrastructure.persistence.UomPersistenceMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,7 +23,7 @@ public class UomConfig {
 
     @Bean
     public UomRepository uomDomainRepository(
-            com.solusi.erp.inventory.repository.UnitOfMeasureRepository jpaRepository,
+            UomJpaRepository jpaRepository,
             UomPersistenceMapper mapper) {
         return new UomRepositoryImpl(jpaRepository, mapper);
     }

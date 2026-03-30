@@ -1,7 +1,7 @@
 package com.solusi.erp.inventory.uom.application.usecase.command;
 
 import com.solusi.erp.core.exception.DomainException;
-import com.solusi.erp.inventory.model.UomType;
+import com.solusi.erp.inventory.uom.domain.model.UomType;
 import com.solusi.erp.inventory.uom.domain.model.UnitOfMeasure;
 import com.solusi.erp.inventory.uom.domain.repository.UomRepository;
 

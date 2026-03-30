@@ -6,9 +6,10 @@ import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.inventory.adjustment.domain.model.StockAdjustment;
 import com.solusi.erp.inventory.adjustment.domain.model.StockAdjustmentLineItem;
 import com.solusi.erp.inventory.adjustment.domain.repository.StockAdjustmentRepository;
+import com.solusi.erp.inventory.adjustment.infrastructure.persistence.StockAdjustmentEntity;
+import com.solusi.erp.inventory.adjustment.infrastructure.persistence.StockAdjustmentJpaRepository;
+import com.solusi.erp.inventory.adjustment.infrastructure.persistence.StockAdjustmentLineEntity;
 import com.solusi.erp.inventory.adjustment.infrastructure.persistence.StockAdjustmentPersistenceMapper;
-import com.solusi.erp.inventory.model.StockAdjustmentLine;
-import org.springframework.data.domain.PageRequest;
 
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -18,35 +19,20 @@ import java.util.stream.Collectors;
  */
 public class StockAdjustmentRepositoryImpl implements StockAdjustmentRepository {
 
-    private final com.solusi.erp.inventory.repository.StockAdjustmentRepository jpaRepository;
-    private final com.solusi.erp.inventory.repository.FacilityRepository facilityRepository;
-    private final com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository productRepository;
-    private final com.solusi.erp.inventory.repository.ContainerRepository containerRepository;
-    private final com.solusi.erp.inventory.repository.GridRepository gridRepository;
-    private final com.solusi.erp.inventory.repository.UnitOfMeasureRepository uomRepository;
+    private final StockAdjustmentJpaRepository jpaRepository;
     private final StockAdjustmentPersistenceMapper mapper;
 
     public StockAdjustmentRepositoryImpl(
-            com.solusi.erp.inventory.repository.StockAdjustmentRepository jpaRepository,
-            com.solusi.erp.inventory.repository.FacilityRepository facilityRepository,
-            com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository productRepository,
-            com.solusi.erp.inventory.repository.ContainerRepository containerRepository,
-            com.solusi.erp.inventory.repository.GridRepository gridRepository,
-            com.solusi.erp.inventory.repository.UnitOfMeasureRepository uomRepository,
+            StockAdjustmentJpaRepository jpaRepository,
             StockAdjustmentPersistenceMapper mapper) {
         this.jpaRepository = jpaRepository;
-        this.facilityRepository = facilityRepository;
-        this.productRepository = productRepository;
-        this.containerRepository = containerRepository;
-        this.gridRepository = gridRepository;
-        this.uomRepository = uomRepository;
         this.mapper = mapper;
     }
 
     @Override
     public Page<StockAdjustment> findAll(String keyword, Pageable pageable) {
         org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
-        org.springframework.data.domain.Page<com.solusi.erp.inventory.model.StockAdjustment> springPage =
+        org.springframework.data.domain.Page<StockAdjustmentEntity> springPage =
                 (keyword != null && !keyword.isBlank())
                         ? jpaRepository.search(keyword, springPageable)
                         : jpaRepository.findAll(springPageable);
@@ -70,11 +56,11 @@ public class StockAdjustmentRepositoryImpl implements StockAdjustmentRepository 
 
     @Override
     public StockAdjustment save(StockAdjustment domain) {
-        com.solusi.erp.inventory.model.StockAdjustment entity;
+        StockAdjustmentEntity entity;
         Long domainId = domain.getMetadata().id();
 
         if (domainId == null) {
-            entity = new com.solusi.erp.inventory.model.StockAdjustment();
+            entity = new StockAdjustmentEntity();
         } else {
             entity = jpaRepository.findById(domainId)
                     .orElseThrow(() -> new RuntimeException("StockAdjustment not found: " + domainId));
@@ -82,9 +68,9 @@ public class StockAdjustmentRepositoryImpl implements StockAdjustmentRepository 
 
         entity.setCode(domain.getCode());
         entity.setTransactionDate(domain.getTransactionDate());
-        entity.setStatus(com.solusi.erp.inventory.model.StockAdjustment.AdjustmentStatus.valueOf(domain.getStatus().name()));
+        entity.setStatus(domain.getStatus());
         entity.setNote(domain.getNote());
-        entity.setFacility(facilityRepository.getReferenceById(domain.getFacilityId()));
+        entity.setFacilityId(domain.getFacilityId());
 
         entity.getTotalCost().setCurrencyId(domain.getCurrencyId());
         entity.getTotalCost().setExchangeRate(domain.getExchangeRate());
@@ -93,16 +79,12 @@ public class StockAdjustmentRepositoryImpl implements StockAdjustmentRepository 
 
         entity.getLines().clear();
         for (StockAdjustmentLineItem lineItem : domain.getLines()) {
-            StockAdjustmentLine line = new StockAdjustmentLine();
+            StockAdjustmentLineEntity line = new StockAdjustmentLineEntity();
             line.setHeader(entity);
-            line.setProduct(productRepository.getReferenceById(lineItem.getProductId()));
-            line.setContainer(containerRepository.getReferenceById(lineItem.getContainerId()));
-            if (lineItem.getGridId() != null) {
-                line.setGrid(gridRepository.getReferenceById(lineItem.getGridId()));
-            }
-            if (lineItem.getUomId() != null) {
-                line.setUom(uomRepository.getReferenceById(lineItem.getUomId()));
-            }
+            line.setProductId(lineItem.getProductId());
+            line.setContainerId(lineItem.getContainerId());
+            line.setGridId(lineItem.getGridId());
+            line.setUomId(lineItem.getUomId());
             line.setConversionFactor(lineItem.getConversionFactor());
             line.setQuantity(lineItem.getQuantity());
             line.setUnitCost(lineItem.getUnitCost());
@@ -111,7 +93,7 @@ public class StockAdjustmentRepositoryImpl implements StockAdjustmentRepository 
             entity.getLines().add(line);
         }
 
-        com.solusi.erp.inventory.model.StockAdjustment saved = jpaRepository.save(entity);
+        StockAdjustmentEntity saved = jpaRepository.save(entity);
         return mapper.toDomain(saved);
     }
 }

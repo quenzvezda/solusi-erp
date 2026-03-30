@@ -3,9 +3,11 @@ package com.solusi.erp.inventory.uom.infrastructure.adapter;
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
-import com.solusi.erp.inventory.model.UomType;
+import com.solusi.erp.inventory.uom.domain.model.UomType;
 import com.solusi.erp.inventory.uom.domain.model.UnitOfMeasure;
 import com.solusi.erp.inventory.uom.domain.repository.UomRepository;
+import com.solusi.erp.inventory.uom.infrastructure.persistence.UomEntity;
+import com.solusi.erp.inventory.uom.infrastructure.persistence.UomJpaRepository;
 import com.solusi.erp.inventory.uom.infrastructure.persistence.UomPersistenceMapper;
 import org.springframework.data.domain.PageRequest;
 
@@ -13,26 +15,20 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/**
- * Adapter implementation of UomRepository.
- * Bridges Domain and Infrastructure Persistence.
- */
 public class UomRepositoryImpl implements UomRepository {
 
-    private final com.solusi.erp.inventory.repository.UnitOfMeasureRepository jpaRepository;
+    private final UomJpaRepository jpaRepository;
     private final UomPersistenceMapper mapper;
 
-    public UomRepositoryImpl(
-            com.solusi.erp.inventory.repository.UnitOfMeasureRepository jpaRepository,
-            UomPersistenceMapper mapper) {
+    public UomRepositoryImpl(UomJpaRepository jpaRepository, UomPersistenceMapper mapper) {
         this.jpaRepository = jpaRepository;
         this.mapper = mapper;
     }
 
     @Override
     public UnitOfMeasure save(UnitOfMeasure domain) {
-        com.solusi.erp.inventory.model.UnitOfMeasure entity = mapper.toEntity(domain);
-        com.solusi.erp.inventory.model.UnitOfMeasure saved = jpaRepository.save(entity);
+        UomEntity entity = mapper.toEntity(domain);
+        UomEntity saved = jpaRepository.save(entity);
         return mapper.toDomain(saved);
     }
 
@@ -44,7 +40,7 @@ public class UomRepositoryImpl implements UomRepository {
     @Override
     public Page<UnitOfMeasure> findAll(String keyword, Pageable pageable) {
         org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
-        org.springframework.data.domain.Page<com.solusi.erp.inventory.model.UnitOfMeasure> springPage =
+        org.springframework.data.domain.Page<UomEntity> springPage =
             (keyword != null && !keyword.isBlank())
                 ? jpaRepository.search(keyword, springPageable)
                 : jpaRepository.findAll(springPageable);

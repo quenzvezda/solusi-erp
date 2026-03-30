@@ -1,6 +1,6 @@
 package com.solusi.erp.inventory.report.application.usecase.query;
 
-import com.solusi.erp.inventory.dto.ProductStockSummaryResponse;
+import com.solusi.erp.inventory.report.web.dto.ProductStockSummaryResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

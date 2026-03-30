@@ -3,7 +3,7 @@ package com.solusi.erp.inventory.productcategory.application.usecase.query;
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.exception.DomainException;
-import com.solusi.erp.inventory.model.ProductCategoryType;
+import com.solusi.erp.inventory.productcategory.domain.model.ProductCategoryType;
 import com.solusi.erp.inventory.productcategory.domain.model.ProductCategory;
 import com.solusi.erp.inventory.productcategory.domain.repository.ProductCategoryRepository;
 import org.junit.jupiter.api.BeforeEach;

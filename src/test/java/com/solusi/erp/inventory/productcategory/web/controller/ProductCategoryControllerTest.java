@@ -10,7 +10,7 @@ import com.solusi.erp.inventory.productcategory.application.usecase.query.GetPro
 import com.solusi.erp.inventory.productcategory.domain.model.ProductCategory;
 import com.solusi.erp.inventory.productcategory.web.dto.ProductCategorySummaryResponse;
 import com.solusi.erp.inventory.productcategory.web.mapper.ProductCategoryWebMapper;
-import com.solusi.erp.inventory.model.ProductCategoryType;
+import com.solusi.erp.inventory.productcategory.domain.model.ProductCategoryType;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.MessageSource;
 import org.springframework.ui.ExtendedModelMap;

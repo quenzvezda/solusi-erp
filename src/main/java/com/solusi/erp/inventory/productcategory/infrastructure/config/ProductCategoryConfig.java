@@ -5,6 +5,7 @@ import com.solusi.erp.inventory.productcategory.application.usecase.command.*;
 import com.solusi.erp.inventory.productcategory.application.usecase.query.*;
 import com.solusi.erp.inventory.productcategory.domain.repository.ProductCategoryRepository;
 import com.solusi.erp.inventory.productcategory.infrastructure.adapter.ProductCategoryRepositoryImpl;
+import com.solusi.erp.inventory.productcategory.infrastructure.persistence.ProductCategoryJpaRepository;
 import com.solusi.erp.inventory.productcategory.infrastructure.persistence.ProductCategoryPersistenceMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +17,7 @@ public class ProductCategoryConfig {
 
     @Bean
     public ProductCategoryRepository productCategoryDomainRepository(
-            com.solusi.erp.inventory.repository.ProductCategoryRepository jpaRepository,
+            ProductCategoryJpaRepository jpaRepository,
             ProductCategoryPersistenceMapper mapper) {
         return new ProductCategoryRepositoryImpl(jpaRepository, mapper);
     }

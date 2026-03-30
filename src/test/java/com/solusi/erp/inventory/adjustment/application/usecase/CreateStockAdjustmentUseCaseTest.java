@@ -6,7 +6,8 @@ import com.solusi.erp.inventory.adjustment.application.usecase.command.LineComma
 import com.solusi.erp.inventory.adjustment.domain.model.AdjustmentStatus;
 import com.solusi.erp.inventory.adjustment.domain.model.StockAdjustment;
 import com.solusi.erp.inventory.adjustment.domain.repository.StockAdjustmentRepository;
-import com.solusi.erp.inventory.model.Facility;
+import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityEntity;
+import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityJpaRepository;
 import com.solusi.erp.master.currency.domain.model.Currency;
 import com.solusi.erp.master.currency.domain.repository.CurrencyRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +34,7 @@ class CreateStockAdjustmentUseCaseTest {
     @Mock
     private StockAdjustmentRepository repository;
     @Mock
-    private com.solusi.erp.inventory.repository.FacilityRepository facilityRepository;
+    private FacilityJpaRepository facilityJpaRepository;
     @Mock
     private CurrencyRepository currencyRepository;
     @Mock
@@ -45,16 +46,16 @@ class CreateStockAdjustmentUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        useCase = new CreateStockAdjustmentUseCaseImpl(repository, facilityRepository,
+        useCase = new CreateStockAdjustmentUseCaseImpl(repository, facilityJpaRepository,
                 currencyRepository, sequenceGeneratorService, messageSource);
     }
 
     @Test
     @DisplayName("execute creates and saves stock adjustment with correct code")
     void execute_createsAdjustmentWithCode() {
-        Facility facility = mock(Facility.class);
+        FacilityEntity facility = mock(FacilityEntity.class);
         when(facility.getName()).thenReturn("Main Warehouse");
-        when(facilityRepository.findById(1L)).thenReturn(Optional.of(facility));
+        when(facilityJpaRepository.findById(1L)).thenReturn(Optional.of(facility));
 
         Currency currency = mock(Currency.class);
         when(currency.getAlias()).thenReturn("IDR");
@@ -84,7 +85,7 @@ class CreateStockAdjustmentUseCaseTest {
     @Test
     @DisplayName("execute throws when facility not found")
     void execute_throwsWhenFacilityNotFound() {
-        when(facilityRepository.findById(anyLong())).thenReturn(Optional.empty());
+        when(facilityJpaRepository.findById(anyLong())).thenReturn(Optional.empty());
         when(messageSource.getMessage(anyString(), any(), any())).thenReturn("Not found");
 
         org.assertj.core.api.Assertions.assertThatThrownBy(() ->

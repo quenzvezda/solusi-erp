@@ -1,10 +1,10 @@
 package com.solusi.erp.inventory.uomconversion.application.usecase.query;
 
 import com.solusi.erp.core.exception.DomainException;
-import com.solusi.erp.inventory.model.UnitOfMeasure;
+import com.solusi.erp.inventory.uom.infrastructure.persistence.UomEntity;
+import com.solusi.erp.inventory.uom.infrastructure.persistence.UomJpaRepository;
 import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import com.solusi.erp.inventory.product.infrastructure.persistence.ProductEntity;
-import com.solusi.erp.inventory.repository.UnitOfMeasureRepository;
 import com.solusi.erp.inventory.uomconversion.domain.model.UomConversion;
 import com.solusi.erp.inventory.uomconversion.domain.repository.UomConversionRepository;
 import com.solusi.erp.inventory.uomconversion.web.dto.UomConversionLookupData;
@@ -17,11 +17,11 @@ public class GetUomConversionLookupUseCaseImpl implements GetUomConversionLookup
 
     private final UomConversionRepository repository;
     private final JpaProductRepository productRepo;
-    private final UnitOfMeasureRepository uomRepo;
+    private final UomJpaRepository uomRepo;
 
     public GetUomConversionLookupUseCaseImpl(UomConversionRepository repository,
                                               JpaProductRepository productRepo,
-                                              UnitOfMeasureRepository uomRepo) {
+                                              UomJpaRepository uomRepo) {
         this.repository = repository;
         this.productRepo = productRepo;
         this.uomRepo = uomRepo;
@@ -32,14 +32,16 @@ public class GetUomConversionLookupUseCaseImpl implements GetUomConversionLookup
         ProductEntity product = productRepo.findById(productId)
             .orElseThrow(() -> new DomainException("msg.error.product.not-found"));
 
-        UnitOfMeasure baseUom = product.getUom();
+        Long baseUomId = product.getUomId();
+        UomEntity baseUom = uomRepo.findById(baseUomId)
+            .orElseThrow(() -> new DomainException("msg.error.uom.not-found"));
         List<UomConversionLookupData> result = new ArrayList<>();
         result.add(new UomConversionLookupData(
             baseUom.getId(), baseUom.getName(), baseUom.getCode(), BigDecimal.ONE, true));
 
         List<UomConversion> conversions = repository.findByProductId(productId);
         for (UomConversion conv : conversions) {
-            UnitOfMeasure fromUom = uomRepo.findById(conv.getFromUomId()).orElse(null);
+            UomEntity fromUom = uomRepo.findById(conv.getFromUomId()).orElse(null);
             String code = fromUom != null ? fromUom.getCode() : "";
             result.add(new UomConversionLookupData(
                 conv.getFromUomId(), conv.getFromUomName(), code, conv.getConversionFactor(), false));

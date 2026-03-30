@@ -1,7 +1,7 @@
 package com.solusi.erp.inventory.uom.web.dto;
 
 import com.solusi.erp.core.dto.BaseAuditResponse;
-import com.solusi.erp.inventory.model.UomType;
+import com.solusi.erp.inventory.uom.domain.model.UomType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

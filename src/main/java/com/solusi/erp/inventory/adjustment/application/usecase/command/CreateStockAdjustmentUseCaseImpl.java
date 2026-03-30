@@ -3,6 +3,8 @@ package com.solusi.erp.inventory.adjustment.application.usecase.command;
 import com.solusi.erp.inventory.adjustment.domain.model.StockAdjustment;
 import com.solusi.erp.inventory.adjustment.domain.model.StockAdjustmentLineItem;
 import com.solusi.erp.inventory.adjustment.domain.repository.StockAdjustmentRepository;
+import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityEntity;
+import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityJpaRepository;
 import com.solusi.erp.master.currency.domain.repository.CurrencyRepository;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -15,19 +17,19 @@ import java.util.stream.Collectors;
 public class CreateStockAdjustmentUseCaseImpl implements CreateStockAdjustmentUseCase {
 
     private final StockAdjustmentRepository repository;
-    private final com.solusi.erp.inventory.repository.FacilityRepository facilityRepository;
+    private final FacilityJpaRepository facilityJpaRepository;
     private final CurrencyRepository currencyRepository;
     private final com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService sequenceGeneratorService;
     private final MessageSource messageSource;
 
     public CreateStockAdjustmentUseCaseImpl(
             StockAdjustmentRepository repository,
-            com.solusi.erp.inventory.repository.FacilityRepository facilityRepository,
+            FacilityJpaRepository facilityJpaRepository,
             CurrencyRepository currencyRepository,
             com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService sequenceGeneratorService,
             MessageSource messageSource) {
         this.repository = repository;
-        this.facilityRepository = facilityRepository;
+        this.facilityJpaRepository = facilityJpaRepository;
         this.currencyRepository = currencyRepository;
         this.sequenceGeneratorService = sequenceGeneratorService;
         this.messageSource = messageSource;
@@ -36,7 +38,7 @@ public class CreateStockAdjustmentUseCaseImpl implements CreateStockAdjustmentUs
     @Override
     public StockAdjustment execute(LocalDate transactionDate, String note, Long facilityId,
                                    Long currencyId, BigDecimal exchangeRate, List<LineCommand> lines) {
-        com.solusi.erp.inventory.model.Facility facility = facilityRepository.findById(facilityId)
+        FacilityEntity facility = facilityJpaRepository.findById(facilityId)
                 .orElseThrow(() -> new RuntimeException(
                         messageSource.getMessage("msg.error.notfound", null, LocaleContextHolder.getLocale())));
         String facilityName = facility.getName();

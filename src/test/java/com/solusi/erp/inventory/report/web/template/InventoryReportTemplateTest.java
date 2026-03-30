@@ -1,8 +1,8 @@
 package com.solusi.erp.inventory.report.web.template;
 
-import com.solusi.erp.inventory.dto.InventoryMovementResponse;
-import com.solusi.erp.inventory.dto.LocationStockDetailResponse;
-import com.solusi.erp.inventory.dto.ProductStockSummaryResponse;
+import com.solusi.erp.inventory.report.web.dto.InventoryMovementResponse;
+import com.solusi.erp.inventory.report.web.dto.LocationStockDetailResponse;
+import com.solusi.erp.inventory.report.web.dto.ProductStockSummaryResponse;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;

@@ -5,6 +5,7 @@ import com.solusi.erp.inventory.container.application.usecase.command.*;
 import com.solusi.erp.inventory.container.application.usecase.query.*;
 import com.solusi.erp.inventory.container.domain.repository.ContainerRepository;
 import com.solusi.erp.inventory.container.infrastructure.adapter.ContainerRepositoryImpl;
+import com.solusi.erp.inventory.container.infrastructure.persistence.ContainerJpaRepository;
 import com.solusi.erp.inventory.container.infrastructure.persistence.ContainerPersistenceMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +17,7 @@ public class ContainerConfig {
 
     @Bean
     public ContainerRepository containerDomainRepository(
-            com.solusi.erp.inventory.repository.ContainerRepository jpaRepository,
+            ContainerJpaRepository jpaRepository,
             ContainerPersistenceMapper mapper) {
         return new ContainerRepositoryImpl(jpaRepository, mapper);
     }

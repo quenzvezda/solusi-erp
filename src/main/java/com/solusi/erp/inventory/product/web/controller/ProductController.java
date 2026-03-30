@@ -3,7 +3,7 @@ package com.solusi.erp.inventory.product.web.controller;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
-import com.solusi.erp.inventory.model.UomType;
+import com.solusi.erp.inventory.uom.domain.model.UomType;
 import com.solusi.erp.inventory.product.application.usecase.command.*;
 import com.solusi.erp.inventory.product.application.usecase.query.*;
 import com.solusi.erp.inventory.product.web.dto.*;

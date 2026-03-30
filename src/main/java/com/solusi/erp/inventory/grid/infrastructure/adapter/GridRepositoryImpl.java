@@ -5,6 +5,8 @@ import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.inventory.grid.domain.model.Grid;
 import com.solusi.erp.inventory.grid.domain.repository.GridRepository;
+import com.solusi.erp.inventory.grid.infrastructure.persistence.GridEntity;
+import com.solusi.erp.inventory.grid.infrastructure.persistence.GridJpaRepository;
 import com.solusi.erp.inventory.grid.infrastructure.persistence.GridPersistenceMapper;
 import org.springframework.data.domain.PageRequest;
 
@@ -14,11 +16,11 @@ import java.util.stream.Collectors;
 
 public class GridRepositoryImpl implements GridRepository {
 
-    private final com.solusi.erp.inventory.repository.GridRepository jpaRepository;
+    private final GridJpaRepository jpaRepository;
     private final GridPersistenceMapper mapper;
 
     public GridRepositoryImpl(
-            com.solusi.erp.inventory.repository.GridRepository jpaRepository,
+            GridJpaRepository jpaRepository,
             GridPersistenceMapper mapper) {
         this.jpaRepository = jpaRepository;
         this.mapper = mapper;
@@ -26,8 +28,8 @@ public class GridRepositoryImpl implements GridRepository {
 
     @Override
     public Grid save(Grid domain) {
-        com.solusi.erp.inventory.model.Grid entity = mapper.toEntity(domain);
-        com.solusi.erp.inventory.model.Grid saved = jpaRepository.saveAndFlush(entity);
+        GridEntity entity = mapper.toEntity(domain);
+        GridEntity saved = jpaRepository.saveAndFlush(entity);
         return jpaRepository.findById(saved.getId()).map(mapper::toDomain)
             .orElseThrow(() -> new IllegalStateException("Failed to reload saved Grid"));
     }
@@ -40,7 +42,7 @@ public class GridRepositoryImpl implements GridRepository {
     @Override
     public Page<Grid> findAll(String keyword, Long facilityId, Pageable pageable) {
         org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
-        org.springframework.data.domain.Page<com.solusi.erp.inventory.model.Grid> springPage;
+        org.springframework.data.domain.Page<GridEntity> springPage;
         if (keyword != null && !keyword.isBlank() && facilityId != null) {
             springPage = jpaRepository.searchByFacility(keyword, facilityId, springPageable);
         } else if (keyword != null && !keyword.isBlank()) {

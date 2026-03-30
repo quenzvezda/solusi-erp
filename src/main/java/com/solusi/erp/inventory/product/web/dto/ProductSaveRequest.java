@@ -1,6 +1,7 @@
 package com.solusi.erp.inventory.product.web.dto;
 
 import com.solusi.erp.core.dto.BaseAuditResponse;
+import com.solusi.erp.inventory.product.web.validation.ValidUomMeasurement;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -15,6 +16,7 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@ValidUomMeasurement
 public class ProductSaveRequest extends BaseAuditResponse {
 
     @Size(max = 50, message = "{label.product.code} {validation.size.suffix}")

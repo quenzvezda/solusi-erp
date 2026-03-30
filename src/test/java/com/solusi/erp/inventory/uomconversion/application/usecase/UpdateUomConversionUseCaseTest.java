@@ -2,9 +2,8 @@ package com.solusi.erp.inventory.uomconversion.application.usecase;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.exception.DomainException;
-import com.solusi.erp.inventory.model.UnitOfMeasure;
-import com.solusi.erp.inventory.model.UomType;
-import com.solusi.erp.inventory.repository.UnitOfMeasureRepository;
+import com.solusi.erp.inventory.uom.infrastructure.persistence.UomEntity;
+import com.solusi.erp.inventory.uom.infrastructure.persistence.UomJpaRepository;
 import com.solusi.erp.inventory.uomconversion.application.usecase.command.UpdateUomConversionUseCaseImpl;
 import com.solusi.erp.inventory.uomconversion.domain.model.UomConversion;
 import com.solusi.erp.inventory.uomconversion.domain.repository.UomConversionRepository;
@@ -26,12 +25,12 @@ import static org.mockito.Mockito.*;
 class UpdateUomConversionUseCaseTest {
 
     @Mock UomConversionRepository repository;
-    @Mock UnitOfMeasureRepository uomRepo;
+    @Mock UomJpaRepository uomRepo;
 
     UpdateUomConversionUseCaseImpl useCase;
 
     private UomConversion existing;
-    private UnitOfMeasure fromUom;
+    private UomEntity fromUom;
 
     @BeforeEach
     void setUp() {
@@ -42,8 +41,10 @@ class UpdateUomConversionUseCaseTest {
             10L, "PRD-001", "Product 1",
             20L, "Box", 30L, "Pieces", new BigDecimal("12.00"));
 
-        fromUom = new UnitOfMeasure("CART", "Carton", UomType.UNIT);
+        fromUom = new UomEntity();
         setField(fromUom, "id", 40L);
+        fromUom.setCode("CART");
+        fromUom.setName("Carton");
     }
 
     @Test

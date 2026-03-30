@@ -1,39 +1,40 @@
 package com.solusi.erp.inventory.uomconversion.infrastructure.config;
 
 import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
-import com.solusi.erp.inventory.repository.ProductUomConversionRepository;
-import com.solusi.erp.inventory.repository.UnitOfMeasureRepository;
+import com.solusi.erp.inventory.uom.infrastructure.persistence.UomJpaRepository;
 import com.solusi.erp.inventory.uomconversion.application.usecase.command.*;
 import com.solusi.erp.inventory.uomconversion.application.usecase.query.*;
 import com.solusi.erp.inventory.uomconversion.domain.repository.UomConversionRepository;
 import com.solusi.erp.inventory.uomconversion.infrastructure.adapter.UomConversionRepositoryImpl;
+import com.solusi.erp.inventory.uomconversion.infrastructure.persistence.UomConversionJpaRepository;
 import com.solusi.erp.inventory.uomconversion.infrastructure.persistence.UomConversionPersistenceMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
-/**
- * Composition Root for UomConversion module.
- * Each use case gets its own TransactionTemplate instance to prevent state mutation bugs.
- */
 @Configuration
 public class UomConversionConfig {
 
     @Bean
-    public UomConversionRepository uomConversionDomainRepository(
-            ProductUomConversionRepository jpaRepo,
+    public UomConversionPersistenceMapper uomConversionPersistenceMapper(
             JpaProductRepository productRepo,
-            UnitOfMeasureRepository uomRepo,
+            UomJpaRepository uomRepo) {
+        return new UomConversionPersistenceMapper(productRepo, uomRepo);
+    }
+
+    @Bean
+    public UomConversionRepository uomConversionDomainRepository(
+            UomConversionJpaRepository jpaRepo,
             UomConversionPersistenceMapper mapper) {
-        return new UomConversionRepositoryImpl(jpaRepo, productRepo, uomRepo, mapper);
+        return new UomConversionRepositoryImpl(jpaRepo, mapper);
     }
 
     @Bean
     public CreateUomConversionUseCase createUomConversionUseCase(
             UomConversionRepository uomConversionDomainRepository,
             JpaProductRepository productRepo,
-            UnitOfMeasureRepository uomRepo,
+            UomJpaRepository uomRepo,
             PlatformTransactionManager txManager) {
         CreateUomConversionUseCase pure = new CreateUomConversionUseCaseImpl(
             uomConversionDomainRepository, productRepo, uomRepo);
@@ -44,7 +45,7 @@ public class UomConversionConfig {
     @Bean
     public UpdateUomConversionUseCase updateUomConversionUseCase(
             UomConversionRepository uomConversionDomainRepository,
-            UnitOfMeasureRepository uomRepo,
+            UomJpaRepository uomRepo,
             PlatformTransactionManager txManager) {
         UpdateUomConversionUseCase pure = new UpdateUomConversionUseCaseImpl(
             uomConversionDomainRepository, uomRepo);
@@ -85,7 +86,7 @@ public class UomConversionConfig {
     public GetUomConversionLookupUseCase getUomConversionLookupUseCase(
             UomConversionRepository uomConversionDomainRepository,
             JpaProductRepository productRepo,
-            UnitOfMeasureRepository uomRepo,
+            UomJpaRepository uomRepo,
             PlatformTransactionManager txManager) {
         GetUomConversionLookupUseCase pure = new GetUomConversionLookupUseCaseImpl(
             uomConversionDomainRepository, productRepo, uomRepo);

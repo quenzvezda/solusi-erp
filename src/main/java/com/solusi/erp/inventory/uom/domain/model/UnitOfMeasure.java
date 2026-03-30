@@ -1,7 +1,7 @@
 package com.solusi.erp.inventory.uom.domain.model;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
-import com.solusi.erp.inventory.model.UomType;
+import com.solusi.erp.inventory.uom.domain.model.UomType;
 
 /**
  * Aggregate Root: UnitOfMeasure.

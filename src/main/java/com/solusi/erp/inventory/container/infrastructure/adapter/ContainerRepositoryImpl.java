@@ -5,6 +5,8 @@ import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.inventory.container.domain.model.Container;
 import com.solusi.erp.inventory.container.domain.repository.ContainerRepository;
+import com.solusi.erp.inventory.container.infrastructure.persistence.ContainerEntity;
+import com.solusi.erp.inventory.container.infrastructure.persistence.ContainerJpaRepository;
 import com.solusi.erp.inventory.container.infrastructure.persistence.ContainerPersistenceMapper;
 import org.springframework.data.domain.PageRequest;
 
@@ -14,11 +16,11 @@ import java.util.stream.Collectors;
 
 public class ContainerRepositoryImpl implements ContainerRepository {
 
-    private final com.solusi.erp.inventory.repository.ContainerRepository jpaRepository;
+    private final ContainerJpaRepository jpaRepository;
     private final ContainerPersistenceMapper mapper;
 
     public ContainerRepositoryImpl(
-            com.solusi.erp.inventory.repository.ContainerRepository jpaRepository,
+            ContainerJpaRepository jpaRepository,
             ContainerPersistenceMapper mapper) {
         this.jpaRepository = jpaRepository;
         this.mapper = mapper;
@@ -26,8 +28,8 @@ public class ContainerRepositoryImpl implements ContainerRepository {
 
     @Override
     public Container save(Container domain) {
-        com.solusi.erp.inventory.model.Container entity = mapper.toEntity(domain);
-        com.solusi.erp.inventory.model.Container saved = jpaRepository.saveAndFlush(entity);
+        ContainerEntity entity = mapper.toEntity(domain);
+        ContainerEntity saved = jpaRepository.saveAndFlush(entity);
         return jpaRepository.findById(saved.getId()).map(mapper::toDomain)
             .orElseThrow(() -> new IllegalStateException("Failed to reload saved Container"));
     }
@@ -40,7 +42,7 @@ public class ContainerRepositoryImpl implements ContainerRepository {
     @Override
     public Page<Container> findAll(String keyword, Long gridId, Pageable pageable) {
         org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
-        org.springframework.data.domain.Page<com.solusi.erp.inventory.model.Container> springPage;
+        org.springframework.data.domain.Page<ContainerEntity> springPage;
         if (keyword != null && !keyword.isBlank() && gridId != null) {
             springPage = jpaRepository.searchByGrid(keyword, gridId, springPageable);
         } else if (keyword != null && !keyword.isBlank()) {

@@ -5,8 +5,14 @@ import com.solusi.erp.inventory.adjustment.application.usecase.command.*;
 import com.solusi.erp.inventory.adjustment.application.usecase.query.*;
 import com.solusi.erp.inventory.adjustment.domain.repository.StockAdjustmentRepository;
 import com.solusi.erp.inventory.adjustment.infrastructure.adapter.StockAdjustmentRepositoryImpl;
+import com.solusi.erp.inventory.adjustment.infrastructure.persistence.StockAdjustmentJpaRepository;
 import com.solusi.erp.inventory.adjustment.infrastructure.persistence.StockAdjustmentPersistenceMapper;
-import com.solusi.erp.inventory.service.StockService;
+import com.solusi.erp.inventory.container.infrastructure.persistence.ContainerJpaRepository;
+import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityJpaRepository;
+import com.solusi.erp.inventory.grid.infrastructure.persistence.GridJpaRepository;
+import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
+import com.solusi.erp.inventory.stock.domain.port.StockService;
+import com.solusi.erp.inventory.uom.infrastructure.persistence.UomJpaRepository;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,33 +28,33 @@ public class StockAdjustmentConfig {
 
     @Bean
     public StockAdjustmentPersistenceMapper stockAdjustmentPersistenceMapper(
-            com.solusi.erp.master.currency.domain.repository.CurrencyRepository currencyRepository) {
-        return new StockAdjustmentPersistenceMapper(currencyRepository);
+            com.solusi.erp.master.currency.domain.repository.CurrencyRepository currencyRepository,
+            FacilityJpaRepository facilityJpaRepository,
+            JpaProductRepository productJpaRepository,
+            GridJpaRepository gridJpaRepository,
+            ContainerJpaRepository containerJpaRepository,
+            UomJpaRepository uomJpaRepository) {
+        return new StockAdjustmentPersistenceMapper(currencyRepository, facilityJpaRepository,
+                productJpaRepository, gridJpaRepository, containerJpaRepository, uomJpaRepository);
     }
 
     @Bean
     public StockAdjustmentRepository stockAdjustmentDomainRepository(
-            StockAdjustmentPersistenceMapper mapper,
-            com.solusi.erp.inventory.repository.StockAdjustmentRepository jpaStockAdjustmentRepository,
-            com.solusi.erp.inventory.repository.FacilityRepository facilityRepository,
-            com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository productRepository,
-            com.solusi.erp.inventory.repository.ContainerRepository containerRepository,
-            com.solusi.erp.inventory.repository.GridRepository gridRepository,
-            com.solusi.erp.inventory.repository.UnitOfMeasureRepository uomRepository) {
-        return new StockAdjustmentRepositoryImpl(jpaStockAdjustmentRepository, facilityRepository,
-                productRepository, containerRepository, gridRepository, uomRepository, mapper);
+            StockAdjustmentJpaRepository jpaStockAdjustmentRepository,
+            StockAdjustmentPersistenceMapper mapper) {
+        return new StockAdjustmentRepositoryImpl(jpaStockAdjustmentRepository, mapper);
     }
 
     @Bean
     public CreateStockAdjustmentUseCase createStockAdjustmentUseCase(
             StockAdjustmentRepository stockAdjustmentDomainRepository,
-            com.solusi.erp.inventory.repository.FacilityRepository facilityRepository,
+            FacilityJpaRepository facilityJpaRepository,
             com.solusi.erp.master.currency.domain.repository.CurrencyRepository currencyRepository,
             SequenceGeneratorService sequenceGeneratorService,
             MessageSource messageSource,
             PlatformTransactionManager txManager) {
         CreateStockAdjustmentUseCase pure = new CreateStockAdjustmentUseCaseImpl(
-                stockAdjustmentDomainRepository, facilityRepository, currencyRepository,
+                stockAdjustmentDomainRepository, facilityJpaRepository, currencyRepository,
                 sequenceGeneratorService, messageSource);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         return (d, n, fId, cId, er, lines) -> tx.execute(s -> pure.execute(d, n, fId, cId, er, lines));
@@ -57,12 +63,12 @@ public class StockAdjustmentConfig {
     @Bean
     public UpdateStockAdjustmentUseCase updateStockAdjustmentUseCase(
             StockAdjustmentRepository stockAdjustmentDomainRepository,
-            com.solusi.erp.inventory.repository.FacilityRepository facilityRepository,
+            FacilityJpaRepository facilityJpaRepository,
             com.solusi.erp.master.currency.domain.repository.CurrencyRepository currencyRepository,
             MessageSource messageSource,
             PlatformTransactionManager txManager) {
         UpdateStockAdjustmentUseCase pure = new UpdateStockAdjustmentUseCaseImpl(
-                stockAdjustmentDomainRepository, facilityRepository, currencyRepository, messageSource);
+                stockAdjustmentDomainRepository, facilityJpaRepository, currencyRepository, messageSource);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         return (id, d, n, fId, cId, er, lines) -> tx.execute(s -> pure.execute(id, d, n, fId, cId, er, lines));
     }
