@@ -5,7 +5,9 @@ import com.solusi.erp.inventory.container.application.usecase.command.*;
 import com.solusi.erp.inventory.container.application.usecase.query.*;
 import com.solusi.erp.inventory.container.domain.repository.ContainerRepository;
 import com.solusi.erp.inventory.container.infrastructure.adapter.ContainerGridUsageChecker;
+import com.solusi.erp.inventory.container.infrastructure.adapter.ContainerInUseCheckerComposite;
 import com.solusi.erp.inventory.container.infrastructure.adapter.ContainerRepositoryImpl;
+import com.solusi.erp.inventory.container.domain.port.ContainerUsageChecker;
 import com.solusi.erp.inventory.container.infrastructure.persistence.ContainerJpaRepository;
 import com.solusi.erp.inventory.container.infrastructure.persistence.ContainerPersistenceMapper;
 import com.solusi.erp.inventory.grid.domain.port.GridUsageChecker;
@@ -51,10 +53,18 @@ public class ContainerConfig {
     }
 
     @Bean
+    public ContainerInUseCheckerComposite containerInUseCheckerComposite(
+            java.util.List<ContainerUsageChecker> checkers) {
+        return new ContainerInUseCheckerComposite(checkers);
+    }
+
+    @Bean
     public DeleteContainerUseCase deleteContainerUseCase(
             ContainerRepository containerDomainRepository,
+            ContainerInUseCheckerComposite containerInUseCheckerComposite,
             PlatformTransactionManager txManager) {
-        DeleteContainerUseCase pure = new DeleteContainerUseCaseImpl(containerDomainRepository);
+        DeleteContainerUseCase pure = new DeleteContainerUseCaseImpl(containerDomainRepository,
+                containerInUseCheckerComposite);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         return (id) -> tx.executeWithoutResult(status -> pure.execute(id));
     }

@@ -26,4 +26,6 @@ public interface InventoryMovementJpaRepository extends JpaRepository<InventoryM
                                          @Param("startDate") LocalDateTime startDate,
                                          @Param("endDate") LocalDateTime endDate,
                                          Pageable pageable);
+
+    boolean existsByContainerId(Long containerId);
 }

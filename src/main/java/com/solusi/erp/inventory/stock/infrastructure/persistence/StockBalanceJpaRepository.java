@@ -20,6 +20,8 @@ public interface StockBalanceJpaRepository extends JpaRepository<StockBalanceEnt
 
     Optional<StockBalanceEntity> findByProductIdAndContainerIdAndSerialNumber(Long productId, Long containerId, String serialNumber);
 
+    boolean existsByContainerId(Long containerId);
+
     @Query("SELECT new com.solusi.erp.inventory.report.web.dto.ProductStockSummaryResponse(" +
            "p.id, p.code, p.name, u.code, " +
            "SUM(sb.quantity), SUM(sb.reservedQuantity), SUM(sb.quantity - sb.reservedQuantity), SUM(sb.inTransitQuantity)) " +
