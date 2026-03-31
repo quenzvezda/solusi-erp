@@ -12,9 +12,8 @@ public class DeleteProductCategoryUseCaseImpl implements DeleteProductCategoryUs
 
     @Override
     public void execute(Long id) {
-        if (!repository.existsByCode(String.valueOf(id))) {
-            repository.findById(id).orElseThrow(() -> new DomainException("msg.error.product-category.notfound"));
-        }
+        repository.findById(id)
+            .orElseThrow(() -> new DomainException("msg.error.product-category.notfound"));
         repository.delete(id);
     }
 }
