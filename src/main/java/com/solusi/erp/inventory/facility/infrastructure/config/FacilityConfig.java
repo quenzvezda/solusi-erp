@@ -3,7 +3,9 @@ package com.solusi.erp.inventory.facility.infrastructure.config;
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.inventory.facility.application.usecase.command.*;
 import com.solusi.erp.inventory.facility.application.usecase.query.*;
+import com.solusi.erp.inventory.facility.domain.port.FacilityUsageChecker;
 import com.solusi.erp.inventory.facility.domain.repository.FacilityRepository;
+import com.solusi.erp.inventory.facility.infrastructure.adapter.FacilityInUseCheckerComposite;
 import com.solusi.erp.inventory.facility.infrastructure.adapter.FacilityRepositoryImpl;
 import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityJpaRepository;
 import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityPersistenceMapper;
@@ -11,6 +13,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import java.util.List;
 
 @Configuration
 public class FacilityConfig {
@@ -44,10 +48,17 @@ public class FacilityConfig {
     }
 
     @Bean
+    public FacilityInUseCheckerComposite facilityInUseCheckerComposite(
+            List<FacilityUsageChecker> facilityUsageCheckers) {
+        return new FacilityInUseCheckerComposite(facilityUsageCheckers);
+    }
+
+    @Bean
     public DeleteFacilityUseCase deleteFacilityUseCase(
             FacilityRepository facilityDomainRepository,
+            FacilityInUseCheckerComposite facilityInUseCheckerComposite,
             PlatformTransactionManager txManager) {
-        DeleteFacilityUseCase pure = new DeleteFacilityUseCaseImpl(facilityDomainRepository);
+        DeleteFacilityUseCase pure = new DeleteFacilityUseCaseImpl(facilityDomainRepository, facilityInUseCheckerComposite);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         return (id) -> tx.executeWithoutResult(status -> pure.execute(id));
     }

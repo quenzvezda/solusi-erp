@@ -15,4 +15,5 @@ public interface StockAdjustmentJpaRepository extends JpaRepository<StockAdjustm
            "LOWER(s.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(s.note) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<StockAdjustmentEntity> search(@Param("keyword") String keyword, Pageable pageable);
+    boolean existsByFacilityId(Long facilityId);
 }

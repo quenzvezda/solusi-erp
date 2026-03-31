@@ -2,14 +2,20 @@ package com.solusi.erp.inventory.grid.infrastructure.config;
 
 import com.solusi.erp.inventory.grid.application.usecase.command.*;
 import com.solusi.erp.inventory.grid.application.usecase.query.*;
+import com.solusi.erp.inventory.grid.domain.port.GridUsageChecker;
 import com.solusi.erp.inventory.grid.domain.repository.GridRepository;
+import com.solusi.erp.inventory.grid.infrastructure.adapter.GridFacilityUsageChecker;
+import com.solusi.erp.inventory.grid.infrastructure.adapter.GridInUseCheckerComposite;
 import com.solusi.erp.inventory.grid.infrastructure.adapter.GridRepositoryImpl;
 import com.solusi.erp.inventory.grid.infrastructure.persistence.GridJpaRepository;
 import com.solusi.erp.inventory.grid.infrastructure.persistence.GridPersistenceMapper;
+import com.solusi.erp.inventory.facility.domain.port.FacilityUsageChecker;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import java.util.List;
 
 @Configuration
 public class GridConfig {
@@ -42,10 +48,22 @@ public class GridConfig {
     }
 
     @Bean
+    public FacilityUsageChecker gridFacilityUsageChecker(GridJpaRepository gridJpaRepository) {
+        return new GridFacilityUsageChecker(gridJpaRepository);
+    }
+
+    @Bean
+    public GridInUseCheckerComposite gridInUseCheckerComposite(
+            List<GridUsageChecker> gridUsageCheckers) {
+        return new GridInUseCheckerComposite(gridUsageCheckers);
+    }
+
+    @Bean
     public DeleteGridUseCase deleteGridUseCase(
             GridRepository gridDomainRepository,
+            GridInUseCheckerComposite gridInUseCheckerComposite,
             PlatformTransactionManager txManager) {
-        DeleteGridUseCase pure = new DeleteGridUseCaseImpl(gridDomainRepository);
+        DeleteGridUseCase pure = new DeleteGridUseCaseImpl(gridDomainRepository, gridInUseCheckerComposite);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         return (id) -> tx.executeWithoutResult(status -> pure.execute(id));
     }

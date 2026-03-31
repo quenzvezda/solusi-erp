@@ -4,9 +4,11 @@ import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.inventory.container.application.usecase.command.*;
 import com.solusi.erp.inventory.container.application.usecase.query.*;
 import com.solusi.erp.inventory.container.domain.repository.ContainerRepository;
+import com.solusi.erp.inventory.container.infrastructure.adapter.ContainerGridUsageChecker;
 import com.solusi.erp.inventory.container.infrastructure.adapter.ContainerRepositoryImpl;
 import com.solusi.erp.inventory.container.infrastructure.persistence.ContainerJpaRepository;
 import com.solusi.erp.inventory.container.infrastructure.persistence.ContainerPersistenceMapper;
+import com.solusi.erp.inventory.grid.domain.port.GridUsageChecker;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -14,6 +16,11 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 @Configuration
 public class ContainerConfig {
+
+    @Bean
+    public GridUsageChecker containerGridUsageChecker(ContainerJpaRepository containerJpaRepository) {
+        return new ContainerGridUsageChecker(containerJpaRepository);
+    }
 
     @Bean
     public ContainerRepository containerDomainRepository(

@@ -31,4 +31,6 @@ public interface GridJpaRepository extends JpaRepository<GridEntity, Long> {
     boolean existsByFacilityIdAndCode(Long facilityId, String code);
 
     boolean existsByFacilityIdAndCodeAndIdNot(Long facilityId, String code, Long id);
+
+    boolean existsByFacilityId(Long facilityId);
 }
