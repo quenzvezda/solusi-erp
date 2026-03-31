@@ -38,7 +38,7 @@ class DeleteGridUseCaseTest {
 
     private Grid stubGrid(Long id) {
         AuditMetadata meta = new AuditMetadata(id, id, null, null, null, null);
-        return new Grid(meta, 1L, null, "GRD-001", "Grid A", null, true);
+        return new Grid(meta, 1L, null, null, "GRD-001", "Grid A", null, true);
     }
 
     @Test

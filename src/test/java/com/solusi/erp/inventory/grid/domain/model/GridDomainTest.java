@@ -27,7 +27,7 @@ class GridDomainTest {
     @DisplayName("Full constructor preserves all fields including metadata")
     void constructor_preservesAllFields() {
         AuditMetadata metadata = new AuditMetadata(7L, 1L, null, null, null, null);
-        Grid grid = new Grid(metadata, 1L, "Main Warehouse", "GRD-001", "Storage Area A", "Note", true);
+        Grid grid = new Grid(metadata, 1L, "Main Warehouse", "FAC-001", "GRD-001", "Storage Area A", "Note", true);
 
         assertThat(grid.getId()).isEqualTo(7L);
         assertThat(grid.getFacilityName()).isEqualTo("Main Warehouse");

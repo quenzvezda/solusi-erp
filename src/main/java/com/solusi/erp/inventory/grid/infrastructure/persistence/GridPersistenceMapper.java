@@ -25,12 +25,15 @@ public class GridPersistenceMapper {
             entity.getUpdatedDate(),
             entity.getUpdatedBy()
         );
-        String facilityName = entity.getFacilityId() != null
-            ? facilityJpaRepository.findById(entity.getFacilityId())
-                .map(FacilityEntity::getName).orElse(null)
-            : null;
-        return new Grid(metadata, entity.getFacilityId(), facilityName, entity.getCode(),
-            entity.getName(), entity.getNote(), entity.getIsActive());
+        String facilityName = null;
+        String facilityCode = null;
+        if (entity.getFacilityId() != null) {
+            var facilityOpt = facilityJpaRepository.findById(entity.getFacilityId());
+            facilityName = facilityOpt.map(FacilityEntity::getName).orElse(null);
+            facilityCode = facilityOpt.map(FacilityEntity::getCode).orElse(null);
+        }
+        return new Grid(metadata, entity.getFacilityId(), facilityName, facilityCode,
+            entity.getCode(), entity.getName(), entity.getNote(), entity.getIsActive());
     }
 
     public GridEntity toEntity(Grid domain) {

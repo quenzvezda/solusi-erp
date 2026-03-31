@@ -57,7 +57,7 @@ class CreateGridUseCaseTest {
     @DisplayName("execute returns persisted result from repository")
     void execute_returnsPersisted() {
         AuditMetadata metadata = new AuditMetadata(15L, 1L, null, null, null, null);
-        Grid persisted = new Grid(metadata, 1L, "Main WH", "GRD-001", "Storage A", null, true);
+        Grid persisted = new Grid(metadata, 1L, "Main WH", "FAC-001", "GRD-001", "Storage A", null, true);
 
         when(repository.existsByFacilityIdAndCode(1L, "GRD-001")).thenReturn(false);
         when(repository.save(any(Grid.class))).thenReturn(persisted);

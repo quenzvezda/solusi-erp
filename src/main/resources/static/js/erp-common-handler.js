@@ -349,6 +349,11 @@ function initLookup(el, lookupPath, parentProvider = null) {
                     });
                     this.options[val].payload = payload;
                     this.refreshOptions(false);
+                    // Re-render selected item so subText shows on initial load
+                    if (subText) {
+                        this.removeItem(val, true);
+                        this.addItem(val, true);
+                    }
                 }
             }
         },
@@ -367,7 +372,10 @@ function initLookup(el, lookupPath, parentProvider = null) {
                 let sub = data.subText ? `<small class="text-muted d-block" style="font-size:0.75em">${escape(data.subText)}</small>` : '';
                 return `<div class="py-1"><div>${escape(data.name)}</div>${sub}</div>`;
             },
-            item: (data, escape) => `<span>${escape(data.name)}</span>`
+            item: (data, escape) => {
+                let sub = data.subText ? `<small class="text-muted ms-1" style="font-size:0.8em;opacity:0.7">${escape(data.subText)}</small>` : '';
+                return `<span>${escape(data.name)}${sub}</span>`;
+            }
         }
     });
 

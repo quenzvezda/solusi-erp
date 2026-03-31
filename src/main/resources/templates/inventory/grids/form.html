@@ -33,7 +33,7 @@
                     <div class="col-md-6">
                         <div th:replace="~{fragments/inputs :: autocomplete(field='facilityId', label=#{label.grid.facility}, required=true, placeholder=#{label.grid.select.facility}, isReadonly=false, id='grid-facility',
                             path='inventory/facilities',
-                            initialValue=${gridRequest.facilityId}, initialText=${gridRequest.facilityName})}"></div>
+                            initialValue=${gridRequest.facilityId}, initialText=${gridRequest.facilityName}, initialSubtext=${gridRequest.facilityCode})}"></div>
 
                         <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.grid.code}, required=true, placeholder=#{placeholder.grid.code})}"></div>
                         <div th:replace="~{fragments/inputs :: text(field='name', label=#{label.grid.name}, required=true, placeholder=#{placeholder.grid.name})}"></div>
