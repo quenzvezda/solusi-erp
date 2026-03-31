@@ -14,6 +14,7 @@ public interface JpaProductRepository extends JpaRepository<ProductEntity, Long>
     boolean existsByCode(String code);
     boolean existsByCategoryId(Long categoryId);
     boolean existsByBrandId(Long brandId);
+    boolean existsByUomId(Long uomId);
 
     @Query("SELECT p FROM ProductEntity p WHERE " +
            "(:keyword IS NULL OR LOWER(p.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +

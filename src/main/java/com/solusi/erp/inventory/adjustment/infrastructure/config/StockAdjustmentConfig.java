@@ -7,6 +7,7 @@ import com.solusi.erp.inventory.adjustment.domain.repository.StockAdjustmentRepo
 import com.solusi.erp.inventory.adjustment.infrastructure.adapter.AdjustmentFacilityUsageChecker;
 import com.solusi.erp.inventory.adjustment.infrastructure.adapter.AdjustmentLineContainerUsageChecker;
 import com.solusi.erp.inventory.adjustment.infrastructure.adapter.AdjustmentLineGridUsageChecker;
+import com.solusi.erp.inventory.adjustment.infrastructure.adapter.AdjustmentLineUomUsageChecker;
 import com.solusi.erp.inventory.adjustment.infrastructure.adapter.StockAdjustmentRepositoryImpl;
 import com.solusi.erp.inventory.adjustment.infrastructure.persistence.StockAdjustmentJpaRepository;
 import com.solusi.erp.inventory.adjustment.infrastructure.persistence.StockAdjustmentLineJpaRepository;
@@ -14,6 +15,7 @@ import com.solusi.erp.inventory.adjustment.infrastructure.persistence.StockAdjus
 import com.solusi.erp.inventory.container.infrastructure.persistence.ContainerJpaRepository;
 import com.solusi.erp.inventory.container.domain.port.ContainerUsageChecker;
 import com.solusi.erp.inventory.facility.domain.port.FacilityUsageChecker;
+import com.solusi.erp.inventory.uom.domain.port.UomUsageChecker;
 import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityJpaRepository;
 import com.solusi.erp.inventory.grid.domain.port.GridUsageChecker;
 import com.solusi.erp.inventory.grid.infrastructure.persistence.GridJpaRepository;
@@ -61,6 +63,12 @@ public class StockAdjustmentConfig {
     public ContainerUsageChecker adjustmentLineContainerUsageChecker(
             StockAdjustmentLineJpaRepository lineJpaRepository) {
         return new AdjustmentLineContainerUsageChecker(lineJpaRepository);
+    }
+
+    @Bean
+    public UomUsageChecker adjustmentLineUomUsageChecker(
+            StockAdjustmentLineJpaRepository lineJpaRepository) {
+        return new AdjustmentLineUomUsageChecker(lineJpaRepository);
     }
 
     @Bean

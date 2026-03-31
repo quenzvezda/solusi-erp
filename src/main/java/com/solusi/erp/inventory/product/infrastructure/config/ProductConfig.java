@@ -5,8 +5,10 @@ import com.solusi.erp.inventory.product.application.usecase.command.*;
 import com.solusi.erp.inventory.product.application.usecase.query.*;
 import com.solusi.erp.inventory.product.domain.repository.ProductRepository;
 import com.solusi.erp.inventory.product.infrastructure.adapter.ProductRepositoryImpl;
+import com.solusi.erp.inventory.product.infrastructure.adapter.ProductUomUsageChecker;
 import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import com.solusi.erp.inventory.product.infrastructure.persistence.ProductPersistenceMapper;
+import com.solusi.erp.inventory.uom.domain.port.UomUsageChecker;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -17,6 +19,11 @@ import org.springframework.transaction.support.TransactionTemplate;
  */
 @Configuration
 public class ProductConfig {
+
+    @Bean
+    public UomUsageChecker productUomUsageChecker(JpaProductRepository jpaProductRepository) {
+        return new ProductUomUsageChecker(jpaProductRepository);
+    }
 
     @Bean
     public ProductRepository productRepository(

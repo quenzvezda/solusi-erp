@@ -3,7 +3,9 @@ package com.solusi.erp.inventory.uom.infrastructure.config;
 import com.solusi.erp.inventory.uom.domain.model.UomType;
 import com.solusi.erp.inventory.uom.application.usecase.command.*;
 import com.solusi.erp.inventory.uom.application.usecase.query.*;
+import com.solusi.erp.inventory.uom.domain.port.UomUsageChecker;
 import com.solusi.erp.inventory.uom.domain.repository.UomRepository;
+import com.solusi.erp.inventory.uom.infrastructure.adapter.UomInUseCheckerComposite;
 import com.solusi.erp.inventory.uom.infrastructure.adapter.UomRepositoryImpl;
 import com.solusi.erp.inventory.uom.infrastructure.persistence.UomJpaRepository;
 import com.solusi.erp.inventory.uom.infrastructure.persistence.UomPersistenceMapper;
@@ -20,6 +22,11 @@ import java.util.List;
  */
 @Configuration
 public class UomConfig {
+
+    @Bean
+    public UomInUseCheckerComposite uomInUseCheckerComposite(List<UomUsageChecker> checkers) {
+        return new UomInUseCheckerComposite(checkers);
+    }
 
     @Bean
     public UomRepository uomDomainRepository(
@@ -49,8 +56,9 @@ public class UomConfig {
     @Bean
     public DeleteUomUseCase deleteUomUseCase(
             UomRepository repository,
+            UomInUseCheckerComposite uomInUseCheckerComposite,
             PlatformTransactionManager txManager) {
-        DeleteUomUseCase pure = new DeleteUomUseCaseImpl(repository);
+        DeleteUomUseCase pure = new DeleteUomUseCaseImpl(repository, uomInUseCheckerComposite);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         return (id) -> tx.executeWithoutResult(status -> pure.execute(id));
     }
