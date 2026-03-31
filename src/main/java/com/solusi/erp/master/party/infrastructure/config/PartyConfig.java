@@ -3,12 +3,16 @@ package com.solusi.erp.master.party.infrastructure.config;
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.master.party.application.usecase.command.*;
 import com.solusi.erp.master.party.application.usecase.query.*;
+import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import com.solusi.erp.master.party.domain.repository.PartyRepository;
+import com.solusi.erp.master.party.infrastructure.adapter.PartyLookupProviderImpl;
 import com.solusi.erp.master.party.infrastructure.adapter.PartyRepositoryImpl;
 import com.solusi.erp.master.party.infrastructure.persistence.PartyPersistenceMapper;
 import com.solusi.erp.master.geographic.infrastructure.persistence.GeographicJpaRepository;
 import com.solusi.erp.master.party.infrastructure.persistence.PartyIdentificationTypeJpaRepository;
+import com.solusi.erp.master.party.infrastructure.persistence.PartyJpaRepository;
 import com.solusi.erp.master.partyroletype.infrastructure.persistence.PartyRoleTypeJpaRepository;
+import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -112,6 +116,13 @@ public class PartyConfig {
         TransactionTemplate tx = new TransactionTemplate(txManager);
         tx.setReadOnly(true);
         return (keyword, excludePartyId) -> tx.execute(status -> pure.execute(keyword, excludePartyId));
+    }
+
+    @Bean
+    public PartyLookupProvider partyLookupProvider(
+            PartyJpaRepository partyJpaRepository,
+            MessageSource messageSource) {
+        return new PartyLookupProviderImpl(partyJpaRepository, messageSource);
     }
 }
 

@@ -12,8 +12,7 @@ import com.solusi.erp.inventory.facility.web.dto.*;
 import com.solusi.erp.inventory.facility.web.mapper.FacilityWebMapper;
 import com.solusi.erp.master.geographic.infrastructure.persistence.Geographic;
 import com.solusi.erp.master.geographic.infrastructure.persistence.GeographicJpaRepository;
-import com.solusi.erp.master.party.infrastructure.persistence.Party;
-import com.solusi.erp.master.party.infrastructure.persistence.PartyJpaRepository;
+import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +46,7 @@ public class FacilityController {
     private final GetFacilityLookupUseCase getFacilityLookupUseCase;
     private final FacilityWebMapper webMapper;
     private final MessageSource messageSource;
-    private final PartyJpaRepository partyJpaRepository;
+    private final PartyLookupProvider partyLookupProvider;
     private final GeographicJpaRepository geographicJpaRepository;
 
     @GetMapping
@@ -139,21 +138,14 @@ public class FacilityController {
 
     private Map<String, Object> buildFacilityUI(Facility domain) {
         Map<String, Object> ui = new HashMap<>();
-        ui.put("ownerName", domain.getOwnerName());
-        ui.put("ownerCode", buildOwnerSubText(domain.getOwnerId()));
+        // Owner: uses PartyLookupProvider port (new standard — single source of truth)
+        LookupDto ownerLookup = partyLookupProvider.resolve(domain.getOwnerId());
+        ui.put("ownerName", ownerLookup != null ? ownerLookup.name() : domain.getOwnerName());
+        ui.put("ownerCode", ownerLookup != null ? ownerLookup.subText() : "");
+        // City: uses GeographicJpaRepository directly (old approach — kept for comparison)
         ui.put("cityName", domain.getCityName());
         ui.put("cityCode", buildCitySubText(domain.getCityId()));
         return ui;
-    }
-
-    private String buildOwnerSubText(Long ownerId) {
-        if (ownerId == null) return "";
-        return partyJpaRepository.findById(ownerId).map(party -> {
-            String typeLabel = messageSource.getMessage(
-                    "label.party.type." + party.getType().name().toLowerCase(),
-                    null, LocaleContextHolder.getLocale());
-            return party.getCode() + " - " + typeLabel;
-        }).orElse("");
     }
 
     private String buildCitySubText(Long cityId) {

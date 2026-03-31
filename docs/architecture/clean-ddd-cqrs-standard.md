@@ -91,6 +91,7 @@ Dalam arsitektur Vertical Slice, setiap slice adalah unit yang otonom. Ketika sa
 |----------|--------------------|---------------------|
 | Slice A perlu **cek keberadaan** data di slice B | `brand` cek apakah ada `Product` yang pakai brand ini sebelum delete | **Query Port** (`XxxChecker`) |
 | Slice A perlu **lookup nilai** dari slice B (nama, kode) | `product` tampilkan nama brand tanpa join entity | **Query Port** (`XxxLookupPort`) |
+| Slice A perlu **tampilkan data referensi** dari slice B di autocomplete | `facility` tampilkan subText Party (kode + tipe) di form edit | **Lookup Provider Port** (`XxxLookupProvider`) |
 | Slice A perlu **memicu aksi** di slice B | `adjustment` meminta `StockService` untuk kurangi stok | **Command Port** (inject Use Case interface) |
 | Banyak slice perlu di-notify satu kejadian | Approval selesai → modul bisnis bereaksi | **Domain Event** (Spring `ApplicationEvent`) |
 | Slice A & B selalu berubah bersama, coupling sangat tinggi | — | Pertimbangkan gabung jadi **1 slice** (salah boundary) |
@@ -191,6 +192,89 @@ public class CreateStockAdjustmentUseCaseImpl {
 Digunakan ketika **banyak slice** perlu bereaksi atas satu kejadian, atau ketika coupling searah tidak jelas. Slice A publish event, slice-slice lain listen secara independen.
 
 Lihat implementasi detail: [`docs/architecture/approval-arsitektur.md`](approval-arsitektur.md)
+
+---
+
+### Pola 4 — Lookup Provider Port (Cross-Slice Autocomplete)
+
+Digunakan ketika slice consumer butuh **menampilkan data referensi** (nama + subText) dari slice provider secara konsisten di UI autocomplete. Pola ini menjamin **single source of truth** untuk format tampilan setiap entity.
+
+**Masalah yang dipecahkan:**
+- Controller di slice consumer perlu menampilkan subText (kode, tipe, dll) dari entity slice lain saat pre-fill form edit.
+- Tanpa pola ini, setiap consumer harus query JPA repository provider langsung dan menduplikasi logika format subText.
+- Jika format subText berubah (misal tambah field), semua consumer harus diubah.
+
+**Struktur:**
+```
+provider-slice/                          (misal: master.party)
+  domain/port/XxxLookupProvider.java     ← interface (pure Java)
+  infrastructure/adapter/
+    XxxLookupProviderImpl.java           ← impl: query JPA + format subText
+  infrastructure/config/XxxConfig.java   ← @Bean registration
+
+consumer-slice/                          (misal: inventory.facility)
+  web/controller/XxxController.java      ← inject XxxLookupProvider (bukan JPA repo)
+```
+
+**Kontrak Interface:**
+```java
+// master/party/domain/port/PartyLookupProvider.java
+public interface PartyLookupProvider {
+    LookupDto resolve(Long partyId);
+    // Returns: id, name (with salutation), subText ("PRT-001 - Organisasi / Perusahaan")
+}
+```
+
+**Implementasi Adapter (single source of truth untuk format subText):**
+```java
+// master/party/infrastructure/adapter/PartyLookupProviderImpl.java
+public class PartyLookupProviderImpl implements PartyLookupProvider {
+    private final PartyJpaRepository partyJpaRepository;
+    private final MessageSource messageSource;
+
+    @Override
+    public LookupDto resolve(Long partyId) {
+        if (partyId == null) return null;
+        return partyJpaRepository.findById(partyId)
+                .map(this::toLookupDto).orElse(null);
+    }
+
+    private LookupDto toLookupDto(Party party) {
+        String fullName = (hasText(party.getSalutation())
+                ? party.getSalutation() + " " : "") + party.getName();
+        String typeLabel = messageSource.getMessage(
+                "label.party.type." + party.getType().name().toLowerCase(),
+                null, LocaleContextHolder.getLocale());
+        return new LookupDto(party.getId(), fullName,
+                party.getCode() + " - " + typeLabel);
+    }
+}
+```
+
+**Consumer menggunakan port:**
+```java
+// inventory/facility/web/controller/FacilityController.java
+private final PartyLookupProvider partyLookupProvider;  // inject port, bukan JPA repo
+
+private Map<String, Object> buildFacilityUI(Facility domain) {
+    LookupDto ownerLookup = partyLookupProvider.resolve(domain.getOwnerId());
+    ui.put("ownerName", ownerLookup != null ? ownerLookup.name() : "");
+    ui.put("ownerCode", ownerLookup != null ? ownerLookup.subText() : "");
+}
+```
+
+**Kapan menggunakan pola ini:**
+
+| Kondisi | Gunakan Lookup Provider? |
+|---------|--------------------------|
+| Entity provider dipakai oleh ≥ 2 consumer slice | ✅ Wajib — hindari duplikasi format |
+| Entity provider hanya dipakai 1 consumer | ⚠️ Opsional — boleh query langsung, tapi provider port lebih future-proof |
+| SubText memerlukan i18n / logika format kompleks | ✅ Wajib — pastikan konsistensi |
+| Hanya butuh kode sederhana (misal `Geographic.code`) | ❌ Boleh query langsung dari JPA repo |
+
+**Referensi di Codebase:**
+- `master.party.domain.port.PartyLookupProvider` — dipakai oleh `inventory.facility`
+- Format subText konsisten dengan `PartyLookupController.mapToLookupDto()` (lookup endpoint)
 
 ---
 
