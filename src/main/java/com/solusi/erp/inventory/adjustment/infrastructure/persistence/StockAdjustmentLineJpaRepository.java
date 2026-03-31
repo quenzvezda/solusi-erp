@@ -9,4 +9,5 @@ import java.util.List;
 public interface StockAdjustmentLineJpaRepository extends JpaRepository<StockAdjustmentLineEntity, Long> {
 
     List<StockAdjustmentLineEntity> findByHeaderId(Long headerId);
+    boolean existsByGridId(Long gridId);
 }

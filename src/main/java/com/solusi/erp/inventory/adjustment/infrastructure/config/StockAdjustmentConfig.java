@@ -4,11 +4,16 @@ import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.inventory.adjustment.application.usecase.command.*;
 import com.solusi.erp.inventory.adjustment.application.usecase.query.*;
 import com.solusi.erp.inventory.adjustment.domain.repository.StockAdjustmentRepository;
+import com.solusi.erp.inventory.adjustment.infrastructure.adapter.AdjustmentFacilityUsageChecker;
+import com.solusi.erp.inventory.adjustment.infrastructure.adapter.AdjustmentLineGridUsageChecker;
 import com.solusi.erp.inventory.adjustment.infrastructure.adapter.StockAdjustmentRepositoryImpl;
 import com.solusi.erp.inventory.adjustment.infrastructure.persistence.StockAdjustmentJpaRepository;
+import com.solusi.erp.inventory.adjustment.infrastructure.persistence.StockAdjustmentLineJpaRepository;
 import com.solusi.erp.inventory.adjustment.infrastructure.persistence.StockAdjustmentPersistenceMapper;
 import com.solusi.erp.inventory.container.infrastructure.persistence.ContainerJpaRepository;
+import com.solusi.erp.inventory.facility.domain.port.FacilityUsageChecker;
 import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityJpaRepository;
+import com.solusi.erp.inventory.grid.domain.port.GridUsageChecker;
 import com.solusi.erp.inventory.grid.infrastructure.persistence.GridJpaRepository;
 import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import com.solusi.erp.inventory.stock.domain.port.StockService;
@@ -36,6 +41,18 @@ public class StockAdjustmentConfig {
             UomJpaRepository uomJpaRepository) {
         return new StockAdjustmentPersistenceMapper(currencyRepository, facilityJpaRepository,
                 productJpaRepository, gridJpaRepository, containerJpaRepository, uomJpaRepository);
+    }
+
+    @Bean
+    public FacilityUsageChecker adjustmentFacilityUsageChecker(
+            StockAdjustmentJpaRepository adjustmentJpaRepository) {
+        return new AdjustmentFacilityUsageChecker(adjustmentJpaRepository);
+    }
+
+    @Bean
+    public GridUsageChecker adjustmentLineGridUsageChecker(
+            StockAdjustmentLineJpaRepository lineJpaRepository) {
+        return new AdjustmentLineGridUsageChecker(lineJpaRepository);
     }
 
     @Bean

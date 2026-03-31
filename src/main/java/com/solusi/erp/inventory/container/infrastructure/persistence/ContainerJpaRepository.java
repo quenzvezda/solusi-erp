@@ -50,4 +50,6 @@ public interface ContainerJpaRepository extends JpaRepository<ContainerEntity, L
     boolean existsByBarcode(String barcode);
 
     boolean existsByBarcodeAndIdNot(String barcode, Long id);
+
+    boolean existsByGridId(Long gridId);
 }
