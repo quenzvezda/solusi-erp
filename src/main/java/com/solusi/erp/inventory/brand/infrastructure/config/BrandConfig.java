@@ -3,10 +3,13 @@ package com.solusi.erp.inventory.brand.infrastructure.config;
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.inventory.brand.application.usecase.command.*;
 import com.solusi.erp.inventory.brand.application.usecase.query.*;
+import com.solusi.erp.inventory.brand.domain.port.BrandInUseChecker;
 import com.solusi.erp.inventory.brand.domain.repository.BrandRepository;
+import com.solusi.erp.inventory.brand.infrastructure.adapter.BrandInUseCheckerImpl;
 import com.solusi.erp.inventory.brand.infrastructure.adapter.BrandRepositoryImpl;
 import com.solusi.erp.inventory.brand.infrastructure.persistence.BrandJpaRepository;
 import com.solusi.erp.inventory.brand.infrastructure.persistence.BrandPersistenceMapper;
+import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -46,10 +49,16 @@ public class BrandConfig {
     }
 
     @Bean
+    public BrandInUseChecker brandInUseChecker(JpaProductRepository jpaProductRepository) {
+        return new BrandInUseCheckerImpl(jpaProductRepository);
+    }
+
+    @Bean
     public DeleteBrandUseCase deleteBrandUseCase(
             BrandRepository repository,
+            BrandInUseChecker brandInUseChecker,
             PlatformTransactionManager txManager) {
-        DeleteBrandUseCase pure = new DeleteBrandUseCaseImpl(repository);
+        DeleteBrandUseCase pure = new DeleteBrandUseCaseImpl(repository, brandInUseChecker);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         return (id) -> tx.executeWithoutResult(status -> pure.execute(id));
     }

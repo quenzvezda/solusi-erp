@@ -3,10 +3,13 @@ package com.solusi.erp.inventory.productcategory.infrastructure.config;
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.inventory.productcategory.application.usecase.command.*;
 import com.solusi.erp.inventory.productcategory.application.usecase.query.*;
+import com.solusi.erp.inventory.productcategory.domain.port.ProductCategoryInUseChecker;
 import com.solusi.erp.inventory.productcategory.domain.repository.ProductCategoryRepository;
+import com.solusi.erp.inventory.productcategory.infrastructure.adapter.ProductCategoryInUseCheckerImpl;
 import com.solusi.erp.inventory.productcategory.infrastructure.adapter.ProductCategoryRepositoryImpl;
 import com.solusi.erp.inventory.productcategory.infrastructure.persistence.ProductCategoryJpaRepository;
 import com.solusi.erp.inventory.productcategory.infrastructure.persistence.ProductCategoryPersistenceMapper;
+import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -42,10 +45,17 @@ public class ProductCategoryConfig {
     }
 
     @Bean
+    public ProductCategoryInUseChecker productCategoryInUseChecker(
+            JpaProductRepository jpaProductRepository) {
+        return new ProductCategoryInUseCheckerImpl(jpaProductRepository);
+    }
+
+    @Bean
     public DeleteProductCategoryUseCase deleteProductCategoryUseCase(
             ProductCategoryRepository repository,
+            ProductCategoryInUseChecker productCategoryInUseChecker,
             PlatformTransactionManager txManager) {
-        DeleteProductCategoryUseCase pure = new DeleteProductCategoryUseCaseImpl(repository);
+        DeleteProductCategoryUseCase pure = new DeleteProductCategoryUseCaseImpl(repository, productCategoryInUseChecker);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         return (id) -> tx.executeWithoutResult(status -> pure.execute(id));
     }

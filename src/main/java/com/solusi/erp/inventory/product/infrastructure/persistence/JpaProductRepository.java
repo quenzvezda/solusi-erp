@@ -12,6 +12,8 @@ import java.util.Optional;
 public interface JpaProductRepository extends JpaRepository<ProductEntity, Long> {
     Optional<ProductEntity> findByCode(String code);
     boolean existsByCode(String code);
+    boolean existsByCategoryId(Long categoryId);
+    boolean existsByBrandId(Long brandId);
 
     @Query("SELECT p FROM ProductEntity p WHERE " +
            "(:keyword IS NULL OR LOWER(p.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
