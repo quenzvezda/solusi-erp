@@ -9,15 +9,16 @@ Setiap modul (fitur) dibagi menjadi 4 layer utama:
 com.solusi.erp.[module]
 ├── domain              <-- 100% PURE JAVA
 │   ├── model           (Entity & Value Objects)
-│   ├── repository      (Interfaces)
-│   └── service         (Domain Logic lintas Aggregate)
+│   ├── repository      (Interfaces — domain port ke persistence)
+│   ├── port            (Interfaces — domain port ke slice LAIN, lihat §8)
+│   └── service         (Domain Logic lintas Aggregate dalam 1 slice)
 ├── application         <-- 100% PURE JAVA (Logic Orchestrator)
 │   └── usecase
 │       ├── command     (Create, Update, Delete)
 │       └── query       (Find, List, Search)
 ├── infrastructure      <-- FRAMEWORK DEPENDENT (Details)
 │   ├── persistence     (JPA Entities, Spring Data Repositories)
-│   ├── adapter         (Impl Domain Repository)
+│   ├── adapter         (Impl Domain Repository & Port)
 │   └── config          (Composition Root / Bean Registration)
 └── web                 <-- FRAMEWORK DEPENDENT (Interface)
     ├── controller      (Spring Controllers)
@@ -77,3 +78,130 @@ Berikut modul-modul yang bisa dijadikan referensi implementasi Clean Architectur
 | **Approval** | `common.approval` | Kompleks | Event-driven, polymorphic reference, domain service |
 
 > **Catatan:** Untuk modul baru, mulailah dari `master.tax` atau `inventory.brand` sebagai template, lalu lihat `security.role` untuk pola many-to-many.
+
+---
+
+## 8. Cross-Slice Communication Standard
+
+Dalam arsitektur Vertical Slice, setiap slice adalah unit yang otonom. Ketika satu slice butuh data atau aksi dari slice lain, **dilarang** melakukan import langsung ke domain model atau JPA repository slice lain dari application/domain layer. Gunakan salah satu dari tiga pola berikut sesuai kebutuhan.
+
+### Tabel Skenario
+
+| Skenario | Contoh di Codebase | Pola yang Digunakan |
+|----------|--------------------|---------------------|
+| Slice A perlu **cek keberadaan** data di slice B | `brand` cek apakah ada `Product` yang pakai brand ini sebelum delete | **Query Port** (`XxxChecker`) |
+| Slice A perlu **lookup nilai** dari slice B (nama, kode) | `product` tampilkan nama brand tanpa join entity | **Query Port** (`XxxLookupPort`) |
+| Slice A perlu **memicu aksi** di slice B | `adjustment` meminta `StockService` untuk kurangi stok | **Command Port** (inject Use Case interface) |
+| Banyak slice perlu di-notify satu kejadian | Approval selesai → modul bisnis bereaksi | **Domain Event** (Spring `ApplicationEvent`) |
+| Slice A & B selalu berubah bersama, coupling sangat tinggi | — | Pertimbangkan gabung jadi **1 slice** (salah boundary) |
+
+> **Dilarang keras:** Import entity domain, JPA repository, atau Use Case *impl* dari slice lain di dalam **domain** atau **application** layer manapun.
+
+---
+
+### Pola 1 — Query Port (`XxxChecker` / `XxxQueryPort`)
+
+Digunakan untuk **query read-only** dari slice A ke slice B tanpa slice A perlu mengetahui internal slice B.
+
+**Struktur:**
+```
+slice-A/
+  domain/port/SliceAInUseChecker.java       ← interface (pure Java, tanpa Spring)
+  infrastructure/adapter/
+    SliceAInUseCheckerImpl.java             ← boleh inject JpaRepository slice B
+  infrastructure/config/SliceAConfig.java  ← wire bean checker
+```
+
+**Contoh — `brand` cek apakah dipakai `Product`:**
+```java
+// brand/domain/port/BrandInUseChecker.java  (domain, pure Java)
+public interface BrandInUseChecker {
+    boolean isUsedByAnyProduct(Long brandId);
+}
+
+// brand/infrastructure/adapter/BrandInUseCheckerImpl.java  (infrastructure)
+public class BrandInUseCheckerImpl implements BrandInUseChecker {
+    private final JpaProductRepository productJpaRepository;  // boleh di sini
+    @Override
+    public boolean isUsedByAnyProduct(Long brandId) {
+        return productJpaRepository.existsByBrandId(brandId);
+    }
+}
+
+// brand/application/usecase/command/DeleteBrandUseCaseImpl.java
+public void execute(Long id) {
+    repository.findById(id).orElseThrow(...);
+    if (inUseChecker.isUsedByAnyProduct(id)) {
+        throw new DomainException("msg.error.brand.in-use");
+    }
+    repository.delete(id);
+}
+```
+
+**Wiring di Config:**
+```java
+@Bean
+public BrandInUseChecker brandInUseChecker(JpaProductRepository jpaProductRepository) {
+    return new BrandInUseCheckerImpl(jpaProductRepository);
+}
+
+@Bean
+public DeleteBrandUseCase deleteBrandUseCase(
+        BrandRepository repository,
+        BrandInUseChecker brandInUseChecker,
+        PlatformTransactionManager txManager) {
+    var pure = new DeleteBrandUseCaseImpl(repository, brandInUseChecker);
+    TransactionTemplate tx = new TransactionTemplate(txManager);
+    return (id) -> tx.executeWithoutResult(s -> pure.execute(id));
+}
+```
+
+**Referensi di Codebase:**
+- `inventory.brand.domain.port.BrandInUseChecker`
+- `inventory.productcategory.domain.port.ProductCategoryInUseChecker`
+
+---
+
+### Pola 2 — Command Port (inject Use Case Interface)
+
+Digunakan ketika slice A perlu **memicu perubahan state** di slice B. Inject interface Use Case (bukan impl, bukan repository) dari slice B sebagai dependency slice A.
+
+**Contoh — `adjustment` memicu perubahan stok:**
+```java
+// adjustment use case menerima StockService (port dari stock/domain/port/)
+public class CreateStockAdjustmentUseCaseImpl {
+    private final StockService stockService;   // port dari slice stock
+    // ...
+    public void execute(...) {
+        // proses adjustment
+        stockService.recordMovement(payload);  // delegate ke slice stock
+    }
+}
+```
+
+**Referensi di Codebase:**
+- `inventory.stock.domain.port.StockService` — dipakai oleh `adjustment`
+- `inventory.stock.domain.port.ValuationService`
+- `inventory.uomconversion.domain.port.UomConversionService` — dipakai oleh `stock`
+
+---
+
+### Pola 3 — Domain Event
+
+Digunakan ketika **banyak slice** perlu bereaksi atas satu kejadian, atau ketika coupling searah tidak jelas. Slice A publish event, slice-slice lain listen secara independen.
+
+Lihat implementasi detail: [`docs/architecture/approval-arsitektur.md`](approval-arsitektur.md)
+
+---
+
+### Ringkasan Aturan
+
+```
+✅ domain/port/     → interface Java murni, boleh dipakai di application layer
+✅ infrastructure/adapter/ → satu-satunya tempat yang boleh import JpaRepository slice lain
+✅ Inject Use Case interface antar slice hanya melalui port / domain/port/
+❌ Import domain model atau entity dari slice lain di application/domain layer
+❌ Import JpaRepository slice lain di use case atau domain service
+❌ @ManyToOne ke entity slice lain — gunakan Long referenceId
+```
+
