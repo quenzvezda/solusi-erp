@@ -7,6 +7,7 @@ import com.solusi.erp.inventory.product.domain.repository.ProductRepository;
 import com.solusi.erp.inventory.product.infrastructure.config.ProductConfig;
 import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import com.solusi.erp.inventory.product.infrastructure.persistence.ProductPersistenceMapper;
+import com.solusi.erp.inventory.uom.infrastructure.persistence.UomJpaRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,8 @@ class ProductConfigIntegrationTest {
         public JpaProductRepository jpaProductRepository() { return mock(JpaProductRepository.class); }
         @Bean
         public ProductPersistenceMapper productPersistenceMapper() { return mock(ProductPersistenceMapper.class); }
+        @Bean
+        public UomJpaRepository uomJpaRepository() { return mock(UomJpaRepository.class); }
         @Bean
         public SequenceGeneratorService sequenceGeneratorService() { return mock(SequenceGeneratorService.class); }
         @Bean

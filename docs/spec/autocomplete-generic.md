@@ -48,7 +48,7 @@ Untuk menjaga konsistensi UI, setiap penggunaan autocomplete **WAJIB** menyertak
 Hal ini berlaku untuk semua Request DTO yang dikirim kembali ke View. Jika salah satu kosong, maka UI akan terlihat tidak konsisten saat mode Edit.
 
 ### C. Inisialisasi Manual (Cascading)
-Jika sebuah lookup bergantung pada field lain (misal: Bin bergantung pada Grid), gunakan fungsi **`initLookup`** yang tersedia secara global di **`erp-common-handler.js`**.
+Jika sebuah lookup bergantung pada field lain (misal: Bin bergantung pada Grid), gunakan fungsi **`initLookup`** yang tersedia secara global di **`shared/erp-common-handler.js`**.
 
 ```javascript
 // Pola 1: Standar (Parent -> Child)

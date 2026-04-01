@@ -142,7 +142,7 @@ Gunakan HTMX hanya untuk filter pencarian atau interaksi sederhana yang tidak me
 ## Best Practices & JavaScript Initialization
 
 ### 1. Global Auto-Initialization
-Sistem secara otomatis menginisialisasi komponen berikut melalui **`erp-common-handler.js`**:
+Sistem secara otomatis menginisialisasi komponen berikut melalui **`shared/erp-common-handler.js`**:
 - **Numeric**: Elemen dengan class `.erp-number-*`.
 - **Autocomplete**: Elemen `.erp-input-ts` yang memiliki atribut `data-lookup-path`.
 
@@ -155,7 +155,7 @@ Untuk mencegah dropdown terlihat kosong saat mode Edit atau setelah error valida
 Developer wajib memastikan Request DTO memiliki field penampung untuk Name dan SubText tersebut (contoh: `brandName`, `brandCode`).
 
 ### 2. The Global `initLookup` Function
-Jika butuh inisialisasi manual (misal: cascading), gunakan fungsi yang tersedia di `erp-common-handler.js`:
+Jika butuh inisialisasi manual (misal: cascading), gunakan fungsi yang tersedia di `shared/erp-common-handler.js`:
 ```javascript
 const ts = initLookup(element, 'module/path', parentProvider);
 ```

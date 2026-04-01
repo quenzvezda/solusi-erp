@@ -39,7 +39,7 @@ Tandai form dengan atribut `data-ajax-form="true"` dan tentukan URL tujuan setel
 ```
 
 ### B. Penanganan Client-Side
-Sistem menggunakan `erp-form-handler.js` (global) yang secara otomatis:
+Sistem menggunakan `shared/erp-form-handler.js` (global) yang secara otomatis:
 1.  Mencegat submit form.
 2.  **Data Cleaning (Otomatis)**:
     *   **Empty to Null**: Mengonversi string kosong (`""`) menjadi `null` agar kompatibel dengan Jackson (Enum/Long).

@@ -10,7 +10,7 @@ import java.util.List;
 
 /**
  * REST controller for inventory lookup APIs.
- * Provides the UOM conversion lookup endpoint consumed by erp-common-handler.js.
+ * Provides the UOM conversion lookup endpoint consumed by shared/erp-common-handler.js.
  */
 @RestController
 @RequestMapping("/api/lookup/inventory")

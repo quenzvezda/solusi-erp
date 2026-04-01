@@ -17,7 +17,7 @@
 - **Security:** Use `sec:authorize` to control visibility based on user roles and permissions.
 
 ## AJAX & Form Submission (Standard CRUD)
-- **Attribute-Driven Logic:** Use `data-ajax-form="true"` on form tags to enable automatic AJAX submission via `erp-form-handler.js`.
+- **Attribute-Driven Logic:** Use `data-ajax-form="true"` on form tags to enable automatic AJAX submission via `shared/erp-form-handler.js`.
 - **Redirects:** Specify the success redirect path using `data-redirect-on-success="/module/path"`.
 - **State Persistence:** Do not use HTMX for forms with complex JavaScript components (TomSelect, AutoNumeric) to prevent state destruction on validation errors. Use AJAX instead.
 

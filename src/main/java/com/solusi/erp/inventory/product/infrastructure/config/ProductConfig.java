@@ -11,6 +11,7 @@ import com.solusi.erp.inventory.product.domain.port.ProductLookupProvider;
 import com.solusi.erp.inventory.product.infrastructure.adapter.ProductLookupProviderImpl;
 import com.solusi.erp.inventory.product.infrastructure.persistence.ProductPersistenceMapper;
 import com.solusi.erp.inventory.uom.domain.port.UomUsageChecker;
+import com.solusi.erp.inventory.uom.infrastructure.persistence.UomJpaRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -99,8 +100,9 @@ public class ProductConfig {
     @Bean
     public GetProductLookupUseCase getProductLookupUseCase(
             ProductRepository productRepository,
+            UomJpaRepository uomRepository,
             PlatformTransactionManager txManager) {
-        GetProductLookupUseCase pureUseCase = new GetProductLookupUseCaseImpl(productRepository);
+        GetProductLookupUseCase pureUseCase = new GetProductLookupUseCaseImpl(productRepository, uomRepository);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         tx.setReadOnly(true);
         return new GetProductLookupUseCase() {

@@ -138,15 +138,15 @@ masih perlu hidup. MenuSearch bisa dibiarkan di horizontal sementara.
 - `UserRepositoryAdapter.java` — `security.user.infrastructure.adapter`
 - `layout/master.html` — template layout
 - `security/profile/form.html` — template form profil
-- `erp-form-handler.js` — form submission handler
+- `shared/erp-form-handler.js` — form submission handler
 - `GlobalModelAttributeAdvice.java` — `core.infrastructure.web.advice`
 
 **Hasil trace alur save tema:**
 
 1. Template `form.html` — radio input `th:field="*{theme}"` dengan nilai `light/dark/warm/green`.
-   Form menggunakan `data-ajax-form="true"` → dihandle oleh `erp-form-handler.js`.
+   Form menggunakan `data-ajax-form="true"` → dihandle oleh `shared/erp-form-handler.js`.
 
-2. `erp-form-handler.js` — radio button ditangani di baris 134–136:
+2. `shared/erp-form-handler.js` — radio button ditangani di baris 134–136:
    ```js
    if (el.type === 'radio') {
        if (el.checked) { setDeepValue(data, cleanName, el.value); }
@@ -190,7 +190,7 @@ Form profil di `form.html` baris 21–22:
 
 **Tidak ada `data-redirect-on-success`.**
 
-Akibatnya: setelah AJAX POST berhasil, `erp-form-handler.js` hanya menampilkan toast sukses
+Akibatnya: setelah AJAX POST berhasil, `shared/erp-form-handler.js` hanya menampilkan toast sukses
 (baris 183: `showSuccess(result.message)`), tapi **halaman tidak di-reload**.
 Body element tetap memiliki `data-bs-theme` lama yang di-render server saat halaman pertama kali dimuat.
 Pengguna melihat toast "berhasil" tapi tema visual tidak berubah, sehingga mengira perubahan tidak tersimpan.

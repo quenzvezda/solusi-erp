@@ -9,6 +9,7 @@ Folder ini berisi standar teknis horizontal yang berlaku di seluruh aplikasi ERP
 - **[header-lines-form.md](header-lines-form.md)**: Standar pola form Header-Lines (PO, SO, Inventory).
 - **[form-submission.md](form-submission.md)**: Pola pengiriman form (Hybrid Approach: HTMX vs AJAX).
 - **[layout-standard.md](layout-standard.md)**: Standar layout utama dengan slot untuk JavaScript per-halaman.
+- **[page-specific-scripts.md](page-specific-scripts.md)**: Panduan memilih antara script inline di template dan file JavaScript khusus per halaman/fitur.
 
 ## Developer Guides (Implementation)
 - **[../architecture/form-guide.md](../architecture/form-guide.md)**: Panduan praktis implementasi form dinamis (`ErpLineManager`, `ErpInventory`).

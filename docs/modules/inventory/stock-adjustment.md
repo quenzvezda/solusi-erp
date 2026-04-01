@@ -42,7 +42,7 @@ Stock Adjustment digunakan untuk melakukan koreksi jumlah stok fisik secara manu
 - **Facility Change**: Jika user mengubah *Facility* (Gudang) saat item sudah ada di tabel, sistem akan menampilkan konfirmasi dan **menghapus seluruh item** jika disetujui. Hal ini dilakukan karena Grid dan Container bergantung pada Facility yang dipilih.
 
 ## 4. Standar UI/UX (Technical Standard)
-- **Generic Helpers**: Menggunakan arsitektur `erp-common-handler.js` untuk konsistensi antar modul:
+- **Generic Helpers**: Menggunakan arsitektur `shared/erp-common-handler.js` untuk konsistensi antar modul:
     - `ErpLineManager`: Otomasi penambahan/penghapusan baris dan penataan index `lines[n]`.
     - `ErpNumeric`: Penanganan input angka ribuan dan desimal yang aman.
     - `ErpInventory`: Mesin konversi UoM (Unit of Measure) dan Serial Number yang terintegrasi dengan drawer.

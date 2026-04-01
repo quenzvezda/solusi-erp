@@ -22,5 +22,5 @@ Dokumentasi dikelompokkan ke dalam folder berikut berdasarkan konteksnya:
 ## 3. How to Use
 Jika Anda baru bergabung dengan proyek ini atau sedang melakukan troubleshooting:
 1. Baca **AGENTS.md** untuk memahami aturan main.
-2. Jika masalah berkaitan dengan komponen UI atau pola coding tertentu (misal: cara kerja Autocomplete atau HTMX), carilah dokumen yang relevan di folder **[/spec](spec/index.md)**.
+2. Jika masalah berkaitan dengan komponen UI atau pola coding tertentu (misal: cara kerja Autocomplete, HTMX, atau JavaScript per-halaman), carilah dokumen yang relevan di folder **[/spec](spec/index.md)**.
 3. Jika masalah berkaitan dengan aturan bisnis modul, cari di folder **[/modules](modules/)**.

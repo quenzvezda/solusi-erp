@@ -23,7 +23,7 @@ Gunakan atribut `th:disabled` atau `isReadonly` pada fragment input agar form ti
 
 ## 2. Dynamic Line Manager (`ErpLineManager`)
 
-Jangan menulis logika penambahan baris secara manual. Gunakan `ErpLineManager` yang tersedia di `erp-common-handler.js`.
+Jangan menulis logika penambahan baris secara manual. Gunakan `ErpLineManager` yang tersedia di `shared/erp-common-handler.js`.
 
 ### A. Template Baris (HTML)
 Simpan template baris di dalam tabel yang tersembunyi. Gunakan placeholder `INDEX` untuk atribut `name`.
@@ -64,25 +64,30 @@ lineManager.updateIndexes();
 
 ---
 
-## 3. Inventory & UoM Engine (`ErpInventory`)
+## 3. Inventory & UoM Flow
 
-Untuk form inventory, gunakan `ErpInventory.setupUomLogic` untuk menangani pemilihan satuan (UoM) dan Serial Number via Drawer.
+Untuk form inventory yang kompleks, gunakan file JavaScript khusus per fitur, misalnya `static/js/inventory/adjustment/stock-adjustment-form.js`.
+Flow seperti pemilihan UoM, pengaturan serial number, dan kalkulasi drawer sebaiknya tetap berada di file fitur tersebut, bukan di helper global.
+
+Pola yang disarankan:
 
 ```javascript
 row.querySelector('.btn-edit-detail').onclick = () => {
     const isSerialized = row.querySelector('.input-serialized').value === 'true';
     const drawerId = isSerialized ? 'drawer-serial' : 'drawer-non-serial';
-    
-    ErpInventory.setupUomLogic(
-        document.getElementById(drawerId), 
-        row, 
-        isSerialized, 
-        calculateTotals // Callback setelah save di drawer
-    );
-    
-    ErpDrawer.open(drawerId);
+
+    if (StockAdjustmentForm.setupUomDrawer(
+        document.getElementById(drawerId),
+        row,
+        isSerialized,
+        calculateTotals
+    )) {
+        ErpDrawer.open(drawerId);
+    }
 };
 ```
+
+Jika fitur lain memiliki flow serupa, buat file JavaScript per fitur dengan pola yang sama dan kirim lewat slot `pageScripts` pada layout master.
 
 ---
 
