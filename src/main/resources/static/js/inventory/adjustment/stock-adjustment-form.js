@@ -115,16 +115,24 @@
         }
 
         function populateUomDropdown(data) {
+            // When TomSelect has no payload (pre-edit rows with static HTML options),
+            // baseUomId falls back to input-uom-id which holds the *selected* UOM, not
+            // the product base UOM. Use isBase flag from the API response to resolve
+            // the correct base UOM instead.
+            const baseFromApi = data && data.find(u => u.isBase);
+            const resolvedBaseUomId = baseFromApi ? String(baseFromApi.uomId) : String(baseUomId);
+            const resolvedBaseUomAlias = baseFromApi ? baseFromApi.uomName : baseUomAlias;
+
             uomEl.innerHTML = '';
 
             const baseOpt = document.createElement('option');
-            baseOpt.value = String(baseUomId);
-            baseOpt.text = baseUomAlias;
+            baseOpt.value = resolvedBaseUomId;
+            baseOpt.text = resolvedBaseUomAlias;
             baseOpt.setAttribute('data-factor', '1.00');
             uomEl.appendChild(baseOpt);
 
             (data || []).forEach(u => {
-                if (String(u.uomId) !== String(baseUomId)) {
+                if (!u.isBase) {
                     const opt = document.createElement('option');
                     opt.value = u.uomId;
                     opt.text = u.uomName;
@@ -135,6 +143,11 @@
                     uomEl.appendChild(opt);
                 }
             });
+
+            // Update base UOM labels with the resolved value (overrides the initial
+            // optimistic value set before the fetch, which may have been wrong for
+            // pre-edit rows)
+            drawer.querySelectorAll('.txt-base-uom').forEach(el => el.textContent = resolvedBaseUomAlias);
 
             uomEl.value = selectedUomId;
             initNumericInputs(drawer);

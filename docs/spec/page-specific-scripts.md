@@ -75,3 +75,16 @@ Namun helper global tidak boleh menampung flow bisnis yang hanya relevan untuk s
 - Gunakan file JavaScript khusus untuk form yang kompleks.
 - Pertahankan helper global tetap kecil, stabil, dan reusable.
 - Jika file per fitur dipakai lintas beberapa halaman, pertimbangkan subfolder modul agar struktur tetap rapi.
+
+## Jebakan Umum di Mode Pre-Edit (TomSelect tanpa Payload)
+
+Ketika baris tabel di-render oleh server (Thymeleaf), elemen `<select>` diisi dengan opsi statis (`<option selected>`). Saat TomSelect di-init atas elemen ini, opsi tersebut **tidak memiliki `payload`** — berbeda dengan opsi yang dimuat via `load` callback saat user mengetik.
+
+Akibatnya, mengakses `tomselect.options[val]?.payload` untuk mengambil data produk (misal base UoM ID, harga terakhir) akan mengembalikan `undefined` pada baris pre-edit.
+
+**Pattern yang harus diikuti**:
+- Jangan andalkan `payload` untuk state yang perlu dilihat saat drawer dibuka di mode pre-edit.
+- Simpan data penting di hidden inputs pada saat row di-render (server-side) dan saat `tsProd.on('change')` (client-side).
+- Jika data hanya tersedia dari API (misal base UoM dari `/api/lookup/inventory/uom-conversions`), baca field diskriminan dari respons API tersebut (misal `isBase: true`) dan jangan andalkan nilai hidden input yang bisa saja sudah diubah oleh user (misal dari Pieces ke Box).
+
+Pola ini sudah diterapkan di `stock-adjustment-form.js` pada fungsi `populateUomDropdown`.
