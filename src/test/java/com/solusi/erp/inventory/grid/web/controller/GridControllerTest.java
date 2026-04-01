@@ -2,6 +2,7 @@ package com.solusi.erp.inventory.grid.web.controller;
 
 import com.solusi.erp.inventory.facility.application.usecase.query.FindFacilitiesUseCase;
 import com.solusi.erp.inventory.facility.application.usecase.query.GetFacilityEditViewUseCase;
+import com.solusi.erp.inventory.facility.domain.port.FacilityLookupProvider;
 import com.solusi.erp.inventory.facility.web.mapper.FacilityWebMapper;
 import com.solusi.erp.inventory.grid.application.usecase.command.CreateGridUseCase;
 import com.solusi.erp.inventory.grid.application.usecase.command.DeleteGridUseCase;
@@ -40,13 +41,14 @@ public class GridControllerTest {
         FindFacilitiesUseCase findFacilitiesUseCase = mock(FindFacilitiesUseCase.class);
         GetFacilityEditViewUseCase getFacilityEditViewUseCase = mock(GetFacilityEditViewUseCase.class);
         FacilityWebMapper facilityWebMapper = mock(FacilityWebMapper.class);
+        FacilityLookupProvider facilityLookupProvider = mock(FacilityLookupProvider.class);
         MessageSource messageSource = mock(MessageSource.class);
 
         GridController controller = new GridController(
             createUseCase, updateUseCase, deleteUseCase,
             findUseCase, editViewUseCase, lookupUseCase,
             webMapper, findFacilitiesUseCase, getFacilityEditViewUseCase,
-            facilityWebMapper, messageSource
+            facilityWebMapper, facilityLookupProvider, messageSource
         );
 
         Grid domainGrid = Grid.createNew(1L, "GRD-001", "Storage Area A", null, true);

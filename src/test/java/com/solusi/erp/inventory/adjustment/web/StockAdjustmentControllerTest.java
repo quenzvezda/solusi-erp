@@ -8,6 +8,7 @@ import com.solusi.erp.inventory.adjustment.domain.model.StockAdjustment;
 import com.solusi.erp.inventory.adjustment.web.controller.StockAdjustmentController;
 import com.solusi.erp.inventory.adjustment.web.dto.*;
 import com.solusi.erp.inventory.adjustment.web.mapper.StockAdjustmentWebMapper;
+import com.solusi.erp.inventory.facility.domain.port.FacilityLookupProvider;
 import com.solusi.erp.master.currency.application.usecase.query.FindActiveCurrenciesUseCase;
 import com.solusi.erp.master.currency.application.usecase.query.GetDefaultCurrencyUseCase;
 import com.solusi.erp.master.currency.domain.model.Currency;
@@ -45,6 +46,7 @@ class StockAdjustmentControllerTest {
     private FindActiveCurrenciesUseCase findActiveCurrenciesUseCase;
     private GetDefaultCurrencyUseCase getDefaultCurrencyUseCase;
     private CurrencyWebMapper currencyWebMapper;
+    private FacilityLookupProvider facilityLookupProvider;
     private MessageSource messageSource;
 
     private StockAdjustmentController controller;
@@ -62,11 +64,13 @@ class StockAdjustmentControllerTest {
         findActiveCurrenciesUseCase = mock(FindActiveCurrenciesUseCase.class);
         getDefaultCurrencyUseCase = mock(GetDefaultCurrencyUseCase.class);
         currencyWebMapper = mock(CurrencyWebMapper.class);
+        facilityLookupProvider = mock(FacilityLookupProvider.class);
         messageSource = mock(MessageSource.class);
 
         controller = new StockAdjustmentController(createUseCase, updateUseCase, deleteUseCase,
                 processUseCase, findUseCase, getUseCase, getEditViewUseCase,
-                webMapper, findActiveCurrenciesUseCase, getDefaultCurrencyUseCase, currencyWebMapper, messageSource);
+                webMapper, findActiveCurrenciesUseCase, getDefaultCurrencyUseCase, currencyWebMapper,
+                facilityLookupProvider, messageSource);
     }
 
     private StockAdjustment draftDomain() {

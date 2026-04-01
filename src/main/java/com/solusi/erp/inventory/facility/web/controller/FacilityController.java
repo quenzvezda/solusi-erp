@@ -10,8 +10,7 @@ import com.solusi.erp.inventory.facility.application.usecase.query.*;
 import com.solusi.erp.inventory.facility.domain.model.Facility;
 import com.solusi.erp.inventory.facility.web.dto.*;
 import com.solusi.erp.inventory.facility.web.mapper.FacilityWebMapper;
-import com.solusi.erp.master.geographic.infrastructure.persistence.Geographic;
-import com.solusi.erp.master.geographic.infrastructure.persistence.GeographicJpaRepository;
+import com.solusi.erp.master.geographic.domain.port.GeographicLookupProvider;
 import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
@@ -47,7 +46,7 @@ public class FacilityController {
     private final FacilityWebMapper webMapper;
     private final MessageSource messageSource;
     private final PartyLookupProvider partyLookupProvider;
-    private final GeographicJpaRepository geographicJpaRepository;
+    private final GeographicLookupProvider geographicLookupProvider;
 
     @GetMapping
     @PreAuthorize("hasAuthority('FACILITY_READ')")
@@ -138,20 +137,14 @@ public class FacilityController {
 
     private Map<String, Object> buildFacilityUI(Facility domain) {
         Map<String, Object> ui = new HashMap<>();
-        // Owner: uses PartyLookupProvider port (new standard — single source of truth)
+        // Owner: uses PartyLookupProvider port
         LookupDto ownerLookup = partyLookupProvider.resolve(domain.getOwnerId());
         ui.put("ownerName", ownerLookup != null ? ownerLookup.name() : domain.getOwnerName());
         ui.put("ownerCode", ownerLookup != null ? ownerLookup.subText() : "");
-        // City: uses GeographicJpaRepository directly (old approach — kept for comparison)
-        ui.put("cityName", domain.getCityName());
-        ui.put("cityCode", buildCitySubText(domain.getCityId()));
+        // City: uses GeographicLookupProvider port
+        LookupDto cityLookup = geographicLookupProvider.resolve(domain.getCityId());
+        ui.put("cityName", cityLookup != null ? cityLookup.name() : domain.getCityName());
+        ui.put("cityCode", cityLookup != null ? cityLookup.subText() : "");
         return ui;
-    }
-
-    private String buildCitySubText(Long cityId) {
-        if (cityId == null) return "";
-        return geographicJpaRepository.findById(cityId)
-                .map(Geographic::getCode)
-                .orElse("");
     }
 }

@@ -4,8 +4,10 @@ import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.inventory.uom.domain.model.UomType;
 import com.solusi.erp.inventory.uom.application.usecase.query.GetUomLookupUseCase;
+import com.solusi.erp.inventory.product.domain.port.ProductLookupProvider;
 import com.solusi.erp.inventory.uomconversion.application.usecase.command.*;
 import com.solusi.erp.inventory.uomconversion.application.usecase.query.*;
 import com.solusi.erp.inventory.uomconversion.domain.model.UomConversion;
@@ -45,6 +47,7 @@ public class UomConversionController {
     private final GetUomConversionEditViewUseCase getUomConversionEditViewUseCase;
     private final GetUomLookupUseCase getUomLookupUseCase;
     private final UomConversionWebMapper webMapper;
+    private final ProductLookupProvider productLookupProvider;
     private final MessageSource messageSource;
 
     @GetMapping
@@ -94,8 +97,11 @@ public class UomConversionController {
             .orElseThrow(() -> new RuntimeException("UomConversion not found"));
 
         model.addAttribute("uomConversionRequest", webMapper.toSaveRequest(domain));
+        LookupDto product = productLookupProvider.resolve(domain.getProductId());
+        String productName = product != null ? product.name() : domain.getProductName();
+        String productCode = product != null ? product.subText() : domain.getProductCode();
         model.addAttribute("uomUIForm", new UomConversionUIInfo(
-            domain.getProductName(), domain.getProductCode(), domain.getToUomName()));
+            productName, productCode, domain.getToUomName()));
         model.addAttribute("auditInfo", webMapper.toDetailResponse(domain));
         model.addAttribute("uoms", getUomLookupUseCase.findByType(UomType.UNIT));
         return "inventory/uom-conversions/form";

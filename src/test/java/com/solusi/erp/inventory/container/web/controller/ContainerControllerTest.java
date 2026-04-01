@@ -10,6 +10,7 @@ import com.solusi.erp.inventory.container.domain.model.Container;
 import com.solusi.erp.inventory.container.web.dto.ContainerSummaryResponse;
 import com.solusi.erp.inventory.container.web.mapper.ContainerWebMapper;
 import com.solusi.erp.inventory.grid.application.usecase.query.GetGridEditViewUseCase;
+import com.solusi.erp.inventory.grid.domain.port.GridLookupProvider;
 import com.solusi.erp.inventory.grid.web.mapper.GridWebMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.MessageSource;
@@ -38,12 +39,13 @@ public class ContainerControllerTest {
         ContainerWebMapper webMapper = mock(ContainerWebMapper.class);
         GetGridEditViewUseCase getGridEditViewUseCase = mock(GetGridEditViewUseCase.class);
         GridWebMapper gridWebMapper = mock(GridWebMapper.class);
+        GridLookupProvider gridLookupProvider = mock(GridLookupProvider.class);
         MessageSource messageSource = mock(MessageSource.class);
 
         ContainerController controller = new ContainerController(
             createUseCase, updateUseCase, deleteUseCase,
             findUseCase, editViewUseCase, lookupUseCase,
-            webMapper, getGridEditViewUseCase, gridWebMapper, messageSource
+            webMapper, getGridEditViewUseCase, gridWebMapper, gridLookupProvider, messageSource
         );
 
         Container domainContainer = Container.createNew(1L, "Bin A1", null, null, null, null, null, null, true);

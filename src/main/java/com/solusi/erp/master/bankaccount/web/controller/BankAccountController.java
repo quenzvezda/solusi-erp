@@ -4,11 +4,14 @@ import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.master.bankaccount.application.usecase.command.*;
 import com.solusi.erp.master.bankaccount.application.usecase.query.*;
 import com.solusi.erp.master.bankaccount.domain.model.BankAccount;
 import com.solusi.erp.master.bankaccount.web.dto.*;
 import com.solusi.erp.master.bankaccount.web.mapper.BankAccountWebMapper;
+import com.solusi.erp.master.geographic.domain.port.GeographicLookupProvider;
+import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import com.solusi.erp.master.shared.model.AccountType;
 import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
@@ -44,6 +47,8 @@ public class BankAccountController {
     private final GetBankAccountEditViewUseCase getBankAccountEditViewUseCase;
     private final BankAccountWebMapper webMapper;
     private final MessageSource messageSource;
+    private final PartyLookupProvider partyLookupProvider;
+    private final GeographicLookupProvider geographicLookupProvider;
 
     @GetMapping
     @PreAuthorize("hasAuthority('BANK-ACCOUNT_READ')")
@@ -94,6 +99,13 @@ public class BankAccountController {
         model.addAttribute("bankAccountRequest", webMapper.toSaveRequest(domain));
         model.addAttribute("auditInfo", webMapper.toDetailResponse(domain));
         model.addAttribute("accountTypes", AccountType.values());
+
+        LookupDto cityLookup = geographicLookupProvider.resolve(domain.getCityId());
+        model.addAttribute("selectedCity", cityLookup != null ? cityLookup.name() : domain.getCityName());
+
+        LookupDto partyLookup = partyLookupProvider.resolve(domain.getPartyId());
+        model.addAttribute("selectedParty", partyLookup != null ? partyLookup.name() : domain.getPartyName());
+
         return "master/bank-accounts/form";
     }
 

@@ -12,6 +12,8 @@ import com.solusi.erp.inventory.product.domain.model.Product;
 import com.solusi.erp.inventory.product.web.dto.ProductSummaryResponse;
 import com.solusi.erp.inventory.product.web.mapper.ProductWebMapper;
 import com.solusi.erp.inventory.uom.application.usecase.query.GetUomLookupUseCase;
+import com.solusi.erp.inventory.productcategory.domain.port.ProductCategoryLookupProvider;
+import com.solusi.erp.inventory.brand.domain.port.BrandLookupProvider;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.MessageSource;
 import org.springframework.ui.ExtendedModelMap;
@@ -37,12 +39,15 @@ public class ProductControllerTest {
         GetProductUseCase getProductUseCase = mock(GetProductUseCase.class);
         GetUomLookupUseCase getUomLookupUseCase = mock(GetUomLookupUseCase.class);
         ProductWebMapper webMapper = mock(ProductWebMapper.class);
+        ProductCategoryLookupProvider productCategoryLookupProvider = mock(ProductCategoryLookupProvider.class);
+        BrandLookupProvider brandLookupProvider = mock(BrandLookupProvider.class);
         MessageSource messageSource = mock(MessageSource.class);
 
         ProductController controller = new ProductController(
             findProductsUseCase, getProductUseCase, createProductUseCase,
             updateProductUseCase, deleteProductUseCase, getProductEditViewUseCase,
-            getProductLookupUseCase, getUomLookupUseCase, webMapper, messageSource
+            getProductLookupUseCase, getUomLookupUseCase, webMapper,
+            productCategoryLookupProvider, brandLookupProvider, messageSource
         );
 
         Product domain = Product.createNew(

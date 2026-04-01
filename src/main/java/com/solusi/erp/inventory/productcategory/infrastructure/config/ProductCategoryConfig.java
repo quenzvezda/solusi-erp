@@ -8,6 +8,8 @@ import com.solusi.erp.inventory.productcategory.domain.repository.ProductCategor
 import com.solusi.erp.inventory.productcategory.infrastructure.adapter.ProductCategoryInUseCheckerImpl;
 import com.solusi.erp.inventory.productcategory.infrastructure.adapter.ProductCategoryRepositoryImpl;
 import com.solusi.erp.inventory.productcategory.infrastructure.persistence.ProductCategoryJpaRepository;
+import com.solusi.erp.inventory.productcategory.domain.port.ProductCategoryLookupProvider;
+import com.solusi.erp.inventory.productcategory.infrastructure.adapter.ProductCategoryLookupProviderImpl;
 import com.solusi.erp.inventory.productcategory.infrastructure.persistence.ProductCategoryPersistenceMapper;
 import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import org.springframework.context.annotation.Bean;
@@ -108,5 +110,10 @@ public class ProductCategoryConfig {
                 return tx.execute(status -> pure.search(keyword, limit));
             }
         };
+    }
+
+    @Bean
+    public ProductCategoryLookupProvider productCategoryLookupProvider(ProductCategoryJpaRepository productCategoryJpaRepository) {
+        return new ProductCategoryLookupProviderImpl(productCategoryJpaRepository);
     }
 }

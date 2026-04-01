@@ -9,7 +9,7 @@ import com.solusi.erp.inventory.facility.application.usecase.query.GetFacilityLo
 import com.solusi.erp.inventory.facility.domain.model.Facility;
 import com.solusi.erp.inventory.facility.web.dto.FacilitySummaryResponse;
 import com.solusi.erp.inventory.facility.web.mapper.FacilityWebMapper;
-import com.solusi.erp.master.geographic.infrastructure.persistence.GeographicJpaRepository;
+import com.solusi.erp.master.geographic.domain.port.GeographicLookupProvider;
 import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.MessageSource;
@@ -38,12 +38,12 @@ public class FacilityControllerTest {
         FacilityWebMapper webMapper = mock(FacilityWebMapper.class);
         MessageSource messageSource = mock(MessageSource.class);
         PartyLookupProvider partyLookupProvider = mock(PartyLookupProvider.class);
-        GeographicJpaRepository geographicJpaRepository = mock(GeographicJpaRepository.class);
+        GeographicLookupProvider geographicLookupProvider = mock(GeographicLookupProvider.class);
 
         FacilityController controller = new FacilityController(
             createUseCase, updateUseCase, deleteUseCase,
             findUseCase, editViewUseCase, lookupUseCase,
-            webMapper, messageSource, partyLookupProvider, geographicJpaRepository
+            webMapper, messageSource, partyLookupProvider, geographicLookupProvider
         );
 
         Facility domainFacility = Facility.createNew("Warehouse A", 1L, "Jl. Test", 10L, "12345", null, true);

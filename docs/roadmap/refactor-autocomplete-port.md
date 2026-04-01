@@ -116,13 +116,13 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
 
 #### Buat Port
 
-- [ ] Buat interface `com.solusi.erp.master.geographic.domain.port.GeographicLookupProvider`
+- [x] Buat interface `com.solusi.erp.master.geographic.domain.port.GeographicLookupProvider`
   dengan method `LookupDto resolve(Long geographicId)`
   di file `src/main/java/com/solusi/erp/master/geographic/domain/port/GeographicLookupProvider.java`
 
 #### Buat Implementation
 
-- [ ] Buat class `com.solusi.erp.master.geographic.infrastructure.adapter.GeographicLookupProviderImpl`
+- [x] Buat class `com.solusi.erp.master.geographic.infrastructure.adapter.GeographicLookupProviderImpl`
   implements `GeographicLookupProvider`
   di file `src/main/java/com/solusi/erp/master/geographic/infrastructure/adapter/GeographicLookupProviderImpl.java`
   - Query `GeographicJpaRepository.findById(id)`
@@ -131,15 +131,15 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
 
 #### Daftarkan Bean
 
-- [ ] Tambah `@Bean GeographicLookupProvider geographicLookupProvider(...)` di
+- [x] Tambah `@Bean GeographicLookupProvider geographicLookupProvider(...)` di
   `com.solusi.erp.master.geographic.infrastructure.config.GeographicConfig`
   (buat file jika belum ada:
   `src/main/java/com/solusi/erp/master/geographic/infrastructure/config/GeographicConfig.java`)
 
 **Acceptance Criteria Phase 1:**
-- [ ] `GeographicLookupProvider` terimplementasi sebagai Port dengan Impl dan Bean
-- [ ] `resolve(null)` mengembalikan `null` (tidak throw exception)
-- [ ] `mvn clean test` pass sebelum lanjut ke Phase 2
+- [x] `GeographicLookupProvider` terimplementasi sebagai Port dengan Impl dan Bean
+- [x] `resolve(null)` mengembalikan `null` (tidak throw exception)
+- [x] `mvn clean test` pass sebelum lanjut ke Phase 2
 
 ---
 
@@ -151,21 +151,21 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
 
 #### Wire ke Controller
 
-- [ ] Inject `PartyLookupProvider partyLookupProvider` di constructor
+- [x] Inject `PartyLookupProvider partyLookupProvider` di constructor
   `com.solusi.erp.master.bankaccount.web.controller.BankAccountController`
   di file `src/main/java/com/solusi/erp/master/bankaccount/web/controller/BankAccountController.java`
 
-- [ ] Di method `showEditForm(Long id, Model model)` pada `BankAccountController`:
+- [x] Di method `showEditForm(Long id, Model model)` pada `BankAccountController`:
   - Panggil `partyLookupProvider.resolve(domain.getPartyId())`
   - Set `model.addAttribute("selectedParty", lookup != null ? lookup.name() : domain.getPartyName())`
   - (Opsional) set subtext untuk kode party jika template mendukung
 
-- [ ] Update template `src/main/resources/templates/master/bank-accounts/form.html`
+- [x] Update template `src/main/resources/templates/master/bank-accounts/form.html`
   bila `initialSubtext` untuk `partyId` perlu diisi (saat ini kosong `''`)
 
 **Acceptance Criteria Phase 2:**
-- [ ] Halaman edit Bank Account menampilkan nama Party yang sudah terpilih dengan benar
-- [ ] `mvn clean test` pass sebelum lanjut ke Phase 3
+- [x] Halaman edit Bank Account menampilkan nama Party yang sudah terpilih dengan benar
+- [x] `mvn clean test` pass sebelum lanjut ke Phase 3
 
 ---
 
@@ -177,29 +177,29 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
 
 #### Wire ke FacilityController
 
-- [ ] Inject `GeographicLookupProvider geographicLookupProvider` di constructor
+- [x] Inject `GeographicLookupProvider geographicLookupProvider` di constructor
   `com.solusi.erp.inventory.facility.web.controller.FacilityController`
   di file `src/main/java/com/solusi/erp/inventory/facility/web/controller/FacilityController.java`
 
-- [ ] Di method `buildFacilityUI(Facility domain)` pada `FacilityController`:
+- [x] Di method `buildFacilityUI(Facility domain)` pada `FacilityController`:
   - Ganti `GeographicJpaRepository` call dengan `geographicLookupProvider.resolve(domain.getCityId())`
   - Hapus injection `GeographicJpaRepository` dari controller (tidak perlu lagi setelah ini)
 
 #### Wire ke BankAccountController
 
-- [ ] Inject `GeographicLookupProvider geographicLookupProvider` di constructor
+- [x] Inject `GeographicLookupProvider geographicLookupProvider` di constructor
   `com.solusi.erp.master.bankaccount.web.controller.BankAccountController`
   di file `src/main/java/com/solusi/erp/master/bankaccount/web/controller/BankAccountController.java`
 
-- [ ] Di method `showEditForm(Long id, Model model)` pada `BankAccountController`:
+- [x] Di method `showEditForm(Long id, Model model)` pada `BankAccountController`:
   - Panggil `geographicLookupProvider.resolve(domain.getCityId())`
   - Set `model.addAttribute("selectedCity", lookup != null ? lookup.name() : domain.getCityName())`
 
 **Acceptance Criteria Phase 3:**
-- [ ] `FacilityController` tidak lagi mengimport atau menggunakan `GeographicJpaRepository`
-- [ ] Halaman edit Facility menampilkan nama kota yang benar via Port
-- [ ] Halaman edit Bank Account menampilkan nama kota yang sudah terpilih dengan benar
-- [ ] `mvn clean test` pass sebelum lanjut ke Phase 4
+- [x] `FacilityController` tidak lagi mengimport atau menggunakan `GeographicJpaRepository`
+- [x] Halaman edit Facility menampilkan nama kota yang benar via Port
+- [x] Halaman edit Bank Account menampilkan nama kota yang sudah terpilih dengan benar
+- [x] `mvn clean test` pass sebelum lanjut ke Phase 4
 
 ---
 
@@ -211,13 +211,13 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
 
 #### Buat Port
 
-- [ ] Buat interface `com.solusi.erp.inventory.facility.domain.port.FacilityLookupProvider`
+- [x] Buat interface `com.solusi.erp.inventory.facility.domain.port.FacilityLookupProvider`
   dengan method `LookupDto resolve(Long facilityId)`
   di file `src/main/java/com/solusi/erp/inventory/facility/domain/port/FacilityLookupProvider.java`
 
 #### Buat Implementation
 
-- [ ] Buat class `com.solusi.erp.inventory.facility.infrastructure.adapter.FacilityLookupProviderImpl`
+- [x] Buat class `com.solusi.erp.inventory.facility.infrastructure.adapter.FacilityLookupProviderImpl`
   implements `FacilityLookupProvider`
   di file `src/main/java/com/solusi/erp/inventory/facility/infrastructure/adapter/FacilityLookupProviderImpl.java`
   - Query `FacilityJpaRepository.findById(id)`
@@ -226,13 +226,13 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
 
 #### Daftarkan Bean
 
-- [ ] Tambah `@Bean FacilityLookupProvider facilityLookupProvider(...)` di
+- [x] Tambah `@Bean FacilityLookupProvider facilityLookupProvider(...)` di
   `com.solusi.erp.inventory.facility.infrastructure.config.FacilityConfig`
   di file `src/main/java/com/solusi/erp/inventory/facility/infrastructure/config/FacilityConfig.java`
 
 **Acceptance Criteria Phase 4:**
-- [ ] `FacilityLookupProvider` terimplementasi sebagai Port dengan Impl dan Bean
-- [ ] `mvn clean test` pass sebelum lanjut ke Phase 5
+- [x] `FacilityLookupProvider` terimplementasi sebagai Port dengan Impl dan Bean
+- [x] `mvn clean test` pass sebelum lanjut ke Phase 5
 
 ---
 
@@ -244,13 +244,13 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
 
 #### Buat Port
 
-- [ ] Buat interface `com.solusi.erp.inventory.grid.domain.port.GridLookupProvider`
+- [x] Buat interface `com.solusi.erp.inventory.grid.domain.port.GridLookupProvider`
   dengan method `LookupDto resolve(Long gridId)`
   di file `src/main/java/com/solusi/erp/inventory/grid/domain/port/GridLookupProvider.java`
 
 #### Buat Implementation
 
-- [ ] Buat class `com.solusi.erp.inventory.grid.infrastructure.adapter.GridLookupProviderImpl`
+- [x] Buat class `com.solusi.erp.inventory.grid.infrastructure.adapter.GridLookupProviderImpl`
   implements `GridLookupProvider`
   di file `src/main/java/com/solusi/erp/inventory/grid/infrastructure/adapter/GridLookupProviderImpl.java`
   - Query `GridJpaRepository.findById(id)`
@@ -259,13 +259,13 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
 
 #### Daftarkan Bean
 
-- [ ] Tambah `@Bean GridLookupProvider gridLookupProvider(...)` di
+- [x] Tambah `@Bean GridLookupProvider gridLookupProvider(...)` di
   `com.solusi.erp.inventory.grid.infrastructure.config.GridConfig`
   di file `src/main/java/com/solusi/erp/inventory/grid/infrastructure/config/GridConfig.java`
 
 **Acceptance Criteria Phase 5:**
-- [ ] `GridLookupProvider` terimplementasi sebagai Port dengan Impl dan Bean
-- [ ] `mvn clean test` pass sebelum lanjut ke Phase 6
+- [x] `GridLookupProvider` terimplementasi sebagai Port dengan Impl dan Bean
+- [x] `mvn clean test` pass sebelum lanjut ke Phase 6
 
 ---
 
@@ -273,30 +273,30 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
 
 #### Wire ke GridController
 
-- [ ] Inject `FacilityLookupProvider facilityLookupProvider` di constructor
+- [x] Inject `FacilityLookupProvider facilityLookupProvider` di constructor
   `com.solusi.erp.inventory.grid.web.controller.GridController`
   di file `src/main/java/com/solusi/erp/inventory/grid/web/controller/GridController.java`
 
-- [ ] Di method `showEditForm(Long id, Model model)` pada `GridController`:
+- [x] Di method `showEditForm(Long id, Model model)` pada `GridController`:
   - Panggil `facilityLookupProvider.resolve(domain.getFacilityId())`
   - Set `gridRequest.facilityName` dan `gridRequest.facilityCode` dari `LookupDto`
     (atau tambah `gridUI` map ke model jika tidak ingin modifikasi DTO)
 
 #### Wire ke StockAdjustmentController
 
-- [ ] Inject `FacilityLookupProvider facilityLookupProvider` di constructor
+- [x] Inject `FacilityLookupProvider facilityLookupProvider` di constructor
   `com.solusi.erp.inventory.adjustment.web.controller.StockAdjustmentController`
   di file `src/main/java/com/solusi/erp/inventory/adjustment/web/controller/StockAdjustmentController.java`
 
-- [ ] Di method `editForm(Long id, Model model)` pada `StockAdjustmentController`:
+- [x] Di method `editForm(Long id, Model model)` pada `StockAdjustmentController`:
   - Panggil `facilityLookupProvider.resolve(domain.getFacilityId())`
   - Timpa `stockAdjustment.facilityName` dan `facilityCode` dengan data dari Port
     agar menampilkan nama facility terkini (bukan snapshot lama)
 
 **Acceptance Criteria Phase 6:**
-- [ ] Halaman edit Grid menampilkan nama dan kode Facility yang benar via Port
-- [ ] Halaman edit Stock Adjustment menampilkan nama Facility yang benar via Port
-- [ ] `mvn clean test` pass sebelum lanjut ke Phase 7
+- [x] Halaman edit Grid menampilkan nama dan kode Facility yang benar via Port
+- [x] Halaman edit Stock Adjustment menampilkan nama Facility yang benar via Port
+- [x] `mvn clean test` pass sebelum lanjut ke Phase 7
 
 ---
 
@@ -304,19 +304,19 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
 
 #### Wire ke ContainerController
 
-- [ ] Inject `GridLookupProvider gridLookupProvider` di constructor
+- [x] Inject `GridLookupProvider gridLookupProvider` di constructor
   `com.solusi.erp.inventory.container.web.controller.ContainerController`
   di file `src/main/java/com/solusi/erp/inventory/container/web/controller/ContainerController.java`
 
-- [ ] Di method `buildContainerUI(Container domain)` pada `ContainerController`:
+- [x] Di method `buildContainerUI(Container domain)` pada `ContainerController`:
   - Ganti `ui.put("gridName", domain.getGridName())` dan `ui.put("gridCode", "")`
     dengan `gridLookupProvider.resolve(domain.getGridId())`
   - Set `gridName` dan `gridCode` dari `LookupDto` (saat ini `gridCode` selalu `""` — bug)
 
 **Acceptance Criteria Phase 7:**
-- [ ] Halaman edit Container menampilkan nama dan kode Grid yang benar via Port
-- [ ] `gridCode` tidak lagi kosong string
-- [ ] `mvn clean test` pass sebelum lanjut ke Phase 8
+- [x] Halaman edit Container menampilkan nama dan kode Grid yang benar via Port
+- [x] `gridCode` tidak lagi kosong string
+- [x] `mvn clean test` pass sebelum lanjut ke Phase 8
 
 ---
 
@@ -328,13 +328,13 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
 
 #### Buat Port
 
-- [ ] Buat interface `com.solusi.erp.inventory.product.domain.port.ProductLookupProvider`
+- [x] Buat interface `com.solusi.erp.inventory.product.domain.port.ProductLookupProvider`
   dengan method `LookupDto resolve(Long productId)`
   di file `src/main/java/com/solusi/erp/inventory/product/domain/port/ProductLookupProvider.java`
 
 #### Buat Implementation
 
-- [ ] Buat class `com.solusi.erp.inventory.product.infrastructure.adapter.ProductLookupProviderImpl`
+- [x] Buat class `com.solusi.erp.inventory.product.infrastructure.adapter.ProductLookupProviderImpl`
   implements `ProductLookupProvider`
   di file `src/main/java/com/solusi/erp/inventory/product/infrastructure/adapter/ProductLookupProviderImpl.java`
   - Query `ProductJpaRepository.findById(id)`
@@ -343,13 +343,13 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
 
 #### Daftarkan Bean
 
-- [ ] Tambah `@Bean ProductLookupProvider productLookupProvider(...)` di
+- [x] Tambah `@Bean ProductLookupProvider productLookupProvider(...)` di
   `com.solusi.erp.inventory.product.infrastructure.config.ProductConfig`
   di file `src/main/java/com/solusi/erp/inventory/product/infrastructure/config/ProductConfig.java`
 
 **Acceptance Criteria Phase 8:**
-- [ ] `ProductLookupProvider` terimplementasi sebagai Port dengan Impl dan Bean
-- [ ] `mvn clean test` pass sebelum lanjut ke Phase 9
+- [x] `ProductLookupProvider` terimplementasi sebagai Port dengan Impl dan Bean
+- [x] `mvn clean test` pass sebelum lanjut ke Phase 9
 
 ---
 
@@ -357,17 +357,17 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
 
 #### Wire ke UomConversionController
 
-- [ ] Inject `ProductLookupProvider productLookupProvider` di constructor
+- [x] Inject `ProductLookupProvider productLookupProvider` di constructor
   `com.solusi.erp.inventory.uomconversion.web.controller.UomConversionController`
   di file `src/main/java/com/solusi/erp/inventory/uomconversion/web/controller/UomConversionController.java`
 
-- [ ] Di method `showEditForm(Long id, Model model)` pada `UomConversionController`:
+- [x] Di method `showEditForm(Long id, Model model)` pada `UomConversionController`:
   - Panggil `productLookupProvider.resolve(domain.getProductId())`
   - Ganti konstruksi `UomConversionUIInfo` dengan nama dan kode dari `LookupDto`
 
 **Acceptance Criteria Phase 9:**
-- [ ] Halaman edit UOM Conversion menampilkan nama dan kode Product yang benar via Port
-- [ ] `mvn clean test` pass sebelum lanjut ke Phase 10
+- [x] Halaman edit UOM Conversion menampilkan nama dan kode Product yang benar via Port
+- [x] `mvn clean test` pass sebelum lanjut ke Phase 10
 
 ---
 
@@ -379,13 +379,13 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
 
 #### Buat Port
 
-- [ ] Buat interface `com.solusi.erp.inventory.productcategory.domain.port.ProductCategoryLookupProvider`
+- [x] Buat interface `com.solusi.erp.inventory.productcategory.domain.port.ProductCategoryLookupProvider`
   dengan method `LookupDto resolve(Long categoryId)`
   di file `src/main/java/com/solusi/erp/inventory/productcategory/domain/port/ProductCategoryLookupProvider.java`
 
 #### Buat Implementation
 
-- [ ] Buat class `com.solusi.erp.inventory.productcategory.infrastructure.adapter.ProductCategoryLookupProviderImpl`
+- [x] Buat class `com.solusi.erp.inventory.productcategory.infrastructure.adapter.ProductCategoryLookupProviderImpl`
   implements `ProductCategoryLookupProvider`
   di file `src/main/java/com/solusi/erp/inventory/productcategory/infrastructure/adapter/ProductCategoryLookupProviderImpl.java`
   - Query `ProductCategoryJpaRepository.findById(id)`
@@ -394,13 +394,13 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
 
 #### Daftarkan Bean
 
-- [ ] Tambah `@Bean ProductCategoryLookupProvider productCategoryLookupProvider(...)` di
+- [x] Tambah `@Bean ProductCategoryLookupProvider productCategoryLookupProvider(...)` di
   `com.solusi.erp.inventory.productcategory.infrastructure.config.ProductCategoryConfig`
   di file `src/main/java/com/solusi/erp/inventory/productcategory/infrastructure/config/ProductCategoryConfig.java`
 
 **Acceptance Criteria Phase 10:**
-- [ ] `ProductCategoryLookupProvider` terimplementasi sebagai Port dengan Impl dan Bean
-- [ ] `mvn clean test` pass sebelum lanjut ke Phase 11
+- [x] `ProductCategoryLookupProvider` terimplementasi sebagai Port dengan Impl dan Bean
+- [x] `mvn clean test` pass sebelum lanjut ke Phase 11
 
 ---
 
@@ -411,13 +411,13 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
 
 #### Buat Port
 
-- [ ] Buat interface `com.solusi.erp.inventory.brand.domain.port.BrandLookupProvider`
+- [x] Buat interface `com.solusi.erp.inventory.brand.domain.port.BrandLookupProvider`
   dengan method `LookupDto resolve(Long brandId)`
   di file `src/main/java/com/solusi/erp/inventory/brand/domain/port/BrandLookupProvider.java`
 
 #### Buat Implementation
 
-- [ ] Buat class `com.solusi.erp.inventory.brand.infrastructure.adapter.BrandLookupProviderImpl`
+- [x] Buat class `com.solusi.erp.inventory.brand.infrastructure.adapter.BrandLookupProviderImpl`
   implements `BrandLookupProvider`
   di file `src/main/java/com/solusi/erp/inventory/brand/infrastructure/adapter/BrandLookupProviderImpl.java`
   - Query `BrandJpaRepository.findById(id)`
@@ -426,13 +426,13 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
 
 #### Daftarkan Bean
 
-- [ ] Tambah `@Bean BrandLookupProvider brandLookupProvider(...)` di
+- [x] Tambah `@Bean BrandLookupProvider brandLookupProvider(...)` di
   `com.solusi.erp.inventory.brand.infrastructure.config.BrandConfig`
   di file `src/main/java/com/solusi/erp/inventory/brand/infrastructure/config/BrandConfig.java`
 
 **Acceptance Criteria Phase 11:**
-- [ ] `BrandLookupProvider` terimplementasi sebagai Port dengan Impl dan Bean
-- [ ] `mvn clean test` pass sebelum lanjut ke Phase 12
+- [x] `BrandLookupProvider` terimplementasi sebagai Port dengan Impl dan Bean
+- [x] `mvn clean test` pass sebelum lanjut ke Phase 12
 
 ---
 
@@ -440,14 +440,14 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
 
 #### Wire ke ProductController
 
-- [ ] Inject `ProductCategoryLookupProvider productCategoryLookupProvider` di constructor
+- [x] Inject `ProductCategoryLookupProvider productCategoryLookupProvider` di constructor
   `com.solusi.erp.inventory.product.web.controller.ProductController`
   di file `src/main/java/com/solusi/erp/inventory/product/web/controller/ProductController.java`
 
-- [ ] Inject `BrandLookupProvider brandLookupProvider` di constructor
+- [x] Inject `BrandLookupProvider brandLookupProvider` di constructor
   `com.solusi.erp.inventory.product.web.controller.ProductController`
 
-- [ ] Di method `showEditForm(Long id, Model model)` pada `ProductController`:
+- [x] Di method `showEditForm(Long id, Model model)` pada `ProductController`:
   - Panggil `productCategoryLookupProvider.resolve(domain.getCategoryId())`
   - Set `productRequest.setCategoryName(...)` dan `productRequest.setCategoryCode(...)`
     dari `LookupDto`, atau tambah `productUI` map ke model
@@ -457,9 +457,9 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
     dari `LookupDto`
 
 **Acceptance Criteria Phase 12:**
-- [ ] Halaman edit Product menampilkan nama dan kode ProductCategory yang benar via Port
-- [ ] Halaman edit Product menampilkan nama dan kode Brand yang benar via Port
-- [ ] `mvn clean test` pass sebelum lanjut ke Phase 13
+- [x] Halaman edit Product menampilkan nama dan kode ProductCategory yang benar via Port
+- [x] Halaman edit Product menampilkan nama dan kode Brand yang benar via Port
+- [x] `mvn clean test` pass sebelum lanjut ke Phase 13
 
 ---
 
@@ -471,13 +471,13 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
 
 #### Buat Port
 
-- [ ] Buat interface `com.solusi.erp.security.role.domain.port.RoleLookupProvider`
+- [x] Buat interface `com.solusi.erp.security.role.domain.port.RoleLookupProvider`
   dengan method `LookupDto resolve(Long roleId)`
   di file `src/main/java/com/solusi/erp/security/role/domain/port/RoleLookupProvider.java`
 
 #### Buat Implementation
 
-- [ ] Buat class `com.solusi.erp.security.role.infrastructure.adapter.RoleLookupProviderImpl`
+- [x] Buat class `com.solusi.erp.security.role.infrastructure.adapter.RoleLookupProviderImpl`
   implements `RoleLookupProvider`
   di file `src/main/java/com/solusi/erp/security/role/infrastructure/adapter/RoleLookupProviderImpl.java`
   - Query `RoleJpaRepository.findById(id)`
@@ -486,13 +486,13 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
 
 #### Daftarkan Bean
 
-- [ ] Tambah `@Bean RoleLookupProvider roleLookupProvider(...)` di
+- [x] Tambah `@Bean RoleLookupProvider roleLookupProvider(...)` di
   `com.solusi.erp.security.role.infrastructure.config.RoleConfig`
   di file `src/main/java/com/solusi/erp/security/role/infrastructure/config/RoleConfig.java`
 
 **Acceptance Criteria Phase 13:**
-- [ ] `RoleLookupProvider` terimplementasi sebagai Port dengan Impl dan Bean
-- [ ] `mvn clean test` pass sebelum lanjut ke Phase 14
+- [x] `RoleLookupProvider` terimplementasi sebagai Port dengan Impl dan Bean
+- [x] `mvn clean test` pass sebelum lanjut ke Phase 14
 
 ---
 
@@ -500,33 +500,33 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
 
 #### Wire ke UserServiceImpl
 
-- [ ] Inject `RoleLookupProvider roleLookupProvider` di constructor
+- [x] Inject `RoleLookupProvider roleLookupProvider` di constructor
   `com.solusi.erp.security.user.service.impl.UserServiceImpl`
   di file `src/main/java/com/solusi/erp/security/user/service/impl/UserServiceImpl.java`
 
-- [ ] Di method `getUserEditView(Long id)` pada `UserServiceImpl`:
+- [x] Di method `getUserEditView(Long id)` pada `UserServiceImpl`:
   - Panggil `roleLookupProvider.resolve(user.getRoleId())`
   - Bangun `UserUiForm` dengan `roleName` dan `roleDescription` dari `LookupDto`
   - Hapus penggunaan `findRolesUseCase` untuk keperluan pre-edit (tetap boleh digunakan
     untuk dropdown list di form, bukan untuk resolve single role by ID)
 
-- [ ] Update bean definition di
+- [x] Update bean definition di
   `com.solusi.erp.security.user.infrastructure.config.UserConfig`
   di file `src/main/java/com/solusi/erp/security/user/infrastructure/config/UserConfig.java`
   untuk inject `RoleLookupProvider` ke `UserServiceImpl`
 
 **Acceptance Criteria Phase 14:**
-- [ ] Halaman edit User menampilkan nama Role yang benar via Port
-- [ ] `UserServiceImpl` tidak lagi load semua Role hanya untuk resolve satu role by ID
-- [ ] `mvn clean test` pass
+- [x] Halaman edit User menampilkan nama Role yang benar via Port
+- [x] `UserServiceImpl` tidak lagi load semua Role hanya untuk resolve satu role by ID
+- [x] `mvn clean test` pass
 
 ---
 
 ## Final Acceptance Criteria
 
-- [ ] `mvn clean test` pass (semua test suite green)
-- [ ] Semua autocomplete di seluruh halaman berfungsi — tidak ada 404 pada endpoint lookup
-- [ ] Tidak ada direct cross-domain query untuk kebutuhan lookup/pre-edit:
+- [x] `mvn clean test` pass (semua test suite green)
+- [x] Semua autocomplete di seluruh halaman berfungsi — tidak ada 404 pada endpoint lookup
+- [x] Tidak ada direct cross-domain query untuk kebutuhan lookup/pre-edit:
   - `FacilityController` tidak inject `GeographicJpaRepository`
   - `BankAccountController` tidak inject repo domain lain
   - `GridController` tidak inject repo Facility langsung
@@ -534,16 +534,16 @@ Phase 14: Wire RoleLookupProvider ke UserServiceImpl
   - `UomConversionController` tidak inject repo Product langsung
   - `ProductController` tidak inject repo ProductCategory atau Brand langsung
   - `UserServiceImpl` tidak load semua Role hanya untuk resolve satu ID
-- [ ] Smoke test Playwright — semua halaman berikut dapat dibuka dan autocomplete berfungsi:
-  - [ ] `/master/bank-accounts/create` — dropdown city dan party bisa diisi
-  - [ ] `/master/bank-accounts/edit/{id}` — city dan party tampil pre-populated
-  - [ ] `/inventory/facilities/edit/{id}` — owner (party) dan city tampil pre-populated
-  - [ ] `/inventory/grids/edit/{id}` — facility tampil pre-populated dengan subtext kode
-  - [ ] `/inventory/containers/edit/{id}` — grid tampil pre-populated dengan subtext kode
-  - [ ] `/inventory/products/edit/{id}` — category dan brand tampil pre-populated
-  - [ ] `/inventory/uom-conversions/edit/{id}` — product tampil pre-populated
-  - [ ] `/inventory/adjustments/edit/{id}` — facility header tampil pre-populated
-  - [ ] `/security/users/edit/{id}` — role tampil pre-populated
+- [x] Smoke test Playwright — semua halaman berikut dapat dibuka dan autocomplete berfungsi:
+  - [x] `/master/bank-accounts/create` — dropdown city dan party bisa diisi
+  - [x] `/master/bank-accounts/edit/{id}` — city dan party tampil pre-populated
+  - [x] `/inventory/facilities/edit/{id}` — owner (party) dan city tampil pre-populated
+  - [x] `/inventory/grids/edit/{id}` — facility tampil pre-populated dengan subtext kode
+  - [x] `/inventory/containers/edit/{id}` — grid tampil pre-populated dengan subtext kode
+  - [x] `/inventory/products/edit/{id}` — category dan brand tampil pre-populated
+  - [x] `/inventory/uom-conversions/edit/{id}` — product tampil pre-populated
+  - [x] `/inventory/adjustments/edit/{id}` — facility header tampil pre-populated
+  - [x] `/security/users/edit/{id}` — role tampil pre-populated
 
 ---
 

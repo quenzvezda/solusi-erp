@@ -3,9 +3,11 @@ package com.solusi.erp.inventory.facility.infrastructure.config;
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.inventory.facility.application.usecase.command.*;
 import com.solusi.erp.inventory.facility.application.usecase.query.*;
+import com.solusi.erp.inventory.facility.domain.port.FacilityLookupProvider;
 import com.solusi.erp.inventory.facility.domain.port.FacilityUsageChecker;
 import com.solusi.erp.inventory.facility.domain.repository.FacilityRepository;
 import com.solusi.erp.inventory.facility.infrastructure.adapter.FacilityInUseCheckerComposite;
+import com.solusi.erp.inventory.facility.infrastructure.adapter.FacilityLookupProviderImpl;
 import com.solusi.erp.inventory.facility.infrastructure.adapter.FacilityRepositoryImpl;
 import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityJpaRepository;
 import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityPersistenceMapper;
@@ -100,5 +102,10 @@ public class FacilityConfig {
                 return tx.execute(status -> pure.search(keyword, limit));
             }
         };
+    }
+
+    @Bean
+    public FacilityLookupProvider facilityLookupProvider(FacilityJpaRepository facilityJpaRepository) {
+        return new FacilityLookupProviderImpl(facilityJpaRepository);
     }
 }

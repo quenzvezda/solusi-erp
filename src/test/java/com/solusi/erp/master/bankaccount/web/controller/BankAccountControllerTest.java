@@ -8,6 +8,8 @@ import com.solusi.erp.master.bankaccount.application.usecase.query.GetBankAccoun
 import com.solusi.erp.master.bankaccount.domain.model.BankAccount;
 import com.solusi.erp.master.bankaccount.web.dto.BankAccountSummaryResponse;
 import com.solusi.erp.master.bankaccount.web.mapper.BankAccountWebMapper;
+import com.solusi.erp.master.geographic.domain.port.GeographicLookupProvider;
+import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.MessageSource;
 import org.springframework.ui.ExtendedModelMap;
@@ -32,10 +34,13 @@ public class BankAccountControllerTest {
         GetBankAccountEditViewUseCase getEditViewUseCase = mock(GetBankAccountEditViewUseCase.class);
         BankAccountWebMapper webMapper = mock(BankAccountWebMapper.class);
         MessageSource messageSource = mock(MessageSource.class);
+        PartyLookupProvider partyLookupProvider = mock(PartyLookupProvider.class);
+        GeographicLookupProvider geographicLookupProvider = mock(GeographicLookupProvider.class);
 
         BankAccountController controller = new BankAccountController(
                 createUseCase, updateUseCase, deleteUseCase,
-                findUseCase, getEditViewUseCase, webMapper, messageSource);
+                findUseCase, getEditViewUseCase, webMapper, messageSource,
+                partyLookupProvider, geographicLookupProvider);
 
         BankAccount domainAccount = BankAccount.createNew("BA-001", "Bank BCA", "Sudirman",
                 "John Doe", "1234567890", "BANK", "Note", 1L, 2L, true);

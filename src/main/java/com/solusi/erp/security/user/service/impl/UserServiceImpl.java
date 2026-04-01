@@ -7,6 +7,8 @@ import com.solusi.erp.security.permissiongroup.application.usecase.query.FindPer
 import com.solusi.erp.security.permissiongroup.web.mapper.PermissionGroupWebMapper;
 import com.solusi.erp.security.role.application.usecase.query.FindRolesUseCase;
 import com.solusi.erp.security.role.domain.model.Role;
+import com.solusi.erp.security.role.domain.port.RoleLookupProvider;
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.security.user.application.port.PartyReferenceGateway;
 import com.solusi.erp.security.user.application.usecase.command.*;
 import com.solusi.erp.security.user.application.usecase.query.*;
@@ -40,6 +42,7 @@ public class UserServiceImpl implements UserService {
     private final FindRolesUseCase findRolesUseCase;
     private final FindPermissionGroupsUseCase findPermissionGroupsUseCase;
     private final PartyReferenceGateway partyReferenceGateway;
+    private final RoleLookupProvider roleLookupProvider;
     private final UserWebMapper userWebMapper;
     private final PermissionGroupWebMapper permissionGroupWebMapper;
     private final MessageSource messageSource;
@@ -57,6 +60,7 @@ public class UserServiceImpl implements UserService {
                            FindRolesUseCase findRolesUseCase,
                            FindPermissionGroupsUseCase findPermissionGroupsUseCase,
                            PartyReferenceGateway partyReferenceGateway,
+                           RoleLookupProvider roleLookupProvider,
                            UserWebMapper userWebMapper,
                            PermissionGroupWebMapper permissionGroupWebMapper,
                            MessageSource messageSource) {
@@ -73,6 +77,7 @@ public class UserServiceImpl implements UserService {
         this.findRolesUseCase = findRolesUseCase;
         this.findPermissionGroupsUseCase = findPermissionGroupsUseCase;
         this.partyReferenceGateway = partyReferenceGateway;
+        this.roleLookupProvider = roleLookupProvider;
         this.userWebMapper = userWebMapper;
         this.permissionGroupWebMapper = permissionGroupWebMapper;
         this.messageSource = messageSource;
@@ -188,15 +193,12 @@ public class UserServiceImpl implements UserService {
         if (user.getRoleId() == null) {
             return user;
         }
-        Role role = findRolesUseCase.execute().stream()
-                .filter(it -> it.getId() != null && it.getId().equals(user.getRoleId()))
-                .findFirst()
-                .orElse(null);
-        if (role != null) {
+        LookupDto roleDto = roleLookupProvider.resolve(user.getRoleId());
+        if (roleDto != null) {
             user.setPartyReference(user.getPartyId(), user.getPartyCode(), user.getPartyName());
             return new User(user.getMetadata(), user.getUsername(), user.getPassword(), user.getEmail(),
                     user.isEnabled(), user.isPasswordChangeRequired(), user.getLastPasswordChange(),
-                    user.getRoleId(), role.getName(), role.getDescription(), user.getPartyId(), user.getPartyCode(),
+                    user.getRoleId(), roleDto.name(), roleDto.subText(), user.getPartyId(), user.getPartyCode(),
                     user.getPartyName(), user.getProfile());
         }
         return user;

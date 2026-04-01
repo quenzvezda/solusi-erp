@@ -4,12 +4,14 @@ import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.inventory.adjustment.application.usecase.command.*;
 import com.solusi.erp.inventory.adjustment.application.usecase.query.*;
 import com.solusi.erp.inventory.adjustment.domain.model.AdjustmentStatus;
 import com.solusi.erp.inventory.adjustment.domain.model.StockAdjustment;
 import com.solusi.erp.inventory.adjustment.web.dto.*;
 import com.solusi.erp.inventory.adjustment.web.mapper.StockAdjustmentWebMapper;
+import com.solusi.erp.inventory.facility.domain.port.FacilityLookupProvider;
 import com.solusi.erp.master.currency.application.usecase.query.FindActiveCurrenciesUseCase;
 import com.solusi.erp.master.currency.application.usecase.query.GetDefaultCurrencyUseCase;
 import com.solusi.erp.master.currency.domain.model.Currency;
@@ -59,6 +61,7 @@ public class StockAdjustmentController {
     private final FindActiveCurrenciesUseCase findActiveCurrenciesUseCase;
     private final GetDefaultCurrencyUseCase getDefaultCurrencyUseCase;
     private final CurrencyWebMapper currencyWebMapper;
+    private final FacilityLookupProvider facilityLookupProvider;
     private final MessageSource messageSource;
 
     @GetMapping
@@ -120,6 +123,14 @@ public class StockAdjustmentController {
             return "redirect:/inventory/adjustments/view/" + id;
         }
         model.addAttribute("stockAdjustment", webMapper.toSaveRequest(domain));
+        StockAdjustmentSaveRequest adj = (StockAdjustmentSaveRequest) model.getAttribute("stockAdjustment");
+        if (adj != null) {
+            LookupDto facility = facilityLookupProvider.resolve(domain.getFacilityId());
+            if (facility != null) {
+                adj.setFacilityName(facility.name());
+                adj.setFacilityCode(facility.subText());
+            }
+        }
         populateFormModels(model);
         return "inventory/adjustments/form";
     }

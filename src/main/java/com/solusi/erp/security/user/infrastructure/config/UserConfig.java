@@ -11,6 +11,7 @@ import com.solusi.erp.security.user.domain.repository.UserRepository;
 import com.solusi.erp.security.user.infrastructure.adapter.PartyReferenceGatewayAdapter;
 import com.solusi.erp.security.user.infrastructure.adapter.PasswordCipherAdapter;
 import com.solusi.erp.security.role.infrastructure.persistence.RoleJpaRepository;
+import com.solusi.erp.security.role.domain.port.RoleLookupProvider;
 import com.solusi.erp.security.user.infrastructure.adapter.UserRepositoryAdapter;
 import com.solusi.erp.security.user.infrastructure.persistence.UserJpaRepository;
 import com.solusi.erp.security.user.infrastructure.persistence.UserPersistenceMapper;
@@ -151,6 +152,7 @@ public class UserConfig {
                                    com.solusi.erp.security.role.application.usecase.query.FindRolesUseCase findRolesUseCase,
                                    FindPermissionGroupsUseCase findPermissionGroupsUseCase,
                                    PartyReferenceGateway partyReferenceGateway,
+                                   RoleLookupProvider roleLookupProvider,
                                    UserWebMapper userWebMapper,
                                    PermissionGroupWebMapper permissionGroupWebMapper,
                                    MessageSource messageSource) {
@@ -158,6 +160,6 @@ public class UserConfig {
                 toggleUserStatusUseCase, updateProfileUseCase, findUsersUseCase, findUserByIdUseCase,
                 getUserEditViewUseCase, getProfileUseCase, getProfileUpdateDataUseCase,
                 findRolesUseCase, findPermissionGroupsUseCase, partyReferenceGateway,
-                userWebMapper, permissionGroupWebMapper, messageSource);
+                roleLookupProvider, userWebMapper, permissionGroupWebMapper, messageSource);
     }
 }

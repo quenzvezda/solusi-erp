@@ -1,6 +1,7 @@
 package com.solusi.erp.inventory.product.web.controller;
 
 import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.inventory.uom.domain.model.UomType;
@@ -8,6 +9,8 @@ import com.solusi.erp.inventory.product.application.usecase.command.*;
 import com.solusi.erp.inventory.product.application.usecase.query.*;
 import com.solusi.erp.inventory.product.web.dto.*;
 import com.solusi.erp.inventory.product.web.mapper.ProductWebMapper;
+import com.solusi.erp.inventory.productcategory.domain.port.ProductCategoryLookupProvider;
+import com.solusi.erp.inventory.brand.domain.port.BrandLookupProvider;
 import com.solusi.erp.inventory.uom.application.usecase.query.GetUomLookupUseCase;
 import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
@@ -40,9 +43,11 @@ public class ProductController {
     private final DeleteProductUseCase deleteProductUseCase;
     private final GetProductEditViewUseCase getProductEditViewUseCase;
     private final GetProductLookupUseCase getProductLookupUseCase;
-    
+
     private final GetUomLookupUseCase getUomLookupUseCase;
     private final ProductWebMapper webMapper;
+    private final ProductCategoryLookupProvider productCategoryLookupProvider;
+    private final BrandLookupProvider brandLookupProvider;
     private final MessageSource messageSource;
 
     @GetMapping
@@ -100,6 +105,16 @@ public class ProductController {
             .orElseThrow(() -> new RuntimeException("Product not found"));
 
         ProductSaveRequest request = webMapper.toSaveRequest(domain);
+        LookupDto category = productCategoryLookupProvider.resolve(domain.getCategoryId());
+        if (category != null) {
+            request.setCategoryName(category.name());
+            request.setCategoryCode(category.subText());
+        }
+        LookupDto brand = brandLookupProvider.resolve(domain.getBrandId());
+        if (brand != null) {
+            request.setBrandName(brand.name());
+            request.setBrandCode(brand.subText());
+        }
         ProductDetailResponse audit = webMapper.toDetailResponse(domain);
         
         // ProductUIForm replacement logic if needed, but the original template uses productRequest

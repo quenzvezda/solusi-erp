@@ -4,6 +4,7 @@ import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.inventory.uom.domain.model.UomType;
 import com.solusi.erp.inventory.uom.application.usecase.query.GetUomLookupUseCase;
+import com.solusi.erp.inventory.product.domain.port.ProductLookupProvider;
 import com.solusi.erp.inventory.uomconversion.application.usecase.command.*;
 import com.solusi.erp.inventory.uomconversion.application.usecase.query.*;
 import com.solusi.erp.inventory.uomconversion.domain.model.UomConversion;
@@ -33,6 +34,7 @@ public class UomConversionControllerTest {
     GetUomConversionEditViewUseCase editViewUseCase;
     GetUomLookupUseCase getUomLookupUseCase;
     UomConversionWebMapper webMapper;
+    ProductLookupProvider productLookupProvider;
     MessageSource messageSource;
     UomConversionController controller;
 
@@ -45,12 +47,13 @@ public class UomConversionControllerTest {
         editViewUseCase = mock(GetUomConversionEditViewUseCase.class);
         getUomLookupUseCase = mock(GetUomLookupUseCase.class);
         webMapper = mock(UomConversionWebMapper.class);
+        productLookupProvider = mock(ProductLookupProvider.class);
         messageSource = mock(MessageSource.class);
 
         controller = new UomConversionController(
             createUseCase, updateUseCase, deleteUseCase,
             findUseCase, editViewUseCase, getUomLookupUseCase,
-            webMapper, messageSource
+            webMapper, productLookupProvider, messageSource
         );
     }
 

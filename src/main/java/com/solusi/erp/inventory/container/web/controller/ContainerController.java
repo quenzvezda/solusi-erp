@@ -11,6 +11,7 @@ import com.solusi.erp.inventory.container.domain.model.Container;
 import com.solusi.erp.inventory.container.web.dto.*;
 import com.solusi.erp.inventory.container.web.mapper.ContainerWebMapper;
 import com.solusi.erp.inventory.grid.application.usecase.query.GetGridEditViewUseCase;
+import com.solusi.erp.inventory.grid.domain.port.GridLookupProvider;
 import com.solusi.erp.inventory.grid.web.mapper.GridWebMapper;
 import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
@@ -46,6 +47,7 @@ public class ContainerController {
     private final ContainerWebMapper webMapper;
     private final GetGridEditViewUseCase getGridEditViewUseCase;
     private final GridWebMapper gridWebMapper;
+    private final GridLookupProvider gridLookupProvider;
     private final MessageSource messageSource;
 
     @GetMapping
@@ -152,8 +154,9 @@ public class ContainerController {
 
     private Map<String, Object> buildContainerUI(Container domain) {
         Map<String, Object> ui = new HashMap<>();
-        ui.put("gridName", domain.getGridName());
-        ui.put("gridCode", "");
+        LookupDto grid = gridLookupProvider.resolve(domain.getGridId());
+        ui.put("gridName", grid != null ? grid.name() : domain.getGridName());
+        ui.put("gridCode", grid != null ? grid.subText() : "");
         return ui;
     }
 }

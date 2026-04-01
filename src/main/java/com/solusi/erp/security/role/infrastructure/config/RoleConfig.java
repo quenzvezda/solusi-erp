@@ -7,6 +7,8 @@ import com.solusi.erp.security.role.domain.repository.RoleRepository;
 import com.solusi.erp.security.role.infrastructure.adapter.RoleRepositoryAdapter;
 import com.solusi.erp.security.role.infrastructure.persistence.RoleJpaRepository;
 import com.solusi.erp.security.role.infrastructure.persistence.RolePersistenceMapper;
+import com.solusi.erp.security.role.domain.port.RoleLookupProvider;
+import com.solusi.erp.security.role.infrastructure.adapter.RoleLookupProviderImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -89,6 +91,11 @@ public class RoleConfig {
                 return tx.execute(status -> pure.search(keyword, limit));
             }
         };
+    }
+
+    @Bean
+    public RoleLookupProvider roleLookupProvider(RoleJpaRepository roleJpaRepository) {
+        return new RoleLookupProviderImpl(roleJpaRepository);
     }
 }
 

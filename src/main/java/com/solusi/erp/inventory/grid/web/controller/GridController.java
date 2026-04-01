@@ -7,6 +7,7 @@ import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.inventory.facility.application.usecase.query.FindFacilitiesUseCase;
 import com.solusi.erp.inventory.facility.application.usecase.query.GetFacilityEditViewUseCase;
+import com.solusi.erp.inventory.facility.domain.port.FacilityLookupProvider;
 import com.solusi.erp.inventory.facility.web.dto.FacilitySummaryResponse;
 import com.solusi.erp.inventory.facility.web.mapper.FacilityWebMapper;
 import com.solusi.erp.inventory.grid.application.usecase.command.*;
@@ -47,6 +48,7 @@ public class GridController {
     private final FindFacilitiesUseCase findFacilitiesUseCase;
     private final GetFacilityEditViewUseCase getFacilityEditViewUseCase;
     private final FacilityWebMapper facilityWebMapper;
+    private final FacilityLookupProvider facilityLookupProvider;
     private final MessageSource messageSource;
 
     @GetMapping
@@ -106,6 +108,14 @@ public class GridController {
             .orElseThrow(() -> new RuntimeException("Grid not found"));
         model.addAttribute("gridRequest", webMapper.toSaveRequest(domain));
         model.addAttribute("auditInfo", webMapper.toDetailResponse(domain));
+        LookupDto facility = facilityLookupProvider.resolve(domain.getFacilityId());
+        if (facility != null) {
+            GridSaveRequest req = (GridSaveRequest) model.getAttribute("gridRequest");
+            if (req != null) {
+                req.setFacilityName(facility.name());
+                req.setFacilityCode(facility.subText());
+            }
+        }
         return "inventory/grids/form";
     }
 

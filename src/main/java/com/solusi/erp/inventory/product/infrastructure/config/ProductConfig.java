@@ -7,6 +7,8 @@ import com.solusi.erp.inventory.product.domain.repository.ProductRepository;
 import com.solusi.erp.inventory.product.infrastructure.adapter.ProductRepositoryImpl;
 import com.solusi.erp.inventory.product.infrastructure.adapter.ProductUomUsageChecker;
 import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
+import com.solusi.erp.inventory.product.domain.port.ProductLookupProvider;
+import com.solusi.erp.inventory.product.infrastructure.adapter.ProductLookupProviderImpl;
 import com.solusi.erp.inventory.product.infrastructure.persistence.ProductPersistenceMapper;
 import com.solusi.erp.inventory.uom.domain.port.UomUsageChecker;
 import org.springframework.context.annotation.Bean;
@@ -112,5 +114,10 @@ public class ProductConfig {
                 return tx.execute(status -> pureUseCase.search(keyword, limit));
             }
         };
+    }
+
+    @Bean
+    public ProductLookupProvider productLookupProvider(JpaProductRepository jpaProductRepository) {
+        return new ProductLookupProviderImpl(jpaProductRepository);
     }
 }

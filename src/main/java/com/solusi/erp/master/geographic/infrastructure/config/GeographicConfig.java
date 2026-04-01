@@ -2,8 +2,11 @@ package com.solusi.erp.master.geographic.infrastructure.config;
 
 import com.solusi.erp.master.geographic.application.usecase.command.*;
 import com.solusi.erp.master.geographic.application.usecase.query.*;
+import com.solusi.erp.master.geographic.domain.port.GeographicLookupProvider;
 import com.solusi.erp.master.geographic.domain.repository.GeographicRepository;
+import com.solusi.erp.master.geographic.infrastructure.adapter.GeographicLookupProviderImpl;
 import com.solusi.erp.master.geographic.infrastructure.adapter.GeographicRepositoryImpl;
+import com.solusi.erp.master.geographic.infrastructure.persistence.GeographicJpaRepository;
 import com.solusi.erp.master.geographic.infrastructure.persistence.GeographicPersistenceMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -102,6 +105,12 @@ public class GeographicConfig {
         TransactionTemplate tx = new TransactionTemplate(txManager);
         tx.setReadOnly(true);
         return (provinceId, keyword, limit) -> tx.execute(status -> pure.execute(provinceId, keyword, limit));
+    }
+
+    @Bean
+    public GeographicLookupProvider geographicLookupProvider(
+            GeographicJpaRepository geographicJpaRepository) {
+        return new GeographicLookupProviderImpl(geographicJpaRepository);
     }
 }
 

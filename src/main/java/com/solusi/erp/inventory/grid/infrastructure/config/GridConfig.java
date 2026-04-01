@@ -2,10 +2,12 @@ package com.solusi.erp.inventory.grid.infrastructure.config;
 
 import com.solusi.erp.inventory.grid.application.usecase.command.*;
 import com.solusi.erp.inventory.grid.application.usecase.query.*;
+import com.solusi.erp.inventory.grid.domain.port.GridLookupProvider;
 import com.solusi.erp.inventory.grid.domain.port.GridUsageChecker;
 import com.solusi.erp.inventory.grid.domain.repository.GridRepository;
 import com.solusi.erp.inventory.grid.infrastructure.adapter.GridFacilityUsageChecker;
 import com.solusi.erp.inventory.grid.infrastructure.adapter.GridInUseCheckerComposite;
+import com.solusi.erp.inventory.grid.infrastructure.adapter.GridLookupProviderImpl;
 import com.solusi.erp.inventory.grid.infrastructure.adapter.GridRepositoryImpl;
 import com.solusi.erp.inventory.grid.infrastructure.persistence.GridJpaRepository;
 import com.solusi.erp.inventory.grid.infrastructure.persistence.GridPersistenceMapper;
@@ -110,5 +112,10 @@ public class GridConfig {
                 return tx.execute(status -> pure.search(keyword, facilityId, limit));
             }
         };
+    }
+
+    @Bean
+    public GridLookupProvider gridLookupProvider(GridJpaRepository gridJpaRepository) {
+        return new GridLookupProviderImpl(gridJpaRepository);
     }
 }

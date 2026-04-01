@@ -8,6 +8,8 @@ import com.solusi.erp.inventory.brand.domain.repository.BrandRepository;
 import com.solusi.erp.inventory.brand.infrastructure.adapter.BrandInUseCheckerImpl;
 import com.solusi.erp.inventory.brand.infrastructure.adapter.BrandRepositoryImpl;
 import com.solusi.erp.inventory.brand.infrastructure.persistence.BrandJpaRepository;
+import com.solusi.erp.inventory.brand.domain.port.BrandLookupProvider;
+import com.solusi.erp.inventory.brand.infrastructure.adapter.BrandLookupProviderImpl;
 import com.solusi.erp.inventory.brand.infrastructure.persistence.BrandPersistenceMapper;
 import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import org.springframework.context.annotation.Bean;
@@ -100,5 +102,10 @@ public class BrandConfig {
                 return tx.execute(status -> pure.search(keyword, limit));
             }
         };
+    }
+
+    @Bean
+    public BrandLookupProvider brandLookupProvider(BrandJpaRepository brandJpaRepository) {
+        return new BrandLookupProviderImpl(brandJpaRepository);
     }
 }
