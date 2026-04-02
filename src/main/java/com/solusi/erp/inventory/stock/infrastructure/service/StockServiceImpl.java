@@ -2,40 +2,49 @@ package com.solusi.erp.inventory.stock.infrastructure.service;
 
 import com.solusi.erp.core.model.CurrencyAmount;
 import com.solusi.erp.inventory.stock.application.dto.StockMovementPayload;
+import com.solusi.erp.inventory.stock.domain.model.CostAmount;
 import com.solusi.erp.inventory.stock.domain.model.MovementType;
+import com.solusi.erp.inventory.stock.domain.model.StockBalance;
 import com.solusi.erp.inventory.stock.domain.port.StockService;
-import com.solusi.erp.inventory.stock.domain.port.ValuationService;
+import com.solusi.erp.inventory.stock.domain.repository.StockBalanceRepository;
+import com.solusi.erp.inventory.stock.domain.service.FifoValuationService;
 import com.solusi.erp.inventory.stock.infrastructure.persistence.InventoryMovementEntity;
 import com.solusi.erp.inventory.stock.infrastructure.persistence.InventoryMovementJpaRepository;
-import com.solusi.erp.inventory.stock.infrastructure.persistence.StockBalanceEntity;
-import com.solusi.erp.inventory.stock.infrastructure.persistence.StockBalanceJpaRepository;
 import com.solusi.erp.inventory.product.infrastructure.persistence.ProductEntity;
 import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import com.solusi.erp.inventory.uomconversion.domain.port.UomConversionService;
 import com.solusi.erp.inventory.shared.util.SerialNumberGenerator;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 
 /**
- * Implementation of StockService with Multi-Currency and UOM support.
+ * Implementation of StockService delegating business logic to domain models.
  */
-@Service
-@Transactional
-@RequiredArgsConstructor
 public class StockServiceImpl implements StockService {
 
-    private final StockBalanceJpaRepository stockBalanceRepository;
+    private final StockBalanceRepository stockBalanceRepository;
     private final InventoryMovementJpaRepository inventoryMovementRepository;
     private final JpaProductRepository productRepository;
     private final UomConversionService uomConversionService;
-    private final ValuationService valuationService;
+    private final FifoValuationService fifoValuationService;
     private final MessageSource messageSource;
+
+    public StockServiceImpl(StockBalanceRepository stockBalanceRepository,
+                            InventoryMovementJpaRepository inventoryMovementRepository,
+                            JpaProductRepository productRepository,
+                            UomConversionService uomConversionService,
+                            FifoValuationService fifoValuationService,
+                            MessageSource messageSource) {
+        this.stockBalanceRepository = stockBalanceRepository;
+        this.inventoryMovementRepository = inventoryMovementRepository;
+        this.productRepository = productRepository;
+        this.uomConversionService = uomConversionService;
+        this.fifoValuationService = fifoValuationService;
+        this.messageSource = messageSource;
+    }
 
     @Override
     public void adjust(StockMovementPayload payload) {
@@ -51,44 +60,53 @@ public class StockServiceImpl implements StockService {
         // 2. Resolve Serial Number
         final String serialNumber = resolveSerialNumber(product, payload);
 
-        // 3. Update Balance
-        StockBalanceEntity balance = stockBalanceRepository
-                .findByProductIdAndContainerIdAndSerialNumber(payload.getProductId(), payload.getContainerId(), serialNumber)
-                .orElseGet(() -> createNewBalance(payload, serialNumber));
+        // 3. Load or create domain StockBalance, apply movement, validate
+        StockBalance balance = stockBalanceRepository
+                .findByProductContainerSerial(payload.getProductId(), payload.getContainerId(), serialNumber)
+                .orElseGet(() -> StockBalance.createNew(payload.getProductId(), payload.getContainerId(), serialNumber));
 
-        updateBalance(balance, payload, baseQuantity);
-        validateBalance(balance);
+        balance.applyMovement(payload.getMovementType(), baseQuantity);
+
+        try {
+            balance.validate();
+        } catch (IllegalStateException e) {
+            throw new RuntimeException(getMessage(e.getMessage()));
+        }
+
         stockBalanceRepository.save(balance);
 
-        // 4. Handle Valuation (FIFO)
-        CurrencyAmount unitCost = handleValuation(payload, baseQuantity, serialNumber);
+        // 4. Handle Valuation (FIFO) via domain service
+        CostAmount costAmount = handleValuation(payload, baseQuantity, serialNumber);
 
-        // 5. Log Movement
+        // 5. Log Movement (infrastructure concern — writes directly to JPA entity)
+        CurrencyAmount unitCost = costAmount != null ? toCurrencyAmount(costAmount) : null;
         logMovement(payload, baseQuantity, serialNumber, unitCost);
     }
 
-    private CurrencyAmount handleValuation(StockMovementPayload payload, BigDecimal baseQuantity, String serialNumber) {
+    private CostAmount handleValuation(StockMovementPayload payload, BigDecimal baseQuantity, String serialNumber) {
         BigDecimal absQuantity = baseQuantity.abs();
         if (isPositiveAdjustment(payload)) {
-            CurrencyAmount cost = resolveCurrencyAmount(payload);
-            valuationService.addStock(payload.getProductId(), payload.getContainerId(), serialNumber, absQuantity, cost);
+            CostAmount cost = resolveCostAmount(payload);
+            fifoValuationService.addLayer(payload.getProductId(), payload.getContainerId(), serialNumber, absQuantity, cost);
             return cost;
         } else if (isNegativeAdjustment(payload)) {
-            return valuationService.consumeStock(payload.getProductId(), payload.getContainerId(), serialNumber, absQuantity);
+            return fifoValuationService.consumeLayers(payload.getProductId(), payload.getContainerId(), serialNumber, absQuantity);
         }
         return null;
     }
 
-    private CurrencyAmount resolveCurrencyAmount(StockMovementPayload payload) {
+    private CostAmount resolveCostAmount(StockMovementPayload payload) {
         BigDecimal exchangeRate = payload.getExchangeRate() != null ? payload.getExchangeRate() : BigDecimal.ONE;
         BigDecimal originalAmount = payload.getNetPrice() != null ? payload.getNetPrice() : BigDecimal.ZERO;
-        BigDecimal localAmount = originalAmount.multiply(exchangeRate);
+        return CostAmount.of(payload.getCurrencyId(), exchangeRate, originalAmount);
+    }
 
+    private CurrencyAmount toCurrencyAmount(CostAmount cost) {
         return CurrencyAmount.builder()
-                .currencyId(payload.getCurrencyId())
-                .exchangeRate(exchangeRate)
-                .originalAmount(originalAmount)
-                .localAmount(localAmount)
+                .currencyId(cost.currencyId())
+                .exchangeRate(cost.exchangeRate())
+                .originalAmount(cost.originalAmount())
+                .localAmount(cost.localAmount())
                 .build();
     }
 
@@ -118,47 +136,6 @@ public class StockServiceImpl implements StockService {
             return SerialNumberGenerator.generate();
         }
         return sn;
-    }
-
-    private StockBalanceEntity createNewBalance(StockMovementPayload payload, String serialNumber) {
-        StockBalanceEntity balance = new StockBalanceEntity();
-        balance.setProductId(payload.getProductId());
-        balance.setContainerId(payload.getContainerId());
-        balance.setSerialNumber(serialNumber);
-        balance.setQuantity(BigDecimal.ZERO);
-        balance.setReservedQuantity(BigDecimal.ZERO);
-        balance.setInTransitQuantity(BigDecimal.ZERO);
-        return balance;
-    }
-
-    private void updateBalance(StockBalanceEntity balance, StockMovementPayload payload, BigDecimal baseQuantity) {
-        switch (payload.getMovementType()) {
-            case RECEIPT, TRANSFER_IN, ADJUSTMENT -> {
-                balance.setQuantity(balance.getQuantity().add(baseQuantity));
-            }
-            case ISSUE, TRANSFER_OUT -> {
-                balance.setQuantity(balance.getQuantity().subtract(baseQuantity));
-            }
-            case ISSUE_RESERVED -> {
-                balance.setQuantity(balance.getQuantity().subtract(baseQuantity));
-                balance.setReservedQuantity(balance.getReservedQuantity().subtract(baseQuantity));
-            }
-            case RESERVE -> {
-                balance.setReservedQuantity(balance.getReservedQuantity().add(baseQuantity));
-            }
-            case RELEASE -> {
-                balance.setReservedQuantity(balance.getReservedQuantity().subtract(baseQuantity));
-            }
-        }
-    }
-
-    private void validateBalance(StockBalanceEntity balance) {
-        if (balance.getQuantity().compareTo(BigDecimal.ZERO) < 0) {
-            throw new RuntimeException(getMessage("msg.error.inventory.insufficient_stock"));
-        }
-        if (balance.getReservedQuantity().compareTo(BigDecimal.ZERO) < 0) {
-            throw new RuntimeException(getMessage("msg.error.inventory.insufficient_reserved"));
-        }
     }
 
     private void logMovement(StockMovementPayload payload, BigDecimal baseQuantity, String serialNumber, CurrencyAmount unitCost) {

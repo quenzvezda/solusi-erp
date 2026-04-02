@@ -182,7 +182,7 @@ public class CreateStockAdjustmentUseCaseImpl {
 
 **Referensi di Codebase:**
 - `inventory.stock.domain.port.StockService` — dipakai oleh `adjustment`
-- `inventory.stock.domain.port.ValuationService`
+- `inventory.stock.domain.service.FifoValuationService` — domain service FIFO internal slice stock
 - `inventory.uomconversion.domain.port.UomConversionService` — dipakai oleh `stock`
 
 ---

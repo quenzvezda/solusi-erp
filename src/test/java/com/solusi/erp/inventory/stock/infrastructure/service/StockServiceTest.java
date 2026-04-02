@@ -3,11 +3,11 @@ package com.solusi.erp.inventory.stock.infrastructure.service;
 import com.solusi.erp.inventory.stock.application.dto.StockMovementPayload;
 import com.solusi.erp.inventory.stock.domain.model.MovementType;
 import com.solusi.erp.inventory.stock.domain.model.ReferenceType;
+import com.solusi.erp.inventory.stock.domain.model.StockBalance;
+import com.solusi.erp.inventory.stock.domain.repository.StockBalanceRepository;
+import com.solusi.erp.inventory.stock.domain.service.FifoValuationService;
 import com.solusi.erp.inventory.stock.infrastructure.persistence.InventoryMovementEntity;
 import com.solusi.erp.inventory.stock.infrastructure.persistence.InventoryMovementJpaRepository;
-import com.solusi.erp.inventory.stock.infrastructure.persistence.StockBalanceEntity;
-import com.solusi.erp.inventory.stock.infrastructure.persistence.StockBalanceJpaRepository;
-import com.solusi.erp.inventory.stock.domain.port.ValuationService;
 import com.solusi.erp.inventory.product.infrastructure.persistence.ProductEntity;
 import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import com.solusi.erp.inventory.uomconversion.domain.port.UomConversionService;
@@ -30,7 +30,7 @@ import static org.mockito.Mockito.*;
 public class StockServiceTest {
 
     @Mock
-    private StockBalanceJpaRepository stockBalanceRepository;
+    private StockBalanceRepository stockBalanceRepository;
 
     @Mock
     private InventoryMovementJpaRepository inventoryMovementRepository;
@@ -42,7 +42,7 @@ public class StockServiceTest {
     private UomConversionService uomConversionService;
 
     @Mock
-    private ValuationService valuationService;
+    private FifoValuationService fifoValuationService;
 
     @Mock
     private MessageSource messageSource;
@@ -73,11 +73,12 @@ public class StockServiceTest {
 
         product.setIsSerialized(false);
         when(productRepository.getReferenceById(1L)).thenReturn(product);
-        when(stockBalanceRepository.findByProductIdAndContainerIdAndSerialNumber(1L, 1L, null)).thenReturn(Optional.empty());
+        when(stockBalanceRepository.findByProductContainerSerial(1L, 1L, null)).thenReturn(Optional.empty());
+        when(stockBalanceRepository.save(any(StockBalance.class))).thenAnswer(i -> i.getArgument(0));
 
         stockService.adjust(payload);
 
-        verify(stockBalanceRepository).save(argThat(sb -> 
+        verify(stockBalanceRepository).save(argThat(sb ->
             sb.getQuantity().compareTo(BigDecimal.TEN) == 0 &&
             sb.getReservedQuantity().compareTo(BigDecimal.ZERO) == 0
         ));
@@ -93,13 +94,12 @@ public class StockServiceTest {
                 .movementType(MovementType.ISSUE)
                 .build();
 
-        StockBalanceEntity existingBalance = new StockBalanceEntity();
-        existingBalance.setProductId(1L);
-        existingBalance.setContainerId(1L);
-        existingBalance.setQuantity(BigDecimal.ONE); // Only 1 on hand, trying to issue 10
+        StockBalance existingBalance = StockBalance.createNew(1L, 1L, null);
+        existingBalance.applyMovement(MovementType.RECEIPT, BigDecimal.ONE); // Only 1 on hand
 
         when(productRepository.getReferenceById(1L)).thenReturn(product);
-        when(stockBalanceRepository.findByProductIdAndContainerIdAndSerialNumber(1L, 1L, null)).thenReturn(Optional.of(existingBalance));
+        when(stockBalanceRepository.findByProductContainerSerial(1L, 1L, null)).thenReturn(Optional.of(existingBalance));
+        when(messageSource.getMessage(anyString(), any(), any())).thenReturn("Insufficient stock");
 
         assertThrows(RuntimeException.class, () -> stockService.adjust(payload));
     }
@@ -113,18 +113,16 @@ public class StockServiceTest {
                 .movementType(MovementType.RESERVE)
                 .build();
 
-        StockBalanceEntity existingBalance = new StockBalanceEntity();
-        existingBalance.setProductId(1L);
-        existingBalance.setContainerId(1L);
-        existingBalance.setQuantity(BigDecimal.TEN);
-        existingBalance.setReservedQuantity(BigDecimal.ZERO);
+        StockBalance existingBalance = StockBalance.createNew(1L, 1L, null);
+        existingBalance.applyMovement(MovementType.RECEIPT, BigDecimal.TEN);
 
         when(productRepository.getReferenceById(1L)).thenReturn(product);
-        when(stockBalanceRepository.findByProductIdAndContainerIdAndSerialNumber(1L, 1L, null)).thenReturn(Optional.of(existingBalance));
+        when(stockBalanceRepository.findByProductContainerSerial(1L, 1L, null)).thenReturn(Optional.of(existingBalance));
+        when(stockBalanceRepository.save(any(StockBalance.class))).thenAnswer(i -> i.getArgument(0));
 
         stockService.adjust(payload);
 
-        verify(stockBalanceRepository).save(argThat(sb -> 
+        verify(stockBalanceRepository).save(argThat(sb ->
             sb.getQuantity().compareTo(BigDecimal.TEN) == 0 &&
             sb.getReservedQuantity().compareTo(BigDecimal.valueOf(5)) == 0
         ));
@@ -139,18 +137,17 @@ public class StockServiceTest {
                 .movementType(MovementType.ISSUE_RESERVED)
                 .build();
 
-        StockBalanceEntity existingBalance = new StockBalanceEntity();
-        existingBalance.setProductId(1L);
-        existingBalance.setContainerId(1L);
-        existingBalance.setQuantity(BigDecimal.TEN);
-        existingBalance.setReservedQuantity(BigDecimal.valueOf(5));
+        StockBalance existingBalance = StockBalance.createNew(1L, 1L, null);
+        existingBalance.applyMovement(MovementType.RECEIPT, BigDecimal.TEN);
+        existingBalance.applyMovement(MovementType.RESERVE, BigDecimal.valueOf(5));
 
         when(productRepository.getReferenceById(1L)).thenReturn(product);
-        when(stockBalanceRepository.findByProductIdAndContainerIdAndSerialNumber(1L, 1L, null)).thenReturn(Optional.of(existingBalance));
+        when(stockBalanceRepository.findByProductContainerSerial(1L, 1L, null)).thenReturn(Optional.of(existingBalance));
+        when(stockBalanceRepository.save(any(StockBalance.class))).thenAnswer(i -> i.getArgument(0));
 
         stockService.adjust(payload);
 
-        verify(stockBalanceRepository).save(argThat(sb -> 
+        verify(stockBalanceRepository).save(argThat(sb ->
             sb.getQuantity().compareTo(BigDecimal.valueOf(5)) == 0 &&
             sb.getReservedQuantity().compareTo(BigDecimal.ZERO) == 0
         ));
@@ -165,17 +162,16 @@ public class StockServiceTest {
                 .movementType(MovementType.TRANSFER_OUT)
                 .build();
 
-        StockBalanceEntity existingBalance = new StockBalanceEntity();
-        existingBalance.setProductId(1L);
-        existingBalance.setContainerId(1L);
-        existingBalance.setQuantity(BigDecimal.TEN);
+        StockBalance existingBalance = StockBalance.createNew(1L, 1L, null);
+        existingBalance.applyMovement(MovementType.RECEIPT, BigDecimal.TEN);
 
         when(productRepository.getReferenceById(1L)).thenReturn(product);
-        when(stockBalanceRepository.findByProductIdAndContainerIdAndSerialNumber(1L, 1L, null)).thenReturn(Optional.of(existingBalance));
+        when(stockBalanceRepository.findByProductContainerSerial(1L, 1L, null)).thenReturn(Optional.of(existingBalance));
+        when(stockBalanceRepository.save(any(StockBalance.class))).thenAnswer(i -> i.getArgument(0));
 
         stockService.adjust(payload);
 
-        verify(stockBalanceRepository).save(argThat(sb -> 
+        verify(stockBalanceRepository).save(argThat(sb ->
             sb.getQuantity().compareTo(BigDecimal.valueOf(7)) == 0
         ));
     }
@@ -189,18 +185,17 @@ public class StockServiceTest {
                 .movementType(MovementType.RELEASE)
                 .build();
 
-        StockBalanceEntity existingBalance = new StockBalanceEntity();
-        existingBalance.setProductId(1L);
-        existingBalance.setContainerId(1L);
-        existingBalance.setQuantity(BigDecimal.TEN);
-        existingBalance.setReservedQuantity(BigDecimal.valueOf(5));
+        StockBalance existingBalance = StockBalance.createNew(1L, 1L, null);
+        existingBalance.applyMovement(MovementType.RECEIPT, BigDecimal.TEN);
+        existingBalance.applyMovement(MovementType.RESERVE, BigDecimal.valueOf(5));
 
         when(productRepository.getReferenceById(1L)).thenReturn(product);
-        when(stockBalanceRepository.findByProductIdAndContainerIdAndSerialNumber(1L, 1L, null)).thenReturn(Optional.of(existingBalance));
+        when(stockBalanceRepository.findByProductContainerSerial(1L, 1L, null)).thenReturn(Optional.of(existingBalance));
+        when(stockBalanceRepository.save(any(StockBalance.class))).thenAnswer(i -> i.getArgument(0));
 
         stockService.adjust(payload);
 
-        verify(stockBalanceRepository).save(argThat(sb -> 
+        verify(stockBalanceRepository).save(argThat(sb ->
             sb.getReservedQuantity().compareTo(BigDecimal.valueOf(3)) == 0
         ));
     }
@@ -221,11 +216,12 @@ public class StockServiceTest {
 
         product.setIsSerialized(false);
         when(productRepository.getReferenceById(1L)).thenReturn(product);
-        when(stockBalanceRepository.findByProductIdAndContainerIdAndSerialNumber(1L, 1L, null)).thenReturn(Optional.empty());
+        when(stockBalanceRepository.findByProductContainerSerial(1L, 1L, null)).thenReturn(Optional.empty());
+        when(stockBalanceRepository.save(any(StockBalance.class))).thenAnswer(i -> i.getArgument(0));
 
         stockService.adjust(payload);
 
-        verify(inventoryMovementRepository).save(argThat(mov -> 
+        verify(inventoryMovementRepository).save(argThat(mov ->
             mov.getQuantity().compareTo(BigDecimal.TEN) == 0 &&
             mov.getMovementType() == MovementType.ADJUSTMENT &&
             mov.getReferenceType() == ReferenceType.STOCK_OPNAME &&
@@ -244,14 +240,13 @@ public class StockServiceTest {
                 .movementType(MovementType.RELEASE)
                 .build();
 
-        StockBalanceEntity existingBalance = new StockBalanceEntity();
-        existingBalance.setProductId(1L);
-        existingBalance.setContainerId(1L);
-        existingBalance.setQuantity(BigDecimal.TEN);
-        existingBalance.setReservedQuantity(BigDecimal.ONE); // Only 1 reserved, trying to release 10
+        StockBalance existingBalance = StockBalance.createNew(1L, 1L, null);
+        existingBalance.applyMovement(MovementType.RECEIPT, BigDecimal.TEN);
+        existingBalance.applyMovement(MovementType.RESERVE, BigDecimal.ONE); // Only 1 reserved
 
         when(productRepository.getReferenceById(1L)).thenReturn(product);
-        when(stockBalanceRepository.findByProductIdAndContainerIdAndSerialNumber(1L, 1L, null)).thenReturn(Optional.of(existingBalance));
+        when(stockBalanceRepository.findByProductContainerSerial(1L, 1L, null)).thenReturn(Optional.of(existingBalance));
+        when(messageSource.getMessage(anyString(), any(), any())).thenReturn("Insufficient reserved");
 
         assertThrows(RuntimeException.class, () -> stockService.adjust(payload));
     }
@@ -267,14 +262,15 @@ public class StockServiceTest {
 
         product.setIsSerialized(true);
         when(productRepository.getReferenceById(1L)).thenReturn(product);
-        when(stockBalanceRepository.findByProductIdAndContainerIdAndSerialNumber(eq(1L), eq(1L), anyString())).thenReturn(Optional.empty());
+        when(stockBalanceRepository.findByProductContainerSerial(eq(1L), eq(1L), anyString())).thenReturn(Optional.empty());
+        when(stockBalanceRepository.save(any(StockBalance.class))).thenAnswer(i -> i.getArgument(0));
 
         stockService.adjust(payload);
 
-        verify(stockBalanceRepository).save(argThat(sb -> 
+        verify(stockBalanceRepository).save(argThat(sb ->
             sb.getSerialNumber() != null && sb.getSerialNumber().startsWith("SN-")
         ));
-        verify(inventoryMovementRepository).save(argThat(mov -> 
+        verify(inventoryMovementRepository).save(argThat(mov ->
             mov.getSerialNumber() != null && mov.getSerialNumber().startsWith("SN-")
         ));
     }
@@ -293,12 +289,13 @@ public class StockServiceTest {
         when(productRepository.getReferenceById(1L)).thenReturn(product);
         when(uomConversionService.convertToBaseUom(1L, 2L, BigDecimal.valueOf(2)))
                 .thenReturn(BigDecimal.valueOf(48)); // 2 Boxes * 24 factor
-        when(stockBalanceRepository.findByProductIdAndContainerIdAndSerialNumber(1L, 1L, null))
+        when(stockBalanceRepository.findByProductContainerSerial(1L, 1L, null))
                 .thenReturn(Optional.empty());
+        when(stockBalanceRepository.save(any(StockBalance.class))).thenAnswer(i -> i.getArgument(0));
 
         stockService.adjust(payload);
 
-        verify(stockBalanceRepository).save(argThat(sb -> 
+        verify(stockBalanceRepository).save(argThat(sb ->
             sb.getQuantity().compareTo(BigDecimal.valueOf(48)) == 0
         ));
     }
