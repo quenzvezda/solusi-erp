@@ -105,6 +105,7 @@ class StockAdjustmentFormIntegrationTest {
                 auth("STOCK-ADJUSTMENT_UPDATE", "STOCK-ADJUSTMENT_PROCESS"));
         // btn-process-inventory button element's id attribute
         assertThat(html).contains("id=\"btn-process-inventory\"");
+        assertThat(html).contains("data-process-url=\"/inventory/adjustments/1/process\"");
     }
 
     @Test
