@@ -1,9 +1,12 @@
 package com.solusi.erp.inventory.product.infrastructure.config;
 
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
+import com.solusi.erp.inventory.adjustment.infrastructure.persistence.StockAdjustmentLineJpaRepository;
 import com.solusi.erp.inventory.product.application.usecase.command.*;
 import com.solusi.erp.inventory.product.application.usecase.query.*;
+import com.solusi.erp.inventory.product.domain.port.ProductInUseChecker;
 import com.solusi.erp.inventory.product.domain.repository.ProductRepository;
+import com.solusi.erp.inventory.product.infrastructure.adapter.ProductInUseCheckerImpl;
 import com.solusi.erp.inventory.product.infrastructure.adapter.ProductRepositoryImpl;
 import com.solusi.erp.inventory.product.infrastructure.adapter.ProductUomUsageChecker;
 import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
@@ -12,6 +15,7 @@ import com.solusi.erp.inventory.product.infrastructure.adapter.ProductLookupProv
 import com.solusi.erp.inventory.product.infrastructure.persistence.ProductPersistenceMapper;
 import com.solusi.erp.inventory.uom.domain.port.UomUsageChecker;
 import com.solusi.erp.inventory.uom.infrastructure.persistence.UomJpaRepository;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -58,10 +62,22 @@ public class ProductConfig {
     }
 
     @Bean
+    public ProductInUseChecker productInUseChecker(
+            ObjectProvider<StockAdjustmentLineJpaRepository> stockAdjustmentLineJpaRepositoryProvider) {
+        StockAdjustmentLineJpaRepository repo = stockAdjustmentLineJpaRepositoryProvider.getIfAvailable();
+        if (repo == null) {
+            // return a no-op checker for test contexts where the repository is not present
+            return productId -> false;
+        }
+        return new ProductInUseCheckerImpl(repo);
+    }
+
+    @Bean
     public DeleteProductUseCase deleteProductUseCase(
             ProductRepository productRepository,
+            com.solusi.erp.inventory.product.domain.port.ProductInUseChecker productInUseChecker,
             PlatformTransactionManager txManager) {
-        DeleteProductUseCase pureUseCase = new DeleteProductUseCaseImpl(productRepository);
+        DeleteProductUseCase pureUseCase = new DeleteProductUseCaseImpl(productRepository, productInUseChecker);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         return (id) -> tx.executeWithoutResult(status -> pureUseCase.execute(id));
     }

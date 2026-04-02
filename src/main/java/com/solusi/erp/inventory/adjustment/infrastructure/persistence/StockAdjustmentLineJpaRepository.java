@@ -12,4 +12,5 @@ public interface StockAdjustmentLineJpaRepository extends JpaRepository<StockAdj
     boolean existsByGridId(Long gridId);
     boolean existsByContainerId(Long containerId);
     boolean existsByUomId(Long uomId);
+    boolean existsByProductId(Long productId);
 }
