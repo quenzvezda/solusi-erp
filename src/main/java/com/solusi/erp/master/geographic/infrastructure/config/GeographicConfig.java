@@ -5,9 +5,12 @@ import com.solusi.erp.master.geographic.application.usecase.query.*;
 import com.solusi.erp.master.geographic.domain.port.GeographicLookupProvider;
 import com.solusi.erp.master.geographic.domain.repository.GeographicRepository;
 import com.solusi.erp.master.geographic.infrastructure.adapter.GeographicLookupProviderImpl;
+import com.solusi.erp.master.geographic.domain.port.GeographicInUseChecker;
+import com.solusi.erp.master.geographic.infrastructure.adapter.GeographicInUseCheckerImpl;
 import com.solusi.erp.master.geographic.infrastructure.adapter.GeographicRepositoryImpl;
 import com.solusi.erp.master.geographic.infrastructure.persistence.GeographicJpaRepository;
 import com.solusi.erp.master.geographic.infrastructure.persistence.GeographicPersistenceMapper;
+import com.solusi.erp.master.bankaccount.infrastructure.persistence.BankAccountJpaRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -48,12 +51,20 @@ public class GeographicConfig {
     }
 
     @Bean
+    public GeographicInUseChecker geographicInUseChecker(
+            GeographicJpaRepository geographicJpaRepository,
+            BankAccountJpaRepository bankAccountJpaRepository) {
+        return new GeographicInUseCheckerImpl(geographicJpaRepository, bankAccountJpaRepository);
+    }
+
+    @Bean
     public DeleteGeographicUseCase deleteGeographicUseCase(
             GeographicRepository geographicDomainRepository,
+            GeographicInUseChecker geographicInUseChecker,
             PlatformTransactionManager txManager) {
-        DeleteGeographicUseCase pure = new DeleteGeographicUseCaseImpl(geographicDomainRepository);
+        DeleteGeographicUseCase pure = new DeleteGeographicUseCaseImpl(geographicDomainRepository, geographicInUseChecker);
         TransactionTemplate tx = new TransactionTemplate(txManager);
-        return (id) -> tx.executeWithoutResult(status -> pure.execute(id));
+        return (id) -> tx.execute(status -> pure.execute(id));
     }
 
     @Bean

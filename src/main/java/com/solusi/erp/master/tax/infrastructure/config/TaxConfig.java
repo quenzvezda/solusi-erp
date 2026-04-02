@@ -2,7 +2,9 @@ package com.solusi.erp.master.tax.infrastructure.config;
 
 import com.solusi.erp.master.tax.application.usecase.command.*;
 import com.solusi.erp.master.tax.application.usecase.query.*;
+import com.solusi.erp.master.tax.domain.port.TaxInUseChecker;
 import com.solusi.erp.master.tax.domain.repository.TaxRepository;
+import com.solusi.erp.master.tax.infrastructure.adapter.TaxInUseCheckerImpl;
 import com.solusi.erp.master.tax.infrastructure.adapter.TaxRepositoryImpl;
 import com.solusi.erp.master.tax.infrastructure.persistence.TaxPersistenceMapper;
 import org.springframework.context.annotation.Bean;
@@ -45,12 +47,18 @@ public class TaxConfig {
     }
 
     @Bean
+    public TaxInUseChecker taxInUseChecker() {
+        return new TaxInUseCheckerImpl();
+    }
+
+    @Bean
     public DeleteTaxUseCase deleteTaxUseCase(
             TaxRepository taxDomainRepository,
+            TaxInUseChecker taxInUseChecker,
             PlatformTransactionManager txManager) {
-        DeleteTaxUseCase pure = new DeleteTaxUseCaseImpl(taxDomainRepository);
+        DeleteTaxUseCase pure = new DeleteTaxUseCaseImpl(taxDomainRepository, taxInUseChecker);
         TransactionTemplate tx = new TransactionTemplate(txManager);
-        return (id) -> tx.executeWithoutResult(status -> pure.execute(id));
+        return (id) -> tx.execute(status -> pure.execute(id));
     }
 
     @Bean

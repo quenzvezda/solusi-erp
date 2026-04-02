@@ -63,6 +63,8 @@ public interface GeographicJpaRepository extends JpaRepository<Geographic, Long>
         java.util.List<Geographic> findByTypeAndIsActiveTrue(GeographicType type);
 
         boolean existsByCode(String code);
+
+    boolean existsByParentId(Long parentId);
 }
 
 

@@ -3,6 +3,8 @@ package com.solusi.erp.master.bankaccount.infrastructure.config;
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.master.bankaccount.application.usecase.command.*;
 import com.solusi.erp.master.bankaccount.application.usecase.query.*;
+import com.solusi.erp.master.bankaccount.domain.port.BankAccountInUseChecker;
+import com.solusi.erp.master.bankaccount.infrastructure.adapter.BankAccountInUseCheckerImpl;
 import com.solusi.erp.master.bankaccount.domain.repository.BankAccountRepository;
 import com.solusi.erp.master.bankaccount.infrastructure.adapter.BankAccountRepositoryImpl;
 import com.solusi.erp.master.bankaccount.infrastructure.persistence.BankAccountPersistenceMapper;
@@ -51,12 +53,18 @@ public class BankAccountConfig {
     }
 
     @Bean
+    public BankAccountInUseChecker bankAccountInUseChecker() {
+        return new BankAccountInUseCheckerImpl();
+    }
+
+    @Bean
     public DeleteBankAccountUseCase deleteBankAccountUseCase(
             BankAccountRepository bankAccountDomainRepository,
+            BankAccountInUseChecker bankAccountInUseChecker,
             PlatformTransactionManager txManager) {
-        DeleteBankAccountUseCase pure = new DeleteBankAccountUseCaseImpl(bankAccountDomainRepository);
+        DeleteBankAccountUseCase pure = new DeleteBankAccountUseCaseImpl(bankAccountDomainRepository, bankAccountInUseChecker);
         TransactionTemplate tx = new TransactionTemplate(txManager);
-        return (id) -> tx.executeWithoutResult(status -> pure.execute(id));
+        return (id) -> tx.execute(status -> pure.execute(id));
     }
 
     @Bean

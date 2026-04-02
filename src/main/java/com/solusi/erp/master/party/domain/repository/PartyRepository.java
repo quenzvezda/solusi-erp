@@ -14,4 +14,5 @@ public interface PartyRepository {
     List<Party> findForLookup(String keyword);
     List<Party> findAvailableForUser(String keyword, Long excludePartyId);
     void delete(Long id);
+    void softDelete(Long id);
 }

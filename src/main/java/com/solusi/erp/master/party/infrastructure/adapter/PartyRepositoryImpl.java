@@ -123,6 +123,14 @@ public class PartyRepositoryImpl implements PartyRepository {
         jpaPartyRepo.deleteById(id);
     }
 
+    @Override
+    public void softDelete(Long id) {
+        jpaPartyRepo.findById(id).ifPresent(entity -> {
+            entity.setIsActive(false);
+            jpaPartyRepo.save(entity);
+        });
+    }
+
     private void syncRoles(com.solusi.erp.master.party.infrastructure.persistence.Party entity, Set<Long> roleIds) {
         if (roleIds == null || roleIds.isEmpty()) {
             entity.setRoles(new HashSet<>());

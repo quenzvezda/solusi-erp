@@ -1,6 +1,7 @@
 package com.solusi.erp.master.party.web.controller;
 
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
+import com.solusi.erp.core.domain.model.DeleteResult;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
@@ -132,7 +133,11 @@ public class PartyController {
     @PreAuthorize("hasAuthority('PARTY_DELETE')")
     @ResponseBody
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        deletePartyUseCase.execute(id);
+        DeleteResult result = deletePartyUseCase.execute(id);
+        if (result == DeleteResult.SOFT_DELETED) {
+            String msg = messageSource.getMessage("msg.success.deactivated", null, LocaleContextHolder.getLocale());
+            return HtmxResponseUtility.okWithRefreshTableAndWarning(msg);
+        }
         String msg = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
         return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
     }

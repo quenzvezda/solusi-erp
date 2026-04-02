@@ -1,6 +1,8 @@
 package com.solusi.erp.master.bankaccount.application.usecase.command;
 
+import com.solusi.erp.core.domain.model.DeleteResult;
+
 @FunctionalInterface
 public interface DeleteBankAccountUseCase {
-    void execute(Long id);
+    DeleteResult execute(Long id);
 }

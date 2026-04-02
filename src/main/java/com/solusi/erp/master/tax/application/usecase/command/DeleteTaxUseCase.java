@@ -1,6 +1,8 @@
 package com.solusi.erp.master.tax.application.usecase.command;
 
+import com.solusi.erp.core.domain.model.DeleteResult;
+
 @FunctionalInterface
 public interface DeleteTaxUseCase {
-    void execute(Long id);
+    DeleteResult execute(Long id);
 }

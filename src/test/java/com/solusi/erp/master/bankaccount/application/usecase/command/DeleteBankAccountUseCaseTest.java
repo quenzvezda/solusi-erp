@@ -1,8 +1,10 @@
 package com.solusi.erp.master.bankaccount.application.usecase.command;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
+import com.solusi.erp.core.domain.model.DeleteResult;
 import com.solusi.erp.core.exception.DomainException;
 import com.solusi.erp.master.bankaccount.domain.model.BankAccount;
+import com.solusi.erp.master.bankaccount.domain.port.BankAccountInUseChecker;
 import com.solusi.erp.master.bankaccount.domain.repository.BankAccountRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -13,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -24,25 +27,46 @@ class DeleteBankAccountUseCaseTest {
     @Mock
     private BankAccountRepository repository;
 
+    @Mock
+    private BankAccountInUseChecker inUseChecker;
+
     private DeleteBankAccountUseCaseImpl useCase;
 
     @BeforeEach
     void setUp() {
-        useCase = new DeleteBankAccountUseCaseImpl(repository);
+        useCase = new DeleteBankAccountUseCaseImpl(repository, inUseChecker);
     }
 
     @Test
-    @DisplayName("execute deletes an existing bank account by id")
-    void execute_deletesExistingBankAccount() {
+    @DisplayName("execute hard-deletes when bank account is not in use")
+    void execute_hardDeletesWhenNotInUse() {
         AuditMetadata metadata = new AuditMetadata(1L, 1L, null, null, null, null);
         BankAccount existing = new BankAccount(metadata, "BA-001", "Bank BCA", "Sudirman",
                 "John Doe", "1234567890", "BANK", "Note", 1L, "Jakarta", 2L, "PT ABC", true);
 
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
+        when(inUseChecker.isInUse(1L)).thenReturn(false);
 
-        useCase.execute(1L);
+        DeleteResult result = useCase.execute(1L);
 
         verify(repository).delete(1L);
+        assertEquals(DeleteResult.HARD_DELETED, result);
+    }
+
+    @Test
+    @DisplayName("execute soft-deletes when bank account is in use")
+    void execute_softDeletesWhenInUse() {
+        AuditMetadata metadata = new AuditMetadata(1L, 1L, null, null, null, null);
+        BankAccount existing = new BankAccount(metadata, "BA-001", "Bank BCA", "Sudirman",
+                "John Doe", "1234567890", "BANK", "Note", 1L, "Jakarta", 2L, "PT ABC", true);
+
+        when(repository.findById(1L)).thenReturn(Optional.of(existing));
+        when(inUseChecker.isInUse(1L)).thenReturn(true);
+
+        DeleteResult result = useCase.execute(1L);
+
+        verify(repository).save(existing);
+        assertEquals(DeleteResult.SOFT_DELETED, result);
     }
 
     @Test

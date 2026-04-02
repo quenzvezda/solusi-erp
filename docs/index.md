@@ -11,6 +11,7 @@ Dokumentasi dikelompokkan ke dalam folder berikut berdasarkan konteksnya:
 - **[/architecture](architecture/)**: Berisi Class Diagram dan pola desain tingkat tinggi.
     - [Clean Architecture + DDD + CQRS Standard](architecture/clean-ddd-cqrs-standard.md) (Standard Baru)
     - [Base Model Pattern](architecture/base-model-pattern.md)
+    - [Smart Delete Pattern](architecture/smart-delete-pattern.md) — Pola delete fleksibel: hard-delete jika tidak dipakai, soft-delete jika masih direferensikan
 - **[/database](database/)**: Berisi ERD dan script dummy data.
 - **[/tests](tests/)**: Panduan dan utilitas pengujian level web (Controller + Thymeleaf).
     - [Web-layer Testing Guidelines](tests/web-layer-testing.md)

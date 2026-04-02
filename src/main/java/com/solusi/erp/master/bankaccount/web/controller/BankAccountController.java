@@ -1,6 +1,7 @@
 package com.solusi.erp.master.bankaccount.web.controller;
 
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
+import com.solusi.erp.core.domain.model.DeleteResult;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
@@ -128,7 +129,11 @@ public class BankAccountController {
     @PreAuthorize("hasAuthority('BANK-ACCOUNT_DELETE')")
     @ResponseBody
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        deleteBankAccountUseCase.execute(id);
+        DeleteResult result = deleteBankAccountUseCase.execute(id);
+        if (result == DeleteResult.SOFT_DELETED) {
+            String msg = messageSource.getMessage("msg.success.deactivated", null, LocaleContextHolder.getLocale());
+            return HtmxResponseUtility.okWithRefreshTableAndWarning(msg);
+        }
         String msg = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
         return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
     }

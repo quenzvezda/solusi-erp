@@ -4,6 +4,7 @@ import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.core.domain.model.DeleteResult;
 import com.solusi.erp.master.partyroletype.application.usecase.command.CreatePartyRoleTypeUseCase;
 import com.solusi.erp.master.partyroletype.application.usecase.command.DeletePartyRoleTypeUseCase;
 import com.solusi.erp.master.partyroletype.application.usecase.command.UpdatePartyRoleTypeUseCase;
@@ -115,7 +116,11 @@ public class PartyRoleTypeController {
     @PreAuthorize("hasAuthority('PARTY-ROLE-TYPE_DELETE')")
     @ResponseBody
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        deletePartyRoleTypeUseCase.execute(id);
+        DeleteResult result = deletePartyRoleTypeUseCase.execute(id);
+        if (result == DeleteResult.SOFT_DELETED) {
+            String msg = messageSource.getMessage("msg.success.deactivated", null, LocaleContextHolder.getLocale());
+            return HtmxResponseUtility.okWithRefreshTableAndWarning(msg);
+        }
         String msg = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
         return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
     }

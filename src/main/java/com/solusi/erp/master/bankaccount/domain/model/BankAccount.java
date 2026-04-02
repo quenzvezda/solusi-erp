@@ -62,6 +62,10 @@ public class BankAccount {
         this.isActive = isActive;
     }
 
+    public void softDelete() {
+        this.isActive = false;
+    }
+
     public Long getId() { return metadata.id(); }
     public AuditMetadata getMetadata() { return metadata; }
     public String getCode() { return code; }

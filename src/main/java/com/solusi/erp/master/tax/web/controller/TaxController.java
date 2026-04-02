@@ -4,6 +4,7 @@ import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.core.domain.model.DeleteResult;
 import com.solusi.erp.master.tax.application.usecase.command.CreateTaxUseCase;
 import com.solusi.erp.master.tax.application.usecase.command.DeleteTaxUseCase;
 import com.solusi.erp.master.tax.application.usecase.command.UpdateTaxUseCase;
@@ -116,7 +117,11 @@ public class TaxController {
     @PreAuthorize("hasAuthority('TAX_DELETE')")
     @ResponseBody
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        deleteTaxUseCase.execute(id);
+        DeleteResult result = deleteTaxUseCase.execute(id);
+        if (result == DeleteResult.SOFT_DELETED) {
+            String msg = messageSource.getMessage("msg.success.deactivated", null, LocaleContextHolder.getLocale());
+            return HtmxResponseUtility.okWithRefreshTableAndWarning(msg);
+        }
         String msg = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
         return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
     }

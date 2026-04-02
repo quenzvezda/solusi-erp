@@ -4,7 +4,9 @@ import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.master.party.application.usecase.command.*;
 import com.solusi.erp.master.party.application.usecase.query.*;
 import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
+import com.solusi.erp.master.party.domain.port.PartyInUseChecker;
 import com.solusi.erp.master.party.domain.repository.PartyRepository;
+import com.solusi.erp.master.party.infrastructure.adapter.PartyInUseCheckerImpl;
 import com.solusi.erp.master.party.infrastructure.adapter.PartyLookupProviderImpl;
 import com.solusi.erp.master.party.infrastructure.adapter.PartyRepositoryImpl;
 import com.solusi.erp.master.party.infrastructure.persistence.PartyPersistenceMapper;
@@ -12,6 +14,7 @@ import com.solusi.erp.master.geographic.infrastructure.persistence.GeographicJpa
 import com.solusi.erp.master.party.infrastructure.persistence.PartyIdentificationTypeJpaRepository;
 import com.solusi.erp.master.party.infrastructure.persistence.PartyJpaRepository;
 import com.solusi.erp.master.partyroletype.infrastructure.persistence.PartyRoleTypeJpaRepository;
+import com.solusi.erp.master.bankaccount.infrastructure.persistence.BankAccountJpaRepository;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -60,12 +63,18 @@ public class PartyConfig {
     }
 
     @Bean
+    public PartyInUseChecker partyInUseChecker(BankAccountJpaRepository bankAccountJpaRepository) {
+        return new PartyInUseCheckerImpl(bankAccountJpaRepository);
+    }
+
+    @Bean
     public DeletePartyUseCase deletePartyUseCase(
             PartyRepository partyDomainRepository,
+            PartyInUseChecker partyInUseChecker,
             PlatformTransactionManager txManager) {
-        DeletePartyUseCase pure = new DeletePartyUseCaseImpl(partyDomainRepository);
+        DeletePartyUseCase pure = new DeletePartyUseCaseImpl(partyDomainRepository, partyInUseChecker);
         TransactionTemplate tx = new TransactionTemplate(txManager);
-        return (id) -> tx.executeWithoutResult(status -> pure.execute(id));
+        return (id) -> tx.execute(status -> pure.execute(id));
     }
 
     @Bean

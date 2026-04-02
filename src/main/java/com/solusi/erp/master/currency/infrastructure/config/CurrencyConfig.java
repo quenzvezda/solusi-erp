@@ -2,7 +2,9 @@ package com.solusi.erp.master.currency.infrastructure.config;
 
 import com.solusi.erp.master.currency.application.usecase.command.*;
 import com.solusi.erp.master.currency.application.usecase.query.*;
+import com.solusi.erp.master.currency.domain.port.CurrencyInUseChecker;
 import com.solusi.erp.master.currency.domain.repository.CurrencyRepository;
+import com.solusi.erp.master.currency.infrastructure.adapter.CurrencyInUseCheckerImpl;
 import com.solusi.erp.master.currency.infrastructure.adapter.CurrencyRepositoryImpl;
 import com.solusi.erp.master.currency.infrastructure.persistence.CurrencyPersistenceMapper;
 import org.springframework.context.annotation.Bean;
@@ -45,12 +47,18 @@ public class CurrencyConfig {
     }
 
     @Bean
+    public CurrencyInUseChecker currencyInUseChecker() {
+        return new CurrencyInUseCheckerImpl();
+    }
+
+    @Bean
     public DeleteCurrencyUseCase deleteCurrencyUseCase(
             CurrencyRepository currencyDomainRepository,
+            CurrencyInUseChecker currencyInUseChecker,
             PlatformTransactionManager txManager) {
-        DeleteCurrencyUseCase pure = new DeleteCurrencyUseCaseImpl(currencyDomainRepository);
+        DeleteCurrencyUseCase pure = new DeleteCurrencyUseCaseImpl(currencyDomainRepository, currencyInUseChecker);
         TransactionTemplate tx = new TransactionTemplate(txManager);
-        return (id) -> tx.executeWithoutResult(status -> pure.execute(id));
+        return (id) -> tx.execute(status -> pure.execute(id));
     }
 
     @Bean

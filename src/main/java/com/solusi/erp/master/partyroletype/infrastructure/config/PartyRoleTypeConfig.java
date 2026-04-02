@@ -1,9 +1,12 @@
 package com.solusi.erp.master.partyroletype.infrastructure.config;
 
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
+import com.solusi.erp.master.party.infrastructure.persistence.PartyJpaRepository;
 import com.solusi.erp.master.partyroletype.application.usecase.command.*;
 import com.solusi.erp.master.partyroletype.application.usecase.query.*;
+import com.solusi.erp.master.partyroletype.domain.port.PartyRoleTypeInUseChecker;
 import com.solusi.erp.master.partyroletype.domain.repository.PartyRoleTypeRepository;
+import com.solusi.erp.master.partyroletype.infrastructure.adapter.PartyRoleTypeInUseCheckerImpl;
 import com.solusi.erp.master.partyroletype.infrastructure.adapter.PartyRoleTypeRepositoryImpl;
 import com.solusi.erp.master.partyroletype.infrastructure.persistence.PartyRoleTypePersistenceMapper;
 import org.springframework.context.annotation.Bean;
@@ -46,12 +49,18 @@ public class PartyRoleTypeConfig {
     }
 
     @Bean
+    public PartyRoleTypeInUseChecker partyRoleTypeInUseChecker(PartyJpaRepository partyJpaRepository) {
+        return new PartyRoleTypeInUseCheckerImpl(partyJpaRepository);
+    }
+
+    @Bean
     public DeletePartyRoleTypeUseCase deletePartyRoleTypeUseCase(
             PartyRoleTypeRepository partyRoleTypeDomainRepository,
+            PartyRoleTypeInUseChecker partyRoleTypeInUseChecker,
             PlatformTransactionManager txManager) {
-        DeletePartyRoleTypeUseCase pure = new DeletePartyRoleTypeUseCaseImpl(partyRoleTypeDomainRepository);
+        DeletePartyRoleTypeUseCase pure = new DeletePartyRoleTypeUseCaseImpl(partyRoleTypeDomainRepository, partyRoleTypeInUseChecker);
         TransactionTemplate tx = new TransactionTemplate(txManager);
-        return (id) -> tx.executeWithoutResult(status -> pure.execute(id));
+        return (id) -> tx.execute(status -> pure.execute(id));
     }
 
     @Bean

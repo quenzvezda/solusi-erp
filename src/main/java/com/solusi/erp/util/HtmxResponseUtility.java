@@ -17,6 +17,7 @@ public class HtmxResponseUtility {
     // Standard Events
     private static final String EVENT_REFRESH_TABLE = "refresh-table";
     private static final String EVENT_SHOW_SUCCESS = "erp:show-success";
+    private static final String EVENT_SHOW_WARNING = "erp:show-warning";
     
     private static final String GLOBAL_ERROR_FRAGMENT = "fragments/alerts :: error";
 
@@ -81,6 +82,15 @@ public class HtmxResponseUtility {
      */
     public static ResponseEntity<Void> okWithRefreshTableAndSuccess(String message) {
         String json = String.format("{\"%s\":true, \"%s\":\"%s\"}", EVENT_REFRESH_TABLE, EVENT_SHOW_SUCCESS, escapeJson(message));
+        return ResponseEntity.ok().header(HX_TRIGGER, json).build();
+    }
+
+    /**
+     * Returns an empty OK response with both refresh-table and warning message trigger.
+     * Used by Smart Delete when entity is in use and soft-deleted instead of hard-deleted.
+     */
+    public static ResponseEntity<Void> okWithRefreshTableAndWarning(String message) {
+        String json = String.format("{\"%s\":true, \"%s\":\"%s\"}", EVENT_REFRESH_TABLE, EVENT_SHOW_WARNING, escapeJson(message));
         return ResponseEntity.ok().header(HX_TRIGGER, json).build();
     }
 

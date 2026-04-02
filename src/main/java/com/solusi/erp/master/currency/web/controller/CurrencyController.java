@@ -4,6 +4,7 @@ import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.core.domain.model.DeleteResult;
 import com.solusi.erp.master.currency.application.usecase.command.CreateCurrencyUseCase;
 import com.solusi.erp.master.currency.application.usecase.command.DeleteCurrencyUseCase;
 import com.solusi.erp.master.currency.application.usecase.command.UpdateCurrencyUseCase;
@@ -117,7 +118,11 @@ public class CurrencyController {
     @PreAuthorize("hasAuthority('CURRENCY_DELETE')")
     @ResponseBody
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        deleteCurrencyUseCase.execute(id);
+        DeleteResult result = deleteCurrencyUseCase.execute(id);
+        if (result == DeleteResult.SOFT_DELETED) {
+            String msg = messageSource.getMessage("msg.success.deactivated", null, LocaleContextHolder.getLocale());
+            return HtmxResponseUtility.okWithRefreshTableAndWarning(msg);
+        }
         String msg = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
         return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
     }

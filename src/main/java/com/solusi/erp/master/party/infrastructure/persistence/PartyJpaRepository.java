@@ -37,5 +37,7 @@ public interface PartyJpaRepository extends JpaRepository<Party, Long> {
     boolean existsByCode(String code);
 
     boolean existsByCodeAndIdNot(String code, Long id);
+
+    boolean existsByRolesId(Long roleTypeId);
 }
 

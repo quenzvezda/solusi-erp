@@ -51,6 +51,17 @@ const ErpFormHandler = (function () {
      * Display a success message manually. Useful for external triggers (like HTMX events).
      */
     const showSuccess = function(message) {
+        showAlert(message, 'success', 'ti-check');
+    }
+
+    /**
+     * Display a warning message. Used by Smart Delete when entity is deactivated instead of deleted.
+     */
+    const showWarning = function(message) {
+        showAlert(message, 'warning', 'ti-alert-triangle');
+    }
+
+    const showAlert = function(message, type, icon) {
         // Find appropriate container for alerts (Same logic as checkPendingSuccess)
         let alertContainer = document.querySelector('.alert-container') || 
                              document.querySelector('.page-body .page-body .container-xl') ||
@@ -62,9 +73,9 @@ const ErpFormHandler = (function () {
             existingAlerts.forEach(el => el.remove());
 
             const alertHtml = `
-                <div class="alert alert-success alert-dismissible fade show alert-ajax-global" role="alert">
+                <div class="alert alert-${type} alert-dismissible fade show alert-ajax-global" role="alert">
                     <div class="d-flex">
-                        <div><i class="ti ti-check icon alert-icon"></i></div>
+                        <div><i class="ti ${icon} icon alert-icon"></i></div>
                         <div>${message}</div>
                     </div>
                     <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
@@ -255,7 +266,8 @@ const ErpFormHandler = (function () {
 
     return {
         init: init,
-        showSuccess: showSuccess
+        showSuccess: showSuccess,
+        showWarning: showWarning
     };
 })();
 
@@ -269,6 +281,12 @@ document.addEventListener('DOMContentLoaded', function() {
     document.body.addEventListener('erp:show-success', function(evt) {
         const message = evt.detail.value || evt.detail.message || "Action successful";
         ErpFormHandler.showSuccess(message);
+    });
+
+    // Listen for custom "erp:show-warning" events (used by Smart Delete for soft-delete feedback)
+    document.body.addEventListener('erp:show-warning', function(evt) {
+        const message = evt.detail.value || evt.detail.message || "Action completed with warning";
+        ErpFormHandler.showWarning(message);
     });
 });
 

@@ -17,5 +17,9 @@ public interface BankAccountJpaRepository extends JpaRepository<BankAccount, Lon
     Page<BankAccount> search(@Param("search") String search, Pageable pageable);
 
     Optional<BankAccount> findByIdAndIsActiveTrue(Long id);
+
+    boolean existsByCityId(Long cityId);
+
+    boolean existsByPartyId(Long partyId);
 }
 
