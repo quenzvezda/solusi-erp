@@ -1,4 +1,4 @@
-name: CI - Java 21
+name:CI - Java 21
 
 on:
   push:
@@ -16,20 +16,29 @@ on:
         default: 'false'
         type: boolean
 
+# Prevents multiple redundant jobs from running on the same branch simultaneously
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 env:
   JAVA_VERSION: '21'
   JAVA_DISTRIBUTION: 'temurin'
 
 jobs:
   # ──────────────────────────────────────────────────────────────────────────
-  # Job 1: Fast — dijalankan setiap push / PR
-  # Mencakup: unit tests, static template checks, domain/application usecases
-  # Tidak mencakup: @Tag("integration-template") (Thymeleaf sec:authorize tests)
-  # Target waktu: < 60 detik
+  # Job 1: Fast — executed on every push / PR
+  # Includes: unit tests, static template checks, domain/application usecases
+  # Excludes: @Tag("integration-template") (Thymeleaf sec:authorize tests)
+  # Target time: < 60 seconds
   # ──────────────────────────────────────────────────────────────────────────
   fast-tests:
     name: Fast Tests (unit + static)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: github.event_name != 'schedule'
 
     steps:
@@ -43,8 +52,12 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           cache: maven
 
+      - name: Make Maven Wrapper Executable
+        run: chmod +x mvnw
+
       - name: Run fast tests (exclude integration-template tag)
-        run: mvn -B -e test -DexcludedGroups=integration-template
+        # Use ./mvnw to ensure the same Maven version as in local development
+        run: ./mvnw -B -e test -DexcludedGroups=integration-template
 
       - name: Upload test reports
         if: always()
@@ -54,14 +67,15 @@ jobs:
           path: target/surefire-reports/
 
   # ──────────────────────────────────────────────────────────────────────────
-  # Job 2: Full — dijalankan secara terjadwal (nightly) atau manual dispatch
-  # Mencakup: SEMUA tests termasuk @Tag("integration-template")
-  # Target waktu: < 3 menit
+  # Job 2: Full — executed on schedule (nightly) or manual dispatch
+  # Includes: ALL tests including @Tag("integration-template")
+  # Target time: < 3 minutes
   # ──────────────────────────────────────────────────────────────────────────
   full-tests:
     name: Full Tests (unit + integration-template)
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_full == 'true')
+    timeout-minutes: 15
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_full == true)
 
     steps:
       - name: Checkout
@@ -74,8 +88,11 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           cache: maven
 
+      - name: Make Maven Wrapper Executable
+        run: chmod +x mvnw
+
       - name: Run full test suite
-        run: mvn -B -e test
+        run: ./mvnw -B -e test
 
       - name: Upload test reports
         if: always()
