@@ -5,32 +5,31 @@ The Currency feature is a core master data module within the ERP system. It repl
 
 ## Architecture
 
-This feature follows the standard Layered Architecture pattern of the system:
+This feature follows the **Clean Architecture + DDD + CQRS** pattern (standard for all modules).
 
-1. **Database Layer (MySQL/Flyway)**
-   * Manages the schema setup (`master_currencies` table).
-   * Automatically seeds commonly used international currency data and role-based permissions (`CURRENCY_READ`, etc.) into the system.
+```text
+master.currency
+├── domain              (100% Pure Java)
+│   ├── model           Currency.java (Aggregate Root, uses AuditMetadata)
+│   └── repository      CurrencyRepository.java (interface)
+├── application         (100% Pure Java)
+│   └── usecase
+│       ├── command     CreateCurrencyUseCase, UpdateCurrencyUseCase, DeleteCurrencyUseCase
+│       └── query       FindCurrenciesUseCase, FindCurrencyByIdUseCase, GetCurrencyEditViewUseCase
+├── infrastructure      (Framework-dependent)
+│   ├── persistence     Currency (JPA Entity, extends BaseModel), CurrencyJpaRepository
+│   ├── adapter         CurrencyRepositoryAdapter (implements domain CurrencyRepository)
+│   └── config          CurrencyConfig.java (Composition Root, TransactionTemplate)
+└── web
+    ├── controller      CurrencyController.java
+    ├── dto             CurrencySaveRequest, CurrencyDetailResponse, CurrencySummaryResponse
+    └── mapper          CurrencyWebMapper.java (MapStruct)
+```
 
-2. **Domain/Entity Layer (Hibernate/JPA)**
-   * The `Currency.java` entity defines the structural mapping to the database table extending the auditable `BaseModel` (which captures `createdBy`, `createdDate`, etc.).
-
-3. **Data Transfer Objects (DTO) & Mappers**
-   * Uses `CurrencyDto.java` containing Jakarta Bean validations (`@NotBlank`, `@Size`) ensuring data integrity arriving from the frontend.
-   * Employs `CurrencyMapper.java` via MapStruct to seamlessly translate data between `Currency` and `CurrencyDto` layers.
-
-4. **Service & Repository Layer (Spring Data JPA)**
-   * Provides persistence operations through `CurrencyRepository.java`.
-   * Encompasses domain logic and validation rules in `CurrencyServiceImpl.java` (e.g., ensuring alias uniqueness and protecting constraints).
-   * **Default Currency Management**: Handles logic where there can only ever be **one** system-wide default currency active at a time. If a user sets a new currency as default, all other currencies are automatically unmarked.
-
-5. **Controller Layer (Spring Web MVC & Security)**
-   * The `CurrencyController.java` intercepts web requests.
-   * Utilizes Spring Security method-level annotations (`@PreAuthorize("hasAuthority('...')")`) to ensure only individuals with specific permissions can read, create, update, or soft-delete currencies.
-
-6. **Presentation Layer (Thymeleaf & Tabler UI)**
-   * Renders the List views with Sortable Paginations (`currencies/list.html`).
-   * Renders Form views for creation and updates with reactive form validation states (`currencies/form.html`).
-   * Provides UI localization via `messages.properties` and `messages_id.properties`.
+**Domain highlights:**
+- `Currency` domain model menggunakan `AuditMetadata` (bukan `extends BaseModel`) untuk menjaga kemurnian domain.
+- Business method `setAsDefault()` dan `revokeDefault()` berada di domain model untuk menerapkan aturan "hanya satu default aktif".
+- Bean registration dan `TransactionTemplate` dikonfigurasi di `CurrencyConfig.java`.
 
 ---
 

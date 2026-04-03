@@ -1,7 +1,7 @@
 package com.solusi.erp.config;
 
-import com.solusi.erp.security.service.CustomAuthenticationSuccessHandler;
-import com.solusi.erp.security.service.ForcePasswordChangeFilter;
+import com.solusi.erp.security.user.security.CustomAuthenticationSuccessHandler;
+import com.solusi.erp.security.user.security.ForcePasswordChangeFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

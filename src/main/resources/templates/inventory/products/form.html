@@ -43,7 +43,7 @@
 
                     <!-- UI Metadata (Used for display initial labels in Edit Mode) -->
                     <input type="hidden" name="categoryType" id="hidden-category-type" 
-                           th:value="${productUIForm != null ? productUIForm.categoryType : ''}">
+                           th:value="*{categoryType}">
 
                     <div class="card-body">
                         <!-- Alert Placeholder inside card-body for global errors -->
@@ -64,23 +64,23 @@
                             <div class="col-md-4">
                                 <div th:insert="~{fragments/inputs :: autocomplete(field='categoryId', label=#{label.product.category}, required=true, id='category-select', path='inventory/product-categories',
                                     initialValue=*{categoryId}, 
-                                    initialText=${productUIForm != null ? productUIForm.categoryName : ''}, 
-                                    initialSubtext=${productUIForm != null ? productUIForm.categoryCode : ''}, 
-                                    initialPayload=${productUIForm != null ? productUIForm.categoryType : ''})}"></div>
+                                    initialText=*{categoryName}, 
+                                    initialSubtext=*{categoryCode}, 
+                                    initialPayload=*{categoryType})}"></div>
 
                                 <div class="mb-3">
                                     <label class="form-label required" th:text="#{label.product.uom}">Satuan Ukur (UoM)</label>
                                     <select th:field="*{uomId}" id="uom-select" class="form-select erp-input">
                                         <option value="" th:text="#{label.product.select.uom}">-- Pilih UoM --</option>
                                         <option th:each="u : ${uoms}" th:value="${u.id}"
-                                            th:text="${u.name + ' (' + u.code + ')'}"></option>
+                                            th:text="${u.name + ' (' + u.subText + ')'}"></option>
                                     </select>
                                 </div>
 
                                 <div th:insert="~{fragments/inputs :: autocomplete(field='brandId', label=#{label.brand}, id='brand-select', path='inventory/brands',
                                     initialValue=*{brandId}, 
-                                    initialText=${productUIForm != null ? productUIForm.brandName : ''}, 
-                                    initialSubtext=${productUIForm != null ? productUIForm.brandCode : ''})}"></div>
+                                    initialText=*{brandName}, 
+                                    initialSubtext=*{brandCode})}"></div>
                             </div>
 
                             <div class="col-md-4">
@@ -132,7 +132,7 @@
                                     <select th:field="*{weightUomId}" class="form-select erp-input">
                                         <option value="" th:text="#{label.product.select.uom.weight}">-- Pilih Satuan Berat --</option>
                                         <option th:each="u : ${weightUoms}" th:value="${u.id}"
-                                            th:text="${u.name + ' (' + u.code + ')'}"></option>
+                                            th:text="${u.name + ' (' + u.subText + ')'}"></option>
                                     </select>
                                 </div>
                             </div>
@@ -148,7 +148,7 @@
                                     <select th:field="*{dimensionUomId}" class="form-select erp-input">
                                         <option value="" th:text="#{label.product.select.uom.dimension}">-- Pilih Satuan Dimensi --</option>
                                         <option th:each="u : ${lengthUoms}" th:value="${u.id}"
-                                            th:text="${u.name + ' (' + u.code + ')'}"></option>
+                                            th:text="${u.name + ' (' + u.subText + ')'}"></option>
                                     </select>
                                 </div>
                             </div>

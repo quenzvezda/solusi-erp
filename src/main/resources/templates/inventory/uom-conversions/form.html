@@ -43,7 +43,7 @@
                                     <label class="form-label required" th:text="#{label.uom-conversion.from-uom}">Satuan Asal</label>
                                     <select th:field="*{fromUomId}" class="form-select erp-input">
                                         <option value="" th:text="#{label.product.select.uom}">-- Pilih Satuan --</option>
-                                        <option th:each="u : ${uoms}" th:value="${u.id}" th:text="${u.name + ' (' + u.code + ')'}"></option>
+                                        <option th:each="u : ${uoms}" th:value="${u.id}" th:text="${u.name + ' (' + u.subText + ')'}"></option>
                                     </select>
                                 </div>
                             </div>

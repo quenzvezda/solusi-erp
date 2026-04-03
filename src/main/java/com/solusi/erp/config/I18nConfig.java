@@ -16,7 +16,7 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class I18nConfig implements WebMvcConfigurer {
 
-    private final com.solusi.erp.security.interceptor.LocaleSyncInterceptor localeSyncInterceptor;
+    private final com.solusi.erp.security.user.security.LocaleSyncInterceptor localeSyncInterceptor;
 
     @Bean
     public LocaleResolver localeResolver() {

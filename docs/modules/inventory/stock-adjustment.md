@@ -42,13 +42,25 @@ Stock Adjustment digunakan untuk melakukan koreksi jumlah stok fisik secara manu
 - **Facility Change**: Jika user mengubah *Facility* (Gudang) saat item sudah ada di tabel, sistem akan menampilkan konfirmasi dan **menghapus seluruh item** jika disetujui. Hal ini dilakukan karena Grid dan Container bergantung pada Facility yang dipilih.
 
 ## 4. Standar UI/UX (Technical Standard)
-- **Generic Helpers**: Menggunakan arsitektur `erp-common-handler.js` untuk konsistensi antar modul:
+- **Generic Helpers**: Menggunakan arsitektur `shared/erp-common-handler.js` untuk konsistensi antar modul:
     - `ErpLineManager`: Otomasi penambahan/penghapusan baris dan penataan index `lines[n]`.
     - `ErpNumeric`: Penanganan input angka ribuan dan desimal yang aman.
-    - `ErpInventory`: Mesin konversi UoM (Unit of Measure) dan Serial Number yang terintegrasi dengan drawer.
+    - `ErpDrawer`: Utility pembuka/penutup offcanvas drawer.
+- **Page-Specific Script**: Logika drawer, UoM, dan serial number untuk halaman ini ada di `static/js/inventory/adjustment/stock-adjustment-form.js`, bukan di helper global. Lihat `docs/spec/page-specific-scripts.md`.
 - **Autocomplete**: Menggunakan standar `Autocomplete Generic` dengan cascading Facility -> Grid -> Container.
 - **Dynamic Recap**: Menampilkan ringkasan total nilai dokumen secara real-time di sisi kanan atas form.
 - **Fixed Table Layout**: Tabel item menggunakan layout tetap untuk mencegah horizontal scrollbar pada input data yang padat.
+
+### Behaviour Drawer di Mode Pre-Edit
+
+Ketika halaman dibuka dalam mode **edit** (data sudah ada), baris-baris line item di-render oleh Thymeleaf sebagai HTML statis. TomSelect yang di-init atas baris ini **tidak memiliki `payload`** (berbeda dengan saat user memilih produk via search). Akibatnya:
+
+- `input-uom-id` menyimpan UoM yang **terakhir dipilih** (bisa UoM konversi, misal Box), bukan base UoM produk.
+- Drawer UoM tidak boleh mengandalkan `prodData?.payload?.uomId` untuk menentukan base UoM, karena nilainya akan `undefined` pada baris pre-edit.
+
+**Solusi yang diterapkan**: Drawer meminta `/api/lookup/inventory/uom-conversions?productId=…` dan menggunakan flag `isBase: true` dari respons API untuk menentukan base UoM secara akurat, terlepas dari isi hidden input.
+
+Pola ini harus dipertahankan agar drawer selalu konsisten antara baris baru (dipilih user) dan baris lama (di-load dari server).
 
 ## 5. Keamanan (Security)
 Fitur ini dilindungi oleh otoritas berikut:

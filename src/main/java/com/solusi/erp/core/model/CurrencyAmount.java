@@ -1,11 +1,7 @@
 package com.solusi.erp.core.model;
 
-import com.solusi.erp.master.model.Currency;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,8 +11,8 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 /**
- * Reusable Embeddable for Currency + Amount logic.
- * Ensures consistent attribute naming across the ERP system.
+ * Reusable embeddable for currency reference and amount fields.
+ * Keeps monetary values consistent without coupling to a currency entity.
  */
 @Getter
 @Setter
@@ -26,9 +22,8 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class CurrencyAmount {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "currency_id")
-    private Currency currency;
+    @Column(name = "currency_id")
+    private Long currencyId;
 
     @Column(name = "exchange_rate", precision = 19, scale = 6)
     private BigDecimal exchangeRate;

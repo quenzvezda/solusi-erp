@@ -8,14 +8,21 @@ Selamat datang di pusat dokumentasi sistem Solusi ERP. Gunakan dokumen ini sebag
 ## 2. Documentation Folders
 Dokumentasi dikelompokkan ke dalam folder berikut berdasarkan konteksnya:
 
-- **[/architecture](architecture/)**: Berisi Class Diagram dan pola desain tingkat tinggi (seperti `BaseModel`).
-- **[/database](database/)**: Berisi ERD (Entity Relationship Diagram) dan script dummy data (Seeder).
+- **[/architecture](architecture/)**: Berisi Class Diagram dan pola desain tingkat tinggi.
+    - [Clean Architecture + DDD + CQRS Standard](architecture/clean-ddd-cqrs-standard.md) (Standard Baru)
+    - [Base Model Pattern](architecture/base-model-pattern.md)
+    - [Smart Delete Pattern](architecture/smart-delete-pattern.md) — Pola delete fleksibel: hard-delete jika tidak dipakai, soft-delete jika masih direferensikan
+    - [JaCoCo Coverage Guide](architecture/jacoco-coverage.md) — Standar code coverage: versi, exclude strategy, threshold, cara baca laporan
+- **[/database](database/)**: Berisi ERD dan script dummy data.
+- **[/tests](tests/)**: Panduan dan utilitas pengujian level web (Controller + Thymeleaf).
+    - [Web-layer Testing Guidelines](tests/web-layer-testing.md)
 - **[/modules](modules/)**: Penjelasan fungsional dan aturan bisnis untuk setiap fitur spesifik (Inventory, Master Data, dll).
 - **[/spec](spec/)**: **[PENTING]** Spesifikasi teknis horizontal/shared yang digunakan di seluruh aplikasi. Lihat **[Spec Index](spec/index.md)**.
 - **[/roadmap](roadmap/)**: Rencana pengembangan masa depan dan pelacakan standardisasi arsitektur.
+- **[/workflow](workflow/)**: Panduan prosedur kerja agen (seperti tugas repetitif, troubleshooting, dll).
 
 ## 3. How to Use
 Jika Anda baru bergabung dengan proyek ini atau sedang melakukan troubleshooting:
 1. Baca **AGENTS.md** untuk memahami aturan main.
-2. Jika masalah berkaitan dengan komponen UI atau pola coding tertentu (misal: cara kerja Autocomplete atau HTMX), carilah dokumen yang relevan di folder **[/spec](spec/index.md)**.
+2. Jika masalah berkaitan dengan komponen UI atau pola coding tertentu (misal: cara kerja Autocomplete, HTMX, atau JavaScript per-halaman), carilah dokumen yang relevan di folder **[/spec](spec/index.md)**.
 3. Jika masalah berkaitan dengan aturan bisnis modul, cari di folder **[/modules](modules/)**.

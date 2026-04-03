@@ -1,7 +1,7 @@
 package com.solusi.erp.core.auditing;
 
-import com.solusi.erp.security.model.SecurityUser;
-import com.solusi.erp.security.repository.UserRepository;
+import com.solusi.erp.security.shared.model.SecurityUser;
+import com.solusi.erp.security.user.infrastructure.persistence.UserJpaRepository;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,9 +21,9 @@ public class AuditorAwareImpl implements AuditorAware<Long> {
 
     private static final Long SYSTEM_USER_ID = 1L;
 
-    private final UserRepository userRepository;
+    private final UserJpaRepository userRepository;
 
-    public AuditorAwareImpl(UserRepository userRepository) {
+    public AuditorAwareImpl(UserJpaRepository userRepository) {
         this.userRepository = userRepository;
     }
 

@@ -101,12 +101,12 @@
                                     <label class="form-label text-muted" th:text="#{label.stock-adjustment.currency}">Currency</label>
                                     <div class="font-weight-medium">
                                         <span th:text="${stockAdjustment.currencyAlias}">USD</span>
-                                        <span class="text-muted small">(Rate: <span th:text="${#numbers.formatDecimal(stockAdjustment.exchangeRate, 1, 'COMMA', 2, 'POINT')}">1.00</span>)</span>
+                                        <span class="text-muted small">(Rate: <span th:text="${#numbers.formatDecimal(stockAdjustment.exchangeRate, 1, 'COMMA', 2, 'POINT')}" th:data-value="${stockAdjustment.exchangeRate}">1.00</span>)</span>
                                     </div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label text-muted" th:text="#{label.stock-adjustment.total.local}">Total (Local)</label>
-                                    <div class="h2 font-weight-bold text-primary mb-0" th:text="${#numbers.formatDecimal(stockAdjustment.totalAmountLocal, 1, 'COMMA', 2, 'POINT')}">0.00</div>
+                                    <div class="h2 font-weight-bold text-primary mb-0" th:text="${#numbers.formatDecimal(stockAdjustment.totalAmountLocal, 1, 'COMMA', 2, 'POINT')}" th:data-value="${stockAdjustment.totalAmountLocal}">0.00</div>
                                 </div>
                                 <div class="mb-0">
                                     <label class="form-label text-muted" th:text="#{label.stock-adjustment.note}">Note</label>

@@ -61,7 +61,7 @@
                                 <tbody>
                                     <tr th:each="role : ${roles}" th:id="'role-row-' + ${role.id}">
                                         <td class="fw-bold" th:text="${role.name}">ROLE_NAME</td>
-                                        <td class="text-secondary" th:text="${role.description ?: '-'}">Description</td>
+                                        <td class="text-secondary" th:text="${role.description != null and !#strings.isEmpty(role.description) ? role.description : '-'}">Description</td>
                                         <td>
                                             <div class="flex-wrap gap-1 d-flex">
                                                 <span th:each="perm : ${role.permissions}" 

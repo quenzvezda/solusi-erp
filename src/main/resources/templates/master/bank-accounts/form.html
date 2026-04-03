@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="~{layout/master :: head(${bankAccount.code == null ? #messages.msg('master.bank-account.add') : #messages.msg('master.bank-account.edit')})}"></head>
+<head th:replace="~{layout/master :: head(${bankAccountRequest.code == null ? #messages.msg('master.bank-account.add') : #messages.msg('master.bank-account.edit')})}"></head>
 
 <body th:replace="~{layout/master :: layout(~{:: .bank-account-form-content}, ~{:: #page-scripts})}">
     <div class="bank-account-form-content">
@@ -11,7 +11,7 @@
                 <div class="row g-2 align-items-center">
                     <div class="col">
                         <h2 class="page-title"
-                            th:text="${bankAccount.code == null ? #messages.msg('master.bank-account.add') : #messages.msg('master.bank-account.edit')}">
+                            th:text="${bankAccountRequest.code == null ? #messages.msg('master.bank-account.add') : #messages.msg('master.bank-account.edit')}">
                             Add Bank Account
                         </h2>
                     </div>
@@ -22,8 +22,8 @@
         <!-- Page Body -->
         <div class="page-body">
             <div class="container-xl">
-                <form th:action="${bankAccount.code == null ? '/master/bank-accounts/create' : '/master/bank-accounts/edit/' + id}"
-                      th:object="${bankAccount}" method="post"
+                <form th:action="${bankAccountRequest.code == null ? '/master/bank-accounts/create' : '/master/bank-accounts/edit/' + bankAccountRequest.id}"
+                      th:object="${bankAccountRequest}" method="post"
                       data-ajax-form="true"
                       data-redirect-on-success="/master/bank-accounts">
 
@@ -39,7 +39,7 @@
                                     <div th:replace="~{fragments/inputs :: text(field='branch', label=#{master.bank-account.branch}, required=true)}"></div>
 
                                     <div th:replace="~{fragments/inputs :: autocomplete(field='cityId', label=#{master.bank-account.city}, path='geographics/cities', required=true,
-                                        initialValue=${bankAccount.cityId}, 
+                                        initialValue=${bankAccountRequest.cityId}, 
                                         initialText=${selectedCity}, 
                                         initialSubtext='')}"></div>
                                 </div>
@@ -47,7 +47,7 @@
                                 <!-- Right Column -->
                                 <div class="col-md-6 border-start-md">
                                     <div th:replace="~{fragments/inputs :: autocomplete(field='partyId', label=#{master.bank-account.party}, path='parties', required=true,
-                                        initialValue=${bankAccount.partyId}, 
+                                        initialValue=${bankAccountRequest.partyId}, 
                                         initialText=${selectedParty}, 
                                         initialSubtext='')}"></div>
 

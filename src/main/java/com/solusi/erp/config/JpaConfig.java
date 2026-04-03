@@ -1,7 +1,7 @@
 package com.solusi.erp.config;
 
 import com.solusi.erp.core.auditing.AuditorAwareImpl;
-import com.solusi.erp.security.repository.UserRepository;
+import com.solusi.erp.security.user.infrastructure.persistence.UserJpaRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
@@ -18,7 +18,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 public class JpaConfig {
 
     @Bean
-    public AuditorAware<Long> auditorAware(UserRepository userRepository) {
+    public AuditorAware<Long> auditorAware(UserJpaRepository userRepository) {
         return new AuditorAwareImpl(userRepository);
     }
 }

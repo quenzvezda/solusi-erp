@@ -1,6 +1,6 @@
 package com.solusi.erp.core.model;
 
-import com.solusi.erp.security.model.User;
+import com.solusi.erp.security.user.infrastructure.persistence.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

@@ -1,0 +1,81 @@
+package com.solusi.erp.inventory.facility.infrastructure.adapter;
+
+import com.solusi.erp.core.domain.model.Page;
+import com.solusi.erp.core.domain.model.Pageable;
+import com.solusi.erp.core.infrastructure.util.PageableMapper;
+import com.solusi.erp.inventory.facility.domain.model.Facility;
+import com.solusi.erp.inventory.facility.domain.repository.FacilityRepository;
+import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityEntity;
+import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityJpaRepository;
+import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityPersistenceMapper;
+import org.springframework.data.domain.PageRequest;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+public class FacilityRepositoryImpl implements FacilityRepository {
+
+    private final FacilityJpaRepository jpaRepository;
+    private final FacilityPersistenceMapper mapper;
+
+    public FacilityRepositoryImpl(
+            FacilityJpaRepository jpaRepository,
+            FacilityPersistenceMapper mapper) {
+        this.jpaRepository = jpaRepository;
+        this.mapper = mapper;
+    }
+
+    @Override
+    public Facility save(Facility domain) {
+        FacilityEntity entity = mapper.toEntity(domain);
+        FacilityEntity saved = jpaRepository.saveAndFlush(entity);
+        return jpaRepository.findById(saved.getId()).map(mapper::toDomain)
+            .orElseThrow(() -> new IllegalStateException("Failed to reload saved Facility"));
+    }
+
+    @Override
+    public Optional<Facility> findById(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public Page<Facility> findAll(String keyword, Pageable pageable) {
+        org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
+        org.springframework.data.domain.Page<FacilityEntity> springPage =
+            (keyword != null && !keyword.isBlank())
+                ? jpaRepository.search(keyword, springPageable)
+                : jpaRepository.findAll(springPageable);
+        return new Page<>(
+            springPage.getContent().stream().map(mapper::toDomain).collect(Collectors.toList()),
+            springPage.getNumber(),
+            springPage.getSize(),
+            springPage.getTotalElements()
+        );
+    }
+
+    @Override
+    public List<Facility> search(String keyword, int limit) {
+        return jpaRepository.search(
+                keyword != null ? keyword : "",
+                PageRequest.of(0, limit)
+            ).getContent().stream()
+            .map(mapper::toDomain)
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    public void delete(Long id) {
+        jpaRepository.deleteById(id);
+    }
+
+    @Override
+    public boolean existsByCode(String code) {
+        return jpaRepository.existsByCode(code);
+    }
+
+    @Override
+    public boolean existsByCodeAndIdNot(String code, Long id) {
+        return jpaRepository.existsByCodeAndIdNot(code, id);
+    }
+}

@@ -50,8 +50,12 @@
                     <div class="card-body border-bottom py-3">
                         <div class="d-flex">
                             <div class="ms-auto text-secondary">
-                                <form th:action="@{/inventory/adjustments}" method="get" class="input-icon">
-                                    <input type="text" name="search" th:value="${search}"
+                                <form th:action="@{/inventory/adjustments}" method="get" class="input-icon"
+                                      hx-get="/inventory/adjustments"
+                                      hx-target="#adjustment-table-container"
+                                      hx-trigger="keyup changed delay:500ms from:#search-input"
+                                      hx-push-url="true">
+                                    <input type="text" id="search-input" name="search" th:value="${search}"
                                         class="form-control form-control-sm" th:placeholder="#{label.search}">
                                     <span class="input-icon-addon">
                                         <i class="ti ti-search"></i>
@@ -60,6 +64,14 @@
                             </div>
                         </div>
                     </div>
+
+                    <div id="adjustment-table-container" th:fragment="adjustment-table-container"
+                         hx-get="/inventory/adjustments"
+                         hx-trigger="refresh-table from:body delay:500ms"
+                         hx-include="[name='search'], [name='page']">
+                        <!-- State Tracking -->
+                        <input type="hidden" name="page" th:value="${page.number}">
+
                     <div class="table-responsive">
                         <table class="table table-vcenter card-table">
                             <thead>
@@ -86,9 +98,9 @@
                                         </span>
                                     </td>
                                     <td class="text-end font-weight-medium">
-                                        <span th:text="${#numbers.formatDecimal(item.totalAmountLocal, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                                        <span th:text="${#numbers.formatDecimal(item.totalAmountLocal, 1, 'COMMA', 2, 'POINT')}" th:data-value="${item.totalAmountLocal}">0.00</span>
                                     </td>
-                                    <td class="text-secondary small" th:text="${#strings.abbreviate(item.note, 50)}">Note</td>
+                                    <td class="text-secondary small" th:text="${item.note}" th:title="${#strings.abbreviate(item.note, 100)}">Note</td>
                                     <td>
                                         <div class="btn-list flex-nowrap justify-content-end">
                                             <a th:if="${item.status.name() == 'DRAFT'}" 
@@ -114,6 +126,7 @@
                     </div>
                     <!-- Pagination -->
                     <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+                    </div><!-- /adjustment-table-container -->
                 </div>
             </div>
         </div>

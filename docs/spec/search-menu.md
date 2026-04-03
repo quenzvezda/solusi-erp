@@ -28,20 +28,20 @@ public record MenuSearchDto(
 ) {}
 ```
 
-### B. Service Layer (`MenuSearchService`)
+### B. Use Case / Application Layer (`SearchMenusUseCase`)
 
-Method `searchMenus` melakukan hal berikut:
-1. Mendapatkan `Authentication` dari `SecurityContextHolder`.
-2. Mengekstrak daftar `Authorities` user.
-3. Memanggil repository untuk mencari `PermissionGroup` yang:
+Berada di `security.menusearch.application.usecase`. Method `execute` melakukan hal berikut:
+1. Menerima `keyword`, `limit`, dan koleksi `authorities` dari controller.
+2. Memanggil `MenuQueryPort` (abstraksi repository) untuk mencari `PermissionGroup` yang:
     - Memiliki `Permission` di dalam daftar `Authorities` user.
     - Namanya (ID/EN) atau kodenya mengandung keyword pencarian.
 
 ### C. RestController (`MenuSearchController`)
 
-Hanya menyediakan satu endpoint publik (terautentikasi):
+Berada di `security.menusearch.web.controller`. Hanya menyediakan satu endpoint publik (terautentikasi):
 - `GET /api/lookup/menus?q={keyword}&limit={n}`
-- Endpoint ini tidak memerlukan permission khusus karena sudah difilter di dalam logic service berdasarkan permission user yang login.
+- Controller mengekstrak `authorities` dari `SecurityContextHolder`, lalu mendelegasikan ke `SearchMenusUseCase`.
+- Endpoint ini tidak memerlukan permission khusus karena sudah difilter di dalam logic use case berdasarkan permission user yang login.
 
 ---
 

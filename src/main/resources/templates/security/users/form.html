@@ -107,20 +107,20 @@
     <script th:inline="javascript">
         (function() {
             function setupPartyConfirmation(ts) {
-                console.log('[DEBUG-PARTY] Setting up confirmation for TomSelect instance', ts);
+
                 let lastValue = ts.getValue();
                 let isConfirming = false;
 
                 ts.on('change', function(value) {
-                    console.log('[DEBUG-PARTY] Change detected. New value:', value, 'Last value:', lastValue, 'isConfirming:', isConfirming);
+
                     
                     if (isConfirming) {
-                        console.log('[DEBUG-PARTY] Change ignored because isConfirming is true');
+
                         return;
                     }
                     
                     if (!value || value === lastValue) {
-                        console.log('[DEBUG-PARTY] Change ignored (empty or same value)');
+
                         lastValue = value;
                         return;
                     }
@@ -129,7 +129,7 @@
                     const msg = /*[[#{msg.users.party.confirm}]]*/ 'Apakah Anda yakin ingin memilih Party ini? Sekali disimpan, Party tidak dapat diubah lagi.';
                     const title = /*[[#{label.warning.exclamation.mark}]]*/ 'Peringatan!';
 
-                    console.log('[DEBUG-PARTY] Triggering ErpModal.confirm for value:', newValue);
+
 
                     // Revert UI ke nilai sebelumnya secara instan sebelum modal muncul
                     isConfirming = true;
@@ -138,7 +138,7 @@
 
                     // Tampilkan konfirmasi
                     ErpModal.confirm(msg, function() {
-                        console.log('[DEBUG-PARTY] User confirmed. Setting value to:', newValue);
+
                         isConfirming = true;
                         ts.setValue(newValue, true); 
                         lastValue = newValue;
@@ -148,22 +148,22 @@
             }
 
             function init() {
-                console.log('[DEBUG-PARTY] Initializing confirmation logic...');
+
                 const partyEl = document.getElementById('partyId');
                 if (!partyEl) {
                     console.warn('[DEBUG-PARTY] Element #partyId not found!');
                     return;
                 }
 
-                console.log('[DEBUG-PARTY] Element #partyId found');
+
 
                 if (partyEl.tomselect) {
-                    console.log('[DEBUG-PARTY] TomSelect already initialized on #partyId');
+
                     setupPartyConfirmation(partyEl.tomselect);
                 } else {
-                    console.log('[DEBUG-PARTY] TomSelect not yet initialized, waiting for erp:lookup-initialized...');
+
                     document.addEventListener('erp:lookup-initialized', function(e) {
-                        console.log('[DEBUG-PARTY] Event erp:lookup-initialized received for:', e.target.id);
+
                         if (e.target.id === 'partyId') {
                             setupPartyConfirmation(e.detail.tomselect);
                         }

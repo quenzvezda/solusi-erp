@@ -48,7 +48,7 @@ Untuk menjaga konsistensi UI, setiap penggunaan autocomplete **WAJIB** menyertak
 Hal ini berlaku untuk semua Request DTO yang dikirim kembali ke View. Jika salah satu kosong, maka UI akan terlihat tidak konsisten saat mode Edit.
 
 ### C. Inisialisasi Manual (Cascading)
-Jika sebuah lookup bergantung pada field lain (misal: Bin bergantung pada Grid), gunakan fungsi **`initLookup`** yang tersedia secara global di **`erp-common-handler.js`**.
+Jika sebuah lookup bergantung pada field lain (misal: Bin bergantung pada Grid), gunakan fungsi **`initLookup`** yang tersedia secara global di **`shared/erp-common-handler.js`**.
 
 ```javascript
 // Pola 1: Standar (Parent -> Child)
@@ -102,4 +102,44 @@ tsBin.on('change', (val) => {
 3.  **Debouncing**: Penundaan request (150ms) untuk menghemat beban server.
 4.  **HTMX Compatibility**: Otomatis re-init setelah swap HTMX selesai (diatur di `master.html`).
 5.  **Smart Re-Search UX**: Saat dropdown diklik dan sudah memiliki nilai, label teks otomatis masuk ke kotak pencarian (input) untuk memudahkan edit tanpa harus menghapus pilihan lama.
+
+---
+
+## 4. Server-Side Pre-fill: Lookup Provider Port
+
+### Masalah
+Saat form edit di-render server-side (Thymeleaf), autocomplete perlu menampilkan **Trinity Data** (`initialValue`, `initialText`, `initialSubtext`). Controller consumer hanya menyimpan `referenceId` (misal `ownerId`), tapi perlu mengambil `name` dan `subText` dari entity slice lain.
+
+### Pendekatan Lama (Anti-pattern)
+Controller langsung inject `PartyJpaRepository` lalu memformat subText sendiri:
+```java
+// ❌ Duplikasi format, coupling ke JPA entity slice lain
+private final PartyJpaRepository partyJpaRepository;
+String subText = party.getCode() + " - " + typeLabel;  // format bisa berbeda antar consumer
+```
+
+### Pendekatan Baru: Lookup Provider Port
+Provider slice (misal `master.party`) mengekspos port `PartyLookupProvider` di `domain/port/`. Consumer slice inject port ini — **bukan** JPA repository.
+
+```java
+// ✅ Single source of truth — format subText konsisten di semua consumer
+private final PartyLookupProvider partyLookupProvider;
+LookupDto owner = partyLookupProvider.resolve(domain.getOwnerId());
+ui.put("ownerName", owner != null ? owner.name() : "");
+ui.put("ownerCode", owner != null ? owner.subText() : "");
+```
+
+**Keuntungan:**
+1. **Konsistensi** — SubText format sama di form edit dan dropdown autocomplete
+2. **Single Source of Truth** — Ubah format di 1 tempat, semua consumer otomatis ikut
+3. **Bounded Context** — Consumer tidak perlu tahu struktur internal entity provider
+4. **Testable** — Mock port di unit test, tidak perlu JPA repository
+
+### Kapan Menggunakan
+- ✅ Entity provider dipakai ≥ 2 consumer → **wajib** pakai Lookup Provider
+- ✅ SubText butuh i18n atau logika format kompleks → **wajib** pakai Lookup Provider
+- ❌ SubText hanya field sederhana (misal `Geographic.code`) → boleh query langsung
+
+> Detail teknis dan contoh kode lengkap: [`architecture/clean-ddd-cqrs-standard.md` §8 Pola 4](../architecture/clean-ddd-cqrs-standard.md#pola-4--lookup-provider-port-cross-slice-autocomplete)
+
 

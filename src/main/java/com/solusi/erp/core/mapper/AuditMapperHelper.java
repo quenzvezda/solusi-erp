@@ -2,8 +2,8 @@ package com.solusi.erp.core.mapper;
 
 import com.solusi.erp.core.dto.BaseAuditResponse;
 import com.solusi.erp.core.model.BaseModel;
-import com.solusi.erp.security.model.User;
-import com.solusi.erp.security.model.UserProfile;
+import com.solusi.erp.security.user.infrastructure.persistence.User;
+import com.solusi.erp.security.user.infrastructure.persistence.UserProfile;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.MappingTarget;
 import org.springframework.stereotype.Component;
