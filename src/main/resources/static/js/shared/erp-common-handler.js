@@ -11,6 +11,16 @@ const ErpModal = (function() {
             if (titleEl && title) titleEl.textContent = title;
             if (btn) btn.click();
         },
+        showSuccess: function(message) {
+            const container = document.getElementById('erp-success-toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'alert alert-success alert-dismissible fade show shadow-sm mb-2';
+            toast.setAttribute('role', 'alert');
+            toast.innerHTML = `<i class="ti ti-circle-check me-2"></i>${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 200); }, 4000);
+        },
         showWarning: function(message, title) {
             const msgEl = document.getElementById('warning-modal-message');
             const titleEl = document.getElementById('warning-modal-title');

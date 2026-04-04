@@ -103,6 +103,7 @@
 <div id="page-specific-scripts" th:fragment="pageScripts">
 
 <!-- Submit for Approval Modal with Approver Selection -->
+<button id="btn-trigger-submit-approval" class="d-none" data-bs-toggle="modal" data-bs-target="#modal-submit-approval"></button>
 <div class="modal fade" id="modal-submit-approval" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -139,7 +140,6 @@
 
     function submitForApproval(id) {
         const modalEl = document.getElementById('modal-submit-approval');
-        const modal = new bootstrap.Modal(modalEl);
 
         // Init TomSelect for approver lookup after modal is shown
         modalEl.addEventListener('shown.bs.modal', function handler() {
@@ -182,7 +182,8 @@
             .then(async res => {
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.message || 'Error');
-                bootstrap.Modal.getInstance(modalEl)?.hide();
+                const closeBtn = modalEl.querySelector('[data-bs-dismiss="modal"]');
+                if (closeBtn) closeBtn.click();
                 window.location.reload();
             })
             .catch(err => {
@@ -191,7 +192,7 @@
             });
         });
 
-        modal.show();
+        document.getElementById('btn-trigger-submit-approval').click();
     }
 
     function showError(id) {

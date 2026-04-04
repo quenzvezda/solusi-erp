@@ -148,6 +148,9 @@
     <!-- Hidden Trigger for Error Modal -->
     <button id="btn-trigger-global-error" class="d-none" data-bs-toggle="modal" data-bs-target="#modal-global-error"></button>
 
+    <!-- Success Toast Container -->
+    <div id="erp-success-toast-container" style="position:fixed;top:1rem;right:1rem;z-index:1100;min-width:280px;max-width:400px;"></div>
+
     <!-- Optional Page-specific scripts -->
     <th:block th:replace="${pageScripts} ?: ~{}"></th:block>
 </body>

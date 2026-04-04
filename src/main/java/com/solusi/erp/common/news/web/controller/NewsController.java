@@ -88,7 +88,8 @@ public class NewsController {
             boolean isCurrentApprover = false;
             if (principal instanceof SecurityUser securityUser) {
                 Long partyId = securityUser.user().getPartyId();
-                isCurrentApprover = partyId != null && partyId.equals(req.getCurrentApproverId());
+                isCurrentApprover = partyId != null && partyId.equals(req.getCurrentApproverId())
+                        && req.getStatus() == com.solusi.erp.common.approval.domain.model.ApprovalStatus.PENDING;
             }
             model.addAttribute("isCurrentApprover", isCurrentApprover);
         });

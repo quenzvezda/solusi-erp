@@ -50,9 +50,20 @@ const ApprovalUI = (() => {
 
     // ─── Modal Openers ───
 
+    function triggerModal(triggerId) {
+        const btn = document.getElementById(triggerId);
+        if (btn) btn.click();
+    }
+
+    function closeModal(modalId) {
+        const modalEl = document.getElementById(modalId);
+        if (!modalEl) return;
+        const closeBtn = modalEl.querySelector('[data-bs-dismiss="modal"]');
+        if (closeBtn) closeBtn.click();
+    }
+
     function openApproveFinishModal() {
         const modalEl = document.getElementById('modal-approve-finish');
-        const modal = new bootstrap.Modal(modalEl);
         modalEl.addEventListener('shown.bs.modal', function handler() {
             initSignaturePad('sig-canvas-approve-finish');
             modalEl.removeEventListener('shown.bs.modal', handler);
@@ -60,12 +71,11 @@ const ApprovalUI = (() => {
         document.getElementById('approve-finish-notes').value = '';
         hideError('approve-finish-notes-error');
         hideError('sig-error-approve-finish');
-        modal.show();
+        triggerModal('btn-trigger-modal-approve-finish');
     }
 
     function openApproveForwardModal() {
         const modalEl = document.getElementById('modal-approve-forward');
-        const modal = new bootstrap.Modal(modalEl);
         modalEl.addEventListener('shown.bs.modal', function handler() {
             initSignaturePad('sig-canvas-approve-forward');
             initApproverLookup('approve-forward-approver');
@@ -77,12 +87,11 @@ const ApprovalUI = (() => {
         hideError('approve-forward-notes-error');
         hideError('approve-forward-approver-error');
         hideError('sig-error-approve-forward');
-        modal.show();
+        triggerModal('btn-trigger-modal-approve-forward');
     }
 
     function openForwardModal() {
         const modalEl = document.getElementById('modal-forward');
-        const modal = new bootstrap.Modal(modalEl);
         modalEl.addEventListener('shown.bs.modal', function handler() {
             initApproverLookup('forward-approver');
             modalEl.removeEventListener('shown.bs.modal', handler);
@@ -92,14 +101,13 @@ const ApprovalUI = (() => {
         if (sel && sel.tomselect) sel.tomselect.clear();
         hideError('forward-notes-error');
         hideError('forward-approver-error');
-        modal.show();
+        triggerModal('btn-trigger-modal-forward');
     }
 
     function openRejectModal() {
         document.getElementById('reject-notes').value = '';
         hideError('reject-notes-error');
-        const modal = new bootstrap.Modal(document.getElementById('modal-reject-approval'));
-        modal.show();
+        triggerModal('btn-trigger-modal-reject');
     }
 
     // ─── Clear Signature ───
@@ -195,8 +203,7 @@ const ApprovalUI = (() => {
             return data;
         })
         .then(data => {
-            const modalEl = document.getElementById(modalId);
-            bootstrap.Modal.getInstance(modalEl)?.hide();
+            closeModal(modalId);
             document.body.dispatchEvent(new CustomEvent('approvalProcessed'));
             if (window.ErpModal) ErpModal.showSuccess(data.message || 'Action completed.');
 

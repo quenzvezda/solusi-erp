@@ -134,7 +134,8 @@ public class ApprovalController {
         boolean isCurrentApprover = false;
         if (principal instanceof SecurityUser securityUser) {
             Long partyId = securityUser.user().getPartyId();
-            isCurrentApprover = partyId != null && partyId.equals(request.getCurrentApproverId());
+            isCurrentApprover = partyId != null && partyId.equals(request.getCurrentApproverId())
+                    && request.getStatus() == com.solusi.erp.common.approval.domain.model.ApprovalStatus.PENDING;
         }
         model.addAttribute("isCurrentApprover", isCurrentApprover);
         return "fragments/approval :: timeline";

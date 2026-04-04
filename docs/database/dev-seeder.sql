@@ -153,7 +153,7 @@ INSERT INTO party_roles (party_id, role_type_id) VALUES (@p_owner, @prt_internal
 INSERT INTO party_addresses (party_id, address_line1, city_id, postal_code, is_active, is_default, created_by_user_id, created_date, version)
 VALUES (@p_owner, 'Jl. Sudirman No. 1, Gedung Solusi Lt. 5', @geo_jkt_pusat, '10220', 1, 1, 1, NOW(), 1);
 SET @addr_owner = LAST_INSERT_ID();
-INSERT INTO party_address_types (party_address_id, type) VALUES (@addr_owner, 'MAIN');
+INSERT INTO party_address_types (party_address_id, type) VALUES (@addr_owner, 'OFFICE');
 
 INSERT INTO party_contacts (party_id, label, mobile, phone, email, is_active, is_default, created_by_user_id, created_date, version)
 VALUES (@p_owner, 'Kantor Pusat', NULL, '021-5551000', 'info@solusierp.com', 1, 1, 1, NOW(), 1);
@@ -175,7 +175,7 @@ INSERT INTO party_roles (party_id, role_type_id) VALUES (@p_admin, @prt_internal
 INSERT INTO party_addresses (party_id, address_line1, city_id, postal_code, is_active, is_default, created_by_user_id, created_date, version)
 VALUES (@p_admin, 'Jl. Sudirman No. 1, Gedung Solusi Lt. 5', @geo_jkt_pusat, '10220', 1, 1, 1, NOW(), 1);
 SET @addr_admin = LAST_INSERT_ID();
-INSERT INTO party_address_types (party_address_id, type) VALUES (@addr_admin, 'MAIN');
+INSERT INTO party_address_types (party_address_id, type) VALUES (@addr_admin, 'OFFICE');
 
 INSERT INTO party_contacts (party_id, label, mobile, phone, email, is_active, is_default, created_by_user_id, created_date, version)
 VALUES (@p_admin, 'Personal', '081234567890', NULL, 'admin@solusierp.com', 1, 1, 1, NOW(), 1);
@@ -198,7 +198,7 @@ INSERT INTO party_roles (party_id, role_type_id) VALUES (@p_apr1, @prt_approver)
 INSERT INTO party_addresses (party_id, address_line1, city_id, postal_code, is_active, is_default, created_by_user_id, created_date, version)
 VALUES (@p_apr1, 'Jl. Gatot Subroto No. 45, Pancoran', @geo_jkt_selatan, '12780', 1, 1, 1, NOW(), 1);
 SET @addr_apr1 = LAST_INSERT_ID();
-INSERT INTO party_address_types (party_address_id, type) VALUES (@addr_apr1, 'MAIN');
+INSERT INTO party_address_types (party_address_id, type) VALUES (@addr_apr1, 'HOME');
 
 INSERT INTO party_contacts (party_id, label, mobile, phone, email, is_active, is_default, created_by_user_id, created_date, version)
 VALUES (@p_apr1, 'Personal', '081234567891', NULL, 'budi.santoso@solusierp.com', 1, 1, 1, NOW(), 1);
@@ -218,7 +218,7 @@ INSERT INTO party_roles (party_id, role_type_id) VALUES (@p_apr2, @prt_approver)
 INSERT INTO party_addresses (party_id, address_line1, city_id, postal_code, is_active, is_default, created_by_user_id, created_date, version)
 VALUES (@p_apr2, 'Jl. Casablanca No. 12, Tebet', @geo_jkt_selatan, '12870', 1, 1, 1, NOW(), 1);
 SET @addr_apr2 = LAST_INSERT_ID();
-INSERT INTO party_address_types (party_address_id, type) VALUES (@addr_apr2, 'MAIN');
+INSERT INTO party_address_types (party_address_id, type) VALUES (@addr_apr2, 'HOME');
 
 INSERT INTO party_contacts (party_id, label, mobile, phone, email, is_active, is_default, created_by_user_id, created_date, version)
 VALUES (@p_apr2, 'Personal', '081234567892', NULL, 'siti.rahayu@solusierp.com', 1, 1, 1, NOW(), 1);
@@ -238,7 +238,7 @@ INSERT INTO party_roles (party_id, role_type_id) VALUES (@p_cust1, @prt_customer
 INSERT INTO party_addresses (party_id, address_line1, city_id, postal_code, is_active, is_default, created_by_user_id, created_date, version)
 VALUES (@p_cust1, 'Jl. Mangga Dua Raya No. 88, Pademangan', @geo_jkt_pusat, '10730', 1, 1, 1, NOW(), 1);
 SET @addr_cust1 = LAST_INSERT_ID();
-INSERT INTO party_address_types (party_address_id, type) VALUES (@addr_cust1, 'MAIN'), (@addr_cust1, 'BILLING');
+INSERT INTO party_address_types (party_address_id, type) VALUES (@addr_cust1, 'OFFICE'), (@addr_cust1, 'BILLING');
 
 INSERT INTO party_contacts (party_id, label, mobile, phone, email, is_active, is_default, created_by_user_id, created_date, version)
 VALUES (@p_cust1, 'PIC Purchasing', '081299887766', '021-5552001', 'purchasing@majujaya.co.id', 1, 1, 1, NOW(), 1);
@@ -260,7 +260,7 @@ INSERT INTO party_roles (party_id, role_type_id) VALUES (@p_cust2, @prt_customer
 INSERT INTO party_addresses (party_id, address_line1, city_id, postal_code, is_active, is_default, created_by_user_id, created_date, version)
 VALUES (@p_cust2, 'Jl. Kalibata Raya No. 5, Pancoran', @geo_jkt_selatan, '12740', 1, 1, 1, NOW(), 1);
 SET @addr_cust2 = LAST_INSERT_ID();
-INSERT INTO party_address_types (party_address_id, type) VALUES (@addr_cust2, 'MAIN');
+INSERT INTO party_address_types (party_address_id, type) VALUES (@addr_cust2, 'OFFICE');
 
 INSERT INTO party_contacts (party_id, label, mobile, phone, email, is_active, is_default, created_by_user_id, created_date, version)
 VALUES (@p_cust2, 'Owner', '081388776655', NULL, 'order@berkahsejahtera.id', 1, 1, 1, NOW(), 1);
@@ -280,7 +280,7 @@ INSERT INTO party_roles (party_id, role_type_id) VALUES (@p_sup1, @prt_supplier)
 INSERT INTO party_addresses (party_id, address_line1, city_id, postal_code, is_active, is_default, created_by_user_id, created_date, version)
 VALUES (@p_sup1, 'Kawasan Industri Pulogadung Blok A No. 10', @geo_jkt_timur, '13920', 1, 1, 1, NOW(), 1);
 SET @addr_sup1 = LAST_INSERT_ID();
-INSERT INTO party_address_types (party_address_id, type) VALUES (@addr_sup1, 'MAIN'), (@addr_sup1, 'SHIPPING');
+INSERT INTO party_address_types (party_address_id, type) VALUES (@addr_sup1, 'FACTORY'), (@addr_sup1, 'SHIPPING');
 
 INSERT INTO party_contacts (party_id, label, mobile, phone, email, is_active, is_default, created_by_user_id, created_date, version)
 VALUES (@p_sup1, 'PIC Sales', '081277665544', '021-5554003', 'sales@sumbermakmur.co.id', 1, 1, 1, NOW(), 1);
@@ -304,7 +304,7 @@ INSERT INTO party_roles (party_id, role_type_id) VALUES (@p_wh1, @prt_warehouse)
 INSERT INTO party_addresses (party_id, address_line1, city_id, postal_code, is_active, is_default, created_by_user_id, created_date, version)
 VALUES (@p_wh1, 'Jl. Cempaka Putih Tengah No. 20', @geo_jkt_pusat, '10510', 1, 1, 1, NOW(), 1);
 SET @addr_wh1 = LAST_INSERT_ID();
-INSERT INTO party_address_types (party_address_id, type) VALUES (@addr_wh1, 'MAIN');
+INSERT INTO party_address_types (party_address_id, type) VALUES (@addr_wh1, 'HOME');
 
 INSERT INTO party_contacts (party_id, label, mobile, phone, email, is_active, is_default, created_by_user_id, created_date, version)
 VALUES (@p_wh1, 'Personal', '081234567893', NULL, 'ahmad.fadli@solusierp.com', 1, 1, 1, NOW(), 1);
@@ -324,7 +324,7 @@ INSERT INTO party_roles (party_id, role_type_id) VALUES (@p_emp1, @prt_employee)
 INSERT INTO party_addresses (party_id, address_line1, city_id, postal_code, is_active, is_default, created_by_user_id, created_date, version)
 VALUES (@p_emp1, 'Jl. Kebagusan Raya No. 15, Pasar Minggu', @geo_jkt_selatan, '12520', 1, 1, 1, NOW(), 1);
 SET @addr_emp1 = LAST_INSERT_ID();
-INSERT INTO party_address_types (party_address_id, type) VALUES (@addr_emp1, 'MAIN');
+INSERT INTO party_address_types (party_address_id, type) VALUES (@addr_emp1, 'HOME');
 
 INSERT INTO party_contacts (party_id, label, mobile, phone, email, is_active, is_default, created_by_user_id, created_date, version)
 VALUES (@p_emp1, 'Personal', '081234567894', NULL, 'dewi.lestari@solusierp.com', 1, 1, 1, NOW(), 1);
