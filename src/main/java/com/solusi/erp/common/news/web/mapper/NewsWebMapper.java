@@ -4,60 +4,43 @@ import com.solusi.erp.common.news.domain.model.News;
 import com.solusi.erp.common.news.web.dto.NewsSaveRequest;
 import com.solusi.erp.common.news.web.dto.NewsDetailResponse;
 import com.solusi.erp.core.domain.model.AuditMetadata;
+import com.solusi.erp.core.dto.BaseAuditResponse;
 import com.solusi.erp.core.mapper.AuditMapperHelper;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * Mapper untuk UI Layer (DTO <-> Domain).
- * Note: id/version are set via @AfterMapping because Lombok @Builder does not include
- * inherited fields from BaseAuditResponse in the generated builder.
+ * Web Mapper for News module (Domain → DTO).
+ * Resolves audit user names via AuditMapperHelper.resolveUserDisplayName(Long).
  */
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = {AuditMapperHelper.class})
-public interface NewsWebMapper {
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public abstract class NewsWebMapper {
+
+    @Autowired
+    protected AuditMapperHelper auditMapperHelper;
 
     @Mapping(target = "title", source = "title")
     @Mapping(target = "content", source = "contentText")
-    NewsDetailResponse toResponse(News domain);
+    public abstract NewsDetailResponse toResponse(News domain);
 
     @Mapping(target = "title", source = "title")
     @Mapping(target = "content", source = "contentText")
-    NewsSaveRequest toRequest(News domain);
+    public abstract NewsSaveRequest toRequest(News domain);
 
     @AfterMapping
-    default void applyNewsIds(News source, @MappingTarget NewsDetailResponse target) {
-        target.setId(source.getId());
-        target.setVersion(source.getVersion() != null ? source.getVersion().intValue() : null);
-    }
-
-    @AfterMapping
-    default void applyAuditDates(News source, @MappingTarget NewsDetailResponse target) {
+    protected void mapAuditFields(News source, @MappingTarget BaseAuditResponse target) {
         AuditMetadata meta = source.getMetadata();
         if (meta != null) {
+            target.setId(meta.id());
+            target.setVersion(meta.version() != null ? meta.version().intValue() : null);
             target.setCreatedDate(meta.createdDate());
             target.setUpdatedDate(meta.updatedDate());
+            target.setCreatedByName(auditMapperHelper.resolveUserDisplayName(meta.createdBy()));
+            target.setUpdatedByName(auditMapperHelper.resolveUserDisplayName(meta.updatedBy()));
         }
-        target.setCreatedByName(source.getCreatedByName());
-        target.setUpdatedByName(source.getUpdatedByName());
-    }
-
-    @AfterMapping
-    default void applyAuditDates(News source, @MappingTarget NewsSaveRequest target) {
-        AuditMetadata meta = source.getMetadata();
-        if (meta != null) {
-            target.setCreatedDate(meta.createdDate());
-            target.setUpdatedDate(meta.updatedDate());
-        }
-        target.setCreatedByName(source.getCreatedByName());
-        target.setUpdatedByName(source.getUpdatedByName());
-    }
-
-    @AfterMapping
-    default void applyNewsIds(News source, @MappingTarget NewsSaveRequest target) {
-        target.setId(source.getId());
-        target.setVersion(source.getVersion() != null ? source.getVersion().intValue() : null);
     }
 }

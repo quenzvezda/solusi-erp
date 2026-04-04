@@ -30,12 +30,8 @@ DELETE FROM appr_signatures;
 DELETE FROM appr_histories;
 DELETE FROM appr_requests;
 
--- News data (table created by app on first run — skip if not exists)
-SET @news_exists = (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'news');
-SET @sql = IF(@news_exists > 0, 'DELETE FROM news', 'SELECT 1');
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
+-- News data
+DELETE FROM common_news WHERE 1=1;
 
 -- User-Party links for dev users (excluding admin=1)
 UPDATE users SET party_id = NULL WHERE username IN ('approver1','approver2','warehouse1','employee1');

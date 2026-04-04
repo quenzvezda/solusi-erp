@@ -47,6 +47,9 @@ public class PermissionGroup extends BaseModel {
     @Column(name = "description_en", length = 255)
     private String descriptionEn;
 
+    @Column(name = "sort_order", nullable = false)
+    private Integer sortOrder = 100;
+
     @OneToMany(mappedBy = "permissionGroup")
     private List<Permission> permissions;
 

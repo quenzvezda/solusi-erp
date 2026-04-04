@@ -29,6 +29,6 @@ public interface PermissionGroupJpaRepository extends JpaRepository<PermissionGr
            "OR LOWER(pg.code) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<PermissionGroup> searchAllowedMenus(@Param("keyword") String keyword, @Param("authorities") Collection<String> authorities, Pageable pageable);
 
-    @Query("SELECT DISTINCT pg FROM PermissionGroup pg JOIN pg.permissions p WHERE p.name IN :authorities")
+    @Query("SELECT DISTINCT pg FROM PermissionGroup pg JOIN pg.permissions p WHERE p.name IN :authorities ORDER BY pg.sortOrder")
     List<PermissionGroup> findAllByAuthorities(@Param("authorities") Collection<String> authorities);
 }

@@ -6,7 +6,9 @@ import com.solusi.erp.common.approval.signature.domain.model.ApprovalSignature;
 import com.solusi.erp.common.approval.web.dto.ApprovalHistoryResponse;
 import com.solusi.erp.common.approval.web.dto.ApprovalSignatureResponse;
 import com.solusi.erp.common.approval.web.dto.ApprovalStatusResponse;
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.storage.domain.port.StorageProvider;
+import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +22,7 @@ import java.util.List;
 public class ApprovalWebMapper {
 
     private final StorageProvider storageProvider;
+    private final PartyLookupProvider partyLookupProvider;
 
     public ApprovalStatusResponse toStatusResponse(ApprovalRequest request) {
         List<ApprovalHistoryResponse> histories = request.getHistories().stream()
@@ -40,6 +43,7 @@ public class ApprovalWebMapper {
                 .id(history.id())
                 .action(history.action().name())
                 .actorId(history.actorId())
+                .actorName(resolvePartyName(history.actorId()))
                 .notes(history.notes())
                 .actionDate(history.actionDate())
                 .build();
@@ -53,5 +57,11 @@ public class ApprovalWebMapper {
                 .signerUserId(signature.getSignerUserId())
                 .signedAt(signature.getStoredAt())
                 .build();
+    }
+
+    private String resolvePartyName(Long partyId) {
+        if (partyId == null) return null;
+        LookupDto lookup = partyLookupProvider.resolve(partyId);
+        return lookup != null ? lookup.name() : null;
     }
 }

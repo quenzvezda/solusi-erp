@@ -15,8 +15,6 @@ public class News {
     private LocalDateTime publishDate;
     private LocalDateTime expiryDate;
     private final String author;
-    private String createdByName;
-    private String updatedByName;
 
     public News(AuditMetadata metadata, NewsContent content, NewsStatus status, LocalDateTime publishDate, LocalDateTime expiryDate, String author) {
         this.metadata = metadata;
@@ -87,9 +85,4 @@ public class News {
     public String getAuthor() { return author; }
     public Long getVersion() { return metadata.version(); }
     public AuditMetadata getMetadata() { return metadata; }
-    public String getCreatedByName() { return createdByName; }
-    public String getUpdatedByName() { return updatedByName; }
-
-    public void setCreatedByName(String createdByName) { this.createdByName = createdByName; }
-    public void setUpdatedByName(String updatedByName) { this.updatedByName = updatedByName; }
 }

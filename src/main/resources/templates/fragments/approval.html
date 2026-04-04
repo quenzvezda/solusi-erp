@@ -95,6 +95,55 @@
 
 
 <!-- ================================================
+     FRAGMENT: approve-action-banner(requestId)
+     Full-width alert banner placed ABOVE the main content area.
+     Shows approval action buttons for the current approver.
+     Usage: <div th:if="${isCurrentApprover}" th:replace="~{fragments/approval :: approve-action-banner(${approvalRequestId})}"></div>
+     ================================================ -->
+<div th:fragment="approve-action-banner(requestId)" class="card card-sm border-primary mb-3" style="border-left: 4px solid var(--tblr-primary);">
+    <div class="card-body py-2">
+        <div class="d-flex align-items-center flex-wrap gap-2">
+            <div class="me-auto d-flex align-items-center gap-2">
+                <i class="ti ti-clipboard-check fs-2 text-primary"></i>
+                <div>
+                    <div class="fw-bold" th:text="#{label.approval.banner.title}">This document requires your approval</div>
+                    <div class="text-muted small" th:text="#{label.approval.banner.subtitle}">Please review and take action.</div>
+                </div>
+            </div>
+            <div class="btn-list flex-nowrap">
+                <button type="button" class="btn btn-success btn-sm"
+                        onclick="ApprovalUI.openApproveFinishModal()"
+                        th:attr="data-request-id=${requestId}">
+                    <i class="ti ti-check me-1"></i>
+                    <span th:text="#{label.approval.btn.approve_and_finish}">Approve &amp; Finish</span>
+                </button>
+                <button type="button" class="btn btn-primary btn-sm"
+                        onclick="ApprovalUI.openApproveForwardModal()"
+                        th:attr="data-request-id=${requestId}">
+                    <i class="ti ti-checks me-1"></i>
+                    <span th:text="#{label.approval.btn.approve_and_forward}">Approve &amp; Forward</span>
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm"
+                        onclick="ApprovalUI.openForwardModal()"
+                        th:attr="data-request-id=${requestId}">
+                    <i class="ti ti-arrow-forward me-1"></i>
+                    <span th:text="#{label.approval.btn.forward}">Forward</span>
+                </button>
+                <button type="button" class="btn btn-outline-danger btn-sm"
+                        onclick="ApprovalUI.openRejectModal()"
+                        th:attr="data-request-id=${requestId}">
+                    <i class="ti ti-x me-1"></i>
+                    <span th:text="#{label.approval.btn.reject}">Reject</span>
+                </button>
+            </div>
+        </div>
+        <!-- Hidden field for requestId — used by JS -->
+        <input type="hidden" id="current-approval-request-id" th:value="${requestId}">
+    </div>
+</div>
+
+
+<!-- ================================================
      FRAGMENT: approval-history-drawer(requestId)
      Generic offcanvas drawer showing the approval timeline.
      Include ONCE at the END of any detail page that has approval.
@@ -102,7 +151,7 @@
      ================================================ -->
 <div th:fragment="approval-history-drawer(requestId)"
      class="offcanvas offcanvas-end" tabindex="-1"
-     id="drawer-approval-history" style="width: 440px;">
+     id="drawer-approval-history" style="width: 520px;">
     <div class="offcanvas-header border-bottom">
         <h2 class="offcanvas-title fs-4" th:text="#{label.approval.history}">Approval History</h2>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
@@ -152,6 +201,10 @@
                         <strong class="me-auto"
                                 th:text="${#messages.msg('label.approval.action.' + #strings.toLowerCase(h.action))}">Action</strong>
                         <span class="text-muted small" th:text="${#temporals.format(h.actionDate, 'dd MMM yyyy HH:mm')}">Date</span>
+                    </div>
+                    <div th:if="${h.actorName != null}" class="text-muted small mb-1">
+                        <i class="ti ti-user me-1" style="font-size: 12px;"></i>
+                        <span th:text="${h.actorName}">Actor Name</span>
                     </div>
                     <p class="text-secondary small mb-0" th:text="${h.notes ?: '-'}">Notes</p>
                 </div>

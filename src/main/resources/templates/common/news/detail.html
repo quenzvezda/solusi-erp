@@ -56,6 +56,12 @@
 
     <div class="page-body">
         <div class="container-xl">
+
+            <!-- Approval Action Banner — only for current approver -->
+            <th:block th:if="${isCurrentApprover}">
+                <div th:replace="~{fragments/approval :: approve-action-banner(${approvalRequestId})}"></div>
+            </th:block>
+
             <div class="row row-cards">
 
                 <!-- Left: Content -->
@@ -70,7 +76,7 @@
                     </div>
                 </div>
 
-                <!-- Right: Metadata + Approval -->
+                <!-- Right: Metadata -->
                 <div class="col-lg-4">
                     <div class="card">
                         <div class="card-header">
@@ -93,11 +99,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Compact Approval Decision Card (only shown if approval exists) -->
-                    <th:block th:if="${approvalRequestId != null}">
-                        <div th:replace="~{fragments/approval :: approve-reject-panel(${approvalRequestId}, ${isCurrentApprover}, ${approvalStatus})}"></div>
-                    </th:block>
                 </div>
 
             </div>

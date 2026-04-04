@@ -18,6 +18,7 @@ public class ApprovalHistoryResponse {
     private Long id;
     private String action;
     private Long actorId;
+    private String actorName;
     private String notes;
     private LocalDateTime actionDate;
     private String signatureKey;
