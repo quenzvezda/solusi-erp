@@ -48,4 +48,11 @@ public class NewsRepositoryAdapter implements NewsRepository {
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<News> findAll() {
+        return jpaRepository.findAll().stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
 }

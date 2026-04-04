@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.news.detail.title})}"></head>
+
+<body th:replace="~{layout/master :: layout(~{:: .news-detail-content}, ~{:: #page-specific-scripts})}">
+<div class="news-detail-content">
+
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title" th:text="${news.title}">News Title</h2>
+                    <div class="mt-1">
+                        <span class="badge"
+                              th:classappend="${news.status.name() == 'DRAFT' ? 'bg-secondary-lt' :
+                                             (news.status.name() == 'PENDING_APPROVAL' ? 'bg-warning-lt' :
+                                             (news.status.name() == 'PUBLISHED' ? 'bg-success-lt' : 'bg-muted-lt'))}"
+                              th:text="${news.status}">DRAFT</span>
+                    </div>
+                </div>
+                <div class="col-auto ms-auto d-print-none">
+                    <div class="btn-list">
+                        <a th:href="@{/common/news}" class="btn btn-white">
+                            <i class="ti ti-arrow-left me-1"></i>
+                            <span th:text="#{label.back}">Back</span>
+                        </a>
+                        <a th:if="${news.status.name() == 'DRAFT'}"
+                           th:href="@{/common/news/edit/{id}(id=${news.id})}"
+                           class="btn btn-white"
+                           sec:authorize="hasAuthority('NEWS_UPDATE')">
+                            <i class="ti ti-edit me-1"></i>Edit
+                        </a>
+                        <!-- Submit for Approval button (DRAFT only) -->
+                        <button th:if="${news.status.name() == 'DRAFT'}"
+                                type="button"
+                                class="btn btn-primary"
+                                sec:authorize="hasAuthority('NEWS_UPDATE')"
+                                th:attr="data-news-id=${news.id}"
+                                onclick="submitForApproval(this.dataset.newsId)">
+                            <i class="ti ti-send me-1"></i>Submit for Approval
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="row row-cards">
+
+                <!-- Left: Content -->
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title" th:text="#{label.news.content}">Content</h3>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-secondary" style="white-space: pre-wrap;" th:text="${news.content}">Content here</p>
+                        </div>
+                    </div>
+
+                    <!-- Approval Panel (only shown if approval exists) -->
+                    <div th:if="${approvalRequestId != null}"
+                         th:replace="~{fragments/approval :: approve-reject-panel(${approvalRequestId})}"></div>
+                </div>
+
+                <!-- Right: Metadata -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Information</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted" th:text="#{label.news.author}">Author</label>
+                                <div class="font-weight-medium" th:text="${news.author ?: '-'}">Author</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted" th:text="#{label.news.publish-date}">Publish Date</label>
+                                <div class="font-weight-medium"
+                                     th:text="${news.publishDate != null ? #temporals.format(news.publishDate, 'dd MMM yyyy HH:mm') : '-'}">-</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted" th:text="#{label.news.expiry-date}">Expiry Date</label>
+                                <div class="font-weight-medium"
+                                     th:text="${news.expiryDate != null ? #temporals.format(news.expiryDate, 'dd MMM yyyy HH:mm') : '-'}">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div th:replace="~{fragments/audit-info :: audit-info(${news})}"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div id="page-specific-scripts" th:fragment="pageScripts">
+<script th:inline="javascript">
+    const newsId = /*[[${news.id}]]*/ null;
+    const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
+    const csrfToken = /*[[${_csrf.token}]]*/ '';
+
+    function submitForApproval(id) {
+        if (!confirm('Submit this news for approval?')) return;
+
+        fetch(`/common/news/${id}/submit-for-approval`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                [csrfHeader]: csrfToken
+            }
+        })
+        .then(async res => {
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Error');
+            window.location.reload();
+        })
+        .catch(err => {
+            if (window.ErpModal) ErpModal.showError(err.message);
+            else alert(err.message);
+        });
+    }
+</script>
+</div>
+</body>
+</html>

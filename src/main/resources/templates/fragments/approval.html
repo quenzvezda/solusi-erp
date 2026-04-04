@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+    GENERIC APPROVAL FRAGMENT
+    =========================
+    Usage in any module:
+
+    Timeline only (HTMX-loaded):
+        <div id="approval-timeline"
+             hx-get="/approval/{requestId}/history"
+             hx-trigger="load"
+             hx-swap="innerHTML">
+        </div>
+
+    Full panel (action buttons + timeline):
+        <div th:replace="~{fragments/approval :: approve-reject-panel(${news.approvalRequestId})}"></div>
+
+    Modal is included in master.html globally, no need to include separately.
+-->
+
+<!-- ================================================
+     FRAGMENT: approve-reject-panel(requestId)
+     Renders the action buttons (Approve/Reject) and the approval timeline.
+     Embed this in any detail page that needs approval.
+     ================================================ -->
+<div th:fragment="approve-reject-panel(requestId)" class="card mt-3">
+    <div class="card-header">
+        <h3 class="card-title" th:text="#{label.approval}">Approval</h3>
+        <div class="card-options">
+            <span class="badge bg-blue-lt" id="approval-status-badge">
+                <span th:text="#{label.approval.status.pending}">Pending</span>
+            </span>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- Action Buttons -->
+        <div class="d-flex gap-2 mb-3" id="approval-action-buttons">
+            <button type="button"
+                    class="btn btn-success"
+                    onclick="ApprovalUI.openApproveModal()"
+                    th:attr="data-request-id=${requestId}">
+                <i class="ti ti-check"></i>
+                <span th:text="#{label.approval.btn.approve}">Approve</span>
+            </button>
+            <button type="button"
+                    class="btn btn-danger"
+                    onclick="ApprovalUI.openRejectModal()"
+                    th:attr="data-request-id=${requestId}">
+                <i class="ti ti-x"></i>
+                <span th:text="#{label.approval.btn.reject}">Reject</span>
+            </button>
+        </div>
+
+        <!-- Approval Timeline (HTMX-loaded) -->
+        <div id="approval-timeline"
+             th:attr="hx-get='/approval/' + ${requestId} + '/history'"
+             hx-trigger="load, approvalProcessed from:body"
+             hx-swap="innerHTML">
+            <div class="text-center text-muted py-3">
+                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                Loading history...
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden field for requestId — used by JS -->
+    <input type="hidden" id="current-approval-request-id" th:value="${requestId}">
+</div>
+
+
+<!-- ================================================
+     FRAGMENT: timeline
+     The HTMX-loaded timeline content.
+     Rendered by ApprovalController.history() → "fragments/approval :: timeline"
+     ================================================ -->
+<div th:fragment="timeline">
+    <th:block th:if="${approval == null or approval.histories == null or approval.histories.isEmpty()}">
+        <p class="text-muted small mb-0" th:text="#{label.approval.history}">No history yet.</p>
+    </th:block>
+
+    <div class="timeline" th:unless="${approval == null or approval.histories == null or approval.histories.isEmpty()}">
+        <div class="timeline-event" th:each="h : ${approval.histories}">
+            <div class="timeline-event-icon"
+                 th:classappend="${h.action == 'REQUESTED' ? 'bg-blue-lt' : (h.action == 'APPROVE_AND_FINISH' ? 'bg-success-lt' : 'bg-danger-lt')}">
+                <i class="ti"
+                   th:classappend="${h.action == 'REQUESTED' ? 'ti-send' : (h.action == 'APPROVE_AND_FINISH' ? 'ti-check' : 'ti-x')}"></i>
+            </div>
+            <div class="card timeline-event-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-1">
+                        <strong class="me-auto"
+                                th:text="${h.action == 'REQUESTED' ? #{label.approval.action.requested} :
+                                         (h.action == 'APPROVE_AND_FINISH' ? #{label.approval.action.approve_and_finish} :
+                                          #{label.approval.action.rejected})}">Action</strong>
+                        <span class="text-muted small" th:text="${#temporals.format(h.actionDate, 'dd MMM yyyy HH:mm')}">Date</span>
+                    </div>
+                    <p class="text-secondary small mb-0" th:text="${h.notes ?: '-'}">Notes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ================================================
+     FRAGMENT: signature-capture-modal
+     The modal containing SignaturePad canvas.
+     Included ONCE in layout/master.html globally.
+     ================================================ -->
+<div th:fragment="signature-capture-modal">
+
+    <!-- APPROVE Modal -->
+    <div class="modal fade" id="modal-approve-signature" tabindex="-1" aria-labelledby="modal-approve-title">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-approve-title" th:text="#{label.approval.btn.approve}">Approve</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Notes -->
+                    <div class="mb-3">
+                        <label class="form-label" th:text="#{label.approval.notes}">Notes (optional)</label>
+                        <textarea id="approve-notes" class="form-control" rows="2" placeholder="Optional notes..."></textarea>
+                    </div>
+                    <!-- Signature Pad -->
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <span th:text="#{label.approval.signature}">Digital Signature</span>
+                            <span class="text-danger ms-1">*</span>
+                        </label>
+                        <div class="border rounded bg-white position-relative" style="touch-action: none;">
+                            <canvas id="signature-canvas"
+                                    style="width:100%;height:200px;display:block;cursor:crosshair;"
+                                    th:attr="data-placeholder=#{label.approval.signature.draw}">
+                            </canvas>
+                        </div>
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="ApprovalUI.clearSignature()">
+                                <i class="ti ti-eraser me-1"></i>
+                                <span th:text="#{label.approval.signature.clear}">Clear</span>
+                            </button>
+                        </div>
+                        <div class="invalid-feedback d-block d-none" id="signature-error"
+                             th:text="#{label.approval.signature.required}">Please draw your signature.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                            th:text="#{label.cancel}">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="ApprovalUI.submitApprove()">
+                        <i class="ti ti-check me-1"></i>
+                        <span th:text="#{label.approval.btn.approve}">Approve</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- REJECT Modal -->
+    <div class="modal fade" id="modal-reject-approval" tabindex="-1" aria-labelledby="modal-reject-title">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-reject-title" th:text="#{label.approval.btn.reject}">Reject</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <span th:text="#{label.approval.notes}">Notes</span>
+                            <span class="text-danger ms-1">*</span>
+                        </label>
+                        <textarea id="reject-notes" class="form-control" rows="3"
+                                  th:placeholder="#{label.approval.notes}" required></textarea>
+                        <div class="invalid-feedback d-block d-none" id="reject-notes-error">
+                            Notes are required when rejecting.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                            th:text="#{label.cancel}">Cancel</button>
+                    <button type="button" class="btn btn-danger" onclick="ApprovalUI.submitReject()">
+                        <i class="ti ti-x me-1"></i>
+                        <span th:text="#{label.approval.btn.reject}">Reject</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

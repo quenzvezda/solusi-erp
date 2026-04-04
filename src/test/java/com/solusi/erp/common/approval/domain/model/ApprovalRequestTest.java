@@ -90,4 +90,52 @@ class ApprovalRequestTest {
         
         assertEquals("msg.error.approval.not-pending", exception.getKey());
     }
+
+    @Test
+    @DisplayName("Should throw exception when approving an already REJECTED request (not-pending)")
+    void shouldThrowExceptionWhenApprovingRejectedRequest() {
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, 1L);
+        request.reject(2L, "Rejected notes");
+
+        DomainException exception = assertThrows(DomainException.class, () ->
+            request.approve(2L, "Trying to approve after reject")
+        );
+
+        assertEquals("msg.error.approval.not-pending", exception.getKey());
+    }
+
+    @Test
+    @DisplayName("Should throw exception when rejecting an already COMPLETED request")
+    void shouldThrowExceptionWhenRejectingCompletedRequest() {
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, 1L);
+        request.approve(2L, "Approved");
+
+        DomainException exception = assertThrows(DomainException.class, () ->
+            request.reject(2L, "Trying to reject after approval")
+        );
+
+        assertEquals("msg.error.approval.not-pending", exception.getKey());
+    }
+
+    @Test
+    @DisplayName("Should record correct referenceType and referenceId when created")
+    void shouldRecordCorrectReference() {
+        String refType = "STOCK_ADJUSTMENT";
+        Long refId = 456L;
+
+        ApprovalRequest request = ApprovalRequest.createNew(refType, refId, 1L);
+
+        assertEquals(refType, request.getReferenceType());
+        assertEquals(refId, request.getReferenceId());
+    }
+
+    @Test
+    @DisplayName("createNew should produce exactly 1 history entry with REQUESTED action")
+    void shouldHaveOneHistoryEntryOnCreate() {
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, 99L);
+
+        assertEquals(1, request.getHistories().size());
+        assertEquals(ApprovalAction.REQUESTED, request.getHistories().get(0).action());
+        assertEquals(99L, request.getHistories().get(0).actorId());
+    }
 }

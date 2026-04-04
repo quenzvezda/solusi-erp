@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 class CreateApprovalRequestUseCaseImplTest {
@@ -52,5 +53,42 @@ class CreateApprovalRequestUseCaseImplTest {
         ApprovalRequest saved = captor.getValue();
         assertEquals(refType, saved.getReferenceType());
         assertEquals(refId, saved.getReferenceId());
+    }
+
+    @Test
+    @DisplayName("Should create request for unknown referenceType without validation error (flexible polymorphic design)")
+    void shouldCreateForUnknownReferenceType() {
+        String refType = "FUTURE_MODULE";
+        Long refId = 999L;
+
+        when(repository.save(any(ApprovalRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ApprovalRequest result = useCase.execute(refType, refId, "admin");
+
+        assertNotNull(result);
+        assertEquals(refType, result.getReferenceType());
+        assertEquals(refId, result.getReferenceId());
+        assertEquals(ApprovalStatus.PENDING, result.getStatus());
+        verify(repository).save(any(ApprovalRequest.class));
+    }
+
+    @Test
+    @DisplayName("Should always set initial status to PENDING")
+    void shouldAlwaysStartWithPendingStatus() {
+        when(repository.save(any(ApprovalRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ApprovalRequest result = useCase.execute("NEWS", 1L, "someUser");
+
+        assertEquals(ApprovalStatus.PENDING, result.getStatus());
+    }
+
+    @Test
+    @DisplayName("Should call repository.save exactly once")
+    void shouldCallSaveExactlyOnce() {
+        when(repository.save(any(ApprovalRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        useCase.execute("NEWS", 1L, "admin");
+
+        verify(repository, times(1)).save(any(ApprovalRequest.class));
     }
 }

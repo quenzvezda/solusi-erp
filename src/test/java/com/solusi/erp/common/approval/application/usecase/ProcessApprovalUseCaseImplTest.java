@@ -85,4 +85,50 @@ class ProcessApprovalUseCaseImplTest {
         verify(repository, never()).save(any());
         verify(eventPublisher, never()).publishCompleted(any(), any());
     }
+
+    @Test
+    @DisplayName("Should throw DomainException when trying to approve an already COMPLETED request")
+    void shouldThrowWhenApprovingAlreadyCompleted() {
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 100L, 1L);
+        request.approve(2L, "First approval");
+
+        when(repository.findById(1L)).thenReturn(Optional.of(request));
+
+        DomainException exception = assertThrows(DomainException.class, () ->
+            useCase.approve(1L, 3L, "Second attempt")
+        );
+
+        assertEquals("msg.error.approval.not-pending", exception.getKey());
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should throw DomainException when trying to reject an already REJECTED request")
+    void shouldThrowWhenRejectingAlreadyRejected() {
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 100L, 1L);
+        request.reject(2L, "Already rejected");
+
+        when(repository.findById(1L)).thenReturn(Optional.of(request));
+
+        DomainException exception = assertThrows(DomainException.class, () ->
+            useCase.reject(1L, 3L, "Double reject")
+        );
+
+        assertEquals("msg.error.approval.not-pending", exception.getKey());
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should throw exception for reject if request not found")
+    void shouldThrowExceptionWhenRejectingNotFound() {
+        when(repository.findById(99L)).thenReturn(Optional.empty());
+
+        DomainException exception = assertThrows(DomainException.class, () ->
+            useCase.reject(99L, 2L, "Notes")
+        );
+
+        assertEquals("msg.error.approval.not-found", exception.getKey());
+        verify(repository, never()).save(any());
+        verify(eventPublisher, never()).publishRejected(any(), any());
+    }
 }

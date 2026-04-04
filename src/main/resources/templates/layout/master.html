@@ -66,6 +66,13 @@
     <script th:src="@{/js/shared/erp-common-handler.js}" defer></script>
     <!-- ERP Form Handler (AJAX) -->
     <script th:src="@{/js/shared/erp-form-handler.js}" defer></script>
+    <!-- SignaturePad — Digital Signature Capture -->
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4/dist/signature_pad.umd.min.js" defer></script>
+    <!-- Approval UI Handler -->
+    <script th:src="@{/js/approval/signature-capture.js}" defer></script>
+
+    <!-- Global Approval Modals (signature-capture-modal) -->
+    <div th:replace="~{fragments/approval :: signature-capture-modal}"></div>
     
     <!-- Global Page Lifecycle & HTMX Handlers -->
     <script>
