@@ -63,7 +63,7 @@
 
                     <!-- Approval Panel (only shown if approval exists) -->
                     <th:block th:if="${approvalRequestId != null}">
-                        <div th:replace="~{fragments/approval :: approve-reject-panel(${approvalRequestId})}"></div>
+                        <div th:replace="~{fragments/approval :: approve-reject-panel(${approvalRequestId}, ${isCurrentApprover})}"></div>
                     </th:block>
                 </div>
 
@@ -101,35 +101,106 @@
 </div>
 
 <div id="page-specific-scripts" th:fragment="pageScripts">
+
+<!-- Submit for Approval Modal with Approver Selection -->
+<div class="modal fade" id="modal-submit-approval" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Submit for Approval</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">
+                        Select Approver <span class="text-danger ms-1">*</span>
+                    </label>
+                    <select id="submit-approver" class="erp-input-ts"
+                            data-lookup-path="parties/by-role-type?roleTypeCode=APPROVER">
+                        <option value="">-- Select Approver --</option>
+                    </select>
+                    <div class="invalid-feedback d-block d-none" id="submit-approver-error">Please select an approver.</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-confirm-submit-approval">
+                    <i class="ti ti-send me-1"></i> Submit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script th:inline="javascript">
     const newsId = /*[[${news.id}]]*/ null;
     const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
     const csrfToken = /*[[${_csrf.token}]]*/ '';
 
     function submitForApproval(id) {
-        ErpModal.confirm(
-            'Submit this news for approval?',
-            () => {
-                fetch(`/common/news/${id}/submit-for-approval`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        [csrfHeader]: csrfToken
-                    }
-                })
-                .then(async res => {
-                    const data = await res.json();
-                    if (!res.ok) throw new Error(data.message || 'Error');
-                    window.location.reload();
-                })
-                .catch(err => {
-                    if (window.ErpModal) ErpModal.showError(err.message);
-                    else alert(err.message);
-                });
-            },
-            'Submit for Approval'
-        );
+        const modalEl = document.getElementById('modal-submit-approval');
+        const modal = new bootstrap.Modal(modalEl);
+
+        // Init TomSelect for approver lookup after modal is shown
+        modalEl.addEventListener('shown.bs.modal', function handler() {
+            const selectEl = document.getElementById('submit-approver');
+            if (selectEl && !selectEl.tomselect && typeof initLookup === 'function') {
+                initLookup(selectEl, selectEl.getAttribute('data-lookup-path'));
+            }
+            modalEl.removeEventListener('shown.bs.modal', handler);
+        });
+
+        // Reset state
+        const selectEl = document.getElementById('submit-approver');
+        if (selectEl && selectEl.tomselect) {
+            selectEl.tomselect.clear();
+        }
+        hideError('submit-approver-error');
+
+        // Bind confirm button
+        const btn = document.getElementById('btn-confirm-submit-approval');
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        newBtn.addEventListener('click', () => {
+            const approverSelect = document.getElementById('submit-approver');
+            const approverId = approverSelect.tomselect ? approverSelect.tomselect.getValue() : approverSelect.value;
+            if (!approverId) {
+                showError('submit-approver-error');
+                return;
+            }
+            hideError('submit-approver-error');
+
+            fetch(`/common/news/${id}/submit-for-approval`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({ approverId: parseInt(approverId) })
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Error');
+                bootstrap.Modal.getInstance(modalEl)?.hide();
+                window.location.reload();
+            })
+            .catch(err => {
+                if (window.ErpModal) ErpModal.showError(err.message);
+                else alert(err.message);
+            });
+        });
+
+        modal.show();
+    }
+
+    function showError(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('d-none');
+    }
+    function hideError(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('d-none');
     }
 </script>
 </div>

@@ -105,6 +105,15 @@ public class PartyRepositoryImpl implements PartyRepository {
     }
 
     @Override
+    public List<Party> findForLookupByRoleType(String keyword, String roleTypeCode, Long excludePartyId) {
+        String kw = keyword != null ? keyword : "";
+        return jpaPartyRepo.searchByRoleType(kw, roleTypeCode, excludePartyId, PageRequest.of(0, 10))
+                .getContent().stream()
+                .map(persistenceMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<Party> findAvailableForUser(String keyword, Long excludePartyId) {
         String kw = keyword != null ? keyword : "";
         org.springframework.data.domain.Page<com.solusi.erp.master.party.infrastructure.persistence.Party> page;

@@ -10,10 +10,12 @@ public class ApprovalRequestedEvent {
     private final String referenceType;
     private final Long referenceId;
     private final String requester;
+    private final Long approverId;
 
-    public ApprovalRequestedEvent(String referenceType, Long referenceId, String requester) {
+    public ApprovalRequestedEvent(String referenceType, Long referenceId, String requester, Long approverId) {
         this.referenceType = referenceType;
         this.referenceId = referenceId;
         this.requester = requester;
+        this.approverId = approverId;
     }
 }

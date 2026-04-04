@@ -15,12 +15,15 @@ class ApprovalRequestTest {
         Long refId = 123L;
         Long requesterId = 1L;
 
-        ApprovalRequest request = ApprovalRequest.createNew(refType, refId, requesterId);
+        Long approverId = 50L;
+
+        ApprovalRequest request = ApprovalRequest.createNew(refType, refId, requesterId, approverId);
 
         assertNotNull(request);
         assertEquals(refType, request.getReferenceType());
         assertEquals(refId, request.getReferenceId());
         assertEquals(ApprovalStatus.PENDING, request.getStatus());
+        assertEquals(approverId, request.getCurrentApproverId());
         assertEquals(1, request.getHistories().size());
         
         ApprovalHistory history = request.getHistories().get(0);
@@ -32,7 +35,7 @@ class ApprovalRequestTest {
     @Test
     @DisplayName("Should change status to COMPLETED when approved")
     void shouldApprove() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, 1L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, 1L, 50L);
         Long approverId = 2L;
         String notes = "Approved!";
 
@@ -50,7 +53,7 @@ class ApprovalRequestTest {
     @Test
     @DisplayName("Should change status to REJECTED when rejected")
     void shouldReject() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, 1L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, 1L, 50L);
         Long actorId = 2L;
         String notes = "Rejected due to typo";
 
@@ -68,7 +71,7 @@ class ApprovalRequestTest {
     @Test
     @DisplayName("Should throw exception when approving a non-PENDING request")
     void shouldThrowExceptionWhenApprovingNonPending() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, 1L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, 1L, 50L);
         request.approve(2L, "First Approval");
 
         DomainException exception = assertThrows(DomainException.class, () -> 
@@ -81,7 +84,7 @@ class ApprovalRequestTest {
     @Test
     @DisplayName("Should throw exception when rejecting a non-PENDING request")
     void shouldThrowExceptionWhenRejectingNonPending() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, 1L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, 1L, 50L);
         request.reject(2L, "First Rejection");
 
         DomainException exception = assertThrows(DomainException.class, () -> 
@@ -94,7 +97,7 @@ class ApprovalRequestTest {
     @Test
     @DisplayName("Should throw exception when approving an already REJECTED request (not-pending)")
     void shouldThrowExceptionWhenApprovingRejectedRequest() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, 1L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, 1L, 50L);
         request.reject(2L, "Rejected notes");
 
         DomainException exception = assertThrows(DomainException.class, () ->
@@ -107,7 +110,7 @@ class ApprovalRequestTest {
     @Test
     @DisplayName("Should throw exception when rejecting an already COMPLETED request")
     void shouldThrowExceptionWhenRejectingCompletedRequest() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, 1L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, 1L, 50L);
         request.approve(2L, "Approved");
 
         DomainException exception = assertThrows(DomainException.class, () ->
@@ -123,7 +126,7 @@ class ApprovalRequestTest {
         String refType = "STOCK_ADJUSTMENT";
         Long refId = 456L;
 
-        ApprovalRequest request = ApprovalRequest.createNew(refType, refId, 1L);
+        ApprovalRequest request = ApprovalRequest.createNew(refType, refId, 1L, 50L);
 
         assertEquals(refType, request.getReferenceType());
         assertEquals(refId, request.getReferenceId());
@@ -132,7 +135,7 @@ class ApprovalRequestTest {
     @Test
     @DisplayName("createNew should produce exactly 1 history entry with REQUESTED action")
     void shouldHaveOneHistoryEntryOnCreate() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, 99L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, 99L, 50L);
 
         assertEquals(1, request.getHistories().size());
         assertEquals(ApprovalAction.REQUESTED, request.getHistories().get(0).action());

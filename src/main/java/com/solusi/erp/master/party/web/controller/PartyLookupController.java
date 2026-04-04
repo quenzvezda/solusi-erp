@@ -36,6 +36,17 @@ public class PartyLookupController {
                 .collect(Collectors.toList());
     }
 
+    @GetMapping("/by-role-type")
+    public List<LookupDto> searchByRoleType(
+            @RequestParam(value = "q", defaultValue = "") String q,
+            @RequestParam(value = "roleTypeCode") String roleTypeCode,
+            @RequestParam(value = "excludePartyId", required = false) Long excludePartyId) {
+        Locale locale = LocaleContextHolder.getLocale();
+        return findPartiesForLookupUseCase.executeByRoleType(q, roleTypeCode, excludePartyId).stream()
+                .map(p -> mapToLookupDto(p, locale))
+                .collect(Collectors.toList());
+    }
+
     @GetMapping("/available-for-user")
     public List<LookupDto> availableForUser(
             @RequestParam(value = "q", defaultValue = "") String q,

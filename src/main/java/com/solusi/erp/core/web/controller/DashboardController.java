@@ -5,6 +5,7 @@ import com.solusi.erp.common.news.domain.model.News;
 import com.solusi.erp.common.news.domain.repository.NewsRepository;
 import com.solusi.erp.common.news.web.dto.NewsDetailResponse;
 import com.solusi.erp.common.news.web.mapper.NewsWebMapper;
+import com.solusi.erp.security.shared.model.SecurityUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -40,7 +41,15 @@ public class DashboardController {
         }
 
         if (hasAuthority(authentication, "DASHBOARD_APPROVAL")) {
-            model.addAttribute("pendingApprovalCount", approvalRequestRepository.countPendingApprovals());
+            Long approverPartyId = null;
+            if (authentication.getPrincipal() instanceof SecurityUser securityUser) {
+                approverPartyId = securityUser.user().getPartyId();
+            }
+            if (approverPartyId != null) {
+                model.addAttribute("pendingApprovalCount", approvalRequestRepository.countPendingApprovalsForApprover(approverPartyId));
+            } else {
+                model.addAttribute("pendingApprovalCount", approvalRequestRepository.countPendingApprovals());
+            }
         }
 
         return "dashboard/index";

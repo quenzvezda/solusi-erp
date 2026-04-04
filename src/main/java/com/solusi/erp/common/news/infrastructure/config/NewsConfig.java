@@ -46,8 +46,8 @@ public class NewsConfig {
             NewsEventPublisher eventPublisher,
             TransactionTemplate transactionTemplate) {
         SubmitNewsForApprovalUseCase pureUseCase = new SubmitNewsForApprovalUseCaseImpl(newsRepository, eventPublisher);
-        return (id, requester) ->
-            transactionTemplate.execute(status -> pureUseCase.execute(id, requester));
+        return (id, requester, approverId) ->
+            transactionTemplate.execute(status -> pureUseCase.execute(id, requester, approverId));
     }
 
     @Bean

@@ -15,11 +15,14 @@ import com.solusi.erp.master.party.infrastructure.persistence.PartyIdentificatio
 import com.solusi.erp.master.party.infrastructure.persistence.PartyJpaRepository;
 import com.solusi.erp.master.partyroletype.infrastructure.persistence.PartyRoleTypeJpaRepository;
 import com.solusi.erp.master.bankaccount.infrastructure.persistence.BankAccountJpaRepository;
+import com.solusi.erp.master.party.domain.model.Party;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import java.util.List;
 
 @Configuration
 public class PartyConfig {
@@ -111,10 +114,20 @@ public class PartyConfig {
     public FindPartiesForLookupUseCase findPartiesForLookupUseCase(
             PartyRepository partyDomainRepository,
             PlatformTransactionManager txManager) {
-        FindPartiesForLookupUseCase pure = new FindPartiesForLookupUseCaseImpl(partyDomainRepository);
+        FindPartiesForLookupUseCaseImpl pure = new FindPartiesForLookupUseCaseImpl(partyDomainRepository);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         tx.setReadOnly(true);
-        return (keyword) -> tx.execute(status -> pure.execute(keyword));
+        return new FindPartiesForLookupUseCase() {
+            @Override
+            public List<Party> execute(String keyword) {
+                return tx.execute(status -> pure.execute(keyword));
+            }
+
+            @Override
+            public List<Party> executeByRoleType(String keyword, String roleTypeCode, Long excludePartyId) {
+                return tx.execute(status -> pure.executeByRoleType(keyword, roleTypeCode, excludePartyId));
+            }
+        };
     }
 
     @Bean

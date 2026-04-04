@@ -14,4 +14,6 @@ public interface ApprovalRequestRepository {
     Optional<ApprovalRequest> findByReference(String referenceType, Long referenceId);
     Page<ApprovalRequest> findPendingApprovals(Pageable pageable);
     long countPendingApprovals();
+    Page<ApprovalRequest> findPendingApprovalsForApprover(Long approverPartyId, Pageable pageable);
+    long countPendingApprovalsForApprover(Long approverPartyId);
 }

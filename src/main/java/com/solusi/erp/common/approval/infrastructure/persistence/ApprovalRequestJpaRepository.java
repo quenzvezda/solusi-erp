@@ -23,4 +23,9 @@ public interface ApprovalRequestJpaRepository extends JpaRepository<ApprovalRequ
     Page<ApprovalRequestEntity> findByStatus(ApprovalStatus status, Pageable pageable);
 
     long countByStatus(ApprovalStatus status);
+
+    @EntityGraph(attributePaths = "histories")
+    Page<ApprovalRequestEntity> findByStatusAndCurrentApproverId(ApprovalStatus status, Long currentApproverId, Pageable pageable);
+
+    long countByStatusAndCurrentApproverId(ApprovalStatus status, Long currentApproverId);
 }

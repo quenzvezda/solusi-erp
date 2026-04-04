@@ -4,5 +4,5 @@ import com.solusi.erp.master.partyroletype.domain.model.PartyRoleType;
 
 @FunctionalInterface
 public interface CreatePartyRoleTypeUseCase {
-    PartyRoleType execute(String name, String note, Boolean isActive);
+    PartyRoleType execute(String code, String name, String note, Boolean isActive);
 }

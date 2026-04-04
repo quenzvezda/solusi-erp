@@ -34,6 +34,16 @@ public interface PartyJpaRepository extends JpaRepository<Party, Long> {
             "LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<Party> searchUnassigned(@Param("keyword") String keyword, Pageable pageable);
 
+    @Query("SELECT DISTINCT p FROM Party p JOIN p.roles r " +
+            "WHERE r.code = :roleTypeCode AND p.isActive = true AND " +
+            "(:excludePartyId IS NULL OR p.id != :excludePartyId) AND " +
+            "(LOWER(p.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<Party> searchByRoleType(@Param("keyword") String keyword,
+                                 @Param("roleTypeCode") String roleTypeCode,
+                                 @Param("excludePartyId") Long excludePartyId,
+                                 Pageable pageable);
+
     boolean existsByCode(String code);
 
     boolean existsByCodeAndIdNot(String code, Long id);

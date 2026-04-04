@@ -40,7 +40,7 @@ class CreateApprovalRequestUseCaseImplTest {
 
         when(repository.save(any(ApprovalRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ApprovalRequest result = useCase.execute(refType, refId, requesterUsername);
+        ApprovalRequest result = useCase.execute(refType, refId, requesterUsername, null);
 
         assertNotNull(result);
         assertEquals(refType, result.getReferenceType());
@@ -63,7 +63,7 @@ class CreateApprovalRequestUseCaseImplTest {
 
         when(repository.save(any(ApprovalRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ApprovalRequest result = useCase.execute(refType, refId, "admin");
+        ApprovalRequest result = useCase.execute(refType, refId, "admin", null);
 
         assertNotNull(result);
         assertEquals(refType, result.getReferenceType());
@@ -77,7 +77,7 @@ class CreateApprovalRequestUseCaseImplTest {
     void shouldAlwaysStartWithPendingStatus() {
         when(repository.save(any(ApprovalRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ApprovalRequest result = useCase.execute("NEWS", 1L, "someUser");
+        ApprovalRequest result = useCase.execute("NEWS", 1L, "someUser", null);
 
         assertEquals(ApprovalStatus.PENDING, result.getStatus());
     }
@@ -87,7 +87,7 @@ class CreateApprovalRequestUseCaseImplTest {
     void shouldCallSaveExactlyOnce() {
         when(repository.save(any(ApprovalRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        useCase.execute("NEWS", 1L, "admin");
+        useCase.execute("NEWS", 1L, "admin", null);
 
         verify(repository, times(1)).save(any(ApprovalRequest.class));
     }

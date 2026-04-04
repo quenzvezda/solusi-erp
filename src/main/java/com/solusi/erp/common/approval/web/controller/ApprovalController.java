@@ -15,6 +15,7 @@ import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.core.exception.DomainException;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
+import com.solusi.erp.security.shared.model.SecurityUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -56,10 +57,20 @@ public class ApprovalController {
      */
     @GetMapping
     @PreAuthorize("hasAuthority('APPROVAL_READ')")
-    public String list(org.springframework.data.domain.Pageable springPageable, Model model) {
+    public String list(org.springframework.data.domain.Pageable springPageable, Model model,
+                       @AuthenticationPrincipal UserDetails principal) {
+        Long currentApproverPartyId = null;
+        if (principal instanceof SecurityUser securityUser) {
+            currentApproverPartyId = securityUser.user().getPartyId();
+        }
+
         Pageable domainPageable = PageableMapper.toDomain(springPageable);
-        com.solusi.erp.core.domain.model.Page<ApprovalRequest> domainPage =
-                approvalRequestRepository.findPendingApprovals(domainPageable);
+        com.solusi.erp.core.domain.model.Page<ApprovalRequest> domainPage;
+        if (currentApproverPartyId != null) {
+            domainPage = approvalRequestRepository.findPendingApprovalsForApprover(currentApproverPartyId, domainPageable);
+        } else {
+            domainPage = approvalRequestRepository.findPendingApprovals(domainPageable);
+        }
 
         List<ApprovalStatusResponse> content = domainPage.content().stream()
                 .map(webMapper::toStatusResponse)
@@ -82,22 +93,28 @@ public class ApprovalController {
             @Valid @RequestBody ProcessApprovalRequest request,
             @AuthenticationPrincipal UserDetails principal) {
 
-        Long actorId = resolveUserId(principal);
+        Long actorPartyId = resolvePartyId(principal);
+        String action = request.getAction().toUpperCase();
 
-        ApprovalRequest result;
-        if ("APPROVE".equalsIgnoreCase(request.getAction())) {
-            result = processApprovalUseCase.approve(requestId, actorId, request.getNotes());
-            if (request.getSignatureBase64() != null && !request.getSignatureBase64().isBlank()) {
-                saveApprovalSignatureUseCase.execute(requestId, request.getSignatureBase64(), actorId);
+        ApprovalRequest result = switch (action) {
+            case "APPROVE_AND_FINISH" -> {
+                ApprovalRequest r = processApprovalUseCase.approve(requestId, actorPartyId, request.getNotes());
+                if (request.getSignatureBase64() != null && !request.getSignatureBase64().isBlank()) {
+                    saveApprovalSignatureUseCase.execute(requestId, request.getSignatureBase64(), actorPartyId);
+                }
+                yield r;
             }
-        } else if ("REJECT".equalsIgnoreCase(request.getAction())) {
-            if (request.getNotes() == null || request.getNotes().isBlank()) {
-                throw new DomainException("msg.error.approval.reject.notes-required");
+            case "APPROVE_AND_FORWARD" -> {
+                ApprovalRequest r = processApprovalUseCase.approveAndForward(requestId, actorPartyId, request.getTargetApproverId(), request.getNotes());
+                if (request.getSignatureBase64() != null && !request.getSignatureBase64().isBlank()) {
+                    saveApprovalSignatureUseCase.execute(requestId, request.getSignatureBase64(), actorPartyId);
+                }
+                yield r;
             }
-            result = processApprovalUseCase.reject(requestId, actorId, request.getNotes());
-        } else {
-            throw new DomainException("msg.error.approval.invalid-action");
-        }
+            case "FORWARD" -> processApprovalUseCase.forward(requestId, actorPartyId, request.getTargetApproverId(), request.getNotes());
+            case "REJECTED" -> processApprovalUseCase.reject(requestId, actorPartyId, request.getNotes());
+            default -> throw new DomainException("msg.error.approval.invalid-action");
+        };
 
         String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
         return ResponseEntity.ok(ApiResponse.success(msg, webMapper.toStatusResponse(result)));
@@ -108,10 +125,18 @@ public class ApprovalController {
      * Returns an HTMX fragment containing the approval timeline.
      */
     @GetMapping("/{requestId}/history")
-    public String history(@PathVariable Long requestId, Model model) {
+    public String history(@PathVariable Long requestId, Model model,
+                          @AuthenticationPrincipal UserDetails principal) {
         ApprovalRequest request = approvalRequestRepository.findById(requestId)
                 .orElseThrow(() -> new DomainException("msg.error.approval.not-found"));
         model.addAttribute("approval", webMapper.toStatusResponse(request));
+
+        boolean isCurrentApprover = false;
+        if (principal instanceof SecurityUser securityUser) {
+            Long partyId = securityUser.user().getPartyId();
+            isCurrentApprover = partyId != null && partyId.equals(request.getCurrentApproverId());
+        }
+        model.addAttribute("isCurrentApprover", isCurrentApprover);
         return "fragments/approval :: timeline";
     }
 
@@ -130,8 +155,14 @@ public class ApprovalController {
         return ResponseEntity.ok(ApiResponse.success("OK", webMapper.toSignatureResponse(sig.get())));
     }
 
-    /** Stub — in production resolve the Party/User ID from SecurityUser. */
-    private Long resolveUserId(UserDetails principal) {
-        return 1L;
+    private Long resolvePartyId(UserDetails principal) {
+        if (principal instanceof SecurityUser securityUser) {
+            Long partyId = securityUser.user().getPartyId();
+            if (partyId == null) {
+                throw new DomainException("msg.error.approval.no-party-linked");
+            }
+            return partyId;
+        }
+        throw new DomainException("msg.error.approval.no-party-linked");
     }
 }

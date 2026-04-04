@@ -28,8 +28,8 @@ public class ApprovalConfig {
             ApprovalRequestRepository repository,
             TransactionTemplate transactionTemplate) {
         CreateApprovalRequestUseCase pureUseCase = new CreateApprovalRequestUseCaseImpl(repository);
-        return (refType, refId, requester) ->
-            transactionTemplate.execute(status -> pureUseCase.execute(refType, refId, requester));
+        return (refType, refId, requester, approverId) ->
+            transactionTemplate.execute(status -> pureUseCase.execute(refType, refId, requester, approverId));
     }
 
     @Bean
@@ -47,6 +47,16 @@ public class ApprovalConfig {
             @Override
             public com.solusi.erp.common.approval.domain.model.ApprovalRequest reject(Long id, Long actorId, String notes) {
                 return transactionTemplate.execute(status -> pureUseCase.reject(id, actorId, notes));
+            }
+
+            @Override
+            public com.solusi.erp.common.approval.domain.model.ApprovalRequest forward(Long id, Long actorId, Long targetApproverId, String notes) {
+                return transactionTemplate.execute(status -> pureUseCase.forward(id, actorId, targetApproverId, notes));
+            }
+
+            @Override
+            public com.solusi.erp.common.approval.domain.model.ApprovalRequest approveAndForward(Long id, Long actorId, Long targetApproverId, String notes) {
+                return transactionTemplate.execute(status -> pureUseCase.approveAndForward(id, actorId, targetApproverId, notes));
             }
         };
     }

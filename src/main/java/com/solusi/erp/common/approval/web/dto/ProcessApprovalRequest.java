@@ -11,10 +11,13 @@ import lombok.Data;
 public class ProcessApprovalRequest {
 
     @NotNull(message = "{label.approval.action} {validation.notnull.suffix}")
-    private String action; // "APPROVE" or "REJECT"
+    private String action; // APPROVE_AND_FINISH, APPROVE_AND_FORWARD, FORWARD, REJECTED
 
     private String notes;
 
-    /** Base64-encoded PNG of the signature canvas. Optional but recommended for APPROVE. */
+    /** Base64-encoded PNG of the signature canvas. Required for APPROVE_AND_FINISH, APPROVE_AND_FORWARD. */
     private String signatureBase64;
+
+    /** Target approver party ID. Required for FORWARD, APPROVE_AND_FORWARD. */
+    private Long targetApproverId;
 }

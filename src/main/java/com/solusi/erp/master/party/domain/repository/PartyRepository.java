@@ -12,6 +12,7 @@ public interface PartyRepository {
     Optional<Party> findById(Long id);
     Page<Party> findAll(String keyword, Pageable pageable);
     List<Party> findForLookup(String keyword);
+    List<Party> findForLookupByRoleType(String keyword, String roleTypeCode, Long excludePartyId);
     List<Party> findAvailableForUser(String keyword, Long excludePartyId);
     void delete(Long id);
     void softDelete(Long id);

@@ -15,6 +15,7 @@ import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.core.exception.DomainException;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
+import com.solusi.erp.security.shared.model.SecurityUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -24,12 +25,15 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -71,14 +75,23 @@ public class NewsController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('NEWS_READ')")
-    public String detail(@PathVariable Long id, Model model) {
+    public String detail(@PathVariable Long id, Model model,
+                         @AuthenticationPrincipal UserDetails principal) {
         News news = newsRepository.findById(id)
                 .orElseThrow(() -> new DomainException("msg.error.news.not-found"));
         model.addAttribute("news", webMapper.toResponse(news));
 
         Optional<ApprovalRequest> approvalRequest =
                 approvalRequestRepository.findByReference("NEWS", id);
-        approvalRequest.ifPresent(req -> model.addAttribute("approvalRequestId", req.getId()));
+        approvalRequest.ifPresent(req -> {
+            model.addAttribute("approvalRequestId", req.getId());
+            boolean isCurrentApprover = false;
+            if (principal instanceof SecurityUser securityUser) {
+                Long partyId = securityUser.user().getPartyId();
+                isCurrentApprover = partyId != null && partyId.equals(req.getCurrentApproverId());
+            }
+            model.addAttribute("isCurrentApprover", isCurrentApprover);
+        });
 
         return "common/news/detail";
     }
@@ -126,9 +139,12 @@ public class NewsController {
     @PostMapping("/{id}/submit-for-approval")
     @PreAuthorize("hasAuthority('NEWS_UPDATE')")
     @ResponseBody
-    public ResponseEntity<ApiResponse<NewsDetailResponse>> submitForApproval(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<NewsDetailResponse>> submitForApproval(
+            @PathVariable Long id,
+            @RequestBody(required = false) Map<String, Long> body) {
         String requester = SecurityContextHolder.getContext().getAuthentication().getName();
-        News domain = submitNewsForApprovalUseCase.execute(id, requester);
+        Long approverId = (body != null) ? body.get("approverId") : null;
+        News domain = submitNewsForApprovalUseCase.execute(id, requester, approverId);
         NewsDetailResponse response = webMapper.toResponse(domain);
         String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
         return ResponseEntity.ok(ApiResponse.success(msg, response));

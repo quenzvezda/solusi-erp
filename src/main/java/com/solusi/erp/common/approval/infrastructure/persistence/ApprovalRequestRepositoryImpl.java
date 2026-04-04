@@ -56,4 +56,20 @@ public class ApprovalRequestRepositoryImpl implements ApprovalRequestRepository 
     public long countPendingApprovals() {
         return jpaRepository.countByStatus(ApprovalStatus.PENDING);
     }
+
+    @Override
+    public Page<ApprovalRequest> findPendingApprovalsForApprover(Long approverPartyId, Pageable pageable) {
+        org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
+        org.springframework.data.domain.Page<ApprovalRequestEntity> entityPage =
+                jpaRepository.findByStatusAndCurrentApproverId(ApprovalStatus.PENDING, approverPartyId, springPageable);
+        List<ApprovalRequest> content = entityPage.getContent().stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+        return new Page<>(content, entityPage.getNumber(), entityPage.getSize(), entityPage.getTotalElements());
+    }
+
+    @Override
+    public long countPendingApprovalsForApprover(Long approverPartyId) {
+        return jpaRepository.countByStatusAndCurrentApproverId(ApprovalStatus.PENDING, approverPartyId);
+    }
 }

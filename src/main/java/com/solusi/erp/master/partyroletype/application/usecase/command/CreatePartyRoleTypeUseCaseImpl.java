@@ -16,9 +16,9 @@ public class CreatePartyRoleTypeUseCaseImpl implements CreatePartyRoleTypeUseCas
     }
 
     @Override
-    public PartyRoleType execute(String name, String note, Boolean isActive) {
-        String code = sequenceGeneratorService.generate("PARTY-ROLE-TYPE");
-        PartyRoleType partyRoleType = PartyRoleType.createNew(code, name, note, isActive);
+    public PartyRoleType execute(String code, String name, String note, Boolean isActive) {
+        String finalCode = (code != null && !code.isBlank()) ? code : sequenceGeneratorService.generate("PARTY-ROLE-TYPE");
+        PartyRoleType partyRoleType = PartyRoleType.createNew(finalCode, name, note, isActive);
         return repository.save(partyRoleType);
     }
 }
