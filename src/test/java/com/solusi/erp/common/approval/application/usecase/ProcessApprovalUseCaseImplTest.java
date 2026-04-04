@@ -14,6 +14,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -130,5 +132,78 @@ class ProcessApprovalUseCaseImplTest {
         assertEquals("msg.error.approval.not-found", exception.getKey());
         verify(repository, never()).save(any());
         verify(eventPublisher, never()).publishRejected(any(), any());
+    }
+
+    // --- forward tests ---
+
+    @Test
+    @DisplayName("forward delegates to domain and saves")
+    void forward_validInput_delegatesToDomain() {
+        Long requestId = 1L;
+        Long actorId = 2L;
+        Long targetApproverId = 3L;
+        String notes = "Please review";
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 100L, 1L, actorId);
+
+        when(repository.findById(requestId)).thenReturn(Optional.of(request));
+        when(repository.save(any(ApprovalRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ApprovalRequest result = useCase.forward(requestId, actorId, targetApproverId, notes);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getStatus()).isEqualTo(ApprovalStatus.PENDING);
+        assertThat(result.getCurrentApproverId()).isEqualTo(targetApproverId);
+        verify(repository).save(request);
+        verify(eventPublisher, never()).publishCompleted(any(), any());
+        verify(eventPublisher, never()).publishRejected(any(), any());
+    }
+
+    @Test
+    @DisplayName("forward throws when request not found")
+    void forward_notFound_throwsException() {
+        when(repository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> useCase.forward(99L, 2L, 3L, "Notes"))
+                .isInstanceOf(DomainException.class)
+                .satisfies(ex -> assertThat(((DomainException) ex).getKey())
+                        .isEqualTo("msg.error.approval.not-found"));
+
+        verify(repository, never()).save(any());
+    }
+
+    // --- approveAndForward tests ---
+
+    @Test
+    @DisplayName("approveAndForward delegates to domain and saves")
+    void approveAndForward_validInput_delegatesToDomain() {
+        Long requestId = 1L;
+        Long actorId = 2L;
+        Long targetApproverId = 3L;
+        String notes = "Approved, next level";
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 100L, 1L, actorId);
+
+        when(repository.findById(requestId)).thenReturn(Optional.of(request));
+        when(repository.save(any(ApprovalRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ApprovalRequest result = useCase.approveAndForward(requestId, actorId, targetApproverId, notes);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getStatus()).isEqualTo(ApprovalStatus.PENDING);
+        assertThat(result.getCurrentApproverId()).isEqualTo(targetApproverId);
+        verify(repository).save(request);
+        verify(eventPublisher, never()).publishCompleted(any(), any());
+    }
+
+    @Test
+    @DisplayName("approveAndForward throws when request not found")
+    void approveAndForward_notFound_throwsException() {
+        when(repository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> useCase.approveAndForward(99L, 2L, 3L, "Notes"))
+                .isInstanceOf(DomainException.class)
+                .satisfies(ex -> assertThat(((DomainException) ex).getKey())
+                        .isEqualTo("msg.error.approval.not-found"));
+
+        verify(repository, never()).save(any());
     }
 }

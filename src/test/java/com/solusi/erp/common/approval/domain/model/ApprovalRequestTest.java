@@ -4,6 +4,8 @@ import com.solusi.erp.core.exception.DomainException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ApprovalRequestTest {
@@ -140,5 +142,114 @@ class ApprovalRequestTest {
         assertEquals(1, request.getHistories().size());
         assertEquals(ApprovalAction.REQUESTED, request.getHistories().get(0).action());
         assertEquals(99L, request.getHistories().get(0).actorId());
+    }
+
+    // --- forward tests ---
+
+    @Test
+    @DisplayName("forward with valid input updates currentApproverId, keeps PENDING, records FORWARD history")
+    void forward_validInput_updatesCurrentApprover() {
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, 10L, 50L);
+
+        request.forward(50L, 60L, "Forwarding to manager");
+
+        assertThat(request.getCurrentApproverId()).isEqualTo(60L);
+        assertThat(request.getStatus()).isEqualTo(ApprovalStatus.PENDING);
+        assertThat(request.getHistories()).hasSize(2);
+
+        ApprovalHistory history = request.getHistories().get(1);
+        assertThat(history.action()).isEqualTo(ApprovalAction.FORWARD);
+        assertThat(history.actorId()).isEqualTo(50L);
+        assertThat(history.targetApproverId()).isEqualTo(60L);
+        assertThat(history.notes()).isEqualTo("Forwarding to manager");
+    }
+
+    @Test
+    @DisplayName("forward to self throws cannot-forward-to-self")
+    void forward_toSelf_throwsException() {
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, 10L, 50L);
+
+        assertThatThrownBy(() -> request.forward(50L, 50L, "Self forward"))
+                .isInstanceOf(DomainException.class)
+                .satisfies(ex -> assertThat(((DomainException) ex).getKey())
+                        .isEqualTo("msg.error.approval.cannot-forward-to-self"));
+    }
+
+    @Test
+    @DisplayName("forward with null target throws target-approver-required")
+    void forward_nullTarget_throwsException() {
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, 10L, 50L);
+
+        assertThatThrownBy(() -> request.forward(50L, null, "No target"))
+                .isInstanceOf(DomainException.class)
+                .satisfies(ex -> assertThat(((DomainException) ex).getKey())
+                        .isEqualTo("msg.error.approval.target-approver-required"));
+    }
+
+    @Test
+    @DisplayName("forward with blank notes throws reason-required")
+    void forward_blankNotes_throwsException() {
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, 10L, 50L);
+
+        assertThatThrownBy(() -> request.forward(50L, 60L, "   "))
+                .isInstanceOf(DomainException.class)
+                .satisfies(ex -> assertThat(((DomainException) ex).getKey())
+                        .isEqualTo("msg.error.approval.reason-required"));
+    }
+
+    // --- approveAndForward tests ---
+
+    @Test
+    @DisplayName("approveAndForward with valid input updates currentApproverId, keeps PENDING")
+    void approveAndForward_validInput_updatesCurrentApprover() {
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, 10L, 50L);
+
+        request.approveAndForward(50L, 70L, "Approved, forwarding to director");
+
+        assertThat(request.getCurrentApproverId()).isEqualTo(70L);
+        assertThat(request.getStatus()).isEqualTo(ApprovalStatus.PENDING);
+        assertThat(request.getHistories()).hasSize(2);
+
+        ApprovalHistory history = request.getHistories().get(1);
+        assertThat(history.action()).isEqualTo(ApprovalAction.APPROVE_AND_FORWARD);
+        assertThat(history.actorId()).isEqualTo(50L);
+        assertThat(history.targetApproverId()).isEqualTo(70L);
+    }
+
+    @Test
+    @DisplayName("approveAndForward to self throws cannot-forward-to-self")
+    void approveAndForward_toSelf_throwsException() {
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, 10L, 50L);
+
+        assertThatThrownBy(() -> request.approveAndForward(50L, 50L, "Self forward"))
+                .isInstanceOf(DomainException.class)
+                .satisfies(ex -> assertThat(((DomainException) ex).getKey())
+                        .isEqualTo("msg.error.approval.cannot-forward-to-self"));
+    }
+
+    // --- createNew with approverId ---
+
+    @Test
+    @DisplayName("createNew sets currentApproverId correctly")
+    void createNew_setsCurrentApproverId() {
+        Long approverId = 99L;
+
+        ApprovalRequest request = ApprovalRequest.createNew("STOCK", 200L, 1L, approverId);
+
+        assertThat(request.getCurrentApproverId()).isEqualTo(approverId);
+        assertThat(request.getStatus()).isEqualTo(ApprovalStatus.PENDING);
+    }
+
+    // --- approve with blank notes ---
+
+    @Test
+    @DisplayName("approve with blank notes throws reason-required")
+    void approve_blankNotes_throwsException() {
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, 10L, 50L);
+
+        assertThatThrownBy(() -> request.approve(50L, ""))
+                .isInstanceOf(DomainException.class)
+                .satisfies(ex -> assertThat(((DomainException) ex).getKey())
+                        .isEqualTo("msg.error.approval.reason-required"));
     }
 }

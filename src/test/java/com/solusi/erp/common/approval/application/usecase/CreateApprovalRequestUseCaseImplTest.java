@@ -11,6 +11,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -90,5 +91,24 @@ class CreateApprovalRequestUseCaseImplTest {
         useCase.execute("NEWS", 1L, "admin", null);
 
         verify(repository, times(1)).save(any(ApprovalRequest.class));
+    }
+
+    @Test
+    @DisplayName("Should create request with approverId setting currentApprover")
+    void execute_withApproverId_setsCurrentApprover() {
+        Long approverId = 42L;
+        when(repository.save(any(ApprovalRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ApprovalRequest result = useCase.execute("STOCK", 200L, "admin", approverId);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getCurrentApproverId()).isEqualTo(approverId);
+        assertThat(result.getStatus()).isEqualTo(ApprovalStatus.PENDING);
+        assertThat(result.getReferenceType()).isEqualTo("STOCK");
+        assertThat(result.getReferenceId()).isEqualTo(200L);
+
+        ArgumentCaptor<ApprovalRequest> captor = ArgumentCaptor.forClass(ApprovalRequest.class);
+        verify(repository).save(captor.capture());
+        assertThat(captor.getValue().getCurrentApproverId()).isEqualTo(approverId);
     }
 }
