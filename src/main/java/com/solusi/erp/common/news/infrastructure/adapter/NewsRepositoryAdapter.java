@@ -6,6 +6,9 @@ import com.solusi.erp.common.news.domain.repository.NewsRepository;
 import com.solusi.erp.common.news.infrastructure.persistence.NewsEntity;
 import com.solusi.erp.common.news.infrastructure.persistence.NewsJpaRepository;
 import com.solusi.erp.common.news.infrastructure.persistence.NewsPersistenceMapper;
+import com.solusi.erp.core.domain.model.Page;
+import com.solusi.erp.core.domain.model.Pageable;
+import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -54,5 +57,16 @@ public class NewsRepositoryAdapter implements NewsRepository {
         return jpaRepository.findAll().stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<News> findAll(String keyword, Pageable pageable) {
+        org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
+        org.springframework.data.domain.Page<NewsEntity> entityPage =
+                jpaRepository.findAllByKeyword(keyword, springPageable);
+        List<News> content = entityPage.getContent().stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+        return new Page<>(content, entityPage.getNumber(), entityPage.getSize(), entityPage.getTotalElements());
     }
 }

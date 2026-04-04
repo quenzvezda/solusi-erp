@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.approval.list.title})}"></head>
+
+<body th:replace="~{layout/master :: layout(~{:: .approval-list-content}, ~{})}">
+<div class="approval-list-content">
+
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title" th:text="#{label.approval.list.title}">Persetujuan Pending</h2>
+                    <div class="text-secondary mt-1" th:text="#{label.approval.list.subtitle}">
+                        Daftar item yang membutuhkan persetujuan Anda.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="card">
+                <div id="approval-table-container" th:fragment="approval-table-container">
+                    <div class="table-responsive">
+                        <table class="table card-table table-vcenter">
+                            <thead>
+                                <tr>
+                                    <th th:text="#{label.approval.reference-type}">Tipe Dokumen</th>
+                                    <th th:text="#{label.approval.reference-id}">ID Dokumen</th>
+                                    <th th:text="#{label.approval.status}">Status</th>
+                                    <th th:text="#{label.approval.submitted-date}">Tanggal Diajukan</th>
+                                    <th class="w-1" th:text="#{label.actions}">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="item : ${page.content}">
+                                    <td>
+                                        <span class="badge bg-blue-lt" th:text="${item.referenceType}">NEWS</span>
+                                    </td>
+                                    <td th:text="${item.referenceId}">#1</td>
+                                    <td>
+                                        <span class="badge bg-warning-lt">
+                                            <span th:text="#{label.approval.status.pending}">Pending</span>
+                                        </span>
+                                    </td>
+                                    <td th:text="${item.histories != null and !item.histories.isEmpty() ?
+                                                   #temporals.format(item.histories[0].actionDate, 'dd MMM yyyy HH:mm') : '-'}">-</td>
+                                    <td>
+                                        <div class="btn-list flex-nowrap justify-content-end">
+                                            <!-- Link to source document by referenceType -->
+                                            <a th:if="${item.referenceType == 'NEWS'}"
+                                               th:href="@{/common/news/{id}(id=${item.referenceId})}"
+                                               class="btn btn-primary btn-sm"
+                                               sec:authorize="hasAuthority('APPROVAL_PROCESS')">
+                                                <i class="ti ti-eye me-1"></i>
+                                                <span th:text="#{label.approval.btn.view-process}">Lihat & Proses</span>
+                                            </a>
+                                            <span th:if="${item.referenceType != 'NEWS'}"
+                                                  class="text-secondary small"
+                                                  th:text="'#' + ${item.referenceId}"></span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${page.isEmpty()}">
+                                    <td colspan="5" class="text-center py-4 text-secondary">
+                                        <i class="ti ti-check-circle me-2 text-success"></i>
+                                        <span th:text="#{label.approval.empty}">Tidak ada persetujuan yang perlu diproses.</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

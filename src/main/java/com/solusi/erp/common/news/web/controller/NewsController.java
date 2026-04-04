@@ -1,6 +1,5 @@
 package com.solusi.erp.common.news.web.controller;
 
-import com.solusi.erp.common.approval.application.usecase.CreateApprovalRequestUseCase;
 import com.solusi.erp.common.approval.domain.model.ApprovalRequest;
 import com.solusi.erp.common.approval.domain.repository.ApprovalRequestRepository;
 import com.solusi.erp.common.news.application.usecase.command.CreateNewsUseCase;
@@ -11,12 +10,17 @@ import com.solusi.erp.common.news.domain.repository.NewsRepository;
 import com.solusi.erp.common.news.web.dto.NewsSaveRequest;
 import com.solusi.erp.common.news.web.dto.NewsDetailResponse;
 import com.solusi.erp.common.news.web.mapper.NewsWebMapper;
+import com.solusi.erp.core.annotation.DefaultRedirectUrl;
+import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.core.exception.DomainException;
+import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Web Controller for News.
@@ -34,6 +39,7 @@ import java.util.Optional;
 @Controller
 @RequestMapping("/common/news")
 @RequiredArgsConstructor
+@DefaultRedirectUrl
 public class NewsController {
 
     private final CreateNewsUseCase createNewsUseCase;
@@ -46,12 +52,20 @@ public class NewsController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('NEWS_READ')")
-    public String list(Model model) {
-        List<News> newsList = newsRepository.findAll();
-        List<NewsDetailResponse> responses = newsList.stream()
+    public String list(@RequestParam(required = false) String keyword,
+                       org.springframework.data.domain.Pageable springPageable,
+                       Model model) {
+        Pageable domainPageable = PageableMapper.toDomain(springPageable);
+        com.solusi.erp.core.domain.model.Page<News> domainPage =
+                newsRepository.findAll(keyword, domainPageable);
+
+        List<NewsDetailResponse> content = domainPage.content().stream()
                 .map(webMapper::toResponse)
-                .toList();
-        model.addAttribute("newsList", responses);
+                .collect(Collectors.toList());
+
+        Page<NewsDetailResponse> springPage = new PageImpl<>(content, springPageable, domainPage.totalElements());
+        model.addAttribute("page", springPage);
+        model.addAttribute("keyword", keyword);
         return "common/news/list";
     }
 
@@ -91,12 +105,9 @@ public class NewsController {
     @ResponseBody
     public ResponseEntity<ApiResponse<NewsDetailResponse>> create(@Valid @RequestBody NewsSaveRequest request) {
         String author = SecurityContextHolder.getContext().getAuthentication().getName();
-
         News domain = createNewsUseCase.execute(request.getTitle(), request.getContent(), author);
-
         NewsDetailResponse response = webMapper.toResponse(domain);
         String msg = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
-
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(msg, response));
     }
 
@@ -106,12 +117,9 @@ public class NewsController {
     public ResponseEntity<ApiResponse<NewsDetailResponse>> update(
             @PathVariable Long id,
             @Valid @RequestBody NewsSaveRequest request) {
-
         News domain = updateNewsUseCase.execute(id, request.getTitle(), request.getContent());
-
         NewsDetailResponse response = webMapper.toResponse(domain);
         String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
-
         return ResponseEntity.ok(ApiResponse.success(msg, response));
     }
 
@@ -121,10 +129,8 @@ public class NewsController {
     public ResponseEntity<ApiResponse<NewsDetailResponse>> submitForApproval(@PathVariable Long id) {
         String requester = SecurityContextHolder.getContext().getAuthentication().getName();
         News domain = submitNewsForApprovalUseCase.execute(id, requester);
-
         NewsDetailResponse response = webMapper.toResponse(domain);
         String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
-
         return ResponseEntity.ok(ApiResponse.success(msg, response));
     }
 }

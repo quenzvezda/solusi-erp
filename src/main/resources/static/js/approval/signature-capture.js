@@ -122,7 +122,7 @@ const ApprovalUI = (() => {
         // Merge CSRF header from hx-headers if available
         Object.assign(headers, csrfHeaderName);
 
-        fetch(`/approval/${requestId}/process`, {
+        fetch(`/common/approval/${requestId}/process`, {
             method: 'POST',
             headers,
             body: JSON.stringify(payload),

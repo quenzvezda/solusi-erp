@@ -10,28 +10,37 @@ import com.solusi.erp.common.approval.web.dto.ApprovalSignatureResponse;
 import com.solusi.erp.common.approval.web.dto.ApprovalStatusResponse;
 import com.solusi.erp.common.approval.web.dto.ProcessApprovalRequest;
 import com.solusi.erp.common.approval.web.mapper.ApprovalWebMapper;
+import com.solusi.erp.core.annotation.DefaultRedirectUrl;
+import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.core.exception.DomainException;
+import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Web controller for Approval actions and timeline display.
  * Endpoints are generic — usable by any module (News, StockAdjustment, etc.).
  */
 @Controller
-@RequestMapping("/approval")
+@RequestMapping("/common/approval")
 @RequiredArgsConstructor
+@DefaultRedirectUrl
 public class ApprovalController {
 
     private final ProcessApprovalUseCase processApprovalUseCase;
@@ -42,10 +51,31 @@ public class ApprovalController {
     private final MessageSource messageSource;
 
     /**
-     * POST /approval/{requestId}/process
+     * GET /common/approval
+     * Shows list of PENDING approvals.
+     */
+    @GetMapping
+    @PreAuthorize("hasAuthority('APPROVAL_READ')")
+    public String list(org.springframework.data.domain.Pageable springPageable, Model model) {
+        Pageable domainPageable = PageableMapper.toDomain(springPageable);
+        com.solusi.erp.core.domain.model.Page<ApprovalRequest> domainPage =
+                approvalRequestRepository.findPendingApprovals(domainPageable);
+
+        List<ApprovalStatusResponse> content = domainPage.content().stream()
+                .map(webMapper::toStatusResponse)
+                .collect(Collectors.toList());
+
+        Page<ApprovalStatusResponse> springPage = new PageImpl<>(content, springPageable, domainPage.totalElements());
+        model.addAttribute("page", springPage);
+        return "common/approval/list";
+    }
+
+    /**
+     * POST /common/approval/{requestId}/process
      * Approves or rejects an approval request, optionally saving a digital signature.
      */
     @PostMapping("/{requestId}/process")
+    @PreAuthorize("hasAuthority('APPROVAL_PROCESS')")
     @ResponseBody
     public ResponseEntity<ApiResponse<ApprovalStatusResponse>> process(
             @PathVariable Long requestId,
@@ -74,23 +104,23 @@ public class ApprovalController {
     }
 
     /**
-     * GET /approval/{requestId}/history
+     * GET /common/approval/{requestId}/history
      * Returns an HTMX fragment containing the approval timeline.
      */
     @GetMapping("/{requestId}/history")
     public String history(@PathVariable Long requestId, Model model) {
         ApprovalRequest request = approvalRequestRepository.findById(requestId)
                 .orElseThrow(() -> new DomainException("msg.error.approval.not-found"));
-
         model.addAttribute("approval", webMapper.toStatusResponse(request));
         return "fragments/approval :: timeline";
     }
 
     /**
-     * GET /approval/{requestId}/signature
+     * GET /common/approval/{requestId}/signature
      * Returns the signature URL for a given approval request (JSON).
      */
     @GetMapping("/{requestId}/signature")
+    @PreAuthorize("hasAuthority('APPROVAL_READ')")
     @ResponseBody
     public ResponseEntity<ApiResponse<ApprovalSignatureResponse>> signature(@PathVariable Long requestId) {
         Optional<ApprovalSignature> sig = getApprovalSignatureUrlUseCase.findByRequestId(requestId);

@@ -1,5 +1,8 @@
 package com.solusi.erp.common.approval.infrastructure.persistence;
 
+import com.solusi.erp.common.approval.domain.model.ApprovalStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
@@ -15,4 +18,9 @@ public interface ApprovalRequestJpaRepository extends JpaRepository<ApprovalRequ
     @EntityGraph(attributePaths = "histories")
     @Override
     Optional<ApprovalRequestEntity> findById(Long id);
+
+    @EntityGraph(attributePaths = "histories")
+    Page<ApprovalRequestEntity> findByStatus(ApprovalStatus status, Pageable pageable);
+
+    long countByStatus(ApprovalStatus status);
 }

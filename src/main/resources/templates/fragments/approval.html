@@ -55,7 +55,7 @@
 
         <!-- Approval Timeline (HTMX-loaded) -->
         <div id="approval-timeline"
-             th:attr="hx-get='/approval/' + ${requestId} + '/history'"
+             th:attr="hx-get='/common/approval/' + ${requestId} + '/history'"
              hx-trigger="load, approvalProcessed from:body"
              hx-swap="innerHTML">
             <div class="text-center text-muted py-3">

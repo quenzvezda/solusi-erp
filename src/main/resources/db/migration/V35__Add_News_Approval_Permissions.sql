@@ -5,7 +5,7 @@
 -- 1. Insert Permission Groups
 INSERT INTO permission_groups (code, name_id, name_en, breadcrumb_id, breadcrumb_en, url_path, icon_class, description_id, description_en, created_by_user_id, created_date) VALUES
 ('COM-01', 'Berita', 'News', 'Operasional > Aplikasi > Berita', 'Operations > Application > News', '/common/news', 'ti-news', 'Manajemen konten berita', 'Manage news content', 1, NOW()),
-('COM-02', 'Persetujuan', 'Approvals', 'Operasional > Aplikasi > Persetujuan', 'Operations > Application > Approvals', '/approval', 'ti-checkbox', 'Manajemen persetujuan', 'Manage generic approvals', 1, NOW());
+('COM-02', 'Persetujuan', 'Approvals', 'Operasional > Aplikasi > Persetujuan', 'Operations > Application > Approvals', '/common/approval', 'ti-checkbox', 'Manajemen persetujuan', 'Manage generic approvals', 1, NOW());
 
 -- 2. Insert Permissions for News
 INSERT INTO permissions (name, description, created_by_user_id, created_date, permission_group_id) VALUES
