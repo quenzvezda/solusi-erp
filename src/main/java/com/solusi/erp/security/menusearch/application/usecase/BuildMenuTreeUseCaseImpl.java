@@ -16,6 +16,8 @@ public class BuildMenuTreeUseCaseImpl implements BuildMenuTreeUseCase {
             Map.entry("Master Data", "ti-database"),
             Map.entry("Finance Settings", "ti-receipt-tax"),
             Map.entry("Operations", "ti-briefcase"),
+            // Application parent (folder under Operations) -- provide an icon so "Operations > Application" is not generic
+            Map.entry("Application", "ti-apps"),
             Map.entry("Inventory", "ti-packages"),
             Map.entry("Inventory Management", "ti-packages"),
             Map.entry("Inventory Setup", "ti-settings"),

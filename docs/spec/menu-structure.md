@@ -31,6 +31,11 @@ Dokumen ini mendefinisikan standar hirarki menu (Breadcrumb) yang digunakan di s
     - Rekening Bank (`MST-03`)
 
 ### B. Operations (Inti Bisnis)
+
+- **Application**
+    - Berita (`COM-01`)
+    - Persetujuan (`COM-02`)
+
 - **Inventory Setup**
     - Produk (`INV-01`)
     - Kategori Produk (`INV-02`)
