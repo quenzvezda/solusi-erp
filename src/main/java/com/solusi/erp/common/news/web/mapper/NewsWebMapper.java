@@ -3,6 +3,7 @@ package com.solusi.erp.common.news.web.mapper;
 import com.solusi.erp.common.news.domain.model.News;
 import com.solusi.erp.common.news.web.dto.NewsSaveRequest;
 import com.solusi.erp.common.news.web.dto.NewsDetailResponse;
+import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.mapper.AuditMapperHelper;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
@@ -30,6 +31,16 @@ public interface NewsWebMapper {
     default void applyNewsIds(News source, @MappingTarget NewsDetailResponse target) {
         target.setId(source.getId());
         target.setVersion(source.getVersion() != null ? source.getVersion().intValue() : null);
+    }
+
+    @AfterMapping
+    default void applyAuditDates(News source, @MappingTarget NewsDetailResponse target) {
+        AuditMetadata meta = source.getMetadata();
+        if (meta != null) {
+            target.setCreatedDate(meta.createdDate());
+            target.setUpdatedDate(meta.updatedDate());
+            // User names are not carried in the domain model; they remain null (shows "-")
+        }
     }
 
     @AfterMapping

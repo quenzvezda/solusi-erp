@@ -8,6 +8,7 @@ import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +25,7 @@ public class ApprovalRequestRepositoryImpl implements ApprovalRequestRepository 
     private final ApprovalPersistenceMapper mapper;
 
     @Override
+    @Transactional
     public ApprovalRequest save(ApprovalRequest request) {
         ApprovalRequestEntity entity = mapper.toEntity(request);
         ApprovalRequestEntity saved = jpaRepository.save(entity);
@@ -31,17 +33,20 @@ public class ApprovalRequestRepositoryImpl implements ApprovalRequestRepository 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<ApprovalRequest> findById(Long id) {
         return jpaRepository.findById(id).map(mapper::toDomain);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<ApprovalRequest> findByReference(String referenceType, Long referenceId) {
         return jpaRepository.findByReferenceTypeAndReferenceId(referenceType, referenceId)
             .map(mapper::toDomain);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<ApprovalRequest> findPendingApprovals(Pageable pageable) {
         org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
         org.springframework.data.domain.Page<ApprovalRequestEntity> entityPage =
@@ -58,6 +63,7 @@ public class ApprovalRequestRepositoryImpl implements ApprovalRequestRepository 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<ApprovalRequest> findPendingApprovalsForApprover(Long approverPartyId, Pageable pageable) {
         org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
         org.springframework.data.domain.Page<ApprovalRequestEntity> entityPage =

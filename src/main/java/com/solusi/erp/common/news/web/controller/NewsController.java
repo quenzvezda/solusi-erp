@@ -85,6 +85,7 @@ public class NewsController {
                 approvalRequestRepository.findByReference("NEWS", id);
         approvalRequest.ifPresent(req -> {
             model.addAttribute("approvalRequestId", req.getId());
+            model.addAttribute("approvalStatus", req.getStatus());
             boolean isCurrentApprover = false;
             if (principal instanceof SecurityUser securityUser) {
                 Long partyId = securityUser.user().getPartyId();

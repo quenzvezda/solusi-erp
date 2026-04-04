@@ -1,6 +1,6 @@
 # Arsitektur Generic Approval System
 
-Status: **Phase 3 Selesai — Multi-Action Workflow, Approver Selection & Guard** ✅
+Status: **Phase 4 Selesai — UI Polish, Approval History Drawer, Dynamic Status Badge** ✅
 
 Sistem Approval yang dirancang agar *generic* dan dapat diimplementasikan ke berbagai modul transaksi tanpa memerlukan *hard-coding* relasi database antar modul (mencegah *tight-coupling*).
 
@@ -153,19 +153,25 @@ eventPublisher.publishEvent(new ApprovalRequestedEvent("STOCK_ADJUSTMENT", adjId
 ```html
 <!-- Di adjustment/detail.html -->
 <th:block th:if="${approvalRequestId != null}">
-    <div th:replace="~{fragments/approval :: approve-reject-panel(${approvalRequestId}, ${isCurrentApprover})}"></div>
+    <div th:replace="~{fragments/approval :: approve-reject-panel(${approvalRequestId}, ${isCurrentApprover}, ${approvalStatus})}"></div>
+</th:block>
+<!-- Drawer history (sebelum </body>) -->
+<th:block th:if="${approvalRequestId != null}">
+    <div th:replace="~{fragments/approval :: approval-history-drawer(${approvalRequestId})}"></div>
 </th:block>
 ```
 
-**Langkah 3 — Controller pass isCurrentApprover:**
+**Langkah 3 — Controller pass approvalStatus + isCurrentApprover:**
 ```java
 // Di detail endpoint controller
 approvalRequest.ifPresent(req -> {
     model.addAttribute("approvalRequestId", req.getId());
+    model.addAttribute("approvalStatus", req.getStatus());
     boolean isCurrentApprover = false;
     if (principal instanceof SecurityUser su) {
         Long partyId = su.user().getPartyId();
-        isCurrentApprover = partyId != null && partyId.equals(req.getCurrentApproverId());
+        isCurrentApprover = partyId != null && partyId.equals(req.getCurrentApproverId())
+                && req.getStatus() == ApprovalStatus.PENDING;
     }
     model.addAttribute("isCurrentApprover", isCurrentApprover);
 });
@@ -184,18 +190,38 @@ void onApprovalCompleted(ApprovalCompletedEvent event) {
 ### Fragment yang Tersedia
 
 ```html
-<!-- Panel aksi (4 tombol) + timeline (paling sering dipakai) -->
-<!-- isCurrentApprover: boolean — tombol hanya muncul jika true -->
-<div th:replace="~{fragments/approval :: approve-reject-panel(${approvalRequestId}, ${isCurrentApprover})}"></div>
+<!-- Panel aksi (4 tombol) + badge status — sematkan di right sidebar -->
+<!-- requestId: Long, isCurrentApprover: boolean, approvalStatus: ApprovalStatus enum -->
+<div th:replace="~{fragments/approval :: approve-reject-panel(${approvalRequestId}, ${isCurrentApprover}, ${approvalStatus})}"></div>
 
-<!-- Timeline saja (HTMX-loaded) -->
-<div th:replace="~{fragments/approval :: timeline}"></div>
+<!-- Drawer riwayat approval (sematkan sebelum </body>) -->
+<div th:replace="~{fragments/approval :: approval-history-drawer(${approvalRequestId})}"></div>
+
+<!-- Tombol buka drawer (sematkan di page header btn-list) -->
+<button th:if="${approvalRequestId != null}" type="button" class="btn btn-white"
+        onclick="ErpDrawer.open('drawer-approval-history')">
+    <i class="ti ti-history me-1"></i>
+    <span th:text="#{label.approval.history}">Riwayat Persetujuan</span>
+</button>
 
 <!-- Modal signature capture (sudah disertakan global di master.html) -->
 <!-- 4 modal: approve-finish, approve-forward, forward, reject -->
 ```
 
-### Aksi yang Tersedia
+### Status Badge
+
+| Status    | Warna Badge        | i18n key                              |
+|-----------|--------------------|---------------------------------------|
+| PENDING   | `bg-yellow-lt`     | `label.approval.status.pending`       |
+| COMPLETED | `bg-success-lt`    | `label.approval.status.completed`     |
+| REJECTED  | `bg-danger-lt`     | `label.approval.status.rejected`      |
+| CANCELLED | `bg-secondary-lt`  | `label.approval.status.cancelled`     |
+
+### Approval History Drawer
+
+History dimuat via HTMX GET ke `/common/approval/{requestId}/history` setiap kali drawer dibuka.
+Setelah action selesai, JS mendispatch event `approvalProcessed` pada `document.body`
+yang memicu reload otomatis history di dalam drawer.
 
 | Action | Signature | Target Approver | Notes | Status Setelah |
 |--------|-----------|-----------------|-------|----------------|

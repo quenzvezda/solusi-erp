@@ -21,6 +21,14 @@
                 </div>
                 <div class="col-auto ms-auto d-print-none">
                     <div class="btn-list">
+                        <!-- Approval History button (only when approval exists) -->
+                        <button th:if="${approvalRequestId != null}"
+                                type="button"
+                                class="btn btn-white"
+                                onclick="ErpDrawer.open('drawer-approval-history')">
+                            <i class="ti ti-history me-1"></i>
+                            <span th:text="#{label.approval.history}">Approval History</span>
+                        </button>
                         <a th:href="@{/common/news}" class="btn btn-white">
                             <i class="ti ti-arrow-left me-1"></i>
                             <span th:text="#{label.back}">Back</span>
@@ -60,14 +68,9 @@
                             <p class="text-secondary" style="white-space: pre-wrap;" th:text="${news.content}">Content here</p>
                         </div>
                     </div>
-
-                    <!-- Approval Panel (only shown if approval exists) -->
-                    <th:block th:if="${approvalRequestId != null}">
-                        <div th:replace="~{fragments/approval :: approve-reject-panel(${approvalRequestId}, ${isCurrentApprover})}"></div>
-                    </th:block>
                 </div>
 
-                <!-- Right: Metadata -->
+                <!-- Right: Metadata + Approval -->
                 <div class="col-lg-4">
                     <div class="card">
                         <div class="card-header">
@@ -91,12 +94,23 @@
                         </div>
                     </div>
 
-                    <div th:replace="~{fragments/audit-info :: audit-info(${news})}"></div>
+                    <!-- Compact Approval Decision Card (only shown if approval exists) -->
+                    <th:block th:if="${approvalRequestId != null}">
+                        <div th:replace="~{fragments/approval :: approve-reject-panel(${approvalRequestId}, ${isCurrentApprover}, ${approvalStatus})}"></div>
+                    </th:block>
                 </div>
 
             </div>
+
+            <!-- Audit Info — full-width strip below the 2-column layout -->
+            <div th:replace="~{fragments/audit-info :: audit-info(${news})}"></div>
         </div>
     </div>
+
+    <!-- Approval History Drawer (only when approval exists) -->
+    <th:block th:if="${approvalRequestId != null}">
+        <div th:replace="~{fragments/approval :: approval-history-drawer(${approvalRequestId})}"></div>
+    </th:block>
 
 </div>
 
