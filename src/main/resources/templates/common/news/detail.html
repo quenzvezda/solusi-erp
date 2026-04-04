@@ -62,8 +62,9 @@
                     </div>
 
                     <!-- Approval Panel (only shown if approval exists) -->
-                    <div th:if="${approvalRequestId != null}"
-                         th:replace="~{fragments/approval :: approve-reject-panel(${approvalRequestId})}"></div>
+                    <th:block th:if="${approvalRequestId != null}">
+                        <div th:replace="~{fragments/approval :: approve-reject-panel(${approvalRequestId})}"></div>
+                    </th:block>
                 </div>
 
                 <!-- Right: Metadata -->
@@ -106,25 +107,29 @@
     const csrfToken = /*[[${_csrf.token}]]*/ '';
 
     function submitForApproval(id) {
-        if (!confirm('Submit this news for approval?')) return;
-
-        fetch(`/common/news/${id}/submit-for-approval`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                [csrfHeader]: csrfToken
-            }
-        })
-        .then(async res => {
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || 'Error');
-            window.location.reload();
-        })
-        .catch(err => {
-            if (window.ErpModal) ErpModal.showError(err.message);
-            else alert(err.message);
-        });
+        ErpModal.confirm(
+            'Submit this news for approval?',
+            () => {
+                fetch(`/common/news/${id}/submit-for-approval`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        [csrfHeader]: csrfToken
+                    }
+                })
+                .then(async res => {
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.message || 'Error');
+                    window.location.reload();
+                })
+                .catch(err => {
+                    if (window.ErpModal) ErpModal.showError(err.message);
+                    else alert(err.message);
+                });
+            },
+            'Submit for Approval'
+        );
     }
 </script>
 </div>

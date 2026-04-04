@@ -91,9 +91,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-1">
                         <strong class="me-auto"
-                                th:text="${h.action == 'REQUESTED' ? #{label.approval.action.requested} :
-                                         (h.action == 'APPROVE_AND_FINISH' ? #{label.approval.action.approve_and_finish} :
-                                          #{label.approval.action.rejected})}">Action</strong>
+                                th:text="${#messages.msg('label.approval.action.' + #strings.toLowerCase(h.action))}">Action</strong>
                         <span class="text-muted small" th:text="${#temporals.format(h.actionDate, 'dd MMM yyyy HH:mm')}">Date</span>
                     </div>
                     <p class="text-secondary small mb-0" th:text="${h.notes ?: '-'}">Notes</p>

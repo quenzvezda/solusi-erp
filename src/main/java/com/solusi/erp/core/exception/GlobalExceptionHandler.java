@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.ui.Model;
@@ -83,8 +84,9 @@ public class GlobalExceptionHandler {
         log.error("Exception occurred: ", ex);
 
         if (isAjaxRequest(request)) {
-            response.resetBuffer(); 
+            response.resetBuffer();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(ApiResponse.error(ex.getMessage()));
         }
 
@@ -132,6 +134,7 @@ public class GlobalExceptionHandler {
         
         if (isAjaxRequest(request)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(ApiResponse.error("Access Denied"));
         }
         
@@ -147,6 +150,7 @@ public class GlobalExceptionHandler {
         
         if (isAjaxRequest(request)) {
             return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(ApiResponse.error(ex.getMessage()));
         }
         
@@ -163,6 +167,7 @@ public class GlobalExceptionHandler {
         
         if (isAjaxRequest(request)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(ApiResponse.error("Resource not found"));
         }
         

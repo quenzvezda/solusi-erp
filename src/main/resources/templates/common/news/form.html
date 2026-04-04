@@ -28,7 +28,7 @@
                   class="card"
                   id="news-form"
                   data-ajax-form="true"
-                  th:attr="data-redirect-on-success='/common/news/' + (${news.id} != null ? ${news.id} : '')">
+                  th:attr="data-redirect-on-success=${news.id != null ? '/common/news/' + news.id : '/common/news'}">
 
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                 <input type="hidden" th:field="*{id}"/>
