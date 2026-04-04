@@ -134,13 +134,192 @@ Saat menghasilkan kode:
 4.  **Strategic replace Tool Usage:** The replace tool requires an exact literal match for `old_string` and is highly sensitive to whitespace. Avoid replacing large, complex blocks of code. Prefer smaller, more targeted replacements. Always re-read the target file immediately before executing a replace command to ensure the `old_string` is based on the file's current content.
 5.  **Wajib Membaca Referensi & Contoh Eksisting:** DILARANG keras berasumsi tentang komponen UI, spesifikasi teknis, atau fitur bisnis yang sudah ada. Jika tugas berkaitan dengan modul baru/lama, AI **WAJIB** membaca dokumen spesifikasi teknis di direktori `docs/spec/` dan dokumentasi proses bisnis di `docs/modules/`. AI **DISARANKAN KUAT** untuk memeriksa *source code* serupa yang sudah stabil (seperti `Product` atau `Tax`) sebagai template *best practice* sebelum membuat kode.
 
-## 10. Cold Start Strategy (Initial Setup)
+## 9.A Semantic Versioning Automation (WAJIB DITERAPKAN)
+Untuk menjaga konsistensi dan automatisasi versioning, setiap agent **WAJIB** mengikuti protokol berikut setelah menyelesaikan implementasi dan testing:
+
+### 9.A.1 Automatic Version Bump Decision
+Setelah task implementation + test selesai dan SEMUA test lulus, agent **WAJIB**:
+1.  **Analisis konteks perubahan** untuk menentukan jenis bump:
+    *   **MAJOR (x.0.0)**: Breaking API changes, perubahan arsitektural fundamental, atau perubahan flow bisnis yang signifikan
+    *   **MINOR (0.x.0)**: Penambahan fitur baru, modul baru, atau enhancement yang kompatibel backward
+    *   **PATCH (0.0.x)**: Bug fixes, optimasi performa, refactoring kecil, atau perbaikan dokumentasi
+2.  **Update `pom.xml` version** secara otomatis berdasarkan keputusan di atas
+3.  **Tidak perlu menunggu konfirmasi user** — lakukan update langsung jika task sudah complete dan tested
+
+### 9.A.2 Version Format
+Format versi mengikuti **Semantic Versioning 2.0.0**:
+- **Format:** `MAJOR.MINOR.PATCH`
+- **Contoh progression:** `1.0.0` → `1.1.0` (feature) → `1.1.1` (patch) → `2.0.0` (breaking)
+- **Current version:** Lihat `<version>` di `pom.xml` (currently: `1.0.0`)
+
+### 9.A.3 Implementation Steps
+```bash
+# 1. Cek versi saat ini
+grep '<version>' pom.xml | head -1
+
+# 2. Update versi di pom.xml (ganti 1.0.0 dengan versi baru)
+# Gunakan tool edit untuk mengganti:
+# Old: <version>1.0.0</version>
+# New: <version>1.1.0</version>
+
+# 3. Run full test suite untuk konfirmasi
+.\mvnw.cmd clean test -q
+```
+
+---
+
+## 9.B Commit Message Documentation Workflow (WAJIB DITERAPKAN)
+Setelah setiap task (implementation + testing) selesai dengan sukses, agent **WAJIB** membuat/update file `commit.txt` di root project dengan saran pesan commit bahasa inggris format conventional. File ini **JANGAN langsung di-commit** — gunakan sebagai referensi untuk user:
+
+### 9.B.1 Commit Message Format
+Ikuti **Conventional Commits** dengan struktur:
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+**Penjelasan:**
+- **type**: `feat`, `fix`, `refactor`, `docs`, `chore`, `test`
+- **scope**: Modul atau komponen utama (contoh: `inventory-stock`, `security-user`, `core-pagination`)
+- **subject**: Pernyataan ringkas (imperative mood, lowercase, max 50 chars)
+- **body**: Detail perubahan apa & mengapa (optional, max 72 chars per line)
+- **footer**: Referensi ticket, breaking changes (optional)
+
+### 9.B.2 Commit Message Examples
+```
+feat(inventory-product): add bulk import from CSV
+
+- Support batch product creation with validation
+- Auto-generate product codes using SequenceGeneratorService
+- Add progress tracking for large imports (100+ items)
+
+This enables users to quickly populate product master data
+from external systems (legacy ERP, supplier catalogs).
+```
+
+```
+fix(security-rbac): correct permission filtering in sidebar
+
+Previously, parent menu items required individual permission checks.
+Now uses hasAnyAuthority() to correctly show menu if user has ANY
+child permission.
+
+Fixes: #123
+```
+
+```
+refactor(core-pagination): optimize page resolver query
+
+- Cache Pageable resolution results
+- Reduce database hits by 40% on list views with pagination
+- Backward compatible: no breaking changes
+```
+
+### 9.B.3 File Location & Generation
+- **File path:** `commit.txt` (di root repository, F:\solusi-program-erp\commit.txt)
+- **Update frequency:** Setiap kali task (impl + test) selesai
+- **Format file:** Satu commit message per task (append dengan separator line jika ada multiple)
+- **User workflow:** User membaca file ini sebelum manual git commit
+
+### 9.B.4 Implementation Steps
+```bash
+# Pada akhir task setelah .\mvnw.cmd clean test -q lulus:
+
+# 1. Tentukan jenis perubahan (feat/fix/refactor/etc)
+# 2. Tulis commit message mengikuti format Conventional Commits
+# 3. Create atau update commit.txt dengan isi:
+
+---
+Suggested commit message for this task:
+
+feat(inventory-stock): implement stock balance tracking
+
+- Add StockBalance entity with movement history
+- Track IN/OUT movements with MovementType enum
+- Implement StockServiceImpl with balance calculations
+- Add 15 new tests for balance operations
+
+Version bumped: 1.0.0 → 1.1.0 (Minor - new feature)
+
+---
+
+# 4. DO NOT commit langsung — biarkan user review & manual commit
+```
+
+### 9.B.5 Breaking Changes Handling
+Jika ada **breaking changes**, WAJIB:
+- Tambahkan `BREAKING CHANGE:` di footer commit message
+- Bump ke MAJOR version (x.0.0)
+- Dokumentasikan migration guide (jika diperlukan)
+
+Contoh:
+```
+refactor(security-auth)!: replace session-based with token-based auth
+
+BREAKING CHANGE: Session-based authentication removed.
+All clients must implement token-based auth using new
+AuthenticationService.authenticateWithToken() method.
+
+Migration guide: docs/migration/v2.0.0-token-migration.md
+```
+
+## 10. Frontend & E2E Debugging with MCP Playwright
+
+Untuk keperluan debugging frontend atau pengujian end-to-end, AI **WAJIB** menjalankan Spring Boot server secara mandiri menggunakan MCP Playwright. **DILARANG** meminta user untuk menjalankan server.
+
+### Menjalankan Server
+
+**Langkah 1 — Cek apakah server sudah berjalan:**
+```bash
+curl -s -o /dev/null -w "%{http_code}" http://localhost:18080/login
+```
+Jika response `200` atau `302`, server sudah aktif — **lewati langkah 2**.
+
+**Langkah 2 — Start server jika belum berjalan:**
+```bash
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=18080"
+```
+Jalankan sebagai **detached background process**. Tunggu hingga log menampilkan `Started ... in ... seconds` sebelum membuka browser.
+
+### Kredensial Default (Dev)
+| Field | Value |
+|-------|-------|
+| URL | `http://localhost:18080` |
+| Username | `admin` |
+| Password | `admin123` |
+
+> Kredensial ini hampir tidak pernah diubah di environment dev.
+
+### Alur Debugging dengan Playwright
+1. Pastikan server berjalan (langkah di atas).
+2. Gunakan `browser_navigate` ke `http://localhost:18080/login`.
+3. Login menggunakan kredensial default.
+4. Navigasi ke halaman yang ingin di-debug.
+5. Gunakan `browser_snapshot` untuk membaca accessibility tree, atau `browser_take_screenshot` untuk tangkapan visual.
+6. Gunakan `browser_console_messages` untuk melihat error JavaScript.
+7. Gunakan `browser_network_requests` untuk memeriksa AJAX/HTMX request dan response.
+
+### Catatan Penting
+- **Port wajib 18080** untuk sesi dev/debug. Jangan gunakan port lain agar tidak bentrok dengan environment lain.
+- Jika server gagal start (port sudah dipakai proses lain), lakukan `kill` pada PID yang menempati port tersebut sebelum mencoba ulang: `lsof -ti:18080 | xargs kill -9`.
+- Setelah debugging selesai, server boleh dibiarkan berjalan (persistent) untuk sesi berikutnya.
+
+## 11. Cold Start Strategy (Initial Setup)
 Untuk menjamin keamanan dan sinkronisasi enkripsi:
 *   **Seeder SQL**: Menggunakan placeholder `INITIAL_PASSWORD_SETUP` untuk password admin pertama.
 *   **SystemInitializer (Java)**: Sebuah `CommandLineRunner` yang mendeteksi placeholder tersebut dan menggantinya dengan hash BCrypt yang valid untuk password **`admin123`** saat aplikasi pertama kali dijalankan.
 *   **Force Reset**: Semua user baru (termasuk admin) wajib memiliki flag `password_change_required = true` di database.
 
-## 11. Understanding Documentation Structure
+## 11. Cold Start Strategy (Initial Setup)
+Untuk menjamin keamanan dan sinkronisasi enkripsi:
+*   **Seeder SQL**: Menggunakan placeholder `INITIAL_PASSWORD_SETUP` untuk password admin pertama.
+*   **SystemInitializer (Java)**: Sebuah `CommandLineRunner` yang mendeteksi placeholder tersebut dan menggantinya dengan hash BCrypt yang valid untuk password **`admin123`** saat aplikasi pertama kali dijalankan.
+*   **Force Reset**: Semua user baru (termasuk admin) wajib memiliki flag `password_change_required = true` di database.
+
+## 12. Understanding Documentation Structure
 Sistem ini menggunakan folder `docs/` terstruktur agar AI dan Developer dapat menemukan konteks secara mandiri. AI diharapkan inisiatif membuka dan membaca direktori ini jika kekurangan konteks:
 *   **`docs/architecture/`**: Visualisasi dan arsitektur klasifikasi (Class Diagram, Usecases, dll).
 *   **`docs/database/`**: Dokumentasi ERD dan definisi relasi antar identitas database ERP yang kompleks.
@@ -148,19 +327,34 @@ Sistem ini menggunakan folder `docs/` terstruktur agar AI dan Developer dapat me
 *   **`docs/spec/`**: Spesifikasi teknis horizontal/bersama yang dipakai seluruh fitur (misal: Tata cara standar `pagination.md`, `sequence-generator.md`, `search-menu.md`, atau `menu-structure.md`).
 *   **`docs/roadmap/`**: Dokumen perencanaan masa depan ERP atau fitur yang masih tertunda.
 
-## 12. Security & Role Permissions
+## 12. Understanding Documentation Structure
+Sistem ini menggunakan folder `docs/` terstruktur agar AI dan Developer dapat menemukan konteks secara mandiri. AI diharapkan inisiatif membuka dan membaca direktori ini jika kekurangan konteks:
+*   **`docs/architecture/`**: Visualisasi dan arsitektur klasifikasi (Class Diagram, Usecases, dll).
+*   **`docs/database/`**: Dokumentasi ERD dan definisi relasi antar identitas database ERP yang kompleks.
+*   **`docs/modules/`**: **[SANGAT PENTING UNTUK AI]** Penjelasan setiap Modul/Fitur bisnis spesifik (misal: `modules/master/tax.md`, `modules/master/currency.md`, `modules/security/permission-groups.md`). Jelajahi riwayat aturan modul melalui file ini.
+*   **`docs/spec/`**: Spesifikasi teknis horizontal/bersama yang dipakai seluruh fitur (misal: Tata cara standar `pagination.md`, `sequence-generator.md`, `search-menu.md`, atau `menu-structure.md`).
+*   **`docs/roadmap/`**: Dokumen perencanaan masa depan ERP atau fitur yang masih tertunda.
+
+## 13. Security & Role Permissions
 Aplikasi ini memiliki UI dinamis untuk Manajemen Role (Grouped Permissions) yang secara otomatis akan mengelompokkan daftar _permission_ ke dalam sebuah Folder berdasarkan **kata pertama sebelum underscore (`_`)**. Oleh sebab itu, konvensi penamaan permission sangatlah penting:
 1. **Modul Utama (CRUD)**: Gunakan format `[NAMA_MODUL]_[AKSI]`. 
    Contoh: `GEOGRAPHIC_READ`, `PRODUCT_CREATE`. Ini akan mengelompokkan mereka ke folder `GEOGRAPHIC` dan `PRODUCT`.
 2. **Fitur Lintas Modul (Shared Features)**: Gunakan *Prefix* jenis fiturnya, contohnya `LOOKUP_` untuk autocomplete popup, dan `POPUP_` untuk fitur modal/popup lainnya (misal: Popup selector item di transaksi).
    Contoh: `LOOKUP_GEOGRAPHIC`, `LOOKUP_PRODUCT`, `POPUP_PARTNER`. Ini akan membuat folder `LOOKUP` dan `POPUP` yang bersih dan mudah diatur oleh Administrator di UI tanpa mencampuri izin akses CRUD reguler.
 
-## 13. Global Search Menu & Permission Groups
+## 13. Security & Role Permissions
+Aplikasi ini memiliki UI dinamis untuk Manajemen Role (Grouped Permissions) yang secara otomatis akan mengelompokkan daftar _permission_ ke dalam sebuah Folder berdasarkan **kata pertama sebelum underscore (`_`)**. Oleh sebab itu, konvensi penamaan permission sangatlah penting:
+1. **Modul Utama (CRUD)**: Gunakan format `[NAMA_MODUL]_[AKSI]`. 
+   Contoh: `GEOGRAPHIC_READ`, `PRODUCT_CREATE`. Ini akan mengelompokkan mereka ke folder `GEOGRAPHIC` dan `PRODUCT`.
+2. **Fitur Lintas Modul (Shared Features)**: Gunakan *Prefix* jenis fiturnya, contohnya `LOOKUP_` untuk autocomplete popup, dan `POPUP_` untuk fitur modal/popup lainnya (misal: Popup selector item di transaksi).
+   Contoh: `LOOKUP_GEOGRAPHIC`, `LOOKUP_PRODUCT`, `POPUP_PARTNER`. Ini akan membuat folder `LOOKUP` dan `POPUP` yang bersih dan mudah diatur oleh Administrator di UI tanpa mencampuri izin akses CRUD reguler.
+
+## 14. Global Search Menu & Permission Groups
 Selain pengelompokan visual di UI Role, sistem memiliki fitur **Global Search Menu** yang menggunakan entitas `PermissionGroup`.
 - Setiap `Permission` **WAJIB** dikaitkan dengan satu `PermissionGroup` agar modul tersebut dapat muncul di hasil pencarian navbar (jika user punya akses).
 - Detail teknis silakan merujuk ke [docs/spec/search-menu.md](spec/search-menu.md) dan [docs/modules/security/permission-groups.md](modules/security/permission-groups.md).
 
-## 14. Frontend & E2E Debugging with MCP Playwright
+## 15. Frontend & E2E Debugging with MCP Playwright
 
 Untuk keperluan debugging frontend atau pengujian end-to-end, AI **WAJIB** menjalankan Spring Boot server secara mandiri menggunakan MCP Playwright. **DILARANG** meminta user untuk menjalankan server.
 
