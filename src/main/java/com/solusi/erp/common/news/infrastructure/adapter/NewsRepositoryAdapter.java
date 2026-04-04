@@ -11,6 +11,7 @@ import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,12 +23,14 @@ import java.util.stream.Collectors;
  */
 @Component
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class NewsRepositoryAdapter implements NewsRepository {
 
     private final NewsJpaRepository jpaRepository;
     private final NewsPersistenceMapper mapper;
 
     @Override
+    @Transactional
     public News save(News news) {
         NewsEntity entity = mapper.toEntity(news);
         NewsEntity saved = jpaRepository.save(entity);

@@ -204,12 +204,9 @@ const ApprovalUI = (() => {
         })
         .then(data => {
             closeModal(modalId);
-            document.body.dispatchEvent(new CustomEvent('approvalProcessed'));
             if (window.ErpModal) ErpModal.showSuccess(data.message || 'Action completed.');
-
-            // Hide action buttons after processing
-            const btnContainer = document.getElementById('approval-action-buttons');
-            if (btnContainer) btnContainer.classList.add('d-none');
+            // Reload page to reflect updated status, badge, and hide action buttons
+            setTimeout(() => window.location.reload(), 800);
         })
         .catch(err => {
             if (window.ErpModal) ErpModal.showError(err.message || 'An unexpected error occurred.');

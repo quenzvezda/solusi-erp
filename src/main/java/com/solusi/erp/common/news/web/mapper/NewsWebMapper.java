@@ -39,8 +39,20 @@ public interface NewsWebMapper {
         if (meta != null) {
             target.setCreatedDate(meta.createdDate());
             target.setUpdatedDate(meta.updatedDate());
-            // User names are not carried in the domain model; they remain null (shows "-")
         }
+        target.setCreatedByName(source.getCreatedByName());
+        target.setUpdatedByName(source.getUpdatedByName());
+    }
+
+    @AfterMapping
+    default void applyAuditDates(News source, @MappingTarget NewsSaveRequest target) {
+        AuditMetadata meta = source.getMetadata();
+        if (meta != null) {
+            target.setCreatedDate(meta.createdDate());
+            target.setUpdatedDate(meta.updatedDate());
+        }
+        target.setCreatedByName(source.getCreatedByName());
+        target.setUpdatedByName(source.getUpdatedByName());
     }
 
     @AfterMapping
