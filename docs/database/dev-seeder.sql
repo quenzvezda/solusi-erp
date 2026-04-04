@@ -33,8 +33,8 @@ DELETE FROM appr_requests;
 -- News data
 DELETE FROM common_news WHERE 1=1;
 
--- User-Party links for dev users (excluding admin=1)
-UPDATE users SET party_id = NULL WHERE username IN ('approver1','approver2','warehouse1','employee1');
+-- User-Party links for dev users (including admin to allow party cleanup)
+UPDATE users SET party_id = NULL WHERE username IN ('admin','approver1','approver2','warehouse1','employee1');
 
 -- User profiles for dev users
 DELETE FROM user_profiles WHERE user_id IN (SELECT id FROM users WHERE username IN ('approver1','approver2','warehouse1','employee1'));

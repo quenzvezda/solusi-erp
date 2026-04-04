@@ -76,7 +76,13 @@
                                         </div>
                                         <div class="col text-truncate">
                                             <div class="text-body d-block fw-semibold text-truncate" th:text="${n.title}">Title</div>
-                                            <div class="d-block text-secondary text-truncate small" th:text="${n.author ?: '-'}">Author</div>
+                                            <div class="d-block text-secondary text-truncate small">
+                                                <span th:text="${n.author ?: '-'}">Author</span>
+                                                <span th:if="${n.publishDate}" class="ms-2 text-muted">
+                                                    <i class="ti ti-calendar me-1"></i>
+                                                    <span th:text="${#temporals.format(n.publishDate, 'dd MMM yyyy')}">Date</span>
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </a>

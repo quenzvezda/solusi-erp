@@ -16,7 +16,7 @@ public class NewsEventPublisherAdapter implements NewsEventPublisher {
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
-    public void publishApprovalRequested(Long newsId, String requester, Long approverId) {
-        eventPublisher.publishEvent(new ApprovalRequestedEvent("NEWS", newsId, requester, approverId));
+    public void publishApprovalRequested(Long newsId, Long requesterId, Long approverId) {
+        eventPublisher.publishEvent(new ApprovalRequestedEvent("NEWS", newsId, requesterId, approverId));
     }
 }

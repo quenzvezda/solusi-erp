@@ -44,7 +44,7 @@ class SubmitNewsForApprovalUseCaseImplTest {
         when(newsRepository.findById(11L)).thenReturn(Optional.of(draftNews));
         when(newsRepository.save(any(News.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        News result = useCase.execute(11L, "requester", 100L);
+        News result = useCase.execute(11L, 10L, 100L);
 
         assertNotNull(result);
         assertEquals(11L, result.getId());
@@ -53,7 +53,7 @@ class SubmitNewsForApprovalUseCaseImplTest {
         ArgumentCaptor<News> captor = ArgumentCaptor.forClass(News.class);
         verify(newsRepository).save(captor.capture());
         assertEquals(NewsStatus.PENDING_APPROVAL, captor.getValue().getStatus());
-        verify(eventPublisher).publishApprovalRequested(11L, "requester", 100L);
+        verify(eventPublisher).publishApprovalRequested(11L, 10L, 100L);
     }
 
     private static News newsWithStatus(Long id, NewsStatus status) {

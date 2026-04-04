@@ -59,7 +59,7 @@
 
             <!-- Approval Action Banner — only for current approver -->
             <th:block th:if="${isCurrentApprover}">
-                <div th:replace="~{fragments/approval :: approve-action-banner(${approvalRequestId})}"></div>
+                <div th:replace="~{fragments/approval :: approve-action-banner(${approvalRequestId}, ${currentPartyId})}"></div>
             </th:block>
 
             <div class="row row-cards">

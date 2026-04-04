@@ -1,11 +1,13 @@
 package com.solusi.erp.master.geographic.web.mapper;
 
 import com.solusi.erp.core.dto.BaseAuditResponse;
+import com.solusi.erp.core.mapper.AuditMapperHelper;
 import com.solusi.erp.master.geographic.domain.model.Geographic;
 import com.solusi.erp.master.geographic.web.dto.GeographicDetailResponse;
 import com.solusi.erp.master.geographic.web.dto.GeographicSaveRequest;
 import com.solusi.erp.master.geographic.web.dto.GeographicSummaryResponse;
 import org.mapstruct.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Web Mapper for Geographic module.
@@ -13,6 +15,9 @@ import org.mapstruct.*;
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public abstract class GeographicWebMapper {
+
+    @Autowired
+    protected AuditMapperHelper auditMapperHelper;
 
     public abstract GeographicSummaryResponse toSummaryResponse(Geographic domain);
 
@@ -28,6 +33,8 @@ public abstract class GeographicWebMapper {
                     ? domain.getMetadata().version().intValue() : null);
             target.setCreatedDate(domain.getMetadata().createdDate());
             target.setUpdatedDate(domain.getMetadata().updatedDate());
+            target.setCreatedByName(auditMapperHelper.resolveUserDisplayName(domain.getMetadata().createdBy()));
+            target.setUpdatedByName(auditMapperHelper.resolveUserDisplayName(domain.getMetadata().updatedBy()));
         }
     }
 }

@@ -7,13 +7,17 @@ import com.solusi.erp.master.bankaccount.web.dto.BankAccountDetailResponse;
 import com.solusi.erp.master.bankaccount.web.dto.BankAccountSaveRequest;
 import com.solusi.erp.master.bankaccount.web.dto.BankAccountSummaryResponse;
 import org.mapstruct.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Web Mapper for BankAccount module.
  * Maps between Domain Model and Web DTOs.
  */
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = {AuditMapperHelper.class})
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public abstract class BankAccountWebMapper {
+
+    @Autowired
+    protected AuditMapperHelper auditMapperHelper;
 
     public abstract BankAccountSummaryResponse toSummaryResponse(BankAccount domain);
 
@@ -28,6 +32,8 @@ public abstract class BankAccountWebMapper {
             target.setVersion(domain.getMetadata().version() != null ? domain.getMetadata().version().intValue() : null);
             target.setCreatedDate(domain.getMetadata().createdDate());
             target.setUpdatedDate(domain.getMetadata().updatedDate());
+            target.setCreatedByName(auditMapperHelper.resolveUserDisplayName(domain.getMetadata().createdBy()));
+            target.setUpdatedByName(auditMapperHelper.resolveUserDisplayName(domain.getMetadata().updatedBy()));
         }
     }
 }

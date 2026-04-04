@@ -6,9 +6,13 @@ import com.solusi.erp.inventory.productcategory.web.dto.ProductCategoryDetailRes
 import com.solusi.erp.inventory.productcategory.web.dto.ProductCategorySaveRequest;
 import com.solusi.erp.inventory.productcategory.web.dto.ProductCategorySummaryResponse;
 import org.mapstruct.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = {AuditMapperHelper.class})
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public abstract class ProductCategoryWebMapper {
+
+    @Autowired
+    protected AuditMapperHelper auditMapperHelper;
 
     public abstract ProductCategorySummaryResponse toSummaryResponse(ProductCategory domain);
 
@@ -23,6 +27,8 @@ public abstract class ProductCategoryWebMapper {
             target.setVersion(domain.getMetadata().version() != null ? domain.getMetadata().version().intValue() : null);
             target.setCreatedDate(domain.getMetadata().createdDate());
             target.setUpdatedDate(domain.getMetadata().updatedDate());
+            target.setCreatedByName(auditMapperHelper.resolveUserDisplayName(domain.getMetadata().createdBy()));
+            target.setUpdatedByName(auditMapperHelper.resolveUserDisplayName(domain.getMetadata().updatedBy()));
         }
     }
 }

@@ -7,6 +7,7 @@ import com.solusi.erp.common.approval.web.dto.ApprovalHistoryResponse;
 import com.solusi.erp.common.approval.web.dto.ApprovalSignatureResponse;
 import com.solusi.erp.common.approval.web.dto.ApprovalStatusResponse;
 import com.solusi.erp.core.dto.LookupDto;
+import com.solusi.erp.core.mapper.AuditMapperHelper;
 import com.solusi.erp.core.storage.domain.port.StorageProvider;
 import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ public class ApprovalWebMapper {
 
     private final StorageProvider storageProvider;
     private final PartyLookupProvider partyLookupProvider;
+    private final AuditMapperHelper auditMapperHelper;
 
     public ApprovalStatusResponse toStatusResponse(ApprovalRequest request) {
         List<ApprovalHistoryResponse> histories = request.getHistories().stream()
@@ -43,7 +45,7 @@ public class ApprovalWebMapper {
                 .id(history.id())
                 .action(history.action().name())
                 .actorId(history.actorId())
-                .actorName(resolvePartyName(history.actorId()))
+                .actorName(resolveActorName(history.actorId()))
                 .notes(history.notes())
                 .actionDate(history.actionDate())
                 .build();
@@ -59,9 +61,12 @@ public class ApprovalWebMapper {
                 .build();
     }
 
-    private String resolvePartyName(Long partyId) {
-        if (partyId == null) return null;
-        LookupDto lookup = partyLookupProvider.resolve(partyId);
-        return lookup != null ? lookup.name() : null;
+    private String resolveActorName(Long actorId) {
+        if (actorId == null) return null;
+        // Try party lookup first (normal case for approver actions)
+        LookupDto lookup = partyLookupProvider.resolve(actorId);
+        if (lookup != null) return lookup.name();
+        // Fallback: resolve as userId (for REQUESTED action or when party not linked)
+        return auditMapperHelper.resolveUserDisplayName(actorId);
     }
 }

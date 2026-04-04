@@ -19,7 +19,7 @@ public class SubmitNewsForApprovalUseCaseImpl implements SubmitNewsForApprovalUs
     }
 
     @Override
-    public News execute(Long id, String requester, Long approverId) {
+    public News execute(Long id, Long requesterId, Long approverId) {
         News news = newsRepository.findById(id)
                 .orElseThrow(() -> new DomainException("msg.error.news.not-found"));
 
@@ -27,7 +27,7 @@ public class SubmitNewsForApprovalUseCaseImpl implements SubmitNewsForApprovalUs
         News savedNews = newsRepository.save(news);
 
         // Publish event to the outside world
-        eventPublisher.publishApprovalRequested(savedNews.getId(), requester, approverId);
+        eventPublisher.publishApprovalRequested(savedNews.getId(), requesterId, approverId);
 
         return savedNews;
     }

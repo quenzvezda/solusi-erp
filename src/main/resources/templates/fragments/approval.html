@@ -100,7 +100,7 @@
      Shows approval action buttons for the current approver.
      Usage: <div th:if="${isCurrentApprover}" th:replace="~{fragments/approval :: approve-action-banner(${approvalRequestId})}"></div>
      ================================================ -->
-<div th:fragment="approve-action-banner(requestId)" class="card card-sm border-primary mb-3" style="border-left: 4px solid var(--tblr-primary);">
+<div th:fragment="approve-action-banner(requestId, excludePartyId)" class="card card-sm border-primary mb-3" style="border-left: 4px solid var(--tblr-primary);">
     <div class="card-body py-2">
         <div class="d-flex align-items-center flex-wrap gap-2">
             <div class="me-auto d-flex align-items-center gap-2">
@@ -137,8 +137,9 @@
                 </button>
             </div>
         </div>
-        <!-- Hidden field for requestId — used by JS -->
+        <!-- Hidden fields for JS -->
         <input type="hidden" id="current-approval-request-id" th:value="${requestId}">
+        <input type="hidden" id="current-exclude-party-id" th:value="${excludePartyId}">
     </div>
 </div>
 

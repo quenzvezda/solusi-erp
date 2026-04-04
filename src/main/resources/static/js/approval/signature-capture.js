@@ -40,11 +40,17 @@ const ApprovalUI = (() => {
 
     /**
      * Init TomSelect on approver select elements inside a modal.
+     * Appends excludePartyId to the lookup path if available.
      */
     function initApproverLookup(selectId) {
         const selectEl = document.getElementById(selectId);
         if (selectEl && !selectEl.tomselect && typeof initLookup === 'function') {
-            initLookup(selectEl, selectEl.getAttribute('data-lookup-path'));
+            let lookupPath = selectEl.getAttribute('data-lookup-path');
+            const excludeId = document.getElementById('current-exclude-party-id')?.value;
+            if (excludeId && excludeId !== 'null') {
+                lookupPath += (lookupPath.includes('?') ? '&' : '?') + 'excludePartyId=' + excludeId;
+            }
+            initLookup(selectEl, lookupPath);
         }
     }
 

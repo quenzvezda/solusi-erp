@@ -37,11 +37,11 @@ class CreateApprovalRequestUseCaseImplTest {
     void shouldCreateAndSave() {
         String refType = "NEWS";
         Long refId = 123L;
-        String requesterUsername = "admin";
+        Long requesterId = 11L;
 
         when(repository.save(any(ApprovalRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ApprovalRequest result = useCase.execute(refType, refId, requesterUsername, null);
+        ApprovalRequest result = useCase.execute(refType, refId, requesterId, null);
 
         assertNotNull(result);
         assertEquals(refType, result.getReferenceType());
@@ -64,7 +64,7 @@ class CreateApprovalRequestUseCaseImplTest {
 
         when(repository.save(any(ApprovalRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ApprovalRequest result = useCase.execute(refType, refId, "admin", null);
+        ApprovalRequest result = useCase.execute(refType, refId, 1L, null);
 
         assertNotNull(result);
         assertEquals(refType, result.getReferenceType());
@@ -78,7 +78,7 @@ class CreateApprovalRequestUseCaseImplTest {
     void shouldAlwaysStartWithPendingStatus() {
         when(repository.save(any(ApprovalRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ApprovalRequest result = useCase.execute("NEWS", 1L, "someUser", null);
+        ApprovalRequest result = useCase.execute("NEWS", 1L, 1L, null);
 
         assertEquals(ApprovalStatus.PENDING, result.getStatus());
     }
@@ -88,7 +88,7 @@ class CreateApprovalRequestUseCaseImplTest {
     void shouldCallSaveExactlyOnce() {
         when(repository.save(any(ApprovalRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        useCase.execute("NEWS", 1L, "admin", null);
+        useCase.execute("NEWS", 1L, 1L, null);
 
         verify(repository, times(1)).save(any(ApprovalRequest.class));
     }
@@ -99,7 +99,7 @@ class CreateApprovalRequestUseCaseImplTest {
         Long approverId = 42L;
         when(repository.save(any(ApprovalRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ApprovalRequest result = useCase.execute("STOCK", 200L, "admin", approverId);
+        ApprovalRequest result = useCase.execute("STOCK", 200L, 1L, approverId);
 
         assertThat(result).isNotNull();
         assertThat(result.getCurrentApproverId()).isEqualTo(approverId);

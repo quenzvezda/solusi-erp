@@ -91,6 +91,7 @@ public class NewsController {
                 Long partyId = securityUser.user().getPartyId();
                 isCurrentApprover = partyId != null && partyId.equals(req.getCurrentApproverId())
                         && req.getStatus() == com.solusi.erp.common.approval.domain.model.ApprovalStatus.PENDING;
+                model.addAttribute("currentPartyId", partyId);
             }
             model.addAttribute("isCurrentApprover", isCurrentApprover);
         });
@@ -143,10 +144,11 @@ public class NewsController {
     @ResponseBody
     public ResponseEntity<ApiResponse<NewsDetailResponse>> submitForApproval(
             @PathVariable Long id,
-            @RequestBody(required = false) Map<String, Long> body) {
-        String requester = SecurityContextHolder.getContext().getAuthentication().getName();
+            @RequestBody(required = false) Map<String, Long> body,
+            @AuthenticationPrincipal SecurityUser securityUser) {
+        Long requesterId = securityUser.user().getPartyId();
         Long approverId = (body != null) ? body.get("approverId") : null;
-        News domain = submitNewsForApprovalUseCase.execute(id, requester, approverId);
+        News domain = submitNewsForApprovalUseCase.execute(id, requesterId, approverId);
         NewsDetailResponse response = webMapper.toResponse(domain);
         String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
         return ResponseEntity.ok(ApiResponse.success(msg, response));
