@@ -6,6 +6,7 @@ Folder ini berisi standar teknis horizontal yang berlaku di seluruh aplikasi ERP
 - **[ui-standards.md](ui-standards.md)**: Standar visual, tinggi input (32px/28px), dan class CSS ERP.
 - **[autocomplete-generic.md](autocomplete-generic.md)**: Cara kerja TomSelect asinkron dan pola cascading lookup.
 - **[numeric-standards.md](numeric-standards.md)**: Standar input angka dengan pemisah ribuan (AutoNumeric), helper `ErpNumeric`, dan Spring Formatter.
+- **[datetime-standards.md](datetime-standards.md)**: Standar input tanggal & waktu (Flatpickr), format display vs backend (ISO 8601), `@DateTimeFormat` annotation, dan pre-fill dari database.
 - **[header-lines-form.md](header-lines-form.md)**: Standar pola form Header-Lines (PO, SO, Inventory).
 - **[form-submission.md](form-submission.md)**: Pola pengiriman form (Hybrid Approach: HTMX vs AJAX).
 - **[layout-standard.md](layout-standard.md)**: Standar layout utama dengan slot untuk JavaScript per-halaman.

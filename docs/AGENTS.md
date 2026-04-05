@@ -125,14 +125,17 @@ Sistem ini menggunakan mekanisme internasionalisasi dinamis untuk mendukung mult
 Saat menghasilkan kode:
 1.  **Fokus pada Backend & Integrasi Thymeleaf:** Tulis kode Java yang bersih dan berikan contoh HTML Thymeleaf yang mengimplementasikan class Bootstrap/Tabler secara langsung.
 2.  **Berikan Kode Lengkap:** Jika membuat sebuah DTO atau Controller, sertakan seluruh import, anotasi, dan field yang diperlukan secara utuh.
-3.  **Versioning & Commit Protocol:**
+3.  **Form Input Standards (Critical):** 
+    *   **Numeric Inputs**: Ikuti [docs/spec/numeric-standards.md](docs/spec/numeric-standards.md) untuk input dengan pemisah ribuan.
+    *   **Date/Time Inputs**: Ikuti [docs/spec/datetime-standards.md](docs/spec/datetime-standards.md) untuk input tanggal dan waktu. Wajib: (a) tambahkan `data-picker="datetime|date|time"` pada HTML input, (b) tambahkan `@DateTimeFormat(pattern = "...")` pada DTO field.
+4.  **Versioning & Commit Protocol:**
     *   Jika User meminta Agent untuk melakukan `commit`, Agent **WAJIB** memeriksa apakah ada perubahan versi di `pom.xml` dibandingkan dengan *commit* terakhir.
     *   Jika versi belum naik, Agent **HARUS** mengingatkan User untuk menaikkan versi terlebih dahulu dan menyarankan kenaikan berdasarkan prinsip **Semantic Versioning (SemVer)**:
         *   **Patch (0.0.x):** Untuk perbaikan bug kecil atau optimasi tanpa fitur baru.
         *   **Minor (0.x.0):** Untuk penambahan fitur baru yang tidak merusak kompatibilitas (misal: modul baru).
         *   **Major (x.0.0):** Untuk perubahan besar/arsitektural yang tidak kompatibel dengan versi sebelumnya.
-4.  **Strategic replace Tool Usage:** The replace tool requires an exact literal match for `old_string` and is highly sensitive to whitespace. Avoid replacing large, complex blocks of code. Prefer smaller, more targeted replacements. Always re-read the target file immediately before executing a replace command to ensure the `old_string` is based on the file's current content.
-5.  **Wajib Membaca Referensi & Contoh Eksisting:** DILARANG keras berasumsi tentang komponen UI, spesifikasi teknis, atau fitur bisnis yang sudah ada. Jika tugas berkaitan dengan modul baru/lama, AI **WAJIB** membaca dokumen spesifikasi teknis di direktori `docs/spec/` dan dokumentasi proses bisnis di `docs/modules/`. AI **DISARANKAN KUAT** untuk memeriksa *source code* serupa yang sudah stabil (seperti `Product` atau `Tax`) sebagai template *best practice* sebelum membuat kode.
+5.  **Strategic replace Tool Usage:** The replace tool requires an exact literal match for `old_string` and is highly sensitive to whitespace. Avoid replacing large, complex blocks of code. Prefer smaller, more targeted replacements. Always re-read the target file immediately before executing a replace command to ensure the `old_string` is based on the file's current content.
+6.  **Wajib Membaca Referensi & Contoh Eksisting:** DILARANG keras berasumsi tentang komponen UI, spesifikasi teknis, atau fitur bisnis yang sudah ada. Jika tugas berkaitan dengan modul baru/lama, AI **WAJIB** membaca dokumen spesifikasi teknis di direktori `docs/spec/` dan dokumentasi proses bisnis di `docs/modules/`. AI **DISARANKAN KUAT** untuk memeriksa *source code* serupa yang sudah stabil (seperti `Product` atau `Tax`) sebagai template *best practice* sebelum membuat kode.
 
 ## 9.A Semantic Versioning Automation (WAJIB DITERAPKAN)
 Untuk menjaga konsistensi dan automatisasi versioning, setiap agent **WAJIB** mengikuti protokol berikut setelah menyelesaikan implementasi dan testing:
