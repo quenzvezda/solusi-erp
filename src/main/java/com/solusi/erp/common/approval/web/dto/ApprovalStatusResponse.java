@@ -19,5 +19,7 @@ public class ApprovalStatusResponse {
     private String status;
     private String referenceType;
     private Long referenceId;
+    private String referenceCode;
+    private String currentApproverName;
     private List<ApprovalHistoryResponse> histories;
 }

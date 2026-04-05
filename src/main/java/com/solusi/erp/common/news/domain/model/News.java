@@ -10,14 +10,16 @@ import java.time.LocalDateTime;
  */
 public class News {
     private final AuditMetadata metadata;
+    private final String code;
     private NewsContent content;
     private NewsStatus status;
     private LocalDateTime publishDate;
     private LocalDateTime expiryDate;
     private final String author;
 
-    public News(AuditMetadata metadata, NewsContent content, NewsStatus status, LocalDateTime publishDate, LocalDateTime expiryDate, String author) {
+    public News(AuditMetadata metadata, String code, NewsContent content, NewsStatus status, LocalDateTime publishDate, LocalDateTime expiryDate, String author) {
         this.metadata = metadata;
+        this.code = code;
         this.content = content;
         this.status = status;
         this.publishDate = publishDate;
@@ -25,13 +27,17 @@ public class News {
         this.author = author;
     }
 
-    public static News createNew(String title, String content, String author) {
+    public static News createNew(String code, String title, String content, String author, LocalDateTime publishDate, LocalDateTime expiryDate) {
+        if (publishDate == null) {
+            throw new DomainException("msg.error.news.publish-date.required");
+        }
         return new News(
             AuditMetadata.empty(),
+            code,
             new NewsContent(title, content),
             NewsStatus.DRAFT,
-            null,
-            null,
+            publishDate,
+            expiryDate,
             author
         );
     }
@@ -41,39 +47,46 @@ public class News {
         if (this.status != NewsStatus.DRAFT) {
             throw new DomainException("msg.error.news.submit.not-draft");
         }
+        if (this.publishDate == null) {
+            throw new DomainException("msg.error.news.publish-date.required");
+        }
         this.status = NewsStatus.PENDING_APPROVAL;
     }
 
-    public void publish(LocalDateTime publishDate, LocalDateTime expiryDate) {
+    public void publish(LocalDateTime expiryDateOverride) {
         if (this.status != NewsStatus.PENDING_APPROVAL) {
             throw new DomainException("msg.error.news.publish.not-pending");
         }
-        
-        if (publishDate == null) {
-            publishDate = LocalDateTime.now();
+
+        if (this.publishDate == null) {
+            throw new DomainException("msg.error.news.publish-date.required");
         }
-        
-        if (expiryDate != null && expiryDate.isBefore(publishDate)) {
+
+        LocalDateTime effectiveExpiry = expiryDateOverride != null ? expiryDateOverride : this.expiryDate;
+        if (effectiveExpiry != null && effectiveExpiry.isBefore(this.publishDate)) {
             throw new DomainException("msg.error.news.publish.invalid-expiry");
         }
 
         this.status = NewsStatus.PUBLISHED;
-        this.publishDate = publishDate;
-        this.expiryDate = expiryDate;
+        if (effectiveExpiry != null) {
+            this.expiryDate = effectiveExpiry;
+        }
     }
 
     public void archive() {
         this.status = NewsStatus.ARCHIVED;
     }
 
-    public void updateContent(String newTitle, String newContent) {
-        // ATURAN BISNIS: Hanya boleh update jika masih DRAFT
+    public void updateContent(String newTitle, String newContent, LocalDateTime publishDate, LocalDateTime expiryDate) {
         if (this.status != NewsStatus.DRAFT) {
             throw new DomainException("msg.error.news.update.not-draft");
         }
         this.content = new NewsContent(newTitle, newContent);
+        this.publishDate = publishDate;
+        this.expiryDate = expiryDate;
     }
 
+    public String getCode() { return code; }
     public String getTitle() { return content.title(); }
     public String getContentText() { return content.content(); }
     

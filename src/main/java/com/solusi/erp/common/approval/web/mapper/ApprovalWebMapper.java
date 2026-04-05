@@ -36,6 +36,8 @@ public class ApprovalWebMapper {
                 .status(request.getStatus().name())
                 .referenceType(request.getReferenceType())
                 .referenceId(request.getReferenceId())
+                .referenceCode(request.getReferenceCode())
+                .currentApproverName(resolveActorName(request.getCurrentApproverId()))
                 .histories(histories)
                 .build();
     }
@@ -46,6 +48,7 @@ public class ApprovalWebMapper {
                 .action(history.action().name())
                 .actorId(history.actorId())
                 .actorName(resolveActorName(history.actorId()))
+                .targetApproverName(resolveActorName(history.targetApproverId()))
                 .notes(history.notes())
                 .actionDate(history.actionDate())
                 .build();

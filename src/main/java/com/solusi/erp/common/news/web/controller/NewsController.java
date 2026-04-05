@@ -121,7 +121,7 @@ public class NewsController {
     @ResponseBody
     public ResponseEntity<ApiResponse<NewsDetailResponse>> create(@Valid @RequestBody NewsSaveRequest request) {
         String author = SecurityContextHolder.getContext().getAuthentication().getName();
-        News domain = createNewsUseCase.execute(request.getTitle(), request.getContent(), author);
+        News domain = createNewsUseCase.execute(request.getTitle(), request.getContent(), author, request.getPublishDate(), request.getExpiryDate());
         NewsDetailResponse response = webMapper.toResponse(domain);
         String msg = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(msg, response));
@@ -133,7 +133,7 @@ public class NewsController {
     public ResponseEntity<ApiResponse<NewsDetailResponse>> update(
             @PathVariable Long id,
             @Valid @RequestBody NewsSaveRequest request) {
-        News domain = updateNewsUseCase.execute(id, request.getTitle(), request.getContent());
+        News domain = updateNewsUseCase.execute(id, request.getTitle(), request.getContent(), request.getPublishDate(), request.getExpiryDate());
         NewsDetailResponse response = webMapper.toResponse(domain);
         String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
         return ResponseEntity.ok(ApiResponse.success(msg, response));

@@ -11,13 +11,6 @@
             <div class="row g-2 align-items-center">
                 <div class="col">
                     <h2 class="page-title" th:text="${news.title}">News Title</h2>
-                    <div class="mt-1">
-                        <span class="badge"
-                              th:classappend="${news.status.name() == 'DRAFT' ? 'bg-secondary-lt' :
-                                             (news.status.name() == 'PENDING_APPROVAL' ? 'bg-warning-lt' :
-                                             (news.status.name() == 'PUBLISHED' ? 'bg-success-lt' : 'bg-muted-lt'))}"
-                              th:text="${news.status}">DRAFT</span>
-                    </div>
                 </div>
                 <div class="col-auto ms-auto d-print-none">
                     <div class="btn-list">
@@ -71,7 +64,7 @@
                             <h3 class="card-title" th:text="#{label.news.content}">Content</h3>
                         </div>
                         <div class="card-body">
-                            <p class="text-secondary" style="white-space: pre-wrap;" th:text="${news.content}">Content here</p>
+                            <div class="news-content" th:utext="${news.content}">Content here</div>
                         </div>
                     </div>
                 </div>
@@ -83,6 +76,20 @@
                             <h3 class="card-title">Information</h3>
                         </div>
                         <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted" th:text="#{label.news.status}">Status</label>
+                                <div>
+                                    <span class="badge"
+                                          th:classappend="${news.status.name() == 'DRAFT' ? 'bg-secondary-lt' :
+                                                         (news.status.name() == 'PENDING_APPROVAL' ? 'bg-warning-lt' :
+                                                         (news.status.name() == 'PUBLISHED' ? 'bg-success-lt' : 'bg-muted-lt'))}"
+                                          th:text="${#messages.msg('label.news.status.' + #strings.toLowerCase(news.status.name()))}">Draft</span>
+                                </div>
+                            </div>
+                            <div th:if="${news.code != null}" class="mb-3">
+                                <label class="form-label text-muted" th:text="#{label.news.code}">Code</label>
+                                <div class="font-weight-medium font-monospace" th:text="${news.code}">NEWS-0001</div>
+                            </div>
                             <div class="mb-3">
                                 <label class="form-label text-muted" th:text="#{label.news.author}">Author</label>
                                 <div class="font-weight-medium" th:text="${news.author ?: '-'}">Author</div>

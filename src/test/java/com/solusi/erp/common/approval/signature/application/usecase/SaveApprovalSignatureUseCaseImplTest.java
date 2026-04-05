@@ -55,7 +55,7 @@ class SaveApprovalSignatureUseCaseImplTest {
         byte[] fakeImage = "fake-png-data".getBytes();
         String base64 = Base64.getEncoder().encodeToString(fakeImage);
 
-        ApprovalRequest mockRequest = ApprovalRequest.createNew("NEWS", 1L, 99L, 50L);
+        ApprovalRequest mockRequest = ApprovalRequest.createNew("NEWS", 1L, null, 99L, 50L);
         when(approvalRequestRepository.findById(REQUEST_ID)).thenReturn(Optional.of(mockRequest));
         when(signatureRepository.save(any(ApprovalSignature.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -78,7 +78,7 @@ class SaveApprovalSignatureUseCaseImplTest {
         String base64Raw = Base64.getEncoder().encodeToString(fakeImage);
         String dataUri = "data:image/png;base64," + base64Raw;
 
-        ApprovalRequest mockRequest = ApprovalRequest.createNew("NEWS", 1L, 99L, 50L);
+        ApprovalRequest mockRequest = ApprovalRequest.createNew("NEWS", 1L, null, 99L, 50L);
         when(approvalRequestRepository.findById(REQUEST_ID)).thenReturn(Optional.of(mockRequest));
         when(signatureRepository.save(any(ApprovalSignature.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -128,7 +128,7 @@ class SaveApprovalSignatureUseCaseImplTest {
         String invalidBase64 = "NOT!!!VALID!!!BASE64!!!@@@";
 
         when(approvalRequestRepository.findById(REQUEST_ID))
-                .thenReturn(Optional.of(ApprovalRequest.createNew("NEWS", 1L, 99L, 50L)));
+                .thenReturn(Optional.of(ApprovalRequest.createNew("NEWS", 1L, null, 99L, 50L)));
 
         DomainException ex = assertThrows(DomainException.class,
                 () -> useCase.execute(REQUEST_ID, invalidBase64, SIGNER_ID));
@@ -156,7 +156,7 @@ class SaveApprovalSignatureUseCaseImplTest {
     void execute_whenStorageFails_doesNotSaveMetadata() {
         String base64 = Base64.getEncoder().encodeToString("data".getBytes());
         when(approvalRequestRepository.findById(REQUEST_ID))
-                .thenReturn(Optional.of(ApprovalRequest.createNew("NEWS", 1L, 99L, 50L)));
+                .thenReturn(Optional.of(ApprovalRequest.createNew("NEWS", 1L, null, 99L, 50L)));
         doThrow(new RuntimeException("MinIO connection refused"))
                 .when(storageProvider).store(any(), any(), any(), any());
 
@@ -174,7 +174,7 @@ class SaveApprovalSignatureUseCaseImplTest {
         String base64 = Base64.getEncoder().encodeToString(fakeImage);
 
         when(approvalRequestRepository.findById(REQUEST_ID))
-                .thenReturn(Optional.of(ApprovalRequest.createNew("NEWS", 1L, 99L, 50L)));
+                .thenReturn(Optional.of(ApprovalRequest.createNew("NEWS", 1L, null, 99L, 50L)));
         when(signatureRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         useCase.execute(REQUEST_ID, base64, SIGNER_ID);

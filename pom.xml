@@ -66,6 +66,13 @@
             <artifactId>thymeleaf-extras-springsecurity6</artifactId>
             <version>3.1.3.RELEASE</version>
         </dependency>
+
+        <!-- HTML sanitization for rich text content (XSS protection) -->
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.18.3</version>
+        </dependency>
         <!-- OGNL is required by Thymeleaf for expression evaluation in some environments -->
         <dependency>
             <groupId>ognl</groupId>

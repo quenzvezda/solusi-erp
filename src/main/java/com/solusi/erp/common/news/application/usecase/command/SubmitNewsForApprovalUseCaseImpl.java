@@ -27,7 +27,7 @@ public class SubmitNewsForApprovalUseCaseImpl implements SubmitNewsForApprovalUs
         News savedNews = newsRepository.save(news);
 
         // Publish event to the outside world
-        eventPublisher.publishApprovalRequested(savedNews.getId(), requesterId, approverId);
+        eventPublisher.publishApprovalRequested(savedNews.getId(), savedNews.getCode(), requesterId, approverId);
 
         return savedNews;
     }

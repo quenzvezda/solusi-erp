@@ -51,10 +51,24 @@
                         <label class="form-label" th:text="#{label.news.content}">Content
                             <span class="text-danger ms-1">*</span>
                         </label>
-                        <textarea th:field="*{content}" class="form-control erp-input" rows="10"
-                                  th:placeholder="#{label.news.content}" required></textarea>
+                        <!-- Quill editor container -->
+                        <div id="quill-editor" style="min-height: 250px;"></div>
+                        <!-- Hidden input carries the HTML value to the server -->
+                        <input type="hidden" id="content-input" th:field="*{content}" required/>
                         <div class="invalid-feedback" th:if="${#fields.hasErrors('content')}"
                              th:errors="*{content}"></div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" th:text="#{label.news.publish-date}">Publish Date</label>
+                            <input type="datetime-local" th:field="*{publishDate}" class="form-control erp-input" required/>
+                            <div class="form-text text-muted" th:text="#{label.news.publish-date.hint}">Set this while draft; it will be used when approved.</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" th:text="#{label.news.expiry-date}">Expiry Date</label>
+                            <input type="datetime-local" th:field="*{expiryDate}" class="form-control erp-input"/>
+                        </div>
                     </div>
 
                     <div th:if="${news.id != null}" th:replace="~{fragments/audit-info :: audit-info(${news})}"></div>
@@ -80,6 +94,37 @@
 </div>
 
 <div id="page-specific-scripts" th:fragment="pageScripts">
+    <!-- Quill rich text editor -->
+    <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            const quill = new Quill('#quill-editor', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        [{ header: [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ list: 'ordered' }, { list: 'bullet' }],
+                        ['blockquote', 'link'],
+                        ['clean']
+                    ]
+                }
+            });
+
+            // Seed existing content into Quill on edit
+            const existingContent = document.getElementById('content-input').value;
+            if (existingContent) {
+                quill.clipboard.dangerouslyPasteHTML(existingContent);
+            }
+
+            // Copy Quill HTML to hidden input before form submit (capturing phase = runs first)
+            const form = document.getElementById('news-form');
+            form.addEventListener('submit', function () {
+                document.getElementById('content-input').value = quill.getSemanticHTML();
+            }, true);
+        });
+    </script>
 </div>
 </body>
 </html>

@@ -28,7 +28,7 @@
                             <thead>
                                 <tr>
                                     <th th:text="#{label.approval.reference-type}">Tipe Dokumen</th>
-                                    <th th:text="#{label.approval.reference-id}">ID Dokumen</th>
+                                    <th th:text="#{label.approval.reference-code}">Kode Dokumen</th>
                                     <th th:text="#{label.approval.status}">Status</th>
                                     <th th:text="#{label.approval.submitted-date}">Tanggal Diajukan</th>
                                     <th class="w-1" th:text="#{label.actions}">Aksi</th>
@@ -37,9 +37,10 @@
                             <tbody>
                                 <tr th:each="item : ${page.content}">
                                     <td>
-                                        <span class="badge bg-blue-lt" th:text="${item.referenceType}">NEWS</span>
+                                        <span class="badge bg-blue-lt"
+                                              th:text="${#messages.msgOrNull('label.approval.reference-type.' + #strings.toLowerCase(item.referenceType)) ?: item.referenceType}">NEWS</span>
                                     </td>
-                                    <td th:text="${item.referenceId}">#1</td>
+                                    <td th:text="${item.referenceCode ?: '#' + item.referenceId}">#1</td>
                                     <td>
                                         <span class="badge bg-warning-lt">
                                             <span th:text="#{label.approval.status.pending}">Pending</span>

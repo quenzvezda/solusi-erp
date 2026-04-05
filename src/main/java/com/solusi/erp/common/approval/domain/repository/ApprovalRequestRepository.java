@@ -16,4 +16,5 @@ public interface ApprovalRequestRepository {
     long countPendingApprovals();
     Page<ApprovalRequest> findPendingApprovalsForApprover(Long approverPartyId, Pageable pageable);
     long countPendingApprovalsForApprover(Long approverPartyId);
+    Page<ApprovalRequest> findAll(Pageable pageable);
 }

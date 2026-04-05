@@ -24,7 +24,8 @@ public class OnApprovalRequestedListener {
         
         createApprovalRequestUseCase.execute(
             event.getReferenceType(), 
-            event.getReferenceId(), 
+            event.getReferenceId(),
+            event.getReferenceCode(),
             event.getRequesterId(),
             event.getApproverId()
         );

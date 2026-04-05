@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import java.util.Optional;
 
 /**
@@ -28,4 +29,8 @@ public interface ApprovalRequestJpaRepository extends JpaRepository<ApprovalRequ
     Page<ApprovalRequestEntity> findByStatusAndCurrentApproverId(ApprovalStatus status, Long currentApproverId, Pageable pageable);
 
     long countByStatusAndCurrentApproverId(ApprovalStatus status, Long currentApproverId);
+
+    @EntityGraph(attributePaths = "histories")
+    @Query("SELECT r FROM ApprovalRequestEntity r ORDER BY r.id DESC")
+    Page<ApprovalRequestEntity> findAllWithHistories(Pageable pageable);
 }

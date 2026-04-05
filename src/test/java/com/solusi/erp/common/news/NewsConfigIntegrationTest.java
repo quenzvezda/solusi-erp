@@ -7,6 +7,7 @@ import com.solusi.erp.common.news.application.usecase.query.FindPublishedNewsUse
 import com.solusi.erp.common.news.application.usecase.query.FindPublishedNewsUseCaseImpl;
 import com.solusi.erp.common.news.domain.repository.NewsRepository;
 import com.solusi.erp.common.news.infrastructure.config.NewsConfig;
+import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +52,11 @@ class NewsConfigIntegrationTest {
         @Bean
         public TransactionTemplate transactionTemplate() { 
             return mock(TransactionTemplate.class); 
+        }
+
+        @Bean
+        public SequenceGeneratorService sequenceGeneratorService() {
+            return mock(SequenceGeneratorService.class);
         }
     }
 

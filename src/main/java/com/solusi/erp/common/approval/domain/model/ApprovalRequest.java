@@ -14,22 +14,24 @@ public class ApprovalRequest {
     private final AuditMetadata metadata;
     private final String referenceType;
     private final Long referenceId;
+    private final String referenceCode;
     private ApprovalStatus status;
     private Long currentApproverId;
     private List<ApprovalHistory> histories;
 
-    public ApprovalRequest(AuditMetadata metadata, String referenceType, Long referenceId, ApprovalStatus status, Long currentApproverId) {
+    public ApprovalRequest(AuditMetadata metadata, String referenceType, Long referenceId, String referenceCode, ApprovalStatus status, Long currentApproverId) {
         this.metadata = metadata;
         this.referenceType = referenceType;
         this.referenceId = referenceId;
+        this.referenceCode = referenceCode;
         this.status = status;
         this.currentApproverId = currentApproverId;
         this.histories = new ArrayList<>();
     }
 
-    public static ApprovalRequest createNew(String referenceType, Long referenceId, Long requesterId, Long assignedApproverId) {
+    public static ApprovalRequest createNew(String referenceType, Long referenceId, String referenceCode, Long requesterId, Long assignedApproverId) {
         ApprovalRequest request = new ApprovalRequest(
-            AuditMetadata.empty(), referenceType, referenceId, ApprovalStatus.PENDING, assignedApproverId
+            AuditMetadata.empty(), referenceType, referenceId, referenceCode, ApprovalStatus.PENDING, assignedApproverId
         );
         request.addHistory(ApprovalAction.REQUESTED, requesterId, assignedApproverId, "Initial Request");
         return request;
@@ -94,6 +96,7 @@ public class ApprovalRequest {
     public Long getId() { return metadata.id(); }
     public String getReferenceType() { return referenceType; }
     public Long getReferenceId() { return referenceId; }
+    public String getReferenceCode() { return referenceCode; }
     public ApprovalStatus getStatus() { return status; }
     public Long getCurrentApproverId() { return currentApproverId; }
     public List<ApprovalHistory> getHistories() { return histories; }

@@ -22,7 +22,9 @@ public class PublishNewsUseCaseImpl implements PublishNewsUseCase {
         News news = newsRepository.findById(id)
                 .orElseThrow(() -> new DomainException("msg.error.news.not-found"));
 
-        news.publish(publishDate, expiryDate);
+        // publishDate override is ignored here — it was set by user during create/edit
+        // expiryDate can be updated at publish time if provided
+        news.publish(expiryDate);
         return newsRepository.save(news);
     }
 }

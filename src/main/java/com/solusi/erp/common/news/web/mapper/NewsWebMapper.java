@@ -23,6 +23,7 @@ public abstract class NewsWebMapper {
     @Autowired
     protected AuditMapperHelper auditMapperHelper;
 
+    @Mapping(target = "code", source = "code")
     @Mapping(target = "title", source = "title")
     @Mapping(target = "content", source = "contentText")
     public abstract NewsDetailResponse toResponse(News domain);

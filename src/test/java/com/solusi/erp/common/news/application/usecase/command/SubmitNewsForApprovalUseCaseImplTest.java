@@ -13,6 +13,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -53,15 +54,16 @@ class SubmitNewsForApprovalUseCaseImplTest {
         ArgumentCaptor<News> captor = ArgumentCaptor.forClass(News.class);
         verify(newsRepository).save(captor.capture());
         assertEquals(NewsStatus.PENDING_APPROVAL, captor.getValue().getStatus());
-        verify(eventPublisher).publishApprovalRequested(11L, 10L, 100L);
+        verify(eventPublisher).publishApprovalRequested(11L, null, 10L, 100L);
     }
 
     private static News newsWithStatus(Long id, NewsStatus status) {
         return new News(
             new AuditMetadata(id, 1L, null, null, null, null),
+            null,
             new NewsContent("Draft News Title", "Draft news content"),
             status,
-            null,
+            LocalDateTime.now().plusDays(1),
             null,
             "Author"
         );

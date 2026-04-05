@@ -19,7 +19,7 @@ class ApprovalRequestTest {
 
         Long approverId = 50L;
 
-        ApprovalRequest request = ApprovalRequest.createNew(refType, refId, requesterId, approverId);
+        ApprovalRequest request = ApprovalRequest.createNew(refType, refId, null, requesterId, approverId);
 
         assertNotNull(request);
         assertEquals(refType, request.getReferenceType());
@@ -37,7 +37,7 @@ class ApprovalRequestTest {
     @Test
     @DisplayName("Should change status to COMPLETED when approved")
     void shouldApprove() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, 1L, 50L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, null, 1L, 50L);
         Long approverId = 2L;
         String notes = "Approved!";
 
@@ -55,7 +55,7 @@ class ApprovalRequestTest {
     @Test
     @DisplayName("Should change status to REJECTED when rejected")
     void shouldReject() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, 1L, 50L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, null, 1L, 50L);
         Long actorId = 2L;
         String notes = "Rejected due to typo";
 
@@ -73,7 +73,7 @@ class ApprovalRequestTest {
     @Test
     @DisplayName("Should throw exception when approving a non-PENDING request")
     void shouldThrowExceptionWhenApprovingNonPending() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, 1L, 50L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, null, 1L, 50L);
         request.approve(2L, "First Approval");
 
         DomainException exception = assertThrows(DomainException.class, () -> 
@@ -86,7 +86,7 @@ class ApprovalRequestTest {
     @Test
     @DisplayName("Should throw exception when rejecting a non-PENDING request")
     void shouldThrowExceptionWhenRejectingNonPending() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, 1L, 50L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, null, 1L, 50L);
         request.reject(2L, "First Rejection");
 
         DomainException exception = assertThrows(DomainException.class, () -> 
@@ -99,7 +99,7 @@ class ApprovalRequestTest {
     @Test
     @DisplayName("Should throw exception when approving an already REJECTED request (not-pending)")
     void shouldThrowExceptionWhenApprovingRejectedRequest() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, 1L, 50L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, null, 1L, 50L);
         request.reject(2L, "Rejected notes");
 
         DomainException exception = assertThrows(DomainException.class, () ->
@@ -112,7 +112,7 @@ class ApprovalRequestTest {
     @Test
     @DisplayName("Should throw exception when rejecting an already COMPLETED request")
     void shouldThrowExceptionWhenRejectingCompletedRequest() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, 1L, 50L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 123L, null, 1L, 50L);
         request.approve(2L, "Approved");
 
         DomainException exception = assertThrows(DomainException.class, () ->
@@ -128,7 +128,7 @@ class ApprovalRequestTest {
         String refType = "STOCK_ADJUSTMENT";
         Long refId = 456L;
 
-        ApprovalRequest request = ApprovalRequest.createNew(refType, refId, 1L, 50L);
+        ApprovalRequest request = ApprovalRequest.createNew(refType, refId, null, 1L, 50L);
 
         assertEquals(refType, request.getReferenceType());
         assertEquals(refId, request.getReferenceId());
@@ -137,7 +137,7 @@ class ApprovalRequestTest {
     @Test
     @DisplayName("createNew should produce exactly 1 history entry with REQUESTED action")
     void shouldHaveOneHistoryEntryOnCreate() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, 99L, 50L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, null, 99L, 50L);
 
         assertEquals(1, request.getHistories().size());
         assertEquals(ApprovalAction.REQUESTED, request.getHistories().get(0).action());
@@ -149,7 +149,7 @@ class ApprovalRequestTest {
     @Test
     @DisplayName("forward with valid input updates currentApproverId, keeps PENDING, records FORWARD history")
     void forward_validInput_updatesCurrentApprover() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, 10L, 50L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, null, 10L, 50L);
 
         request.forward(50L, 60L, "Forwarding to manager");
 
@@ -167,7 +167,7 @@ class ApprovalRequestTest {
     @Test
     @DisplayName("forward to self throws cannot-forward-to-self")
     void forward_toSelf_throwsException() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, 10L, 50L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, null, 10L, 50L);
 
         assertThatThrownBy(() -> request.forward(50L, 50L, "Self forward"))
                 .isInstanceOf(DomainException.class)
@@ -178,7 +178,7 @@ class ApprovalRequestTest {
     @Test
     @DisplayName("forward with null target throws target-approver-required")
     void forward_nullTarget_throwsException() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, 10L, 50L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, null, 10L, 50L);
 
         assertThatThrownBy(() -> request.forward(50L, null, "No target"))
                 .isInstanceOf(DomainException.class)
@@ -189,7 +189,7 @@ class ApprovalRequestTest {
     @Test
     @DisplayName("forward with blank notes throws reason-required")
     void forward_blankNotes_throwsException() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, 10L, 50L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, null, 10L, 50L);
 
         assertThatThrownBy(() -> request.forward(50L, 60L, "   "))
                 .isInstanceOf(DomainException.class)
@@ -202,7 +202,7 @@ class ApprovalRequestTest {
     @Test
     @DisplayName("approveAndForward with valid input updates currentApproverId, keeps PENDING")
     void approveAndForward_validInput_updatesCurrentApprover() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, 10L, 50L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, null, 10L, 50L);
 
         request.approveAndForward(50L, 70L, "Approved, forwarding to director");
 
@@ -219,7 +219,7 @@ class ApprovalRequestTest {
     @Test
     @DisplayName("approveAndForward to self throws cannot-forward-to-self")
     void approveAndForward_toSelf_throwsException() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, 10L, 50L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, null, 10L, 50L);
 
         assertThatThrownBy(() -> request.approveAndForward(50L, 50L, "Self forward"))
                 .isInstanceOf(DomainException.class)
@@ -234,7 +234,7 @@ class ApprovalRequestTest {
     void createNew_setsCurrentApproverId() {
         Long approverId = 99L;
 
-        ApprovalRequest request = ApprovalRequest.createNew("STOCK", 200L, 1L, approverId);
+        ApprovalRequest request = ApprovalRequest.createNew("STOCK", 200L, null, 1L, approverId);
 
         assertThat(request.getCurrentApproverId()).isEqualTo(approverId);
         assertThat(request.getStatus()).isEqualTo(ApprovalStatus.PENDING);
@@ -245,7 +245,7 @@ class ApprovalRequestTest {
     @Test
     @DisplayName("approve with blank notes throws reason-required")
     void approve_blankNotes_throwsException() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, 10L, 50L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, null, 10L, 50L);
 
         assertThatThrownBy(() -> request.approve(50L, ""))
                 .isInstanceOf(DomainException.class)

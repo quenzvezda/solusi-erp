@@ -3,6 +3,7 @@ package com.solusi.erp.common.news.web.dto;
 import com.solusi.erp.common.news.domain.model.NewsStatus;
 import com.solusi.erp.core.dto.BaseAuditResponse;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,6 +34,9 @@ public class NewsSaveRequest extends BaseAuditResponse {
     private String author;
     
     private NewsStatus status;
+
+    @NotNull(message = "{label.news.publish-date} {validation.notnull.suffix}")
     private LocalDateTime publishDate;
+
     private LocalDateTime expiryDate;
 }

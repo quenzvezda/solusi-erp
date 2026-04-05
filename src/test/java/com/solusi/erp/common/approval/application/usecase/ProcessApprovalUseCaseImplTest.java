@@ -42,7 +42,7 @@ class ProcessApprovalUseCaseImplTest {
         Long requestId = 1L;
         Long actorId = 2L;
         String notes = "OK";
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 100L, 1L, 50L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 100L, null, 1L, 50L);
 
         when(repository.findById(requestId)).thenReturn(Optional.of(request));
         when(repository.save(any(ApprovalRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -61,7 +61,7 @@ class ProcessApprovalUseCaseImplTest {
         Long requestId = 1L;
         Long actorId = 2L;
         String notes = "Bad";
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 100L, 1L, 50L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 100L, null, 1L, 50L);
 
         when(repository.findById(requestId)).thenReturn(Optional.of(request));
         when(repository.save(any(ApprovalRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -91,7 +91,7 @@ class ProcessApprovalUseCaseImplTest {
     @Test
     @DisplayName("Should throw DomainException when trying to approve an already COMPLETED request")
     void shouldThrowWhenApprovingAlreadyCompleted() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 100L, 1L, 50L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 100L, null, 1L, 50L);
         request.approve(2L, "First approval");
 
         when(repository.findById(1L)).thenReturn(Optional.of(request));
@@ -107,7 +107,7 @@ class ProcessApprovalUseCaseImplTest {
     @Test
     @DisplayName("Should throw DomainException when trying to reject an already REJECTED request")
     void shouldThrowWhenRejectingAlreadyRejected() {
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 100L, 1L, 50L);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 100L, null, 1L, 50L);
         request.reject(2L, "Already rejected");
 
         when(repository.findById(1L)).thenReturn(Optional.of(request));
@@ -143,7 +143,7 @@ class ProcessApprovalUseCaseImplTest {
         Long actorId = 2L;
         Long targetApproverId = 3L;
         String notes = "Please review";
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 100L, 1L, actorId);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 100L, null, 1L, actorId);
 
         when(repository.findById(requestId)).thenReturn(Optional.of(request));
         when(repository.save(any(ApprovalRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -180,7 +180,7 @@ class ProcessApprovalUseCaseImplTest {
         Long actorId = 2L;
         Long targetApproverId = 3L;
         String notes = "Approved, next level";
-        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 100L, 1L, actorId);
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 100L, null, 1L, actorId);
 
         when(repository.findById(requestId)).thenReturn(Optional.of(request));
         when(repository.save(any(ApprovalRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));

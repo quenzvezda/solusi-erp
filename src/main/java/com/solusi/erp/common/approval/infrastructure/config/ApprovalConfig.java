@@ -28,8 +28,8 @@ public class ApprovalConfig {
             ApprovalRequestRepository repository,
             TransactionTemplate transactionTemplate) {
         CreateApprovalRequestUseCase pureUseCase = new CreateApprovalRequestUseCaseImpl(repository);
-        return (refType, refId, requesterId, approverId) ->
-            transactionTemplate.execute(status -> pureUseCase.execute(refType, refId, requesterId, approverId));
+        return (refType, refId, refCode, requesterId, approverId) ->
+            transactionTemplate.execute(status -> pureUseCase.execute(refType, refId, refCode, requesterId, approverId));
     }
 
     @Bean

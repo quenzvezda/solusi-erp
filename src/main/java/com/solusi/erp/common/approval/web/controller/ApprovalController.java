@@ -9,6 +9,7 @@ import com.solusi.erp.common.approval.signature.domain.model.ApprovalSignature;
 import com.solusi.erp.common.approval.web.dto.ApprovalSignatureResponse;
 import com.solusi.erp.common.approval.web.dto.ApprovalStatusResponse;
 import com.solusi.erp.common.approval.web.dto.ProcessApprovalRequest;
+import com.solusi.erp.common.approval.web.dto.ReassignApprovalRequest;
 import com.solusi.erp.common.approval.web.mapper.ApprovalWebMapper;
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
@@ -82,7 +83,26 @@ public class ApprovalController {
     }
 
     /**
-     * POST /common/approval/{requestId}/process
+     * GET /common/approval/manage
+     * Admin page showing ALL approval requests (any status, any assignee).
+     */
+    @GetMapping("/manage")
+    @PreAuthorize("hasAuthority('APPROVAL_MANAGE')")
+    public String manage(org.springframework.data.domain.Pageable springPageable, Model model) {
+        Pageable domainPageable = PageableMapper.toDomain(springPageable);
+        com.solusi.erp.core.domain.model.Page<ApprovalRequest> domainPage =
+                approvalRequestRepository.findAll(domainPageable);
+
+        List<ApprovalStatusResponse> content = domainPage.content().stream()
+                .map(webMapper::toStatusResponse)
+                .collect(Collectors.toList());
+
+        Page<ApprovalStatusResponse> springPage = new PageImpl<>(content, springPageable, domainPage.totalElements());
+        model.addAttribute("page", springPage);
+        return "common/approval/manage";
+    }
+
+    /**
      * Approves or rejects an approval request, optionally saving a digital signature.
      */
     @PostMapping("/{requestId}/process")
@@ -116,6 +136,21 @@ public class ApprovalController {
             default -> throw new DomainException("msg.error.approval.invalid-action");
         };
 
+        String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.ok(ApiResponse.success(msg, webMapper.toStatusResponse(result)));
+    }
+
+    @PostMapping("/{requestId}/reassign")
+    @PreAuthorize("hasAuthority('APPROVAL_MANAGE')")
+    @ResponseBody
+    public ResponseEntity<ApiResponse<ApprovalStatusResponse>> reassign(
+            @PathVariable Long requestId,
+            @Valid @RequestBody ReassignApprovalRequest request,
+            @AuthenticationPrincipal UserDetails principal) {
+
+        Long actorPartyId = resolvePartyId(principal);
+        ApprovalRequest result = processApprovalUseCase.forward(
+                requestId, actorPartyId, request.getTargetApproverId(), request.getNotes());
         String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
         return ResponseEntity.ok(ApiResponse.success(msg, webMapper.toStatusResponse(result)));
     }

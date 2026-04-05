@@ -1,6 +1,6 @@
 # Arsitektur Generic Approval System
 
-Status: **Phase 4 Selesai — UI Polish, Approval History Drawer, Dynamic Status Badge** ✅
+Status: **Phase 9 Selesai — Reference Code, Split Pages, Timeline Actor→Assignee, Rich Text** ✅
 
 Sistem Approval yang dirancang agar *generic* dan dapat diimplementasikan ke berbagai modul transaksi tanpa memerlukan *hard-coding* relasi database antar modul (mencegah *tight-coupling*).
 
