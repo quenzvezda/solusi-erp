@@ -27,7 +27,15 @@ const ErpDateTimePicker = (function() {
         return (input.getAttribute('type') || '').toLowerCase();
     }
 
-    function buildOptions(input) {
+    function parseExistingValue(raw) {
+        if (!raw) return null;
+        const d = new Date(raw);
+        return isNaN(d.getTime()) ? null : d;
+    }
+
+    // rawValue is passed explicitly so buildOptions can use it regardless of
+    // whether input.value has already been cleared.
+    function buildOptions(input, rawValue) {
         const mode = detectMode(input);
         const options = {
             allowInput: true,
@@ -40,12 +48,18 @@ const ErpDateTimePicker = (function() {
             options.noCalendar = true;
             options.time_24hr = true;
             options.dateFormat = 'H:i';
+            options.altInput = true;
+            options.altFormat = 'H:i';
         } else if (mode === 'datetime' || mode === 'datetime-local') {
             options.enableTime = true;
             options.time_24hr = true;
             options.dateFormat = 'Y-m-d\\TH:i';
+            options.altInput = true;
+            options.altFormat = 'd M Y H:i';
         } else {
             options.dateFormat = 'Y-m-d';
+            options.altInput = true;
+            options.altFormat = 'd M Y';
         }
 
         const stepSeconds = Number(input.getAttribute('step'));
@@ -60,6 +74,14 @@ const ErpDateTimePicker = (function() {
         if (minValue) options.minDate = minValue;
         if (maxValue) options.maxDate = maxValue;
 
+        // Pre-fill: parse the captured raw value via native Date to handle
+        // ISO strings with seconds (e.g. "2026-04-03T00:00:00") that Flatpickr
+        // would reject against dateFormat 'Y-m-d\TH:i'.
+        const parsed = parseExistingValue(rawValue);
+        if (parsed) {
+            options.defaultDate = parsed;
+        }
+
         return options;
     }
 
@@ -68,7 +90,19 @@ const ErpDateTimePicker = (function() {
         if (input._flatpickr || input.dataset.pickerInitialized === 'true') return;
         if (typeof window.flatpickr !== 'function') return;
 
-        window.flatpickr(input, buildOptions(input));
+        // Capture value FIRST, then clear so Flatpickr won't attempt to parse
+        // it against dateFormat and silently fall back to browser-native.
+        const rawValue = input.value;
+        input.value = '';
+
+        const instance = window.flatpickr(input, buildOptions(input, rawValue));
+
+        // Safety fallback: if Flatpickr still didn't select a date (e.g. truly
+        // empty field), restore original value so a plain form submit is valid.
+        if (!instance.selectedDates.length && rawValue) {
+            input.value = rawValue;
+        }
+
         input.dataset.pickerInitialized = 'true';
     }
 

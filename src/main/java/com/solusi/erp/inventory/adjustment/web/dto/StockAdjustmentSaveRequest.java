@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -30,6 +31,7 @@ public class StockAdjustmentSaveRequest extends BaseAuditResponse {
 
     @NotNull(message = "{label.stock-adjustment.date} {validation.notnull.suffix}")
     @Builder.Default
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate transactionDate = LocalDate.now();
 
     private String note;
