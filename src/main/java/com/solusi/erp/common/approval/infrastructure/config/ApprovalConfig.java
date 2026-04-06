@@ -9,7 +9,7 @@ import com.solusi.erp.common.approval.signature.application.usecase.SaveApproval
 import com.solusi.erp.common.approval.signature.application.usecase.SaveApprovalSignatureUseCaseImpl;
 import com.solusi.erp.common.approval.signature.domain.repository.ApprovalSignatureRepository;
 import com.solusi.erp.core.storage.domain.port.StorageProvider;
-import org.springframework.beans.factory.annotation.Value;
+import com.solusi.erp.core.storage.infrastructure.config.MinioProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -20,8 +20,11 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Configuration
 public class ApprovalConfig {
 
-    @Value("${minio.bucket-name}")
-    private String bucketName;
+    private final MinioProperties minioProperties;
+
+    public ApprovalConfig(MinioProperties minioProperties) {
+        this.minioProperties = minioProperties;
+    }
 
     @Bean
     public CreateApprovalRequestUseCase createApprovalRequestUseCase(
@@ -68,7 +71,8 @@ public class ApprovalConfig {
             StorageProvider storageProvider,
             TransactionTemplate transactionTemplate) {
         SaveApprovalSignatureUseCase pureUseCase = new SaveApprovalSignatureUseCaseImpl(
-                signatureRepository, approvalRequestRepository, storageProvider, bucketName);
+                signatureRepository, approvalRequestRepository, storageProvider,
+                minioProperties.getBucket("signatures"));
         return (requestId, signatureBase64, signerUserId) ->
                 transactionTemplate.execute(status -> pureUseCase.execute(requestId, signatureBase64, signerUserId));
     }

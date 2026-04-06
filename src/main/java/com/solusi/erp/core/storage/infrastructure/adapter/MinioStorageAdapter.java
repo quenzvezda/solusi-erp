@@ -1,12 +1,12 @@
 package com.solusi.erp.core.storage.infrastructure.adapter;
 
 import com.solusi.erp.core.storage.domain.port.StorageProvider;
+import com.solusi.erp.core.storage.infrastructure.config.MinioProperties;
 import io.minio.*;
 import io.minio.errors.MinioException;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
@@ -16,7 +16,7 @@ import java.security.NoSuchAlgorithmException;
 
 /**
  * MinIO-backed implementation of StorageProvider.
- * Ensures the configured bucket exists at application startup.
+ * Ensures all configured buckets exist at application startup.
  */
 @Slf4j
 @Component
@@ -24,29 +24,26 @@ import java.security.NoSuchAlgorithmException;
 public class MinioStorageAdapter implements StorageProvider {
 
     private final MinioClient minioClient;
-
-    @Value("${minio.bucket-name}")
-    private String defaultBucketName;
-
-    @Value("${minio.endpoint}")
-    private String endpoint;
+    private final MinioProperties minioProperties;
 
     @PostConstruct
-    public void ensureBucketExists() {
-        try {
-            boolean exists = minioClient.bucketExists(
-                    BucketExistsArgs.builder().bucket(defaultBucketName).build()
-            );
-            if (!exists) {
-                minioClient.makeBucket(MakeBucketArgs.builder().bucket(defaultBucketName).build());
-                log.info("MinIO bucket '{}' created successfully.", defaultBucketName);
-            } else {
-                log.info("MinIO bucket '{}' already exists.", defaultBucketName);
+    public void ensureBucketsExist() {
+        minioProperties.getBuckets().forEach((key, bucketName) -> {
+            try {
+                boolean exists = minioClient.bucketExists(
+                        BucketExistsArgs.builder().bucket(bucketName).build()
+                );
+                if (!exists) {
+                    minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+                    log.info("MinIO bucket created: {}", bucketName);
+                } else {
+                    log.debug("MinIO bucket already exists: {}", bucketName);
+                }
+            } catch (MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException e) {
+                log.error("Failed to verify/create MinIO bucket '{}': {}", bucketName, e.getMessage(), e);
+                throw new IllegalStateException("MinIO bucket initialization failed for '" + bucketName + "'. Check MinIO connectivity.", e);
             }
-        } catch (MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException e) {
-            log.error("Failed to verify/create MinIO bucket '{}': {}", defaultBucketName, e.getMessage(), e);
-            throw new IllegalStateException("MinIO bucket initialization failed. Check MinIO connectivity.", e);
-        }
+        });
     }
 
     @Override
@@ -68,7 +65,7 @@ public class MinioStorageAdapter implements StorageProvider {
 
     @Override
     public String getUrl(String bucket, String key) {
-        return endpoint + "/" + bucket + "/" + key;
+        return minioProperties.getEndpoint() + "/" + bucket + "/" + key;
     }
 
     @Override
