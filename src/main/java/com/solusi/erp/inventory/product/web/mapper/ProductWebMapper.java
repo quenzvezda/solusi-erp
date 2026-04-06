@@ -20,9 +20,11 @@ import org.springframework.beans.factory.annotation.Autowired;
  * Web Mapper for Product module.
  * Maps between Domain Model and Web DTOs.
  */
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = {AuditMapperHelper.class})
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public abstract class ProductWebMapper {
 
+    @Autowired
+    protected AuditMapperHelper auditMapperHelper;
     @Autowired
     protected ProductCategoryJpaRepository categoryRepository;
     @Autowired
@@ -66,8 +68,8 @@ public abstract class ProductWebMapper {
             target.setVersion(domain.getMetadata().version() != null ? domain.getMetadata().version().intValue() : null);
             target.setCreatedDate(domain.getMetadata().createdDate());
             target.setUpdatedDate(domain.getMetadata().updatedDate());
-            // Note: AuditMapperHelper will be used for mapping names if source was BaseModel, 
-            // but here we manually map dates/id/version from our AuditMetadata record.
+            target.setCreatedByName(auditMapperHelper.resolveUserDisplayName(domain.getMetadata().createdBy()));
+            target.setUpdatedByName(auditMapperHelper.resolveUserDisplayName(domain.getMetadata().updatedBy()));
         }
     }
 

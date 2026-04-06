@@ -1,11 +1,13 @@
 package com.solusi.erp.inventory.adjustment.web.mapper;
 
 import com.solusi.erp.core.dto.BaseAuditResponse;
+import com.solusi.erp.core.mapper.AuditMapperHelper;
 import com.solusi.erp.inventory.adjustment.application.usecase.command.LineCommand;
 import com.solusi.erp.inventory.adjustment.domain.model.StockAdjustment;
 import com.solusi.erp.inventory.adjustment.domain.model.StockAdjustmentLineItem;
 import com.solusi.erp.inventory.adjustment.web.dto.*;
 import org.mapstruct.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
@@ -15,6 +17,9 @@ import java.util.List;
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public abstract class StockAdjustmentWebMapper {
+
+    @Autowired
+    protected AuditMapperHelper auditMapperHelper;
 
     public abstract StockAdjustmentSummaryResponse toSummaryResponse(StockAdjustment domain);
 
@@ -40,6 +45,8 @@ public abstract class StockAdjustmentWebMapper {
                     ? domain.getMetadata().version().intValue() : null);
             target.setCreatedDate(domain.getMetadata().createdDate());
             target.setUpdatedDate(domain.getMetadata().updatedDate());
+            target.setCreatedByName(auditMapperHelper.resolveUserDisplayName(domain.getMetadata().createdBy()));
+            target.setUpdatedByName(auditMapperHelper.resolveUserDisplayName(domain.getMetadata().updatedBy()));
         }
     }
 }

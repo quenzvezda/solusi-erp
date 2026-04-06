@@ -3,12 +3,14 @@ package com.solusi.erp.common.news.web.dto;
 import com.solusi.erp.common.news.domain.model.NewsStatus;
 import com.solusi.erp.core.dto.BaseAuditResponse;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 
@@ -33,6 +35,11 @@ public class NewsSaveRequest extends BaseAuditResponse {
     private String author;
     
     private NewsStatus status;
+
+    @NotNull(message = "{label.news.publish-date} {validation.notnull.suffix}")
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime publishDate;
+
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime expiryDate;
 }

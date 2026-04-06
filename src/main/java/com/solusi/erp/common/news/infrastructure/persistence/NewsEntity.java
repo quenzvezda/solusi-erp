@@ -16,6 +16,9 @@ import java.time.LocalDateTime;
 @Setter
 public class NewsEntity extends BaseModel {
 
+    @Column(nullable = false, length = 50, unique = true)
+    private String code;
+
     @Column(nullable = false, length = 255, unique = true)
     private String title;
 

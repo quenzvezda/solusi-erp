@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.news.detail.title})}"></head>
+
+<body th:replace="~{layout/master :: layout(~{:: .news-detail-content}, ~{:: #page-specific-scripts})}">
+<div class="news-detail-content">
+
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title" th:text="${news.title}">News Title</h2>
+                </div>
+                <div class="col-auto ms-auto d-print-none">
+                    <div class="btn-list">
+                        <!-- Approval History button (only when approval exists) -->
+                        <button th:if="${approvalRequestId != null}"
+                                type="button"
+                                class="btn btn-white"
+                                onclick="ErpDrawer.open('drawer-approval-history')">
+                            <i class="ti ti-history me-1"></i>
+                            <span th:text="#{label.approval.history}">Approval History</span>
+                        </button>
+                        <a th:href="@{/common/news}" class="btn btn-white">
+                            <i class="ti ti-arrow-left me-1"></i>
+                            <span th:text="#{label.back}">Back</span>
+                        </a>
+                        <a th:if="${news.status.name() == 'DRAFT'}"
+                           th:href="@{/common/news/edit/{id}(id=${news.id})}"
+                           class="btn btn-white"
+                           sec:authorize="hasAuthority('NEWS_UPDATE')">
+                            <i class="ti ti-edit me-1"></i>Edit
+                        </a>
+                        <!-- Submit for Approval button (DRAFT only) -->
+                        <button th:if="${news.status.name() == 'DRAFT'}"
+                                type="button"
+                                class="btn btn-primary"
+                                sec:authorize="hasAuthority('NEWS_UPDATE')"
+                                th:attr="data-news-id=${news.id}"
+                                onclick="submitForApproval(this.dataset.newsId)">
+                            <i class="ti ti-send me-1"></i>Submit for Approval
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+
+            <!-- Approval Action Banner — only for current approver -->
+            <th:block th:if="${isCurrentApprover}">
+                <div th:replace="~{fragments/approval :: approve-action-banner(${approvalRequestId}, ${currentPartyId})}"></div>
+            </th:block>
+
+            <div class="row row-cards">
+
+                <!-- Left: Content -->
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title" th:text="#{label.news.content}">Content</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="news-content" th:utext="${news.content}">Content here</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Metadata -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Information</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted" th:text="#{label.news.status}">Status</label>
+                                <div>
+                                    <span class="badge"
+                                          th:classappend="${news.status.name() == 'DRAFT' ? 'bg-secondary-lt' :
+                                                         (news.status.name() == 'PENDING_APPROVAL' ? 'bg-warning-lt' :
+                                                         (news.status.name() == 'PUBLISHED' ? 'bg-success-lt' : 'bg-muted-lt'))}"
+                                          th:text="${#messages.msg('label.news.status.' + #strings.toLowerCase(news.status.name()))}">Draft</span>
+                                </div>
+                            </div>
+                            <div th:if="${news.code != null}" class="mb-3">
+                                <label class="form-label text-muted" th:text="#{label.news.code}">Code</label>
+                                <div class="font-weight-medium font-monospace" th:text="${news.code}">NEWS-0001</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted" th:text="#{label.news.author}">Author</label>
+                                <div class="font-weight-medium" th:text="${news.author ?: '-'}">Author</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted" th:text="#{label.news.publish-date}">Publish Date</label>
+                                <div class="font-weight-medium"
+                                     th:text="${news.publishDate != null ? #temporals.format(news.publishDate, 'dd MMM yyyy HH:mm') : '-'}">-</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted" th:text="#{label.news.expiry-date}">Expiry Date</label>
+                                <div class="font-weight-medium"
+                                     th:text="${news.expiryDate != null ? #temporals.format(news.expiryDate, 'dd MMM yyyy HH:mm') : '-'}">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Audit Info — full-width strip below the 2-column layout -->
+            <div th:replace="~{fragments/audit-info :: audit-info(${news})}"></div>
+        </div>
+    </div>
+
+    <!-- Approval History Drawer (only when approval exists) -->
+    <th:block th:if="${approvalRequestId != null}">
+        <div th:replace="~{fragments/approval :: approval-history-drawer(${approvalRequestId})}"></div>
+    </th:block>
+
+</div>
+
+<div id="page-specific-scripts" th:fragment="pageScripts">
+
+<!-- Submit for Approval Modal with Approver Selection -->
+<button id="btn-trigger-submit-approval" class="d-none" data-bs-toggle="modal" data-bs-target="#modal-submit-approval"></button>
+<div class="modal fade" id="modal-submit-approval" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Submit for Approval</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">
+                        Select Approver <span class="text-danger ms-1">*</span>
+                    </label>
+                    <select id="submit-approver" class="erp-input-ts"
+                            data-lookup-path="parties/by-role-type?roleTypeCode=APPROVER">
+                        <option value="">-- Select Approver --</option>
+                    </select>
+                    <div class="invalid-feedback d-block d-none" id="submit-approver-error">Please select an approver.</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-confirm-submit-approval">
+                    <i class="ti ti-send me-1"></i> Submit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    const newsId = /*[[${news.id}]]*/ null;
+    const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
+    const csrfToken = /*[[${_csrf.token}]]*/ '';
+
+    function submitForApproval(id) {
+        const modalEl = document.getElementById('modal-submit-approval');
+
+        // Init TomSelect for approver lookup after modal is shown
+        modalEl.addEventListener('shown.bs.modal', function handler() {
+            const selectEl = document.getElementById('submit-approver');
+            if (selectEl && !selectEl.tomselect && typeof initLookup === 'function') {
+                initLookup(selectEl, selectEl.getAttribute('data-lookup-path'));
+            }
+            modalEl.removeEventListener('shown.bs.modal', handler);
+        });
+
+        // Reset state
+        const selectEl = document.getElementById('submit-approver');
+        if (selectEl && selectEl.tomselect) {
+            selectEl.tomselect.clear();
+        }
+        hideError('submit-approver-error');
+
+        // Bind confirm button
+        const btn = document.getElementById('btn-confirm-submit-approval');
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        newBtn.addEventListener('click', () => {
+            const approverSelect = document.getElementById('submit-approver');
+            const approverId = approverSelect.tomselect ? approverSelect.tomselect.getValue() : approverSelect.value;
+            if (!approverId) {
+                showError('submit-approver-error');
+                return;
+            }
+            hideError('submit-approver-error');
+
+            fetch(`/common/news/${id}/submit-for-approval`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({ approverId: parseInt(approverId) })
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Error');
+                const closeBtn = modalEl.querySelector('[data-bs-dismiss="modal"]');
+                if (closeBtn) closeBtn.click();
+                window.location.reload();
+            })
+            .catch(err => {
+                if (window.ErpModal) ErpModal.showError(err.message);
+                else alert(err.message);
+            });
+        });
+
+        document.getElementById('btn-trigger-submit-approval').click();
+    }
+
+    function showError(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('d-none');
+    }
+    function hideError(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('d-none');
+    }
+</script>
+</div>
+</body>
+</html>

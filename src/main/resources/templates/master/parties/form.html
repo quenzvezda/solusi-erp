@@ -211,6 +211,7 @@
                                                         th:field="*{identifications[__${stat.index}__].idNumber}"
                                                         class="form-control form-control-sm"></td>
                                                 <td><input type="date"
+                                                        data-picker="date"
                                                         th:field="*{identifications[__${stat.index}__].expiryDate}"
                                                         class="form-control form-control-sm"></td>
                                                 <td class="text-center">
@@ -402,7 +403,7 @@
                     </select>
                 </td>
                 <td><input type="text" name="identifications[INDEX].idNumber" class="form-control form-control-sm"></td>
-                <td><input type="date" name="identifications[INDEX].expiryDate" class="form-control form-control-sm">
+                <td><input type="date" data-picker="date" name="identifications[INDEX].expiryDate" class="form-control form-control-sm">
                 </td>
                 <td class="text-center">
                     <input type="radio" name="idenDefault" class="form-check-input iden-default-radio" value="INDEX"

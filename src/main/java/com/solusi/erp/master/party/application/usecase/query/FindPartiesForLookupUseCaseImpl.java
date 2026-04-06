@@ -17,4 +17,9 @@ public class FindPartiesForLookupUseCaseImpl implements FindPartiesForLookupUseC
     public List<Party> execute(String keyword) {
         return repository.findForLookup(keyword);
     }
+
+    @Override
+    public List<Party> executeByRoleType(String keyword, String roleTypeCode, Long excludePartyId) {
+        return repository.findForLookupByRoleType(keyword, roleTypeCode, excludePartyId);
+    }
 }

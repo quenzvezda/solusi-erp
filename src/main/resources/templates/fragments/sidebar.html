@@ -30,16 +30,6 @@
         <div class="collapse navbar-collapse" id="sidebar-menu">
             <ul class="navbar-nav pt-lg-3 flex-grow-1">
 
-                <!-- Dashboard -->
-                <li class="nav-item" sec:authorize="hasAuthority('DASHBOARD_READ')">
-                    <a class="nav-link" th:href="@{/dashboard}">
-                        <span class="nav-link-icon d-md-none d-lg-inline-block">
-                            <i class="ti ti-home-2"></i>
-                        </span>
-                        <span class="nav-link-title" th:text="#{label.dashboard}">Dashboard</span>
-                    </a>
-                </li>
-
                 <!-- Dynamic Menu Nodes from Session -->
                 <th:block th:if="${session.userMenu != null}">
                     <th:block th:each="mNode, iterStat : ${session.userMenu}">

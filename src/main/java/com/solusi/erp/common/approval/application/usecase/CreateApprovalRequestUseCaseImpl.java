@@ -13,12 +13,8 @@ public class CreateApprovalRequestUseCaseImpl implements CreateApprovalRequestUs
     private final ApprovalRequestRepository repository;
 
     @Override
-    public ApprovalRequest execute(String referenceType, Long referenceId, String requesterUsername) {
-        // In a real app, we'd lookup the Party ID from the username.
-        // For POC, we'll use a placeholder or ID 1 (Admin).
-        Long requesterId = 1L; 
-        
-        ApprovalRequest request = ApprovalRequest.createNew(referenceType, referenceId, requesterId);
+    public ApprovalRequest execute(String referenceType, Long referenceId, String referenceCode, Long requesterId, Long approverId) {
+        ApprovalRequest request = ApprovalRequest.createNew(referenceType, referenceId, referenceCode, requesterId, approverId);
         return repository.save(request);
     }
 }

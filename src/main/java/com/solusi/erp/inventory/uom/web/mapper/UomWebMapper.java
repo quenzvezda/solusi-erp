@@ -7,13 +7,17 @@ import com.solusi.erp.inventory.uom.web.dto.UomDetailResponse;
 import com.solusi.erp.inventory.uom.web.dto.UomSaveRequest;
 import com.solusi.erp.inventory.uom.web.dto.UomSummaryResponse;
 import org.mapstruct.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Web Mapper for UnitOfMeasure module.
  * Maps between Domain Model and Web DTOs.
  */
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = {AuditMapperHelper.class})
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public abstract class UomWebMapper {
+
+    @Autowired
+    protected AuditMapperHelper auditMapperHelper;
 
     public abstract UomSummaryResponse toSummaryResponse(UnitOfMeasure domain);
 
@@ -28,6 +32,8 @@ public abstract class UomWebMapper {
             target.setVersion(domain.getMetadata().version() != null ? domain.getMetadata().version().intValue() : null);
             target.setCreatedDate(domain.getMetadata().createdDate());
             target.setUpdatedDate(domain.getMetadata().updatedDate());
+            target.setCreatedByName(auditMapperHelper.resolveUserDisplayName(domain.getMetadata().createdBy()));
+            target.setUpdatedByName(auditMapperHelper.resolveUserDisplayName(domain.getMetadata().updatedBy()));
         }
     }
 }

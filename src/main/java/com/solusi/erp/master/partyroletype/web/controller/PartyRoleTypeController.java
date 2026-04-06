@@ -83,7 +83,7 @@ public class PartyRoleTypeController {
     public ResponseEntity<ApiResponse<PartyRoleTypeDetailResponse>> create(
             @Valid @RequestBody PartyRoleTypeSaveRequest request) {
         PartyRoleType domain = createPartyRoleTypeUseCase.execute(
-                request.getName(), request.getNote(), request.getIsActive());
+                request.getCode(), request.getName(), request.getNote(), request.getIsActive());
         PartyRoleTypeDetailResponse data = webMapper.toDetailResponse(domain);
         String msg = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(msg, data));

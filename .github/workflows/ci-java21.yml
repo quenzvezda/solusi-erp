@@ -67,7 +67,7 @@ jobs:
           path: target/surefire-reports/
 
   # ──────────────────────────────────────────────────────────────────────────
-  # Job 2: Full — executed on schedule (nightly) or manual dispatch
+  # Job 2: Full — executed on schedule (nightly), manual dispatch, or push to main/master
   # Includes: ALL tests including @Tag("integration-template")
   # Target time: < 3 minutes
   # ──────────────────────────────────────────────────────────────────────────
@@ -75,7 +75,10 @@ jobs:
     name: Full Tests (unit + integration-template)
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_full == true)
+    if: |
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_full == true) ||
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
 
     steps:
       - name: Checkout

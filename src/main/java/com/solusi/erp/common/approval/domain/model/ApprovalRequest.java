@@ -14,53 +14,89 @@ public class ApprovalRequest {
     private final AuditMetadata metadata;
     private final String referenceType;
     private final Long referenceId;
+    private final String referenceCode;
     private ApprovalStatus status;
     private Long currentApproverId;
     private List<ApprovalHistory> histories;
 
-    public ApprovalRequest(AuditMetadata metadata, String referenceType, Long referenceId, ApprovalStatus status, Long currentApproverId) {
+    public ApprovalRequest(AuditMetadata metadata, String referenceType, Long referenceId, String referenceCode, ApprovalStatus status, Long currentApproverId) {
         this.metadata = metadata;
         this.referenceType = referenceType;
         this.referenceId = referenceId;
+        this.referenceCode = referenceCode;
         this.status = status;
         this.currentApproverId = currentApproverId;
         this.histories = new ArrayList<>();
     }
 
-    public static ApprovalRequest createNew(String referenceType, Long referenceId, Long requesterId) {
+    public static ApprovalRequest createNew(String referenceType, Long referenceId, String referenceCode, Long requesterId, Long assignedApproverId) {
         ApprovalRequest request = new ApprovalRequest(
-            AuditMetadata.empty(), referenceType, referenceId, ApprovalStatus.PENDING, null
+            AuditMetadata.empty(), referenceType, referenceId, referenceCode, ApprovalStatus.PENDING, assignedApproverId
         );
-        request.addHistory(ApprovalAction.REQUESTED, requesterId, "Initial Request");
+        request.addHistory(ApprovalAction.REQUESTED, requesterId, assignedApproverId, "Initial Request");
         return request;
     }
 
     public void approve(Long actorId, String notes) {
-        if (this.status != ApprovalStatus.PENDING) {
-            throw new DomainException("msg.error.approval.not-pending");
-        }
-        
+        validatePending();
+        validateNotesRequired(notes);
         this.status = ApprovalStatus.COMPLETED;
-        addHistory(ApprovalAction.APPROVE_AND_FINISH, actorId, notes);
+        addHistory(ApprovalAction.APPROVE_AND_FINISH, actorId, null, notes);
+    }
+
+    public void approveAndForward(Long actorId, Long targetApproverId, String notes) {
+        validatePending();
+        validateNotesRequired(notes);
+        validateForwardTarget(actorId, targetApproverId);
+        this.currentApproverId = targetApproverId;
+        addHistory(ApprovalAction.APPROVE_AND_FORWARD, actorId, targetApproverId, notes);
+    }
+
+    public void forward(Long actorId, Long targetApproverId, String notes) {
+        validatePending();
+        validateNotesRequired(notes);
+        validateForwardTarget(actorId, targetApproverId);
+        this.currentApproverId = targetApproverId;
+        addHistory(ApprovalAction.FORWARD, actorId, targetApproverId, notes);
     }
 
     public void reject(Long actorId, String notes) {
+        validatePending();
+        validateNotesRequired(notes);
+        this.status = ApprovalStatus.REJECTED;
+        addHistory(ApprovalAction.REJECTED, actorId, null, notes);
+    }
+
+    private void validatePending() {
         if (this.status != ApprovalStatus.PENDING) {
             throw new DomainException("msg.error.approval.not-pending");
         }
-        
-        this.status = ApprovalStatus.REJECTED;
-        addHistory(ApprovalAction.REJECTED, actorId, notes);
     }
 
-    private void addHistory(ApprovalAction action, Long actorId, String notes) {
-        this.histories.add(new ApprovalHistory(null, action, actorId, null, notes, LocalDateTime.now()));
+    private void validateNotesRequired(String notes) {
+        if (notes == null || notes.isBlank()) {
+            throw new DomainException("msg.error.approval.reason-required");
+        }
+    }
+
+    private void validateForwardTarget(Long actorId, Long targetApproverId) {
+        if (targetApproverId == null) {
+            throw new DomainException("msg.error.approval.target-approver-required");
+        }
+        if (targetApproverId.equals(actorId)) {
+            throw new DomainException("msg.error.approval.cannot-forward-to-self");
+        }
+    }
+
+    private void addHistory(ApprovalAction action, Long actorId, Long targetApproverId, String notes) {
+        this.histories.add(new ApprovalHistory(null, action, actorId, targetApproverId, notes, LocalDateTime.now()));
     }
 
     // Getters
     public Long getId() { return metadata.id(); }
     public String getReferenceType() { return referenceType; }
     public Long getReferenceId() { return referenceId; }
+    public String getReferenceCode() { return referenceCode; }
     public ApprovalStatus getStatus() { return status; }
     public Long getCurrentApproverId() { return currentApproverId; }
     public List<ApprovalHistory> getHistories() { return histories; }

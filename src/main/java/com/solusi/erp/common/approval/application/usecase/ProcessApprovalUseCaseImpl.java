@@ -42,4 +42,22 @@ public class ProcessApprovalUseCaseImpl implements ProcessApprovalUseCase {
         
         return saved;
     }
+
+    @Override
+    public ApprovalRequest forward(Long requestId, Long actorId, Long targetApproverId, String notes) {
+        ApprovalRequest request = repository.findById(requestId)
+            .orElseThrow(() -> new DomainException("msg.error.approval.not-found"));
+
+        request.forward(actorId, targetApproverId, notes);
+        return repository.save(request);
+    }
+
+    @Override
+    public ApprovalRequest approveAndForward(Long requestId, Long actorId, Long targetApproverId, String notes) {
+        ApprovalRequest request = repository.findById(requestId)
+            .orElseThrow(() -> new DomainException("msg.error.approval.not-found"));
+
+        request.approveAndForward(actorId, targetApproverId, notes);
+        return repository.save(request);
+    }
 }

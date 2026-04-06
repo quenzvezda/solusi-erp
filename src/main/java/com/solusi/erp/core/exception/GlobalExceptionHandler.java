@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.ui.Model;
@@ -56,20 +57,48 @@ public class GlobalExceptionHandler {
     /**
      * Handle domain logic exceptions (DDD).
      * Automatically resolves the i18n key provided by the Domain Model.
+     * For HTML GET requests with @DefaultRedirectUrl: redirects with flash error.
+     * For AJAX/API requests: returns JSON error response.
      */
     @ExceptionHandler(DomainException.class)
-    @ResponseBody
-    public ResponseEntity<ApiResponse<Void>> handleDomainException(DomainException ex) {
+    public Object handleDomainException(DomainException ex, HttpServletRequest request) {
         log.warn("Domain exception: {}", ex.getKey());
-        
+
         String localizedMessage;
         try {
             localizedMessage = messageSource.getMessage(ex.getKey(), ex.getArgs(), LocaleContextHolder.getLocale());
         } catch (org.springframework.context.NoSuchMessageException e) {
             log.warn("Missing i18n message key for DomainException: {}", ex.getKey());
-            localizedMessage = ex.getKey(); // Fallback to raw key if not found
+            localizedMessage = ex.getKey();
         }
-        
+
+        if (!isAjaxRequest(request)) {
+            Object handler = request.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
+            if (handler instanceof HandlerMethod handlerMethod && "GET".equalsIgnoreCase(request.getMethod())) {
+                DefaultRedirectUrl annotation = handlerMethod.getMethodAnnotation(DefaultRedirectUrl.class);
+                if (annotation == null) {
+                    annotation = handlerMethod.getBeanType().getAnnotation(DefaultRedirectUrl.class);
+                }
+                if (annotation != null) {
+                    String redirectUrl = annotation.value();
+                    if (redirectUrl.isEmpty()) {
+                        RequestMapping requestMapping = handlerMethod.getBeanType().getAnnotation(RequestMapping.class);
+                        if (requestMapping != null && requestMapping.value().length > 0) {
+                            redirectUrl = requestMapping.value()[0];
+                        }
+                    }
+                    if (!redirectUrl.isEmpty()) {
+                        log.info("Smart Redirect (DomainException): redirecting to: {}", redirectUrl);
+                        FlashMap flashMap = RequestContextUtils.getOutputFlashMap(request);
+                        if (flashMap != null) {
+                            flashMap.put("errorMessage", localizedMessage);
+                        }
+                        return "redirect:" + redirectUrl;
+                    }
+                }
+            }
+        }
+
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(localizedMessage));
     }
@@ -83,8 +112,9 @@ public class GlobalExceptionHandler {
         log.error("Exception occurred: ", ex);
 
         if (isAjaxRequest(request)) {
-            response.resetBuffer(); 
+            response.resetBuffer();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(ApiResponse.error(ex.getMessage()));
         }
 
@@ -132,6 +162,7 @@ public class GlobalExceptionHandler {
         
         if (isAjaxRequest(request)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(ApiResponse.error("Access Denied"));
         }
         
@@ -147,6 +178,7 @@ public class GlobalExceptionHandler {
         
         if (isAjaxRequest(request)) {
             return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(ApiResponse.error(ex.getMessage()));
         }
         
@@ -163,6 +195,7 @@ public class GlobalExceptionHandler {
         
         if (isAjaxRequest(request)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(ApiResponse.error("Resource not found"));
         }
         

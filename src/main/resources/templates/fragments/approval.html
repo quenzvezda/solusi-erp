@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+    GENERIC APPROVAL FRAGMENT
+    =========================
+    Usage in any module:
+
+    1. Include the approval panel in the right info sidebar:
+        <div th:replace="~{fragments/approval :: approve-reject-panel(${approvalRequestId}, ${isCurrentApprover}, ${approvalStatus})}"></div>
+
+    2. Include the history drawer at the END of the page (before </body>):
+        <div th:replace="~{fragments/approval :: approval-history-drawer(${approvalRequestId})}"></div>
+
+    3. Include the history button in the page header btn-list:
+        <span th:replace="~{fragments/approval :: btn-approval-history}"></span>
+
+    4. Approval action modals are included globally in layout/master.html via:
+        <div th:replace="~{fragments/approval :: signature-capture-modal}"></div>
+-->
+
+<!-- ================================================
+     FRAGMENT: approve-reject-panel(requestId, isCurrentApprover, approvalStatus)
+     Renders the compact decision card with action buttons.
+     Action buttons are only shown when isCurrentApprover is true.
+     Embed in right sidebar of any detail page that needs approval.
+     ================================================ -->
+<div th:fragment="approve-reject-panel(requestId, isCurrentApprover, approvalStatus)" class="card mt-3">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="ti ti-clipboard-check me-1"></i>
+            <span th:text="#{label.approval}">Approval</span>
+        </h3>
+        <div class="card-options">
+            <span class="badge"
+                  th:if="${approvalStatus != null}"
+                  th:classappend="${approvalStatus.name() == 'PENDING' ? 'bg-yellow-lt' :
+                                  (approvalStatus.name() == 'COMPLETED' ? 'bg-success-lt' :
+                                  (approvalStatus.name() == 'REJECTED' ? 'bg-danger-lt' : 'bg-secondary-lt'))}"
+                  th:text="${#messages.msg('label.approval.status.' + approvalStatus.name().toLowerCase())}">Status</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- Decision Buttons — only for current approver -->
+        <div th:if="${isCurrentApprover}">
+            <p class="text-muted small mb-2">
+                <i class="ti ti-info-circle me-1"></i>
+                <span th:text="#{label.approval.action}">Take an action</span>:
+            </p>
+            <div class="row g-2">
+                <div class="col-6">
+                    <button type="button" class="btn btn-success btn-sm w-100"
+                            onclick="ApprovalUI.openApproveFinishModal()"
+                            th:attr="data-request-id=${requestId}">
+                        <i class="ti ti-check me-1"></i>
+                        <span th:text="#{label.approval.btn.approve_and_finish}">Approve &amp; Finish</span>
+                    </button>
+                </div>
+                <div class="col-6">
+                    <button type="button" class="btn btn-primary btn-sm w-100"
+                            onclick="ApprovalUI.openApproveForwardModal()"
+                            th:attr="data-request-id=${requestId}">
+                        <i class="ti ti-checks me-1"></i>
+                        <span th:text="#{label.approval.btn.approve_and_forward}">Approve &amp; Forward</span>
+                    </button>
+                </div>
+                <div class="col-6">
+                    <button type="button" class="btn btn-secondary btn-sm w-100"
+                            onclick="ApprovalUI.openForwardModal()"
+                            th:attr="data-request-id=${requestId}">
+                        <i class="ti ti-arrow-forward me-1"></i>
+                        <span th:text="#{label.approval.btn.forward}">Forward</span>
+                    </button>
+                </div>
+                <div class="col-6">
+                    <button type="button" class="btn btn-outline-danger btn-sm w-100"
+                            onclick="ApprovalUI.openRejectModal()"
+                            th:attr="data-request-id=${requestId}">
+                        <i class="ti ti-x me-1"></i>
+                        <span th:text="#{label.approval.btn.reject}">Reject</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div th:unless="${isCurrentApprover}" class="text-muted small">
+            <i class="ti ti-info-circle me-1"></i>
+            <span th:text="#{label.approval.history}">View approval history using the history button above.</span>
+        </div>
+
+        <!-- Hidden field for requestId — used by JS -->
+        <input type="hidden" id="current-approval-request-id" th:value="${requestId}">
+    </div>
+</div>
+
+
+<!-- ================================================
+     FRAGMENT: approve-action-banner(requestId)
+     Full-width alert banner placed ABOVE the main content area.
+     Shows approval action buttons for the current approver.
+     Usage: <div th:if="${isCurrentApprover}" th:replace="~{fragments/approval :: approve-action-banner(${approvalRequestId})}"></div>
+     ================================================ -->
+<div th:fragment="approve-action-banner(requestId, excludePartyId)" class="card card-sm border-primary mb-3" style="border-left: 4px solid var(--tblr-primary);">
+    <div class="card-body py-2">
+        <div class="d-flex align-items-center flex-wrap gap-2">
+            <div class="me-auto d-flex align-items-center gap-2">
+                <i class="ti ti-clipboard-check fs-2 text-primary"></i>
+                <div>
+                    <div class="fw-bold" th:text="#{label.approval.banner.title}">This document requires your approval</div>
+                    <div class="text-muted small" th:text="#{label.approval.banner.subtitle}">Please review and take action.</div>
+                </div>
+            </div>
+            <div class="btn-list flex-nowrap">
+                <button type="button" class="btn btn-success btn-sm"
+                        onclick="ApprovalUI.openApproveFinishModal()"
+                        th:attr="data-request-id=${requestId}">
+                    <i class="ti ti-check me-1"></i>
+                    <span th:text="#{label.approval.btn.approve_and_finish}">Approve &amp; Finish</span>
+                </button>
+                <button type="button" class="btn btn-primary btn-sm"
+                        onclick="ApprovalUI.openApproveForwardModal()"
+                        th:attr="data-request-id=${requestId}">
+                    <i class="ti ti-checks me-1"></i>
+                    <span th:text="#{label.approval.btn.approve_and_forward}">Approve &amp; Forward</span>
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm"
+                        onclick="ApprovalUI.openForwardModal()"
+                        th:attr="data-request-id=${requestId}">
+                    <i class="ti ti-arrow-forward me-1"></i>
+                    <span th:text="#{label.approval.btn.forward}">Forward</span>
+                </button>
+                <button type="button" class="btn btn-outline-danger btn-sm"
+                        onclick="ApprovalUI.openRejectModal()"
+                        th:attr="data-request-id=${requestId}">
+                    <i class="ti ti-x me-1"></i>
+                    <span th:text="#{label.approval.btn.reject}">Reject</span>
+                </button>
+            </div>
+        </div>
+        <!-- Hidden fields for JS -->
+        <input type="hidden" id="current-approval-request-id" th:value="${requestId}">
+        <input type="hidden" id="current-exclude-party-id" th:value="${excludePartyId}">
+    </div>
+</div>
+
+
+<!-- ================================================
+     FRAGMENT: approval-history-drawer(requestId)
+     Generic offcanvas drawer showing the approval timeline.
+     Include ONCE at the END of any detail page that has approval.
+     Open via: ErpDrawer.open('drawer-approval-history')
+     ================================================ -->
+<div th:fragment="approval-history-drawer(requestId)"
+     class="offcanvas offcanvas-end" tabindex="-1"
+     id="drawer-approval-history" style="width: 520px;">
+    <div class="offcanvas-header border-bottom">
+        <h2 class="offcanvas-title fs-4" th:text="#{label.approval.history}">Approval History</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div th:attr="hx-get='/common/approval/' + ${requestId} + '/history'"
+             hx-trigger="load, approvalProcessed from:body"
+             hx-swap="innerHTML">
+            <div class="text-center text-muted py-4">
+                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                Loading...
+            </div>
+        </div>
+    </div>
+    <!-- Hidden trigger for ErpDrawer.open() -->
+    <button id="btn-trigger-drawer-approval-history" class="d-none"
+            data-bs-toggle="offcanvas" data-bs-target="#drawer-approval-history"></button>
+</div>
+
+
+<!-- ================================================
+     FRAGMENT: timeline
+     The HTMX-loaded timeline content.
+     Rendered by ApprovalController.history() → "fragments/approval :: timeline"
+     ================================================ -->
+<div th:fragment="timeline">
+    <th:block th:if="${approval == null or approval.histories == null or approval.histories.isEmpty()}">
+        <p class="text-muted small mb-0" th:text="#{label.approval.empty}">No history yet.</p>
+    </th:block>
+
+    <div class="timeline" th:unless="${approval == null or approval.histories == null or approval.histories.isEmpty()}">
+        <div class="timeline-event" th:each="h : ${approval.histories}">
+            <div class="timeline-event-icon"
+                 th:classappend="${h.action == 'REQUESTED' ? 'bg-blue-lt' :
+                                  (h.action == 'APPROVE_AND_FINISH' ? 'bg-success-lt' :
+                                   (h.action == 'APPROVE_AND_FORWARD' ? 'bg-success-lt' :
+                                    (h.action == 'FORWARD' ? 'bg-azure-lt' : 'bg-danger-lt')))}">
+                <i class="ti"
+                   th:classappend="${h.action == 'REQUESTED' ? 'ti-send' :
+                                    (h.action == 'APPROVE_AND_FINISH' ? 'ti-check' :
+                                     (h.action == 'APPROVE_AND_FORWARD' ? 'ti-checks' :
+                                      (h.action == 'FORWARD' ? 'ti-arrow-forward' : 'ti-x')))}"></i>
+            </div>
+            <div class="card timeline-event-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-1">
+                        <strong class="me-auto"
+                                th:text="${#messages.msg('label.approval.action.' + #strings.toLowerCase(h.action))}">Action</strong>
+                        <span class="text-muted small" th:text="${#temporals.format(h.actionDate, 'dd MMM yyyy HH:mm')}">Date</span>
+                    </div>
+                    <div th:if="${h.actorName != null}" class="text-muted small mb-1 text-end">
+                        <i class="ti ti-user me-1" style="font-size: 12px;"></i>
+                        <span th:text="${h.actorName}">Actor Name</span>
+                        <th:block th:if="${h.targetApproverName != null}">
+                            <i class="ti ti-arrow-right mx-1" style="font-size: 12px;"></i>
+                            <span th:text="${h.targetApproverName}">Assignee Name</span>
+                        </th:block>
+                    </div>
+                    <p class="text-secondary small mb-0" th:text="${h.notes ?: '-'}">Notes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ================================================
+     FRAGMENT: signature-capture-modal
+     The modal containing SignaturePad canvas.
+     Included ONCE in layout/master.html globally.
+     ================================================ -->
+<div th:fragment="signature-capture-modal">
+
+    <!-- APPROVE & FINISH Modal -->
+    <div class="modal fade" id="modal-approve-finish" tabindex="-1" aria-labelledby="modal-approve-finish-title">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-approve-finish-title" th:text="#{label.approval.btn.approve_and_finish}">Approve &amp; Finish</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <span th:text="#{label.approval.notes}">Notes</span>
+                            <span class="text-danger ms-1">*</span>
+                        </label>
+                        <textarea id="approve-finish-notes" class="form-control" rows="2" required></textarea>
+                        <div class="invalid-feedback d-block d-none" id="approve-finish-notes-error">Notes are required.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <span th:text="#{label.approval.signature}">Digital Signature</span>
+                            <span class="text-danger ms-1">*</span>
+                        </label>
+                        <div class="border rounded bg-white position-relative" style="touch-action: none;">
+                            <canvas id="sig-canvas-approve-finish"
+                                    style="width:100%;height:200px;display:block;cursor:crosshair;"
+                                    th:attr="data-placeholder=#{label.approval.signature.draw}">
+                            </canvas>
+                        </div>
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="ApprovalUI.clearSignature('approve-finish')">
+                                <i class="ti ti-eraser me-1"></i>
+                                <span th:text="#{label.approval.signature.clear}">Clear</span>
+                            </button>
+                        </div>
+                        <div class="invalid-feedback d-block d-none" id="sig-error-approve-finish"
+                             th:text="#{label.approval.signature.required}">Please draw your signature.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{label.cancel}">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="ApprovalUI.submitApproveFinish()">
+                        <i class="ti ti-check me-1"></i>
+                        <span th:text="#{label.approval.btn.approve_and_finish}">Approve &amp; Finish</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APPROVE & FORWARD Modal -->
+    <div class="modal fade" id="modal-approve-forward" tabindex="-1" aria-labelledby="modal-approve-forward-title">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-approve-forward-title" th:text="#{label.approval.btn.approve_and_forward}">Approve &amp; Forward</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <span th:text="#{label.approval.notes}">Notes</span>
+                            <span class="text-danger ms-1">*</span>
+                        </label>
+                        <textarea id="approve-forward-notes" class="form-control" rows="2" required></textarea>
+                        <div class="invalid-feedback d-block d-none" id="approve-forward-notes-error">Notes are required.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Next Approver <span class="text-danger ms-1">*</span>
+                        </label>
+                        <select id="approve-forward-approver" class="approver-modal-select"
+                                data-lookup-path="parties/by-role-type?roleTypeCode=APPROVER">
+                            <option value="">-- Select Approver --</option>
+                        </select>
+                        <div class="invalid-feedback d-block d-none" id="approve-forward-approver-error">Please select an approver.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <span th:text="#{label.approval.signature}">Digital Signature</span>
+                            <span class="text-danger ms-1">*</span>
+                        </label>
+                        <div class="border rounded bg-white position-relative" style="touch-action: none;">
+                            <canvas id="sig-canvas-approve-forward"
+                                    style="width:100%;height:200px;display:block;cursor:crosshair;"
+                                    th:attr="data-placeholder=#{label.approval.signature.draw}">
+                            </canvas>
+                        </div>
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="ApprovalUI.clearSignature('approve-forward')">
+                                <i class="ti ti-eraser me-1"></i>
+                                <span th:text="#{label.approval.signature.clear}">Clear</span>
+                            </button>
+                        </div>
+                        <div class="invalid-feedback d-block d-none" id="sig-error-approve-forward"
+                             th:text="#{label.approval.signature.required}">Please draw your signature.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{label.cancel}">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="ApprovalUI.submitApproveForward()">
+                        <i class="ti ti-checks me-1"></i>
+                        <span th:text="#{label.approval.btn.approve_and_forward}">Approve &amp; Forward</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORWARD Modal -->
+    <div class="modal fade" id="modal-forward" tabindex="-1" aria-labelledby="modal-forward-title">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-forward-title" th:text="#{label.approval.btn.forward}">Forward</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <span th:text="#{label.approval.notes}">Notes</span>
+                            <span class="text-danger ms-1">*</span>
+                        </label>
+                        <textarea id="forward-notes" class="form-control" rows="2" required></textarea>
+                        <div class="invalid-feedback d-block d-none" id="forward-notes-error">Notes are required.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Next Approver <span class="text-danger ms-1">*</span>
+                        </label>
+                        <select id="forward-approver" class="approver-modal-select"
+                                data-lookup-path="parties/by-role-type?roleTypeCode=APPROVER">
+                            <option value="">-- Select Approver --</option>
+                        </select>
+                        <div class="invalid-feedback d-block d-none" id="forward-approver-error">Please select an approver.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{label.cancel}">Cancel</button>
+                    <button type="button" class="btn btn-blue" onclick="ApprovalUI.submitForward()">
+                        <i class="ti ti-arrow-forward me-1"></i>
+                        <span th:text="#{label.approval.btn.forward}">Forward</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- REJECT Modal -->
+    <div class="modal fade" id="modal-reject-approval" tabindex="-1" aria-labelledby="modal-reject-title">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-reject-title" th:text="#{label.approval.btn.reject}">Reject</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <span th:text="#{label.approval.notes}">Notes</span>
+                            <span class="text-danger ms-1">*</span>
+                        </label>
+                        <textarea id="reject-notes" class="form-control" rows="3"
+                                  th:placeholder="#{label.approval.notes}" required></textarea>
+                        <div class="invalid-feedback d-block d-none" id="reject-notes-error">
+                            Notes are required when rejecting.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                            th:text="#{label.cancel}">Cancel</button>
+                    <button type="button" class="btn btn-danger" onclick="ApprovalUI.submitReject()">
+                        <i class="ti ti-x me-1"></i>
+                        <span th:text="#{label.approval.btn.reject}">Reject</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden modal triggers (avoid bootstrap global dependency) -->
+    <button id="btn-trigger-modal-approve-finish"  class="d-none" data-bs-toggle="modal" data-bs-target="#modal-approve-finish"></button>
+    <button id="btn-trigger-modal-approve-forward" class="d-none" data-bs-toggle="modal" data-bs-target="#modal-approve-forward"></button>
+    <button id="btn-trigger-modal-forward"         class="d-none" data-bs-toggle="modal" data-bs-target="#modal-forward"></button>
+    <button id="btn-trigger-modal-reject"          class="d-none" data-bs-toggle="modal" data-bs-target="#modal-reject-approval"></button>
+
+</div>
+
+</body>
+</html>

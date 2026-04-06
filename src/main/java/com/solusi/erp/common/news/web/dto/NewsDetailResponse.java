@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class NewsDetailResponse extends BaseAuditResponse {
+    private String code;
     private String title;
     private String content;
     private NewsStatus status;

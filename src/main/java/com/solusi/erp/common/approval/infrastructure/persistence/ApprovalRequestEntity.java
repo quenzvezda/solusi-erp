@@ -23,6 +23,9 @@ public class ApprovalRequestEntity extends BaseModel {
     @Column(name = "reference_id", nullable = false)
     private Long referenceId;
 
+    @Column(name = "reference_code", length = 100)
+    private String referenceCode;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private ApprovalStatus status;

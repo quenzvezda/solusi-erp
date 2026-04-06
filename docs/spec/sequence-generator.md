@@ -35,3 +35,13 @@ public void create(MyRequest request) {
 ## 5. UI Standarisasi
 *   Input untuk `code` di form harus diatur sebagai `readonly` dan `bg-light`.
 *   Tampilkan placeholder `[Auto Generated]` saat mode **Create**.
+
+## 6. Registered Module Codes
+
+| Module Code | Format Pattern | Pad Length | Reset Cycle | Entity |
+|:---|:---|:---|:---|:---|
+| `PART` | `BP-{date:yyyy}-{seq}` | 4 | YEARLY | Party |
+| `ADJ` | `ADJ-{date:yyyyMM}-{seq}` | 4 | MONTHLY | StockAdjustment |
+| `NEWS` | `NEWS-{seq}` | 4 | NEVER | News |
+
+> Untuk modul baru, tambahkan entry ke `system_sequences` via Flyway migration mengikuti pola di atas (`updated_by_user_id` dan `updated_date` wajib diisi).

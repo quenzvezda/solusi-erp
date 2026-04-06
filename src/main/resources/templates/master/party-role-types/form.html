@@ -38,7 +38,7 @@
                             </h3>
                         </div>
                         <div class="card-body">
-                            <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.party-role-type.code}, isReadonly=true, placeholder='[Auto Generated]')}"></div>
+                            <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.party-role-type.code}, isReadonly=${partyRoleTypeRequest.id != null}, placeholder='Auto-generated if empty')}"></div>
                             
                             <div th:replace="~{fragments/inputs :: text(field='name', label=#{label.party-role-type.name}, required=true, placeholder=#{placeholder.party-role-type.name})}"></div>
 

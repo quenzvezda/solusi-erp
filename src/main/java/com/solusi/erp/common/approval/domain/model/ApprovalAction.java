@@ -6,5 +6,7 @@ package com.solusi.erp.common.approval.domain.model;
 public enum ApprovalAction {
     REQUESTED,
     APPROVE_AND_FINISH,
+    APPROVE_AND_FORWARD,
+    FORWARD,
     REJECTED
 }

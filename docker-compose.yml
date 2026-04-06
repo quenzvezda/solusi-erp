@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # MariaDB Database
+  # Note: Not used on current PC (mariadb-local already running on 3307)
+  # Uncomment ports if needed. Or change DB_PORT in .env to use this.
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb-erp
+    ports:
+      - "${DB_PORT}:3306"  # Set to 3308+ if mariadb-local using 3307
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+    volumes:
+      - ./data/mariadb:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - erp-network
+    profiles: ["with-db"]  # Only start if explicitly requested
+
+  # MinIO Object Storage
+  minio:
+    image: minio/minio:latest
+    container_name: minio-erp
+    ports:
+      - "${MINIO_PORT}:9000"
+      - "${MINIO_CONSOLE_PORT}:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - ./data/minio:/minio_data
+    command: minio server /minio_data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - erp-network
+
+networks:
+  erp-network:
+    driver: bridge

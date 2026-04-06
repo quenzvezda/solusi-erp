@@ -1,6 +1,7 @@
 package com.solusi.erp.master.party.web.mapper;
 
 import com.solusi.erp.core.dto.BaseAuditResponse;
+import com.solusi.erp.core.mapper.AuditMapperHelper;
 import com.solusi.erp.master.party.domain.model.Party;
 import com.solusi.erp.master.party.domain.model.PartyAddressData;
 import com.solusi.erp.master.party.domain.model.PartyContactData;
@@ -15,9 +16,13 @@ import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public abstract class PartyWebMapper {
+
+    @Autowired
+    protected AuditMapperHelper auditMapperHelper;
 
     public abstract PartySummaryResponse toSummaryResponse(Party domain);
 
@@ -38,6 +43,8 @@ public abstract class PartyWebMapper {
             target.setVersion(domain.getMetadata().version() != null ? domain.getMetadata().version().intValue() : null);
             target.setCreatedDate(domain.getMetadata().createdDate());
             target.setUpdatedDate(domain.getMetadata().updatedDate());
+            target.setCreatedByName(auditMapperHelper.resolveUserDisplayName(domain.getMetadata().createdBy()));
+            target.setUpdatedByName(auditMapperHelper.resolveUserDisplayName(domain.getMetadata().updatedBy()));
         }
     }
 }

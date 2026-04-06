@@ -9,11 +9,15 @@ import lombok.Getter;
 public class ApprovalRequestedEvent {
     private final String referenceType;
     private final Long referenceId;
-    private final String requester;
+    private final String referenceCode;
+    private final Long requesterId;
+    private final Long approverId;
 
-    public ApprovalRequestedEvent(String referenceType, Long referenceId, String requester) {
+    public ApprovalRequestedEvent(String referenceType, Long referenceId, String referenceCode, Long requesterId, Long approverId) {
         this.referenceType = referenceType;
         this.referenceId = referenceId;
-        this.requester = requester;
+        this.referenceCode = referenceCode;
+        this.requesterId = requesterId;
+        this.approverId = approverId;
     }
 }

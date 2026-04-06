@@ -55,6 +55,7 @@
 <div th:fragment="date" class="mb-3">
     <label th:if="${label}" class="form-label" th:classappend="${required} ? 'required'" th:text="${label}"></label>
     <input type="date" 
+           data-picker="date"
            th:value="${value != null ? #temporals.format(value, 'yyyy-MM-dd') : #calendars.format(#calendars.createNow(), 'yyyy-MM-dd')}"
            th:name="${field}"
            th:readonly="${isReadonly}" 

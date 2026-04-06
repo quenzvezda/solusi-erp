@@ -6,6 +6,8 @@
 
     <!-- TomSelect (Autocomplete) CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2/dist/css/tom-select.bootstrap5.min.css">
+    <!-- Flatpickr (Date & Time Picker) CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" th:href="@{/css/tomselect-custom.css}">
 </head>
@@ -51,6 +53,9 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@latest/dist/apexcharts.min.js" defer></script>
     <!-- TomSelect (Autocomplete) JS -->
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2/dist/js/tom-select.complete.min.js" defer></script>
+    <!-- Flatpickr (Date & Time Picker) JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/id.min.js" defer></script>
     
     <!-- Global i18n for JavaScript -->
     <script th:inline="javascript">
@@ -64,14 +69,26 @@
 
     <!-- ERP Global Helpers & Utilities -->
     <script th:src="@{/js/shared/erp-common-handler.js}" defer></script>
+    <!-- ERP Global Date/Time Picker -->
+    <script th:src="@{/js/shared/erp-datetime-picker.js}" defer></script>
     <!-- ERP Form Handler (AJAX) -->
     <script th:src="@{/js/shared/erp-form-handler.js}" defer></script>
+    <!-- SignaturePad — Digital Signature Capture -->
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4/dist/signature_pad.umd.min.js" defer></script>
+    <!-- Approval UI Handler -->
+    <script th:src="@{/js/approval/signature-capture.js}" defer></script>
+
+    <!-- Global Approval Modals (signature-capture-modal) -->
+    <div th:replace="~{fragments/approval :: signature-capture-modal}"></div>
     
     <!-- Global Page Lifecycle & HTMX Handlers -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             initNumericInputs();
             initAllLookups();
+            if (window.ErpDateTimePicker) {
+                window.ErpDateTimePicker.init(document);
+            }
 
             const menuSearchEl = document.getElementById('global-menu-search');
             if (menuSearchEl) {
@@ -106,6 +123,9 @@
         document.body.addEventListener('htmx:afterSwap', function (evt) {
             initNumericInputs(evt.detail.target);
             initAllLookups(evt.detail.target);
+            if (window.ErpDateTimePicker) {
+                window.ErpDateTimePicker.init(evt.detail.target);
+            }
         });
 
         /**
@@ -140,6 +160,9 @@
 
     <!-- Hidden Trigger for Error Modal -->
     <button id="btn-trigger-global-error" class="d-none" data-bs-toggle="modal" data-bs-target="#modal-global-error"></button>
+
+    <!-- Success Toast Container -->
+    <div id="erp-success-toast-container" style="position:fixed;top:1rem;left:50%;transform:translateX(-50%);z-index:1100;min-width:280px;max-width:420px;text-align:center;"></div>
 
     <!-- Optional Page-specific scripts -->
     <th:block th:replace="${pageScripts} ?: ~{}"></th:block>

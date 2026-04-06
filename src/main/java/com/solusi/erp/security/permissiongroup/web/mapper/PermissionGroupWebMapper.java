@@ -7,13 +7,17 @@ import com.solusi.erp.security.permissiongroup.web.dto.PermissionGroupDetailResp
 import com.solusi.erp.security.permissiongroup.web.dto.PermissionGroupSaveRequest;
 import com.solusi.erp.security.permissiongroup.web.dto.PermissionGroupSummaryResponse;
 import org.mapstruct.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Web Mapper for PermissionGroup module.
  * Maps between Domain Model and Web DTOs.
  */
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = {AuditMapperHelper.class})
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public abstract class PermissionGroupWebMapper {
+
+    @Autowired
+    protected AuditMapperHelper auditMapperHelper;
 
     public abstract PermissionGroupSummaryResponse toSummaryResponse(PermissionGroup domain);
 
@@ -28,6 +32,8 @@ public abstract class PermissionGroupWebMapper {
             target.setVersion(domain.getMetadata().version() != null ? domain.getMetadata().version().intValue() : null);
             target.setCreatedDate(domain.getMetadata().createdDate());
             target.setUpdatedDate(domain.getMetadata().updatedDate());
+            target.setCreatedByName(auditMapperHelper.resolveUserDisplayName(domain.getMetadata().createdBy()));
+            target.setUpdatedByName(auditMapperHelper.resolveUserDisplayName(domain.getMetadata().updatedBy()));
         }
     }
 

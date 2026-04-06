@@ -33,16 +33,39 @@ class CreatePartyRoleTypeUseCaseTest {
     }
 
     @Test
-    @DisplayName("execute generates code from sequence and saves party role type")
-    void execute_generatesCodeAndSavesPartyRoleType() {
+    @DisplayName("execute auto-generates code from sequence when code is null")
+    void execute_generatesCodeWhenCodeIsNull() {
         when(sequenceGeneratorService.generate("PARTY-ROLE-TYPE")).thenReturn("PRT-001");
         when(repository.save(any(PartyRoleType.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        PartyRoleType result = useCase.execute("Customer", "A customer role", true);
+        PartyRoleType result = useCase.execute(null, "Customer", "A customer role", true);
 
         assertThat(result.getCode()).isEqualTo("PRT-001");
         assertThat(result.getName()).isEqualTo("Customer");
         assertThat(result.getIsActive()).isTrue();
+    }
+
+    @Test
+    @DisplayName("execute auto-generates code from sequence when code is blank")
+    void execute_generatesCodeWhenCodeIsBlank() {
+        when(sequenceGeneratorService.generate("PARTY-ROLE-TYPE")).thenReturn("PRT-002");
+        when(repository.save(any(PartyRoleType.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        PartyRoleType result = useCase.execute("  ", "Vendor", null, true);
+
+        assertThat(result.getCode()).isEqualTo("PRT-002");
+        assertThat(result.getName()).isEqualTo("Vendor");
+    }
+
+    @Test
+    @DisplayName("execute uses provided code when code is not blank")
+    void execute_usesProvidedCode() {
+        when(repository.save(any(PartyRoleType.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        PartyRoleType result = useCase.execute("CUSTOM-CODE", "Customer", "A customer role", true);
+
+        assertThat(result.getCode()).isEqualTo("CUSTOM-CODE");
+        assertThat(result.getName()).isEqualTo("Customer");
     }
 
     @Test
@@ -54,7 +77,7 @@ class CreatePartyRoleTypeUseCaseTest {
         when(sequenceGeneratorService.generate("PARTY-ROLE-TYPE")).thenReturn("PRT-001");
         when(repository.save(any(PartyRoleType.class))).thenReturn(persisted);
 
-        PartyRoleType result = useCase.execute("Customer", null, true);
+        PartyRoleType result = useCase.execute(null, "Customer", null, true);
 
         assertThat(result.getId()).isEqualTo(10L);
     }

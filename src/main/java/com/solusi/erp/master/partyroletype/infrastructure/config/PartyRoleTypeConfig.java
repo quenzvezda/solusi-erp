@@ -36,7 +36,7 @@ public class PartyRoleTypeConfig {
         CreatePartyRoleTypeUseCase pure = new CreatePartyRoleTypeUseCaseImpl(
                 partyRoleTypeDomainRepository, sequenceGeneratorService);
         TransactionTemplate tx = new TransactionTemplate(txManager);
-        return (name, note, isActive) -> tx.execute(status -> pure.execute(name, note, isActive));
+        return (code, name, note, isActive) -> tx.execute(status -> pure.execute(code, name, note, isActive));
     }
 
     @Bean

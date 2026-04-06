@@ -5,6 +5,7 @@ import com.solusi.erp.common.news.application.usecase.command.*;
 import com.solusi.erp.common.news.application.usecase.query.*;
 import com.solusi.erp.common.news.domain.repository.NewsRepository;
 import com.solusi.erp.common.news.domain.service.NewsDomainService;
+import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -25,10 +26,11 @@ public class NewsConfig {
     public CreateNewsUseCase createNewsUseCase(
             NewsRepository newsRepository, 
             NewsDomainService domainService,
+            SequenceGeneratorService sequenceGeneratorService,
             TransactionTemplate transactionTemplate) {
-        CreateNewsUseCase pureUseCase = new CreateNewsUseCaseImpl(newsRepository, domainService);
-        return (title, content, author) -> 
-            transactionTemplate.execute(status -> pureUseCase.execute(title, content, author));
+        CreateNewsUseCase pureUseCase = new CreateNewsUseCaseImpl(newsRepository, domainService, sequenceGeneratorService);
+        return (title, content, author, publishDate, expiryDate) -> 
+            transactionTemplate.execute(status -> pureUseCase.execute(title, content, author, publishDate, expiryDate));
     }
 
     @Bean
@@ -36,8 +38,8 @@ public class NewsConfig {
             NewsRepository newsRepository, 
             TransactionTemplate transactionTemplate) {
         UpdateNewsUseCase pureUseCase = new UpdateNewsUseCaseImpl(newsRepository);
-        return (id, title, content) -> 
-            transactionTemplate.execute(status -> pureUseCase.execute(id, title, content));
+        return (id, title, content, publishDate, expiryDate) -> 
+            transactionTemplate.execute(status -> pureUseCase.execute(id, title, content, publishDate, expiryDate));
     }
 
     @Bean
@@ -46,8 +48,8 @@ public class NewsConfig {
             NewsEventPublisher eventPublisher,
             TransactionTemplate transactionTemplate) {
         SubmitNewsForApprovalUseCase pureUseCase = new SubmitNewsForApprovalUseCaseImpl(newsRepository, eventPublisher);
-        return (id, requester) ->
-            transactionTemplate.execute(status -> pureUseCase.execute(id, requester));
+        return (id, requester, approverId) ->
+            transactionTemplate.execute(status -> pureUseCase.execute(id, requester, approverId));
     }
 
     @Bean
