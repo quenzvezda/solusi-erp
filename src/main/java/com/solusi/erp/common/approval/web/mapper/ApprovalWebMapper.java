@@ -57,7 +57,10 @@ public class ApprovalWebMapper {
     }
 
     public ApprovalSignatureResponse toSignatureResponse(ApprovalSignature signature) {
-        String url = storageProvider.getUrl(signature.getBucketName(), signature.getStorageKey());
+        // Generate a 1-hour presigned URL so the browser can load the image directly
+        // from MinIO without CORS issues or proxy overhead.
+        String url = storageProvider.getPresignedUrl(
+                signature.getBucketName(), signature.getStorageKey(), 3600);
         return ApprovalSignatureResponse.builder()
                 .requestId(signature.getRequestId())
                 .signatureUrl(url)
