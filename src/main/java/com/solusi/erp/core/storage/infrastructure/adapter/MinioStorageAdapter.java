@@ -73,7 +73,7 @@ public class MinioStorageAdapter implements StorageProvider {
     @Override
     public String getPresignedUrl(String bucket, String key, int expirySeconds) {
         try {
-            return minioClient.getPresignedObjectUrl(
+            String url = minioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
                             .method(Method.GET)
                             .bucket(bucket)
@@ -81,6 +81,16 @@ public class MinioStorageAdapter implements StorageProvider {
                             .expiry(expirySeconds, TimeUnit.SECONDS)
                             .build()
             );
+            
+            // Transform URL from internal endpoint to external presigned endpoint if configured
+            String internalEndpoint = minioProperties.getEndpoint();
+            String presignedEndpoint = minioProperties.getPresignedEndpoint();
+            
+            if (presignedEndpoint != null && !presignedEndpoint.equals(internalEndpoint)) {
+                url = url.replace(internalEndpoint, presignedEndpoint);
+            }
+            
+            return url;
         } catch (MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException e) {
             throw new StorageException(
                     "Failed to generate presigned URL for '" + key + "' in bucket '" + bucket + "'", e);

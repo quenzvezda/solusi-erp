@@ -17,6 +17,7 @@ import java.util.Optional;
 public class MinioProperties {
 
     private String endpoint;
+    private String presignedEndpoint;
     private String accessKey;
     private String secretKey;
     private Map<String, String> buckets;
