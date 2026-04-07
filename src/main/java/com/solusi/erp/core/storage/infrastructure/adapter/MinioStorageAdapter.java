@@ -69,6 +69,16 @@ public class MinioStorageAdapter implements StorageProvider {
     }
 
     @Override
+    public byte[] getBytes(String bucket, String key) {
+        try (var stream = minioClient.getObject(
+                GetObjectArgs.builder().bucket(bucket).object(key).build())) {
+            return stream.readAllBytes();
+        } catch (MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException e) {
+            throw new StorageException("Failed to get object '" + key + "' from bucket '" + bucket + "'", e);
+        }
+    }
+
+    @Override
     public void delete(String bucket, String key) {
         try {
             minioClient.removeObject(

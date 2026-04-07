@@ -26,6 +26,15 @@ public interface StorageProvider {
     String getUrl(String bucket, String key);
 
     /**
+     * Retrieve the raw bytes of a stored object.
+     *
+     * @param bucket target bucket name
+     * @param key    object key / path inside the bucket
+     * @return binary content of the object
+     */
+    byte[] getBytes(String bucket, String key);
+
+    /**
      * Delete an object from the given bucket.
      *
      * @param bucket target bucket name

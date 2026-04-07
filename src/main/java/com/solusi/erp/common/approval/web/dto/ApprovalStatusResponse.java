@@ -21,5 +21,6 @@ public class ApprovalStatusResponse {
     private Long referenceId;
     private String referenceCode;
     private String currentApproverName;
+    private String documentUrl;
     private List<ApprovalHistoryResponse> histories;
 }

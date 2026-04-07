@@ -16,13 +16,16 @@ import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.core.exception.DomainException;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
+import com.solusi.erp.core.storage.domain.port.StorageProvider;
 import com.solusi.erp.security.shared.model.SecurityUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -39,6 +42,7 @@ import java.util.stream.Collectors;
  * Web controller for Approval actions and timeline display.
  * Endpoints are generic — usable by any module (News, StockAdjustment, etc.).
  */
+@Slf4j
 @Controller
 @RequestMapping("/common/approval")
 @RequiredArgsConstructor
@@ -51,6 +55,7 @@ public class ApprovalController {
     private final GetApprovalSignatureUrlUseCase getApprovalSignatureUrlUseCase;
     private final ApprovalWebMapper webMapper;
     private final MessageSource messageSource;
+    private final StorageProvider storageProvider;
 
     /**
      * GET /common/approval
@@ -206,6 +211,29 @@ public class ApprovalController {
             return ResponseEntity.ok(ApiResponse.success("No signature found", null));
         }
         return ResponseEntity.ok(ApiResponse.success("OK", webMapper.toSignatureResponse(sig.get())));
+    }
+
+    /**
+     * GET /common/approval/{requestId}/signature/image
+     * Proxies the signature image from storage (avoids CORS issues in dev).
+     */
+    @GetMapping("/{requestId}/signature/image")
+    @PreAuthorize("hasAnyAuthority('APPROVAL_READ', 'APPROVAL_MANAGE')")
+    @ResponseBody
+    public ResponseEntity<byte[]> signatureImage(@PathVariable Long requestId) {
+        Optional<ApprovalSignature> sig = getApprovalSignatureUrlUseCase.findByRequestId(requestId);
+        if (sig.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        try {
+            byte[] data = storageProvider.getBytes(sig.get().getBucketName(), sig.get().getStorageKey());
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_PNG)
+                    .body(data);
+        } catch (Exception e) {
+            log.warn("Failed to load signature image for request {}: {}", requestId, e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
     }
 
     private Long resolvePartyId(UserDetails principal) {

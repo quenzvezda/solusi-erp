@@ -78,11 +78,11 @@
                                             <i class="ti ti-list-details me-1"></i>
                                             <span th:text="#{label.view}">View</span>
                                         </a>
-                                        <a th:if="${item.referenceType == 'NEWS'}"
-                                           th:href="@{/common/news/{id}(id=${item.referenceId})}"
+                                        <a th:if="${item.documentUrl != null}"
+                                           th:href="@{${item.documentUrl}}"
                                            class="btn btn-sm btn-outline-secondary">
-                                            <i class="ti ti-eye me-1"></i>
-                                            <span th:text="#{label.news.module}">News</span>
+                                            <i class="ti ti-file-text me-1"></i>
+                                            <span th:text="#{label.approval.view-document}">Document</span>
                                         </a>
                                         <button th:if="${item.status == 'PENDING'}"
                                                 type="button"
@@ -92,9 +92,6 @@
                                             <i class="ti ti-user-share me-1"></i>
                                             <span th:text="#{label.approval.btn.reassign}">Reassign</span>
                                         </button>
-                                        <span th:if="${item.referenceType != 'NEWS'}"
-                                              class="text-secondary small"
-                                              th:text="'#' + ${item.referenceId}"></span>
                                     </div>
                                 </td>
                             </tr>

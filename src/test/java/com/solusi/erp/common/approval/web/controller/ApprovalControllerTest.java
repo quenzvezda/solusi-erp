@@ -11,6 +11,7 @@ import com.solusi.erp.common.approval.web.mapper.ApprovalWebMapper;
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.exception.DomainException;
+import com.solusi.erp.core.storage.domain.port.StorageProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,6 +41,7 @@ class ApprovalControllerTest {
     @Mock private GetApprovalSignatureUrlUseCase getApprovalSignatureUrlUseCase;
     @Mock private ApprovalWebMapper webMapper;
     @Mock private MessageSource messageSource;
+    @Mock private StorageProvider storageProvider;
     @Mock private Model model;
 
     @InjectMocks
@@ -204,5 +206,49 @@ class ApprovalControllerTest {
         controller.detail(requestId, model);
 
         verify(approvalRequestRepository).findById(requestId);
+    }
+
+    // ── signatureImage() proxy ──────────────────────────────────────────────
+
+    @Test
+    @DisplayName("signatureImage() returns 404 when no signature exists")
+    void signatureImage_noSignature_returns404() {
+        when(getApprovalSignatureUrlUseCase.findByRequestId(1L)).thenReturn(Optional.empty());
+
+        org.springframework.http.ResponseEntity<byte[]> response = controller.signatureImage(1L);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(404);
+    }
+
+    @Test
+    @DisplayName("signatureImage() returns image bytes when signature exists")
+    void signatureImage_withSignature_returnsImage() {
+        var sig = com.solusi.erp.common.approval.signature.domain.model.ApprovalSignature
+                .createNew(5L, "signatures/5/abc.png", "approval-signatures", 10L);
+        byte[] imageBytes = new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47};
+
+        when(getApprovalSignatureUrlUseCase.findByRequestId(5L)).thenReturn(Optional.of(sig));
+        when(storageProvider.getBytes("approval-signatures", "signatures/5/abc.png")).thenReturn(imageBytes);
+
+        org.springframework.http.ResponseEntity<byte[]> response = controller.signatureImage(5L);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getHeaders().getContentType()).isEqualTo(org.springframework.http.MediaType.IMAGE_PNG);
+        assertThat(response.getBody()).isEqualTo(imageBytes);
+    }
+
+    @Test
+    @DisplayName("signatureImage() returns 404 when storage throws exception")
+    void signatureImage_storageError_returns404() {
+        var sig = com.solusi.erp.common.approval.signature.domain.model.ApprovalSignature
+                .createNew(5L, "signatures/5/abc.png", "approval-signatures", 10L);
+
+        when(getApprovalSignatureUrlUseCase.findByRequestId(5L)).thenReturn(Optional.of(sig));
+        when(storageProvider.getBytes("approval-signatures", "signatures/5/abc.png"))
+                .thenThrow(new RuntimeException("MinIO error"));
+
+        org.springframework.http.ResponseEntity<byte[]> response = controller.signatureImage(5L);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(404);
     }
 }

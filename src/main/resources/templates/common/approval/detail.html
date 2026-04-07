@@ -65,30 +65,12 @@
                                 <div class="fw-bold" th:text="${approval.currentApproverName}">Approver</div>
                             </div>
                             <div class="mt-3 d-flex gap-2">
-                                <a th:if="${approval.referenceType == 'NEWS'}"
-                                   th:href="@{/common/news/{id}(id=${approval.referenceId})}"
+                                <a th:if="${approval.documentUrl != null}"
+                                   th:href="@{${approval.documentUrl}}"
                                    class="btn btn-sm btn-primary">
-                                    <i class="ti ti-eye me-1"></i>
-                                    <span th:text="#{label.view}">View Document</span>
+                                    <i class="ti ti-file-text me-1"></i>
+                                    <span th:text="#{label.approval.view-document}">View Document</span>
                                 </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Signature Card -->
-                    <div class="card mt-3">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="ti ti-signature me-1"></i>
-                                <span th:text="#{label.approval.detail.signature}">Decision Signature</span>
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <div id="signature-container">
-                                <div class="text-center text-muted py-3">
-                                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                                    Loading...
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -130,16 +112,29 @@
                                             </div>
                                             <!-- Actor → Target layout: actor left, arrow center, target right -->
                                             <div th:if="${h.actorName != null}" class="text-muted small mb-2">
-                                                <div class="d-flex align-items-center gap-1">
-                                                    <i class="ti ti-user flex-shrink-0" style="font-size: 12px;"></i>
-                                                    <span class="text-truncate" th:text="${h.actorName}">Actor Name</span>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="d-flex align-items-center gap-1 flex-fill" style="min-width:0">
+                                                        <i class="ti ti-user flex-shrink-0" style="font-size: 12px;"></i>
+                                                        <span class="text-truncate" th:text="${h.actorName}">Actor Name</span>
+                                                    </div>
                                                     <th:block th:if="${h.targetApproverName != null}">
-                                                        <i class="ti ti-arrow-right flex-shrink-0 mx-1" style="font-size: 12px;"></i>
-                                                        <span class="ms-auto text-truncate text-end" th:text="${h.targetApproverName}">Assignee Name</span>
+                                                        <i class="ti ti-arrow-right flex-shrink-0 mx-2" style="font-size: 12px;"></i>
+                                                        <div class="d-flex align-items-center gap-1 flex-fill justify-content-end" style="min-width:0">
+                                                            <i class="ti ti-user flex-shrink-0" style="font-size: 12px;"></i>
+                                                            <span class="text-truncate text-end" th:text="${h.targetApproverName}">Assignee Name</span>
+                                                        </div>
                                                     </th:block>
                                                 </div>
                                             </div>
                                             <p class="text-secondary small mb-0" th:text="${h.notes ?: '-'}">Notes</p>
+                                            <!-- Signature button: shown on approval actions, loaded via proxy -->
+                                            <div th:if="${h.action == 'APPROVE_AND_FINISH' or h.action == 'APPROVE_AND_FORWARD'}"
+                                                 class="mt-2 signature-slot" th:attr="data-actor-id=${h.actorId}">
+                                                <div class="text-muted small">
+                                                    <div class="spinner-border spinner-border-sm me-1" role="status" style="width:.75rem;height:.75rem;"></div>
+                                                    Loading...
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -154,34 +149,86 @@
 
 </div>
 
+<!-- Signature popup modal -->
+<div class="modal fade" id="modal-signature-view" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="ti ti-signature me-1"></i>
+                    <span th:text="#{label.approval.detail.signature}">Decision Signature</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <img id="modal-signature-img" src="" alt="Signature"
+                     class="img-fluid border rounded" style="max-height:300px; background:#fff;">
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="page-specific-scripts" th:fragment="pageScripts">
     <script th:inline="javascript">
         const approvalRequestId = /*[[${approval.requestId}]]*/ null;
+        const noSignatureMsg = /*[[#{label.approval.detail.no-signature}]]*/ 'No signature recorded.';
+        const loadErrorMsg = /*[[#{label.approval.signature-load-error}]]*/ 'Failed to load signature image.';
+        const viewSignatureLabel = /*[[#{label.approval.view-signature}]]*/ 'Signature';
 
         document.addEventListener('DOMContentLoaded', function () {
             if (!approvalRequestId) return;
+            const proxyUrl = '/common/approval/' + approvalRequestId + '/signature/image';
+            const slots = document.querySelectorAll('.signature-slot');
+
+            // Check if signature exists via JSON API
             fetch('/common/approval/' + approvalRequestId + '/signature', {
                 headers: { 'Accept': 'application/json' }
             })
-            .then(res => res.json())
-            .then(data => {
-                const container = document.getElementById('signature-container');
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
                 if (data && data.data && data.data.signatureUrl) {
-                    container.innerHTML =
-                        '<div class="text-center">' +
-                        '<img src="' + data.data.signatureUrl + '" alt="Signature" ' +
-                        'class="img-fluid border rounded" style="max-height:180px; background:#fff;">' +
-                        '</div>';
+                    // Signature exists — show button on matching timeline entry
+                    var signerUserId = data.data.signerUserId;
+                    var matched = false;
+                    slots.forEach(function(slot) {
+                        var actorId = parseInt(slot.getAttribute('data-actor-id'), 10);
+                        if (actorId === signerUserId || !matched) {
+                            slot.innerHTML =
+                                '<button type="button" class="btn btn-sm btn-outline-primary btn-view-signature">' +
+                                '<i class="ti ti-signature me-1"></i>' + viewSignatureLabel +
+                                '</button>';
+                            slot.querySelector('.btn-view-signature').addEventListener('click', function() {
+                                var img = document.getElementById('modal-signature-img');
+                                img.src = proxyUrl;
+                                img.onerror = function() {
+                                    img.style.display = 'none';
+                                    var errDiv = document.createElement('div');
+                                    errDiv.className = 'text-danger small py-3';
+                                    errDiv.innerHTML = '<i class="ti ti-alert-triangle me-1"></i>' + loadErrorMsg;
+                                    img.parentNode.appendChild(errDiv);
+                                };
+                                img.style.display = '';
+                                new bootstrap.Modal(document.getElementById('modal-signature-view')).show();
+                            });
+                            matched = true;
+                        } else {
+                            slot.innerHTML =
+                                '<span class="text-muted small"><i class="ti ti-signature-off me-1"></i>' + noSignatureMsg + '</span>';
+                        }
+                    });
                 } else {
-                    const msg = /*[[#{label.approval.detail.no-signature}]]*/ 'No signature recorded.';
-                    container.innerHTML =
-                        '<p class="text-muted small mb-0"><i class="ti ti-signature-off me-1"></i>' + msg + '</p>';
+                    // No signature — show "no signature" on all slots
+                    slots.forEach(function(slot) {
+                        slot.innerHTML =
+                            '<span class="text-muted small"><i class="ti ti-signature-off me-1"></i>' + noSignatureMsg + '</span>';
+                    });
                 }
             })
-            .catch(() => {
-                const msg = /*[[#{label.approval.detail.no-signature}]]*/ 'No signature recorded.';
-                document.getElementById('signature-container').innerHTML =
-                    '<p class="text-muted small mb-0"><i class="ti ti-signature-off me-1"></i>' + msg + '</p>';
+            .catch(function() {
+                slots.forEach(function(slot) {
+                    slot.innerHTML =
+                        '<span class="text-danger small"><i class="ti ti-alert-triangle me-1"></i>' + loadErrorMsg + '</span>';
+                });
             });
         });
     </script>
