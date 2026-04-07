@@ -58,6 +58,18 @@ public class ApprovalRequestRepositoryImpl implements ApprovalRequestRepository 
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<ApprovalRequest> findPendingApprovals(String keyword, Pageable pageable) {
+        org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
+        org.springframework.data.domain.Page<ApprovalRequestEntity> entityPage =
+                jpaRepository.findByStatusAndKeyword(ApprovalStatus.PENDING, keyword, springPageable);
+        List<ApprovalRequest> content = entityPage.getContent().stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+        return new Page<>(content, entityPage.getNumber(), entityPage.getSize(), entityPage.getTotalElements());
+    }
+
+    @Override
     public long countPendingApprovals() {
         return jpaRepository.countByStatus(ApprovalStatus.PENDING);
     }
@@ -75,6 +87,18 @@ public class ApprovalRequestRepositoryImpl implements ApprovalRequestRepository 
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<ApprovalRequest> findPendingApprovalsForApprover(Long approverPartyId, String keyword, Pageable pageable) {
+        org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
+        org.springframework.data.domain.Page<ApprovalRequestEntity> entityPage =
+                jpaRepository.findByStatusAndCurrentApproverIdAndKeyword(ApprovalStatus.PENDING, approverPartyId, keyword, springPageable);
+        List<ApprovalRequest> content = entityPage.getContent().stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+        return new Page<>(content, entityPage.getNumber(), entityPage.getSize(), entityPage.getTotalElements());
+    }
+
+    @Override
     public long countPendingApprovalsForApprover(Long approverPartyId) {
         return jpaRepository.countByStatusAndCurrentApproverId(ApprovalStatus.PENDING, approverPartyId);
     }
@@ -85,6 +109,18 @@ public class ApprovalRequestRepositoryImpl implements ApprovalRequestRepository 
         org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
         org.springframework.data.domain.Page<ApprovalRequestEntity> entityPage =
                 jpaRepository.findAllWithHistories(springPageable);
+        List<ApprovalRequest> content = entityPage.getContent().stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+        return new Page<>(content, entityPage.getNumber(), entityPage.getSize(), entityPage.getTotalElements());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ApprovalRequest> findAll(String keyword, Pageable pageable) {
+        org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
+        org.springframework.data.domain.Page<ApprovalRequestEntity> entityPage =
+                jpaRepository.findAllWithHistoriesAndKeyword(keyword, springPageable);
         List<ApprovalRequest> content = entityPage.getContent().stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());

@@ -58,7 +58,8 @@ public class ApprovalController {
      */
     @GetMapping
     @PreAuthorize("hasAuthority('APPROVAL_READ')")
-    public String list(org.springframework.data.domain.Pageable springPageable, Model model,
+    public String list(@RequestParam(required = false) String keyword,
+                       org.springframework.data.domain.Pageable springPageable, Model model,
                        @AuthenticationPrincipal UserDetails principal) {
         Long currentApproverPartyId = null;
         if (principal instanceof SecurityUser securityUser) {
@@ -68,9 +69,9 @@ public class ApprovalController {
         Pageable domainPageable = PageableMapper.toDomain(springPageable);
         com.solusi.erp.core.domain.model.Page<ApprovalRequest> domainPage;
         if (currentApproverPartyId != null) {
-            domainPage = approvalRequestRepository.findPendingApprovalsForApprover(currentApproverPartyId, domainPageable);
+            domainPage = approvalRequestRepository.findPendingApprovalsForApprover(currentApproverPartyId, keyword, domainPageable);
         } else {
-            domainPage = approvalRequestRepository.findPendingApprovals(domainPageable);
+            domainPage = approvalRequestRepository.findPendingApprovals(keyword, domainPageable);
         }
 
         List<ApprovalStatusResponse> content = domainPage.content().stream()
@@ -79,6 +80,7 @@ public class ApprovalController {
 
         Page<ApprovalStatusResponse> springPage = new PageImpl<>(content, springPageable, domainPage.totalElements());
         model.addAttribute("page", springPage);
+        model.addAttribute("keyword", keyword);
         return "common/approval/list";
     }
 
@@ -88,10 +90,11 @@ public class ApprovalController {
      */
     @GetMapping("/manage")
     @PreAuthorize("hasAuthority('APPROVAL_MANAGE')")
-    public String manage(org.springframework.data.domain.Pageable springPageable, Model model) {
+    public String manage(@RequestParam(required = false) String keyword,
+                         org.springframework.data.domain.Pageable springPageable, Model model) {
         Pageable domainPageable = PageableMapper.toDomain(springPageable);
         com.solusi.erp.core.domain.model.Page<ApprovalRequest> domainPage =
-                approvalRequestRepository.findAll(domainPageable);
+                approvalRequestRepository.findAll(keyword, domainPageable);
 
         List<ApprovalStatusResponse> content = domainPage.content().stream()
                 .map(webMapper::toStatusResponse)
@@ -99,7 +102,21 @@ public class ApprovalController {
 
         Page<ApprovalStatusResponse> springPage = new PageImpl<>(content, springPageable, domainPage.totalElements());
         model.addAttribute("page", springPage);
+        model.addAttribute("keyword", keyword);
         return "common/approval/manage";
+    }
+
+    /**
+     * GET /common/approval/{requestId}/view
+     * Shows the full approval detail page with history and signature.
+     */
+    @GetMapping("/{requestId}/view")
+    @PreAuthorize("hasAnyAuthority('APPROVAL_READ', 'APPROVAL_MANAGE')")
+    public String detail(@PathVariable Long requestId, Model model) {
+        ApprovalRequest request = approvalRequestRepository.findById(requestId)
+                .orElseThrow(() -> new DomainException("msg.error.approval.not-found"));
+        model.addAttribute("approval", webMapper.toStatusResponse(request));
+        return "common/approval/detail";
     }
 
     /**

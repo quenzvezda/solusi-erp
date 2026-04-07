@@ -13,8 +13,11 @@ public interface ApprovalRequestRepository {
     Optional<ApprovalRequest> findById(Long id);
     Optional<ApprovalRequest> findByReference(String referenceType, Long referenceId);
     Page<ApprovalRequest> findPendingApprovals(Pageable pageable);
+    Page<ApprovalRequest> findPendingApprovals(String keyword, Pageable pageable);
     long countPendingApprovals();
     Page<ApprovalRequest> findPendingApprovalsForApprover(Long approverPartyId, Pageable pageable);
+    Page<ApprovalRequest> findPendingApprovalsForApprover(Long approverPartyId, String keyword, Pageable pageable);
     long countPendingApprovalsForApprover(Long approverPartyId);
     Page<ApprovalRequest> findAll(Pageable pageable);
+    Page<ApprovalRequest> findAll(String keyword, Pageable pageable);
 }

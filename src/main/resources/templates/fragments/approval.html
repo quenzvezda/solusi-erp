@@ -203,13 +203,15 @@
                                 th:text="${#messages.msg('label.approval.action.' + #strings.toLowerCase(h.action))}">Action</strong>
                         <span class="text-muted small" th:text="${#temporals.format(h.actionDate, 'dd MMM yyyy HH:mm')}">Date</span>
                     </div>
-                    <div th:if="${h.actorName != null}" class="text-muted small mb-1 text-end">
-                        <i class="ti ti-user me-1" style="font-size: 12px;"></i>
-                        <span th:text="${h.actorName}">Actor Name</span>
-                        <th:block th:if="${h.targetApproverName != null}">
-                            <i class="ti ti-arrow-right mx-1" style="font-size: 12px;"></i>
-                            <span th:text="${h.targetApproverName}">Assignee Name</span>
-                        </th:block>
+                    <div th:if="${h.actorName != null}" class="text-muted small mb-1">
+                        <div class="d-flex align-items-center gap-1">
+                            <i class="ti ti-user flex-shrink-0" style="font-size: 12px;"></i>
+                            <span class="text-truncate" th:text="${h.actorName}">Actor Name</span>
+                            <th:block th:if="${h.targetApproverName != null}">
+                                <i class="ti ti-arrow-right flex-shrink-0 mx-1" style="font-size: 12px;"></i>
+                                <span class="ms-auto text-truncate text-end" th:text="${h.targetApproverName}">Assignee Name</span>
+                            </th:block>
+                        </div>
                     </div>
                     <p class="text-secondary small mb-0" th:text="${h.notes ?: '-'}">Notes</p>
                 </div>
