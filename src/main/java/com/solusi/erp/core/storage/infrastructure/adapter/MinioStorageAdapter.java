@@ -4,6 +4,7 @@ import com.solusi.erp.core.storage.domain.port.StorageProvider;
 import com.solusi.erp.core.storage.infrastructure.config.MinioProperties;
 import io.minio.*;
 import io.minio.errors.MinioException;
+import io.minio.http.Method;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * MinIO-backed implementation of StorageProvider.
@@ -66,6 +68,33 @@ public class MinioStorageAdapter implements StorageProvider {
     @Override
     public String getUrl(String bucket, String key) {
         return minioProperties.getEndpoint() + "/" + bucket + "/" + key;
+    }
+
+    @Override
+    public String getPresignedUrl(String bucket, String key, int expirySeconds) {
+        try {
+            return minioClient.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .method(Method.GET)
+                            .bucket(bucket)
+                            .object(key)
+                            .expiry(expirySeconds, TimeUnit.SECONDS)
+                            .build()
+            );
+        } catch (MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException e) {
+            throw new StorageException(
+                    "Failed to generate presigned URL for '" + key + "' in bucket '" + bucket + "'", e);
+        }
+    }
+
+    @Override
+    public byte[] getBytes(String bucket, String key) {
+        try (var stream = minioClient.getObject(
+                GetObjectArgs.builder().bucket(bucket).object(key).build())) {
+            return stream.readAllBytes();
+        } catch (MinioException | InvalidKeyException | NoSuchAlgorithmException | IOException e) {
+            throw new StorageException("Failed to get object '" + key + "' from bucket '" + bucket + "'", e);
+        }
     }
 
     @Override

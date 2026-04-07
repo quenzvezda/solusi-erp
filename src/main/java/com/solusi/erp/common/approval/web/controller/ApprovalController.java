@@ -16,13 +16,16 @@ import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.core.exception.DomainException;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
+import com.solusi.erp.core.storage.domain.port.StorageProvider;
 import com.solusi.erp.security.shared.model.SecurityUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -39,6 +42,7 @@ import java.util.stream.Collectors;
  * Web controller for Approval actions and timeline display.
  * Endpoints are generic — usable by any module (News, StockAdjustment, etc.).
  */
+@Slf4j
 @Controller
 @RequestMapping("/common/approval")
 @RequiredArgsConstructor
@@ -51,6 +55,7 @@ public class ApprovalController {
     private final GetApprovalSignatureUrlUseCase getApprovalSignatureUrlUseCase;
     private final ApprovalWebMapper webMapper;
     private final MessageSource messageSource;
+    private final StorageProvider storageProvider;
 
     /**
      * GET /common/approval
@@ -58,7 +63,8 @@ public class ApprovalController {
      */
     @GetMapping
     @PreAuthorize("hasAuthority('APPROVAL_READ')")
-    public String list(org.springframework.data.domain.Pageable springPageable, Model model,
+    public String list(@RequestParam(required = false) String keyword,
+                       org.springframework.data.domain.Pageable springPageable, Model model,
                        @AuthenticationPrincipal UserDetails principal) {
         Long currentApproverPartyId = null;
         if (principal instanceof SecurityUser securityUser) {
@@ -68,9 +74,9 @@ public class ApprovalController {
         Pageable domainPageable = PageableMapper.toDomain(springPageable);
         com.solusi.erp.core.domain.model.Page<ApprovalRequest> domainPage;
         if (currentApproverPartyId != null) {
-            domainPage = approvalRequestRepository.findPendingApprovalsForApprover(currentApproverPartyId, domainPageable);
+            domainPage = approvalRequestRepository.findPendingApprovalsForApprover(currentApproverPartyId, keyword, domainPageable);
         } else {
-            domainPage = approvalRequestRepository.findPendingApprovals(domainPageable);
+            domainPage = approvalRequestRepository.findPendingApprovals(keyword, domainPageable);
         }
 
         List<ApprovalStatusResponse> content = domainPage.content().stream()
@@ -79,6 +85,7 @@ public class ApprovalController {
 
         Page<ApprovalStatusResponse> springPage = new PageImpl<>(content, springPageable, domainPage.totalElements());
         model.addAttribute("page", springPage);
+        model.addAttribute("keyword", keyword);
         return "common/approval/list";
     }
 
@@ -88,10 +95,11 @@ public class ApprovalController {
      */
     @GetMapping("/manage")
     @PreAuthorize("hasAuthority('APPROVAL_MANAGE')")
-    public String manage(org.springframework.data.domain.Pageable springPageable, Model model) {
+    public String manage(@RequestParam(required = false) String keyword,
+                         org.springframework.data.domain.Pageable springPageable, Model model) {
         Pageable domainPageable = PageableMapper.toDomain(springPageable);
         com.solusi.erp.core.domain.model.Page<ApprovalRequest> domainPage =
-                approvalRequestRepository.findAll(domainPageable);
+                approvalRequestRepository.findAll(keyword, domainPageable);
 
         List<ApprovalStatusResponse> content = domainPage.content().stream()
                 .map(webMapper::toStatusResponse)
@@ -99,7 +107,21 @@ public class ApprovalController {
 
         Page<ApprovalStatusResponse> springPage = new PageImpl<>(content, springPageable, domainPage.totalElements());
         model.addAttribute("page", springPage);
+        model.addAttribute("keyword", keyword);
         return "common/approval/manage";
+    }
+
+    /**
+     * GET /common/approval/{requestId}/view
+     * Shows the full approval detail page with history and signature.
+     */
+    @GetMapping("/{requestId}/view")
+    @PreAuthorize("hasAnyAuthority('APPROVAL_READ', 'APPROVAL_MANAGE')")
+    public String detail(@PathVariable Long requestId, Model model) {
+        ApprovalRequest request = approvalRequestRepository.findById(requestId)
+                .orElseThrow(() -> new DomainException("msg.error.approval.not-found"));
+        model.addAttribute("approval", webMapper.toStatusResponse(request));
+        return "common/approval/detail";
     }
 
     /**
@@ -189,6 +211,29 @@ public class ApprovalController {
             return ResponseEntity.ok(ApiResponse.success("No signature found", null));
         }
         return ResponseEntity.ok(ApiResponse.success("OK", webMapper.toSignatureResponse(sig.get())));
+    }
+
+    /**
+     * GET /common/approval/{requestId}/signature/image
+     * Proxies the signature image from storage (avoids CORS issues in dev).
+     */
+    @GetMapping("/{requestId}/signature/image")
+    @PreAuthorize("hasAnyAuthority('APPROVAL_READ', 'APPROVAL_MANAGE')")
+    @ResponseBody
+    public ResponseEntity<byte[]> signatureImage(@PathVariable Long requestId) {
+        Optional<ApprovalSignature> sig = getApprovalSignatureUrlUseCase.findByRequestId(requestId);
+        if (sig.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        try {
+            byte[] data = storageProvider.getBytes(sig.get().getBucketName(), sig.get().getStorageKey());
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_PNG)
+                    .body(data);
+        } catch (Exception e) {
+            log.warn("Failed to load signature image for request {}: {}", requestId, e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
     }
 
     private Long resolvePartyId(UserDetails principal) {

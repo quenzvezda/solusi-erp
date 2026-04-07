@@ -550,22 +550,32 @@
                 tooltip.style.left = (cursorX + 18) + 'px';
             }
 
-            /* ── Highlight active nav link ── */
+            /* ── Highlight active nav link (most-specific match only) ── */
             const currentPath = window.location.pathname;
+            let bestLink = null;
+            let bestLen = 0;
             document.querySelectorAll('#sidebar .nav-link').forEach(function (link) {
                 const href = link.getAttribute('href');
-                if (href && href !== '#' && (currentPath === href || currentPath.startsWith(href + '/'))) {
-                    link.classList.add('active');
-                    /* Open all ancestor collapse panels */
-                    let panel = link.closest('.collapse');
-                    while (panel) {
-                        panel.classList.add('show');
-                        const trigger = document.querySelector('[data-bs-target="#' + panel.id + '"]');
-                        if (trigger) trigger.setAttribute('aria-expanded', 'true');
-                        panel = panel.parentElement && panel.parentElement.closest('.collapse');
+                if (href && href !== '#') {
+                    if (currentPath === href || currentPath.startsWith(href + '/')) {
+                        if (href.length > bestLen) {
+                            bestLen = href.length;
+                            bestLink = link;
+                        }
                     }
                 }
             });
+            if (bestLink) {
+                bestLink.classList.add('active');
+                /* Open all ancestor collapse panels */
+                let panel = bestLink.closest('.collapse');
+                while (panel) {
+                    panel.classList.add('show');
+                    const trigger = document.querySelector('[data-bs-target="#' + panel.id + '"]');
+                    if (trigger) trigger.setAttribute('aria-expanded', 'true');
+                    panel = panel.parentElement && panel.parentElement.closest('.collapse');
+                }
+            }
         });
     </script>
 

@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Mapper for converting Approval domain objects to web response DTOs.
@@ -38,6 +39,7 @@ public class ApprovalWebMapper {
                 .referenceId(request.getReferenceId())
                 .referenceCode(request.getReferenceCode())
                 .currentApproverName(resolveActorName(request.getCurrentApproverId()))
+                .documentUrl(resolveDocumentUrl(request.getReferenceType(), request.getReferenceId()))
                 .histories(histories)
                 .build();
     }
@@ -55,7 +57,10 @@ public class ApprovalWebMapper {
     }
 
     public ApprovalSignatureResponse toSignatureResponse(ApprovalSignature signature) {
-        String url = storageProvider.getUrl(signature.getBucketName(), signature.getStorageKey());
+        // Generate a 1-hour presigned URL so the browser can load the image directly
+        // from MinIO without CORS issues or proxy overhead.
+        String url = storageProvider.getPresignedUrl(
+                signature.getBucketName(), signature.getStorageKey(), 3600);
         return ApprovalSignatureResponse.builder()
                 .requestId(signature.getRequestId())
                 .signatureUrl(url)
@@ -71,5 +76,19 @@ public class ApprovalWebMapper {
         if (lookup != null) return lookup.name();
         // Fallback: resolve as userId (for REQUESTED action or when party not linked)
         return auditMapperHelper.resolveUserDisplayName(actorId);
+    }
+
+    /**
+     * Resolves the URL of the source document for a given reference type and ID.
+     * Returns null if the reference type has no known mapping.
+     */
+    private static final Map<String, String> DOCUMENT_URL_PATTERNS = Map.of(
+            "NEWS", "/common/news/"
+    );
+
+    private String resolveDocumentUrl(String referenceType, Long referenceId) {
+        if (referenceType == null || referenceId == null) return null;
+        String basePath = DOCUMENT_URL_PATTERNS.get(referenceType);
+        return basePath != null ? basePath + referenceId : null;
     }
 }
