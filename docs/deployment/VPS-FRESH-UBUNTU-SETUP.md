@@ -788,33 +788,256 @@ Phase 6: Backup
 ☐ Setup cron job
 ☐ Test backup
 
-Phase 7: Verification
+Phase 7: Nginx Reverse Proxy
+☐ Install Nginx and Certbot
+☐ Setup DNS records (app.solusi-program.site, minio.solusi-program.site)
+☐ Verify DNS resolution
+☐ Create app Nginx config
+☐ Generate SSL certificates (Let's Encrypt)
+☐ Update Nginx with SSL directives
+☐ Create MinIO subdomain config
+☐ Verify HTTPS endpoints
+
+Phase 8: Environment Configuration
+☐ Create .env file with correct endpoints:
+  - MINIO_ENDPOINT=http://localhost:9000 (internal)
+  - MINIO_PRESIGNED_ENDPOINT=https://minio.solusi-program.site (external)
+☐ Restart Spring Boot service
+☐ Verify signature upload/download works
+
+Phase 9: Verification
 ☐ Verify all services running
-☐ Test application endpoints
+☐ Test application endpoints (HTTPS)
+☐ Test MinIO via subdomain
+☐ Test signature display
 ☐ Check logs
 
-Phase 8: Done!
-☐ Document server IP
-☐ Document credentials
+Phase 10: Done!
+☐ Document server IP and domains
+☐ Document credentials (securely)
 ☐ Setup monitoring
 ☐ Plan maintenance schedule
 ```
 
 ---
 
+## Phase 7: Setup Nginx Reverse Proxy with MinIO Subdomain (15 min)
+
+### 7.1 Install Nginx and Certbot
+
+```bash
+# Install Nginx and Certbot
+sudo apt install -y nginx certbot python3-certbot-nginx
+
+# Start Nginx
+sudo systemctl start nginx
+sudo systemctl enable nginx
+
+# Verify
+sudo systemctl status nginx | grep "Active"
+# Expected: Active: active (running)
+
+echo "✓ Nginx installed"
+```
+
+### 7.2 Configure DNS and Cloudflare (Prerequisites)
+
+Before configuring Nginx, ensure:
+1. Domain is registered (e.g., at Hostinger)
+2. DNS points to VPS IP via Cloudflare:
+   - `app.solusi-program.site` → VPS IP (Proxied)
+   - `minio.solusi-program.site` → VPS IP (Proxied)
+
+Verify DNS resolution:
+```bash
+nslookup app.solusi-program.site
+nslookup minio.solusi-program.site
+# Both should resolve to your VPS IP
+```
+
+### 7.3 Configure Nginx for Main Application
+
+```bash
+# Create Nginx config for main app
+sudo tee /etc/nginx/sites-available/app.solusi-program.site > /dev/null << 'EOF'
+server {
+    server_name app.solusi-program.site;
+
+    location / {
+        proxy_pass http://localhost:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    listen 80;
+}
+EOF
+
+# Enable the config
+sudo ln -s /etc/nginx/sites-available/app.solusi-program.site \
+            /etc/nginx/sites-enabled/app.solusi-program.site
+
+# Test Nginx config
+sudo nginx -t
+# Expected: syntax ok, test successful
+
+# Reload Nginx
+sudo systemctl reload nginx
+
+echo "✓ Nginx app config created"
+```
+
+### 7.4 Generate SSL Certificates (Let's Encrypt)
+
+```bash
+# Generate cert for main app
+sudo certbot certonly -d app.solusi-program.site
+
+# When prompted, select: 1 (Nginx Web Server plugin)
+
+# Generate cert for MinIO subdomain
+sudo certbot certonly -d minio.solusi-program.site
+
+# When prompted, select: 1 (Nginx Web Server plugin)
+
+# Verify certs
+sudo certbot certificates
+
+echo "✓ SSL certificates generated"
+```
+
+### 7.5 Update Nginx Config with SSL
+
+```bash
+# Update main app config with SSL
+sudo tee /etc/nginx/sites-available/app.solusi-program.site > /dev/null << 'EOF'
+server {
+    server_name app.solusi-program.site;
+
+    location / {
+        proxy_pass http://localhost:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/app.solusi-program.site/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/app.solusi-program.site/privkey.pem;
+}
+
+server {
+    server_name app.solusi-program.site;
+    listen 80;
+    return 301 https://$host$request_uri;
+}
+EOF
+
+# Create MinIO subdomain config
+sudo tee /etc/nginx/sites-available/minio.solusi-program.site > /dev/null << 'EOF'
+server {
+    server_name minio.solusi-program.site;
+
+    location / {
+        proxy_pass http://localhost:9000;
+        proxy_set_header Host localhost:9000;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/minio.solusi-program.site/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/minio.solusi-program.site/privkey.pem;
+}
+
+server {
+    server_name minio.solusi-program.site;
+    listen 80;
+    return 301 https://$host$request_uri;
+}
+EOF
+
+# Enable MinIO config
+sudo ln -s /etc/nginx/sites-available/minio.solusi-program.site \
+            /etc/nginx/sites-enabled/minio.solusi-program.site
+
+# Test Nginx config
+sudo nginx -t
+# Expected: syntax ok, test successful
+
+# Reload Nginx
+sudo systemctl reload nginx
+
+echo "✓ Nginx SSL configs updated"
+```
+
+### 7.6 Verify Nginx is Working
+
+```bash
+# Test main app (HTTP → HTTPS redirect)
+curl -i https://app.solusi-program.site/health
+
+# Test MinIO subdomain
+curl -s https://minio.solusi-program.site/minio/health/live
+
+echo "✓ Nginx reverse proxy verified"
+```
+
+---
+
+## Phase 8: Configure Environment Variables (.env)
+
+The application loads configuration from `.env` file (via Spring Boot's `spring.config.import`).
+Environment variables in `.env` take precedence over `application.yaml` defaults.
+
+### Key Environment Variables:
+
+```properties
+# Database
+DB_URL=jdbc:mariadb://localhost:3306/solusi_erp_db
+DB_USERNAME=erp_user
+DB_PASSWORD=<your_secure_password>
+
+# Server
+SERVER_PORT=8080
+SERVER_COOKIE_SECURE=true
+
+# MinIO Configuration
+# INTERNAL: SDK uses this for authentication (direct to localhost)
+MINIO_ENDPOINT=http://localhost:9000
+# EXTERNAL: Presigned URLs use this endpoint (via HTTPS proxy)
+MINIO_PRESIGNED_ENDPOINT=https://minio.solusi-program.site
+MINIO_ROOT_USER=minioadmin
+MINIO_ROOT_PASSWORD=minioadmin
+MINIO_BUCKET_SIGNATURES=approval-signatures
+```
+
+**Important Notes:**
+- `MINIO_ENDPOINT` must be `http://localhost:9000` (internal, for SDK authentication)
+- `MINIO_PRESIGNED_ENDPOINT` must be `https://minio.solusi-program.site` (external, for browser access)
+- The application automatically transforms presigned URLs from internal to external endpoint
+- This separation prevents `SignatureDoesNotMatch` errors when using HTTPS proxy
+
+---
+
 ## Next Steps
 
 Once deployment is complete:
-1. Test application at `http://your-vps-ip:8080`
-2. Configure DNS if using domain
-3. Setup SSL/TLS (recommended for production)
+1. Test application at `https://app.solusi-program.site`
+2. Verify MinIO is accessible via `https://minio.solusi-program.site/minio/health/live`
+3. Test file operations (e.g., signature uploads/downloads)
 4. Setup monitoring/alerts
 5. Test backup restoration process
+6. Configure auto-renewal for SSL certificates (Certbot handles this automatically)
 
 **All services should be running and accessible!** 🚀
 
 ---
 
-*Last Updated: 2026-04-04*
+*Last Updated: 2026-04-07*
 *For: Solusi Program ERP*
-*Guide: Fresh Ubuntu VPS Deployment*
+*Guide: Fresh Ubuntu VPS Deployment with MinIO Subdomain*
