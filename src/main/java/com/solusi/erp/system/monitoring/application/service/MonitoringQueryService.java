@@ -1,6 +1,7 @@
 package com.solusi.erp.system.monitoring.application.service;
 
-import com.solusi.erp.system.monitoring.domain.model.LogEntry;
+import com.solusi.erp.system.monitoring.domain.model.LogViewResult;
+import com.solusi.erp.system.monitoring.domain.model.ServerSession;
 import com.solusi.erp.system.monitoring.domain.model.ServiceHealth;
 import com.solusi.erp.system.monitoring.domain.model.SystemHealthSnapshot;
 import com.solusi.erp.system.monitoring.domain.port.HealthCheckPort;
@@ -8,6 +9,7 @@ import com.solusi.erp.system.monitoring.domain.port.LogReaderPort;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Application service that orchestrates monitoring queries.
@@ -29,8 +31,12 @@ public class MonitoringQueryService {
         return new SystemHealthSnapshot(services, jvm);
     }
 
-    public List<LogEntry> getRecentLogs(int limit, String levelFilter, String keyword) {
-        return logReaderPort.readRecentLogs(limit, levelFilter, keyword);
+    public LogViewResult getRecentLogs(int limit, Set<String> levelFilters, String keyword, Integer sessionId, String timeRange) {
+        return logReaderPort.readRecentLogs(limit, levelFilters, keyword, sessionId, timeRange);
+    }
+
+    public List<ServerSession> getServerSessions() {
+        return logReaderPort.detectSessions();
     }
 
     public InputStream getLogFileStream(boolean errorOnly) {

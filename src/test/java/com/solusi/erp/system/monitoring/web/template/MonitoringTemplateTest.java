@@ -65,16 +65,14 @@ class MonitoringTemplateTest {
         assertThat(html).contains("${logs}");
         assertThat(html).contains("${entry.level}");
         assertThat(html).contains("${entry.timestamp}");
-        assertThat(html).contains("${entry.logger}");
         assertThat(html).contains("${entry.message}");
         assertThat(html).contains("${entry.stackTrace");
     }
 
     @Test
-    @DisplayName("Template has HTMX refresh triggers")
-    void templateHasHtmxTriggers() throws IOException {
+    @DisplayName("Template has HTMX health refresh trigger")
+    void templateHasHtmxHealthTrigger() throws IOException {
         String html = readTemplate();
-        assertThat(html).contains("hx-get=\"/monitoring/logs\"");
         assertThat(html).contains("hx-get=\"/monitoring/health\"");
         assertThat(html).contains("hx-trigger=");
     }
@@ -96,10 +94,30 @@ class MonitoringTemplateTest {
     }
 
     @Test
-    @DisplayName("Template has level filter select and keyword search input")
-    void templateHasFilterControls() throws IOException {
+    @DisplayName("Template has level toggle chips")
+    void templateHasLevelChips() throws IOException {
         String html = readTemplate();
-        assertThat(html).contains("id=\"level-filter\"");
+        assertThat(html).contains("id=\"level-chips\"");
+    }
+
+    @Test
+    @DisplayName("Template has time range button group")
+    void templateHasTimeRangeGroup() throws IOException {
+        String html = readTemplate();
+        assertThat(html).contains("id=\"time-range-group\"");
+    }
+
+    @Test
+    @DisplayName("Template has session filter dropdown")
+    void templateHasSessionFilter() throws IOException {
+        String html = readTemplate();
+        assertThat(html).contains("id=\"session-filter\"");
+    }
+
+    @Test
+    @DisplayName("Template has keyword search input")
+    void templateHasKeywordSearch() throws IOException {
+        String html = readTemplate();
         assertThat(html).contains("id=\"keyword-search\"");
     }
 }

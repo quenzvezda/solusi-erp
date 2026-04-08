@@ -43,7 +43,7 @@
                         <div class="card">
                             <div class="card-body">
                                 <div class="d-flex align-items-center">
-                                    <div class="subheader" th:text="#{label.monitoring.health.memory}">Memory</div>
+                                    <div class="subheader" th:text="#{label.monitoring.health.memory}">JVM Heap</div>
                                 </div>
                                 <div class="h1 mb-2 mt-2" th:text="${health.jvm.usedMemoryMb} + ' / ' + ${health.jvm.maxMemoryMb} + ' MB'">0 / 0 MB</div>
                                 <div class="progress progress-sm">
@@ -109,10 +109,20 @@
                     <h3 class="card-title" th:text="#{label.monitoring.logs}">Application Logs</h3>
                     <div class="card-actions">
                         <div class="d-flex align-items-center gap-2">
-                            <label class="form-check form-switch mb-0">
-                                <input class="form-check-input" type="checkbox" id="auto-refresh-toggle" checked>
-                                <span class="form-check-label" th:text="#{label.monitoring.logs.auto-refresh}">Auto Refresh</span>
-                            </label>
+                            <!-- Auto-refresh toggle with countdown -->
+                            <div class="d-flex align-items-center gap-1">
+                                <label class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" id="auto-refresh-toggle" checked>
+                                    <span class="form-check-label" th:text="#{label.monitoring.logs.auto-refresh}">Auto Refresh</span>
+                                </label>
+                                <span id="countdown-display" class="text-secondary small">↻ 10s</span>
+                            </div>
+                            <!-- Manual refresh button -->
+                            <button type="button" id="manual-refresh-btn" class="btn btn-sm btn-ghost-primary"
+                                    th:title="#{label.monitoring.logs.refresh}">
+                                <i class="ti ti-refresh"></i>
+                            </button>
+                            <!-- Download buttons -->
                             <div class="btn-list flex-nowrap" sec:authorize="hasAuthority('MONITORING_DOWNLOAD')">
                                 <a th:href="@{/monitoring/download(errorOnly=true)}" class="btn btn-sm btn-outline-danger">
                                     <i class="ti ti-download me-1"></i>
@@ -126,86 +136,135 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Filter Bar -->
                 <div class="card-body border-bottom py-3">
-                    <div class="d-flex gap-2">
-                        <select id="level-filter" name="level" class="form-select form-select-sm" style="width: auto;"
-                                hx-get="/monitoring/logs"
-                                hx-target="#log-table-container"
-                                hx-include="#keyword-search"
-                                hx-trigger="change">
-                            <option value="" th:text="#{label.monitoring.logs.filter.all}">All Levels</option>
-                            <option value="ERROR">ERROR</option>
-                            <option value="WARN">WARN</option>
-                            <option value="INFO">INFO</option>
-                            <option value="DEBUG">DEBUG</option>
-                        </select>
-                        <div class="ms-auto">
-                            <div class="input-icon">
-                                <input id="keyword-search" type="text" name="keyword" class="form-control form-control-sm"
-                                       th:placeholder="#{label.monitoring.logs.search}"
-                                       hx-get="/monitoring/logs"
-                                       hx-target="#log-table-container"
-                                       hx-include="#level-filter"
-                                       hx-trigger="keyup changed delay:500ms">
-                                <span class="input-icon-addon"><i class="ti ti-search"></i></span>
+                    <div class="row g-2 align-items-center">
+                        <!-- Level toggle chips -->
+                        <div class="col-auto">
+                            <div class="d-flex gap-1" id="level-chips">
+                                <button type="button" class="btn btn-sm level-chip active" data-level="ERROR">ERROR</button>
+                                <button type="button" class="btn btn-sm level-chip active" data-level="WARN">WARN</button>
+                                <button type="button" class="btn btn-sm level-chip" data-level="INFO">INFO</button>
+                                <button type="button" class="btn btn-sm level-chip" data-level="DEBUG">DEBUG</button>
+                            </div>
+                        </div>
+                        <div class="col-auto d-none d-sm-block">
+                            <div class="vr" style="height: 24px;"></div>
+                        </div>
+                        <!-- Time range presets -->
+                        <div class="col-auto">
+                            <div class="btn-group btn-group-sm" id="time-range-group">
+                                <button type="button" class="btn btn-outline-secondary time-range-btn" data-range="15m">15m</button>
+                                <button type="button" class="btn btn-outline-secondary time-range-btn active" data-range="1h">1h</button>
+                                <button type="button" class="btn btn-outline-secondary time-range-btn" data-range="6h">6h</button>
+                                <button type="button" class="btn btn-outline-secondary time-range-btn" data-range="24h">24h</button>
+                                <button type="button" class="btn btn-outline-secondary time-range-btn" data-range="7d">7d</button>
+                            </div>
+                        </div>
+                        <!-- Session filter -->
+                        <div class="col-auto" th:if="${sessions != null and !sessions.isEmpty()}">
+                            <select id="session-filter" class="form-select form-select-sm" style="width: auto;">
+                                <option value="" th:text="#{label.monitoring.logs.session.all}">All Sessions</option>
+                                <option th:each="sess : ${sessions}" th:value="${sess.id()}" th:text="${sess.label()}">Session</option>
+                            </select>
+                        </div>
+                        <!-- Search with debounce indicator -->
+                        <div class="col-auto ms-auto">
+                            <div class="input-icon" style="width: 260px;">
+                                <input id="keyword-search" type="text" class="form-control form-control-sm"
+                                       th:placeholder="#{label.monitoring.logs.search}">
+                                <span class="input-icon-addon">
+                                    <span class="spinner-border spinner-border-sm d-none" id="search-spinner"></span>
+                                    <i class="ti ti-search" id="search-icon"></i>
+                                </span>
                             </div>
                         </div>
                     </div>
                 </div>
 
+                <!-- Log Table (HTMX swappable fragment) -->
                 <div id="log-table-container" th:fragment="log-table-container">
-                    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                        <table class="table table-vcenter card-table table-sm table-hover" style="font-size: 0.8125rem;">
-                            <thead>
-                                <tr>
-                                    <th style="width: 50px;" th:text="#{label.monitoring.logs.level}">Level</th>
-                                    <th style="width: 180px;" th:text="#{label.monitoring.logs.timestamp}">Timestamp</th>
-                                    <th style="width: 180px;" th:text="#{label.monitoring.logs.logger}">Logger</th>
-                                    <th th:text="#{label.monitoring.logs.message}">Message</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="entry : ${logs}" th:class="${entry.error ? 'table-danger' : (entry.warn ? 'table-warning' : '')}">
-                                    <td>
-                                        <span class="badge"
-                                              th:classappend="${entry.level == 'ERROR' ? 'bg-danger' :
-                                                              (entry.level == 'WARN' ? 'bg-warning' :
-                                                              (entry.level == 'INFO' ? 'bg-info' :
-                                                              (entry.level == 'DEBUG' ? 'bg-secondary' : 'bg-muted')))}"
-                                              th:text="${entry.level}">INFO</span>
-                                    </td>
-                                    <td class="text-nowrap text-secondary" th:text="${entry.timestamp}">2026-01-01 00:00:00</td>
-                                    <td>
-                                        <span class="text-secondary" style="font-family: monospace; font-size: 0.75rem;"
-                                              th:text="${entry.logger}" th:title="${entry.thread}">logger</span>
-                                    </td>
-                                    <td>
-                                        <div th:text="${entry.message}" style="word-break: break-word;">Message</div>
-                                        <th:block th:if="${entry.stackTrace != null}">
-                                            <details class="mt-1">
-                                                <summary class="text-danger" style="cursor: pointer; font-size: 0.75rem;">
-                                                    <i class="ti ti-chevron-down"></i> Stack Trace
-                                                </summary>
-                                                <div class="position-relative">
-                                                    <pre class="bg-dark text-white p-2 rounded mt-1" style="font-size: 0.7rem; max-height: 300px; overflow: auto; white-space: pre-wrap;"
-                                                         th:text="${entry.stackTrace}">stack trace</pre>
-                                                    <button type="button" class="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-1 copy-stacktrace-btn"
-                                                            th:attr="data-stacktrace=${entry.stackTrace}"
-                                                            th:title="#{label.monitoring.logs.copy-stacktrace}">
-                                                        <i class="ti ti-clipboard"></i>
-                                                    </button>
-                                                </div>
-                                            </details>
-                                        </th:block>
-                                    </td>
-                                </tr>
-                                <tr th:if="${logs == null or #lists.isEmpty(logs)}">
-                                    <td colspan="4" class="text-center py-4 text-secondary"
-                                        th:text="#{label.monitoring.logs.empty}">No log entries found.</td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                    <!-- Count bar -->
+                    <div class="px-3 py-2 border-bottom" style="background-color: var(--tblr-bg-surface-secondary);">
+                        <small class="text-secondary">
+                            <span th:text="#{label.monitoring.logs.showing(${displayedCount},${totalMatched})}">Showing 0 of 0 entries</span>
+                            <th:block th:if="${errorCount != null and errorCount > 0}">
+                                · <span class="text-danger fw-bold" th:text="${errorCount + ' ERROR'}">0 ERROR</span>
+                            </th:block>
+                            <th:block th:if="${warnCount != null and warnCount > 0}">
+                                · <span class="fw-bold" style="color: #f76707;" th:text="${warnCount + ' WARN'}">0 WARN</span>
+                            </th:block>
+                            <th:block th:if="${infoCount != null and infoCount > 0}">
+                                · <span class="text-info fw-bold" th:text="${infoCount + ' INFO'}">0 INFO</span>
+                            </th:block>
+                        </small>
                     </div>
+
+                    <!-- Table or empty state -->
+                    <th:block th:if="${logs != null and !#lists.isEmpty(logs)}">
+                        <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                            <table class="table table-vcenter card-table table-sm table-hover mb-0" style="font-size: 0.8125rem; table-layout: fixed;">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 70px;" th:text="#{label.monitoring.logs.level}">Level</th>
+                                        <th style="width: 170px;" th:text="#{label.monitoring.logs.timestamp}">Timestamp</th>
+                                        <th style="width: 160px;" th:text="#{label.monitoring.logs.logger}">Logger</th>
+                                        <th th:text="#{label.monitoring.logs.message}">Message</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="entry, iterStat : ${logs}"
+                                        th:classappend="${entry.error ? 'table-danger' : (entry.warn ? 'table-warning' : '')}">
+                                        <td>
+                                            <span class="badge"
+                                                  th:classappend="${entry.level == 'ERROR' ? 'bg-red text-red-fg' :
+                                                                  (entry.level == 'WARN' ? 'bg-orange text-orange-fg' :
+                                                                  (entry.level == 'INFO' ? 'bg-azure text-azure-fg' :
+                                                                  (entry.level == 'DEBUG' ? 'bg-secondary' : 'bg-muted')))}"
+                                                  th:text="${entry.level}">INFO</span>
+                                        </td>
+                                        <td class="text-nowrap text-secondary" style="font-size: 0.75rem;" th:text="${entry.timestamp}">2026-01-01 00:00:00</td>
+                                        <td>
+                                            <span class="logger-cell" th:text="${entry.logger}" th:title="${entry.fullLogger}">logger</span>
+                                        </td>
+                                        <td style="max-width: 0; overflow: hidden;">
+                                            <div class="message-cell" th:text="${entry.message}" style="word-break: break-word;">Message</div>
+                                            <th:block th:if="${entry.stackTrace != null}">
+                                                <details class="mt-1" th:attr="data-index=${iterStat.index}">
+                                                    <summary class="text-danger" style="cursor: pointer; font-size: 0.75rem;">
+                                                        <i class="ti ti-chevron-down"></i>
+                                                        <span th:text="#{label.monitoring.logs.copy-stacktrace}">Stack Trace</span>
+                                                    </summary>
+                                                    <div class="position-relative mt-1">
+                                                        <pre class="bg-dark text-white p-2 rounded stacktrace-pre"
+                                                             th:text="${entry.stackTrace}">stack trace</pre>
+                                                        <button type="button"
+                                                                class="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-2 copy-stacktrace-btn"
+                                                                th:attr="data-stacktrace=${entry.stackTrace}">
+                                                            <i class="ti ti-clipboard me-1"></i> Copy
+                                                        </button>
+                                                    </div>
+                                                </details>
+                                            </th:block>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </th:block>
+
+                    <!-- Empty state -->
+                    <th:block th:if="${logs == null or #lists.isEmpty(logs)}">
+                        <div class="empty py-5">
+                            <div class="empty-icon">
+                                <i class="ti ti-mood-happy" style="font-size: 3rem; color: var(--tblr-success);"></i>
+                            </div>
+                            <p class="empty-title" th:text="#{label.monitoring.logs.empty.title}">No entries found</p>
+                            <p class="empty-subtitle text-secondary" th:text="#{label.monitoring.logs.empty.subtitle}">No log entries match your current filter criteria.</p>
+                        </div>
+                    </th:block>
                 </div>
             </div>
 
@@ -216,51 +275,238 @@
 
 <!-- Page-specific scripts -->
 <div id="page-scripts">
-    <script>
+    <style>
+        .logger-cell {
+            display: inline-block;
+            max-width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-family: var(--tblr-font-monospace);
+            font-size: 0.75rem;
+            color: var(--tblr-secondary);
+            cursor: help;
+        }
+        .stacktrace-pre {
+            font-size: 0.7rem;
+            max-height: 400px;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin-bottom: 0;
+        }
+        .level-chip {
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.2rem 0.65rem;
+            border: 1px solid var(--tblr-border-color);
+            background: transparent;
+            color: var(--tblr-secondary);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .level-chip:hover { opacity: 0.85; }
+        .level-chip.active[data-level="ERROR"]  { background-color: #d63939; border-color: #d63939; color: #fff; }
+        .level-chip.active[data-level="WARN"]   { background-color: #f76707; border-color: #f76707; color: #fff; }
+        .level-chip.active[data-level="INFO"]   { background-color: #4299e1; border-color: #4299e1; color: #fff; }
+        .level-chip.active[data-level="DEBUG"]  { background-color: #868e96; border-color: #868e96; color: #fff; }
+        .message-cell mark {
+            background-color: #fff3cd;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .animate-spin { animation: spin 1s linear infinite; }
+    </style>
+    <script th:inline="javascript">
         document.addEventListener('DOMContentLoaded', function() {
-            const toggle = document.getElementById('auto-refresh-toggle');
-            const logContainer = document.getElementById('log-table-container');
-            let refreshInterval = null;
+            // === Constants ===
+            var REFRESH_SECONDS = 10;
+            var MANUAL_COOLDOWN_MS = 5000;
 
-            function startAutoRefresh() {
-                if (refreshInterval) clearInterval(refreshInterval);
-                refreshInterval = setInterval(function() {
-                    if (toggle && toggle.checked) {
-                        const level = document.getElementById('level-filter')?.value || '';
-                        const keyword = document.getElementById('keyword-search')?.value || '';
-                        const url = '/monitoring/logs?limit=100&level=' + encodeURIComponent(level) + '&keyword=' + encodeURIComponent(keyword);
-                        htmx.ajax('GET', url, {target: '#log-table-container', swap: 'innerHTML'});
-                    }
-                }, 5000);
+            // === State ===
+            var countdown = REFRESH_SECONDS;
+            var countdownTimer = null;
+            var lastManualRefresh = 0;
+            var searchTimeout = null;
+
+            // === Elements ===
+            var toggle = document.getElementById('auto-refresh-toggle');
+            var countdownDisplay = document.getElementById('countdown-display');
+            var manualBtn = document.getElementById('manual-refresh-btn');
+            var searchInput = document.getElementById('keyword-search');
+            var searchSpinner = document.getElementById('search-spinner');
+            var searchIcon = document.getElementById('search-icon');
+
+            // === Collect active filters ===
+            function getFilters() {
+                var levels = [];
+                document.querySelectorAll('.level-chip.active').forEach(function(c) {
+                    levels.push(c.dataset.level);
+                });
+                var timeBtn = document.querySelector('.time-range-btn.active');
+                var sessionEl = document.getElementById('session-filter');
+                return {
+                    levels:    levels.join(','),
+                    timeRange: timeBtn ? timeBtn.dataset.range : '',
+                    sessionId: sessionEl ? sessionEl.value : '',
+                    keyword:   searchInput ? searchInput.value : ''
+                };
             }
 
+            function buildUrl(f) {
+                var p = new URLSearchParams();
+                p.set('limit', '100');
+                if (f.levels)    p.set('levels', f.levels);
+                if (f.timeRange) p.set('timeRange', f.timeRange);
+                if (f.sessionId) p.set('sessionId', f.sessionId);
+                if (f.keyword)   p.set('keyword', f.keyword);
+                return '/monitoring/logs?' + p.toString();
+            }
+
+            // === Refresh Logic ===
+            function refreshLogs() {
+                var f = getFilters();
+                var url = buildUrl(f);
+                showSearchSpinner(true);
+                htmx.ajax('GET', url, {target: '#log-table-container', swap: 'outerHTML'}).then(function() {
+                    showSearchSpinner(false);
+                    highlightKeywords(f.keyword);
+                }).catch(function() {
+                    showSearchSpinner(false);
+                });
+            }
+
+            function showSearchSpinner(show) {
+                if (searchSpinner) searchSpinner.classList.toggle('d-none', !show);
+                if (searchIcon)    searchIcon.classList.toggle('d-none', show);
+            }
+
+            function hasOpenStackTraces() {
+                return document.querySelectorAll('#log-table-container details[open]').length > 0;
+            }
+
+            // === Countdown ===
+            function startCountdown() {
+                stopCountdown();
+                countdown = REFRESH_SECONDS;
+                updateCountdownDisplay();
+                countdownTimer = setInterval(function() {
+                    if (!toggle || !toggle.checked) return;
+                    countdown--;
+                    updateCountdownDisplay();
+                    if (countdown <= 0) {
+                        countdown = REFRESH_SECONDS;
+                        if (!hasOpenStackTraces()) {
+                            refreshLogs();
+                        }
+                    }
+                }, 1000);
+            }
+
+            function stopCountdown() {
+                if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+            }
+
+            function updateCountdownDisplay() {
+                if (!countdownDisplay) return;
+                if (toggle && toggle.checked) {
+                    countdownDisplay.textContent = '\u21bb ' + countdown + 's';
+                    countdownDisplay.classList.remove('d-none');
+                } else {
+                    countdownDisplay.classList.add('d-none');
+                }
+            }
+
+            // === Event Listeners ===
             if (toggle) {
                 toggle.addEventListener('change', function() {
-                    if (this.checked) {
-                        startAutoRefresh();
-                    } else if (refreshInterval) {
-                        clearInterval(refreshInterval);
-                        refreshInterval = null;
+                    if (this.checked) { startCountdown(); } else { stopCountdown(); updateCountdownDisplay(); }
+                });
+            }
+
+            // Manual refresh with rate limit
+            if (manualBtn) {
+                manualBtn.addEventListener('click', function() {
+                    var now = Date.now();
+                    if (now - lastManualRefresh < MANUAL_COOLDOWN_MS) return;
+                    lastManualRefresh = now;
+                    var icon = manualBtn.querySelector('i');
+                    manualBtn.disabled = true;
+                    if (icon) icon.className = 'ti ti-loader animate-spin';
+                    refreshLogs();
+                    countdown = REFRESH_SECONDS;
+                    setTimeout(function() {
+                        manualBtn.disabled = false;
+                        if (icon) icon.className = 'ti ti-refresh';
+                    }, MANUAL_COOLDOWN_MS);
+                });
+            }
+
+            // Level chips
+            document.querySelectorAll('.level-chip').forEach(function(chip) {
+                chip.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    refreshLogs();
+                });
+            });
+
+            // Time range buttons
+            document.querySelectorAll('.time-range-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.time-range-btn').forEach(function(b) { b.classList.remove('active'); });
+                    this.classList.add('active');
+                    refreshLogs();
+                });
+            });
+
+            // Session filter
+            var sessionEl = document.getElementById('session-filter');
+            if (sessionEl) sessionEl.addEventListener('change', refreshLogs);
+
+            // Keyword search (debounced)
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    showSearchSpinner(true);
+                    searchTimeout = setTimeout(refreshLogs, 500);
+                });
+            }
+
+            // === Keyword Highlighting ===
+            function highlightKeywords(keyword) {
+                if (!keyword || keyword.length < 2) return;
+                var cells = document.querySelectorAll('#log-table-container .message-cell');
+                var escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                var regex = new RegExp('(' + escaped + ')', 'gi');
+                cells.forEach(function(cell) {
+                    var text = cell.textContent;
+                    if (regex.test(text)) {
+                        cell.innerHTML = text.replace(regex, '<mark>$1</mark>');
                     }
                 });
             }
 
-            startAutoRefresh();
-
-            // Copy stack trace to clipboard
+            // === Copy Stack Trace ===
             document.addEventListener('click', function(e) {
-                const btn = e.target.closest('.copy-stacktrace-btn');
-                if (btn) {
-                    const text = btn.getAttribute('data-stacktrace');
-                    navigator.clipboard.writeText(text).then(function() {
-                        const icon = btn.querySelector('i');
-                        if (icon) {
-                            icon.className = 'ti ti-check';
-                            setTimeout(function() { icon.className = 'ti ti-clipboard'; }, 2000);
-                        }
-                    });
-                }
+                var btn = e.target.closest('.copy-stacktrace-btn');
+                if (!btn) return;
+                var text = btn.getAttribute('data-stacktrace');
+                navigator.clipboard.writeText(text).then(function() {
+                    var icon = btn.querySelector('i');
+                    var label = btn.childNodes[btn.childNodes.length - 1];
+                    if (icon) icon.className = 'ti ti-check me-1';
+                    if (label && label.nodeType === 3) label.textContent = ' Copied!';
+                    setTimeout(function() {
+                        if (icon) icon.className = 'ti ti-clipboard me-1';
+                        if (label && label.nodeType === 3) label.textContent = ' Copy';
+                    }, 2000);
+                });
             });
+
+            // === Init ===
+            startCountdown();
         });
     </script>
 </div>

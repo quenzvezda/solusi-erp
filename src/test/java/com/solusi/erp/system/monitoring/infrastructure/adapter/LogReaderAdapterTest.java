@@ -1,6 +1,8 @@
 package com.solusi.erp.system.monitoring.infrastructure.adapter;
 
 import com.solusi.erp.system.monitoring.domain.model.LogEntry;
+import com.solusi.erp.system.monitoring.domain.model.LogViewResult;
+import com.solusi.erp.system.monitoring.domain.model.ServerSession;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -8,7 +10,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,6 +26,9 @@ class LogReaderAdapterTest {
 
     private LogReaderAdapter adapter;
 
+    private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+    private static final ZoneId WIB = ZoneId.of("Asia/Jakarta");
+
     @BeforeEach
     void setUp() {
         adapter = new LogReaderAdapter(tempDir.toString());
@@ -29,101 +38,162 @@ class LogReaderAdapterTest {
         Files.writeString(tempDir.resolve(filename), content);
     }
 
+    private String recentTimestamp(int minutesAgo) {
+        return LocalDateTime.now(WIB).minusMinutes(minutesAgo).format(FMT);
+    }
+
     @Test
-    @DisplayName("readRecentLogs returns empty list when log file does not exist")
+    @DisplayName("readRecentLogs returns empty result when log file does not exist")
     void readRecentLogs_noFile_returnsEmpty() {
-        List<LogEntry> result = adapter.readRecentLogs(100, null, null);
-        assertThat(result).isEmpty();
+        LogViewResult result = adapter.readRecentLogs(100, Set.of(), null, null, null);
+        assertThat(result.entries()).isEmpty();
+        assertThat(result.totalMatched()).isZero();
     }
 
     @Test
-    @DisplayName("readRecentLogs parses pipe-delimited log entries")
+    @DisplayName("readRecentLogs parses pipe-delimited log entries with fullLogger")
     void readRecentLogs_parsesEntries() throws IOException {
-        String logContent = """
-                2026-04-08 10:00:00|INFO|main|com.solusi.erp.App|Application started
-                2026-04-08 10:00:01|WARN|main|com.solusi.erp.Svc|Slow query detected
-                2026-04-08 10:00:02|ERROR|main|com.solusi.erp.Svc|NullPointerException
-                """;
+        String t1 = recentTimestamp(3);
+        String t2 = recentTimestamp(2);
+        String t3 = recentTimestamp(1);
+        String logContent = t1 + "|INFO|main|com.solusi.erp.App|Application started\n"
+                + t2 + "|WARN|main|com.solusi.erp.Svc|Slow query detected\n"
+                + t3 + "|ERROR|main|com.solusi.erp.Svc|NullPointerException\n";
         writeLogFile("erp.log", logContent);
 
-        List<LogEntry> result = adapter.readRecentLogs(100, null, null);
+        LogViewResult result = adapter.readRecentLogs(100, Set.of(), null, null, null);
 
-        assertThat(result).hasSize(3);
-        // Entries are reversed (newest first)
-        assertThat(result.get(0).level()).isEqualTo("ERROR");
-        assertThat(result.get(1).level()).isEqualTo("WARN");
-        assertThat(result.get(2).level()).isEqualTo("INFO");
+        assertThat(result.entries()).hasSize(3);
+        assertThat(result.entries().get(0).level()).isEqualTo("ERROR");
+        assertThat(result.entries().get(0).fullLogger()).isEqualTo("com.solusi.erp.Svc");
+        assertThat(result.totalMatched()).isEqualTo(3);
+        assertThat(result.errorCount()).isEqualTo(1);
+        assertThat(result.warnCount()).isEqualTo(1);
     }
 
     @Test
-    @DisplayName("readRecentLogs filters by level")
-    void readRecentLogs_filtersByLevel() throws IOException {
-        String logContent = """
-                2026-04-08 10:00:00|INFO|main|com.solusi.erp.App|Info message
-                2026-04-08 10:00:01|ERROR|main|com.solusi.erp.App|Error message
-                2026-04-08 10:00:02|INFO|main|com.solusi.erp.App|Another info
-                """;
+    @DisplayName("readRecentLogs filters by multiple levels")
+    void readRecentLogs_filtersByMultipleLevels() throws IOException {
+        String t1 = recentTimestamp(3);
+        String t2 = recentTimestamp(2);
+        String t3 = recentTimestamp(1);
+        String logContent = t1 + "|INFO|main|com.solusi.erp.App|Info message\n"
+                + t2 + "|ERROR|main|com.solusi.erp.App|Error message\n"
+                + t3 + "|WARN|main|com.solusi.erp.App|Warn message\n";
         writeLogFile("erp.log", logContent);
 
-        List<LogEntry> result = adapter.readRecentLogs(100, "ERROR", null);
+        LogViewResult result = adapter.readRecentLogs(100, Set.of("ERROR", "WARN"), null, null, null);
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).level()).isEqualTo("ERROR");
-        assertThat(result.get(0).message()).isEqualTo("Error message");
+        assertThat(result.entries()).hasSize(2);
+        assertThat(result.entries()).allMatch(e -> "ERROR".equals(e.level()) || "WARN".equals(e.level()));
+        assertThat(result.totalMatched()).isEqualTo(2);
     }
 
     @Test
     @DisplayName("readRecentLogs filters by keyword in message")
     void readRecentLogs_filtersByKeyword() throws IOException {
-        String logContent = """
-                2026-04-08 10:00:00|INFO|main|com.solusi.erp.App|Application started
-                2026-04-08 10:00:01|INFO|main|com.solusi.erp.App|User logged in
-                2026-04-08 10:00:02|ERROR|main|com.solusi.erp.App|User session expired
-                """;
+        String t1 = recentTimestamp(3);
+        String t2 = recentTimestamp(2);
+        String t3 = recentTimestamp(1);
+        String logContent = t1 + "|INFO|main|com.solusi.erp.App|Application started\n"
+                + t2 + "|INFO|main|com.solusi.erp.App|User logged in\n"
+                + t3 + "|ERROR|main|com.solusi.erp.App|User session expired\n";
         writeLogFile("erp.log", logContent);
 
-        List<LogEntry> result = adapter.readRecentLogs(100, null, "user");
+        LogViewResult result = adapter.readRecentLogs(100, Set.of(), "user", null, null);
 
-        assertThat(result).hasSize(2);
-        assertThat(result).allMatch(e -> e.message().toLowerCase().contains("user"));
+        assertThat(result.entries()).hasSize(2);
+        assertThat(result.entries()).allMatch(e -> e.message().toLowerCase().contains("user"));
     }
 
     @Test
     @DisplayName("readRecentLogs merges multi-line stack traces with preceding entry")
     void readRecentLogs_mergesStackTrace() throws IOException {
-        String logContent = """
-                2026-04-08 10:00:00|INFO|main|com.solusi.erp.App|Application started
-                2026-04-08 10:00:01|ERROR|main|com.solusi.erp.App|Failed to process
-                java.lang.NullPointerException: null
-                \tat com.solusi.erp.Service.execute(Service.java:42)
-                \tat com.solusi.erp.Controller.handle(Controller.java:15)
-                2026-04-08 10:00:02|INFO|main|com.solusi.erp.App|Recovered
-                """;
+        String t1 = recentTimestamp(3);
+        String t2 = recentTimestamp(2);
+        String t3 = recentTimestamp(1);
+        String logContent = t1 + "|INFO|main|com.solusi.erp.App|Application started\n"
+                + t2 + "|ERROR|main|com.solusi.erp.App|Failed to process\n"
+                + "java.lang.NullPointerException: null\n"
+                + "\tat com.solusi.erp.Service.execute(Service.java:42)\n"
+                + "\tat com.solusi.erp.Controller.handle(Controller.java:15)\n"
+                + t3 + "|INFO|main|com.solusi.erp.App|Recovered\n";
         writeLogFile("erp.log", logContent);
 
-        List<LogEntry> result = adapter.readRecentLogs(100, null, null);
+        LogViewResult result = adapter.readRecentLogs(100, Set.of(), null, null, null);
 
-        assertThat(result).hasSize(3);
-        // The ERROR entry (second in chronological order, index 1 after reversal) should have stack trace
-        LogEntry errorEntry = result.stream().filter(e -> "ERROR".equals(e.level())).findFirst().orElse(null);
+        assertThat(result.entries()).hasSize(3);
+        LogEntry errorEntry = result.entries().stream().filter(LogEntry::isError).findFirst().orElse(null);
         assertThat(errorEntry).isNotNull();
         assertThat(errorEntry.stackTrace()).contains("NullPointerException");
         assertThat(errorEntry.stackTrace()).contains("Service.java:42");
     }
 
     @Test
-    @DisplayName("readRecentLogs respects limit parameter")
+    @DisplayName("readRecentLogs respects limit parameter and reports total count")
     void readRecentLogs_respectsLimit() throws IOException {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 50; i++) {
-            sb.append("2026-04-08 10:00:").append(String.format("%02d", i))
+            sb.append(recentTimestamp(50 - i))
                     .append("|INFO|main|com.solusi.erp.App|Message ").append(i).append("\n");
         }
         writeLogFile("erp.log", sb.toString());
 
-        List<LogEntry> result = adapter.readRecentLogs(10, null, null);
+        LogViewResult result = adapter.readRecentLogs(10, Set.of(), null, null, null);
 
-        assertThat(result).hasSizeLessThanOrEqualTo(10);
+        assertThat(result.entries()).hasSize(10);
+        assertThat(result.totalMatched()).isEqualTo(50);
+    }
+
+    @Test
+    @DisplayName("readRecentLogs filters by time range")
+    void readRecentLogs_filtersByTimeRange() throws IOException {
+        String old = LocalDateTime.now(WIB).minusHours(3).format(FMT);
+        String recent = recentTimestamp(5);
+        String logContent = old + "|INFO|main|com.solusi.erp.App|Old message\n"
+                + recent + "|INFO|main|com.solusi.erp.App|Recent message\n";
+        writeLogFile("erp.log", logContent);
+
+        LogViewResult result = adapter.readRecentLogs(100, Set.of(), null, null, "1h");
+
+        assertThat(result.entries()).hasSize(1);
+        assertThat(result.entries().get(0).message()).isEqualTo("Recent message");
+    }
+
+    @Test
+    @DisplayName("detectSessions finds server startup markers")
+    void detectSessions_findsStartupMarkers() throws IOException {
+        String t1 = "2026-04-07 10:00:00.000";
+        String t2 = "2026-04-08 14:00:00.000";
+        String logContent = t1 + "|INFO|main|com.solusi.erp.SolusiProgramErpApplication|Starting SolusiProgramErpApplication using Java 21\n"
+                + t1 + "|INFO|main|com.solusi.erp.App|Some log\n"
+                + t2 + "|INFO|main|com.solusi.erp.SolusiProgramErpApplication|Starting SolusiProgramErpApplication using Java 21\n"
+                + t2 + "|INFO|main|com.solusi.erp.App|Another log\n";
+        writeLogFile("erp.log", logContent);
+
+        List<ServerSession> sessions = adapter.detectSessions();
+
+        assertThat(sessions).hasSize(2);
+        assertThat(sessions.get(0).current()).isTrue();
+        assertThat(sessions.get(0).id()).isEqualTo(1);
+        assertThat(sessions.get(1).id()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("readRecentLogs filters by sessionId")
+    void readRecentLogs_filtersBySession() throws IOException {
+        String t1 = recentTimestamp(30);
+        String t2 = recentTimestamp(10);
+        String logContent = t1 + "|INFO|main|com.solusi.erp.SolusiProgramErpApplication|Starting SolusiProgramErpApplication using Java 21\n"
+                + t1 + "|INFO|main|com.solusi.erp.App|Old session log\n"
+                + t2 + "|INFO|main|com.solusi.erp.SolusiProgramErpApplication|Starting SolusiProgramErpApplication using Java 21\n"
+                + t2 + "|INFO|main|com.solusi.erp.App|Current session log\n";
+        writeLogFile("erp.log", logContent);
+
+        LogViewResult result = adapter.readRecentLogs(100, Set.of(), null, 1, null);
+
+        assertThat(result.entries()).hasSize(2);
+        assertThat(result.entries()).anyMatch(e -> e.message().contains("Current session log"));
     }
 
     @Test

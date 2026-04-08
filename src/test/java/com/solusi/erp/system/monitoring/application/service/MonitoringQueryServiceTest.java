@@ -1,6 +1,8 @@
 package com.solusi.erp.system.monitoring.application.service;
 
 import com.solusi.erp.system.monitoring.domain.model.LogEntry;
+import com.solusi.erp.system.monitoring.domain.model.LogViewResult;
+import com.solusi.erp.system.monitoring.domain.model.ServerSession;
 import com.solusi.erp.system.monitoring.domain.model.ServiceHealth;
 import com.solusi.erp.system.monitoring.domain.model.SystemHealthSnapshot;
 import com.solusi.erp.system.monitoring.domain.port.HealthCheckPort;
@@ -12,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -58,17 +61,34 @@ class MonitoringQueryServiceTest {
     @Test
     @DisplayName("getRecentLogs delegates to LogReaderPort with correct parameters")
     void getRecentLogs_delegatesToPort() {
-        List<LogEntry> expected = List.of(
-                new LogEntry("2026-04-08 10:00:00", "INFO", "main", "c.s.e.App", "Started", null),
-                new LogEntry("2026-04-08 10:00:01", "ERROR", "main", "c.s.e.App", "Failure", "NullPointerException")
+        List<LogEntry> entries = List.of(
+                new LogEntry("2026-04-08 10:00:00", "INFO", "main", "c.s.e.App", "com.solusi.erp.App", "Started", null),
+                new LogEntry("2026-04-08 10:00:01", "ERROR", "main", "c.s.e.App", "com.solusi.erp.App", "Failure", "NullPointerException")
         );
-        when(logReaderPort.readRecentLogs(50, "ERROR", "fail")).thenReturn(expected);
+        LogViewResult expected = new LogViewResult(entries, 2, 1, 0, 1, 0);
+        Set<String> levels = Set.of("ERROR");
+        when(logReaderPort.readRecentLogs(50, levels, "fail", null, "1h")).thenReturn(expected);
 
-        List<LogEntry> result = service.getRecentLogs(50, "ERROR", "fail");
+        LogViewResult result = service.getRecentLogs(50, levels, "fail", null, "1h");
 
-        assertThat(result).hasSize(2);
-        assertThat(result.get(1).level()).isEqualTo("ERROR");
-        verify(logReaderPort).readRecentLogs(50, "ERROR", "fail");
+        assertThat(result.entries()).hasSize(2);
+        assertThat(result.errorCount()).isEqualTo(1);
+        verify(logReaderPort).readRecentLogs(50, levels, "fail", null, "1h");
+    }
+
+    @Test
+    @DisplayName("getServerSessions delegates to LogReaderPort")
+    void getServerSessions_delegatesToPort() {
+        List<ServerSession> sessions = List.of(
+                new ServerSession(1, "2026-04-08 10:00:00", null, true, "Current Session")
+        );
+        when(logReaderPort.detectSessions()).thenReturn(sessions);
+
+        List<ServerSession> result = service.getServerSessions();
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).current()).isTrue();
+        verify(logReaderPort).detectSessions();
     }
 
     @Test
