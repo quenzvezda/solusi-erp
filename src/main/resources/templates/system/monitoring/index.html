@@ -163,15 +163,8 @@
                                 <button type="button" class="btn btn-outline-secondary time-range-btn" data-range="custom">Custom</button>
                             </div>
                         </div>
-                        <!-- Custom date range inputs (shown when Custom is active) -->
-                        <div class="col-auto d-none" id="custom-range-inputs">
-                            <div class="d-flex gap-1 align-items-center">
-                                <input type="text" id="date-from-input" class="form-control form-control-sm"
-                                       placeholder="From" style="width: 155px;" autocomplete="off">
-                                <span class="text-secondary">–</span>
-                                <input type="text" id="date-to-input" class="form-control form-control-sm"
-                                       placeholder="To" style="width: 155px;" autocomplete="off">
-                            </div>
+                        <div class="col-auto d-none" id="custom-range-summary-container">
+                            <span class="badge bg-secondary-lt text-secondary" id="custom-range-summary"></span>
                         </div>
                         <!-- Session filter -->
                         <div class="col-auto" th:if="${sessions != null and !sessions.isEmpty()}">
@@ -221,8 +214,8 @@
                             <table class="table table-vcenter card-table table-sm table-hover mb-0" style="font-size: 0.8125rem; table-layout: fixed;">
                                 <thead>
                                     <tr>
-                                        <th style="width: 70px;" th:text="#{label.monitoring.logs.level}">Level</th>
-                                        <th style="width: 90px;" th:text="#{label.monitoring.logs.timestamp}">Timestamp</th>
+                                        <th style="width: 84px;" th:text="#{label.monitoring.logs.level}">Level</th>
+                                        <th style="width: 106px;" th:text="#{label.monitoring.logs.timestamp}">Timestamp</th>
                                         <th style="width: 160px;" th:text="#{label.monitoring.logs.logger}">Logger</th>
                                         <th th:text="#{label.monitoring.logs.message}">Message</th>
                                     </tr>
@@ -230,8 +223,8 @@
                                 <tbody>
                                     <tr th:each="entry, iterStat : ${logs}"
                                         th:classappend="${entry.error ? 'table-danger' : (entry.warn ? 'table-warning' : '')}">
-                                        <td>
-                                            <span class="badge" data-copy-level="true"
+                                        <td class="pe-1">
+                                            <span class="badge log-level-badge" data-copy-level="true"
                                                   style="cursor:pointer;user-select:none;" title="Click to copy row"
                                                   th:classappend="${entry.level == 'ERROR' ? 'bg-red text-red-fg' :
                                                                   (entry.level == 'WARN' ? 'bg-orange text-orange-fg' :
@@ -239,7 +232,7 @@
                                                                   (entry.level == 'DEBUG' ? 'bg-secondary text-white' : 'bg-muted text-muted-fg')))}"
                                                   th:text="${entry.level}">INFO</span>
                                         </td>
-                                        <td class="text-nowrap text-secondary" style="font-size: 0.72rem; width: 90px; vertical-align: top; padding-top: 6px;"><span class="d-block" th:text="${#strings.substring(entry.timestamp, 0, 10)}">2026-01-01</span><span class="d-block" th:text="${entry.timestamp.length() > 11 ? #strings.substring(entry.timestamp, 11, 19) : ''}">00:00:00</span></td>
+                                        <td class="text-nowrap text-secondary ps-1" style="font-size: 0.72rem; width: 106px; line-height: 1.15; vertical-align: top; padding-top: 6px;"><span class="d-block" th:text="${#strings.substring(entry.timestamp, 0, 10)}">2026-01-01</span><span class="d-block" th:text="${entry.timestamp.length() > 11 ? #strings.substring(entry.timestamp, 11, 19) : ''}">00:00:00</span></td>
                                         <td>
                                             <span class="logger-cell" th:text="${entry.logger}" th:title="${entry.fullLogger}">logger</span>
                                         </td>
@@ -265,6 +258,18 @@
                                         </td>
                                     </tr>
                                 </tbody>
+                                <tfoot th:if="${totalMatched != null and displayedCount != null and totalMatched > displayedCount}">
+                                    <tr>
+                                        <td colspan="4" class="text-center py-2 border-top">
+                                            <button type="button" id="load-more-btn" class="btn btn-sm btn-outline-secondary"
+                                                    onclick="loadMore()">
+                                                <i class="ti ti-chevron-down me-1"></i>
+                                                <span th:text="#{label.monitoring.logs.load-more}">Load More</span>
+                                                <span class="badge bg-secondary ms-1" th:text="${totalMatched - displayedCount}">0</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </th:block>
@@ -280,20 +285,36 @@
                         </div>
                     </th:block>
 
-                    <!-- Load More button -->
-                    <th:block th:if="${totalMatched != null and displayedCount != null and totalMatched > displayedCount}">
-                        <div class="p-2 border-top text-center">
-                            <button type="button" id="load-more-btn" class="btn btn-sm btn-outline-secondary"
-                                    onclick="loadMore()">
-                                <i class="ti ti-chevron-down me-1"></i>
-                                <span th:text="#{label.monitoring.logs.load-more}">Load More</span>
-                                <span class="badge bg-secondary ms-1" th:text="${totalMatched - displayedCount}">0</span>
-                            </button>
-                        </div>
-                    </th:block>
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <div class="modal modal-blur fade" id="custom-range-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" th:text="#{label.monitoring.logs.custom.modal.title}">Custom Date Range</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-2">
+                        <div class="col-12 col-md-6">
+                            <label for="custom-date-from" class="form-label mb-1" th:text="#{label.monitoring.logs.custom.from}">From</label>
+                            <input type="text" id="custom-date-from" class="form-control" autocomplete="off">
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="custom-date-to" class="form-label mb-1" th:text="#{label.monitoring.logs.custom.to}">To</label>
+                            <input type="text" id="custom-date-to" class="form-control" autocomplete="off">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" th:text="#{label.cancel}">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="custom-range-apply-btn" th:text="#{label.apply}">Apply</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -337,6 +358,14 @@
         .level-chip.active[data-level="WARN"]   { background-color: #f76707; border-color: #f76707; color: #fff; }
         .level-chip.active[data-level="INFO"]   { background-color: #4299e1; border-color: #4299e1; color: #fff; }
         .level-chip.active[data-level="DEBUG"]  { background-color: #868e96; border-color: #868e96; color: #fff; }
+        .log-level-badge {
+            display: inline-block;
+            min-width: 58px;
+            text-align: center;
+            font-size: 0.67rem;
+            line-height: 1.2;
+            padding: 0.22rem 0.45rem;
+        }
         .message-cell mark {
             background-color: #fff3cd;
             padding: 0 2px;
@@ -356,6 +385,8 @@
             var countdownTimer = null;
             var lastManualRefresh = 0;
             var searchTimeout = null;
+            var appliedDateFrom = '';
+            var appliedDateTo = '';
 
             // === Elements ===
             var toggle = document.getElementById('auto-refresh-toggle');
@@ -364,6 +395,16 @@
             var searchInput = document.getElementById('keyword-search');
             var searchSpinner = document.getElementById('search-spinner');
             var searchIcon = document.getElementById('search-icon');
+            var customRangeModalEl = document.getElementById('custom-range-modal');
+            var customDateFromInput = document.getElementById('custom-date-from');
+            var customDateToInput = document.getElementById('custom-date-to');
+            var customRangeApplyBtn = document.getElementById('custom-range-apply-btn');
+            var customRangeSummaryContainer = document.getElementById('custom-range-summary-container');
+            var customRangeSummary = document.getElementById('custom-range-summary');
+            var ModalCtor = (window.bootstrap && window.bootstrap.Modal)
+                    ? window.bootstrap.Modal
+                    : ((window.tabler && window.tabler.Modal) ? window.tabler.Modal : null);
+            var customRangeModal = (customRangeModalEl && ModalCtor) ? new ModalCtor(customRangeModalEl) : null;
 
             // === Collect active filters ===
             function getFilters() {
@@ -373,16 +414,14 @@
                 });
                 var timeBtn = document.querySelector('.time-range-btn.active');
                 var sessionEl = document.getElementById('session-filter');
-                var fromEl = document.getElementById('date-from-input');
-                var toEl   = document.getElementById('date-to-input');
                 var timeRange = timeBtn ? timeBtn.dataset.range : '1h';
                 return {
                     levels:    levels.join(','),
                     timeRange: timeRange,
                     sessionId: sessionEl ? sessionEl.value : '',
                     keyword:   searchInput ? searchInput.value : '',
-                    dateFrom:  (timeRange === 'custom' && fromEl && fromEl.value) ? fromEl.value : '',
-                    dateTo:    (timeRange === 'custom' && toEl   && toEl.value)   ? toEl.value   : ''
+                    dateFrom:  timeRange === 'custom' ? appliedDateFrom : '',
+                    dateTo:    timeRange === 'custom' ? appliedDateTo : ''
                 };
             }
 
@@ -491,19 +530,38 @@
             // Time range buttons
             document.querySelectorAll('.time-range-btn').forEach(function(btn) {
                 btn.addEventListener('click', function() {
+                    if (this.dataset.range === 'custom') {
+                        if (customDateFromInput && appliedDateFrom) customDateFromInput.value = appliedDateFrom;
+                        if (customDateToInput && appliedDateTo) customDateToInput.value = appliedDateTo;
+                        if (customRangeModal) customRangeModal.show();
+                        return;
+                    }
                     document.querySelectorAll('.time-range-btn').forEach(function(b) { b.classList.remove('active'); });
                     this.classList.add('active');
-                    // Show/hide custom date inputs
-                    var customInputs = document.getElementById('custom-range-inputs');
-                    if (customInputs) {
-                        customInputs.classList.toggle('d-none', this.dataset.range !== 'custom');
-                    }
+                    appliedDateFrom = '';
+                    appliedDateTo = '';
+                    updateCustomRangeSummary();
                     currentLimit = 100;
-                    if (this.dataset.range !== 'custom') {
-                        refreshLogs();
-                    }
+                    refreshLogs();
                 });
             });
+
+            if (customRangeApplyBtn) {
+                customRangeApplyBtn.addEventListener('click', function() {
+                    var fromValue = customDateFromInput ? customDateFromInput.value : '';
+                    var toValue = customDateToInput ? customDateToInput.value : '';
+                    if (!fromValue || !toValue) return;
+                    appliedDateFrom = fromValue;
+                    appliedDateTo = toValue;
+                    document.querySelectorAll('.time-range-btn').forEach(function(b) { b.classList.remove('active'); });
+                    var customBtn = document.querySelector('.time-range-btn[data-range="custom"]');
+                    if (customBtn) customBtn.classList.add('active');
+                    updateCustomRangeSummary();
+                    currentLimit = 100;
+                    if (customRangeModal) customRangeModal.hide();
+                    refreshLogs();
+                });
+            }
 
             // Session filter
             var sessionEl = document.getElementById('session-filter');
@@ -577,21 +635,32 @@
 
             // === Init ===
             initFlatpickr();
+            updateCustomRangeSummary();
             startCountdown();
+
+            function updateCustomRangeSummary() {
+                if (!customRangeSummaryContainer || !customRangeSummary) return;
+                if (!appliedDateFrom || !appliedDateTo) {
+                    customRangeSummaryContainer.classList.add('d-none');
+                    customRangeSummary.textContent = '';
+                    return;
+                }
+                customRangeSummaryContainer.classList.remove('d-none');
+                customRangeSummary.textContent = appliedDateFrom + ' - ' + appliedDateTo;
+            }
         });
 
         // === Flatpickr Custom Date Range (outside DOMContentLoaded for htmx re-init) ===
         function initFlatpickr() {
-            var fromEl = document.getElementById('date-from-input');
-            var toEl   = document.getElementById('date-to-input');
+            var fromEl = document.getElementById('custom-date-from');
+            var toEl   = document.getElementById('custom-date-to');
             if (!fromEl || !toEl || fromEl._flatpickr) return;
             var fpOptions = {
                 enableTime: true,
                 dateFormat: 'Y-m-d H:i',
                 altInput: true,
                 altFormat: 'd M Y H:i',
-                time_24hr: true,
-                onChange: function() { refreshLogs(); }
+                time_24hr: true
             };
             flatpickr(fromEl, fpOptions);
             flatpickr(toEl, fpOptions);
