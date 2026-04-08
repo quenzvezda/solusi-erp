@@ -164,11 +164,11 @@
                         <!-- Inline date range (shown only when Custom is active) -->
                         <div class="col-auto" id="inline-date-range" style="display:none;">
                             <div class="d-flex align-items-center gap-1 mb-1">
-                                <span class="text-secondary" style="font-size:0.75rem; min-width:28px;" th:text="#{label.monitoring.logs.custom.from}">From</span>
+                                <span class="text-secondary" style="font-size:0.75rem; min-width:32px; white-space:nowrap;" th:text="#{label.monitoring.logs.custom.from}">From</span>
                                 <input type="text" id="custom-date-from" class="form-control form-control-sm" autocomplete="off" style="width:160px;">
                             </div>
                             <div class="d-flex align-items-center gap-1">
-                                <span class="text-secondary" style="font-size:0.75rem; min-width:28px;" th:text="#{label.monitoring.logs.custom.to}">To</span>
+                                <span class="text-secondary" style="font-size:0.75rem; min-width:32px; white-space:nowrap;" th:text="#{label.monitoring.logs.custom.to}">To</span>
                                 <input type="text" id="custom-date-to" class="form-control form-control-sm" autocomplete="off" style="width:160px;">
                             </div>
                         </div>
@@ -220,7 +220,7 @@
 
                     <!-- Table or empty state -->
                     <th:block th:if="${logs != null and !#lists.isEmpty(logs)}">
-                        <div class="table-responsive" style="max-height: calc(100vh - 480px); min-height: 180px; overflow-y: auto;">
+                        <div class="table-responsive">
                             <table class="table table-vcenter card-table table-sm table-hover mb-0" style="font-size: 0.8125rem; table-layout: fixed;">
                                 <thead>
                                     <tr>
@@ -385,8 +385,7 @@
         /* Flatpickr alt input sizing inside inline date range */
         #inline-date-range .flatpickr-input:not([type="hidden"]) {
             width: 160px !important;
-        }
-    </style>
+        }    </style>
     <script th:inline="javascript">
         document.addEventListener('DOMContentLoaded', function() {
             // === Constants ===
