@@ -138,22 +138,16 @@
                 </div>
 
                 <!-- Filter Bar -->
-                <div class="card-body border-bottom py-3">
-                    <div class="row g-2 align-items-center">
-                        <!-- Level toggle chips -->
+                <div class="card-body border-bottom py-2">
+                    <div class="row g-2 align-items-center flex-wrap">
+                        <!-- Left stacked: level chips (top) + time range buttons (bottom) -->
                         <div class="col-auto">
-                            <div class="d-flex gap-1" id="level-chips">
+                            <div class="d-flex gap-1 mb-1" id="level-chips">
                                 <button type="button" class="btn btn-sm level-chip active" data-level="ERROR">ERROR</button>
                                 <button type="button" class="btn btn-sm level-chip active" data-level="WARN">WARN</button>
                                 <button type="button" class="btn btn-sm level-chip" data-level="INFO">INFO</button>
                                 <button type="button" class="btn btn-sm level-chip" data-level="DEBUG">DEBUG</button>
                             </div>
-                        </div>
-                        <div class="col-auto d-none d-sm-block">
-                            <div class="vr" style="height: 24px;"></div>
-                        </div>
-                        <!-- Time range presets -->
-                        <div class="col-auto">
                             <div class="btn-group btn-group-sm" id="time-range-group">
                                 <button type="button" class="btn btn-outline-secondary time-range-btn" data-range="15m">15m</button>
                                 <button type="button" class="btn btn-outline-secondary time-range-btn active" data-range="1h">1h</button>
@@ -163,27 +157,43 @@
                                 <button type="button" class="btn btn-outline-secondary time-range-btn" data-range="custom">Custom</button>
                             </div>
                         </div>
-                        <div class="col-auto d-none" id="custom-range-summary-container">
-                            <span class="badge bg-secondary-lt text-secondary" id="custom-range-summary"></span>
+                        <!-- Divider -->
+                        <div class="col-auto d-none d-md-flex align-self-stretch py-1">
+                            <div class="vr"></div>
                         </div>
-                        <!-- Session filter -->
-                        <div class="col-auto" th:if="${sessions != null and !sessions.isEmpty()}">
-                            <select id="session-filter" class="form-select form-select-sm" style="width: auto;">
-                                <option value="" th:text="#{label.monitoring.logs.session.all}">All Sessions</option>
-                                <option th:each="sess : ${sessions}" th:value="${sess.id()}" th:text="${sess.label()}">Session</option>
-                            </select>
-                            <div th:if="${sessions.size() >= 20}" class="form-text text-muted mt-0" style="font-size: 0.7rem;"
-                                 th:text="#{label.monitoring.logs.session.limited}">Showing last 20 sessions</div>
+                        <!-- Inline date range (shown only when Custom is active) -->
+                        <div class="col-auto" id="inline-date-range" style="display:none;">
+                            <div class="d-flex align-items-center gap-1 mb-1">
+                                <span class="text-secondary" style="font-size:0.75rem; min-width:28px;" th:text="#{label.monitoring.logs.custom.from}">From</span>
+                                <input type="text" id="custom-date-from" class="form-control form-control-sm" autocomplete="off" style="width:160px;">
+                            </div>
+                            <div class="d-flex align-items-center gap-1">
+                                <span class="text-secondary" style="font-size:0.75rem; min-width:28px;" th:text="#{label.monitoring.logs.custom.to}">To</span>
+                                <input type="text" id="custom-date-to" class="form-control form-control-sm" autocomplete="off" style="width:160px;">
+                            </div>
                         </div>
-                        <!-- Search with debounce indicator -->
-                        <div class="col-auto ms-auto">
-                            <div class="input-icon" style="width: 260px;">
-                                <input id="keyword-search" type="text" class="form-control form-control-sm"
-                                       th:placeholder="#{label.monitoring.logs.search}">
-                                <span class="input-icon-addon">
-                                    <span class="spinner-border spinner-border-sm d-none" id="search-spinner"></span>
-                                    <i class="ti ti-search" id="search-icon"></i>
-                                </span>
+                        <div class="col-auto align-self-end" id="inline-date-apply" style="display:none;">
+                            <button type="button" class="btn btn-sm btn-primary" id="custom-range-apply-btn" th:text="#{label.apply}">Apply</button>
+                        </div>
+                        <!-- Right stacked: session (top) + search (bottom) -->
+                        <div class="col ms-auto">
+                            <div class="d-flex flex-column align-items-end gap-1">
+                                <div th:if="${sessions != null and !sessions.isEmpty()}">
+                                    <select id="session-filter" class="form-select form-select-sm" style="width: auto;">
+                                        <option value="" th:text="#{label.monitoring.logs.session.all}">All Sessions</option>
+                                        <option th:each="sess : ${sessions}" th:value="${sess.id()}" th:text="${sess.label()}">Session</option>
+                                    </select>
+                                    <div th:if="${sessions.size() >= 20}" class="form-text text-muted mt-0" style="font-size: 0.7rem;"
+                                         th:text="#{label.monitoring.logs.session.limited}">Showing last 20 sessions</div>
+                                </div>
+                                <div class="input-icon" style="width: 260px;">
+                                    <input id="keyword-search" type="text" class="form-control form-control-sm"
+                                           th:placeholder="#{label.monitoring.logs.search}">
+                                    <span class="input-icon-addon">
+                                        <span class="spinner-border spinner-border-sm d-none" id="search-spinner"></span>
+                                        <i class="ti ti-search" id="search-icon"></i>
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -210,7 +220,7 @@
 
                     <!-- Table or empty state -->
                     <th:block th:if="${logs != null and !#lists.isEmpty(logs)}">
-                        <div class="table-responsive" style="max-height: calc(100vh - 450px); min-height: 180px; overflow-y: auto;">
+                        <div class="table-responsive" style="max-height: calc(100vh - 480px); min-height: 180px; overflow-y: auto;">
                             <table class="table table-vcenter card-table table-sm table-hover mb-0" style="font-size: 0.8125rem; table-layout: fixed;">
                                 <thead>
                                     <tr>
@@ -221,56 +231,72 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="entry, iterStat : ${logs}"
-                                        th:classappend="${entry.error ? 'table-danger' : (entry.warn ? 'table-warning' : '')}">
-                                        <td class="pe-1">
-                                            <span class="badge log-level-badge" data-copy-level="true"
-                                                  style="cursor:pointer;user-select:none;" title="Click to copy row"
-                                                  th:classappend="${entry.level == 'ERROR' ? 'bg-red text-red-fg' :
-                                                                  (entry.level == 'WARN' ? 'bg-orange text-orange-fg' :
-                                                                  (entry.level == 'INFO' ? 'bg-azure text-azure-fg' :
-                                                                  (entry.level == 'DEBUG' ? 'bg-secondary text-white' : 'bg-muted text-muted-fg')))}"
-                                                  th:text="${entry.level}">INFO</span>
-                                        </td>
-                                        <td class="text-nowrap text-secondary ps-1" style="font-size: 0.72rem; width: 106px; line-height: 1.15; vertical-align: top; padding-top: 6px;"><span class="d-block" th:text="${#strings.substring(entry.timestamp, 0, 10)}">2026-01-01</span><span class="d-block" th:text="${entry.timestamp.length() > 11 ? #strings.substring(entry.timestamp, 11, 19) : ''}">00:00:00</span></td>
-                                        <td>
-                                            <span class="logger-cell" th:text="${entry.logger}" th:title="${entry.fullLogger}">logger</span>
-                                        </td>
-                                        <td style="max-width: 0; overflow: hidden;">
-                                            <div class="message-cell" th:text="${entry.message}" style="word-break: break-word;">Message</div>
-                                            <th:block th:if="${entry.stackTrace != null}">
-                                                <details class="mt-1" th:attr="data-index=${iterStat.index}">
-                                                    <summary class="text-danger" style="cursor: pointer; font-size: 0.75rem;">
-                                                        <i class="ti ti-chevron-down"></i>
+                                    <th:block th:each="entry, iterStat : ${logs}">
+                                        <!-- Main log row -->
+                                        <tr class="log-main-row"
+                                            th:classappend="${entry.error ? 'table-danger' : (entry.warn ? 'table-warning' : '')}">
+                                            <td class="pe-1">
+                                                <span class="badge log-level-badge" data-copy-level="true"
+                                                      style="cursor:pointer;user-select:none;" title="Click to copy row"
+                                                      th:classappend="${entry.level == 'ERROR' ? 'bg-red text-red-fg' :
+                                                                      (entry.level == 'WARN' ? 'bg-orange text-orange-fg' :
+                                                                      (entry.level == 'INFO' ? 'bg-azure text-azure-fg' :
+                                                                      (entry.level == 'DEBUG' ? 'bg-secondary text-white' : 'bg-muted text-muted-fg')))}"
+                                                      th:text="${entry.level}">INFO</span>
+                                            </td>
+                                            <td class="text-nowrap text-secondary ps-1" style="font-size: 0.72rem; width: 106px; line-height: 1.15; vertical-align: top; padding-top: 6px;"><span class="d-block" th:text="${#strings.substring(entry.timestamp, 0, 10)}">2026-01-01</span><span class="d-block" th:text="${entry.timestamp.length() > 11 ? #strings.substring(entry.timestamp, 11, 19) : ''}">00:00:00</span></td>
+                                            <td>
+                                                <span class="logger-cell" th:text="${entry.logger}" th:title="${entry.fullLogger}">logger</span>
+                                            </td>
+                                            <td style="max-width: 0; overflow: hidden;">
+                                                <div class="message-cell" th:text="${entry.message}" style="word-break: break-word;">Message</div>
+                                                <th:block th:if="${entry.stackTrace != null}">
+                                                    <button type="button" class="btn btn-link btn-sm p-0 mt-1 toggle-stack-btn text-danger"
+                                                            style="font-size:0.75rem; text-decoration:none;">
+                                                        <i class="ti ti-chevron-right me-1 toggle-stack-icon"></i>
                                                         <span th:text="#{label.monitoring.logs.copy-stacktrace}">Stack Trace</span>
-                                                    </summary>
-                                                    <div class="position-relative mt-1">
-                                                        <pre class="bg-dark text-white p-2 rounded stacktrace-pre"
-                                                             th:text="${entry.stackTrace}">stack trace</pre>
-                                                        <button type="button"
-                                                                class="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-2 copy-stacktrace-btn"
-                                                                th:attr="data-stacktrace=${entry.stackTrace}">
-                                                            <i class="ti ti-clipboard me-1"></i> Copy
-                                                        </button>
-                                                    </div>
-                                                </details>
-                                            </th:block>
-                                        </td>
-                                    </tr>
+                                                    </button>
+                                                </th:block>
+                                            </td>
+                                        </tr>
+                                        <!-- Stack trace row — spans full width, hidden by default -->
+                                        <tr th:if="${entry.stackTrace != null}" class="log-stack-row d-none"
+                                            th:classappend="${entry.error ? 'table-danger' : (entry.warn ? 'table-warning' : '')}">
+                                            <td colspan="4" class="pt-0 pb-2 px-3 border-top-0">
+                                                <div class="d-flex align-items-center gap-2 mb-2 pt-1">
+                                                    <span class="badge log-level-badge"
+                                                          th:classappend="${entry.level == 'ERROR' ? 'bg-red text-red-fg' :
+                                                                          (entry.level == 'WARN' ? 'bg-orange text-orange-fg' :
+                                                                          (entry.level == 'INFO' ? 'bg-azure text-azure-fg' :
+                                                                          (entry.level == 'DEBUG' ? 'bg-secondary text-white' : 'bg-muted text-muted-fg')))}"
+                                                          th:text="${entry.level}">INFO</span>
+                                                    <span class="text-secondary" style="font-size:0.75rem;" th:text="${entry.timestamp}">-</span>
+                                                    <code class="text-secondary" style="font-size:0.72rem;" th:text="${entry.fullLogger}">logger</code>
+                                                </div>
+                                                <div class="position-relative">
+                                                    <pre class="bg-dark text-white p-2 rounded stacktrace-pre"
+                                                         th:text="${entry.stackTrace}">stack trace</pre>
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-2 copy-stacktrace-btn"
+                                                            th:attr="data-stacktrace=${entry.stackTrace}">
+                                                        <i class="ti ti-clipboard me-1"></i> Copy
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </th:block>
                                 </tbody>
-                                <tfoot th:if="${totalMatched != null and displayedCount != null and totalMatched > displayedCount}">
-                                    <tr>
-                                        <td colspan="4" class="text-center py-2 border-top">
-                                            <button type="button" id="load-more-btn" class="btn btn-sm btn-outline-secondary"
-                                                    onclick="loadMore()">
-                                                <i class="ti ti-chevron-down me-1"></i>
-                                                <span th:text="#{label.monitoring.logs.load-more}">Load More</span>
-                                                <span class="badge bg-secondary-lt text-secondary border ms-1" th:text="${totalMatched - displayedCount}">0</span>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </tfoot>
                             </table>
+                        </div>
+                        <!-- Load More — outside scrollable area so it stays visible -->
+                        <div class="text-center py-2 border-top"
+                             th:if="${totalMatched != null and displayedCount != null and totalMatched > displayedCount}">
+                            <button type="button" id="load-more-btn" class="btn btn-sm btn-outline-secondary"
+                                    onclick="loadMore()">
+                                <i class="ti ti-chevron-down me-1"></i>
+                                <span th:text="#{label.monitoring.logs.load-more}">Load More</span>
+                                <span class="badge bg-secondary-lt text-secondary border ms-1" th:text="${totalMatched - displayedCount}">0</span>
+                            </button>
                         </div>
                     </th:block>
 
@@ -288,33 +314,6 @@
                 </div>
             </div>
 
-        </div>
-    </div>
-
-    <div class="modal modal-blur fade" id="custom-range-modal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" th:text="#{label.monitoring.logs.custom.modal.title}">Custom Date Range</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row g-2">
-                        <div class="col-12 col-md-6">
-                            <label for="custom-date-from" class="form-label mb-1" th:text="#{label.monitoring.logs.custom.from}">From</label>
-                            <input type="text" id="custom-date-from" class="form-control" autocomplete="off">
-                        </div>
-                        <div class="col-12 col-md-6">
-                            <label for="custom-date-to" class="form-label mb-1" th:text="#{label.monitoring.logs.custom.to}">To</label>
-                            <input type="text" id="custom-date-to" class="form-control" autocomplete="off">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" th:text="#{label.cancel}">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="custom-range-apply-btn" th:text="#{label.apply}">Apply</button>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -373,6 +372,20 @@
         }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .animate-spin { animation: spin 1s linear infinite; }
+        /* Neutral row background — prevents theme accent color bleeding into non-error/warn rows */
+        #log-table-container .table > tbody > tr.log-main-row:not(.table-danger):not(.table-warning),
+        #log-table-container .table > tbody > tr.log-stack-row:not(.table-danger):not(.table-warning) {
+            --tblr-table-bg: transparent;
+            background-color: transparent !important;
+        }
+        /* Stack trace row merges visually with its parent row */
+        #log-table-container .table > tbody > tr.log-stack-row > td {
+            border-top: none;
+        }
+        /* Flatpickr alt input sizing inside inline date range */
+        #inline-date-range .flatpickr-input:not([type="hidden"]) {
+            width: 160px !important;
+        }
     </style>
     <script th:inline="javascript">
         document.addEventListener('DOMContentLoaded', function() {
@@ -395,16 +408,11 @@
             var searchInput = document.getElementById('keyword-search');
             var searchSpinner = document.getElementById('search-spinner');
             var searchIcon = document.getElementById('search-icon');
-            var customRangeModalEl = document.getElementById('custom-range-modal');
             var customDateFromInput = document.getElementById('custom-date-from');
             var customDateToInput = document.getElementById('custom-date-to');
             var customRangeApplyBtn = document.getElementById('custom-range-apply-btn');
-            var customRangeSummaryContainer = document.getElementById('custom-range-summary-container');
-            var customRangeSummary = document.getElementById('custom-range-summary');
-            var ModalCtor = (window.bootstrap && window.bootstrap.Modal)
-                    ? window.bootstrap.Modal
-                    : ((window.tabler && window.tabler.Modal) ? window.tabler.Modal : null);
-            var customRangeModal = (customRangeModalEl && ModalCtor) ? new ModalCtor(customRangeModalEl) : null;
+            var inlineDateRange = document.getElementById('inline-date-range');
+            var inlineDateApply = document.getElementById('inline-date-apply');
 
             // === Collect active filters ===
             function getFilters() {
@@ -458,7 +466,7 @@
             }
 
             function hasOpenStackTraces() {
-                return document.querySelectorAll('#log-table-container details[open]').length > 0;
+                return document.querySelectorAll('#log-table-container .log-stack-row:not(.d-none)').length > 0;
             }
 
             // === Countdown ===
@@ -530,17 +538,24 @@
             // Time range buttons
             document.querySelectorAll('.time-range-btn').forEach(function(btn) {
                 btn.addEventListener('click', function() {
-                    if (this.dataset.range === 'custom') {
-                        if (customDateFromInput && appliedDateFrom) customDateFromInput.value = appliedDateFrom;
-                        if (customDateToInput && appliedDateTo) customDateToInput.value = appliedDateTo;
-                        if (customRangeModal) customRangeModal.show();
-                        return;
-                    }
                     document.querySelectorAll('.time-range-btn').forEach(function(b) { b.classList.remove('active'); });
                     this.classList.add('active');
+                    if (this.dataset.range === 'custom') {
+                        if (inlineDateRange) inlineDateRange.style.display = '';
+                        if (inlineDateApply) inlineDateApply.style.display = '';
+                        // Restore previously applied dates into flatpickr
+                        if (appliedDateFrom && customDateFromInput && customDateFromInput._flatpickr) {
+                            customDateFromInput._flatpickr.setDate(appliedDateFrom);
+                        }
+                        if (appliedDateTo && customDateToInput && customDateToInput._flatpickr) {
+                            customDateToInput._flatpickr.setDate(appliedDateTo);
+                        }
+                        return; // wait for Apply button click
+                    }
+                    if (inlineDateRange) inlineDateRange.style.display = 'none';
+                    if (inlineDateApply) inlineDateApply.style.display = 'none';
                     appliedDateFrom = '';
                     appliedDateTo = '';
-                    updateCustomRangeSummary();
                     currentLimit = 100;
                     refreshLogs();
                 });
@@ -557,12 +572,7 @@
                     }
                     appliedDateFrom = fromValue;
                     appliedDateTo = toValue;
-                    document.querySelectorAll('.time-range-btn').forEach(function(b) { b.classList.remove('active'); });
-                    var customBtn = document.querySelector('.time-range-btn[data-range="custom"]');
-                    if (customBtn) customBtn.classList.add('active');
-                    updateCustomRangeSummary();
                     currentLimit = 100;
-                    if (customRangeModal) customRangeModal.hide();
                     refreshLogs();
                 });
             }
@@ -627,7 +637,10 @@
                 var logger = cells[2] ? (cells[2].querySelector('.logger-cell') || cells[2]).textContent.trim() : '';
                 var msgCell = cells[3];
                 var message = msgCell ? (msgCell.querySelector('.message-cell') || msgCell).textContent.trim() : '';
-                var stPre = msgCell ? msgCell.querySelector('.stacktrace-pre') : null;
+                // Stack trace is in the next sibling row
+                var stackRow = row.nextElementSibling;
+                var stPre = (stackRow && stackRow.classList.contains('log-stack-row'))
+                    ? stackRow.querySelector('.stacktrace-pre') : null;
                 var st = stPre ? stPre.textContent.trim() : '';
                 var text = '[' + level + '] ' + ts + ' | ' + logger + ' | ' + message + (st ? '\n' + st : '');
                 navigator.clipboard.writeText(text).then(function() {
@@ -637,21 +650,25 @@
                 });
             });
 
+            // === Stack Trace Toggle ===
+            document.addEventListener('click', function(e) {
+                var btn = e.target.closest('.toggle-stack-btn');
+                if (!btn) return;
+                var mainRow = btn.closest('tr');
+                var stackRow = mainRow ? mainRow.nextElementSibling : null;
+                if (stackRow && stackRow.classList.contains('log-stack-row')) {
+                    var nowHidden = stackRow.classList.toggle('d-none');
+                    var icon = btn.querySelector('.toggle-stack-icon');
+                    if (icon) {
+                        icon.classList.toggle('ti-chevron-right', nowHidden);
+                        icon.classList.toggle('ti-chevron-down', !nowHidden);
+                    }
+                }
+            });
+
             // === Init ===
             initFlatpickr();
-            updateCustomRangeSummary();
             if (toggle && toggle.checked) { startCountdown(); } else { updateCountdownDisplay(); }
-
-            function updateCustomRangeSummary() {
-                if (!customRangeSummaryContainer || !customRangeSummary) return;
-                if (!appliedDateFrom || !appliedDateTo) {
-                    customRangeSummaryContainer.classList.add('d-none');
-                    customRangeSummary.textContent = '';
-                    return;
-                }
-                customRangeSummaryContainer.classList.remove('d-none');
-                customRangeSummary.textContent = appliedDateFrom + ' - ' + appliedDateTo;
-            }
         });
 
         // === Flatpickr Custom Date Range (outside DOMContentLoaded for htmx re-init) ===
