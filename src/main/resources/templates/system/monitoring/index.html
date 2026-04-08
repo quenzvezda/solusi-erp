@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.monitoring.title})}"></head>
+
+<body th:replace="~{layout/master :: layout(~{:: .monitoring-content}, ~{:: #page-scripts})}">
+<div class="monitoring-content">
+
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title" th:text="#{label.monitoring.title}">System Monitoring</h2>
+                    <div class="text-secondary" th:text="#{label.monitoring.subtitle}">Application health status and log viewer</div>
+                </div>
+                <div class="col-auto ms-auto d-print-none">
+                    <span class="text-secondary" th:text="'🕐 ' + ${currentTime}"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+
+            <!-- Health Status Cards -->
+            <div id="health-cards-container" th:fragment="health-cards-container"
+                 hx-get="/monitoring/health" hx-trigger="every 30s" hx-swap="outerHTML">
+
+                <!-- JVM Metrics Row -->
+                <div class="row row-deck row-cards mb-3">
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="subheader" th:text="#{label.monitoring.health.uptime}">Uptime</div>
+                                </div>
+                                <div class="h1 mb-0 mt-2" th:text="${health.jvm.uptime}">0h 0m</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="subheader" th:text="#{label.monitoring.health.memory}">Memory</div>
+                                </div>
+                                <div class="h1 mb-2 mt-2" th:text="${health.jvm.usedMemoryMb} + ' / ' + ${health.jvm.maxMemoryMb} + ' MB'">0 / 0 MB</div>
+                                <div class="progress progress-sm">
+                                    <div class="progress-bar" th:classappend="${health.jvm.progressBarClass}"
+                                         role="progressbar"
+                                         th:style="'width: ' + ${health.jvm.memoryPercent} + '%'"
+                                         th:attr="aria-valuenow=${health.jvm.memoryPercent}"
+                                         aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="subheader" th:text="#{label.monitoring.health.threads}">Threads</div>
+                                </div>
+                                <div class="h1 mb-0 mt-2" th:text="${health.jvm.activeThreads}">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="subheader" th:text="#{label.monitoring.last-updated}">Last updated</div>
+                                </div>
+                                <div class="h3 mb-0 mt-2" th:text="${currentTime}">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service Health Cards -->
+                <div class="row row-deck row-cards mb-3">
+                    <th:block th:each="svc : ${health.services}">
+                        <div class="col-sm-6 col-lg-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <div class="subheader text-uppercase"
+                                                 th:text="#{${'label.monitoring.health.' + svc.name}}">Service</div>
+                                            <div class="text-secondary mt-1" th:text="${svc.detail}">Detail</div>
+                                        </div>
+                                        <span class="badge" th:classappend="${svc.badgeClass}"
+                                              th:text="#{${svc.status == 'UP' ? 'label.monitoring.health.up' :
+                                                          (svc.status == 'DOWN' ? 'label.monitoring.health.down' :
+                                                          'label.monitoring.health.unknown')}}">UP</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </th:block>
+                </div>
+            </div>
+
+            <!-- Log Viewer -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title" th:text="#{label.monitoring.logs}">Application Logs</h3>
+                    <div class="card-actions">
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox" id="auto-refresh-toggle" checked>
+                                <span class="form-check-label" th:text="#{label.monitoring.logs.auto-refresh}">Auto Refresh</span>
+                            </label>
+                            <div class="btn-list flex-nowrap" sec:authorize="hasAuthority('MONITORING_DOWNLOAD')">
+                                <a th:href="@{/monitoring/download(errorOnly=true)}" class="btn btn-sm btn-outline-danger">
+                                    <i class="ti ti-download me-1"></i>
+                                    <span th:text="#{label.monitoring.logs.download.error}">Error Logs</span>
+                                </a>
+                                <a th:href="@{/monitoring/download(errorOnly=false)}" class="btn btn-sm btn-outline-primary">
+                                    <i class="ti ti-download me-1"></i>
+                                    <span th:text="#{label.monitoring.logs.download.all}">All Logs</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body border-bottom py-3">
+                    <div class="d-flex gap-2">
+                        <select id="level-filter" name="level" class="form-select form-select-sm" style="width: auto;"
+                                hx-get="/monitoring/logs"
+                                hx-target="#log-table-container"
+                                hx-include="#keyword-search"
+                                hx-trigger="change">
+                            <option value="" th:text="#{label.monitoring.logs.filter.all}">All Levels</option>
+                            <option value="ERROR">ERROR</option>
+                            <option value="WARN">WARN</option>
+                            <option value="INFO">INFO</option>
+                            <option value="DEBUG">DEBUG</option>
+                        </select>
+                        <div class="ms-auto">
+                            <div class="input-icon">
+                                <input id="keyword-search" type="text" name="keyword" class="form-control form-control-sm"
+                                       th:placeholder="#{label.monitoring.logs.search}"
+                                       hx-get="/monitoring/logs"
+                                       hx-target="#log-table-container"
+                                       hx-include="#level-filter"
+                                       hx-trigger="keyup changed delay:500ms">
+                                <span class="input-icon-addon"><i class="ti ti-search"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="log-table-container" th:fragment="log-table-container">
+                    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                        <table class="table table-vcenter card-table table-sm table-hover" style="font-size: 0.8125rem;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;" th:text="#{label.monitoring.logs.level}">Level</th>
+                                    <th style="width: 180px;" th:text="#{label.monitoring.logs.timestamp}">Timestamp</th>
+                                    <th style="width: 180px;" th:text="#{label.monitoring.logs.logger}">Logger</th>
+                                    <th th:text="#{label.monitoring.logs.message}">Message</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="entry : ${logs}" th:class="${entry.error ? 'table-danger' : (entry.warn ? 'table-warning' : '')}">
+                                    <td>
+                                        <span class="badge"
+                                              th:classappend="${entry.level == 'ERROR' ? 'bg-danger' :
+                                                              (entry.level == 'WARN' ? 'bg-warning' :
+                                                              (entry.level == 'INFO' ? 'bg-info' :
+                                                              (entry.level == 'DEBUG' ? 'bg-secondary' : 'bg-muted')))}"
+                                              th:text="${entry.level}">INFO</span>
+                                    </td>
+                                    <td class="text-nowrap text-secondary" th:text="${entry.timestamp}">2026-01-01 00:00:00</td>
+                                    <td>
+                                        <span class="text-secondary" style="font-family: monospace; font-size: 0.75rem;"
+                                              th:text="${entry.logger}" th:title="${entry.thread}">logger</span>
+                                    </td>
+                                    <td>
+                                        <div th:text="${entry.message}" style="word-break: break-word;">Message</div>
+                                        <th:block th:if="${entry.stackTrace != null}">
+                                            <details class="mt-1">
+                                                <summary class="text-danger" style="cursor: pointer; font-size: 0.75rem;">
+                                                    <i class="ti ti-chevron-down"></i> Stack Trace
+                                                </summary>
+                                                <div class="position-relative">
+                                                    <pre class="bg-dark text-white p-2 rounded mt-1" style="font-size: 0.7rem; max-height: 300px; overflow: auto; white-space: pre-wrap;"
+                                                         th:text="${entry.stackTrace}">stack trace</pre>
+                                                    <button type="button" class="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-1 copy-stacktrace-btn"
+                                                            th:attr="data-stacktrace=${entry.stackTrace}"
+                                                            th:title="#{label.monitoring.logs.copy-stacktrace}">
+                                                        <i class="ti ti-clipboard"></i>
+                                                    </button>
+                                                </div>
+                                            </details>
+                                        </th:block>
+                                    </td>
+                                </tr>
+                                <tr th:if="${logs == null or #lists.isEmpty(logs)}">
+                                    <td colspan="4" class="text-center py-4 text-secondary"
+                                        th:text="#{label.monitoring.logs.empty}">No log entries found.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- Page-specific scripts -->
+<div id="page-scripts">
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggle = document.getElementById('auto-refresh-toggle');
+            const logContainer = document.getElementById('log-table-container');
+            let refreshInterval = null;
+
+            function startAutoRefresh() {
+                if (refreshInterval) clearInterval(refreshInterval);
+                refreshInterval = setInterval(function() {
+                    if (toggle && toggle.checked) {
+                        const level = document.getElementById('level-filter')?.value || '';
+                        const keyword = document.getElementById('keyword-search')?.value || '';
+                        const url = '/monitoring/logs?limit=100&level=' + encodeURIComponent(level) + '&keyword=' + encodeURIComponent(keyword);
+                        htmx.ajax('GET', url, {target: '#log-table-container', swap: 'innerHTML'});
+                    }
+                }, 5000);
+            }
+
+            if (toggle) {
+                toggle.addEventListener('change', function() {
+                    if (this.checked) {
+                        startAutoRefresh();
+                    } else if (refreshInterval) {
+                        clearInterval(refreshInterval);
+                        refreshInterval = null;
+                    }
+                });
+            }
+
+            startAutoRefresh();
+
+            // Copy stack trace to clipboard
+            document.addEventListener('click', function(e) {
+                const btn = e.target.closest('.copy-stacktrace-btn');
+                if (btn) {
+                    const text = btn.getAttribute('data-stacktrace');
+                    navigator.clipboard.writeText(text).then(function() {
+                        const icon = btn.querySelector('i');
+                        if (icon) {
+                            icon.className = 'ti ti-check';
+                            setTimeout(function() { icon.className = 'ti ti-clipboard'; }, 2000);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</div>
+</body>
+</html>
