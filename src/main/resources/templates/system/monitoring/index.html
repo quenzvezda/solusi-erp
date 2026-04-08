@@ -112,7 +112,7 @@
                             <!-- Auto-refresh toggle with countdown -->
                             <div class="d-flex align-items-center gap-1">
                                 <label class="form-check form-switch mb-0">
-                                    <input class="form-check-input" type="checkbox" id="auto-refresh-toggle" checked>
+                                    <input class="form-check-input" type="checkbox" id="auto-refresh-toggle">
                                     <span class="form-check-label" th:text="#{label.monitoring.logs.auto-refresh}">Auto Refresh</span>
                                 </label>
                                 <span id="countdown-display" class="text-secondary small">↻ 10s</span>
@@ -265,7 +265,7 @@
                                                     onclick="loadMore()">
                                                 <i class="ti ti-chevron-down me-1"></i>
                                                 <span th:text="#{label.monitoring.logs.load-more}">Load More</span>
-                                                <span class="badge bg-secondary ms-1" th:text="${totalMatched - displayedCount}">0</span>
+                                                <span class="badge bg-secondary-lt text-secondary border ms-1" th:text="${totalMatched - displayedCount}">0</span>
                                             </button>
                                         </td>
                                     </tr>
@@ -551,6 +551,10 @@
                     var fromValue = customDateFromInput ? customDateFromInput.value : '';
                     var toValue = customDateToInput ? customDateToInput.value : '';
                     if (!fromValue || !toValue) return;
+                    if (fromValue > toValue) {
+                        if (customDateToInput) customDateToInput.focus();
+                        return;
+                    }
                     appliedDateFrom = fromValue;
                     appliedDateTo = toValue;
                     document.querySelectorAll('.time-range-btn').forEach(function(b) { b.classList.remove('active'); });
@@ -636,7 +640,7 @@
             // === Init ===
             initFlatpickr();
             updateCustomRangeSummary();
-            startCountdown();
+            if (toggle && toggle.checked) { startCountdown(); } else { updateCountdownDisplay(); }
 
             function updateCustomRangeSummary() {
                 if (!customRangeSummaryContainer || !customRangeSummary) return;
@@ -655,15 +659,34 @@
             var fromEl = document.getElementById('custom-date-from');
             var toEl   = document.getElementById('custom-date-to');
             if (!fromEl || !toEl || fromEl._flatpickr) return;
-            var fpOptions = {
+            var today = new Date();
+            today.setHours(23, 59, 59, 999);
+            var fpFrom = flatpickr(fromEl, {
                 enableTime: true,
                 dateFormat: 'Y-m-d H:i',
                 altInput: true,
                 altFormat: 'd M Y H:i',
-                time_24hr: true
-            };
-            flatpickr(fromEl, fpOptions);
-            flatpickr(toEl, fpOptions);
+                time_24hr: true,
+                maxDate: today,
+                onChange: function(selectedDates) {
+                    if (selectedDates.length > 0 && toEl._flatpickr) {
+                        toEl._flatpickr.set('minDate', selectedDates[0]);
+                    }
+                }
+            });
+            flatpickr(toEl, {
+                enableTime: true,
+                dateFormat: 'Y-m-d H:i',
+                altInput: true,
+                altFormat: 'd M Y H:i',
+                time_24hr: true,
+                maxDate: today,
+                onChange: function(selectedDates) {
+                    if (selectedDates.length > 0 && fromEl._flatpickr) {
+                        fromEl._flatpickr.set('maxDate', selectedDates[0]);
+                    }
+                }
+            });
         }
 
         // === Load More (global, called from onclick) ===

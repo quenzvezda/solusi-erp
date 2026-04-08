@@ -52,8 +52,8 @@ public class MonitoringController {
         List<ServerSession> sessions = monitoringQueryService.getServerSessions();
         model.addAttribute("sessions", sessions);
 
-        // Initial log load (last 1 hour, all levels)
-        LogViewResult logResult = monitoringQueryService.getRecentLogs(100, Set.of(), null, null, "1h", null, null);
+        // Initial log load (last 1 hour, default to ERROR + WARN matching the UI chips)
+        LogViewResult logResult = monitoringQueryService.getRecentLogs(100, Set.of("ERROR", "WARN"), null, null, "1h", null, null);
         populateLogModel(model, logResult, "", null, "1h");
 
         return "system/monitoring/index";
