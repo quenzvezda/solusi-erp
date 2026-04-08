@@ -67,13 +67,13 @@ class MonitoringQueryServiceTest {
         );
         LogViewResult expected = new LogViewResult(entries, 2, 1, 0, 1, 0);
         Set<String> levels = Set.of("ERROR");
-        when(logReaderPort.readRecentLogs(50, levels, "fail", null, "1h")).thenReturn(expected);
+        when(logReaderPort.readRecentLogs(50, levels, "fail", null, "1h", null, null)).thenReturn(expected);
 
-        LogViewResult result = service.getRecentLogs(50, levels, "fail", null, "1h");
+        LogViewResult result = service.getRecentLogs(50, levels, "fail", null, "1h", null, null);
 
         assertThat(result.entries()).hasSize(2);
         assertThat(result.errorCount()).isEqualTo(1);
-        verify(logReaderPort).readRecentLogs(50, levels, "fail", null, "1h");
+        verify(logReaderPort).readRecentLogs(50, levels, "fail", null, "1h", null, null);
     }
 
     @Test

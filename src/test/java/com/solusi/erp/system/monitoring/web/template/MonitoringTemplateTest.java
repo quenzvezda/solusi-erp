@@ -64,7 +64,7 @@ class MonitoringTemplateTest {
         String html = readTemplate();
         assertThat(html).contains("${logs}");
         assertThat(html).contains("${entry.level}");
-        assertThat(html).contains("${entry.timestamp}");
+        assertThat(html).contains("#strings.substring(entry.timestamp");
         assertThat(html).contains("${entry.message}");
         assertThat(html).contains("${entry.stackTrace");
     }

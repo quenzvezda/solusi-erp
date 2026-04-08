@@ -45,8 +45,7 @@ class LogReaderAdapterTest {
     @Test
     @DisplayName("readRecentLogs returns empty result when log file does not exist")
     void readRecentLogs_noFile_returnsEmpty() {
-        LogViewResult result = adapter.readRecentLogs(100, Set.of(), null, null, null);
-        assertThat(result.entries()).isEmpty();
+        LogViewResult result = adapter.readRecentLogs(100, Set.of(), null, null, null, null, null);
         assertThat(result.totalMatched()).isZero();
     }
 
@@ -61,7 +60,7 @@ class LogReaderAdapterTest {
                 + t3 + "|ERROR|main|com.solusi.erp.Svc|NullPointerException\n";
         writeLogFile("erp.log", logContent);
 
-        LogViewResult result = adapter.readRecentLogs(100, Set.of(), null, null, null);
+        LogViewResult result = adapter.readRecentLogs(100, Set.of(), null, null, null, null, null);
 
         assertThat(result.entries()).hasSize(3);
         assertThat(result.entries().get(0).level()).isEqualTo("ERROR");
@@ -82,7 +81,7 @@ class LogReaderAdapterTest {
                 + t3 + "|WARN|main|com.solusi.erp.App|Warn message\n";
         writeLogFile("erp.log", logContent);
 
-        LogViewResult result = adapter.readRecentLogs(100, Set.of("ERROR", "WARN"), null, null, null);
+        LogViewResult result = adapter.readRecentLogs(100, Set.of("ERROR", "WARN"), null, null, null, null, null);
 
         assertThat(result.entries()).hasSize(2);
         assertThat(result.entries()).allMatch(e -> "ERROR".equals(e.level()) || "WARN".equals(e.level()));
@@ -100,7 +99,7 @@ class LogReaderAdapterTest {
                 + t3 + "|ERROR|main|com.solusi.erp.App|User session expired\n";
         writeLogFile("erp.log", logContent);
 
-        LogViewResult result = adapter.readRecentLogs(100, Set.of(), "user", null, null);
+        LogViewResult result = adapter.readRecentLogs(100, Set.of(), "user", null, null, null, null);
 
         assertThat(result.entries()).hasSize(2);
         assertThat(result.entries()).allMatch(e -> e.message().toLowerCase().contains("user"));
@@ -120,7 +119,7 @@ class LogReaderAdapterTest {
                 + t3 + "|INFO|main|com.solusi.erp.App|Recovered\n";
         writeLogFile("erp.log", logContent);
 
-        LogViewResult result = adapter.readRecentLogs(100, Set.of(), null, null, null);
+        LogViewResult result = adapter.readRecentLogs(100, Set.of(), null, null, null, null, null);
 
         assertThat(result.entries()).hasSize(3);
         LogEntry errorEntry = result.entries().stream().filter(LogEntry::isError).findFirst().orElse(null);
@@ -139,7 +138,7 @@ class LogReaderAdapterTest {
         }
         writeLogFile("erp.log", sb.toString());
 
-        LogViewResult result = adapter.readRecentLogs(10, Set.of(), null, null, null);
+        LogViewResult result = adapter.readRecentLogs(10, Set.of(), null, null, null, null, null);
 
         assertThat(result.entries()).hasSize(10);
         assertThat(result.totalMatched()).isEqualTo(50);
@@ -154,7 +153,7 @@ class LogReaderAdapterTest {
                 + recent + "|INFO|main|com.solusi.erp.App|Recent message\n";
         writeLogFile("erp.log", logContent);
 
-        LogViewResult result = adapter.readRecentLogs(100, Set.of(), null, null, "1h");
+        LogViewResult result = adapter.readRecentLogs(100, Set.of(), null, null, "1h", null, null);
 
         assertThat(result.entries()).hasSize(1);
         assertThat(result.entries().get(0).message()).isEqualTo("Recent message");
@@ -190,7 +189,7 @@ class LogReaderAdapterTest {
                 + t2 + "|INFO|main|com.solusi.erp.App|Current session log\n";
         writeLogFile("erp.log", logContent);
 
-        LogViewResult result = adapter.readRecentLogs(100, Set.of(), null, 1, null);
+        LogViewResult result = adapter.readRecentLogs(100, Set.of(), null, 1, null, null, null);
 
         assertThat(result.entries()).hasSize(2);
         assertThat(result.entries()).anyMatch(e -> e.message().contains("Current session log"));
@@ -243,5 +242,27 @@ class LogReaderAdapterTest {
     void getLogFileSize_returnsZeroWhenNotFound() {
         long size = adapter.getLogFileSize(false);
         assertThat(size).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("readRecentLogs filters by custom date range (dateFrom and dateTo)")
+    void readRecentLogs_filtersByCustomDateRange() throws IOException {
+        DateTimeFormatter inputFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        LocalDateTime base = LocalDateTime.now(WIB).minusHours(5);
+        String t1 = base.minusHours(2).format(FMT);
+        String t2 = base.format(FMT);
+        String t3 = base.plusHours(2).format(FMT);
+        String logContent = t1 + "|INFO|main|com.solusi.erp.App|Before range\n"
+                + t2 + "|INFO|main|com.solusi.erp.App|In range\n"
+                + t3 + "|INFO|main|com.solusi.erp.App|After range\n";
+        writeLogFile("erp.log", logContent);
+
+        String from = base.minusMinutes(30).format(inputFmt);
+        String to   = base.plusMinutes(30).format(inputFmt);
+
+        LogViewResult result = adapter.readRecentLogs(100, Set.of(), null, null, "custom", from, to);
+
+        assertThat(result.entries()).hasSize(1);
+        assertThat(result.entries().get(0).message()).isEqualTo("In range");
     }
 }

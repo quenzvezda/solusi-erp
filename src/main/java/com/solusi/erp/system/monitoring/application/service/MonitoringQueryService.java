@@ -31,8 +31,8 @@ public class MonitoringQueryService {
         return new SystemHealthSnapshot(services, jvm);
     }
 
-    public LogViewResult getRecentLogs(int limit, Set<String> levelFilters, String keyword, Integer sessionId, String timeRange) {
-        return logReaderPort.readRecentLogs(limit, levelFilters, keyword, sessionId, timeRange);
+    public LogViewResult getRecentLogs(int limit, Set<String> levelFilters, String keyword, Integer sessionId, String timeRange, String dateFrom, String dateTo) {
+        return logReaderPort.readRecentLogs(limit, levelFilters, keyword, sessionId, timeRange, dateFrom, dateTo);
     }
 
     public List<ServerSession> getServerSessions() {

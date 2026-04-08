@@ -39,7 +39,8 @@ public class LogReaderAdapter implements LogReaderPort {
 
     @Override
     public LogViewResult readRecentLogs(int limit, Set<String> levelFilters, String keyword,
-                                         Integer sessionId, String timeRange) {
+                                         Integer sessionId, String timeRange,
+                                         String dateFrom, String dateTo) {
         Path logFile = logDirectory.resolve("erp.log");
         if (!Files.exists(logFile)) {
             log.debug("Log file not found: {}", logFile);
@@ -51,10 +52,12 @@ public class LogReaderAdapter implements LogReaderPort {
             List<LogEntry> entries = parseLogLines(allLines);
 
             // 1) Time range filter
-            LocalDateTime cutoff = computeCutoff(timeRange);
-            if (cutoff != null) {
+            LocalDateTime[] window = computeTimeWindow(timeRange, dateFrom, dateTo);
+            LocalDateTime windowFrom = window[0];
+            LocalDateTime windowTo   = window[1];
+            if (windowFrom != null || windowTo != null) {
                 entries = entries.stream()
-                        .filter(e -> isAfterCutoff(e, cutoff))
+                        .filter(e -> isWithinWindow(e, windowFrom, windowTo))
                         .collect(Collectors.toCollection(ArrayList::new));
             }
 
@@ -124,6 +127,7 @@ public class LogReaderAdapter implements LogReaderPort {
 
             List<ServerSession> sessions = new ArrayList<>();
             for (int i = startTimestamps.size() - 1; i >= 0; i--) {
+                if (sessions.size() >= 20) break; // Limit to 20 most recent sessions
                 int id = startTimestamps.size() - i;
                 String start = startTimestamps.get(i);
                 String end = (i < startTimestamps.size() - 1) ? startTimestamps.get(i + 1) : null;
@@ -266,22 +270,44 @@ public class LogReaderAdapter implements LogReaderPort {
                 || (entry.stackTrace() != null && entry.stackTrace().toLowerCase().contains(lowerKw));
     }
 
-    private LocalDateTime computeCutoff(String timeRange) {
-        if (timeRange == null || timeRange.isBlank()) return null;
+    private LocalDateTime[] computeTimeWindow(String timeRange, String dateFrom, String dateTo) {
+        // Custom range: use explicit from/to dates if provided
+        if ("custom".equals(timeRange) || (dateFrom != null && !dateFrom.isBlank())
+                || (dateTo != null && !dateTo.isBlank())) {
+            LocalDateTime from = parseDateInput(dateFrom);
+            LocalDateTime to   = parseDateInput(dateTo);
+            return new LocalDateTime[]{from, to};
+        }
+        // Preset range: compute cutoff from "now"
+        if (timeRange == null || timeRange.isBlank()) return new LocalDateTime[]{null, null};
         LocalDateTime now = LocalDateTime.now(WIB);
-        return switch (timeRange) {
+        LocalDateTime cutoff = switch (timeRange) {
             case "15m" -> now.minusMinutes(15);
-            case "1h" -> now.minusHours(1);
-            case "6h" -> now.minusHours(6);
+            case "1h"  -> now.minusHours(1);
+            case "6h"  -> now.minusHours(6);
             case "24h" -> now.minusHours(24);
-            case "7d" -> now.minusDays(7);
-            default -> null;
+            case "7d"  -> now.minusDays(7);
+            default    -> null;
         };
+        return new LocalDateTime[]{cutoff, null};
     }
 
-    private boolean isAfterCutoff(LogEntry entry, LocalDateTime cutoff) {
+    private boolean isWithinWindow(LogEntry entry, LocalDateTime from, LocalDateTime to) {
         LocalDateTime ts = parseTimestamp(entry.timestamp());
-        return ts != null && !ts.isBefore(cutoff);
+        if (ts == null) return false;
+        if (from != null && ts.isBefore(from)) return false;
+        if (to   != null && ts.isAfter(to))   return false;
+        return true;
+    }
+
+    private LocalDateTime parseDateInput(String input) {
+        if (input == null || input.isBlank()) return null;
+        try {
+            return LocalDateTime.parse(input.trim(),
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private boolean isWithinSession(LogEntry entry, ServerSession session) {

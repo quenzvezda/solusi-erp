@@ -56,7 +56,7 @@ public class MonitoringControllerTest {
         when(monitoringQueryService.getServerSessions()).thenReturn(List.of(
                 new ServerSession(1, "2026-04-08 10:00:00", null, true, "Current Session")
         ));
-        when(monitoringQueryService.getRecentLogs(anyInt(), anySet(), any(), any(), anyString()))
+        when(monitoringQueryService.getRecentLogs(anyInt(), anySet(), any(), any(), any(), any(), any()))
                 .thenReturn(sampleLogResult());
 
         ExtendedModelMap model = new ExtendedModelMap();
@@ -77,11 +77,11 @@ public class MonitoringControllerTest {
     @DisplayName("logs returns fragment name and populates log model with counts")
     void logs_returnsFragmentAndModel() {
         LogViewResult result = sampleLogResult();
-        when(monitoringQueryService.getRecentLogs(100, Set.of("ERROR", "WARN"), "fail", null, "1h"))
+        when(monitoringQueryService.getRecentLogs(100, Set.of("ERROR", "WARN"), "fail", null, "1h", null, null))
                 .thenReturn(result);
 
         ExtendedModelMap model = new ExtendedModelMap();
-        String view = controller.logs(100, "ERROR,WARN", "fail", null, "1h", model);
+        String view = controller.logs(100, "ERROR,WARN", "fail", null, "1h", null, null, model);
 
         assertThat(view).isEqualTo("system/monitoring/index :: log-table-container");
         assertThat(model.get("logs")).isNotNull();
@@ -94,13 +94,13 @@ public class MonitoringControllerTest {
     @Test
     @DisplayName("logs with empty levels passes empty set to service")
     void logs_emptyLevels_passesEmptySet() {
-        when(monitoringQueryService.getRecentLogs(anyInt(), eq(Set.of()), any(), any(), any()))
+        when(monitoringQueryService.getRecentLogs(anyInt(), eq(Set.of()), any(), any(), any(), any(), any()))
                 .thenReturn(new LogViewResult(List.of(), 0, 0, 0, 0, 0));
 
         ExtendedModelMap model = new ExtendedModelMap();
-        controller.logs(100, "", null, null, null, model);
+        controller.logs(100, "", null, null, null, null, null, model);
 
-        verify(monitoringQueryService).getRecentLogs(100, Set.of(), null, null, null);
+        verify(monitoringQueryService).getRecentLogs(100, Set.of(), null, null, null, null, null);
     }
 
     @Test

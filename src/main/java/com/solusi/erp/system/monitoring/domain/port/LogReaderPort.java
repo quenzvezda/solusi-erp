@@ -11,7 +11,7 @@ import java.util.Set;
  * Port for reading application log entries.
  */
 public interface LogReaderPort {
-    LogViewResult readRecentLogs(int limit, Set<String> levelFilters, String keyword, Integer sessionId, String timeRange);
+    LogViewResult readRecentLogs(int limit, Set<String> levelFilters, String keyword, Integer sessionId, String timeRange, String dateFrom, String dateTo);
     InputStream getLogFileStream(boolean errorOnly);
     long getLogFileSize(boolean errorOnly);
     List<ServerSession> detectSessions();

@@ -53,7 +53,7 @@ public class MonitoringController {
         model.addAttribute("sessions", sessions);
 
         // Initial log load (last 1 hour, all levels)
-        LogViewResult logResult = monitoringQueryService.getRecentLogs(100, Set.of(), null, null, "1h");
+        LogViewResult logResult = monitoringQueryService.getRecentLogs(100, Set.of(), null, null, "1h", null, null);
         populateLogModel(model, logResult, "", null, "1h");
 
         return "system/monitoring/index";
@@ -67,9 +67,11 @@ public class MonitoringController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer sessionId,
             @RequestParam(required = false) String timeRange,
+            @RequestParam(required = false) String dateFrom,
+            @RequestParam(required = false) String dateTo,
             Model model) {
         Set<String> levelSet = parseLevels(levels);
-        LogViewResult result = monitoringQueryService.getRecentLogs(limit, levelSet, keyword, sessionId, timeRange);
+        LogViewResult result = monitoringQueryService.getRecentLogs(limit, levelSet, keyword, sessionId, timeRange, dateFrom, dateTo);
         populateLogModel(model, result, keyword, sessionId, timeRange);
         return "system/monitoring/index :: log-table-container";
     }
