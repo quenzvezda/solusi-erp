@@ -14,5 +14,7 @@ public interface LogReaderPort {
     LogViewResult readRecentLogs(int limit, Set<String> levelFilters, String keyword, Integer sessionId, String timeRange, String dateFrom, String dateTo);
     InputStream getLogFileStream(boolean errorOnly);
     long getLogFileSize(boolean errorOnly);
+    InputStream getAllLogsZipStream();
     List<ServerSession> detectSessions();
+    void clearLog();
 }

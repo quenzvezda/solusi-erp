@@ -8,6 +8,8 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -15,6 +17,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
+import java.util.zip.GZIPOutputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,6 +39,14 @@ class LogReaderAdapterTest {
 
     private void writeLogFile(String filename, String content) throws IOException {
         Files.writeString(tempDir.resolve(filename), content);
+    }
+
+    private void writeGzLogFile(String filename, String content) throws IOException {
+        Path path = tempDir.resolve(filename);
+        try (OutputStream fos = Files.newOutputStream(path);
+             GZIPOutputStream gzos = new GZIPOutputStream(fos)) {
+            gzos.write(content.getBytes(StandardCharsets.UTF_8));
+        }
     }
 
     private String recentTimestamp(int minutesAgo) {
@@ -264,5 +275,83 @@ class LogReaderAdapterTest {
 
         assertThat(result.entries()).hasSize(1);
         assertThat(result.entries().get(0).message()).isEqualTo("In range");
+    }
+
+    @Test
+    @DisplayName("readRecentLogs reads entries from archived .log.gz file within 7-day window")
+    void readRecentLogs_readsFromGzArchivedFiles() throws IOException {
+        LocalDateTime twoDaysAgo = LocalDateTime.now(WIB).minusDays(2);
+        String archivedDate = twoDaysAgo.toLocalDate().toString();
+        String t = twoDaysAgo.format(FMT);
+        String archivedContent = t + "|ERROR|main|com.solusi.erp.App|Archived error message\n";
+        writeGzLogFile("erp-" + archivedDate + ".0.log.gz", archivedContent);
+        writeLogFile("erp.log", recentTimestamp(1) + "|INFO|main|com.solusi.erp.App|Current message\n");
+
+        LogViewResult result = adapter.readRecentLogs(100, Set.of("ERROR"), null, null, "7d", null, null);
+
+        assertThat(result.entries()).hasSize(1);
+        assertThat(result.entries().get(0).message()).isEqualTo("Archived error message");
+    }
+
+    @Test
+    @DisplayName("readRecentLogs does NOT read archived .gz files outside the time window")
+    void readRecentLogs_skipsGzFilesOutsideWindow() throws IOException {
+        LocalDateTime tenDaysAgo = LocalDateTime.now(WIB).minusDays(10);
+        String oldDate = tenDaysAgo.toLocalDate().toString();
+        String t = tenDaysAgo.format(FMT);
+        writeGzLogFile("erp-" + oldDate + ".0.log.gz", t + "|ERROR|main|com.solusi.erp.App|Old archived error\n");
+        writeLogFile("erp.log", recentTimestamp(1) + "|INFO|main|com.solusi.erp.App|Current message\n");
+
+        LogViewResult result = adapter.readRecentLogs(100, Set.of("ERROR"), null, null, "7d", null, null);
+
+        assertThat(result.entries()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("clearLog truncates erp.log to empty")
+    void clearLog_truncatesLogFile() throws IOException {
+        String content = recentTimestamp(1) + "|INFO|main|com.solusi.erp.App|Some log entry\n";
+        writeLogFile("erp.log", content);
+        assertThat(Files.size(tempDir.resolve("erp.log"))).isGreaterThan(0);
+
+        adapter.clearLog();
+
+        assertThat(Files.size(tempDir.resolve("erp.log"))).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("clearLog also deletes archived .log.gz files and erp-error.log")
+    void clearLog_deletesArchivedAndErrorLogs() throws IOException {
+        writeLogFile("erp.log", recentTimestamp(1) + "|INFO|main|com.solusi.erp.App|Current\n");
+        writeGzLogFile("erp-2026-04-08.0.log.gz", recentTimestamp(1500) + "|ERROR|main|com.solusi.erp.App|Old\n");
+        writeLogFile("erp-2026-04-07.0.log", recentTimestamp(2900) + "|WARN|main|com.solusi.erp.App|Older\n");
+        writeLogFile("erp-error.log", recentTimestamp(10) + "|ERROR|main|com.solusi.erp.App|Error\n");
+
+        adapter.clearLog();
+
+        assertThat(Files.size(tempDir.resolve("erp.log"))).isEqualTo(0);
+        assertThat(tempDir.resolve("erp-2026-04-08.0.log.gz")).doesNotExist();
+        assertThat(tempDir.resolve("erp-2026-04-07.0.log")).doesNotExist();
+        assertThat(tempDir.resolve("erp-error.log")).doesNotExist();
+    }
+
+    @Test
+    @DisplayName("getAllLogsZipStream returns a ZIP containing all erp log files")
+    void getAllLogsZipStream_returnsZipWithAllLogFiles() throws IOException {
+        writeLogFile("erp.log", recentTimestamp(1) + "|INFO|main|com.solusi.erp.App|Current\n");
+        writeGzLogFile("erp-2026-04-08.0.log.gz", recentTimestamp(1500) + "|ERROR|main|com.solusi.erp.App|Archived\n");
+        writeLogFile("erp-error.log", recentTimestamp(5) + "|ERROR|main|com.solusi.erp.App|Error\n");
+
+        InputStream zipStream = adapter.getAllLogsZipStream();
+
+        try (java.util.zip.ZipInputStream zis = new java.util.zip.ZipInputStream(zipStream)) {
+            var names = new java.util.HashSet<String>();
+            java.util.zip.ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                names.add(entry.getName());
+                zis.closeEntry();
+            }
+            assertThat(names).containsExactlyInAnyOrder("erp.log", "erp-2026-04-08.0.log.gz", "erp-error.log");
+        }
     }
 }

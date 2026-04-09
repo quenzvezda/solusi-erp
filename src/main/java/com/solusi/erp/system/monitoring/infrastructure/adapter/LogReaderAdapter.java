@@ -11,11 +11,17 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Infrastructure adapter that reads log entries from log files on disk.
@@ -30,6 +36,8 @@ public class LogReaderAdapter implements LogReaderPort {
     private static final ZoneId WIB = ZoneId.of("Asia/Jakarta");
     private static final String SESSION_MARKER = "Starting SolusiProgramErpApplication";
     private static final int MAX_TAIL_LINES = 10_000;
+    private static final Pattern ARCHIVED_LOG_DATE_PATTERN =
+            Pattern.compile("erp-(\\d{4}-\\d{2}-\\d{2})\\.\\d+\\.log(?:\\.gz)?$");
 
     private final Path logDirectory;
 
@@ -48,20 +56,39 @@ public class LogReaderAdapter implements LogReaderPort {
         }
 
         try {
-            List<String> allLines = tailFile(logFile, MAX_TAIL_LINES);
-            List<LogEntry> entries = parseLogLines(allLines);
-
-            // 1) Time range filter
+            // 1) Compute time window early — needed to decide which archived files to read
             LocalDateTime[] window = computeTimeWindow(timeRange, dateFrom, dateTo);
             LocalDateTime windowFrom = window[0];
             LocalDateTime windowTo   = window[1];
+
+            // 2) Collect lines from current log + relevant archived files
+            List<String> allLines = new ArrayList<>();
+
+            // Read archived .log.gz (and non-compressed archived) files when range requires history
+            if (windowFrom != null) {
+                List<Path> archivedFiles = collectRelevantArchivedFiles(windowFrom);
+                for (Path archived : archivedFiles) {
+                    try {
+                        allLines.addAll(readArchivedLogLines(archived));
+                    } catch (IOException e) {
+                        log.warn("Failed to read archived log file {}: {}", archived, e.getMessage());
+                    }
+                }
+            }
+
+            // Always read the current erp.log (tail)
+            allLines.addAll(tailFile(logFile, MAX_TAIL_LINES));
+
+            List<LogEntry> entries = parseLogLines(allLines);
+
+            // 3) Time range filter
             if (windowFrom != null || windowTo != null) {
                 entries = entries.stream()
                         .filter(e -> isWithinWindow(e, windowFrom, windowTo))
                         .collect(Collectors.toCollection(ArrayList::new));
             }
 
-            // 2) Session filter
+            // 4) Session filter
             if (sessionId != null) {
                 List<ServerSession> sessions = detectSessions();
                 ServerSession selected = sessions.stream()
@@ -74,14 +101,14 @@ public class LogReaderAdapter implements LogReaderPort {
                 }
             }
 
-            // 3) Level filter (multi-select)
+            // 5) Level filter (multi-select)
             if (levelFilters != null && !levelFilters.isEmpty()) {
                 entries = entries.stream()
                         .filter(e -> levelFilters.contains(e.level()))
                         .collect(Collectors.toCollection(ArrayList::new));
             }
 
-            // 4) Keyword filter
+            // 6) Keyword filter
             if (keyword != null && !keyword.isBlank()) {
                 entries = entries.stream()
                         .filter(e -> matchesKeyword(e, keyword))
@@ -127,7 +154,7 @@ public class LogReaderAdapter implements LogReaderPort {
 
             List<ServerSession> sessions = new ArrayList<>();
             for (int i = startTimestamps.size() - 1; i >= 0; i--) {
-                if (sessions.size() >= 20) break; // Limit to 20 most recent sessions
+                if (sessions.size() >= 10) break; // Limit to 10 most recent sessions
                 int id = startTimestamps.size() - i;
                 String start = startTimestamps.get(i);
                 String end = (i < startTimestamps.size() - 1) ? startTimestamps.get(i + 1) : null;
@@ -173,6 +200,113 @@ public class LogReaderAdapter implements LogReaderPort {
             log.error("Failed to get log file size: {}", logFile, e);
         }
         return 0;
+    }
+
+    @Override
+    public void clearLog() {
+        Path logFile = logDirectory.resolve("erp.log");
+        try {
+            Files.writeString(logFile, "", StandardCharsets.UTF_8);
+            log.info("Log file truncated by user request: {}", logFile);
+        } catch (IOException e) {
+            log.error("Failed to truncate log file: {}", logFile, e);
+            throw new RuntimeException("Failed to clear log file", e);
+        }
+
+        // Delete all archived log files (erp-YYYY-MM-DD.N.log.gz / .log) and erp-error.log
+        try (var stream = Files.list(logDirectory)) {
+            stream
+                .filter(p -> {
+                    String name = p.getFileName().toString();
+                    return ARCHIVED_LOG_DATE_PATTERN.matcher(name).find()
+                        || name.equals("erp-error.log");
+                })
+                .forEach(p -> {
+                    try {
+                        Files.deleteIfExists(p);
+                        log.info("Deleted archived log file: {}", p.getFileName());
+                    } catch (IOException ex) {
+                        log.warn("Failed to delete archived log file: {}", p.getFileName(), ex);
+                    }
+                });
+        } catch (IOException e) {
+            log.warn("Failed to list log directory for archived cleanup: {}", e.getMessage());
+        }
+    }
+
+    @Override
+    public InputStream getAllLogsZipStream() {
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try (ZipOutputStream zos = new ZipOutputStream(baos);
+                 var stream = Files.list(logDirectory)) {
+                List<Path> files = stream
+                    .filter(p -> {
+                        String name = p.getFileName().toString();
+                        return name.startsWith("erp") &&
+                            (name.endsWith(".log") || name.endsWith(".log.gz") || name.endsWith(".gz"));
+                    })
+                    .sorted(Comparator.comparing(p -> p.getFileName().toString()))
+                    .collect(Collectors.toList());
+                for (Path file : files) {
+                    zos.putNextEntry(new ZipEntry(file.getFileName().toString()));
+                    Files.copy(file, zos);
+                    zos.closeEntry();
+                }
+            }
+            return new ByteArrayInputStream(baos.toByteArray());
+        } catch (IOException e) {
+            log.error("Failed to create log ZIP archive", e);
+            throw new RuntimeException("Failed to create log ZIP archive", e);
+        }
+    }
+
+    /**
+     * Collects archived log files (erp-*.log.gz and erp-*.log) whose date is on or after
+     * the start of (windowFrom date - 1 day), to account for logs near midnight rollover.
+     * Returns files sorted by date ascending so they are merged before erp.log.
+     */
+    List<Path> collectRelevantArchivedFiles(LocalDateTime windowFrom) {
+        LocalDate cutoffDate = windowFrom.toLocalDate().minusDays(1);
+        try (var stream = Files.list(logDirectory)) {
+            return stream
+                    .filter(p -> {
+                        String name = p.getFileName().toString();
+                        Matcher m = ARCHIVED_LOG_DATE_PATTERN.matcher(name);
+                        if (!m.find()) return false;
+                        try {
+                            LocalDate fileDate = LocalDate.parse(m.group(1));
+                            return !fileDate.isBefore(cutoffDate);
+                        } catch (Exception e) {
+                            return false;
+                        }
+                    })
+                    .sorted(Comparator.comparing(p -> {
+                        Matcher m = ARCHIVED_LOG_DATE_PATTERN.matcher(p.getFileName().toString());
+                        return m.find() ? m.group(1) : "";
+                    }))
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            log.warn("Failed to list log directory for archived files: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
+    /**
+     * Reads all lines from an archived log file (supports both .gz and plain .log).
+     */
+    List<String> readArchivedLogLines(Path file) throws IOException {
+        List<String> lines = new ArrayList<>();
+        String name = file.getFileName().toString();
+        InputStream raw = Files.newInputStream(file);
+        InputStream in = name.endsWith(".gz") ? new GZIPInputStream(raw) : raw;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lines.add(line);
+            }
+        }
+        return lines;
     }
 
     // ─── Internal helpers ───────────────────────────────────────────────────

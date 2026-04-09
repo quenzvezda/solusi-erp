@@ -132,6 +132,14 @@
                                     <i class="ti ti-download me-1"></i>
                                     <span th:text="#{label.monitoring.logs.download.all}">All Logs</span>
                                 </a>
+                                <!-- Clear log: subtle danger icon button, hidden unless hovered -->
+                                <button type="button" class="btn btn-sm btn-ghost-danger"
+                                        data-bs-toggle="modal" data-bs-target="#clear-log-modal"
+                                        th:title="#{label.monitoring.logs.clear}"
+                                        style="opacity:0.4; transition: opacity 0.2s;"
+                                        onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='0.4'">
+                                    <i class="ti ti-trash"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -139,7 +147,7 @@
 
                 <!-- Filter Bar -->
                 <div class="card-body border-bottom py-2">
-                    <div class="row g-2 align-items-center flex-wrap">
+                    <div class="row g-2 align-items-center flex-wrap" id="filter-bar">
                         <!-- Left stacked: level chips (top) + time range buttons (bottom) -->
                         <div class="col-auto">
                             <div class="d-flex gap-1 mb-1" id="level-chips">
@@ -183,8 +191,15 @@
                                         <option value="" th:text="#{label.monitoring.logs.session.all}">All Sessions</option>
                                         <option th:each="sess : ${sessions}" th:value="${sess.id()}" th:text="${sess.label()}">Session</option>
                                     </select>
-                                    <div th:if="${sessions.size() >= 20}" class="form-text text-muted mt-0" style="font-size: 0.7rem;"
-                                         th:text="#{label.monitoring.logs.session.limited}">Showing last 20 sessions</div>
+                                    <!-- Hint when sessions are many: guide user to use Clear Log -->
+                                    <div th:if="${sessions.size() >= 5}" class="form-text text-muted mt-0 text-end" style="font-size: 0.7rem;">
+                                        <span th:text="${sessions.size()} + ' sessions'">N sessions</span>
+                                        <span sec:authorize="hasAuthority('MONITORING_DOWNLOAD')">
+                                            · <a href="#" class="text-danger"
+                                                 data-bs-toggle="modal" data-bs-target="#clear-log-modal"
+                                                 th:text="#{label.monitoring.logs.clear}">Clear Log</a>
+                                        </span>
+                                    </div>
                                 </div>
                                 <div class="input-icon" style="width: 260px;">
                                     <input id="keyword-search" type="text" class="form-control form-control-sm"
@@ -201,6 +216,13 @@
 
                 <!-- Log Table (HTMX swappable fragment) -->
                 <div id="log-table-container" th:fragment="log-table-container">
+
+                    <!-- Loading overlay -->
+                    <div id="log-loading-overlay">
+                        <div class="spinner-border text-secondary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
 
                     <!-- Count bar -->
                     <div class="px-3 py-2 border-bottom" style="background-color: var(--tblr-bg-surface-secondary);">
@@ -263,16 +285,6 @@
                                         <tr th:if="${entry.stackTrace != null}" class="log-stack-row d-none"
                                             th:classappend="${entry.error ? 'table-danger' : (entry.warn ? 'table-warning' : '')}">
                                             <td colspan="4" class="pt-0 pb-2 px-3 border-top-0">
-                                                <div class="d-flex align-items-center gap-2 mb-2 pt-1">
-                                                    <span class="badge log-level-badge"
-                                                          th:classappend="${entry.level == 'ERROR' ? 'bg-red text-red-fg' :
-                                                                          (entry.level == 'WARN' ? 'bg-orange text-orange-fg' :
-                                                                          (entry.level == 'INFO' ? 'bg-azure text-azure-fg' :
-                                                                          (entry.level == 'DEBUG' ? 'bg-secondary text-white' : 'bg-muted text-muted-fg')))}"
-                                                          th:text="${entry.level}">INFO</span>
-                                                    <span class="text-secondary" style="font-size:0.75rem;" th:text="${entry.timestamp}">-</span>
-                                                    <code class="text-secondary" style="font-size:0.72rem;" th:text="${entry.fullLogger}">logger</code>
-                                                </div>
                                                 <div class="position-relative">
                                                     <pre class="bg-dark text-white p-2 rounded stacktrace-pre"
                                                          th:text="${entry.stackTrace}">stack trace</pre>
@@ -314,6 +326,46 @@
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <!-- Clear Log Confirmation Modal — must be inside .monitoring-content for Thymeleaf fragment extraction -->
+    <div class="modal modal-blur fade" id="clear-log-modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="modal-title" th:text="#{label.monitoring.logs.clear.confirm.title}">Clear All Logs</div>
+                    <div class="text-secondary mt-1" th:text="#{label.monitoring.logs.clear.confirm.body}">
+                        This will permanently delete all log entries including archived and error log files. This action cannot be undone.
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label small mb-1">
+                            <span th:utext="#{label.monitoring.logs.clear.confirm.type-hint}">
+                                Type <strong>Download &amp; Clear All Logs</strong> to confirm
+                            </span>
+                        </label>
+                        <input type="text" id="clear-confirm-input" class="form-control form-control-sm"
+                               th:placeholder="#{label.monitoring.logs.clear.confirm.placeholder}"
+                               placeholder="Download &amp; Clear All Logs" autocomplete="off"/>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="w-100">
+                        <div class="row g-2">
+                            <div class="col-auto">
+                                <button type="button" class="btn w-100" data-bs-dismiss="modal" th:text="#{label.cancel}">Cancel</button>
+                            </div>
+                            <div class="col">
+                                <form th:action="@{/monitoring/clear}" method="post" id="clear-log-form">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <button type="button" id="clear-confirm-btn" class="btn btn-danger w-100" disabled
+                                            th:text="#{label.monitoring.logs.clear.confirm.btn}">Download &amp; Clear All Logs</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -385,7 +437,29 @@
         /* Flatpickr alt input sizing inside inline date range */
         #inline-date-range .flatpickr-input:not([type="hidden"]) {
             width: 160px !important;
-        }    </style>
+        }
+        /* Filter bar locked state */
+        #filter-bar.filters-loading {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        /* Log table loading overlay */
+        #log-table-container {
+            position: relative;
+        }
+        #log-loading-overlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,0.6);
+            z-index: 10;
+            align-items: center;
+            justify-content: center;
+        }
+        #log-loading-overlay.show {
+            display: flex;
+        }
+    </style>
     <script th:inline="javascript">
         document.addEventListener('DOMContentLoaded', function() {
             // === Constants ===
@@ -399,6 +473,7 @@
             var searchTimeout = null;
             var appliedDateFrom = '';
             var appliedDateTo = '';
+            var requestInFlight = false;
 
             // === Elements ===
             var toggle = document.getElementById('auto-refresh-toggle');
@@ -446,18 +521,27 @@
 
             // === Refresh Logic ===
             function refreshLogs() {
+                if (requestInFlight) return;
                 var f = getFilters();
                 var url = buildUrl(f);
-                showSearchSpinner(true);
+                setFilterLocked(true);
                 htmx.ajax('GET', url, {target: '#log-table-container', swap: 'outerHTML'}).then(function() {
-                    showSearchSpinner(false);
+                    setFilterLocked(false);
                     highlightKeywords(f.keyword);
                 }).catch(function() {
-                    showSearchSpinner(false);
+                    setFilterLocked(false);
                 });
             }
             // Expose for global loadMore() and Flatpickr
             window._monitoringRefresh = refreshLogs;
+
+            function setFilterLocked(locked) {
+                requestInFlight = locked;
+                var filterBar = document.getElementById('filter-bar');
+                var overlay = document.getElementById('log-loading-overlay');
+                if (filterBar) filterBar.classList.toggle('filters-loading', locked);
+                if (overlay) overlay.classList.toggle('show', locked);
+            }
 
             function showSearchSpinner(show) {
                 if (searchSpinner) searchSpinner.classList.toggle('d-none', !show);
@@ -528,6 +612,7 @@
             // Level chips
             document.querySelectorAll('.level-chip').forEach(function(chip) {
                 chip.addEventListener('click', function() {
+                    if (requestInFlight) return;
                     this.classList.toggle('active');
                     currentLimit = 100;
                     refreshLogs();
@@ -537,6 +622,7 @@
             // Time range buttons
             document.querySelectorAll('.time-range-btn').forEach(function(btn) {
                 btn.addEventListener('click', function() {
+                    if (requestInFlight) return;
                     document.querySelectorAll('.time-range-btn').forEach(function(b) { b.classList.remove('active'); });
                     this.classList.add('active');
                     if (this.dataset.range === 'custom') {
@@ -586,7 +672,10 @@
                     clearTimeout(searchTimeout);
                     showSearchSpinner(true);
                     currentLimit = 100;
-                    searchTimeout = setTimeout(refreshLogs, 500);
+                    searchTimeout = setTimeout(function() {
+                        if (!requestInFlight) refreshLogs();
+                        else showSearchSpinner(false);
+                    }, 500);
                 });
             }
 
@@ -664,6 +753,41 @@
                     }
                 }
             });
+
+        // === Clear Log Modal — Confirmation Input ===
+            (function() {
+                var modal = document.getElementById('clear-log-modal');
+                if (!modal) return;
+                modal.addEventListener('show.bs.modal', function() {
+                    var input = document.getElementById('clear-confirm-input');
+                    var btn   = document.getElementById('clear-confirm-btn');
+                    if (input) input.value = '';
+                    if (btn)   btn.disabled = true;
+                });
+                var input = document.getElementById('clear-confirm-input');
+                if (input) {
+                    input.addEventListener('input', function() {
+                        var btn = document.getElementById('clear-confirm-btn');
+                        if (btn) btn.disabled = (input.value !== 'Download & Clear All Logs');
+                    });
+                }
+                var btn = document.getElementById('clear-confirm-btn');
+                if (btn) {
+                    btn.addEventListener('click', function() {
+                        // Step 1: trigger ZIP download in new tab
+                        var a = document.createElement('a');
+                        a.href = /*[[@{/monitoring/download-all}]]*/ '/monitoring/download-all';
+                        a.target = '_blank';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        // Step 2: submit the clear form after a brief delay
+                        setTimeout(function() {
+                            document.getElementById('clear-log-form').submit();
+                        }, 800);
+                    });
+                }
+            })();
 
             // === Init ===
             initFlatpickr();

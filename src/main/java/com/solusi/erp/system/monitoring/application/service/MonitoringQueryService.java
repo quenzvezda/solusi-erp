@@ -46,4 +46,12 @@ public class MonitoringQueryService {
     public long getLogFileSize(boolean errorOnly) {
         return logReaderPort.getLogFileSize(errorOnly);
     }
+
+    public void clearLog() {
+        logReaderPort.clearLog();
+    }
+
+    public InputStream getAllLogsZipStream() {
+        return logReaderPort.getAllLogsZipStream();
+    }
 }

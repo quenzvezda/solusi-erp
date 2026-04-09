@@ -14,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -94,6 +95,25 @@ public class MonitoringController {
         SystemHealthSnapshot snapshot = monitoringQueryService.getSystemHealth();
         String now = ZonedDateTime.now(WIB).format(WIB_FORMATTER);
         return ResponseEntity.ok(MonitoringHealthResponse.from(snapshot, now));
+    }
+
+    @GetMapping("/download-all")
+    @PreAuthorize("hasAuthority('MONITORING_DOWNLOAD')")
+    public ResponseEntity<InputStreamResource> downloadAllLogs() {
+        InputStream stream = monitoringQueryService.getAllLogsZipStream();
+        String filename = "erp-logs-" + ZonedDateTime.now(ZoneId.of("Asia/Jakarta"))
+                .format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss")) + ".zip";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.parseMediaType("application/zip"))
+                .body(new InputStreamResource(stream));
+    }
+
+    @PostMapping("/clear")
+    @PreAuthorize("hasAuthority('MONITORING_DOWNLOAD')")
+    public String clearLogs() {
+        monitoringQueryService.clearLog();
+        return "redirect:/monitoring";
     }
 
     @GetMapping("/download")
