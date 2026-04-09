@@ -30,7 +30,8 @@ public class BuildMenuTreeUseCaseImpl implements BuildMenuTreeUseCase {
             Map.entry("Account Payable (Purchase Invoice)", "ti-receipt"),
             Map.entry("General Ledger", "ti-book"),
             Map.entry("Adjustments", "ti-adjustments-alt"),
-            Map.entry("Production", "ti-assembly")
+            Map.entry("Production", "ti-assembly"),
+            Map.entry("System", "ti-server")
     );
 
     private final MenuQueryPort menuQueryPort;

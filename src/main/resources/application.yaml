@@ -72,6 +72,16 @@ logging:
     org.springframework.security: error
     org.hibernate.SQL: off
     org.hibernate.type.descriptor.sql.BasicBinder: off
+  file:
+    path: logs
+    name: logs/erp.log
+
+# Monitoring Configuration
+monitoring:
+  log:
+    directory: ${LOG_DIR:logs}
+    max-lines: 500
+    timezone: Asia/Jakarta
 
 # MinIO S3-compatible Storage Configuration
 minio:
