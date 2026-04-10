@@ -49,7 +49,7 @@ public class NewsRepositoryAdapter implements NewsRepository {
 
     @Override
     public List<News> findPublishedNews() {
-        return jpaRepository.findAllByStatus(NewsStatus.PUBLISHED)
+        return jpaRepository.findAllByStatusPublishedAndNotExpired()
                 .stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());

@@ -86,6 +86,17 @@ public class News {
         this.expiryDate = expiryDate;
     }
 
+    public boolean isExpired() {
+        return isExpired(LocalDateTime.now());
+    }
+
+    public boolean isExpired(LocalDateTime currentTime) {
+        if (this.expiryDate == null) {
+            return false;
+        }
+        return currentTime.isAfter(this.expiryDate);
+    }
+
     public String getCode() { return code; }
     public String getTitle() { return content.title(); }
     public String getContentText() { return content.content(); }
