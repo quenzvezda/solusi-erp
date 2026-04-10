@@ -24,8 +24,9 @@ public class CoaConfig {
     }
 
     @Bean
-    public CoaInUseChecker coaInUseChecker() {
-        return new CoaInUseCheckerImpl();
+    public CoaInUseChecker coaInUseChecker(
+            com.solusi.erp.accounting.schema.infrastructure.persistence.SchemaJpaRepository schemaJpaRepository) {
+        return new CoaInUseCheckerImpl(schemaJpaRepository);
     }
 
     @Bean

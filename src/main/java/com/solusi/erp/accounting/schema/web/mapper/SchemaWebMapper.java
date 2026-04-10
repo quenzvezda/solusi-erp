@@ -1,0 +1,69 @@
+package com.solusi.erp.accounting.schema.web.mapper;
+
+import com.solusi.erp.core.dto.BaseAuditResponse;
+import com.solusi.erp.core.dto.LookupDto;
+import com.solusi.erp.core.mapper.AuditMapperHelper;
+import com.solusi.erp.accounting.coa.domain.port.CoaLookupProvider;
+import com.solusi.erp.accounting.schema.domain.model.AccountingSchema;
+import com.solusi.erp.accounting.schema.web.dto.SchemaDetailResponse;
+import com.solusi.erp.accounting.schema.web.dto.SchemaSaveRequest;
+import com.solusi.erp.accounting.schema.web.dto.SchemaSummaryResponse;
+import org.mapstruct.*;
+import org.springframework.beans.factory.annotation.Autowired;
+
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public abstract class SchemaWebMapper {
+
+    @Autowired
+    protected AuditMapperHelper auditMapperHelper;
+
+    @Autowired
+    protected CoaLookupProvider coaLookupProvider;
+
+    @Mapping(target = "eventType", expression = "java(domain.getEventType() != null ? domain.getEventType().name() : null)")
+    @Mapping(target = "debitAccountName", ignore = true)
+    @Mapping(target = "creditAccountName", ignore = true)
+    public abstract SchemaSummaryResponse toSummaryResponse(AccountingSchema domain);
+
+    @Mapping(target = "eventType", expression = "java(domain.getEventType() != null ? domain.getEventType().name() : null)")
+    @Mapping(target = "debitAccountName", ignore = true)
+    @Mapping(target = "creditAccountName", ignore = true)
+    public abstract SchemaDetailResponse toDetailResponse(AccountingSchema domain);
+
+    @Mapping(target = "eventType", expression = "java(domain.getEventType() != null ? domain.getEventType().name() : null)")
+    public abstract SchemaSaveRequest toSaveRequest(AccountingSchema domain);
+
+    @AfterMapping
+    protected void mapAuditFields(AccountingSchema domain, @MappingTarget BaseAuditResponse target) {
+        if (domain.getMetadata() != null) {
+            target.setId(domain.getId());
+            target.setVersion(domain.getMetadata().version() != null ? domain.getMetadata().version().intValue() : null);
+            target.setCreatedDate(domain.getMetadata().createdDate());
+            target.setUpdatedDate(domain.getMetadata().updatedDate());
+            target.setCreatedByName(auditMapperHelper.resolveUserDisplayName(domain.getMetadata().createdBy()));
+            target.setUpdatedByName(auditMapperHelper.resolveUserDisplayName(domain.getMetadata().updatedBy()));
+        }
+    }
+
+    @AfterMapping
+    protected void resolveAccountNames(AccountingSchema domain, @MappingTarget SchemaSummaryResponse target) {
+        resolveNames(domain, target);
+    }
+
+    @AfterMapping
+    protected void resolveAccountNames(AccountingSchema domain, @MappingTarget SchemaDetailResponse target) {
+        resolveNames(domain, target);
+    }
+
+    private void resolveNames(AccountingSchema domain, Object target) {
+        LookupDto debit = coaLookupProvider.resolve(domain.getDebitAccountId());
+        LookupDto credit = coaLookupProvider.resolve(domain.getCreditAccountId());
+        if (target instanceof SchemaSummaryResponse s) {
+            s.setDebitAccountName(debit != null ? debit.subText() + " - " + debit.name() : null);
+            s.setCreditAccountName(credit != null ? credit.subText() + " - " + credit.name() : null);
+        } else if (target instanceof SchemaDetailResponse d) {
+            d.setDebitAccountName(debit != null ? debit.subText() + " - " + debit.name() : null);
+            d.setCreditAccountName(credit != null ? credit.subText() + " - " + credit.name() : null);
+        }
+    }
+}
