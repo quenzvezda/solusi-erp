@@ -12,10 +12,10 @@ Status saat ini: **Fase 1 Selesai (Core Engine & POC)**
 *   [x] Verifikasi End-to-End melalui `NewsApprovalIntegrationTest`.
 
 ## Fase 2: UI Components & Frontend Integration (Sedang Berjalan 🚧)
-*   [ ] Pembuatan **Generic Thymeleaf Fragment** untuk Timeline Approval.
-*   [ ] Integrasi **HTMX** untuk memuat history approval secara asinkron.
-*   [ ] Pembuatan Form Approval (Tombol Approve, Reject, Forward) yang muncul secara dinamis berdasarkan `currentApproverId`.
-*   [ ] Penambahan pesan i18n untuk status dan aksi approval.
+*   [x] Pembuatan **Generic Thymeleaf Fragment** untuk Timeline Approval.
+*   [x] Integrasi **HTMX** untuk memuat history approval secara asinkron.
+*   [x] Pembuatan Form Approval (Tombol Approve, Reject, Forward) yang muncul secara dinamis berdasarkan `currentApproverId`.
+*   [x] Penambahan pesan i18n untuk status dan aksi approval.
 
 ## Fase 3: Peningkatan Fitur Enterprise (Masa Depan 🚀)
 *   [ ] **Approval Matrix/Matrix Template**: Otomatisasi penentuan approver berdasarkan nilai transaksi atau kriteria tertentu.
