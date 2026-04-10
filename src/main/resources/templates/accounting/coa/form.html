@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(${coaRequest.id == null ? #messages.msg('label.coa.add') : #messages.msg('label.coa.edit')})}"></head>
+
+<body th:replace="~{layout/master :: layout(~{:: .coa-form-content}, ~{})}">
+    <div class="coa-form-content">
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="${coaRequest.id == null ? #messages.msg('label.coa.add') : #messages.msg('label.coa.edit') + ': ' + coaRequest.name}">
+                            Form Akun
+                        </h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+                <form th:action="${coaRequest.id == null ? '/accounting/coa/create' : '/accounting/coa/edit/' + coaRequest.id}"
+                      th:object="${coaRequest}" method="post" class="card"
+                      data-ajax-form="true"
+                      data-redirect-on-success="/accounting/coa">
+
+                    <input type="hidden" th:field="*{version}" />
+
+                    <div class="card-body">
+                        <div class="alert-container"></div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h3 class="card-title" th:text="#{label.product.section.basic}">Basic Info</h3>
+
+                                <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.coa.code}, required=true, isReadonly=${coaRequest.id != null}, extraClass=${coaRequest.id != null ? 'bg-body-tertiary' : ''}, placeholder=#{placeholder.coa.code})}"></div>
+
+                                <div th:replace="~{fragments/inputs :: text(field='name', label=#{label.coa.name}, required=true, placeholder=#{placeholder.coa.name})}"></div>
+
+                                <div class="mb-3">
+                                    <label class="form-label required" th:text="#{label.coa.account.type}">Account Type</label>
+                                    <select th:field="*{accountType}" class="form-select erp-input">
+                                        <option value="" th:text="#{label.select.placeholder}">-- Select --</option>
+                                        <option th:each="type : ${accountTypes}"
+                                                th:value="${type.name()}"
+                                                th:text="#{${'label.coa.type.' + type.name()}}">Type</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" th:text="#{label.coa.parent}">Parent Account</label>
+                                    <select th:field="*{parentId}" class="form-select erp-input"
+                                            data-lookup-url="/api/lookup/accounting/coa"
+                                            data-lookup-permission="LOOKUP_COA">
+                                        <option value="" th:text="#{label.select.placeholder}">-- Select --</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 border-start-md">
+                                <h3 class="card-title" th:text="#{label.general.settings}">Settings</h3>
+
+                                <div th:replace="~{fragments/inputs :: number(field='level', label=#{label.coa.level}, required=false)}"></div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" th:text="#{label.coa.note}">Note</label>
+                                    <textarea th:field="*{note}" class="form-control erp-input" rows="3" th:placeholder="#{placeholder.coa.note}"></textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" th:field="*{isActive}">
+                                        <span class="form-check-label" th:text="#{label.active}">Active</span>
+                                    </label>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-check">
+                                        <input class="form-check-input" type="checkbox" th:field="*{isHeader}">
+                                        <span class="form-check-label" th:text="#{label.coa.is.header}">Header Account</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div th:if="${auditInfo != null and auditInfo.id != null}"
+                             th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
+                    </div>
+
+                    <div class="card-footer text-end">
+                        <div class="d-flex align-items-center">
+                            <div id="loading-indicator" class="spinner-border spinner-border-sm text-primary me-2" role="status" style="display: none;"></div>
+                            <a th:href="@{/accounting/coa}" class="btn btn-link link-secondary" th:text="#{label.cancel}">Cancel</a>
+                            <button type="submit" class="btn btn-primary ms-auto">
+                                <i class="ti ti-device-floppy me-1"></i>
+                                <span th:text="#{label.save}">Save</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
