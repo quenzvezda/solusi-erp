@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.period.detail.title})}"></head>
+
+<body th:replace="~{layout/master :: layout(~{:: .period-detail-content}, ~{})}">
+    <div class="period-detail-content">
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <div class="page-pretitle" th:text="#{label.period.title}">Accounting Period</div>
+                        <h2 class="page-title" th:text="${fy.code + ' — ' + fy.name}">FY-0001 — Fiscal Year 2026</h2>
+                    </div>
+                    <div class="col-auto ms-auto d-print-none">
+                        <a th:href="@{/accounting/periods}" class="btn btn-secondary">
+                            <i class="ti ti-arrow-left me-1"></i> Back
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+                <!-- FY Summary Card -->
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-2">
+                                    <span class="text-secondary" th:text="#{label.period.fy.code}">Code</span>
+                                    <div class="fw-bold" th:text="${fy.code}">FY-0001</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-2">
+                                    <span class="text-secondary" th:text="#{label.period.fy.start}">Start Date</span>
+                                    <div class="fw-bold" th:text="${#temporals.format(fy.startDate, 'dd MMM yyyy')}">01 Jan 2026</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-2">
+                                    <span class="text-secondary" th:text="#{label.period.fy.end}">End Date</span>
+                                    <div class="fw-bold" th:text="${#temporals.format(fy.endDate, 'dd MMM yyyy')}">31 Dec 2026</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-2">
+                                    <span class="text-secondary" th:text="#{label.period.column.status}">Status</span>
+                                    <div>
+                                        <span class="badge badge-outline text-green" th:if="${fy.isActive}">
+                                            <span class="badge-dot bg-success me-1"></span>
+                                            <span th:text="#{label.active}">Active</span>
+                                        </span>
+                                        <span class="badge badge-outline text-red" th:unless="${fy.isActive}">
+                                            <span class="badge-dot bg-danger me-1"></span>
+                                            <span th:text="#{label.inactive}">Inactive</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Periods Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title" th:text="#{label.period.column.periods}">Periods</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th th:text="#{label.period.column.code}">Code</th>
+                                    <th th:text="#{label.period.column.name}">Name</th>
+                                    <th th:text="#{label.period.column.start}">Start Date</th>
+                                    <th th:text="#{label.period.column.end}">End Date</th>
+                                    <th th:text="#{label.period.column.status}">Status</th>
+                                    <th class="w-1" th:text="#{label.actions}" sec:authorize="hasAuthority('ACCOUNTING-PERIOD_UPDATE')">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="period : ${fy.periods}" th:id="'period-row-' + ${period.id}">
+                                    <td th:text="${period.code}">FY-0001-01</td>
+                                    <td th:text="${period.name}">Jan 2026</td>
+                                    <td th:text="${#temporals.format(period.startDate, 'dd MMM yyyy')}">01 Jan 2026</td>
+                                    <td th:text="${#temporals.format(period.endDate, 'dd MMM yyyy')}">31 Jan 2026</td>
+                                    <td>
+                                        <span th:if="${period.status == 'NEVER_OPENED'}" class="badge bg-secondary-lt"
+                                              th:text="#{label.period.status.NEVER_OPENED}">Never Opened</span>
+                                        <span th:if="${period.status == 'OPEN'}" class="badge bg-green-lt"
+                                              th:text="#{label.period.status.OPEN}">Open</span>
+                                        <span th:if="${period.status == 'CLOSED'}" class="badge bg-red-lt"
+                                              th:text="#{label.period.status.CLOSED}">Closed</span>
+                                    </td>
+                                    <td class="text-end" sec:authorize="hasAuthority('ACCOUNTING-PERIOD_UPDATE')">
+                                        <button th:if="${period.status == 'NEVER_OPENED'}"
+                                                class="btn btn-sm btn-primary"
+                                                hx-post="__${'/accounting/periods/periods/' + period.id + '/reopen'}__"
+                                                hx-confirm="Open this period?"
+                                                th:text="#{label.period.status.OPEN}">Open</button>
+                                        <button th:if="${period.status == 'OPEN'}"
+                                                class="btn btn-sm btn-warning"
+                                                hx-post="__${'/accounting/periods/periods/' + period.id + '/close'}__"
+                                                hx-confirm="Close this period?"
+                                                th:text="#{label.period.close}">Close</button>
+                                        <button th:if="${period.status == 'CLOSED'}"
+                                                class="btn btn-sm btn-outline-success"
+                                                hx-post="__${'/accounting/periods/periods/' + period.id + '/reopen'}__"
+                                                hx-confirm="Reopen this period?"
+                                                th:text="#{label.period.reopen}">Reopen</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
