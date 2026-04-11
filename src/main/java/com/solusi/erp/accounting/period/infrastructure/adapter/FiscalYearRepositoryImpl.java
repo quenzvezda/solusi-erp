@@ -48,7 +48,13 @@ public class FiscalYearRepositoryImpl implements FiscalYearRepository {
                 ? fyJpaRepo.search(keyword, springPageable)
                 : fyJpaRepo.findAllOrdered(springPageable);
         return new Page<>(
-                springPage.getContent().stream().map(fyMapper::toDomain).collect(Collectors.toList()),
+                springPage.getContent().stream().map(fy -> {
+                    var domain = fyMapper.toDomain(fy);
+                    var periods = periodJpaRepo.findByFiscalYearIdOrderByStartDate(fy.getId())
+                            .stream().map(periodMapper::toDomain).toList();
+                    return new FiscalYear(domain.getMetadata(), domain.getCode(), domain.getName(),
+                            domain.getStartDate(), domain.getEndDate(), domain.getIsActive(), periods);
+                }).collect(Collectors.toList()),
                 springPage.getNumber(),
                 springPage.getSize(),
                 springPage.getTotalElements()

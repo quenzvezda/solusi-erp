@@ -33,6 +33,9 @@ DELETE FROM appr_requests;
 -- News data
 DELETE FROM common_news WHERE 1=1;
 
+-- Reset admin password_change_required so login works immediately after seeding
+UPDATE users SET password_change_required = 0 WHERE username = 'admin';
+
 -- User-Party links for dev users (including admin to allow party cleanup)
 UPDATE users SET party_id = NULL WHERE username IN ('admin','approver1','approver2','warehouse1','employee1');
 
@@ -435,4 +438,170 @@ VALUES
 --   BP-DEV-CUST02   / CV. Berkah Sejahtera (Customer)
 --   BP-DEV-SUP01    / PT. Sumber Makmur   (Supplier)
 
+-- ============================================================
+-- ACCOUNTING FOUNDATION (GL Seeder)
+-- Fiscal Years, Accounting Periods, Chart of Accounts
+-- ============================================================
+
+-- ------------------------------------------------------------
+-- CLEANUP — GL data (idempotent, run-safe)
+-- ------------------------------------------------------------
+DELETE FROM acc_accounting_schemas WHERE 1=1;
+DELETE FROM acc_accounting_periods WHERE fiscal_year_id IN (SELECT id FROM acc_fiscal_years WHERE code LIKE 'FY-%');
+DELETE FROM acc_fiscal_years WHERE code LIKE 'FY-%';
+DELETE FROM acc_chart_of_accounts WHERE code REGEXP '^[0-9]';
+
+-- ------------------------------------------------------------
+-- FISCAL YEARS
+-- ------------------------------------------------------------
+INSERT INTO acc_fiscal_years (code, name, start_date, end_date, is_active, version, created_by_user_id, created_date, updated_by_user_id, updated_date) VALUES
+('FY-2024', 'Fiscal Year 2024', '2024-01-01', '2024-12-31', 1, 1, 1, NOW(), 1, NOW()),
+('FY-2025', 'Fiscal Year 2025', '2025-01-01', '2025-12-31', 1, 1, 1, NOW(), 1, NOW());
+
+-- ------------------------------------------------------------
+-- ACCOUNTING PERIODS — FY-2024 (12 monthly periods)
+-- ------------------------------------------------------------
+SET @fy2024 = (SELECT id FROM acc_fiscal_years WHERE code = 'FY-2024');
+
+INSERT INTO acc_accounting_periods (code, name, period_number, fiscal_year_id, start_date, end_date, status, version, created_by_user_id, created_date, updated_by_user_id, updated_date) VALUES
+('AP-2024-M01', 'January 2024',   1,  @fy2024, '2024-01-01', '2024-01-31', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW()),
+('AP-2024-M02', 'February 2024',  2,  @fy2024, '2024-02-01', '2024-02-29', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW()),
+('AP-2024-M03', 'March 2024',     3,  @fy2024, '2024-03-01', '2024-03-31', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW()),
+('AP-2024-M04', 'April 2024',     4,  @fy2024, '2024-04-01', '2024-04-30', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW()),
+('AP-2024-M05', 'May 2024',       5,  @fy2024, '2024-05-01', '2024-05-31', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW()),
+('AP-2024-M06', 'June 2024',      6,  @fy2024, '2024-06-01', '2024-06-30', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW()),
+('AP-2024-M07', 'July 2024',      7,  @fy2024, '2024-07-01', '2024-07-31', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW()),
+('AP-2024-M08', 'August 2024',    8,  @fy2024, '2024-08-01', '2024-08-31', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW()),
+('AP-2024-M09', 'September 2024', 9,  @fy2024, '2024-09-01', '2024-09-30', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW()),
+('AP-2024-M10', 'October 2024',   10, @fy2024, '2024-10-01', '2024-10-31', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW()),
+('AP-2024-M11', 'November 2024',  11, @fy2024, '2024-11-01', '2024-11-30', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW()),
+('AP-2024-M12', 'December 2024',  12, @fy2024, '2024-12-01', '2024-12-31', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW());
+
+-- ------------------------------------------------------------
+-- ACCOUNTING PERIODS — FY-2025 (12 monthly periods)
+-- ------------------------------------------------------------
+SET @fy2025 = (SELECT id FROM acc_fiscal_years WHERE code = 'FY-2025');
+
+INSERT INTO acc_accounting_periods (code, name, period_number, fiscal_year_id, start_date, end_date, status, version, created_by_user_id, created_date, updated_by_user_id, updated_date) VALUES
+('AP-2025-M01', 'January 2025',   1,  @fy2025, '2025-01-01', '2025-01-31', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW()),
+('AP-2025-M02', 'February 2025',  2,  @fy2025, '2025-02-01', '2025-02-28', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW()),
+('AP-2025-M03', 'March 2025',     3,  @fy2025, '2025-03-01', '2025-03-31', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW()),
+('AP-2025-M04', 'April 2025',     4,  @fy2025, '2025-04-01', '2025-04-30', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW()),
+('AP-2025-M05', 'May 2025',       5,  @fy2025, '2025-05-01', '2025-05-31', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW()),
+('AP-2025-M06', 'June 2025',      6,  @fy2025, '2025-06-01', '2025-06-30', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW()),
+('AP-2025-M07', 'July 2025',      7,  @fy2025, '2025-07-01', '2025-07-31', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW()),
+('AP-2025-M08', 'August 2025',    8,  @fy2025, '2025-08-01', '2025-08-31', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW()),
+('AP-2025-M09', 'September 2025', 9,  @fy2025, '2025-09-01', '2025-09-30', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW()),
+('AP-2025-M10', 'October 2025',   10, @fy2025, '2025-10-01', '2025-10-31', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW()),
+('AP-2025-M11', 'November 2025',  11, @fy2025, '2025-11-01', '2025-11-30', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW()),
+('AP-2025-M12', 'December 2025',  12, @fy2025, '2025-12-01', '2025-12-31', 'NEVER_OPENED', 1, 1, NOW(), 1, NOW());
+
+-- ------------------------------------------------------------
+-- CHART OF ACCOUNTS — LEVEL 1 (Root / Main Categories)
+-- account_type HEADER accounts: group nodes, not postable
+-- ------------------------------------------------------------
+INSERT INTO acc_chart_of_accounts (code, name, account_type, normal_balance, parent_id, level, is_header, note, is_active, version, created_by_user_id, created_date, updated_by_user_id, updated_date) VALUES
+('1000', 'ASSETS',      'ASSET',     'DEBIT',  NULL, 1, 1, 'All asset accounts',      1, 1, 1, NOW(), 1, NOW()),
+('2000', 'LIABILITIES', 'LIABILITY', 'CREDIT', NULL, 1, 1, 'All liability accounts',  1, 1, 1, NOW(), 1, NOW()),
+('3000', 'EQUITY',      'EQUITY',    'CREDIT', NULL, 1, 1, 'Owner equity accounts',   1, 1, 1, NOW(), 1, NOW()),
+('4000', 'REVENUE',     'REVENUE',   'CREDIT', NULL, 1, 1, 'All revenue accounts',    1, 1, 1, NOW(), 1, NOW()),
+('5000', 'EXPENSES',    'EXPENSE',   'DEBIT',  NULL, 1, 1, 'All expense accounts',    1, 1, 1, NOW(), 1, NOW());
+
+-- Cache Level 1 IDs for parent references
+SET @coa_assets      = (SELECT id FROM acc_chart_of_accounts WHERE code = '1000');
+SET @coa_liabilities = (SELECT id FROM acc_chart_of_accounts WHERE code = '2000');
+SET @coa_equity      = (SELECT id FROM acc_chart_of_accounts WHERE code = '3000');
+SET @coa_revenue     = (SELECT id FROM acc_chart_of_accounts WHERE code = '4000');
+SET @coa_expenses    = (SELECT id FROM acc_chart_of_accounts WHERE code = '5000');
+
+-- ------------------------------------------------------------
+-- CHART OF ACCOUNTS — LEVEL 2 (Sub-categories / Sub-headers)
+-- ------------------------------------------------------------
+INSERT INTO acc_chart_of_accounts (code, name, account_type, normal_balance, parent_id, level, is_header, note, is_active, version, created_by_user_id, created_date, updated_by_user_id, updated_date) VALUES
+-- Assets sub-groups
+('1100', 'CURRENT ASSETS',         'ASSET',     'DEBIT',  @coa_assets,      2, 1, 'Short-term assets (liquid within 1 year)',  1, 1, 1, NOW(), 1, NOW()),
+('1200', 'FIXED ASSETS',           'ASSET',     'DEBIT',  @coa_assets,      2, 1, 'Long-term tangible assets',                 1, 1, 1, NOW(), 1, NOW()),
+-- Liability sub-groups
+('2100', 'SHORT-TERM LIABILITIES', 'LIABILITY', 'CREDIT', @coa_liabilities, 2, 1, 'Obligations due within 1 year',            1, 1, 1, NOW(), 1, NOW()),
+('2200', 'LONG-TERM LIABILITIES',  'LIABILITY', 'CREDIT', @coa_liabilities, 2, 1, 'Obligations due beyond 1 year',            1, 1, 1, NOW(), 1, NOW()),
+-- Equity sub-groups
+('3100', 'PAID-IN CAPITAL',        'EQUITY',    'CREDIT', @coa_equity,      2, 1, 'Capital contributed by shareholders',       1, 1, 1, NOW(), 1, NOW()),
+('3200', 'RETAINED EARNINGS',      'EQUITY',    'CREDIT', @coa_equity,      2, 1, 'Accumulated profits/losses',                1, 1, 1, NOW(), 1, NOW()),
+-- Revenue sub-groups
+('4100', 'SALES REVENUE',          'REVENUE',   'CREDIT', @coa_revenue,     2, 1, 'Revenue from product sales',                1, 1, 1, NOW(), 1, NOW()),
+('4200', 'SERVICE REVENUE',        'REVENUE',   'CREDIT', @coa_revenue,     2, 1, 'Revenue from services rendered',            1, 1, 1, NOW(), 1, NOW()),
+-- Expense sub-groups
+('5100', 'COST OF GOODS SOLD',     'EXPENSE',   'DEBIT',  @coa_expenses,    2, 1, 'Direct costs of goods sold',                1, 1, 1, NOW(), 1, NOW()),
+('5200', 'OPERATING EXPENSES',     'EXPENSE',   'DEBIT',  @coa_expenses,    2, 1, 'Recurring operational expenses',            1, 1, 1, NOW(), 1, NOW());
+
+-- Cache Level 2 IDs
+SET @coa_current_assets    = (SELECT id FROM acc_chart_of_accounts WHERE code = '1100');
+SET @coa_fixed_assets      = (SELECT id FROM acc_chart_of_accounts WHERE code = '1200');
+SET @coa_short_liab        = (SELECT id FROM acc_chart_of_accounts WHERE code = '2100');
+SET @coa_long_liab         = (SELECT id FROM acc_chart_of_accounts WHERE code = '2200');
+SET @coa_paid_in_capital   = (SELECT id FROM acc_chart_of_accounts WHERE code = '3100');
+SET @coa_retained_earnings = (SELECT id FROM acc_chart_of_accounts WHERE code = '3200');
+SET @coa_sales_revenue     = (SELECT id FROM acc_chart_of_accounts WHERE code = '4100');
+SET @coa_service_revenue   = (SELECT id FROM acc_chart_of_accounts WHERE code = '4200');
+SET @coa_cogs              = (SELECT id FROM acc_chart_of_accounts WHERE code = '5100');
+SET @coa_opex              = (SELECT id FROM acc_chart_of_accounts WHERE code = '5200');
+
+-- ------------------------------------------------------------
+-- CHART OF ACCOUNTS — LEVEL 3 (Detail / Postable Accounts)
+-- is_header = 0: these accounts are used in journal entries
+-- ------------------------------------------------------------
+INSERT INTO acc_chart_of_accounts (code, name, account_type, normal_balance, parent_id, level, is_header, note, is_active, version, created_by_user_id, created_date, updated_by_user_id, updated_date) VALUES
+-- Current Assets (parent: 1100)
+('1110', 'Cash - IDR',                         'ASSET',     'DEBIT',  @coa_current_assets,    3, 0, 'Petty cash and cash on hand in IDR',                 1, 1, 1, NOW(), 1, NOW()),
+('1120', 'Bank - Primary Account',             'ASSET',     'DEBIT',  @coa_current_assets,    3, 0, 'Main operational bank account',                      1, 1, 1, NOW(), 1, NOW()),
+('1130', 'Bank - Savings Account',             'ASSET',     'DEBIT',  @coa_current_assets,    3, 0, 'Company savings / reserve fund',                     1, 1, 1, NOW(), 1, NOW()),
+('1140', 'Accounts Receivable',                'ASSET',     'DEBIT',  @coa_current_assets,    3, 0, 'Amounts owed by customers',                          1, 1, 1, NOW(), 1, NOW()),
+('1150', 'Inventory',                          'ASSET',     'DEBIT',  @coa_current_assets,    3, 0, 'Goods held for sale (stock on hand)',                 1, 1, 1, NOW(), 1, NOW()),
+('1160', 'Prepaid Expenses',                   'ASSET',     'DEBIT',  @coa_current_assets,    3, 0, 'Expenses paid in advance (e.g. prepaid rent)',        1, 1, 1, NOW(), 1, NOW()),
+-- Fixed Assets (parent: 1200)
+('1210', 'Land & Building',                    'ASSET',     'DEBIT',  @coa_fixed_assets,      3, 0, 'Company-owned land and building',                    1, 1, 1, NOW(), 1, NOW()),
+('1220', 'Equipment',                          'ASSET',     'DEBIT',  @coa_fixed_assets,      3, 0, 'Machinery and equipment',                            1, 1, 1, NOW(), 1, NOW()),
+('1230', 'Vehicles',                           'ASSET',     'DEBIT',  @coa_fixed_assets,      3, 0, 'Company vehicles',                                   1, 1, 1, NOW(), 1, NOW()),
+('1240', 'Accumulated Depreciation - Equip',   'ASSET',     'CREDIT', @coa_fixed_assets,      3, 0, 'Contra-asset: accumulated depreciation on equipment', 1, 1, 1, NOW(), 1, NOW()),
+('1250', 'Accumulated Depreciation - Vehicle', 'ASSET',     'CREDIT', @coa_fixed_assets,      3, 0, 'Contra-asset: accumulated depreciation on vehicles',  1, 1, 1, NOW(), 1, NOW()),
+-- Short-term Liabilities (parent: 2100)
+('2110', 'Accounts Payable',                   'LIABILITY', 'CREDIT', @coa_short_liab,        3, 0, 'Amounts owed to suppliers',                          1, 1, 1, NOW(), 1, NOW()),
+('2120', 'Short-term Loan',                    'LIABILITY', 'CREDIT', @coa_short_liab,        3, 0, 'Bank loans due within 1 year',                       1, 1, 1, NOW(), 1, NOW()),
+('2130', 'Tax Payable',                        'LIABILITY', 'CREDIT', @coa_short_liab,        3, 0, 'VAT and income tax payable',                         1, 1, 1, NOW(), 1, NOW()),
+('2140', 'Accrued Liabilities',                'LIABILITY', 'CREDIT', @coa_short_liab,        3, 0, 'Expenses incurred but not yet paid',                 1, 1, 1, NOW(), 1, NOW()),
+-- Long-term Liabilities (parent: 2200)
+('2210', 'Long-term Loan',                     'LIABILITY', 'CREDIT', @coa_long_liab,         3, 0, 'Bank loans due beyond 1 year',                       1, 1, 1, NOW(), 1, NOW()),
+-- Equity (parents: 3100, 3200)
+('3110', 'Common Stock',                       'EQUITY',    'CREDIT', @coa_paid_in_capital,   3, 0, 'Ordinary shares issued to shareholders',             1, 1, 1, NOW(), 1, NOW()),
+('3120', 'Additional Paid-in Capital',         'EQUITY',    'CREDIT', @coa_paid_in_capital,   3, 0, 'Share premium above par value',                      1, 1, 1, NOW(), 1, NOW()),
+('3210', 'Retained Earnings',                  'EQUITY',    'CREDIT', @coa_retained_earnings, 3, 0, 'Cumulative net profit retained in company',          1, 1, 1, NOW(), 1, NOW()),
+('3220', 'Current Year Profit/Loss',           'EQUITY',    'CREDIT', @coa_retained_earnings, 3, 0, 'Net income/loss for current fiscal year',            1, 1, 1, NOW(), 1, NOW()),
+-- Sales Revenue (parent: 4100)
+('4110', 'Product Sales',                      'REVENUE',   'CREDIT', @coa_sales_revenue,     3, 0, 'Revenue from sales of goods',                        1, 1, 1, NOW(), 1, NOW()),
+('4120', 'Sales Discount',                     'REVENUE',   'DEBIT',  @coa_sales_revenue,     3, 0, 'Contra-revenue: discounts granted to customers',     1, 1, 1, NOW(), 1, NOW()),
+('4130', 'Sales Return',                       'REVENUE',   'DEBIT',  @coa_sales_revenue,     3, 0, 'Contra-revenue: goods returned by customers',        1, 1, 1, NOW(), 1, NOW()),
+-- Service Revenue (parent: 4200)
+('4210', 'Service Revenue',                    'REVENUE',   'CREDIT', @coa_service_revenue,   3, 0, 'Revenue from professional services rendered',        1, 1, 1, NOW(), 1, NOW()),
+-- COGS (parent: 5100)
+('5110', 'COGS - Material',                    'EXPENSE',   'DEBIT',  @coa_cogs,              3, 0, 'Direct material cost of goods sold',                 1, 1, 1, NOW(), 1, NOW()),
+('5120', 'COGS - Labor',                       'EXPENSE',   'DEBIT',  @coa_cogs,              3, 0, 'Direct labor cost of goods sold',                    1, 1, 1, NOW(), 1, NOW()),
+-- Operating Expenses (parent: 5200)
+('5210', 'Salaries & Wages',                   'EXPENSE',   'DEBIT',  @coa_opex,              3, 0, 'Employee salaries and wages',                        1, 1, 1, NOW(), 1, NOW()),
+('5220', 'Utilities',                          'EXPENSE',   'DEBIT',  @coa_opex,              3, 0, 'Electricity, water, internet expenses',              1, 1, 1, NOW(), 1, NOW()),
+('5230', 'Depreciation Expense',               'EXPENSE',   'DEBIT',  @coa_opex,              3, 0, 'Periodic depreciation of fixed assets',              1, 1, 1, NOW(), 1, NOW()),
+('5240', 'Office Supplies',                    'EXPENSE',   'DEBIT',  @coa_opex,              3, 0, 'Consumable office materials',                        1, 1, 1, NOW(), 1, NOW()),
+('5250', 'Rent Expense',                       'EXPENSE',   'DEBIT',  @coa_opex,              3, 0, 'Monthly office/warehouse rent',                      1, 1, 1, NOW(), 1, NOW()),
+('5260', 'Transportation & Logistics',         'EXPENSE',   'DEBIT',  @coa_opex,              3, 0, 'Freight, delivery, and logistics costs',             1, 1, 1, NOW(), 1, NOW()),
+('5270', 'Marketing & Advertising',            'EXPENSE',   'DEBIT',  @coa_opex,              3, 0, 'Promotions, ads, and marketing campaigns',           1, 1, 1, NOW(), 1, NOW()),
+('5280', 'Tax Expense',                        'EXPENSE',   'DEBIT',  @coa_opex,              3, 0, 'Income tax and other tax charges',                   1, 1, 1, NOW(), 1, NOW());
+
+-- ============================================================
+-- GL VERIFICATION QUERIES (run manually to confirm)
+-- ============================================================
+-- SELECT COUNT(*) FROM acc_fiscal_years;         -- Expected: 2
+-- SELECT COUNT(*) FROM acc_accounting_periods;   -- Expected: 24
+-- SELECT COUNT(*) FROM acc_chart_of_accounts;    -- Expected: 42 (5+11+26)
+-- SELECT level, COUNT(*) FROM acc_chart_of_accounts GROUP BY level ORDER BY level;
+--   Expected: level 1 = 5, level 2 = 11, level 3 = 26
+-- SELECT code, name, level, is_header FROM acc_chart_of_accounts ORDER BY level, code;
 
