@@ -13,10 +13,15 @@ Dokumentasi dikelompokkan ke dalam folder berikut berdasarkan konteksnya:
     - [Base Model Pattern](architecture/base-model-pattern.md)
     - [Smart Delete Pattern](architecture/smart-delete-pattern.md) — Pola delete fleksibel: hard-delete jika tidak dipakai, soft-delete jika masih direferensikan
     - [JaCoCo Coverage Guide](architecture/jacoco-coverage.md) — Standar code coverage: versi, exclude strategy, threshold, cara baca laporan
+    - [Accounting Foundation Architecture](architecture/accounting-foundation.md) — Sprint 1: COA, Accounting Schema, Fiscal Year/Period — dependency diagram, patterns, auto-journal flow
 - **[/database](database/)**: Berisi ERD dan script dummy data.
 - **[/tests](tests/)**: Panduan dan utilitas pengujian level web (Controller + Thymeleaf).
     - [Web-layer Testing Guidelines](tests/web-layer-testing.md)
 - **[/modules](modules/)**: Penjelasan fungsional dan aturan bisnis untuk setiap fitur spesifik (Inventory, Master Data, dll).
+    - **[/modules/accounting](modules/accounting/)**: Sprint 1 — Accounting Foundation
+        - [Chart of Accounts (COA)](modules/accounting/coa.md) — Hierarki akun, business rules, RBAC
+        - [Accounting Schema](modules/accounting/accounting-schema.md) — Konfigurasi auto-journal event → debit/credit
+        - [Fiscal Year & Accounting Period](modules/accounting/fiscal-year-period.md) — Period Guard, status lifecycle
 - **[/spec](spec/)**: **[PENTING]** Spesifikasi teknis horizontal/shared yang digunakan di seluruh aplikasi. Lihat **[Spec Index](spec/index.md)**.
 - **[/roadmap](roadmap/)**: Rencana pengembangan masa depan dan pelacakan standardisasi arsitektur.
 - **[/workflow](workflow/)**: Panduan prosedur kerja agen (seperti tugas repetitif, troubleshooting, dll).
