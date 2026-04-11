@@ -3,7 +3,7 @@
 -- ============================================================
 -- 0. ALTER: Add is_pkp to parties table
 -- ============================================================
-ALTER TABLE parties ADD COLUMN is_pkp BOOLEAN NOT NULL DEFAULT FALSE AFTER is_active;
+ALTER TABLE parties ADD COLUMN IF NOT EXISTS is_pkp BOOLEAN NOT NULL DEFAULT FALSE AFTER is_active;
 
 -- ============================================================
 -- 1. DDL: Supplier Price List
@@ -30,9 +30,9 @@ CREATE TABLE IF NOT EXISTS pur_supplier_price_lists (
     UNIQUE KEY uk_spl_code (code),
     UNIQUE KEY uk_spl_combo (supplier_id, product_id, uom_id, currency_id, effective_from),
     CONSTRAINT fk_spl_supplier    FOREIGN KEY (supplier_id)      REFERENCES parties(id),
-    CONSTRAINT fk_spl_product     FOREIGN KEY (product_id)       REFERENCES inv_products(id),
-    CONSTRAINT fk_spl_uom         FOREIGN KEY (uom_id)           REFERENCES inv_uoms(id),
-    CONSTRAINT fk_spl_currency    FOREIGN KEY (currency_id)      REFERENCES currencies(id),
+    CONSTRAINT fk_spl_product     FOREIGN KEY (product_id)       REFERENCES products(id),
+    CONSTRAINT fk_spl_uom         FOREIGN KEY (uom_id)           REFERENCES unit_of_measures(id),
+    CONSTRAINT fk_spl_currency    FOREIGN KEY (currency_id)      REFERENCES master_currencies(id),
     CONSTRAINT fk_spl_created_by  FOREIGN KEY (created_by_user_id) REFERENCES users(id),
     CONSTRAINT fk_spl_updated_by  FOREIGN KEY (updated_by_user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -85,8 +85,8 @@ CREATE TABLE IF NOT EXISTS pur_purchase_requisition_lines (
     updated_date           DATETIME      NULL,
     PRIMARY KEY (id),
     CONSTRAINT fk_prl_header     FOREIGN KEY (header_id)            REFERENCES pur_purchase_requisitions(id),
-    CONSTRAINT fk_prl_product    FOREIGN KEY (product_id)           REFERENCES inv_products(id),
-    CONSTRAINT fk_prl_uom        FOREIGN KEY (uom_id)               REFERENCES inv_uoms(id),
+    CONSTRAINT fk_prl_product    FOREIGN KEY (product_id)           REFERENCES products(id),
+    CONSTRAINT fk_prl_uom        FOREIGN KEY (uom_id)               REFERENCES unit_of_measures(id),
     CONSTRAINT fk_prl_supplier   FOREIGN KEY (suggested_supplier_id) REFERENCES parties(id),
     CONSTRAINT fk_prl_created_by FOREIGN KEY (created_by_user_id)   REFERENCES users(id),
     CONSTRAINT fk_prl_updated_by FOREIGN KEY (updated_by_user_id)   REFERENCES users(id)
@@ -95,12 +95,12 @@ CREATE TABLE IF NOT EXISTS pur_purchase_requisition_lines (
 -- ============================================================
 -- 4. Sequence Registration
 -- ============================================================
-INSERT INTO system_sequences (module_code, format_pattern, pad_length, reset_cycle, updated_by, updated_date)
-VALUES ('SPL', 'SPL-{date:yyMM}-{seq}', 5, 'MONTHLY', 'SYSTEM', NOW())
+INSERT INTO system_sequences (module_code, format_pattern, pad_length, reset_cycle, updated_by_user_id, updated_date)
+VALUES ('SPL', 'SPL-{date:yyMM}-{seq}', 5, 'MONTHLY', 1, NOW())
 ON DUPLICATE KEY UPDATE module_code = module_code;
 
-INSERT INTO system_sequences (module_code, format_pattern, pad_length, reset_cycle, updated_by, updated_date)
-VALUES ('PR', 'PR-{date:yyyyMM}-{seq}', 5, 'MONTHLY', 'SYSTEM', NOW())
+INSERT INTO system_sequences (module_code, format_pattern, pad_length, reset_cycle, updated_by_user_id, updated_date)
+VALUES ('PR', 'PR-{date:yyyyMM}-{seq}', 5, 'MONTHLY', 1, NOW())
 ON DUPLICATE KEY UPDATE module_code = module_code;
 
 -- ============================================================
