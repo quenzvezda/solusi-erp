@@ -45,19 +45,23 @@
                             <div class="col-md-6">
                                 <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.spl.code}, isReadonly=true, placeholder=${splRequest.id == null ? '[ Auto Generated ]' : ''})}"></div>
 
-                                <div th:replace="~{fragments/inputs :: lookup(field='supplierId', label=#{label.spl.supplier}, required=true, lookupUrl='/api/lookup/master/parties', displayField='supplierName')}"></div>
+                                <div th:replace="~{fragments/inputs :: autocomplete(field='supplierId', label=#{label.spl.supplier}, required=true, path='master/parties',
+                                    initialValue=${splRequest.supplierId}, initialText=${splRequest.supplierName})}"></div>
 
-                                <div th:replace="~{fragments/inputs :: lookup(field='productId', label=#{label.spl.product}, required=true, lookupUrl='/api/lookup/inventory/products', displayField='productName')}"></div>
+                                <div th:replace="~{fragments/inputs :: autocomplete(field='productId', label=#{label.spl.product}, required=true, path='inventory/products',
+                                    initialValue=${splRequest.productId}, initialText=${splRequest.productName})}"></div>
 
-                                <div th:replace="~{fragments/inputs :: lookup(field='uomId', label=#{label.spl.uom}, required=true, lookupUrl='/api/lookup/inventory/uoms', displayField='uomName')}"></div>
+                                <div th:replace="~{fragments/inputs :: autocomplete(field='uomId', label=#{label.spl.uom}, required=true, path='inventory/uoms',
+                                    initialValue=${splRequest.uomId}, initialText=${splRequest.uomName})}"></div>
 
-                                <div th:replace="~{fragments/inputs :: lookup(field='currencyId', label=#{label.spl.currency}, required=true, lookupUrl='/api/lookup/master/currencies', displayField='currencyName')}"></div>
+                                <div th:replace="~{fragments/inputs :: autocomplete(field='currencyId', label=#{label.spl.currency}, required=true, path='master/currencies',
+                                    initialValue=${splRequest.currencyId}, initialText=${splRequest.currencyName})}"></div>
                             </div>
 
                             <div class="col-md-6">
-                                <div th:replace="~{fragments/inputs :: number(field='unitPrice', label=#{label.spl.unitPrice}, required=true, step='0.0001', placeholder=#{placeholder.spl.unitPrice})}"></div>
+                                <div th:replace="~{fragments/inputs :: decimal(field='unitPrice', label=#{label.spl.unitPrice}, required=true)}"></div>
 
-                                <div th:replace="~{fragments/inputs :: number(field='minQuantity', label=#{label.spl.minQuantity}, required=true, step='0.0001', placeholder=#{placeholder.spl.minQuantity})}"></div>
+                                <div th:replace="~{fragments/inputs :: decimal(field='minQuantity', label=#{label.spl.minQuantity}, required=true)}"></div>
 
                                 <div th:replace="~{fragments/inputs :: date(field='effectiveFrom', label=#{label.spl.effectiveFrom}, required=true)}"></div>
 
