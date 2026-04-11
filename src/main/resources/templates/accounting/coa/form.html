@@ -60,7 +60,7 @@
                             <div class="col-md-6 border-start-md">
                                 <h3 class="card-title" th:text="#{label.general.settings}">Settings</h3>
 
-                                <div th:replace="~{fragments/inputs :: number(field='level', label=#{label.coa.level}, required=false)}"></div>
+                                <div th:replace="~{fragments/inputs :: integer(field='level', label=#{label.coa.level}, required=false)}"></div>
 
                                 <div class="mb-3">
                                     <label class="form-label" th:text="#{label.coa.note}">Note</label>
