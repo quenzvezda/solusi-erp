@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.coa.title})}"></head>
+
+<body th:replace="~{layout/master :: layout(~{:: .coa-list-content}, ~{})}">
+    <div class="coa-list-content">
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="#{label.coa.title}">Bagan Akun</h2>
+                        <div class="text-secondary mt-1" th:text="#{label.coa.subtitle}">Kelola bagan akun.</div>
+                    </div>
+                    <div class="col-auto ms-auto d-print-none" sec:authorize="hasAuthority('ACCOUNTING-COA_CREATE')">
+                        <div class="btn-list">
+                            <a th:href="@{/accounting/coa/create}" class="btn btn-primary d-none d-sm-inline-block">
+                                <i class="ti ti-plus"></i>
+                                <span th:text="#{label.coa.add}">Tambah Akun Baru</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-check icon alert-icon"></i></div>
+                        <div th:text="${successMessage}">Success!</div>
+                    </div>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                </div>
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
+                        <div th:text="${errorMessage}">Error!</div>
+                    </div>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                </div>
+
+                <div class="card">
+                    <div class="card-body border-bottom py-3">
+                        <div class="d-flex">
+                            <div class="text-secondary"></div>
+                            <div class="ms-auto text-secondary">
+                                <form th:action="@{/accounting/coa}" method="get" class="input-icon"
+                                      hx-get="/accounting/coa"
+                                      hx-target="#coa-table-container"
+                                      hx-trigger="keyup changed delay:500ms from:#search-input">
+                                    <input id="search-input" type="text" name="keyword" th:value="${keyword}"
+                                        class="form-control form-control-sm" th:placeholder="#{label.search}">
+                                    <span class="input-icon-addon">
+                                        <i class="ti ti-search"></i>
+                                    </span>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="coa-table-container" th:fragment="coa-table-container"
+                         hx-get="/accounting/coa"
+                         hx-trigger="refresh-table from:body delay:500ms"
+                         hx-include="[name='keyword'], [name='page']">
+                        <input type="hidden" name="page" th:value="${page.number}">
+                        <div class="table-responsive">
+                            <table class="table table-vcenter card-table">
+                                <thead>
+                                    <tr>
+                                        <th th:replace="~{fragments/table :: sortable('code', #{label.coa.column.code})}">Code</th>
+                                        <th th:replace="~{fragments/table :: sortable('name', #{label.coa.column.name})}">Name</th>
+                                        <th th:text="#{label.coa.column.type}">Type</th>
+                                        <th th:text="#{label.coa.column.balance}">Normal Balance</th>
+                                        <th th:text="#{label.coa.column.level}">Level</th>
+                                        <th th:text="#{label.coa.column.header}">Header</th>
+                                        <th th:text="#{label.coa.column.status}">Status</th>
+                                        <th class="w-1" th:text="#{label.actions}">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${page.content}" th:id="'coa-row-' + ${item.id}">
+                                        <td th:text="${item.code}">1000</td>
+                                        <td class="font-weight-medium">
+                                            <span th:style="'padding-left: ' + (${item.level} - 1) * 20 + 'px'" th:text="${item.name}">Cash</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-azure-lt" th:if="${item.accountType != null}" th:text="#{${'label.coa.type.' + item.accountType}}">Asset</span>
+                                            <span th:if="${item.accountType == null}" class="text-secondary">-</span>
+                                        </td>
+                                        <td>
+                                            <span th:if="${item.normalBalance != null}" th:text="#{${'label.coa.balance.' + item.normalBalance}}">Debit</span>
+                                            <span th:if="${item.normalBalance == null}" class="text-secondary">-</span>
+                                        </td>
+                                        <td th:text="${item.level}">1</td>
+                                        <td>
+                                            <span th:if="${item.isHeader}" class="badge bg-purple-lt" th:text="#{label.yes}">Yes</span>
+                                            <span th:unless="${item.isHeader}" class="text-secondary">-</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-outline text-green" th:if="${item.isActive}">
+                                                <span class="badge-dot bg-success me-1"></span>
+                                                <span th:text="#{label.active}">Active</span>
+                                            </span>
+                                            <span class="badge badge-outline text-red" th:unless="${item.isActive}">
+                                                <span class="badge-dot bg-danger me-1"></span>
+                                                <span th:text="#{label.inactive}">Inactive</span>
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="btn-list flex-nowrap justify-content-end">
+                                                <a th:href="@{/accounting/coa/edit/{id}(id=${item.id})}"
+                                                    class="btn btn-white btn-sm" sec:authorize="hasAuthority('ACCOUNTING-COA_UPDATE')"
+                                                    th:text="#{label.edit}">Edit</a>
+                                                <button class="btn btn-white btn-sm text-danger" data-bs-toggle="modal"
+                                                    th:data-bs-target="'#modal-delete-' + ${item.id}"
+                                                    sec:authorize="hasAuthority('ACCOUNTING-COA_DELETE')">
+                                                    <i class="ti ti-trash me-1"></i> <span th:text="#{label.delete}">Delete</span>
+                                                </button>
+                                            </div>
+                                            <div th:replace="~{fragments/modals :: delete-confirm(
+                                                id='modal-delete-' + ${item.id},
+                                                title=#{label.delete.confirm.title},
+                                                message=#{msg.delete.confirm(${item.name})},
+                                                actionUrl='/accounting/coa/' + ${item.id},
+                                                targetId='#coa-row-' + ${item.id}
+                                            )}"></div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${page.isEmpty()}">
+                                        <td colspan="8" class="text-center py-4 text-secondary"
+                                            th:text="#{label.coa.empty}">No data.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.schema.title})}"></head>
+
+<body th:replace="~{layout/master :: layout(~{:: .schema-list-content}, ~{})}">
+    <div class="schema-list-content">
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="#{label.schema.title}">Accounting Schema</h2>
+                        <div class="text-secondary mt-1" th:text="#{label.schema.subtitle}">Configure mappings.</div>
+                    </div>
+                    <div class="col-auto ms-auto d-print-none" sec:authorize="hasAuthority('ACCOUNTING-SCHEMA_CREATE')">
+                        <div class="btn-list">
+                            <a th:href="@{/accounting/schemas/create}" class="btn btn-primary d-none d-sm-inline-block">
+                                <i class="ti ti-plus"></i>
+                                <span th:text="#{label.schema.add}">Add New Schema</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+                <div class="card">
+                    <div class="card-body border-bottom py-3">
+                        <div class="d-flex">
+                            <div class="text-secondary"></div>
+                            <div class="ms-auto text-secondary">
+                                <form th:action="@{/accounting/schemas}" method="get" class="input-icon"
+                                      hx-get="/accounting/schemas"
+                                      hx-target="#schema-table-container"
+                                      hx-trigger="keyup changed delay:500ms from:#search-input">
+                                    <input id="search-input" type="text" name="keyword" th:value="${keyword}"
+                                        class="form-control form-control-sm" th:placeholder="#{label.search}">
+                                    <span class="input-icon-addon"><i class="ti ti-search"></i></span>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="schema-table-container" th:fragment="schema-table-container"
+                         hx-get="/accounting/schemas"
+                         hx-trigger="refresh-table from:body delay:500ms"
+                         hx-include="[name='keyword'], [name='page']">
+                        <input type="hidden" name="page" th:value="${page.number}">
+                        <div class="table-responsive">
+                            <table class="table table-vcenter card-table">
+                                <thead>
+                                    <tr>
+                                        <th th:text="#{label.schema.column.event}">Event Type</th>
+                                        <th th:text="#{label.schema.column.description}">Description</th>
+                                        <th th:text="#{label.schema.column.debit}">Debit Account</th>
+                                        <th th:text="#{label.schema.column.credit}">Credit Account</th>
+                                        <th th:text="#{label.schema.column.status}">Status</th>
+                                        <th class="w-1" th:text="#{label.actions}">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${page.content}" th:id="'schema-row-' + ${item.id}">
+                                        <td>
+                                            <span class="badge bg-blue-lt" th:text="#{${'label.schema.event.' + item.eventType}}">Event</span>
+                                        </td>
+                                        <td th:text="${item.description}">Description</td>
+                                        <td th:text="${item.debitAccountName}">Debit</td>
+                                        <td th:text="${item.creditAccountName}">Credit</td>
+                                        <td>
+                                            <span class="badge badge-outline text-green" th:if="${item.isActive}">
+                                                <span class="badge-dot bg-success me-1"></span>
+                                                <span th:text="#{label.active}">Active</span>
+                                            </span>
+                                            <span class="badge badge-outline text-red" th:unless="${item.isActive}">
+                                                <span class="badge-dot bg-danger me-1"></span>
+                                                <span th:text="#{label.inactive}">Inactive</span>
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="btn-list flex-nowrap justify-content-end">
+                                                <a th:href="@{/accounting/schemas/edit/{id}(id=${item.id})}"
+                                                    class="btn btn-white btn-sm" sec:authorize="hasAuthority('ACCOUNTING-SCHEMA_UPDATE')"
+                                                    th:text="#{label.edit}">Edit</a>
+                                                <button class="btn btn-white btn-sm text-danger" data-bs-toggle="modal"
+                                                    th:data-bs-target="'#modal-delete-' + ${item.id}"
+                                                    sec:authorize="hasAuthority('ACCOUNTING-SCHEMA_DELETE')">
+                                                    <i class="ti ti-trash me-1"></i> <span th:text="#{label.delete}">Delete</span>
+                                                </button>
+                                            </div>
+                                            <div th:replace="~{fragments/modals :: delete-confirm(
+                                                id='modal-delete-' + ${item.id},
+                                                title=#{label.delete.confirm.title},
+                                                message=#{msg.delete.confirm(${item.eventType})},
+                                                actionUrl='/accounting/schemas/' + ${item.id},
+                                                targetId='#schema-row-' + ${item.id}
+                                            )}"></div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${page.isEmpty()}">
+                                        <td colspan="6" class="text-center py-4 text-secondary"
+                                            th:text="#{label.schema.empty}">No data.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

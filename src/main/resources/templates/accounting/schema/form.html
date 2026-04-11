@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(${schemaRequest.id == null ? #messages.msg('label.schema.add') : #messages.msg('label.schema.edit')})}"></head>
+
+<body th:replace="~{layout/master :: layout(~{:: .schema-form-content}, ~{})}">
+    <div class="schema-form-content">
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="${schemaRequest.id == null ? #messages.msg('label.schema.add') : #messages.msg('label.schema.edit')}">
+                            Form Schema
+                        </h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+                <form th:action="${schemaRequest.id == null ? '/accounting/schemas/create' : '/accounting/schemas/edit/' + schemaRequest.id}"
+                      th:object="${schemaRequest}" method="post" class="card"
+                      data-ajax-form="true"
+                      data-redirect-on-success="/accounting/schemas">
+
+                    <input type="hidden" th:field="*{version}" />
+
+                    <div class="card-body">
+                        <div class="alert-container"></div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h3 class="card-title" th:text="#{label.schema.event.type}">Event Mapping</h3>
+
+                                <div class="mb-3">
+                                    <label class="form-label required" th:text="#{label.schema.event.type}">Event Type</label>
+                                    <select th:field="*{eventType}" class="form-select erp-input"
+                                            th:disabled="${schemaRequest.id != null}">
+                                        <option value="" th:text="#{label.select.placeholder}">-- Select --</option>
+                                        <option th:each="type : ${eventTypes}"
+                                                th:value="${type.name()}"
+                                                th:text="#{${'label.schema.event.' + type.name()}}">Type</option>
+                                    </select>
+                                    <input th:if="${schemaRequest.id != null}" type="hidden" th:field="*{eventType}" />
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" th:text="#{label.schema.description}">Description</label>
+                                    <textarea th:field="*{description}" class="form-control erp-input" rows="3"
+                                              th:placeholder="#{placeholder.schema.description}"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 border-start-md">
+                                <h3 class="card-title">Account Mapping</h3>
+
+                                <div class="mb-3">
+                                    <label class="form-label required" th:text="#{label.schema.debit.account}">Debit Account</label>
+                                    <select th:field="*{debitAccountId}" class="form-select erp-input"
+                                            data-lookup-url="/api/lookup/accounting/coa"
+                                            data-lookup-permission="LOOKUP_COA">
+                                        <option value="" th:text="#{label.select.placeholder}">-- Select --</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label required" th:text="#{label.schema.credit.account}">Credit Account</label>
+                                    <select th:field="*{creditAccountId}" class="form-select erp-input"
+                                            data-lookup-url="/api/lookup/accounting/coa"
+                                            data-lookup-permission="LOOKUP_COA">
+                                        <option value="" th:text="#{label.select.placeholder}">-- Select --</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" th:field="*{isActive}">
+                                        <span class="form-check-label" th:text="#{label.active}">Active</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div th:if="${auditInfo != null and auditInfo.id != null}"
+                             th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
+                    </div>
+
+                    <div class="card-footer text-end">
+                        <div class="d-flex align-items-center">
+                            <div id="loading-indicator" class="spinner-border spinner-border-sm text-primary me-2" role="status" style="display: none;"></div>
+                            <a th:href="@{/accounting/schemas}" class="btn btn-link link-secondary" th:text="#{label.cancel}">Cancel</a>
+                            <button type="submit" class="btn btn-primary ms-auto">
+                                <i class="ti ti-device-floppy me-1"></i>
+                                <span th:text="#{label.save}">Save</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

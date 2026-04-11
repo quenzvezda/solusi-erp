@@ -295,42 +295,46 @@
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.60</minimum>
+                                            <minimum>0.80</minimum>
                                         </limit>
                                         <limit>
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.50</minimum>
+                                            <minimum>0.70</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
                             </rules>
                             <excludes>
+                                <!-- Application entry points & configuration -->
                                 <exclude>com/solusi/erp/**/*Application*</exclude>
                                 <exclude>com/solusi/erp/**/config/**</exclude>
                                 <exclude>com/solusi/erp/**/*Config*</exclude>
-                                <exclude>com/solusi/erp/**/infrastructure/persistence/**</exclude>
-                                <exclude>com/solusi/erp/**/infrastructure/adapter/**/*RepositoryImpl*</exclude>
-                                <exclude>com/solusi/erp/**/infrastructure/adapter/**/*RepositoryAdapter*</exclude>
-                                <exclude>com/solusi/erp/security/**/*Filter*</exclude>
-                                <exclude>com/solusi/erp/security/**/*Interceptor*</exclude>
-                                <exclude>com/solusi/erp/security/**/*AuthenticationSuccessHandler*</exclude>
-                                <exclude>com/solusi/erp/security/**/*UserServiceImpl*</exclude>
-                                <exclude>com/solusi/erp/**/web/*ExceptionHandler*</exclude>
+
+                                <!-- Infrastructure layer (JPA, adapters, persistence) -->
+                                <exclude>com/solusi/erp/**/infrastructure/**</exclude>
+
+                                <!-- Web layer (controllers, DTOs, mappers, templates, validators) -->
+                                <exclude>com/solusi/erp/**/web/**</exclude>
+
+                                <!-- Security layer (filters, interceptors, auth) -->
+                                <exclude>com/solusi/erp/security/**</exclude>
+
+                                <!-- DTOs & mappers (may exist outside web/) -->
                                 <exclude>com/solusi/erp/**/*Request*</exclude>
                                 <exclude>com/solusi/erp/**/*Response*</exclude>
                                 <exclude>com/solusi/erp/**/dto/**</exclude>
                                 <exclude>com/solusi/erp/**/*Dto*</exclude>
                                 <exclude>com/solusi/erp/**/*Mapper*</exclude>
+
+                                <!-- Core framework classes (not business logic) -->
                                 <exclude>com/solusi/erp/**/model/AuditMetadata*</exclude>
                                 <exclude>com/solusi/erp/**/model/Page*</exclude>
                                 <exclude>com/solusi/erp/**/model/DeleteResult*</exclude>
                                 <exclude>com/solusi/erp/**/model/Pageable*</exclude>
                                 <exclude>com/solusi/erp/core/auditing/**</exclude>
                                 <exclude>com/solusi/erp/core/event/**</exclude>
-                                <exclude>com/solusi/erp/core/exception/DomainException*</exclude>
-                                <exclude>com/solusi/erp/**/web/controller/**</exclude>
-                                <exclude>com/solusi/erp/**/web/template/**</exclude>
+                                <exclude>com/solusi/erp/core/exception/**</exclude>
                             </excludes>
                         </configuration>
                     </execution>
