@@ -5,6 +5,17 @@ import com.solusi.erp.inventory.product.web.dto.ProductSummaryResponse;
 import com.solusi.erp.master.geographic.web.dto.GeographicSummaryResponse;
 import com.solusi.erp.master.shared.model.GeographicType;
 
+import com.solusi.erp.accounting.coa.web.dto.CoaSummaryResponse;
+import com.solusi.erp.accounting.coa.web.dto.CoaSaveRequest;
+import com.solusi.erp.accounting.coa.web.dto.CoaDetailResponse;
+import com.solusi.erp.accounting.schema.web.dto.SchemaSummaryResponse;
+import com.solusi.erp.accounting.schema.web.dto.SchemaSaveRequest;
+import com.solusi.erp.accounting.schema.web.dto.SchemaDetailResponse;
+import com.solusi.erp.accounting.period.web.dto.FiscalYearSummaryResponse;
+import com.solusi.erp.accounting.period.web.dto.FiscalYearSaveRequest;
+import com.solusi.erp.accounting.period.web.dto.FiscalYearDetailResponse;
+import com.solusi.erp.accounting.period.web.dto.PeriodResponse;
+
 public class TestDtoFactory {
 
     public static BrandSummaryResponse sampleBrandSummaryResponse() {
@@ -42,5 +53,143 @@ public class TestDtoFactory {
         dto.setIsActive(Boolean.TRUE);
         return dto;
     }
+
+    // --- Accounting DTO Factories ---
+    // COA Factories
+    public static CoaSummaryResponse sampleCoaSummaryResponse() {
+        CoaSummaryResponse dto = new CoaSummaryResponse();
+        dto.setId(1L);
+        dto.setCode("1000");
+        dto.setName("Cash");
+        dto.setAccountType("ASSET");
+        dto.setNormalBalance("DEBIT");
+        dto.setLevel(1);
+        dto.setIsHeader(false);
+        dto.setIsActive(true);
+        return dto;
+    }
+
+    public static CoaSummaryResponse sampleCoaSummaryResponse(Long id, String code, String name, String accountType) {
+        CoaSummaryResponse dto = new CoaSummaryResponse();
+        dto.setId(id);
+        dto.setCode(code);
+        dto.setName(name);
+        dto.setAccountType(accountType);
+        dto.setNormalBalance(accountType.equals("ASSET") || accountType.equals("EXPENSE") ? "DEBIT" : "CREDIT");
+        dto.setLevel(1);
+        dto.setIsHeader(false);
+        dto.setIsActive(true);
+        return dto;
+    }
+
+    public static CoaSaveRequest sampleCoaSaveRequest() {
+        CoaSaveRequest req = new CoaSaveRequest();
+        req.setCode("1000");
+        req.setName("Cash");
+        req.setAccountType("ASSET");
+        req.setLevel(1);
+        req.setIsHeader(false);
+        req.setNote("Cash account");
+        req.setIsActive(true);
+        return req;
+    }
+
+    public static CoaDetailResponse sampleCoaDetailResponse() {
+        CoaDetailResponse dto = new CoaDetailResponse();
+        dto.setId(1L);
+        dto.setCode("1000");
+        dto.setName("Cash");
+        dto.setAccountType("ASSET");
+        dto.setNormalBalance("DEBIT");
+        dto.setLevel(1);
+        dto.setIsHeader(false);
+        dto.setNote("Cash account");
+        dto.setIsActive(true);
+        return dto;
+    }
+
+    // Schema Factories
+    public static SchemaSummaryResponse sampleSchemaSummaryResponse() {
+        SchemaSummaryResponse dto = new SchemaSummaryResponse();
+        dto.setId(1L);
+        dto.setEventType("GOODS_RECEIPT");
+        dto.setDescription("Goods receipt schema");
+        dto.setDebitAccountId(1L);
+        dto.setDebitAccountName("1000 - Cash");
+        dto.setCreditAccountId(2L);
+        dto.setCreditAccountName("2000 - Accounts Payable");
+        dto.setIsActive(true);
+        return dto;
+    }
+
+    public static SchemaSaveRequest sampleSchemaSaveRequest() {
+        SchemaSaveRequest req = new SchemaSaveRequest();
+        req.setEventType("GOODS_RECEIPT");
+        req.setDescription("Goods receipt schema");
+        req.setDebitAccountId(1L);
+        req.setCreditAccountId(2L);
+        req.setIsActive(true);
+        return req;
+    }
+
+    public static SchemaDetailResponse sampleSchemaDetailResponse() {
+        SchemaDetailResponse dto = new SchemaDetailResponse();
+        dto.setId(1L);
+        dto.setEventType("GOODS_RECEIPT");
+        dto.setDescription("Goods receipt schema");
+        dto.setDebitAccountId(1L);
+        dto.setDebitAccountName("1000 - Cash");
+        dto.setCreditAccountId(2L);
+        dto.setCreditAccountName("2000 - Accounts Payable");
+        dto.setIsActive(true);
+        return dto;
+    }
+
+    // FiscalYear/Period Factories
+    public static FiscalYearSummaryResponse sampleFiscalYearSummaryResponse() {
+        FiscalYearSummaryResponse dto = new FiscalYearSummaryResponse();
+        dto.setId(1L);
+        dto.setCode("FY-0001");
+        dto.setName("Fiscal Year 2026");
+        dto.setStartDate(java.time.LocalDate.of(2026, 1, 1));
+        dto.setEndDate(java.time.LocalDate.of(2026, 12, 31));
+        dto.setIsActive(true);
+        dto.setPeriodCount(12);
+        return dto;
+    }
+
+    public static FiscalYearSaveRequest sampleFiscalYearSaveRequest() {
+        FiscalYearSaveRequest req = new FiscalYearSaveRequest();
+        req.setName("Fiscal Year 2026");
+        req.setStartDate(java.time.LocalDate.of(2026, 1, 1));
+        req.setEndDate(java.time.LocalDate.of(2026, 12, 31));
+        req.setIsActive(true);
+        return req;
+    }
+
+    public static FiscalYearDetailResponse sampleFiscalYearDetailResponse() {
+        FiscalYearDetailResponse dto = new FiscalYearDetailResponse();
+        dto.setId(1L);
+        dto.setCode("FY-0001");
+        dto.setName("Fiscal Year 2026");
+        dto.setStartDate(java.time.LocalDate.of(2026, 1, 1));
+        dto.setEndDate(java.time.LocalDate.of(2026, 12, 31));
+        dto.setIsActive(true);
+        dto.setPeriods(java.util.List.of(samplePeriodResponse(1L, "FY-0001-01", "Jan 2026", 1, "NEVER_OPENED")));
+        return dto;
+    }
+
+    public static PeriodResponse samplePeriodResponse(Long id, String code, String name, int periodNumber, String status) {
+        PeriodResponse dto = new PeriodResponse();
+        dto.setId(id);
+        dto.setCode(code);
+        dto.setName(name);
+        dto.setPeriodNumber(periodNumber);
+        dto.setStartDate(java.time.LocalDate.of(2026, periodNumber, 1));
+        dto.setEndDate(java.time.LocalDate.of(2026, periodNumber, 1).plusMonths(1).minusDays(1));
+        dto.setStatus(status);
+        return dto;
+    }
 }
+
 
