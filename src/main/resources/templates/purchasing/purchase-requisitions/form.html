@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(${prRequest.id == null
+    ? #messages.msg('label.pr.add')
+    : #messages.msg('label.pr.edit')})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .pr-form-content}, ~{:: #page-specific-scripts})}">
+    <div class="pr-form-content" id="pr-form-content">
+
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title">
+                            <span th:if="${prRequest.id == null}" th:text="#{label.pr.add}">Add Purchase Requisition</span>
+                            <span th:if="${prRequest.id != null}" th:text="${prRequest.code}">PR-001</span>
+                        </h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body" th:with="isLocked=${prRequest.status != null && prRequest.status.name() != 'DRAFT'}">
+            <div class="container-xl">
+
+                <form th:action="${prRequest.id == null
+                        ? '/purchasing/purchase-requisitions/create'
+                        : '/purchasing/purchase-requisitions/edit/' + prRequest.id}"
+                    th:object="${prRequest}"
+                    method="post"
+                    id="pr-form"
+                    data-ajax-form="true"
+                    data-redirect-on-success="/purchasing/purchase-requisitions">
+
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="alert-container"></div>
+
+                            <div class="row g-3">
+                                <div class="col-md-9">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.pr.code}, isReadonly=true, placeholder=${prRequest.id == null ? '[ Auto Generated ]' : ''})}"></div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div th:replace="~{fragments/inputs :: date(field='requestDate', value=*{requestDate}, label=#{label.pr.requestDate}, isReadonly=${isLocked}, required=true)}"></div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label required" th:text="#{label.pr.priority}">Priority</label>
+                                            <select class="form-select erp-input" th:field="*{priority}" th:disabled="${isLocked}">
+                                                <option th:each="p : ${T(com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisitionPriority).values()}"
+                                                        th:value="${p}" th:text="${p}"></option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div th:replace="~{fragments/inputs :: autocomplete(field='requesterId', label=#{label.pr.requester}, placeholder='', isReadonly=${isLocked}, required=true, id='header-requester',
+                                                initialValue=${prRequest.requesterId}, initialText=${prRequest.requesterName})}"></div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div th:replace="~{fragments/inputs :: autocomplete(field='facilityId', label=#{label.pr.facility}, placeholder='', isReadonly=${isLocked}, id='header-facility',
+                                                initialValue=${prRequest.facilityId}, initialText=${prRequest.facilityName})}"></div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div th:replace="~{fragments/inputs :: text(field='department', label=#{label.pr.department}, isReadonly=${isLocked})}"></div>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label" th:text="#{label.pr.note}">Note</label>
+                                            <textarea class="form-control erp-input" th:field="*{note}" rows="2" th:readonly="${isLocked}"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 d-flex flex-column justify-content-center bg-secondary-lt rounded-end">
+                                    <div class="px-3 text-center" sec:authorize="hasAuthority('PR_SUBMIT')">
+                                        <div th:if="${prRequest.id != null && prRequest.status != null && prRequest.status.name() == 'DRAFT'}" class="mt-3">
+                                            <button type="button" class="btn btn-success w-100 py-2" id="btn-submit-pr"
+                                                    th:data-submit-url="@{'/purchasing/purchase-requisitions/' + ${prRequest.id} + '/submit'}">
+                                                <i class="ti ti-send me-1"></i> <span th:text="#{label.pr.btn.submit}">Submit for Approval</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title" th:text="#{label.pr.lines}">Requisition Lines</h3>
+                            <div class="card-actions" th:if="!${isLocked}">
+                                <button type="button" class="btn btn-primary btn-sm" id="btn-add-line"><i class="ti ti-plus"></i> Add Line</button>
+                            </div>
+                        </div>
+                        <div class="table-responsive" style="min-height: 200px;">
+                            <table class="table table-vcenter card-table" id="table-lines">
+                                <thead>
+                                    <tr>
+                                        <th class="required" th:text="#{label.product}" style="width: 22%;">Product</th>
+                                        <th class="text-end required" th:text="#{label.qty}" style="width: 10%;">Qty</th>
+                                        <th class="required" th:text="#{label.uom}" style="width: 12%;">UoM</th>
+                                        <th th:text="#{label.pr.requiredDate}" style="width: 12%;">Required Date</th>
+                                        <th class="text-end" th:text="#{label.pr.estPrice}" style="width: 12%;">Est. Price</th>
+                                        <th th:text="#{label.pr.supplier}" style="width: 15%;">Supplier</th>
+                                        <th th:text="#{label.pr.lineNote}" style="width: 12%;">Note</th>
+                                        <th class="w-1" style="width: 50px;" th:if="!${isLocked}"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="line-container">
+                                    <tr th:each="line, stat : *{lines}" class="line-row" th:data-index="${stat.index}">
+                                        <td>
+                                            <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[' + __${stat.index}__ + '].productId', id='select-product-' + __${stat.index}__, isReadonly=${isLocked}, extraClass='select-product',
+                                                initialValue=${line.productId}, initialText=${line.productName})}"></div>
+                                        </td>
+                                        <td><input type="text" th:name="'lines[' + ${stat.index} + '].quantity'" th:value="${line.quantity}" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-qty" th:readonly="${isLocked}"></td>
+                                        <td>
+                                            <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[' + __${stat.index}__ + '].uomId', id='select-uom-' + __${stat.index}__, isReadonly=${isLocked}, extraClass='select-uom',
+                                                initialValue=${line.uomId}, initialText=${line.uomName})}"></div>
+                                        </td>
+                                        <td><input type="date" th:name="'lines[' + ${stat.index} + '].requiredDate'" th:value="${line.requiredDate}" class="form-control form-control-sm erp-input-sm" th:readonly="${isLocked}"></td>
+                                        <td><input type="text" th:name="'lines[' + ${stat.index} + '].estimatedUnitPrice'" th:value="${line.estimatedUnitPrice}" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end" th:readonly="${isLocked}"></td>
+                                        <td>
+                                            <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[' + __${stat.index}__ + '].suggestedSupplierId', id='select-supplier-' + __${stat.index}__, isReadonly=${isLocked}, extraClass='select-supplier',
+                                                initialValue=${line.suggestedSupplierId}, initialText=${line.supplierName})}"></div>
+                                        </td>
+                                        <td><input type="text" th:name="'lines[' + ${stat.index} + '].note'" th:value="${line.note}" class="form-control form-control-sm erp-input-sm" th:readonly="${isLocked}"></td>
+                                        <td th:if="!${isLocked}">
+                                            <button type="button" class="btn btn-white btn-icon btn-remove-line text-danger" title="Remove"><i class="ti ti-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div id="empty-msg" class="text-center py-4 text-secondary" th:style="${#lists.isEmpty(prRequest.lines)} ? '' : 'display:none'">No lines added yet. Click "Add Line" to start.</div>
+                        </div>
+                        <div class="card-footer text-end">
+                            <div th:if="${auditInfo != null and auditInfo.id != null}" th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
+                            <div class="d-flex align-items-center">
+                                <div id="loading-indicator" class="spinner-border spinner-border-sm text-primary me-2" role="status" style="display: none;"></div>
+                                <a th:href="@{/purchasing/purchase-requisitions}" class="btn btn-link link-secondary" th:text="#{label.cancel}">Cancel</a>
+                                <button type="submit" class="btn btn-primary ms-auto" th:if="!${isLocked}">
+                                    <i class="ti ti-device-floppy"></i>
+                                    <span th:text="#{label.save}">Save</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <table style="display:none">
+            <tbody id="row-template-source">
+                <tr class="line-row">
+                    <td>
+                        <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[INDEX].productId', id='', isReadonly=false, extraClass='select-product')}"></div>
+                    </td>
+                    <td><input type="text" name="lines[INDEX].quantity" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-qty" value="0.0000"></td>
+                    <td>
+                        <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[INDEX].uomId', id='', isReadonly=false, extraClass='select-uom')}"></div>
+                    </td>
+                    <td><input type="date" name="lines[INDEX].requiredDate" class="form-control form-control-sm erp-input-sm"></td>
+                    <td><input type="text" name="lines[INDEX].estimatedUnitPrice" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end" value="0.00"></td>
+                    <td>
+                        <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[INDEX].suggestedSupplierId', id='', isReadonly=false, extraClass='select-supplier')}"></div>
+                    </td>
+                    <td><input type="text" name="lines[INDEX].note" class="form-control form-control-sm erp-input-sm"></td>
+                    <td>
+                        <button type="button" class="btn btn-white btn-icon btn-remove-line text-danger" title="Remove"><i class="ti ti-trash"></i></button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+
+    <div id="page-specific-scripts" th:fragment="pageScripts">
+        <script th:inline="javascript">
+            window.PurchaseRequisitionPageConfig = {
+                isLocked: /*[[${isLocked}]]*/ false
+            };
+        </script>
+        <script th:src="@{/js/purchasing/purchase-requisition-form.js}" defer></script>
+    </div>
+</body>
+
+</html>
