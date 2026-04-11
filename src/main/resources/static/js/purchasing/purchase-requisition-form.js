@@ -33,12 +33,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
             newRow.innerHTML = newRow.innerHTML.replace(/INDEX/g, index);
 
+            // Remove stale TomSelect markup from cloned row so it can be re-initialized
+            newRow.querySelectorAll('.ts-wrapper').forEach(w => w.remove());
+            newRow.querySelectorAll('select.tomselect-initialized').forEach(s => {
+                s.classList.remove('tomselect-initialized', 'tomselected', 'ts-hidden-accessible');
+                s.style.display = '';
+            });
+
             lineContainer.appendChild(newRow);
             updateEmptyMessage();
 
-            // Re-initialize autocomplete on new row if ERP utility exists
+            // Re-initialize autocomplete on new row
             if (window.ERP && window.ERP.initAutocompleteInContainer) {
                 window.ERP.initAutocompleteInContainer(newRow);
+            }
+
+            // Re-initialize numeric inputs on new row
+            if (typeof initNumericInputs === 'function') {
+                initNumericInputs(newRow);
             }
         });
     }

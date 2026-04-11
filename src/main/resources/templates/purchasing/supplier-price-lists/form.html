@@ -45,7 +45,7 @@
                             <div class="col-md-6">
                                 <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.spl.code}, isReadonly=true, placeholder=${splRequest.id == null ? '[ Auto Generated ]' : ''})}"></div>
 
-                                <div th:replace="~{fragments/inputs :: autocomplete(field='supplierId', label=#{label.spl.supplier}, required=true, path='master/parties',
+                                <div th:replace="~{fragments/inputs :: autocomplete(field='supplierId', label=#{label.spl.supplier}, required=true, path='parties',
                                     initialValue=${splRequest.supplierId}, initialText=${splRequest.supplierName})}"></div>
 
                                 <div th:replace="~{fragments/inputs :: autocomplete(field='productId', label=#{label.spl.product}, required=true, path='inventory/products',
