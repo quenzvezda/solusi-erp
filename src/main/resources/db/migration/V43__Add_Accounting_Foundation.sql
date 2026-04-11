@@ -3,7 +3,7 @@
 -- ============================================================
 -- 1. DDL: Chart of Accounts
 -- ============================================================
-CREATE TABLE acc_chart_of_accounts (
+CREATE TABLE IF NOT EXISTS acc_chart_of_accounts (
     id            BIGINT       NOT NULL AUTO_INCREMENT,
     code          VARCHAR(20)  NOT NULL,
     name          VARCHAR(150) NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE acc_chart_of_accounts (
 -- ============================================================
 -- 2. DDL: Accounting Schema
 -- ============================================================
-CREATE TABLE acc_accounting_schemas (
+CREATE TABLE IF NOT EXISTS acc_accounting_schemas (
     id                BIGINT       NOT NULL AUTO_INCREMENT,
     event_type        VARCHAR(50)  NOT NULL COMMENT 'e.g. GOODS_RECEIPT, VENDOR_BILL, etc.',
     description       VARCHAR(255) NULL,
@@ -52,7 +52,7 @@ CREATE TABLE acc_accounting_schemas (
 -- ============================================================
 -- 3. DDL: Fiscal Year
 -- ============================================================
-CREATE TABLE acc_fiscal_years (
+CREATE TABLE IF NOT EXISTS acc_fiscal_years (
     id            BIGINT       NOT NULL AUTO_INCREMENT,
     code          VARCHAR(20)  NOT NULL,
     name          VARCHAR(100) NOT NULL,
@@ -73,7 +73,7 @@ CREATE TABLE acc_fiscal_years (
 -- ============================================================
 -- 4. DDL: Accounting Period
 -- ============================================================
-CREATE TABLE acc_accounting_periods (
+CREATE TABLE IF NOT EXISTS acc_accounting_periods (
     id              BIGINT       NOT NULL AUTO_INCREMENT,
     code            VARCHAR(20)  NOT NULL,
     name            VARCHAR(100) NOT NULL,
@@ -96,8 +96,9 @@ CREATE TABLE acc_accounting_periods (
 -- ============================================================
 -- 5. Sequence Generator Entry for Fiscal Year
 -- ============================================================
-INSERT INTO system_sequences (entity_name, format_pattern, pad_length, last_value, reset_cycle, created_by_user_id, created_date)
-VALUES ('FISCAL_YEAR', 'FY-{seq}', 4, 0, 'NEVER', 1, NOW());
+INSERT INTO system_sequences (module_code, format_pattern, pad_length, reset_cycle, updated_by_user_id, updated_date)
+VALUES ('FISCAL_YEAR', 'FY-{seq}', 4, 'NEVER', 1, NOW())
+ON DUPLICATE KEY UPDATE module_code = module_code;
 
 -- ============================================================
 -- 6. Permission Groups (Menu Entries)
