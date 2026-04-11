@@ -152,7 +152,7 @@ INSERT INTO permissions (name, description, created_by_user_id, created_date, pe
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r, permissions p
 WHERE r.name = 'ROLE_ADMIN'
-AND p.name LIKE 'ACCOUNTING-\_%' ESCAPE '\\';
+AND p.name LIKE 'ACCOUNTING-%';
 
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r, permissions p
