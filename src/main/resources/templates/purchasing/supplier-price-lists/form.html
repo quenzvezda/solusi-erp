@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout/master :: head(${splRequest.id == null
+    ? #messages.msg('label.spl.add')
+    : #messages.msg('label.spl.edit')})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .spl-form-content}, ~{:: #page-specific-scripts})}">
+    <div class="spl-form-content" id="spl-form-content" th:fragment="spl-form-content">
+
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="${splRequest.id == null
+                            ? #messages.msg('label.spl.add')
+                            : #messages.msg('label.spl.edit')}">
+                            Add Price List
+                        </h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+
+                <form th:action="${splRequest.id == null
+                        ? '/purchasing/supplier-price-lists/create'
+                        : '/purchasing/supplier-price-lists/edit/' + splRequest.id}"
+                    th:object="${splRequest}"
+                    method="post"
+                    class="card"
+                    id="spl-form"
+                    data-ajax-form="true"
+                    data-redirect-on-success="/purchasing/supplier-price-lists">
+
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                    <div class="card-body">
+                        <div class="alert-container"></div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.spl.code}, isReadonly=true, placeholder=${splRequest.id == null ? '[ Auto Generated ]' : ''})}"></div>
+
+                                <div th:replace="~{fragments/inputs :: lookup(field='supplierId', label=#{label.spl.supplier}, required=true, lookupUrl='/api/lookup/master/parties', displayField='supplierName')}"></div>
+
+                                <div th:replace="~{fragments/inputs :: lookup(field='productId', label=#{label.spl.product}, required=true, lookupUrl='/api/lookup/inventory/products', displayField='productName')}"></div>
+
+                                <div th:replace="~{fragments/inputs :: lookup(field='uomId', label=#{label.spl.uom}, required=true, lookupUrl='/api/lookup/inventory/uoms', displayField='uomName')}"></div>
+
+                                <div th:replace="~{fragments/inputs :: lookup(field='currencyId', label=#{label.spl.currency}, required=true, lookupUrl='/api/lookup/master/currencies', displayField='currencyName')}"></div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div th:replace="~{fragments/inputs :: number(field='unitPrice', label=#{label.spl.unitPrice}, required=true, step='0.0001', placeholder=#{placeholder.spl.unitPrice})}"></div>
+
+                                <div th:replace="~{fragments/inputs :: number(field='minQuantity', label=#{label.spl.minQuantity}, required=true, step='0.0001', placeholder=#{placeholder.spl.minQuantity})}"></div>
+
+                                <div th:replace="~{fragments/inputs :: date(field='effectiveFrom', label=#{label.spl.effectiveFrom}, required=true)}"></div>
+
+                                <div th:replace="~{fragments/inputs :: date(field='effectiveTo', label=#{label.spl.effectiveTo})}"></div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" th:text="#{label.spl.note}">Note</label>
+                                    <textarea th:field="*{note}" class="form-control erp-input" rows="3" th:placeholder="#{placeholder.spl.note}"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div th:if="${auditInfo != null and auditInfo.id != null}" th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
+                    </div>
+
+                    <div class="card-footer text-end">
+                        <div class="d-flex align-items-center">
+                            <div id="loading-indicator" class="spinner-border spinner-border-sm text-primary me-2" role="status" style="display: none;"></div>
+                            <a th:href="@{/purchasing/supplier-price-lists}" class="btn btn-link link-secondary" th:text="#{label.cancel}">Cancel</a>
+                            <button type="submit" class="btn btn-primary ms-auto">
+                                <i class="ti ti-device-floppy"></i>
+                                <span th:text="#{label.save}">Save</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="page-specific-scripts" th:fragment="pageScripts">
+    </div>
+</body>
+
+</html>

@@ -1,19 +1,3 @@
-# _gen_plan.py - Generates the exhaustive procurement sprint 3 plan
-import os, textwrap
-
-OUT = r"F:\solusi-program-erp\docs\plans\2026-07-14-procurement-sprint3.md"
-
-def w(f, text):
-    f.write(textwrap.dedent(text))
-
-def wl(f, text):
-    f.write(text + "\n")
-
-with open(OUT, "w", encoding="utf-8") as f:
-    # =========================================================================
-    # HEADER SECTION
-    # =========================================================================
-    w(f, """\
 # Sprint 3 — Purchase Order Module: Exhaustive Implementation Plan
 
 > **Date:** 2026-07-14
@@ -238,12 +222,6 @@ src/
 
 ---
 
-""")
-
-    # =========================================================================
-    # TASK 1: FLYWAY MIGRATION
-    # =========================================================================
-    w(f, """\
 ## Task 1: Flyway Migration V47 — Purchase Order Tables, Sequence, Permissions
 
 ### 1.1 Overview
@@ -383,12 +361,6 @@ feat(purchasing): add V47 migration for purchase order tables and permissions
 
 ---
 
-""")
-
-    # =========================================================================
-    # TASK 2: i18n MESSAGES
-    # =========================================================================
-    w(f, """\
 ## Task 2: i18n Messages for Purchase Order Module
 
 ### 2.1 Overview
@@ -599,12 +571,6 @@ feat(purchasing): add i18n messages for purchase order module
 
 ---
 
-""")
-
-    # =========================================================================
-    # TASK 3: DOMAIN LAYER
-    # =========================================================================
-    w(f, """\
 ## Task 3: Domain Layer — Models, Repository Interface, Ports, and Tests
 
 ### 3.1 PurchaseOrderStatus Enum
@@ -882,10 +848,6 @@ public enum PurchaseOrderStatus {
 
 **Important:** The `Lazy` inner class solves the forward-reference problem in Java enums. Enum constants are initialized top-to-bottom, so `DRAFT` cannot reference `SUBMITTED` directly in its constructor. The `Lazy` holder defers resolution until after all constants are initialized.
 
-""")
-
-    # PurchaseOrderLine
-    w(f, """\
 ### 3.2 PurchaseOrderLine Value Object
 
 #### 3.2.1 Test First
@@ -1220,10 +1182,6 @@ public class PurchaseOrderLine {
 }
 ```
 
-""")
-
-    # PurchaseOrder aggregate root
-    w(f, """\
 ### 3.3 PurchaseOrder Aggregate Root
 
 #### 3.3.1 Test First
@@ -1991,10 +1949,6 @@ public class PurchaseOrder {
 }
 ```
 
-""")
-
-    # Repository interface and ports
-    w(f, """\
 ### 3.4 PurchaseOrderRepository Interface
 
 - [ ] Create `src/main/java/com/solusi/erp/purchasing/purchaseorder/domain/repository/PurchaseOrderRepository.java`
@@ -2066,21 +2020,11 @@ feat(purchasing): add purchase order domain layer with status state machine and 
 
 ---
 
-""")
-
-    # =========================================================================
-    # TASK 4: APPLICATION LAYER
-    # =========================================================================
-    w(f, """\
 ## Task 4: Application Layer — Use Cases and Tests
 
 Each use case follows the pattern: functional interface + pure Java implementation.
 All dependencies are injected via constructor. No Spring annotations.
 
-""")
-
-    # --- CreatePurchaseOrderUseCase ---
-    w(f, """\
 ### 4.1 CreatePurchaseOrderUseCase
 
 #### 4.1.1 Interface
@@ -2271,10 +2215,6 @@ public class CreatePurchaseOrderUseCaseImpl implements CreatePurchaseOrderUseCas
 }
 ```
 
-""")
-
-    # --- UpdatePurchaseOrderUseCase ---
-    w(f, """\
 ### 4.2 UpdatePurchaseOrderUseCase
 
 #### 4.2.1 Interface
@@ -2449,10 +2389,6 @@ public class UpdatePurchaseOrderUseCaseImpl implements UpdatePurchaseOrderUseCas
 }
 ```
 
-""")
-
-    # --- DeletePurchaseOrderUseCase ---
-    w(f, """\
 ### 4.3 DeletePurchaseOrderUseCase
 
 #### 4.3.1 Interface
@@ -2591,9 +2527,3 @@ public class DeletePurchaseOrderUseCaseImpl implements DeletePurchaseOrderUseCas
 }
 ```
 
-""")
-
-    # Continue writing to file...
-    print(f"Phase 1 complete. Continuing...")
-
-print("Script phase 1 written successfully")
