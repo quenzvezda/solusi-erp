@@ -70,15 +70,38 @@ npx playwright test tests/smoke-test.spec.js
 
 ### 1.3 Spring Boot Server
 
-Server **WAJIB** berjalan sebelum test. Cek dan start sesuai AGENTS.md:
+Server **WAJIB** berjalan sebelum test. AI agent **WAJIB** start server secara mandiri — jangan minta user menjalankannya.
+
+**Cek apakah server sudah berjalan:**
+```bash
+curl -s -o /dev/null -w "%{http_code}" http://localhost:18080/login
+# Response 200 atau 302 → sudah aktif, lewati langkah start
+```
+
+**Start server (detached background process):**
 
 ```bash
-# Cek apakah sudah jalan
-curl -s -o /dev/null -w "%{http_code}" http://localhost:18080/login
-
-# Start jika belum (detached background)
+# Linux / macOS
 ./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=18080"
 ```
+
+```powershell
+# Windows PowerShell (gunakan semicolon bukan &&, wajib ENV_FILE)
+$env:ENV_FILE=".env.dev"; .\mvnw.cmd spring-boot:run "-Dspring-boot.run.arguments=--server.port=18080"
+```
+
+Tunggu hingga log menampilkan `Started ... in ... seconds` sebelum membuka browser. Port wajib **18080** untuk dev.
+
+**Jika port sudah dipakai:**
+```bash
+# Linux/macOS
+lsof -ti:18080 | xargs kill -9
+
+# Windows PowerShell
+Stop-Process -Id (Get-NetTCPConnection -LocalPort 18080).OwningProcess -Force
+```
+
+> **Cold Start:** Saat pertama kali aplikasi dijalankan, `SystemInitializer` otomatis mengubah placeholder `INITIAL_PASSWORD_SETUP` di database menjadi hash BCrypt untuk password `admin123`. Semua user baru memiliki flag `password_change_required = true`. Login pertama mungkin diredirect ke halaman ganti password — gunakan password lama `admin123` dan set password baru (boleh sama).
 
 ### 1.4 Kredensial
 

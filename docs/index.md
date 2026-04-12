@@ -17,6 +17,7 @@ Dokumentasi dikelompokkan ke dalam folder berikut berdasarkan konteksnya:
 - **[/database](database/)**: Berisi ERD dan script dummy data.
 - **[/tests](tests/)**: Panduan dan utilitas pengujian level web (Controller + Thymeleaf).
     - [Web-layer Testing Guidelines](tests/web-layer-testing.md)
+    - [Playwright Smoke Test Guide](tests/playwright-smoke-test-guide.md) — Panduan lengkap smoke test E2E: cara start server, kamus interaksi TomSelect/Flatpickr/AutoNumeric/Line Items/Serial Drawer, fallback Node.js
 - **[/modules](modules/)**: Penjelasan fungsional dan aturan bisnis untuk setiap fitur spesifik (Inventory, Master Data, dll).
     - **[/modules/accounting](modules/accounting/)**: Sprint 1 — Accounting Foundation
         - [Chart of Accounts (COA)](modules/accounting/coa.md) — Hierarki akun, business rules, RBAC
