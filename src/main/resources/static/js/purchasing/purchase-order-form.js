@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             });
 
-            new bootstrap.Modal(modalEl).show();
+            new (window.bootstrap || window.tabler).Modal(modalEl).show();
         });
     }
 

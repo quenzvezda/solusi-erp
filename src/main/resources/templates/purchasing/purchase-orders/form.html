@@ -185,34 +185,34 @@
             </tbody>
         </table>
 
-    </div>
-
-    <!-- Submit for Approval Modal -->
-    <div class="modal modal-blur fade" id="modal-submit-approval" tabindex="-1" th:if="${poRequest.id != null && poRequest.status != null && poRequest.status.name() == 'DRAFT'}">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" th:text="#{label.po.action.submit}">Submit for Approval</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Select Approver <span class="text-danger ms-1">*</span></label>
-                        <select id="submit-approver" class="erp-input-ts"
-                                data-lookup-path="parties/by-role-type?roleTypeCode=APPROVER">
-                            <option value="">-- Select Approver --</option>
-                        </select>
-                        <div class="invalid-feedback d-block d-none" id="submit-approver-error">Please select an approver.</div>
+        <!-- Submit for Approval Modal -->
+        <div class="modal modal-blur fade" id="modal-submit-approval" tabindex="-1" th:if="${poRequest.id != null && poRequest.status != null && poRequest.status.name() == 'DRAFT'}">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" th:text="#{label.po.action.submit}">Submit for Approval</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{label.cancel}">Cancel</button>
-                    <button type="button" class="btn btn-success" id="btn-confirm-submit-approval">
-                        <i class="ti ti-send me-1"></i> <span th:text="#{label.po.action.submit}">Submit</span>
-                    </button>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Select Approver <span class="text-danger ms-1">*</span></label>
+                            <select id="submit-approver" class="erp-input-ts"
+                                    data-lookup-path="parties/by-role-type?roleTypeCode=APPROVER">
+                                <option value="">-- Select Approver --</option>
+                            </select>
+                            <div class="invalid-feedback d-block d-none" id="submit-approver-error">Please select an approver.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{label.cancel}">Cancel</button>
+                        <button type="button" class="btn btn-success" id="btn-confirm-submit-approval">
+                            <i class="ti ti-send me-1"></i> <span th:text="#{label.po.action.submit}">Submit</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
+
     </div>
 
     <div id="page-specific-scripts" th:fragment="pageScripts">

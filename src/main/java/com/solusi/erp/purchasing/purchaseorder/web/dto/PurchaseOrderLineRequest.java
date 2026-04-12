@@ -15,6 +15,7 @@ public class PurchaseOrderLineRequest {
     private BigDecimal taxRate;
     private Long prLineId;
     private String note;
+    private BigDecimal lineSubtotal;
     // Display names
     private String productName;
     private String uomName;

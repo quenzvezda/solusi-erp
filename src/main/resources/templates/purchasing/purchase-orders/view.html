@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
-<head th:replace="~{layout/master :: head(#{label.po.view})}">
+<head th:replace="~{layout/master :: head(#{label.po.detail})}">
 </head>
 
 <body th:replace="~{layout/master :: layout(~{:: .po-view-content}, ~{:: #page-specific-scripts})}">
@@ -68,7 +68,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label text-secondary" th:text="#{label.po.exchangeRate}">Exchange Rate</label>
-                                <div class="form-control-plaintext" th:text="${po.exchangeRate != null ? #numbers.formatDecimal(po.exchangeRate, 1, 4) : '-'}">1.0000</div>
+                                <div class="form-control-plaintext" th:text="${po.exchangeRate != null ? #numbers.formatDecimal(po.exchangeRate, 1, 'COMMA', 4, 'POINT') : '-'}">1.0000</div>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label text-secondary" th:text="#{label.po.paymentTermDays}">Payment Terms (Days)</label>
@@ -90,15 +90,15 @@
                         <div class="row g-3 text-center">
                             <div class="col-md-4">
                                 <label class="form-label text-secondary" th:text="#{label.po.subtotal}">Subtotal</label>
-                                <div class="form-control-plaintext fw-bold fs-4" th:text="${po.subtotal != null ? #numbers.formatDecimal(po.subtotal, 1, 2) : '0.00'}">0.00</div>
+                                <div class="form-control-plaintext fw-bold fs-4" th:text="${po.subtotal != null ? #numbers.formatDecimal(po.subtotal, 1, 'COMMA', 2, 'POINT') : '0.00'}">0.00</div>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label text-secondary" th:text="#{label.po.taxAmount}">Tax</label>
-                                <div class="form-control-plaintext fw-bold fs-4" th:text="${po.taxAmount != null ? #numbers.formatDecimal(po.taxAmount, 1, 2) : '0.00'}">0.00</div>
+                                <div class="form-control-plaintext fw-bold fs-4" th:text="${po.taxAmount != null ? #numbers.formatDecimal(po.taxAmount, 1, 'COMMA', 2, 'POINT') : '0.00'}">0.00</div>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label text-secondary" th:text="#{label.po.totalAmount}">Total</label>
-                                <div class="form-control-plaintext fw-bold fs-3 text-primary" th:text="${po.totalAmount != null ? #numbers.formatDecimal(po.totalAmount, 1, 2) : '0.00'}">0.00</div>
+                                <div class="form-control-plaintext fw-bold fs-3 text-primary" th:text="${po.totalAmount != null ? #numbers.formatDecimal(po.totalAmount, 1, 'COMMA', 2, 'POINT') : '0.00'}">0.00</div>
                             </div>
                         </div>
                     </div>
@@ -106,7 +106,7 @@
 
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title" th:text="#{label.po.lines}">Order Lines</h3>
+                        <h3 class="card-title" th:text="#{label.po.line.title}">Order Lines</h3>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-vcenter card-table">
@@ -126,13 +126,13 @@
                             <tbody>
                                 <tr th:each="line : ${po.lines}">
                                     <td th:text="${line.productName}">Product</td>
-                                    <td class="text-end" th:text="${#numbers.formatDecimal(line.quantity, 1, 4)}">0.0000</td>
+                                    <td class="text-end" th:text="${#numbers.formatDecimal(line.quantity, 1, 'COMMA', 0, 'POINT')}">0</td>
                                     <td th:text="${line.uomName}">UoM</td>
-                                    <td class="text-end" th:text="${line.unitPrice != null ? #numbers.formatDecimal(line.unitPrice, 1, 2) : '-'}">0.00</td>
-                                    <td class="text-end" th:text="${line.taxRate != null ? #numbers.formatDecimal(line.taxRate, 1, 4) : '-'}">0.0000</td>
-                                    <td class="text-end" th:text="${line.lineSubtotal != null ? #numbers.formatDecimal(line.lineSubtotal, 1, 2) : '-'}">0.00</td>
-                                    <td class="text-end" th:text="${line.lineTax != null ? #numbers.formatDecimal(line.lineTax, 1, 2) : '-'}">0.00</td>
-                                    <td class="text-end fw-bold" th:text="${line.lineTotal != null ? #numbers.formatDecimal(line.lineTotal, 1, 2) : '-'}">0.00</td>
+                                    <td class="text-end" th:text="${line.unitPrice != null ? #numbers.formatDecimal(line.unitPrice, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                    <td class="text-end" th:text="${line.taxRate != null ? #numbers.formatDecimal(line.taxRate, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                    <td class="text-end" th:text="${line.lineSubtotal != null ? #numbers.formatDecimal(line.lineSubtotal, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                    <td class="text-end" th:text="${line.lineTax != null ? #numbers.formatDecimal(line.lineTax, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                    <td class="text-end fw-bold" th:text="${line.lineTotal != null ? #numbers.formatDecimal(line.lineTotal, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
                                     <td th:text="${line.note ?: '-'}">-</td>
                                 </tr>
                                 <tr th:if="${po.lines == null || po.lines.isEmpty()}">

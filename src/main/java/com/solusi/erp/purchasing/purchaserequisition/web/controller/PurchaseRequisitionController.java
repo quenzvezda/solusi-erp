@@ -138,7 +138,7 @@ public class PurchaseRequisitionController {
             @RequestParam Long approverId) {
         PurchaseRequisition domain = submitPurchaseRequisitionUseCase.execute(id, approverId);
         PurchaseRequisitionDetailResponse data = webMapper.toDetailResponse(domain);
-        String msg = messageSource.getMessage("msg.success.submit", null, LocaleContextHolder.getLocale());
+        String msg = messageSource.getMessage("msg.success.pr.submitted", null, LocaleContextHolder.getLocale());
         return ResponseEntity.ok(ApiResponse.success(msg, data));
     }
 
@@ -148,7 +148,7 @@ public class PurchaseRequisitionController {
     public ResponseEntity<ApiResponse<PurchaseRequisitionDetailResponse>> cancel(@PathVariable Long id) {
         PurchaseRequisition domain = cancelPurchaseRequisitionUseCase.execute(id);
         PurchaseRequisitionDetailResponse data = webMapper.toDetailResponse(domain);
-        String msg = messageSource.getMessage("msg.success.cancel", null, LocaleContextHolder.getLocale());
+        String msg = messageSource.getMessage("msg.success.pr.cancelled", null, LocaleContextHolder.getLocale());
         return ResponseEntity.ok(ApiResponse.success(msg, data));
     }
 

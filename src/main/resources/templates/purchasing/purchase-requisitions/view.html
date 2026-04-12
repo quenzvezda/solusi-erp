@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
-<head th:replace="~{layout/master :: head(#{label.pr.view})}">
+<head th:replace="~{layout/master :: head(#{label.pr.detail})}">
 </head>
 
 <body th:replace="~{layout/master :: layout(~{:: .pr-view-content}, ~{:: #page-specific-scripts})}">
@@ -77,7 +77,7 @@
 
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title" th:text="#{label.pr.lines}">Requisition Lines</h3>
+                        <h3 class="card-title" th:text="#{label.pr.line.title}">Requisition Lines</h3>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-vcenter card-table">
@@ -86,19 +86,19 @@
                                     <th th:text="#{label.product}">Product</th>
                                     <th class="text-end" th:text="#{label.qty}">Qty</th>
                                     <th th:text="#{label.uom}">UoM</th>
-                                    <th th:text="#{label.pr.requiredDate}">Required Date</th>
-                                    <th class="text-end" th:text="#{label.pr.estPrice}">Est. Price</th>
-                                    <th th:text="#{label.pr.supplier}">Supplier</th>
-                                    <th th:text="#{label.pr.lineNote}">Note</th>
+                                    <th th:text="#{label.pr.line.requiredDate}">Required Date</th>
+                                    <th class="text-end" th:text="#{label.pr.line.estimatedUnitPrice}">Est. Price</th>
+                                    <th th:text="#{label.pr.line.suggestedSupplier}">Supplier</th>
+                                    <th th:text="#{label.pr.line.note}">Note</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr th:each="line : ${pr.lines}">
                                     <td th:text="${line.productName}">Product</td>
-                                    <td class="text-end" th:text="${#numbers.formatDecimal(line.quantity, 1, 4)}">0.0000</td>
+                                    <td class="text-end" th:text="${#numbers.formatDecimal(line.quantity, 1, 'COMMA', 0, 'POINT')}">0</td>
                                     <td th:text="${line.uomName}">UoM</td>
                                     <td th:text="${line.requiredDate != null ? #temporals.format(line.requiredDate, 'dd MMM yyyy') : '-'}">-</td>
-                                    <td class="text-end" th:text="${line.estimatedUnitPrice != null ? #numbers.formatDecimal(line.estimatedUnitPrice, 1, 2) : '-'}">-</td>
+                                    <td class="text-end" th:text="${line.estimatedUnitPrice != null ? #numbers.formatDecimal(line.estimatedUnitPrice, 1, 'COMMA', 2, 'POINT') : '-'}">-</td>
                                     <td th:text="${line.supplierName ?: '-'}">-</td>
                                     <td th:text="${line.note ?: '-'}">-</td>
                                 </tr>

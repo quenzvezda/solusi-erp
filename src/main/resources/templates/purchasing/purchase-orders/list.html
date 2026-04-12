@@ -78,7 +78,7 @@
                                         <td><span class="font-weight-medium" th:text="${item.code}">PO-001</span></td>
                                         <td th:text="${#temporals.format(item.orderDate, 'dd MMM yyyy')}">01 Jul 2026</td>
                                         <td th:text="${item.supplierName ?: '-'}">Supplier</td>
-                                        <td class="text-end" th:text="${item.totalAmount != null ? #numbers.formatDecimal(item.totalAmount, 1, 2) : '-'}">0.00</td>
+                                        <td class="text-end" th:text="${item.totalAmount != null ? #numbers.formatDecimal(item.totalAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
                                         <td>
                                             <span class="badge"
                                                   th:classappend="${item.status.name() == 'DRAFT'} ? 'bg-secondary-lt' :
