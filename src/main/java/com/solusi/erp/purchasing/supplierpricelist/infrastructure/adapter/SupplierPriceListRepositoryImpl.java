@@ -40,10 +40,11 @@ public class SupplierPriceListRepositoryImpl implements SupplierPriceListReposit
 
     @Override
     public Page<SupplierPriceList> findAll(String keyword, Pageable pageable) {
+        String normalizedKeyword = keyword != null ? keyword.trim() : null;
         org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
         org.springframework.data.domain.Page<SupplierPriceListEntity> springPage =
-            (keyword != null && !keyword.isBlank())
-                ? jpaRepository.search(keyword, springPageable)
+            (normalizedKeyword != null && !normalizedKeyword.isBlank())
+                ? jpaRepository.search(normalizedKeyword, springPageable)
                 : jpaRepository.findAll(springPageable);
         return new Page<>(
             springPage.getContent().stream().map(mapper::toDomain).collect(Collectors.toList()),
@@ -55,8 +56,9 @@ public class SupplierPriceListRepositoryImpl implements SupplierPriceListReposit
 
     @Override
     public List<SupplierPriceList> search(String keyword, int limit) {
+        String normalizedKeyword = keyword != null ? keyword.trim() : "";
         return jpaRepository.search(
-                keyword != null ? keyword : "",
+                normalizedKeyword,
                 PageRequest.of(0, limit)
             ).getContent().stream()
             .map(mapper::toDomain)

@@ -55,7 +55,7 @@ Supplier Price List adalah catatan harga resmi yang disepakati antara perusahaan
 - **Date Picker**: Field `effectiveFrom` dan `effectiveTo` menggunakan date picker standar (format `dd/MM/yyyy`).
 - **Date Range Guard**: `effectiveTo` otomatis mengikuti batas minimum `effectiveFrom` pada Flatpickr.
 - **Active Toggle**: Checkbox atau toggle untuk mengaktifkan/menonaktifkan SPL saat membuat atau mengedit.
-- **Daftar (List)**: Menampilkan kolom kode, supplier, produk, harga, satuan, berlaku dari/sampai, dan status aktif. Nilai `Unit Price` ditampilkan dengan simbol mata uang di depan (contoh: `Rp 1,000,000.00`) agar tidak ambigu. Mendukung pencarian (`keyword`).
+- **Daftar (List)**: Menampilkan kolom kode, supplier, produk, harga, satuan, berlaku dari/sampai, dan status aktif. Nilai `Unit Price` ditampilkan dengan simbol mata uang di depan (contoh: `Rp 1,000,000.00`) agar tidak ambigu. Pencarian (`keyword`) mendukung kode SPL, nama supplier, dan nama produk.
 
 ## 5. Integrasi & Relasi Antar Modul
 

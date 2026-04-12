@@ -12,8 +12,13 @@ import java.time.LocalDate;
 @Repository
 public interface SupplierPriceListJpaRepository extends JpaRepository<SupplierPriceListEntity, Long> {
 
-    @Query("SELECT s FROM SupplierPriceListEntity s WHERE " +
+    @Query("SELECT s FROM SupplierPriceListEntity s " +
+           "LEFT JOIN Party p ON p.id = s.supplierId " +
+           "LEFT JOIN ProductEntity prod ON prod.id = s.productId " +
+           "WHERE " +
            "LOWER(s.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(prod.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "CAST(s.unitPrice AS string) LIKE CONCAT('%', :keyword, '%')")
     Page<SupplierPriceListEntity> search(@Param("keyword") String keyword, Pageable pageable);
 
