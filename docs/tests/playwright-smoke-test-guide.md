@@ -91,8 +91,8 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:18080/login
 ### 1.5 Database Access (untuk verifikasi data)
 
 ```bash
-# Via Docker
-docker exec -it mariadb-erp mariadb -uroot -proot erp-test
+# Via Docker (container name: mariadb-local, DB: erp-test)
+docker exec mariadb-local mariadb -uroot -proot erp-test
 
 # Atau langsung (jika MariaDB lokal)
 mariadb -h localhost -P 3307 -uroot -proot erp-test
@@ -198,9 +198,34 @@ TomSelect me-wrap elemen `<select>` asli menjadi custom widget. Elemen asli di-h
 
 #### Teknik: MCP Playwright
 
-**Prinsip kunci:** Jangan gunakan `browser_fill_form` untuk TomSelect. Gunakan `browser_evaluate` untuk manipulasi langsung via JavaScript API TomSelect.
+**Prinsip kunci:** Cara PALING SEDERHANA dan PALING RELIABLE untuk TomSelect di MCP Playwright adalah **klik langsung** pada elemen combobox yang visible, lalu pilih option dari listbox yang muncul. Ini bekerja karena MCP Playwright menggunakan accessibility tree (bukan raw DOM) sehingga bisa berinteraksi dengan widget TomSelect secara natural.
 
-**Cara paling reliable — langsung via JS API:**
+**Cara utama — klik combobox + klik option (DIREKOMENDASIKAN):**
+
+```
+# 1. Ambil snapshot untuk lihat ref elemen
+browser_snapshot()
+# → Akan tampil: combobox "-- Select --" [ref=e99] di dalam cell/field yang dituju
+
+# 2. Klik combobox untuk buka dropdown
+browser_click(ref: "e99", element: "Category TomSelect dropdown")
+# → Dropdown terbuka, muncul listbox dengan option-option
+
+# 3. Ambil snapshot lagi untuk lihat ref option
+browser_snapshot()
+# → Akan tampil listbox dengan option: option "Electronics PRD-CAT-001" [ref=e105]
+
+# 4. Klik option yang diinginkan
+browser_click(ref: "e105", element: "Electronics option")
+# → Option terpilih, combobox menampilkan teks yang dipilih
+```
+
+**Catatan penting untuk klik approach:**
+- Option yang muncul di listbox sudah ter-load otomatis (tidak perlu query API manual)
+- Cascade TomSelect (misal: Facility → Grid → Container) bekerja otomatis karena klik trigger semua native events
+- Untuk form dengan TomSelect di header (bukan line item), dropdown biasanya muncul langsung tanpa perlu search
+
+**Cara fallback — via JavaScript API (gunakan jika klik tidak berhasil):**
 
 ```
 browser_evaluate(function: "() => {
@@ -212,7 +237,6 @@ browser_evaluate(function: "() => {
   return new Promise((resolve) => {
     ts.load('', (options) => {
       if (options.length > 0) {
-        // Tambah option dan set value
         options.forEach(opt => ts.addOption(opt));
         ts.setValue(options[0].id);
         resolve({ selected: options[0].name, id: options[0].id });
@@ -224,40 +248,17 @@ browser_evaluate(function: "() => {
 }")
 ```
 
-**Cara alternatif — jika sudah tahu ID value:**
+**Fallback alternatif — jika sudah tahu ID value:**
 
 ```
 browser_evaluate(function: "() => {
   const el = document.querySelector('#brand-select');
   const ts = el.tomselect;
-  // Load options lalu set specific value
   return new Promise((resolve) => {
     ts.load('', (options) => {
       options.forEach(opt => ts.addOption(opt));
-      // Set ke value tertentu (misal ID = 1)
-      ts.setValue('1');
+      ts.setValue('1'); // Set ke value ID = 1
       resolve('done');
-    });
-  });
-}")
-```
-
-**Cara interaktif — simulasi user typing (jika perlu test search):**
-
-```
-browser_evaluate(function: "() => {
-  const el = document.querySelector('#category-select');
-  const ts = el.tomselect;
-  
-  return new Promise((resolve) => {
-    ts.load('electronics', (options) => {
-      options.forEach(opt => ts.addOption(opt));
-      if (options.length > 0) {
-        ts.setValue(options[0].id);
-        resolve({ found: options.length, selected: options[0].name });
-      } else {
-        resolve({ found: 0 });
-      }
     });
   });
 }")
@@ -326,36 +327,46 @@ async function setTomSelectValue(page, selector, valueId) {
 
 ### 4.2 TomSelect dalam Line Item (Table)
 
-Line item TomSelect menggunakan class `erp-input-ts-sm` dan di-initialize secara dinamis saat row ditambahkan. Selector-nya menggunakan `name` attribute berbasis index: `lines[0].productId`, `lines[0].gridId`, dll.
+Line item TomSelect menggunakan class `erp-input-ts-sm` dan di-initialize secara dinamis saat row ditambahkan. Cascade berlaku: pilih Product → Grid opsi muncul → pilih Grid → Container opsi muncul.
 
-#### Teknik: MCP Playwright
+#### Teknik: MCP Playwright (DIREKOMENDASIKAN — klik langsung)
+
+Sama seperti TomSelect di header form, cara terbaik adalah klik combobox lalu klik option:
 
 ```
-// Setelah klik "Add Line", TomSelect di row baru sudah ter-initialize
-browser_evaluate(function: "() => {
-  // Cari semua select di line-row terakhir
-  const rows = document.querySelectorAll('#line-container .line-row');
-  const lastRow = rows[rows.length - 1];
-  const productSelect = lastRow.querySelector('.select-product');
-  
-  if (!productSelect || !productSelect.tomselect) {
-    throw new Error('Product TomSelect not initialized in last row');
-  }
-  
-  return new Promise((resolve) => {
-    const ts = productSelect.tomselect;
-    ts.load('', (options) => {
-      options.forEach(opt => ts.addOption(opt));
-      if (options.length > 0) {
-        ts.setValue(options[0].id);
-        resolve({ productId: options[0].id, name: options[0].name });
-      }
-    });
-  });
-}")
+# Setelah klik "Add Line", row baru muncul
+
+# 1. Ambil snapshot untuk lihat combobox di row baru
+browser_snapshot()
+# → Contoh: combobox "-- Select --" [ref=e308] di cell Product baris ke-2
+
+# 2. Klik combobox Product di row baru
+browser_click(ref: "e308", element: "Product TomSelect row 2")
+# → Dropdown muncul dengan semua produk
+
+# 3. Snapshot untuk lihat options
+browser_snapshot()
+# → option "Samsung Galaxy S24 Ultra PRD-DEMO-0001" [ref=e336]
+# → option "IKEA Billy Bookcase White PRD-DEMO-0002" [ref=e339]
+
+# 4. Klik produk yang diinginkan
+browser_click(ref: "e339", element: "IKEA Billy Bookcase White option")
+
+# 5. Klik Grid TomSelect (cascade: otomatis ter-update setelah produk dipilih)
+browser_click(ref: "e314", element: "Grid TomSelect row 2")
+browser_snapshot()
+# → pilih option dari listbox
+browser_click(ref: "<ref_grid_option>", element: "Grid option")
+
+# 6. Klik Container TomSelect (cascade dari Grid)
+browser_click(ref: "e320", element: "Container TomSelect row 2")
+browser_snapshot()
+browser_click(ref: "<ref_container_option>", element: "Container option")
 ```
 
-#### Teknik: Node.js Playwright
+**Penting:** Cascade bekerja sempurna dengan klik approach. Tidak perlu trigger manual event.
+
+#### Teknik: Node.js Playwright (via JS API)
 
 ```javascript
 /**
@@ -678,16 +689,93 @@ async function removeLineItem(page, rowIndex) {
 }
 ```
 
-#### Line Item dengan Drawer (Stock Adjustment — Qty & UoM)
+#### Line Item dengan Drawer (Stock Adjustment — Qty, UoM, Serial Numbers)
 
-Stock Adjustment menggunakan drawer (offcanvas) untuk edit qty dan UoM per line. Qty di table bersifat readonly.
+Stock Adjustment menggunakan drawer (offcanvas/dialog) untuk edit qty dan serial numbers per line item. Qty di table bersifat **readonly** — HARUS diisi via drawer.
 
-**Workflow:**
-1. Klik pencil icon pada row → drawer terbuka
-2. Pilih UoM dari dropdown di drawer
-3. Isi qty target
-4. Klik Save di drawer
-5. Qty dan UoM ter-copy ke row
+**Ada dua jenis drawer:**
+- **Serial drawer** (`drawer-serial`): untuk produk dengan `is_serialized=true`. Memiliki tabel serial number yang muncul setelah qty diisi.
+- **Non-serial drawer** (`drawer-non-serial`): untuk produk biasa. Hanya input qty + UoM.
+
+**Workflow Serial Drawer (MCP Playwright — TESTED):**
+
+```
+# 1. Klik pencil icon pada row
+browser_click(ref: "<ref_pencil_btn>", element: "Edit qty pencil button row 1")
+# → Dialog "Item Detail (Serialized)" terbuka
+
+# 2. Set qty via AutoNumeric API
+browser_evaluate(function: "() => {
+  const dialog = document.querySelector('.offcanvas.show, dialog[open], .modal.show');
+  const qtyInput = dialog.querySelector('.input-qty-target');
+  const an = AutoNumeric.getAutoNumericElement(qtyInput);
+  if (an) {
+    an.set(2); // set qty = 2
+    qtyInput.dispatchEvent(new Event('change', { bubbles: true }));
+    return 'set via AutoNumeric: ' + qtyInput.value;
+  }
+  return 'AutoNumeric not found';
+}")
+# → Serial number rows otomatis muncul di tabel (1 row per unit)
+
+# 3. Isi serial number di tiap row
+browser_snapshot()
+# → textbox [ref=e285] row 1, textbox [ref=e290] row 2
+browser_type(ref: "e285", text: "SN-SAMSUNG-001")
+browser_type(ref: "e290", text: "SN-SAMSUNG-002")
+
+# 4. Klik Apply
+browser_click(ref: "<ref_apply_btn>", element: "Apply button")
+# → Drawer tutup, qty di table ter-update (e.g. "2.00")
+```
+
+**Workflow Non-Serial Drawer (MCP Playwright — TESTED):**
+
+```
+# 1. Klik pencil icon pada row
+browser_click(ref: "<ref_pencil_btn>", element: "Edit qty pencil button row 2")
+# → Dialog "Item Detail (Standard)" terbuka
+
+# 2. Set qty via AutoNumeric API
+browser_evaluate(function: "() => {
+  const dialog = document.querySelector('.offcanvas.show, dialog[open], .modal.show');
+  const qtyInput = dialog.querySelector('.input-qty-target');
+  const an = AutoNumeric.getAutoNumericElement(qtyInput);
+  if (an) {
+    an.set(5); // set qty = 5
+    qtyInput.dispatchEvent(new Event('change', { bubbles: true }));
+    return 'set: ' + qtyInput.value;
+  }
+}")
+
+# 3. Klik Apply (tidak perlu isi serial number)
+browser_click(ref: "<ref_apply_btn>", element: "Apply button")
+```
+
+**Set Unit Cost (Price) setelah drawer ditutup:**
+
+```
+# Price input menggunakan AutoNumeric, class: input-price
+browser_evaluate(function: "() => {
+  const priceInputs = document.querySelectorAll('input.input-price');
+  // Index 0 = row pertama, index 1 = row kedua, dst.
+  const p = priceInputs[0];
+  const an = AutoNumeric.getAutoNumericElement(p);
+  if (an) {
+    an.set(15000000);
+    p.dispatchEvent(new Event('change', { bubbles: true }));
+    return 'price set: ' + p.value;
+  }
+}")
+
+# Untuk trigger recalculation total jika tidak otomatis:
+browser_evaluate(function: "() => {
+  document.querySelectorAll('input.input-price').forEach(p => {
+    p.dispatchEvent(new Event('input', { bubbles: true }));
+    p.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+}")
+```
 
 **Node.js Playwright (bypass drawer, langsung set value):**
 
@@ -1054,9 +1142,30 @@ console.log('CSRF present:', hasCsrf);
 
 **Gejala:** Grid/Container TomSelect tidak load options setelah Product/Facility dipilih.
 
-**Penyebab:** Cascade TomSelect bergantung pada event `change` + parent value. Saat set via JS API, event mungkin belum ter-trigger.
+**Penyebab:** Cascade TomSelect bergantung pada event `change` + parent value. Saat set via JS API (`ts.setValue()`), event mungkin tidak ter-trigger ke listener cascade.
 
-**Solusi:** Tambahkan delay antar field dan trigger change manual:
+**Solusi — Pakai klik approach (DIREKOMENDASIKAN):**
+
+Klik combobox + klik option secara berurutan menggunakan MCP Playwright. Klik di UI memicu semua native events secara otomatis termasuk cascade trigger.
+
+```
+browser_click(ref: "<ref_facility_combobox>", element: "Facility dropdown")
+browser_snapshot()
+browser_click(ref: "<ref_gudang_utama>", element: "Gudang Utama option")
+# → Grid TomSelect otomatis ter-populate
+
+browser_click(ref: "<ref_grid_combobox>", element: "Grid dropdown")
+browser_snapshot()
+browser_click(ref: "<ref_grid_a>", element: "GRD-DEMO-A option")
+# → Container TomSelect otomatis ter-populate
+
+browser_click(ref: "<ref_container_combobox>", element: "Container dropdown")
+browser_snapshot()
+browser_click(ref: "<ref_container>", element: "Container option")
+```
+
+**Solusi fallback — Node.js (jika klik tidak memungkinkan):**
+
 ```javascript
 await selectLineItemTomSelect(page, 0, 'select-product', '');
 await page.waitForTimeout(500); // tunggu cascade effect
@@ -1093,11 +1202,16 @@ ORDER BY created_date DESC
 LIMIT 5;
 
 -- Contoh: verifikasi stock adjustment + lines
+-- (PENTING: prefix tabel adalah inv_, bukan tanpa prefix)
 SELECT sa.code, sa.status, sal.product_id, sal.quantity, sal.unit_cost
-FROM stock_adjustments sa
-JOIN stock_adjustment_lines sal ON sal.stock_adjustment_id = sa.id
+FROM inv_stock_adjustments sa
+JOIN inv_stock_adjustment_lines sal ON sal.stock_adjustment_id = sa.id
 ORDER BY sa.created_date DESC
 LIMIT 10;
+
+-- Verifikasi movements dan stock balance setelah SA diproses
+SELECT * FROM inv_movements ORDER BY id DESC LIMIT 10;
+SELECT * FROM inv_stock_balances ORDER BY id DESC LIMIT 10;
 ```
 
 ### Quick Validation Snippet (MCP Playwright)
@@ -1117,11 +1231,15 @@ browser_snapshot()
 
 | Komponen | ❌ Jangan | ✅ Gunakan |
 |----------|-----------|-----------|
-| TomSelect | `page.fill()`, `page.selectOption()`, `browser_fill_form` | `page.evaluate()` → `el.tomselect.load()` + `setValue()` |
+| TomSelect (MCP) | `browser_fill_form`, `browser_select_option` | **Klik combobox → klik option** (primary); `browser_evaluate` → `ts.load()+setValue()` (fallback) |
+| TomSelect (Node.js) | `page.fill()`, `page.selectOption()` | `page.evaluate()` → `el.tomselect.load()` + `setValue()` |
 | Flatpickr | `page.fill()` (readonly), klik kalender | `page.evaluate()` → `input._flatpickr.setDate()` |
 | AutoNumeric | `page.fill()` (bypass format) | `page.evaluate()` → `AutoNumeric.getAutoNumericElement().set()` |
+| SA Drawer Qty | Isi langsung ke readonly field | Klik pencil icon → set AutoNumeric di drawer → klik Apply |
+| SA Serial Number | - | Set qty → tunggu serial rows muncul → isi `.input-sn-item` |
 | Standard Input | - | `page.fill()` / `browser_type` / `browser_fill_form` |
 | Standard Select | - | `page.selectOption()` / `browser_select_option` |
 | Checkbox/Radio | - | `page.check()` / `page.click()` / `browser_click` |
-| Line Item Add | - | `page.click('#btn-add-line')` + delay + fill fields |
+| Line Item Add | - | Klik tombol "Add Line" + delay + fill fields |
 | AJAX Form Submit | `page.click()` tanpa wait | `page.click()` + `waitForResponse` JSON |
+| JS Confirm Dialog | - | `browser_handle_dialog(accept: true)` |
