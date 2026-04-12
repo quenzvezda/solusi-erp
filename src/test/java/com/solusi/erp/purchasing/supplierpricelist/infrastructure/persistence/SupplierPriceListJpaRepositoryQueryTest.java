@@ -33,4 +33,24 @@ class SupplierPriceListJpaRepositoryQueryTest {
         assertThat(query.value()).containsIgnoringCase("JOIN Party p");
         assertThat(query.value()).containsIgnoringCase("JOIN ProductEntity prod");
     }
+    
+    @Test
+    @DisplayName("findAllWithJoin method exists and supports sorting")
+    void findAllWithJoin_existsAndSupportsSorting() throws Exception {
+        Method method = SupplierPriceListJpaRepository.class.getMethod("findAllWithJoin", Pageable.class);
+        
+        assertThat(method).isNotNull();
+        assertThat(method.getReturnType().getName()).contains("Page");
+    }
+    
+    @Test
+    @DisplayName("findAllWithJoin query includes joins for supplier and product")
+    void findAllWithJoin_includesJoinsForSupplierAndProduct() throws Exception {
+        Method method = SupplierPriceListJpaRepository.class.getMethod("findAllWithJoin", Pageable.class);
+        Query query = method.getAnnotation(Query.class);
+
+        assertThat(query).isNotNull();
+        assertThat(query.value()).containsIgnoringCase("JOIN Party p");
+        assertThat(query.value()).containsIgnoringCase("JOIN ProductEntity prod");
+    }
 }

@@ -8,6 +8,8 @@ import com.solusi.erp.purchasing.supplierpricelist.domain.repository.SupplierPri
 import com.solusi.erp.purchasing.supplierpricelist.infrastructure.persistence.SupplierPriceListEntity;
 import com.solusi.erp.purchasing.supplierpricelist.infrastructure.persistence.SupplierPriceListJpaRepository;
 import com.solusi.erp.purchasing.supplierpricelist.infrastructure.persistence.SupplierPriceListPersistenceMapper;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDate;
@@ -19,11 +21,14 @@ public class SupplierPriceListRepositoryImpl implements SupplierPriceListReposit
 
     private final SupplierPriceListJpaRepository jpaRepository;
     private final SupplierPriceListPersistenceMapper mapper;
+    private final EntityManager entityManager;
 
     public SupplierPriceListRepositoryImpl(SupplierPriceListJpaRepository jpaRepository,
-                                            SupplierPriceListPersistenceMapper mapper) {
+                                            SupplierPriceListPersistenceMapper mapper,
+                                            EntityManager entityManager) {
         this.jpaRepository = jpaRepository;
         this.mapper = mapper;
+        this.entityManager = entityManager;
     }
 
     @Override
@@ -42,15 +47,57 @@ public class SupplierPriceListRepositoryImpl implements SupplierPriceListReposit
     public Page<SupplierPriceList> findAll(String keyword, Pageable pageable) {
         String normalizedKeyword = keyword != null ? keyword.trim() : null;
         org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
-        org.springframework.data.domain.Page<SupplierPriceListEntity> springPage =
-            (normalizedKeyword != null && !normalizedKeyword.isBlank())
-                ? jpaRepository.search(normalizedKeyword, springPageable)
-                : jpaRepository.findAll(springPageable);
+        org.springframework.data.domain.Page<SupplierPriceListEntity> springPage;
+        
+        if (normalizedKeyword != null && !normalizedKeyword.isBlank()) {
+            springPage = jpaRepository.search(normalizedKeyword, springPageable);
+        } else {
+            // Use custom query with proper sorting for joined attributes
+            springPage = findAllWithSort(pageable);
+        }
+        
         return new Page<>(
             springPage.getContent().stream().map(mapper::toDomain).collect(Collectors.toList()),
             springPage.getNumber(),
             springPage.getSize(),
             springPage.getTotalElements()
+        );
+    }
+    
+    private org.springframework.data.domain.Page<SupplierPriceListEntity> findAllWithSort(Pageable pageable) {
+        // Build ORDER BY clause based on sort field
+        String orderBy = "";
+        if (pageable.isSorted()) {
+            String sortDir = "desc".equalsIgnoreCase(pageable.sortDir()) ? "DESC" : "ASC";
+            if ("supplierName".equals(pageable.sortField())) {
+                orderBy = " ORDER BY p.name " + sortDir;
+            } else if ("productName".equals(pageable.sortField())) {
+                orderBy = " ORDER BY prod.name " + sortDir;
+            } else if ("code".equals(pageable.sortField())) {
+                orderBy = " ORDER BY s.code " + sortDir;
+            }
+        }
+        
+        // Build JPQL query
+        String baseQuery = "SELECT s FROM SupplierPriceListEntity s " +
+                           "LEFT JOIN Party p ON p.id = s.supplierId " +
+                           "LEFT JOIN ProductEntity prod ON prod.id = s.productId" + orderBy;
+        
+        // Get total count
+        Long total = (Long) entityManager.createQuery(
+            "SELECT COUNT(s) FROM SupplierPriceListEntity s")
+            .getSingleResult();
+        
+        // Get paginated content
+        TypedQuery<SupplierPriceListEntity> query = entityManager.createQuery(baseQuery, SupplierPriceListEntity.class);
+        query.setFirstResult(pageable.page() * pageable.size());
+        query.setMaxResults(pageable.size());
+        List<SupplierPriceListEntity> content = query.getResultList();
+        
+        return new org.springframework.data.domain.PageImpl<>(
+            content,
+            org.springframework.data.domain.PageRequest.of(pageable.page(), pageable.size()),
+            total
         );
     }
 

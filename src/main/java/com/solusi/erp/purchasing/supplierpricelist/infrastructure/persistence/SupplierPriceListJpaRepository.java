@@ -21,6 +21,11 @@ public interface SupplierPriceListJpaRepository extends JpaRepository<SupplierPr
            "LOWER(prod.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "CAST(s.unitPrice AS string) LIKE CONCAT('%', :keyword, '%')")
     Page<SupplierPriceListEntity> search(@Param("keyword") String keyword, Pageable pageable);
+    
+    @Query("SELECT s FROM SupplierPriceListEntity s " +
+           "LEFT JOIN Party p ON p.id = s.supplierId " +
+           "LEFT JOIN ProductEntity prod ON prod.id = s.productId")
+    Page<SupplierPriceListEntity> findAllWithJoin(Pageable pageable);
 
     @Query("SELECT COUNT(s) > 0 FROM SupplierPriceListEntity s WHERE " +
            "s.supplierId = :supplierId AND s.productId = :productId AND " +

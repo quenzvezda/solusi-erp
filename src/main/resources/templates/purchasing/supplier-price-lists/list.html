@@ -36,37 +36,42 @@
 
                 <div class="card">
                     <div class="card-body border-bottom py-3">
-                        <div class="d-flex">
-                            <div class="ms-auto text-secondary">
-                                <form th:action="@{/purchasing/supplier-price-lists}" method="get" class="input-icon"
-                                      hx-get="/purchasing/supplier-price-lists"
-                                      hx-target="#spl-table-container"
-                                      hx-trigger="keyup changed delay:500ms from:#search-input"
-                                      hx-push-url="true">
-                                    <input type="text" id="search-input" name="keyword" th:value="${keyword}"
-                                           class="form-control form-control-sm"
-                                           th:placeholder="#{label.search} + '...'">
-                                    <span class="input-icon-addon">
-                                        <i class="ti ti-search"></i>
-                                    </span>
-                                </form>
+                            <div class="d-flex">
+                                <div class="ms-auto text-secondary">
+                                    <form th:action="@{/purchasing/supplier-price-lists}" method="get" class="input-icon"
+                                          hx-get="/purchasing/supplier-price-lists"
+                                          hx-target="#spl-table-container"
+                                          hx-trigger="keyup changed delay:500ms from:#search-input"
+                                          hx-push-url="true"
+                                          hx-include="[name='keyword'], [name='sortField'], [name='sortDir']">
+                                        <input type="text" id="search-input" name="keyword" th:value="${keyword}"
+                                               class="form-control form-control-sm"
+                                               th:placeholder="#{label.search} + '...'">
+                                        <input type="hidden" name="sortField" th:value="${sortField ?: ''}">
+                                        <input type="hidden" name="sortDir" th:value="${sortDir ?: 'asc'}">
+                                        <span class="input-icon-addon">
+                                            <i class="ti ti-search"></i>
+                                        </span>
+                                    </form>
+                                </div>
                             </div>
-                        </div>
                     </div>
 
                     <div id="spl-table-container" th:fragment="spl-table-container"
                          hx-get="/purchasing/supplier-price-lists"
                          hx-trigger="refresh-table from:body delay:500ms"
-                         hx-include="[name='keyword'], [name='page']">
+                         hx-include="[name='keyword'], [name='page'], [name='sortField'], [name='sortDir']">
                         <input type="hidden" name="page" th:value="${page.number}">
+                        <input type="hidden" name="sortField" th:value="${sortField ?: ''}">
+                        <input type="hidden" name="sortDir" th:value="${sortDir ?: 'asc'}"}
 
                         <div class="table-responsive">
                             <table class="table card-table table-vcenter text-nowrap datatable">
                                 <thead>
                                     <tr>
                                         <th th:replace="~{fragments/table :: sortable('code', #{label.spl.column.code})}">Code</th>
-                                        <th th:text="#{label.spl.column.supplier}">Supplier</th>
-                                        <th th:text="#{label.spl.column.product}">Product</th>
+                                        <th th:replace="~{fragments/table :: sortable('supplierName', #{label.spl.column.supplier})}">Supplier</th>
+                                        <th th:replace="~{fragments/table :: sortable('productName', #{label.spl.column.product})}">Product</th>
                                         <th th:text="#{label.spl.column.unitPrice}">Unit Price</th>
                                         <th th:text="#{label.spl.column.effectiveFrom}">From</th>
                                         <th th:text="#{label.spl.column.effectiveTo}">To</th>

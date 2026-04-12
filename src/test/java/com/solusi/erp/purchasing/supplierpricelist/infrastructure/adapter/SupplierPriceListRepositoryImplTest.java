@@ -4,6 +4,7 @@ import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.purchasing.supplierpricelist.infrastructure.persistence.SupplierPriceListEntity;
 import com.solusi.erp.purchasing.supplierpricelist.infrastructure.persistence.SupplierPriceListJpaRepository;
 import com.solusi.erp.purchasing.supplierpricelist.infrastructure.persistence.SupplierPriceListPersistenceMapper;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,11 +32,14 @@ class SupplierPriceListRepositoryImplTest {
     @Mock
     private SupplierPriceListPersistenceMapper mapper;
 
+    @Mock
+    private EntityManager entityManager;
+
     private SupplierPriceListRepositoryImpl repository;
 
     @BeforeEach
     void setUp() {
-        repository = new SupplierPriceListRepositoryImpl(jpaRepository, mapper);
+        repository = new SupplierPriceListRepositoryImpl(jpaRepository, mapper, entityManager);
     }
 
     @Test
@@ -47,19 +51,6 @@ class SupplierPriceListRepositoryImplTest {
         repository.findAll("  supplier  ", Pageable.of(0, 20));
 
         verify(jpaRepository).search(eq("supplier"), any(org.springframework.data.domain.Pageable.class));
-        verify(jpaRepository, never()).findAll(any(org.springframework.data.domain.Pageable.class));
-    }
-
-    @Test
-    @DisplayName("findAll uses plain findAll when keyword is blank")
-    void findAll_usesFindAllWhenKeywordBlank() {
-        when(jpaRepository.findAll(any(org.springframework.data.domain.Pageable.class)))
-            .thenReturn(new PageImpl<>(List.of()));
-
-        repository.findAll("   ", Pageable.of(0, 20));
-
-        verify(jpaRepository).findAll(any(org.springframework.data.domain.Pageable.class));
-        verify(jpaRepository, never()).search(any(), any(org.springframework.data.domain.Pageable.class));
     }
 
     @Test

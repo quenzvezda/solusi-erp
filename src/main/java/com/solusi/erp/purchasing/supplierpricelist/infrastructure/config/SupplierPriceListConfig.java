@@ -7,6 +7,7 @@ import com.solusi.erp.purchasing.supplierpricelist.domain.repository.SupplierPri
 import com.solusi.erp.purchasing.supplierpricelist.infrastructure.adapter.SupplierPriceListRepositoryImpl;
 import com.solusi.erp.purchasing.supplierpricelist.infrastructure.persistence.SupplierPriceListJpaRepository;
 import com.solusi.erp.purchasing.supplierpricelist.infrastructure.persistence.SupplierPriceListPersistenceMapper;
+import jakarta.persistence.EntityManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -18,8 +19,9 @@ public class SupplierPriceListConfig {
     @Bean
     public SupplierPriceListRepository supplierPriceListDomainRepository(
             SupplierPriceListJpaRepository jpaRepository,
-            SupplierPriceListPersistenceMapper mapper) {
-        return new SupplierPriceListRepositoryImpl(jpaRepository, mapper);
+            SupplierPriceListPersistenceMapper mapper,
+            EntityManager entityManager) {
+        return new SupplierPriceListRepositoryImpl(jpaRepository, mapper, entityManager);
     }
 
     @Bean
