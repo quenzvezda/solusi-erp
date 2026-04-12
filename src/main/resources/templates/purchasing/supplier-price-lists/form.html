@@ -63,9 +63,9 @@
 
                                 <div th:replace="~{fragments/inputs :: decimal(field='minQuantity', label=#{label.spl.minQuantity}, required=true)}"></div>
 
-                                <div th:replace="~{fragments/inputs :: date(field='effectiveFrom', label=#{label.spl.effectiveFrom}, required=true)}"></div>
+                                <div th:replace="~{fragments/inputs :: date(field='effectiveFrom', value=*{effectiveFrom}, label=#{label.spl.effectiveFrom}, required=true)}"></div>
 
-                                <div th:replace="~{fragments/inputs :: date(field='effectiveTo', label=#{label.spl.effectiveTo})}"></div>
+                                <div th:replace="~{fragments/inputs :: date(field='effectiveTo', value=*{effectiveTo}, label=#{label.spl.effectiveTo})}"></div>
 
                                 <div class="mb-3">
                                     <label class="form-label" th:text="#{label.spl.note}">Note</label>
