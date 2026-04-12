@@ -1,9 +1,11 @@
 package com.solusi.erp.purchasing.purchaserequisition.web.controller;
 
+import com.solusi.erp.common.approval.domain.repository.ApprovalRequestRepository;
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.purchasing.purchaserequisition.application.usecase.command.*;
 import com.solusi.erp.purchasing.purchaserequisition.application.usecase.query.*;
 import com.solusi.erp.purchasing.purchaserequisition.domain.model.*;
+import com.solusi.erp.purchasing.purchaserequisition.infrastructure.persistence.PurchaseRequisitionJpaRepository;
 import com.solusi.erp.purchasing.purchaserequisition.web.dto.*;
 import com.solusi.erp.purchasing.purchaserequisition.web.mapper.PurchaseRequisitionWebMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +36,8 @@ public class PurchaseRequisitionControllerTest {
     private CancelPurchaseRequisitionUseCase cancelUc;
     private FindPurchaseRequisitionsUseCase findUc;
     private GetPurchaseRequisitionEditViewUseCase editViewUc;
+    private ApprovalRequestRepository approvalRequestRepository;
+    private PurchaseRequisitionJpaRepository purchaseRequisitionJpaRepository;
     private PurchaseRequisitionWebMapper webMapper;
     private MessageSource messageSource;
     private PurchaseRequisitionController controller;
@@ -47,12 +51,15 @@ public class PurchaseRequisitionControllerTest {
         cancelUc = mock(CancelPurchaseRequisitionUseCase.class);
         findUc = mock(FindPurchaseRequisitionsUseCase.class);
         editViewUc = mock(GetPurchaseRequisitionEditViewUseCase.class);
+        approvalRequestRepository = mock(ApprovalRequestRepository.class);
+        purchaseRequisitionJpaRepository = mock(PurchaseRequisitionJpaRepository.class);
         webMapper = mock(PurchaseRequisitionWebMapper.class);
         messageSource = mock(MessageSource.class);
 
         controller = new PurchaseRequisitionController(
             createUc, updateUc, deleteUc, submitUc, cancelUc,
-            findUc, editViewUc, webMapper, messageSource
+            findUc, editViewUc, approvalRequestRepository,
+            purchaseRequisitionJpaRepository, webMapper, messageSource
         );
     }
 
@@ -175,7 +182,7 @@ public class PurchaseRequisitionControllerTest {
         when(webMapper.toDetailResponse(any(PurchaseRequisition.class))).thenReturn(detail);
 
         Model model = new ExtendedModelMap();
-        String view = controller.view(2L, model);
+        String view = controller.view(2L, model, null);
 
         assertEquals("purchasing/purchase-requisitions/view", view);
         Object prObj = model.getAttribute("pr");

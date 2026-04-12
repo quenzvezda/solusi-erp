@@ -1,5 +1,6 @@
 package com.solusi.erp.purchasing.purchaseorder.web.controller;
 
+import com.solusi.erp.common.approval.domain.repository.ApprovalRequestRepository;
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.purchasing.purchaseorder.application.usecase.command.*;
@@ -37,6 +38,7 @@ public class PurchaseOrderControllerTest {
     private CancelPurchaseOrderUseCase cancelUc;
     private FindPurchaseOrdersUseCase findUc;
     private GetPurchaseOrderEditViewUseCase editViewUc;
+    private ApprovalRequestRepository approvalRequestRepository;
     private PurchaseOrderWebMapper webMapper;
     private MessageSource messageSource;
     private PurchaseOrderController controller;
@@ -51,12 +53,13 @@ public class PurchaseOrderControllerTest {
         cancelUc = mock(CancelPurchaseOrderUseCase.class);
         findUc = mock(FindPurchaseOrdersUseCase.class);
         editViewUc = mock(GetPurchaseOrderEditViewUseCase.class);
+        approvalRequestRepository = mock(ApprovalRequestRepository.class);
         webMapper = mock(PurchaseOrderWebMapper.class);
         messageSource = mock(MessageSource.class);
 
         controller = new PurchaseOrderController(
             createUc, updateUc, deleteUc, submitUc, sendUc, cancelUc,
-            findUc, editViewUc, webMapper, messageSource
+            findUc, editViewUc, approvalRequestRepository, webMapper, messageSource
         );
     }
 
@@ -73,7 +76,7 @@ public class PurchaseOrderControllerTest {
             100L, 200L, 1L, BigDecimal.ONE,
             new BigDecimal("500.00"), new BigDecimal("50.00"), new BigDecimal("550.00"),
             PurchaseOrderStatus.DRAFT,
-            30, null, "Test note", true, List.of(line));
+            30, null, PurchaseOrderType.DIRECT, "Test note", true, List.of(line));
     }
 
     private PurchaseOrder buildSubmittedPo() {
@@ -83,7 +86,7 @@ public class PurchaseOrderControllerTest {
             100L, null, 1L, BigDecimal.ONE,
             BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
             PurchaseOrderStatus.SUBMITTED,
-            30, null, null, true, List.of());
+            30, null, PurchaseOrderType.DIRECT, null, true, List.of());
     }
 
     private PurchaseOrder buildApprovedPo() {
@@ -93,7 +96,7 @@ public class PurchaseOrderControllerTest {
             100L, null, 1L, BigDecimal.ONE,
             BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
             PurchaseOrderStatus.APPROVED,
-            30, null, null, true, List.of());
+            30, null, PurchaseOrderType.DIRECT, null, true, List.of());
     }
 
     @Test
@@ -191,7 +194,7 @@ public class PurchaseOrderControllerTest {
         when(webMapper.toDetailResponse(any(PurchaseOrder.class))).thenReturn(detail);
 
         Model model = new ExtendedModelMap();
-        String view = controller.view(2L, model);
+        String view = controller.view(2L, model, null);
 
         assertEquals("purchasing/purchase-orders/view", view);
         Object poObj = model.getAttribute("po");
@@ -224,7 +227,7 @@ public class PurchaseOrderControllerTest {
     @DisplayName("create calls use case with correct args")
     void createShouldCallUseCaseWithCorrectArgs() {
         PurchaseOrder po = buildDraftPo();
-        when(createUc.execute(any(), any(), any(), any(), any(), any(), anyInt(), any(), any(), anyList())).thenReturn(po);
+        when(createUc.execute(any(), any(), any(), any(), any(), any(), anyInt(), any(), any(), any(), anyList())).thenReturn(po);
 
         PurchaseOrderDetailResponse detail = new PurchaseOrderDetailResponse();
         detail.setId(1L);
@@ -245,7 +248,7 @@ public class PurchaseOrderControllerTest {
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().isSuccess()).isTrue();
-        verify(createUc).execute(any(), any(), eq(100L), any(), eq(1L), any(), eq(30), any(), any(), anyList());
+        verify(createUc).execute(any(), any(), eq(100L), any(), eq(1L), any(), eq(30), any(), any(), any(), anyList());
     }
 
     @Test

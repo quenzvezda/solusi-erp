@@ -37,7 +37,7 @@ class PurchaseOrderTest {
             LocalDate.of(2026, 8, 14),
             1L, 2L, 1L,
             BigDecimal.ONE,
-            30, null, "Test PO",
+            30, null, PurchaseOrderType.DIRECT, "Test PO",
             lines
         );
     }
@@ -51,7 +51,7 @@ class PurchaseOrderTest {
             1L, 2L, 1L,
             BigDecimal.ONE,
             BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
-            status, 30, null, "Test PO", true,
+            status, 30, null, PurchaseOrderType.DIRECT, "Test PO", true,
             lines
         );
     }
@@ -70,7 +70,7 @@ class PurchaseOrderTest {
                 LocalDate.of(2026, 8, 14),
                 1L, 2L, 1L,
                 new BigDecimal("1.0"),
-                30, 5L, "Test PO",
+                30, 5L, PurchaseOrderType.DIRECT, "Test PO",
                 lines
             );
 
@@ -110,7 +110,7 @@ class PurchaseOrderTest {
                 null, // expectedDate nullable
                 1L, null, 1L, // facilityId nullable
                 BigDecimal.ONE,
-                30, null, null, // prId, note nullable
+                30, null, PurchaseOrderType.DIRECT, null, // prId, poType, note
                 new ArrayList<>()
             );
 
@@ -128,7 +128,7 @@ class PurchaseOrderTest {
                 LocalDate.of(2026, 7, 14),
                 null, 1L, null, 1L,
                 BigDecimal.ZERO,
-                30, null, null,
+                30, null, PurchaseOrderType.DIRECT, null,
                 new ArrayList<>()
             ))
                 .isInstanceOf(DomainException.class)
@@ -143,7 +143,7 @@ class PurchaseOrderTest {
                 LocalDate.of(2026, 7, 14),
                 null, 1L, null, 1L,
                 new BigDecimal("-1"),
-                30, null, null,
+                30, null, PurchaseOrderType.DIRECT, null,
                 new ArrayList<>()
             ))
                 .isInstanceOf(DomainException.class)
@@ -159,7 +159,7 @@ class PurchaseOrderTest {
                 LocalDate.of(2026, 7, 13), // before orderDate
                 1L, null, 1L,
                 BigDecimal.ONE,
-                30, null, null,
+                30, null, PurchaseOrderType.DIRECT, null,
                 new ArrayList<>()
             ))
                 .isInstanceOf(DomainException.class)
@@ -175,7 +175,7 @@ class PurchaseOrderTest {
                 LocalDate.of(2026, 7, 14),
                 1L, null, 1L,
                 BigDecimal.ONE,
-                30, null, null,
+                30, null, PurchaseOrderType.DIRECT, null,
                 new ArrayList<>()
             );
 
@@ -516,7 +516,7 @@ class PurchaseOrderTest {
                 "PO-001",
                 LocalDate.of(2026, 7, 14),
                 null, 1L, null, 1L,
-                BigDecimal.ONE, 30, null, null,
+                BigDecimal.ONE, 30, null, PurchaseOrderType.DIRECT, null,
                 null
             );
 

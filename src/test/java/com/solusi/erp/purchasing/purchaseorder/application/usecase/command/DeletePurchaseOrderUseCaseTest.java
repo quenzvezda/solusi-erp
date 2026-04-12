@@ -4,6 +4,7 @@ import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.exception.DomainException;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrder;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderLine;
+import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderType;
 import com.solusi.erp.purchasing.purchaseorder.domain.repository.PurchaseOrderRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -44,7 +45,7 @@ class DeletePurchaseOrderUseCaseTest {
                 null, null
         );
         return PurchaseOrder.createNew("PO-TEST-001", LocalDate.now(), null,
-                1L, 1L, 1L, BigDecimal.ONE, 30, null, "test", List.of(line));
+                1L, 1L, 1L, BigDecimal.ONE, 30, null, PurchaseOrderType.DIRECT, "test", List.of(line));
     }
 
     @Test

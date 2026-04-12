@@ -4,6 +4,7 @@ import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrder;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderLine;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderStatus;
+import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderType;
 import com.solusi.erp.purchasing.purchaseorder.domain.repository.PurchaseOrderRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -42,7 +43,7 @@ class GetPurchaseOrderEditViewUseCaseTest {
                 "PO-TEST-001", LocalDate.now(), null,
                 1L, 1L, 1L, BigDecimal.ONE,
                 BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
-                PurchaseOrderStatus.DRAFT, 30, null, "test", true,
+                PurchaseOrderStatus.DRAFT, 30, null, PurchaseOrderType.DIRECT, "test", true,
                 List.of()
         );
         when(repository.findById(1L)).thenReturn(Optional.of(po));

@@ -2,7 +2,9 @@ package com.solusi.erp.purchasing.purchaseorder.application.usecase.command;
 
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrder;
+import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderType;
 import com.solusi.erp.purchasing.purchaseorder.domain.repository.PurchaseOrderRepository;
+import com.solusi.erp.purchasing.purchaserequisition.domain.repository.PurchaseRequisitionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,11 +31,14 @@ class CreatePurchaseOrderUseCaseTest {
     @Mock
     private SequenceGeneratorService sequenceGeneratorService;
 
+    @Mock
+    private PurchaseRequisitionRepository purchaseRequisitionRepository;
+
     private CreatePurchaseOrderUseCaseImpl useCase;
 
     @BeforeEach
     void setUp() {
-        useCase = new CreatePurchaseOrderUseCaseImpl(repository, sequenceGeneratorService);
+        useCase = new CreatePurchaseOrderUseCaseImpl(repository, sequenceGeneratorService, purchaseRequisitionRepository);
     }
 
     @Test
@@ -49,7 +54,7 @@ class CreatePurchaseOrderUseCaseTest {
 
         PurchaseOrder result = useCase.execute(
                 LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 15),
-                1L, 2L, 3L, BigDecimal.ONE, 30, null, "Test note", lines
+                1L, 2L, 3L, BigDecimal.ONE, 30, null, PurchaseOrderType.DIRECT, "Test note", lines
         );
 
         assertThat(result.getCode()).isEqualTo("PO-2607-00001");
@@ -69,7 +74,7 @@ class CreatePurchaseOrderUseCaseTest {
 
         PurchaseOrder result = useCase.execute(
                 LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 15),
-                1L, 2L, 3L, BigDecimal.ONE, 30, null, "note", List.of()
+                1L, 2L, 3L, BigDecimal.ONE, 30, null, PurchaseOrderType.DIRECT, "note", List.of()
         );
 
         assertThat(result.getCode()).isEqualTo("PO-2607-00002");
@@ -92,7 +97,7 @@ class CreatePurchaseOrderUseCaseTest {
 
         PurchaseOrder result = useCase.execute(
                 LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 15),
-                1L, 2L, 3L, BigDecimal.ONE, 30, 5L, null, lines
+                1L, 2L, 3L, BigDecimal.ONE, 30, 5L, PurchaseOrderType.DIRECT, null, lines
         );
 
         assertThat(result.getLines()).hasSize(2);

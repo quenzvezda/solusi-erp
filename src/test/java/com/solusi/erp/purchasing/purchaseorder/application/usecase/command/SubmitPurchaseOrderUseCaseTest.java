@@ -5,6 +5,7 @@ import com.solusi.erp.core.exception.DomainException;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrder;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderLine;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderStatus;
+import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderType;
 import com.solusi.erp.purchasing.purchaseorder.domain.port.PurchaseOrderEventPublisher;
 import com.solusi.erp.purchasing.purchaseorder.domain.repository.PurchaseOrderRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,7 +51,7 @@ class SubmitPurchaseOrderUseCaseTest {
                 null, null
         );
         return PurchaseOrder.createNew("PO-TEST-001", LocalDate.now(), null,
-                1L, 1L, 1L, BigDecimal.ONE, 30, null, "test", List.of(line));
+                1L, 1L, 1L, BigDecimal.ONE, 30, null, PurchaseOrderType.DIRECT, "test", List.of(line));
     }
 
     @Test
@@ -61,7 +62,7 @@ class SubmitPurchaseOrderUseCaseTest {
                 "PO-2607-00001", LocalDate.of(2026, 7, 1), null,
                 10L, 2L, 3L, BigDecimal.ONE,
                 new BigDecimal("1000"), BigDecimal.ZERO, new BigDecimal("1000"),
-                PurchaseOrderStatus.DRAFT, 30, null, "note", true,
+                PurchaseOrderStatus.DRAFT, 30, null, PurchaseOrderType.DIRECT, "note", true,
                 List.of(new PurchaseOrderLine(
                         AuditMetadata.empty(), null, 1L, new BigDecimal("10"),
                         BigDecimal.ZERO, 1L, new BigDecimal("100"), BigDecimal.ZERO,
@@ -97,7 +98,7 @@ class SubmitPurchaseOrderUseCaseTest {
                 "PO-2607-00002", LocalDate.of(2026, 7, 1), null,
                 10L, 2L, 3L, BigDecimal.ONE,
                 BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
-                PurchaseOrderStatus.DRAFT, 30, null, "note", true,
+                PurchaseOrderStatus.DRAFT, 30, null, PurchaseOrderType.DIRECT, "note", true,
                 List.of()
         );
 
