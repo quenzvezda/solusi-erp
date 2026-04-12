@@ -269,46 +269,11 @@ AuthenticationService.authenticateWithToken() method.
 Migration guide: docs/migration/v2.0.0-token-migration.md
 ```
 
-## 10. Frontend & E2E Debugging with MCP Playwright
+## 10. Playwright Smoke Test & Frontend Debugging
 
-Untuk keperluan debugging frontend atau pengujian end-to-end, AI **WAJIB** menjalankan Spring Boot server secara mandiri menggunakan MCP Playwright. **DILARANG** meminta user untuk menjalankan server.
+Untuk smoke test end-to-end atau debugging frontend, gunakan MCP Playwright. AI **WAJIB** menjalankan Spring Boot server secara mandiri — **DILARANG** meminta user untuk menjalankan server.
 
-### Menjalankan Server
-
-**Langkah 1 — Cek apakah server sudah berjalan:**
-```bash
-curl -s -o /dev/null -w "%{http_code}" http://localhost:18080/login
-```
-Jika response `200` atau `302`, server sudah aktif — **lewati langkah 2**.
-
-**Langkah 2 — Start server jika belum berjalan:**
-```bash
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=18080"
-```
-Jalankan sebagai **detached background process**. Tunggu hingga log menampilkan `Started ... in ... seconds` sebelum membuka browser.
-
-### Kredensial Default (Dev)
-| Field | Value |
-|-------|-------|
-| URL | `http://localhost:18080` |
-| Username | `admin` |
-| Password | `admin123` |
-
-> Kredensial ini hampir tidak pernah diubah di environment dev.
-
-### Alur Debugging dengan Playwright
-1. Pastikan server berjalan (langkah di atas).
-2. Gunakan `browser_navigate` ke `http://localhost:18080/login`.
-3. Login menggunakan kredensial default.
-4. Navigasi ke halaman yang ingin di-debug.
-5. Gunakan `browser_snapshot` untuk membaca accessibility tree, atau `browser_take_screenshot` untuk tangkapan visual.
-6. Gunakan `browser_console_messages` untuk melihat error JavaScript.
-7. Gunakan `browser_network_requests` untuk memeriksa AJAX/HTMX request dan response.
-
-### Catatan Penting
-- **Port wajib 18080** untuk sesi dev/debug. Jangan gunakan port lain agar tidak bentrok dengan environment lain.
-- Jika server gagal start (port sudah dipakai proses lain), lakukan `kill` pada PID yang menempati port tersebut sebelum mencoba ulang: `lsof -ti:18080 | xargs kill -9`.
-- Setelah debugging selesai, server boleh dibiarkan berjalan (persistent) untuk sesi berikutnya.
+> **Panduan lengkap:** Baca **[docs/tests/playwright-smoke-test-guide.md](tests/playwright-smoke-test-guide.md)** untuk cara start server (termasuk Windows PowerShell), kredensial dev, kamus interaksi komponen (TomSelect, Flatpickr, AutoNumeric, Line Items, Serial Number Drawer), dan troubleshooting.
 
 ## 11. Cold Start Strategy (Initial Setup)
 Untuk menjamin keamanan dan sinkronisasi enkripsi:
@@ -316,34 +281,8 @@ Untuk menjamin keamanan dan sinkronisasi enkripsi:
 *   **SystemInitializer (Java)**: Sebuah `CommandLineRunner` yang mendeteksi placeholder tersebut dan menggantinya dengan hash BCrypt yang valid untuk password **`admin123`** saat aplikasi pertama kali dijalankan.
 *   **Force Reset**: Semua user baru (termasuk admin) wajib memiliki flag `password_change_required = true` di database.
 
-## 11. Cold Start Strategy (Initial Setup)
-Untuk menjamin keamanan dan sinkronisasi enkripsi:
-*   **Seeder SQL**: Menggunakan placeholder `INITIAL_PASSWORD_SETUP` untuk password admin pertama.
-*   **SystemInitializer (Java)**: Sebuah `CommandLineRunner` yang mendeteksi placeholder tersebut dan menggantinya dengan hash BCrypt yang valid untuk password **`admin123`** saat aplikasi pertama kali dijalankan.
-*   **Force Reset**: Semua user baru (termasuk admin) wajib memiliki flag `password_change_required = true` di database.
-
-## 12. Understanding Documentation Structure
-Sistem ini menggunakan folder `docs/` terstruktur agar AI dan Developer dapat menemukan konteks secara mandiri. AI diharapkan inisiatif membuka dan membaca direktori ini jika kekurangan konteks:
-*   **`docs/architecture/`**: Visualisasi dan arsitektur klasifikasi (Class Diagram, Usecases, dll).
-*   **`docs/database/`**: Dokumentasi ERD dan definisi relasi antar identitas database ERP yang kompleks.
-*   **`docs/modules/`**: **[SANGAT PENTING UNTUK AI]** Penjelasan setiap Modul/Fitur bisnis spesifik (misal: `modules/master/tax.md`, `modules/master/currency.md`, `modules/security/permission-groups.md`). Jelajahi riwayat aturan modul melalui file ini.
-*   **`docs/spec/`**: Spesifikasi teknis horizontal/bersama yang dipakai seluruh fitur (misal: Tata cara standar `pagination.md`, `sequence-generator.md`, `search-menu.md`, atau `menu-structure.md`).
-*   **`docs/roadmap/`**: Dokumen perencanaan masa depan ERP atau fitur yang masih tertunda.
-
-## 12. Understanding Documentation Structure
-Sistem ini menggunakan folder `docs/` terstruktur agar AI dan Developer dapat menemukan konteks secara mandiri. AI diharapkan inisiatif membuka dan membaca direktori ini jika kekurangan konteks:
-*   **`docs/architecture/`**: Visualisasi dan arsitektur klasifikasi (Class Diagram, Usecases, dll).
-*   **`docs/database/`**: Dokumentasi ERD dan definisi relasi antar identitas database ERP yang kompleks.
-*   **`docs/modules/`**: **[SANGAT PENTING UNTUK AI]** Penjelasan setiap Modul/Fitur bisnis spesifik (misal: `modules/master/tax.md`, `modules/master/currency.md`, `modules/security/permission-groups.md`). Jelajahi riwayat aturan modul melalui file ini.
-*   **`docs/spec/`**: Spesifikasi teknis horizontal/bersama yang dipakai seluruh fitur (misal: Tata cara standar `pagination.md`, `sequence-generator.md`, `search-menu.md`, atau `menu-structure.md`).
-*   **`docs/roadmap/`**: Dokumen perencanaan masa depan ERP atau fitur yang masih tertunda.
-
-## 13. Security & Role Permissions
-Aplikasi ini memiliki UI dinamis untuk Manajemen Role (Grouped Permissions) yang secara otomatis akan mengelompokkan daftar _permission_ ke dalam sebuah Folder berdasarkan **kata pertama sebelum underscore (`_`)**. Oleh sebab itu, konvensi penamaan permission sangatlah penting:
-1. **Modul Utama (CRUD)**: Gunakan format `[NAMA_MODUL]_[AKSI]`. 
-   Contoh: `GEOGRAPHIC_READ`, `PRODUCT_CREATE`. Ini akan mengelompokkan mereka ke folder `GEOGRAPHIC` dan `PRODUCT`.
-2. **Fitur Lintas Modul (Shared Features)**: Gunakan *Prefix* jenis fiturnya, contohnya `LOOKUP_` untuk autocomplete popup, dan `POPUP_` untuk fitur modal/popup lainnya (misal: Popup selector item di transaksi).
-   Contoh: `LOOKUP_GEOGRAPHIC`, `LOOKUP_PRODUCT`, `POPUP_PARTNER`. Ini akan membuat folder `LOOKUP` dan `POPUP` yang bersih dan mudah diatur oleh Administrator di UI tanpa mencampuri izin akses CRUD reguler.
+## 12. Documentation Index
+Baca **[docs/index.md](index.md)** sebagai peta navigasi lengkap seluruh dokumentasi teknis dan fungsional project ini. Agent **WAJIB** baca index ini sebelum explore dokumentasi project.
 
 ## 13. Security & Role Permissions
 Aplikasi ini memiliki UI dinamis untuk Manajemen Role (Grouped Permissions) yang secara otomatis akan mengelompokkan daftar _permission_ ke dalam sebuah Folder berdasarkan **kata pertama sebelum underscore (`_`)**. Oleh sebab itu, konvensi penamaan permission sangatlah penting:
@@ -356,44 +295,3 @@ Aplikasi ini memiliki UI dinamis untuk Manajemen Role (Grouped Permissions) yang
 Selain pengelompokan visual di UI Role, sistem memiliki fitur **Global Search Menu** yang menggunakan entitas `PermissionGroup`.
 - Setiap `Permission` **WAJIB** dikaitkan dengan satu `PermissionGroup` agar modul tersebut dapat muncul di hasil pencarian navbar (jika user punya akses).
 - Detail teknis silakan merujuk ke [docs/spec/search-menu.md](spec/search-menu.md) dan [docs/modules/security/permission-groups.md](modules/security/permission-groups.md).
-
-## 15. Frontend & E2E Debugging with MCP Playwright
-
-Untuk keperluan debugging frontend atau pengujian end-to-end, AI **WAJIB** menjalankan Spring Boot server secara mandiri menggunakan MCP Playwright. **DILARANG** meminta user untuk menjalankan server.
-
-### Menjalankan Server
-
-**Langkah 1 — Cek apakah server sudah berjalan:**
-```bash
-curl -s -o /dev/null -w "%{http_code}" http://localhost:18080/login
-```
-Jika response `200` atau `302`, server sudah aktif — **lewati langkah 2**.
-
-**Langkah 2 — Start server jika belum berjalan:**
-```bash
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=18080"
-```
-Jalankan sebagai **detached background process**. Tunggu hingga log menampilkan `Started ... in ... seconds` sebelum membuka browser.
-
-### Kredensial Default (Dev)
-| Field | Value |
-|-------|-------|
-| URL | `http://localhost:18080` |
-| Username | `admin` |
-| Password | `admin123` |
-
-> Kredensial ini hampir tidak pernah diubah di environment dev.
-
-### Alur Debugging dengan Playwright
-1. Pastikan server berjalan (langkah di atas).
-2. Gunakan `browser_navigate` ke `http://localhost:18080/login`.
-3. Login menggunakan kredensial default.
-4. Navigasi ke halaman yang ingin di-debug.
-5. Gunakan `browser_snapshot` untuk membaca accessibility tree, atau `browser_take_screenshot` untuk tangkapan visual.
-6. Gunakan `browser_console_messages` untuk melihat error JavaScript.
-7. Gunakan `browser_network_requests` untuk memeriksa AJAX/HTMX request dan response.
-
-### Catatan Penting
-- **Port wajib 18080** untuk sesi dev/debug. Jangan gunakan port lain agar tidak bentrok dengan environment lain.
-- Jika server gagal start (port sudah dipakai proses lain), lakukan `kill` pada PID yang menempati port tersebut sebelum mencoba ulang: `lsof -ti:18080 | xargs kill -9`.
-- Setelah debugging selesai, server boleh dibiarkan berjalan (persistent) untuk sesi berikutnya.
