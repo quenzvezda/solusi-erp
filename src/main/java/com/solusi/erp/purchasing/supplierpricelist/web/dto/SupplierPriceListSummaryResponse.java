@@ -21,6 +21,7 @@ public class SupplierPriceListSummaryResponse extends BaseAuditResponse {
     private String uomName;
     private Long currencyId;
     private String currencyName;
+    private String currencySymbol;
     private BigDecimal unitPrice;
     private BigDecimal minQuantity;
     private LocalDate effectiveFrom;

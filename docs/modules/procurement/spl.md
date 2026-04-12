@@ -20,7 +20,7 @@ Supplier Price List adalah catatan harga resmi yang disepakati antara perusahaan
 | `code` | Nomor dokumen otomatis (format: `SPL-XXXXX`) | Ya (auto) |
 | `supplierId` | Supplier pemilik daftar harga | Ya |
 | `productId` | Produk yang dihargai | Ya |
-| `uomId` | Satuan harga (misal: PCS, BOX, KG) | Ya |
+| `uomId` | Satuan harga produk (otomatis terisi dari master produk) | Ya |
 | `currencyId` | Mata uang harga (misal: IDR, USD) | Ya |
 | `unitPrice` | Harga per satuan | Ya |
 | `minQuantity` | Kuantitas minimum pembelian untuk harga ini berlaku | Tidak |
@@ -37,6 +37,7 @@ Supplier Price List adalah catatan harga resmi yang disepakati antara perusahaan
 1. **Harga Positif**: `unitPrice` wajib > 0. Sistem menolak jika harga nol atau negatif.
 2. **Rentang Tanggal**: `effectiveTo` tidak boleh lebih awal dari `effectiveFrom`. Jika `effectiveTo` dikosongkan, harga dianggap berlaku tanpa batas.
 3. **Supplier Terkunci**: Field `supplierId` tidak dapat diubah setelah SPL dibuat. Untuk supplier yang berbeda, buat SPL baru.
+4. **Validasi Date Picker (UI)**: Saat `effectiveFrom` diisi, date picker `effectiveTo` otomatis dibatasi agar tidak bisa memilih tanggal yang lebih kecil dari `effectiveFrom`.
 
 ### B. Pengelolaan Aktif/Nonaktif
 - SPL **tidak dapat dihapus** jika sudah pernah digunakan sebagai referensi harga.
@@ -50,9 +51,11 @@ Supplier Price List adalah catatan harga resmi yang disepakati antara perusahaan
 ## 4. Standar UI/UX
 
 - **Autocomplete**: Field supplier dan produk menggunakan komponen autocomplete generik — cukup ketik nama untuk mencari.
+- **UoM Auto-Fill Read-Only**: Saat produk dipilih, field UoM otomatis mengikuti UoM default produk dan dikunci (read-only) agar tidak diubah manual.
 - **Date Picker**: Field `effectiveFrom` dan `effectiveTo` menggunakan date picker standar (format `dd/MM/yyyy`).
+- **Date Range Guard**: `effectiveTo` otomatis mengikuti batas minimum `effectiveFrom` pada Flatpickr.
 - **Active Toggle**: Checkbox atau toggle untuk mengaktifkan/menonaktifkan SPL saat membuat atau mengedit.
-- **Daftar (List)**: Menampilkan kolom kode, supplier, produk, harga, satuan, berlaku dari/sampai, dan status aktif. Mendukung pencarian (`keyword`).
+- **Daftar (List)**: Menampilkan kolom kode, supplier, produk, harga, satuan, berlaku dari/sampai, dan status aktif. Nilai `Unit Price` ditampilkan dengan simbol mata uang di depan (contoh: `Rp 1,000,000.00`) agar tidak ambigu. Mendukung pencarian (`keyword`).
 
 ## 5. Integrasi & Relasi Antar Modul
 

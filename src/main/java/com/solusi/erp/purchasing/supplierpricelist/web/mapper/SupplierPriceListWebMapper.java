@@ -31,6 +31,7 @@ public abstract class SupplierPriceListWebMapper {
     @Mapping(target = "productName", source = "productId", qualifiedByName = "getProductName")
     @Mapping(target = "uomName", source = "uomId", qualifiedByName = "getUomName")
     @Mapping(target = "currencyName", source = "currencyId", qualifiedByName = "getCurrencyName")
+    @Mapping(target = "currencySymbol", source = "currencyId", qualifiedByName = "getCurrencySymbol")
     public abstract SupplierPriceListSummaryResponse toSummaryResponse(SupplierPriceList domain);
 
     @Mapping(target = "supplierName", source = "supplierId", qualifiedByName = "getSupplierName")
@@ -82,5 +83,11 @@ public abstract class SupplierPriceListWebMapper {
     protected String getCurrencyName(Long id) {
         if (id == null) return null;
         return currencyRepository.findById(id).map(c -> c.getName()).orElse(null);
+    }
+
+    @Named("getCurrencySymbol")
+    protected String getCurrencySymbol(Long id) {
+        if (id == null) return null;
+        return currencyRepository.findById(id).map(c -> c.getSymbol()).orElse(null);
     }
 }

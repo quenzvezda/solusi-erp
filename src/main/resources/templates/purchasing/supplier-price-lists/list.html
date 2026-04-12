@@ -79,7 +79,7 @@
                                         <td><span class="font-weight-medium" th:text="${item.code}">SPL-001</span></td>
                                         <td th:text="${item.supplierName}">Supplier Name</td>
                                         <td th:text="${item.productName}">Product Name</td>
-                                        <td class="text-end" th:text="${#numbers.formatDecimal(item.unitPrice, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                                        <td class="text-end" th:text="${(item.currencySymbol != null ? item.currencySymbol + ' ' : '') + #numbers.formatDecimal(item.unitPrice, 1, 'COMMA', 2, 'POINT')}">Rp 0.00</td>
                                         <td th:text="${#temporals.format(item.effectiveFrom, 'dd MMM yyyy')}">01 Jul 2026</td>
                                         <td th:text="${item.effectiveTo != null ? #temporals.format(item.effectiveTo, 'dd MMM yyyy') : '-'}">-</td>
                                         <td>
