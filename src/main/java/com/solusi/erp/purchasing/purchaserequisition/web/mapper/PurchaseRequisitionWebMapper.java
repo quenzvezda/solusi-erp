@@ -73,7 +73,7 @@ public abstract class PurchaseRequisitionWebMapper {
     @Named("getRequesterName")
     protected String getRequesterName(Long id) {
         if (id == null) return null;
-        return auditMapperHelper.resolveUserDisplayName(id);
+        return partyRepository.findById(id).map(p -> p.getName()).orElse(null);
     }
 
     @Named("getFacilityName")

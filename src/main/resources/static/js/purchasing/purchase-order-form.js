@@ -112,5 +112,61 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // Submit for Approval handler
+    var btnSubmitPo = document.getElementById('btn-submit-po');
+    if (btnSubmitPo) {
+        btnSubmitPo.addEventListener('click', function () {
+            var modalEl = document.getElementById('modal-submit-approval');
+            if (!modalEl) return;
+
+            modalEl.addEventListener('shown.bs.modal', function handler() {
+                var selectEl = document.getElementById('submit-approver');
+                if (selectEl && !selectEl.tomselect && typeof initLookup === 'function') {
+                    initLookup(selectEl, selectEl.getAttribute('data-lookup-path'));
+                }
+                modalEl.removeEventListener('shown.bs.modal', handler);
+            });
+
+            var selectEl = document.getElementById('submit-approver');
+            if (selectEl && selectEl.tomselect) selectEl.tomselect.clear();
+            var errEl = document.getElementById('submit-approver-error');
+            if (errEl) errEl.classList.add('d-none');
+
+            var btn = document.getElementById('btn-confirm-submit-approval');
+            var newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+            newBtn.addEventListener('click', function () {
+                var approverSelect = document.getElementById('submit-approver');
+                var approverId = approverSelect.tomselect ? approverSelect.tomselect.getValue() : approverSelect.value;
+                if (!approverId) {
+                    if (errEl) errEl.classList.remove('d-none');
+                    return;
+                }
+                if (errEl) errEl.classList.add('d-none');
+
+                fetch(config.submitUrl + '?approverId=' + encodeURIComponent(approverId), {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        [config.csrfHeader]: config.csrfToken
+                    }
+                })
+                .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+                .then(function (result) {
+                    if (!result.ok) throw new Error(result.data.message || 'Error');
+                    var closeBtn = modalEl.querySelector('[data-bs-dismiss="modal"]');
+                    if (closeBtn) closeBtn.click();
+                    window.location.href = '/purchasing/purchase-orders';
+                })
+                .catch(function (err) {
+                    if (window.ErpModal) ErpModal.showError(err.message);
+                    else alert(err.message);
+                });
+            });
+
+            new bootstrap.Modal(modalEl).show();
+        });
+    }
+
     updateEmptyMessage();
 });

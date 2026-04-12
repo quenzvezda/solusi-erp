@@ -66,5 +66,64 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // Submit for Approval handler
+    const btnSubmitPr = document.getElementById('btn-submit-pr');
+    if (btnSubmitPr) {
+        btnSubmitPr.addEventListener('click', function () {
+            const modalEl = document.getElementById('modal-submit-approval');
+            if (!modalEl) return;
+
+            // Init TomSelect for approver lookup after modal is shown
+            modalEl.addEventListener('shown.bs.modal', function handler() {
+                const selectEl = document.getElementById('submit-approver');
+                if (selectEl && !selectEl.tomselect && typeof initLookup === 'function') {
+                    initLookup(selectEl, selectEl.getAttribute('data-lookup-path'));
+                }
+                modalEl.removeEventListener('shown.bs.modal', handler);
+            });
+
+            // Reset state
+            const selectEl = document.getElementById('submit-approver');
+            if (selectEl && selectEl.tomselect) selectEl.tomselect.clear();
+            const errEl = document.getElementById('submit-approver-error');
+            if (errEl) errEl.classList.add('d-none');
+
+            // Bind confirm button
+            const btn = document.getElementById('btn-confirm-submit-approval');
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+            newBtn.addEventListener('click', function () {
+                const approverSelect = document.getElementById('submit-approver');
+                const approverId = approverSelect.tomselect ? approverSelect.tomselect.getValue() : approverSelect.value;
+                if (!approverId) {
+                    if (errEl) errEl.classList.remove('d-none');
+                    return;
+                }
+                if (errEl) errEl.classList.add('d-none');
+
+                fetch(config.submitUrl + '?approverId=' + encodeURIComponent(approverId), {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        [config.csrfHeader]: config.csrfToken
+                    }
+                })
+                .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+                .then(function (result) {
+                    if (!result.ok) throw new Error(result.data.message || 'Error');
+                    var closeBtn = modalEl.querySelector('[data-bs-dismiss="modal"]');
+                    if (closeBtn) closeBtn.click();
+                    window.location.href = '/purchasing/purchase-requisitions';
+                })
+                .catch(function (err) {
+                    if (window.ErpModal) ErpModal.showError(err.message);
+                    else alert(err.message);
+                });
+            });
+
+            new bootstrap.Modal(modalEl).show();
+        });
+    }
+
     updateEmptyMessage();
 });
