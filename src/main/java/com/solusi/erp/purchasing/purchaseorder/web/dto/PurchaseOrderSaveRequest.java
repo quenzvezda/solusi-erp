@@ -2,6 +2,7 @@ package com.solusi.erp.purchasing.purchaseorder.web.dto;
 
 import com.solusi.erp.core.dto.BaseAuditResponse;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderStatus;
+import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -30,6 +31,7 @@ public class PurchaseOrderSaveRequest extends BaseAuditResponse {
     private BigDecimal exchangeRate;
     private int paymentTermDays = 30;
     private Long prId;
+    private PurchaseOrderType poType = PurchaseOrderType.DIRECT;
     private String note;
     private PurchaseOrderStatus status;
     private Long approverId;

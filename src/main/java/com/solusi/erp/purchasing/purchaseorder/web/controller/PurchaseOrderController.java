@@ -1,5 +1,8 @@
 package com.solusi.erp.purchasing.purchaseorder.web.controller;
 
+import com.solusi.erp.common.approval.domain.model.ApprovalRequest;
+import com.solusi.erp.common.approval.domain.model.ApprovalStatus;
+import com.solusi.erp.common.approval.domain.repository.ApprovalRequestRepository;
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
@@ -10,6 +13,7 @@ import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrder;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderStatus;
 import com.solusi.erp.purchasing.purchaseorder.web.dto.*;
 import com.solusi.erp.purchasing.purchaseorder.web.mapper.PurchaseOrderWebMapper;
+import com.solusi.erp.security.shared.model.SecurityUser;
 import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +24,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +33,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
@@ -43,6 +50,7 @@ public class PurchaseOrderController {
     private final CancelPurchaseOrderUseCase cancelPurchaseOrderUseCase;
     private final FindPurchaseOrdersUseCase findPurchaseOrdersUseCase;
     private final GetPurchaseOrderEditViewUseCase getPurchaseOrderEditViewUseCase;
+    private final ApprovalRequestRepository approvalRequestRepository;
     private final PurchaseOrderWebMapper webMapper;
     private final MessageSource messageSource;
 
@@ -88,7 +96,7 @@ public class PurchaseOrderController {
             request.getSupplierId(), request.getFacilityId(),
             request.getCurrencyId(), request.getExchangeRate(),
             request.getPaymentTermDays(), request.getPrId(),
-            request.getNote(), lines
+            request.getPoType(), request.getNote(), lines
         );
         PurchaseOrderDetailResponse data = webMapper.toDetailResponse(domain);
         String msg = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
@@ -169,10 +177,28 @@ public class PurchaseOrderController {
 
     @GetMapping("/view/{id}")
     @PreAuthorize("hasAuthority('PO_READ')")
-    public String view(@PathVariable Long id, Model model) {
+    public String view(@PathVariable Long id, Model model,
+                       @AuthenticationPrincipal UserDetails principal) {
         PurchaseOrder domain = getPurchaseOrderEditViewUseCase.execute(id)
             .orElseThrow(() -> new RuntimeException("Purchase order not found"));
         model.addAttribute("po", webMapper.toDetailResponse(domain));
+
+        Optional<ApprovalRequest> approvalRequest =
+            approvalRequestRepository.findByReference("PURCHASE_ORDER", id);
+        approvalRequest.ifPresent(req -> {
+            model.addAttribute("approvalRequestId", req.getId());
+            model.addAttribute("approvalStatus", req.getStatus());
+            boolean isCurrentApprover = false;
+            if (principal instanceof SecurityUser securityUser) {
+                Long partyId = securityUser.user().getPartyId();
+                isCurrentApprover = partyId != null && partyId.equals(req.getCurrentApproverId())
+                        && req.getStatus() == ApprovalStatus.PENDING;
+                model.addAttribute("currentPartyId", partyId);
+            }
+            model.addAttribute("isCurrentApprover", isCurrentApprover);
+        });
+
         return "purchasing/purchase-orders/view";
     }
 }
+

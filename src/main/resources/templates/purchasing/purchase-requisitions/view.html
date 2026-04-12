@@ -23,9 +23,18 @@
                         </h2>
                     </div>
                     <div class="col-auto ms-auto d-print-none">
-                        <a th:href="@{/purchasing/purchase-requisitions}" class="btn btn-secondary">
-                            <i class="ti ti-arrow-left me-1"></i> Back to List
-                        </a>
+                        <div class="btn-list">
+                            <button th:if="${approvalRequestId != null}"
+                                    type="button"
+                                    class="btn btn-white"
+                                    onclick="ErpDrawer.open('drawer-approval-history')">
+                                <i class="ti ti-history me-1"></i>
+                                <span th:text="#{label.approval.history}">Approval History</span>
+                            </button>
+                            <a th:href="@{/purchasing/purchase-requisitions}" class="btn btn-secondary">
+                                <i class="ti ti-arrow-left me-1"></i> Back to List
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -34,87 +43,131 @@
         <div class="page-body">
             <div class="container-xl">
 
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label text-secondary" th:text="#{label.pr.code}">Code</label>
-                                <div class="form-control-plaintext fw-bold" th:text="${pr.code}">PR-001</div>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label text-secondary" th:text="#{label.pr.requestDate}">Request Date</label>
-                                <div class="form-control-plaintext" th:text="${#temporals.format(pr.requestDate, 'dd MMM yyyy')}">01 Jul 2026</div>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label text-secondary" th:text="#{label.pr.priority}">Priority</label>
-                                <div class="form-control-plaintext">
-                                    <span class="badge"
-                                          th:classappend="${pr.priority.name() == 'LOW'} ? 'bg-secondary-lt' :
-                                                           (${pr.priority.name() == 'NORMAL'} ? 'bg-info-lt' :
-                                                           (${pr.priority.name() == 'HIGH'} ? 'bg-warning-lt' : 'bg-danger-lt'))"
-                                          th:text="${pr.priority}">NORMAL</span>
+                <!-- Approval Action Banner -->
+                <th:block th:if="${isCurrentApprover}">
+                    <div th:replace="~{fragments/approval :: approve-action-banner(${approvalRequestId}, ${currentPartyId})}"></div>
+                </th:block>
+
+                <div class="row row-cards">
+                    <!-- Left: Main Content -->
+                    <div th:classappend="${approvalRequestId != null} ? 'col-lg-8' : 'col-12'">
+
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.pr.code}">Code</label>
+                                        <div class="form-control-plaintext fw-bold" th:text="${pr.code}">PR-001</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.pr.requestDate}">Request Date</label>
+                                        <div class="form-control-plaintext" th:text="${#temporals.format(pr.requestDate, 'dd MMM yyyy')}">01 Jul 2026</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.pr.priority}">Priority</label>
+                                        <div class="form-control-plaintext">
+                                            <span class="badge"
+                                                  th:classappend="${pr.priority.name() == 'LOW'} ? 'bg-secondary-lt' :
+                                                                   (${pr.priority.name() == 'NORMAL'} ? 'bg-info-lt' :
+                                                                   (${pr.priority.name() == 'HIGH'} ? 'bg-warning-lt' : 'bg-danger-lt'))"
+                                                  th:text="${pr.priority}">NORMAL</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.pr.requester}">Requester</label>
+                                        <div class="form-control-plaintext" th:text="${pr.requesterName ?: '-'}">-</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.pr.facility}">Facility</label>
+                                        <div class="form-control-plaintext" th:text="${pr.facilityName ?: '-'}">-</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.pr.department}">Department</label>
+                                        <div class="form-control-plaintext" th:text="${pr.department ?: '-'}">-</div>
+                                    </div>
+                                    <div class="col-12" th:if="${pr.note != null && !pr.note.isEmpty()}">
+                                        <label class="form-label text-secondary" th:text="#{label.pr.note}">Note</label>
+                                        <div class="form-control-plaintext" th:text="${pr.note}">-</div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label text-secondary" th:text="#{label.pr.requester}">Requester</label>
-                                <div class="form-control-plaintext" th:text="${pr.requesterName ?: '-'}">-</div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title" th:text="#{label.pr.line.title}">Requisition Lines</h3>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label text-secondary" th:text="#{label.pr.facility}">Facility</label>
-                                <div class="form-control-plaintext" th:text="${pr.facilityName ?: '-'}">-</div>
+                            <div class="table-responsive">
+                                <table class="table table-vcenter card-table">
+                                    <thead>
+                                        <tr>
+                                            <th th:text="#{label.product}">Product</th>
+                                            <th class="text-end" th:text="#{label.qty}">Qty</th>
+                                            <th th:text="#{label.uom}">UoM</th>
+                                            <th th:text="#{label.pr.line.requiredDate}">Required Date</th>
+                                            <th class="text-end" th:text="#{label.pr.line.estimatedUnitPrice}">Est. Price</th>
+                                            <th th:text="#{label.pr.line.suggestedSupplier}">Supplier</th>
+                                            <th th:text="#{label.pr.line.note}">Note</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="line : ${pr.lines}">
+                                            <td th:text="${line.productName}">Product</td>
+                                            <td class="text-end" th:text="${#numbers.formatDecimal(line.quantity, 1, 'COMMA', 0, 'POINT')}">0</td>
+                                            <td th:text="${line.uomName}">UoM</td>
+                                            <td th:text="${line.requiredDate != null ? #temporals.format(line.requiredDate, 'dd MMM yyyy') : '-'}">-</td>
+                                            <td class="text-end" th:text="${line.estimatedUnitPrice != null ? #numbers.formatDecimal(line.estimatedUnitPrice, 1, 'COMMA', 2, 'POINT') : '-'}">-</td>
+                                            <td th:text="${line.supplierName ?: '-'}">-</td>
+                                            <td th:text="${line.note ?: '-'}">-</td>
+                                        </tr>
+                                        <tr th:if="${pr.lines == null || pr.lines.isEmpty()}">
+                                            <td colspan="7" class="text-center py-4 text-secondary">No lines.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label text-secondary" th:text="#{label.pr.department}">Department</label>
-                                <div class="form-control-plaintext" th:text="${pr.department ?: '-'}">-</div>
+                            <div class="card-footer">
+                                <div th:replace="~{fragments/audit-info :: audit-info(${pr})}"></div>
                             </div>
-                            <div class="col-12" th:if="${pr.note != null && !pr.note.isEmpty()}">
-                                <label class="form-label text-secondary" th:text="#{label.pr.note}">Note</label>
-                                <div class="form-control-plaintext" th:text="${pr.note}">-</div>
+                        </div>
+
+                    </div>
+
+                    <!-- Right: Approval Info -->
+                    <div class="col-lg-4" th:if="${approvalRequestId != null}">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title" th:text="#{label.approval.info}">Approval Info</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label text-muted" th:text="#{label.approval.status}">Status</label>
+                                    <div>
+                                        <span class="badge"
+                                              th:classappend="${approvalStatus.name() == 'PENDING'} ? 'bg-warning-lt' :
+                                                             (${approvalStatus.name() == 'APPROVED'} ? 'bg-success-lt' :
+                                                             (${approvalStatus.name() == 'REJECTED'} ? 'bg-danger-lt' : 'bg-secondary-lt'))"
+                                              th:text="${approvalStatus}">PENDING</span>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-white w-100"
+                                        onclick="ErpDrawer.open('drawer-approval-history')">
+                                    <i class="ti ti-history me-1"></i>
+                                    <span th:text="#{label.approval.history}">View History</span>
+                                </button>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title" th:text="#{label.pr.line.title}">Requisition Lines</h3>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-vcenter card-table">
-                            <thead>
-                                <tr>
-                                    <th th:text="#{label.product}">Product</th>
-                                    <th class="text-end" th:text="#{label.qty}">Qty</th>
-                                    <th th:text="#{label.uom}">UoM</th>
-                                    <th th:text="#{label.pr.line.requiredDate}">Required Date</th>
-                                    <th class="text-end" th:text="#{label.pr.line.estimatedUnitPrice}">Est. Price</th>
-                                    <th th:text="#{label.pr.line.suggestedSupplier}">Supplier</th>
-                                    <th th:text="#{label.pr.line.note}">Note</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="line : ${pr.lines}">
-                                    <td th:text="${line.productName}">Product</td>
-                                    <td class="text-end" th:text="${#numbers.formatDecimal(line.quantity, 1, 'COMMA', 0, 'POINT')}">0</td>
-                                    <td th:text="${line.uomName}">UoM</td>
-                                    <td th:text="${line.requiredDate != null ? #temporals.format(line.requiredDate, 'dd MMM yyyy') : '-'}">-</td>
-                                    <td class="text-end" th:text="${line.estimatedUnitPrice != null ? #numbers.formatDecimal(line.estimatedUnitPrice, 1, 'COMMA', 2, 'POINT') : '-'}">-</td>
-                                    <td th:text="${line.supplierName ?: '-'}">-</td>
-                                    <td th:text="${line.note ?: '-'}">-</td>
-                                </tr>
-                                <tr th:if="${pr.lines == null || pr.lines.isEmpty()}">
-                                    <td colspan="7" class="text-center py-4 text-secondary">No lines.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="card-footer">
-                        <div th:replace="~{fragments/audit-info :: audit-info(${pr})}"></div>
-                    </div>
                 </div>
 
             </div>
         </div>
+
+        <!-- Approval History Drawer -->
+        <th:block th:if="${approvalRequestId != null}">
+            <div th:replace="~{fragments/approval :: approval-history-drawer(${approvalRequestId})}"></div>
+        </th:block>
 
     </div>
 

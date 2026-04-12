@@ -7,6 +7,76 @@ document.addEventListener('DOMContentLoaded', function () {
     const emptyMsg = document.getElementById('empty-msg');
     const btnAddLine = document.getElementById('btn-add-line');
 
+    // === PO Type Toggle ===
+    const poTypeRadios = document.querySelectorAll('input[name="poType"]');
+    const prRefGroup = document.getElementById('pr-reference-group');
+
+    function togglePrReference() {
+        const selected = document.querySelector('input[name="poType"]:checked');
+        if (!selected || !prRefGroup) return;
+        if (selected.value === 'STANDARD') {
+            prRefGroup.style.display = '';
+            loadApprovedPrs();
+        } else {
+            prRefGroup.style.display = 'none';
+        }
+    }
+
+    function loadApprovedPrs() {
+        const supplierInput = document.querySelector('input[name="supplierId"]');
+        const supplierId = supplierInput ? supplierInput.value : '';
+        const selectEl = document.getElementById('select-pr-reference');
+        if (!selectEl) return;
+
+        let url = '/purchasing/purchase-requisitions/api/approved';
+        if (supplierId) url += '?supplierId=' + encodeURIComponent(supplierId);
+
+        fetch(url, {
+            headers: { 'Accept': 'application/json', [config.csrfHeader]: config.csrfToken }
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            const currentVal = selectEl.value;
+            // Keep first option
+            while (selectEl.options.length > 1) selectEl.remove(1);
+            data.forEach(function(item) {
+                var opt = document.createElement('option');
+                opt.value = item.id;
+                opt.textContent = item.text;
+                selectEl.appendChild(opt);
+            });
+            if (currentVal) selectEl.value = currentVal;
+        })
+        .catch(function() {});
+    }
+
+    poTypeRadios.forEach(function(radio) {
+        radio.addEventListener('change', togglePrReference);
+    });
+
+    // Re-load PR list when supplier changes
+    var supplierHiddenInput = document.querySelector('input[name="supplierId"]');
+    if (supplierHiddenInput) {
+        var observer = new MutationObserver(function() {
+            var selected = document.querySelector('input[name="poType"]:checked');
+            if (selected && selected.value === 'STANDARD') loadApprovedPrs();
+        });
+        observer.observe(supplierHiddenInput, { attributes: true, attributeFilter: ['value'] });
+        // Also listen for input event from TomSelect
+        supplierHiddenInput.addEventListener('change', function() {
+            var selected = document.querySelector('input[name="poType"]:checked');
+            if (selected && selected.value === 'STANDARD') loadApprovedPrs();
+        });
+    }
+
+    // Initial toggle
+    if (config.poType === 'STANDARD') {
+        var stdRadio = document.getElementById('po-type-standard');
+        if (stdRadio) stdRadio.checked = true;
+    }
+    togglePrReference();
+
+    // === Line Management ===
     function getNextIndex() {
         const rows = lineContainer.querySelectorAll('.line-row');
         let maxIndex = -1;
@@ -29,11 +99,11 @@ document.addEventListener('DOMContentLoaded', function () {
         var priceInput = row.querySelector('.input-unit-price');
         var taxRateInput = row.querySelector('.input-tax-rate');
 
-        if (!qtyInput || !priceInput || !taxRateInput) return;
+        if (!qtyInput || !priceInput) return;
 
         var qty = parseFloat((qtyInput.value || '0').replace(/,/g, '')) || 0;
         var price = parseFloat((priceInput.value || '0').replace(/,/g, '')) || 0;
-        var taxRate = parseFloat((taxRateInput.value || '0').replace(/,/g, '')) || 0;
+        var taxRate = taxRateInput ? (parseFloat((taxRateInput.value || '0').replace(/,/g, '')) || 0) : 0;
 
         var subtotal = qty * price;
         var tax = subtotal * taxRate;
@@ -48,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (totalInput) totalInput.value = total.toFixed(2);
 
         // Update AutoNumeric if present
-        [subtotalInput, taxInput, totalInput].forEach(function(input) {
+        [totalInput].forEach(function(input) {
             if (input && typeof AutoNumeric !== 'undefined') {
                 var an = AutoNumeric.getAutoNumericElement(input);
                 if (an) an.set(input.value);
@@ -58,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Attach recalculation to existing rows
     lineContainer.querySelectorAll('.line-row').forEach(function(row) {
-        row.querySelectorAll('.input-qty, .input-unit-price, .input-tax-rate').forEach(function(input) {
+        row.querySelectorAll('.input-qty, .input-unit-price').forEach(function(input) {
             input.addEventListener('input', function() { recalculateLineRow(row); });
             input.addEventListener('change', function() { recalculateLineRow(row); });
         });
@@ -73,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             newRow.innerHTML = newRow.innerHTML.replace(/INDEX/g, index);
 
-            // Remove stale TomSelect markup from cloned row so it can be re-initialized
+            // Remove stale TomSelect markup from cloned row
             newRow.querySelectorAll('.ts-wrapper').forEach(function(w) { w.remove(); });
             newRow.querySelectorAll('select.tomselect-initialized').forEach(function(s) {
                 s.classList.remove('tomselect-initialized', 'tomselected', 'ts-hidden-accessible');
@@ -83,25 +153,103 @@ document.addEventListener('DOMContentLoaded', function () {
             lineContainer.appendChild(newRow);
             updateEmptyMessage();
 
-            // Re-initialize autocomplete on new row
             if (window.ERP && window.ERP.initAutocompleteInContainer) {
                 window.ERP.initAutocompleteInContainer(newRow);
             }
-
-            // Re-initialize numeric inputs on new row
             if (typeof initNumericInputs === 'function') {
                 initNumericInputs(newRow);
             }
 
-            // Attach recalculation to new row
-            newRow.querySelectorAll('.input-qty, .input-unit-price, .input-tax-rate').forEach(function(input) {
+            newRow.querySelectorAll('.input-qty, .input-unit-price').forEach(function(input) {
                 input.addEventListener('input', function() { recalculateLineRow(newRow); });
                 input.addEventListener('change', function() { recalculateLineRow(newRow); });
             });
         });
     }
 
+    // === Line Drawer ===
+    var drawerEl = document.getElementById('drawer-line-detail');
+    var drawerInstance = null;
+    var activeRow = null;
+
+    function openLineDrawer(row) {
+        activeRow = row;
+        if (!drawerEl) return;
+
+        var taxRateInput = row.querySelector('.input-tax-rate');
+        var noteInput = row.querySelector('.input-note');
+
+        document.getElementById('drawer-tax-rate').value = taxRateInput ? taxRateInput.value : '0.00';
+        document.getElementById('drawer-note').value = noteInput ? noteInput.value : '';
+
+        recalcDrawerTotals(row);
+
+        if (!drawerInstance) {
+            drawerInstance = new bootstrap.Offcanvas(drawerEl);
+        }
+        drawerInstance.show();
+
+        if (typeof initNumericInputs === 'function') {
+            initNumericInputs(drawerEl);
+        }
+    }
+
+    function recalcDrawerTotals(row) {
+        var qtyInput = row.querySelector('.input-qty');
+        var priceInput = row.querySelector('.input-unit-price');
+        var drawerTaxRate = document.getElementById('drawer-tax-rate');
+
+        var qty = parseFloat((qtyInput ? qtyInput.value : '0').replace(/,/g, '')) || 0;
+        var price = parseFloat((priceInput ? priceInput.value : '0').replace(/,/g, '')) || 0;
+        var taxRate = parseFloat((drawerTaxRate ? drawerTaxRate.value : '0').replace(/,/g, '')) || 0;
+
+        var subtotal = qty * price;
+        var tax = subtotal * taxRate;
+        var total = subtotal + tax;
+
+        document.getElementById('drawer-subtotal').textContent = subtotal.toFixed(2);
+        document.getElementById('drawer-tax').textContent = tax.toFixed(2);
+        document.getElementById('drawer-total').textContent = total.toFixed(2);
+    }
+
+    if (drawerEl) {
+        var drawerTaxInput = document.getElementById('drawer-tax-rate');
+        if (drawerTaxInput) {
+            drawerTaxInput.addEventListener('input', function() {
+                if (activeRow) recalcDrawerTotals(activeRow);
+            });
+            drawerTaxInput.addEventListener('change', function() {
+                if (activeRow) recalcDrawerTotals(activeRow);
+            });
+        }
+    }
+
+    var btnSaveDrawer = document.getElementById('btn-save-drawer');
+    if (btnSaveDrawer) {
+        btnSaveDrawer.addEventListener('click', function() {
+            if (!activeRow) return;
+
+            var taxRateInput = activeRow.querySelector('.input-tax-rate');
+            var noteInput = activeRow.querySelector('.input-note');
+
+            if (taxRateInput) taxRateInput.value = document.getElementById('drawer-tax-rate').value;
+            if (noteInput) noteInput.value = document.getElementById('drawer-note').value;
+
+            recalculateLineRow(activeRow);
+
+            if (drawerInstance) drawerInstance.hide();
+            activeRow = null;
+        });
+    }
+
+    // Delegate edit + remove clicks
     lineContainer.addEventListener('click', function (e) {
+        var editBtn = e.target.closest('.btn-edit-line');
+        if (editBtn) {
+            var row = editBtn.closest('.line-row');
+            if (row) openLineDrawer(row);
+            return;
+        }
         var btn = e.target.closest('.btn-remove-line');
         if (btn) {
             var row = btn.closest('.line-row');
@@ -112,7 +260,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Submit for Approval handler
+    // === Submit for Approval handler ===
     var btnSubmitPo = document.getElementById('btn-submit-po');
     if (btnSubmitPo) {
         btnSubmitPo.addEventListener('click', function () {

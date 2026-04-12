@@ -25,6 +25,7 @@ public class PurchaseOrder {
     private PurchaseOrderStatus status;
     private int paymentTermDays;
     private final Long prId;
+    private final PurchaseOrderType poType;
     private String note;
     private boolean active;
     private List<PurchaseOrderLine> lines;
@@ -35,7 +36,7 @@ public class PurchaseOrder {
                           BigDecimal exchangeRate,
                           BigDecimal subtotal, BigDecimal taxAmount, BigDecimal totalAmount,
                           PurchaseOrderStatus status,
-                          int paymentTermDays, Long prId,
+                          int paymentTermDays, Long prId, PurchaseOrderType poType,
                           String note, boolean active,
                           List<PurchaseOrderLine> lines) {
         this.metadata = metadata;
@@ -52,6 +53,7 @@ public class PurchaseOrder {
         this.status = status;
         this.paymentTermDays = paymentTermDays;
         this.prId = prId;
+        this.poType = poType != null ? poType : PurchaseOrderType.DIRECT;
         this.note = note;
         this.active = active;
         this.lines = lines != null ? new ArrayList<>(lines) : new ArrayList<>();
@@ -62,17 +64,19 @@ public class PurchaseOrder {
                                            Long supplierId, Long facilityId,
                                            Long currencyId, BigDecimal exchangeRate,
                                            int paymentTermDays, Long prId,
+                                           PurchaseOrderType poType,
                                            String note,
                                            List<PurchaseOrderLine> lines) {
         validateExchangeRate(exchangeRate);
         validateExpectedDate(orderDate, expectedDate);
+        validatePoType(poType, prId);
 
         PurchaseOrder po = new PurchaseOrder(
             AuditMetadata.empty(), code, orderDate, expectedDate,
             supplierId, facilityId, currencyId, exchangeRate,
             BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
             PurchaseOrderStatus.DRAFT,
-            paymentTermDays, prId, note, true,
+            paymentTermDays, prId, poType, note, true,
             lines
         );
         po.recalculateTotals();
@@ -158,6 +162,12 @@ public class PurchaseOrder {
         }
     }
 
+    private static void validatePoType(PurchaseOrderType poType, Long prId) {
+        if (PurchaseOrderType.STANDARD == poType && prId == null) {
+            throw new DomainException("msg.error.po.standard.pr.required");
+        }
+    }
+
     public Long getId() { return metadata.id(); }
     public AuditMetadata getMetadata() { return metadata; }
     public String getCode() { return code; }
@@ -173,6 +183,7 @@ public class PurchaseOrder {
     public PurchaseOrderStatus getStatus() { return status; }
     public int getPaymentTermDays() { return paymentTermDays; }
     public Long getPrId() { return prId; }
+    public PurchaseOrderType getPoType() { return poType; }
     public String getNote() { return note; }
     public boolean isActive() { return active; }
     public List<PurchaseOrderLine> getLines() { return Collections.unmodifiableList(lines); }

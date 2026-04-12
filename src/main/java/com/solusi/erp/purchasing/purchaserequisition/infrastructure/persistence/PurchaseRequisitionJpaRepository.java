@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -26,4 +27,13 @@ public interface PurchaseRequisitionJpaRepository extends JpaRepository<Purchase
     @Query(value = "SELECT DISTINCT p FROM PurchaseRequisitionEntity p LEFT JOIN FETCH p.lines",
            countQuery = "SELECT COUNT(p) FROM PurchaseRequisitionEntity p")
     Page<PurchaseRequisitionEntity> findAllWithLines(Pageable pageable);
+
+    @Query("SELECT DISTINCT p FROM PurchaseRequisitionEntity p JOIN p.lines l " +
+           "WHERE p.status = com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisitionStatus.APPROVED " +
+           "AND l.suggestedSupplierId = :supplierId")
+    List<PurchaseRequisitionEntity> findApprovedBySupplier(@Param("supplierId") Long supplierId);
+
+    @Query("SELECT DISTINCT p FROM PurchaseRequisitionEntity p " +
+           "WHERE p.status = com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisitionStatus.APPROVED")
+    List<PurchaseRequisitionEntity> findAllApproved();
 }

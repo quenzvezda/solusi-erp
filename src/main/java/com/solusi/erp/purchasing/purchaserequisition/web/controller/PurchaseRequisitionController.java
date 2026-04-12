@@ -1,5 +1,8 @@
 package com.solusi.erp.purchasing.purchaserequisition.web.controller;
 
+import com.solusi.erp.common.approval.domain.model.ApprovalRequest;
+import com.solusi.erp.common.approval.domain.model.ApprovalStatus;
+import com.solusi.erp.common.approval.domain.repository.ApprovalRequestRepository;
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
@@ -9,8 +12,10 @@ import com.solusi.erp.purchasing.purchaserequisition.application.usecase.query.*
 import com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisition;
 import com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisitionPriority;
 import com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisitionStatus;
+import com.solusi.erp.purchasing.purchaserequisition.infrastructure.persistence.PurchaseRequisitionJpaRepository;
 import com.solusi.erp.purchasing.purchaserequisition.web.dto.*;
 import com.solusi.erp.purchasing.purchaserequisition.web.mapper.PurchaseRequisitionWebMapper;
+import com.solusi.erp.security.shared.model.SecurityUser;
 import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,12 +26,16 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
@@ -42,6 +51,8 @@ public class PurchaseRequisitionController {
     private final CancelPurchaseRequisitionUseCase cancelPurchaseRequisitionUseCase;
     private final FindPurchaseRequisitionsUseCase findPurchaseRequisitionsUseCase;
     private final GetPurchaseRequisitionEditViewUseCase getPurchaseRequisitionEditViewUseCase;
+    private final ApprovalRequestRepository approvalRequestRepository;
+    private final PurchaseRequisitionJpaRepository purchaseRequisitionJpaRepository;
     private final PurchaseRequisitionWebMapper webMapper;
     private final MessageSource messageSource;
 
@@ -154,10 +165,50 @@ public class PurchaseRequisitionController {
 
     @GetMapping("/view/{id}")
     @PreAuthorize("hasAuthority('PR_READ')")
-    public String view(@PathVariable Long id, Model model) {
+    public String view(@PathVariable Long id, Model model,
+                       @AuthenticationPrincipal UserDetails principal) {
         PurchaseRequisition domain = getPurchaseRequisitionEditViewUseCase.execute(id)
             .orElseThrow(() -> new RuntimeException("Purchase requisition not found"));
         model.addAttribute("pr", webMapper.toDetailResponse(domain));
+
+        Optional<ApprovalRequest> approvalRequest =
+            approvalRequestRepository.findByReference("PURCHASE_REQUISITION", id);
+        approvalRequest.ifPresent(req -> {
+            model.addAttribute("approvalRequestId", req.getId());
+            model.addAttribute("approvalStatus", req.getStatus());
+            boolean isCurrentApprover = false;
+            if (principal instanceof SecurityUser securityUser) {
+                Long partyId = securityUser.user().getPartyId();
+                isCurrentApprover = partyId != null && partyId.equals(req.getCurrentApproverId())
+                        && req.getStatus() == ApprovalStatus.PENDING;
+                model.addAttribute("currentPartyId", partyId);
+            }
+            model.addAttribute("isCurrentApprover", isCurrentApprover);
+        });
+
         return "purchasing/purchase-requisitions/view";
     }
+
+    /**
+     * Lookup endpoint: returns approved PRs optionally filtered by supplier.
+     * Used by STANDARD PO type to show only approved PRs matching the selected supplier.
+     */
+    @GetMapping("/api/approved")
+    @PreAuthorize("hasAuthority('PR_READ')")
+    @ResponseBody
+    public ResponseEntity<List<Map<String, Object>>> findApprovedPrs(
+            @RequestParam(required = false) Long supplierId) {
+        var results = supplierId != null
+            ? purchaseRequisitionJpaRepository.findApprovedBySupplier(supplierId)
+            : purchaseRequisitionJpaRepository.findAllApproved();
+
+        List<Map<String, Object>> response = results.stream()
+            .map(entity -> Map.<String, Object>of(
+                "id", entity.getId(),
+                "text", entity.getCode() + " (" + entity.getRequestDate() + ")"
+            ))
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
+    }
 }
+

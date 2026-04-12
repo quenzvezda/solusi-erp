@@ -2,6 +2,7 @@ package com.solusi.erp.purchasing.purchaseorder.infrastructure.persistence;
 
 import com.solusi.erp.core.model.BaseModel;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderStatus;
+import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -56,6 +57,10 @@ public class PurchaseOrderEntity extends BaseModel {
 
     @Column(name = "pr_id")
     private Long prId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "po_type", nullable = false, length = 10)
+    private PurchaseOrderType poType = PurchaseOrderType.DIRECT;
 
     @Column(columnDefinition = "TEXT")
     private String note;

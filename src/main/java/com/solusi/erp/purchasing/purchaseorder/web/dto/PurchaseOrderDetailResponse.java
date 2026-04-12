@@ -2,6 +2,7 @@ package com.solusi.erp.purchasing.purchaseorder.web.dto;
 
 import com.solusi.erp.core.dto.BaseAuditResponse;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderStatus;
+import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -30,6 +31,7 @@ public class PurchaseOrderDetailResponse extends BaseAuditResponse {
     private PurchaseOrderStatus status;
     private int paymentTermDays;
     private Long prId;
+    private PurchaseOrderType poType;
     private String note;
     private List<PurchaseOrderLineResponse> lines;
 }

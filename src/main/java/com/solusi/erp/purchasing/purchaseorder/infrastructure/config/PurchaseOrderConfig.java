@@ -1,6 +1,7 @@
 package com.solusi.erp.purchasing.purchaseorder.infrastructure.config;
 
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
+import com.solusi.erp.purchasing.purchaserequisition.domain.repository.PurchaseRequisitionRepository;
 import com.solusi.erp.purchasing.purchaseorder.application.usecase.command.*;
 import com.solusi.erp.purchasing.purchaseorder.application.usecase.query.*;
 import com.solusi.erp.purchasing.purchaseorder.domain.port.PurchaseOrderEventPublisher;
@@ -27,14 +28,15 @@ public class PurchaseOrderConfig {
     public CreatePurchaseOrderUseCase createPurchaseOrderUseCase(
             PurchaseOrderRepository purchaseOrderDomainRepository,
             SequenceGeneratorService sequenceGeneratorService,
+            PurchaseRequisitionRepository purchaseRequisitionRepository,
             PlatformTransactionManager txManager) {
         CreatePurchaseOrderUseCase pure = new CreatePurchaseOrderUseCaseImpl(
-            purchaseOrderDomainRepository, sequenceGeneratorService);
+            purchaseOrderDomainRepository, sequenceGeneratorService, purchaseRequisitionRepository);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         return (orderDate, expectedDate, supplierId, facilityId, currencyId,
-                exchangeRate, paymentTermDays, prId, note, lines) ->
+                exchangeRate, paymentTermDays, prId, poType, note, lines) ->
             tx.execute(status -> pure.execute(orderDate, expectedDate, supplierId,
-                facilityId, currencyId, exchangeRate, paymentTermDays, prId, note, lines));
+                facilityId, currencyId, exchangeRate, paymentTermDays, prId, poType, note, lines));
     }
 
     @Bean
@@ -114,3 +116,4 @@ public class PurchaseOrderConfig {
         return (id) -> tx.execute(status -> pure.execute(id));
     }
 }
+

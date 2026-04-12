@@ -14,6 +14,9 @@
                         <h2 class="page-title">
                             <span th:text="${po.code}">PO-001</span>
                             <span class="badge ms-2"
+                                  th:classappend="${po.poType != null && po.poType.name() == 'STANDARD'} ? 'bg-purple-lt' : 'bg-blue-lt'"
+                                  th:text="${po.poType != null ? #messages.msg('label.po.type.' + po.poType.name()) : 'Direct'}">Direct</span>
+                            <span class="badge ms-2"
                                   th:classappend="${po.status.name() == 'DRAFT'} ? 'bg-secondary-lt' :
                                                    (${po.status.name() == 'SUBMITTED'} ? 'bg-info-lt' :
                                                    (${po.status.name() == 'APPROVED'} ? 'bg-success-lt' :
@@ -28,9 +31,18 @@
                         </h2>
                     </div>
                     <div class="col-auto ms-auto d-print-none">
-                        <a th:href="@{/purchasing/purchase-orders}" class="btn btn-secondary">
-                            <i class="ti ti-arrow-left me-1"></i> Back to List
-                        </a>
+                        <div class="btn-list">
+                            <button th:if="${approvalRequestId != null}"
+                                    type="button"
+                                    class="btn btn-white"
+                                    onclick="ErpDrawer.open('drawer-approval-history')">
+                                <i class="ti ti-history me-1"></i>
+                                <span th:text="#{label.approval.history}">Approval History</span>
+                            </button>
+                            <a th:href="@{/purchasing/purchase-orders}" class="btn btn-secondary">
+                                <i class="ti ti-arrow-left me-1"></i> Back to List
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -39,115 +51,159 @@
         <div class="page-body">
             <div class="container-xl">
 
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label text-secondary" th:text="#{label.po.code}">Code</label>
-                                <div class="form-control-plaintext fw-bold" th:text="${po.code}">PO-001</div>
+                <!-- Approval Action Banner -->
+                <th:block th:if="${isCurrentApprover}">
+                    <div th:replace="~{fragments/approval :: approve-action-banner(${approvalRequestId}, ${currentPartyId})}"></div>
+                </th:block>
+
+                <div class="row row-cards">
+                    <!-- Left: Main Content -->
+                    <div th:classappend="${approvalRequestId != null} ? 'col-lg-8' : 'col-12'">
+
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.po.code}">Code</label>
+                                        <div class="form-control-plaintext fw-bold" th:text="${po.code}">PO-001</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.po.orderDate}">Order Date</label>
+                                        <div class="form-control-plaintext" th:text="${#temporals.format(po.orderDate, 'dd MMM yyyy')}">01 Jul 2026</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.po.expectedDate}">Expected Date</label>
+                                        <div class="form-control-plaintext" th:text="${po.expectedDate != null ? #temporals.format(po.expectedDate, 'dd MMM yyyy') : '-'}">-</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.po.supplier}">Supplier</label>
+                                        <div class="form-control-plaintext" th:text="${po.supplierName ?: '-'}">-</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.po.facility}">Facility</label>
+                                        <div class="form-control-plaintext" th:text="${po.facilityName ?: '-'}">-</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.po.currency}">Currency</label>
+                                        <div class="form-control-plaintext" th:text="${po.currencyName ?: '-'}">-</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.po.exchangeRate}">Exchange Rate</label>
+                                        <div class="form-control-plaintext" th:text="${po.exchangeRate != null ? #numbers.formatDecimal(po.exchangeRate, 1, 'COMMA', 4, 'POINT') : '-'}">1.0000</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.po.paymentTermDays}">Payment Terms (Days)</label>
+                                        <div class="form-control-plaintext" th:text="${po.paymentTermDays}">30</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        &nbsp;
+                                    </div>
+                                    <div class="col-12" th:if="${po.note != null && !po.note.isEmpty()}">
+                                        <label class="form-label text-secondary" th:text="#{label.po.note}">Note</label>
+                                        <div class="form-control-plaintext" th:text="${po.note}">-</div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label text-secondary" th:text="#{label.po.orderDate}">Order Date</label>
-                                <div class="form-control-plaintext" th:text="${#temporals.format(po.orderDate, 'dd MMM yyyy')}">01 Jul 2026</div>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row g-3 text-center">
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.po.subtotal}">Subtotal</label>
+                                        <div class="form-control-plaintext fw-bold fs-4" th:text="${po.subtotal != null ? #numbers.formatDecimal(po.subtotal, 1, 'COMMA', 2, 'POINT') : '0.00'}">0.00</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.po.taxAmount}">Tax</label>
+                                        <div class="form-control-plaintext fw-bold fs-4" th:text="${po.taxAmount != null ? #numbers.formatDecimal(po.taxAmount, 1, 'COMMA', 2, 'POINT') : '0.00'}">0.00</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.po.totalAmount}">Total</label>
+                                        <div class="form-control-plaintext fw-bold fs-3 text-primary" th:text="${po.totalAmount != null ? #numbers.formatDecimal(po.totalAmount, 1, 'COMMA', 2, 'POINT') : '0.00'}">0.00</div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label text-secondary" th:text="#{label.po.expectedDate}">Expected Date</label>
-                                <div class="form-control-plaintext" th:text="${po.expectedDate != null ? #temporals.format(po.expectedDate, 'dd MMM yyyy') : '-'}">-</div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title" th:text="#{label.po.line.title}">Order Lines</h3>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label text-secondary" th:text="#{label.po.supplier}">Supplier</label>
-                                <div class="form-control-plaintext" th:text="${po.supplierName ?: '-'}">-</div>
+                            <div class="table-responsive">
+                                <table class="table table-vcenter card-table">
+                                    <thead>
+                                        <tr>
+                                            <th th:text="#{label.product}">Product</th>
+                                            <th class="text-end" th:text="#{label.qty}">Qty</th>
+                                            <th th:text="#{label.uom}">UoM</th>
+                                            <th class="text-end" th:text="#{label.po.line.unitPrice}">Unit Price</th>
+                                            <th class="text-end" th:text="#{label.po.line.taxRate}">Tax Rate</th>
+                                            <th class="text-end" th:text="#{label.po.line.subtotal}">Subtotal</th>
+                                            <th class="text-end" th:text="#{label.po.line.tax}">Tax</th>
+                                            <th class="text-end" th:text="#{label.po.line.total}">Total</th>
+                                            <th th:text="#{label.po.line.note}">Note</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="line : ${po.lines}">
+                                            <td th:text="${line.productName}">Product</td>
+                                            <td class="text-end" th:text="${#numbers.formatDecimal(line.quantity, 1, 'COMMA', 0, 'POINT')}">0</td>
+                                            <td th:text="${line.uomName}">UoM</td>
+                                            <td class="text-end" th:text="${line.unitPrice != null ? #numbers.formatDecimal(line.unitPrice, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                            <td class="text-end" th:text="${line.taxRate != null ? #numbers.formatDecimal(line.taxRate, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                            <td class="text-end" th:text="${line.lineSubtotal != null ? #numbers.formatDecimal(line.lineSubtotal, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                            <td class="text-end" th:text="${line.lineTax != null ? #numbers.formatDecimal(line.lineTax, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                            <td class="text-end fw-bold" th:text="${line.lineTotal != null ? #numbers.formatDecimal(line.lineTotal, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                            <td th:text="${line.note ?: '-'}">-</td>
+                                        </tr>
+                                        <tr th:if="${po.lines == null || po.lines.isEmpty()}">
+                                            <td colspan="9" class="text-center py-4 text-secondary">No lines.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label text-secondary" th:text="#{label.po.facility}">Facility</label>
-                                <div class="form-control-plaintext" th:text="${po.facilityName ?: '-'}">-</div>
+                            <div class="card-footer">
+                                <div th:replace="~{fragments/audit-info :: audit-info(${po})}"></div>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label text-secondary" th:text="#{label.po.currency}">Currency</label>
-                                <div class="form-control-plaintext" th:text="${po.currencyName ?: '-'}">-</div>
+                        </div>
+
+                    </div>
+
+                    <!-- Right: Approval Info (only when approval exists) -->
+                    <div class="col-lg-4" th:if="${approvalRequestId != null}">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title" th:text="#{label.approval.info}">Approval Info</h3>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label text-secondary" th:text="#{label.po.exchangeRate}">Exchange Rate</label>
-                                <div class="form-control-plaintext" th:text="${po.exchangeRate != null ? #numbers.formatDecimal(po.exchangeRate, 1, 'COMMA', 4, 'POINT') : '-'}">1.0000</div>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label text-secondary" th:text="#{label.po.paymentTermDays}">Payment Terms (Days)</label>
-                                <div class="form-control-plaintext" th:text="${po.paymentTermDays}">30</div>
-                            </div>
-                            <div class="col-md-4">
-                                &nbsp;
-                            </div>
-                            <div class="col-12" th:if="${po.note != null && !po.note.isEmpty()}">
-                                <label class="form-label text-secondary" th:text="#{label.po.note}">Note</label>
-                                <div class="form-control-plaintext" th:text="${po.note}">-</div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label text-muted" th:text="#{label.approval.status}">Status</label>
+                                    <div>
+                                        <span class="badge"
+                                              th:classappend="${approvalStatus.name() == 'PENDING'} ? 'bg-warning-lt' :
+                                                             (${approvalStatus.name() == 'APPROVED'} ? 'bg-success-lt' :
+                                                             (${approvalStatus.name() == 'REJECTED'} ? 'bg-danger-lt' : 'bg-secondary-lt'))"
+                                              th:text="${approvalStatus}">PENDING</span>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-white w-100"
+                                        onclick="ErpDrawer.open('drawer-approval-history')">
+                                    <i class="ti ti-history me-1"></i>
+                                    <span th:text="#{label.approval.history}">View History</span>
+                                </button>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <div class="row g-3 text-center">
-                            <div class="col-md-4">
-                                <label class="form-label text-secondary" th:text="#{label.po.subtotal}">Subtotal</label>
-                                <div class="form-control-plaintext fw-bold fs-4" th:text="${po.subtotal != null ? #numbers.formatDecimal(po.subtotal, 1, 'COMMA', 2, 'POINT') : '0.00'}">0.00</div>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label text-secondary" th:text="#{label.po.taxAmount}">Tax</label>
-                                <div class="form-control-plaintext fw-bold fs-4" th:text="${po.taxAmount != null ? #numbers.formatDecimal(po.taxAmount, 1, 'COMMA', 2, 'POINT') : '0.00'}">0.00</div>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label text-secondary" th:text="#{label.po.totalAmount}">Total</label>
-                                <div class="form-control-plaintext fw-bold fs-3 text-primary" th:text="${po.totalAmount != null ? #numbers.formatDecimal(po.totalAmount, 1, 'COMMA', 2, 'POINT') : '0.00'}">0.00</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title" th:text="#{label.po.line.title}">Order Lines</h3>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-vcenter card-table">
-                            <thead>
-                                <tr>
-                                    <th th:text="#{label.product}">Product</th>
-                                    <th class="text-end" th:text="#{label.qty}">Qty</th>
-                                    <th th:text="#{label.uom}">UoM</th>
-                                    <th class="text-end" th:text="#{label.po.line.unitPrice}">Unit Price</th>
-                                    <th class="text-end" th:text="#{label.po.line.taxRate}">Tax Rate</th>
-                                    <th class="text-end" th:text="#{label.po.line.subtotal}">Subtotal</th>
-                                    <th class="text-end" th:text="#{label.po.line.tax}">Tax</th>
-                                    <th class="text-end" th:text="#{label.po.line.total}">Total</th>
-                                    <th th:text="#{label.po.line.note}">Note</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="line : ${po.lines}">
-                                    <td th:text="${line.productName}">Product</td>
-                                    <td class="text-end" th:text="${#numbers.formatDecimal(line.quantity, 1, 'COMMA', 0, 'POINT')}">0</td>
-                                    <td th:text="${line.uomName}">UoM</td>
-                                    <td class="text-end" th:text="${line.unitPrice != null ? #numbers.formatDecimal(line.unitPrice, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
-                                    <td class="text-end" th:text="${line.taxRate != null ? #numbers.formatDecimal(line.taxRate, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
-                                    <td class="text-end" th:text="${line.lineSubtotal != null ? #numbers.formatDecimal(line.lineSubtotal, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
-                                    <td class="text-end" th:text="${line.lineTax != null ? #numbers.formatDecimal(line.lineTax, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
-                                    <td class="text-end fw-bold" th:text="${line.lineTotal != null ? #numbers.formatDecimal(line.lineTotal, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
-                                    <td th:text="${line.note ?: '-'}">-</td>
-                                </tr>
-                                <tr th:if="${po.lines == null || po.lines.isEmpty()}">
-                                    <td colspan="9" class="text-center py-4 text-secondary">No lines.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="card-footer">
-                        <div th:replace="~{fragments/audit-info :: audit-info(${po})}"></div>
-                    </div>
                 </div>
 
             </div>
         </div>
+
+        <!-- Approval History Drawer -->
+        <th:block th:if="${approvalRequestId != null}">
+            <div th:replace="~{fragments/approval :: approval-history-drawer(${approvalRequestId})}"></div>
+        </th:block>
 
     </div>
 

@@ -1,9 +1,13 @@
 package com.solusi.erp.purchasing.purchaseorder.application.usecase.command;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
+import com.solusi.erp.core.exception.DomainException;
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
+import com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisitionStatus;
+import com.solusi.erp.purchasing.purchaserequisition.domain.repository.PurchaseRequisitionRepository;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrder;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderLine;
+import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderType;
 import com.solusi.erp.purchasing.purchaseorder.domain.repository.PurchaseOrderRepository;
 
 import java.math.BigDecimal;
@@ -14,18 +18,32 @@ public class CreatePurchaseOrderUseCaseImpl implements CreatePurchaseOrderUseCas
 
     private final PurchaseOrderRepository repository;
     private final SequenceGeneratorService sequenceGeneratorService;
+    private final PurchaseRequisitionRepository purchaseRequisitionRepository;
 
     public CreatePurchaseOrderUseCaseImpl(PurchaseOrderRepository repository,
-                                          SequenceGeneratorService sequenceGeneratorService) {
+                                          SequenceGeneratorService sequenceGeneratorService,
+                                          PurchaseRequisitionRepository purchaseRequisitionRepository) {
         this.repository = repository;
         this.sequenceGeneratorService = sequenceGeneratorService;
+        this.purchaseRequisitionRepository = purchaseRequisitionRepository;
     }
 
     @Override
     public PurchaseOrder execute(LocalDate orderDate, LocalDate expectedDate,
                                   Long supplierId, Long facilityId, Long currencyId,
                                   BigDecimal exchangeRate, int paymentTermDays,
-                                  Long prId, String note, List<PoLineInput> lines) {
+                                  Long prId, PurchaseOrderType poType, String note, List<PoLineInput> lines) {
+        if (PurchaseOrderType.STANDARD == poType) {
+            if (prId == null) {
+                throw new DomainException("msg.error.po.standard.pr.required");
+            }
+            var pr = purchaseRequisitionRepository.findById(prId)
+                .orElseThrow(() -> new DomainException("msg.error.po.standard.pr.not.found"));
+            if (pr.getStatus() != PurchaseRequisitionStatus.APPROVED) {
+                throw new DomainException("msg.error.po.standard.pr.not.approved");
+            }
+        }
+
         String code = sequenceGeneratorService.generate("PO");
 
         List<PurchaseOrderLine> domainLines = lines != null
@@ -34,7 +52,7 @@ public class CreatePurchaseOrderUseCaseImpl implements CreatePurchaseOrderUseCas
 
         PurchaseOrder po = PurchaseOrder.createNew(
                 code, orderDate, expectedDate, supplierId, facilityId,
-                currencyId, exchangeRate, paymentTermDays, prId, note, domainLines
+                currencyId, exchangeRate, paymentTermDays, prId, poType, note, domainLines
         );
         return repository.save(po);
     }
