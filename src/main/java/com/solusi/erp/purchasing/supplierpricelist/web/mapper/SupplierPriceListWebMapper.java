@@ -60,7 +60,10 @@ public abstract class SupplierPriceListWebMapper {
     @Named("getSupplierName")
     protected String getSupplierName(Long id) {
         if (id == null) return null;
-        return partyRepository.findById(id).map(p -> p.getName()).orElse(null);
+        return partyRepository.findById(id).map(p -> {
+            String sal = p.getSalutation();
+            return (sal != null && !sal.isBlank()) ? sal + " " + p.getName() : p.getName();
+        }).orElse(null);
     }
 
     @Named("getProductName")
