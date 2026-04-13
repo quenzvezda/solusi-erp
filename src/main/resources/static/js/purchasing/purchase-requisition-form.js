@@ -56,8 +56,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!uomSelect || !uomSelect.tomselect) return;
 
                 if (!value) {
-                    uomSelect.tomselect.enable();
-                    uomSelect.tomselect.clear();
+                    const uomTs = uomSelect.tomselect;
+                    uomTs.clear();
+                    // Re-enable UoM visually
+                    uomTs.control.style.pointerEvents = 'auto';
+                    uomTs.control.style.opacity = '1';
                     return;
                 }
 
@@ -71,7 +74,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     uomTs.setValue(uomIdStr);
                     uomSelect.value = uomIdStr;
-                    uomTs.disable();
+                    // Lock UoM visually without disabling the underlying select (so form submission includes it)
+                    uomTs.control.style.pointerEvents = 'none';
+                    uomTs.control.style.opacity = '0.6';
                 } else {
                     // No payload yet — fetch from API
                     fetch('/api/lookup/inventory/products/' + encodeURIComponent(value))
@@ -86,7 +91,9 @@ document.addEventListener('DOMContentLoaded', function () {
                                 }
                                 uomTs.setValue(uomIdStr);
                                 uomSelect.value = uomIdStr;
-                                uomTs.disable();
+                                // Lock UoM visually without disabling the underlying select (so form submission includes it)
+                                uomTs.control.style.pointerEvents = 'none';
+                                uomTs.control.style.opacity = '0.6';
                             }
                         })
                         .catch(function () {});
