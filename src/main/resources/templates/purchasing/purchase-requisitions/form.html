@@ -71,6 +71,13 @@
                                             <div th:replace="~{fragments/inputs :: autocomplete(field='suggestedSupplierId', label=#{label.pr.suggestedSupplier}, placeholder='', isReadonly=${isLocked}, id='header-supplier', path='parties',
                                                 initialValue=${prRequest.suggestedSupplierId}, initialText=${prRequest.supplierName})}"></div>
                                         </div>
+                                         <div class="col-md-6">
+                                             <label class="form-label required" th:text="#{label.pr.currency}">Currency</label>
+                                             <select class="form-select erp-input select-currency" th:field="*{currencyId}" th:disabled="${isLocked}" required>
+                                                 <option value="">-- Select Currency --</option>
+                                                 <option th:each="curr : ${currencies}" th:value="${curr.id}" th:text="${curr.code}"></option>
+                                             </select>
+                                         </div>
                                         <div class="col-12">
                                             <label class="form-label" th:text="#{label.pr.note}">Note</label>
                                             <textarea class="form-control erp-input" th:field="*{note}" rows="2" th:readonly="${isLocked}"></textarea>

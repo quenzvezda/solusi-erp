@@ -27,5 +27,7 @@ public class PurchaseRequisitionDetailResponse extends BaseAuditResponse {
     private String note;
     private Long suggestedSupplierId;
     private String supplierName;
+    private Long currencyId;
+    private String currencyCode;
     private List<PurchaseRequisitionLineResponse> lines;
 }

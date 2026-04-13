@@ -31,9 +31,9 @@ public class PurchaseRequisitionConfig {
         CreatePurchaseRequisitionUseCase pure = new CreatePurchaseRequisitionUseCaseImpl(
             purchaseRequisitionDomainRepository, sequenceGeneratorService);
         TransactionTemplate tx = new TransactionTemplate(txManager);
-        return (requestDate, requesterId, facilityId, department, priority, note, suggestedSupplierId, lines) ->
+        return (requestDate, requesterId, facilityId, department, priority, note, suggestedSupplierId, currencyId, lines) ->
             tx.execute(status -> pure.execute(requestDate, requesterId, facilityId,
-                department, priority, note, suggestedSupplierId, lines));
+                department, priority, note, suggestedSupplierId, currencyId, lines));
     }
 
     @Bean
@@ -43,9 +43,9 @@ public class PurchaseRequisitionConfig {
         UpdatePurchaseRequisitionUseCase pure = new UpdatePurchaseRequisitionUseCaseImpl(
             purchaseRequisitionDomainRepository);
         TransactionTemplate tx = new TransactionTemplate(txManager);
-        return (id, requestDate, facilityId, department, priority, note, suggestedSupplierId, lines) ->
+        return (id, requestDate, facilityId, department, priority, note, suggestedSupplierId, currencyId, lines) ->
             tx.execute(status -> pure.execute(id, requestDate, facilityId,
-                department, priority, note, suggestedSupplierId, lines));
+                department, priority, note, suggestedSupplierId, currencyId, lines));
     }
 
     @Bean

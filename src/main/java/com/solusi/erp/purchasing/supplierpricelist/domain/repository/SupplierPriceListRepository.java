@@ -22,4 +22,14 @@ public interface SupplierPriceListRepository {
 
     boolean existsOverlapping(Long supplierId, Long productId, Long uomId, Long currencyId,
                                LocalDate effectiveFrom, LocalDate effectiveTo, Long excludeId);
+
+    /**
+     * Find the most recent active SPL for the given supplier+product+uom+currency combo
+     * that is valid on the given date.
+     * 
+     * Priority: Latest effectiveFrom among all matching active SPLs
+     */
+    Optional<SupplierPriceList> findMostRecentActiveSPL(Long supplierId, Long productId,
+                                                        Long uomId, Long currencyId,
+                                                        LocalDate asOfDate);
 }

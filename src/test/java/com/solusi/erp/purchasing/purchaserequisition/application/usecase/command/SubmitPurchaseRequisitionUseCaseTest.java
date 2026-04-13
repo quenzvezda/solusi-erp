@@ -56,7 +56,7 @@ class SubmitPurchaseRequisitionUseCaseTest {
                 new AuditMetadata(1L, 1L, null, null, null, null),
                 "PR-2607-00001", LocalDate.of(2026, 7, 1), 10L, 2L,
                 "IT", PurchaseRequisitionPriority.NORMAL,
-                PurchaseRequisitionStatus.DRAFT, "note", true, null, List.of(line)
+                PurchaseRequisitionStatus.DRAFT, "note", true, null, 1L, List.of(line)
         );
 
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
@@ -86,7 +86,7 @@ class SubmitPurchaseRequisitionUseCaseTest {
                 new AuditMetadata(2L, 1L, null, null, null, null),
                 "PR-2607-00002", LocalDate.of(2026, 7, 1), 10L, 2L,
                 "IT", PurchaseRequisitionPriority.NORMAL,
-                PurchaseRequisitionStatus.DRAFT, "note", true, null, List.of()
+                PurchaseRequisitionStatus.DRAFT, "note", true, null, 1L, List.of()
         );
 
         when(repository.findById(2L)).thenReturn(Optional.of(existing));

@@ -21,6 +21,7 @@ public class PurchaseRequisition {
     private String note;
     private boolean active;
     private Long suggestedSupplierId;
+    private Long currencyId;
     private List<PurchaseRequisitionLine> lines;
 
     public PurchaseRequisition(AuditMetadata metadata, String code,
@@ -30,6 +31,7 @@ public class PurchaseRequisition {
                                 PurchaseRequisitionStatus status,
                                 String note, boolean active,
                                 Long suggestedSupplierId,
+                                Long currencyId,
                                 List<PurchaseRequisitionLine> lines) {
         this.metadata = metadata;
         this.code = code;
@@ -42,6 +44,7 @@ public class PurchaseRequisition {
         this.note = note;
         this.active = active;
         this.suggestedSupplierId = suggestedSupplierId;
+        this.currencyId = currencyId;
         this.lines = lines != null ? new ArrayList<>(lines) : new ArrayList<>();
     }
 
@@ -51,18 +54,20 @@ public class PurchaseRequisition {
                                                  PurchaseRequisitionPriority priority,
                                                  String note,
                                                  Long suggestedSupplierId,
+                                                 Long currencyId,
                                                  List<PurchaseRequisitionLine> lines) {
         return new PurchaseRequisition(
             AuditMetadata.empty(), code, requestDate, requesterId,
             facilityId, department, priority,
             PurchaseRequisitionStatus.DRAFT,
-            note, true, suggestedSupplierId, lines
+            note, true, suggestedSupplierId, currencyId, lines
         );
     }
 
     public void update(LocalDate requestDate, Long facilityId,
                        String department, PurchaseRequisitionPriority priority,
                        String note, Long suggestedSupplierId,
+                       Long currencyId,
                        List<PurchaseRequisitionLine> lines) {
         if (!status.canUpdate()) {
             throw new DomainException("msg.error.pr.update.not.draft");
@@ -73,6 +78,7 @@ public class PurchaseRequisition {
         this.priority = priority;
         this.note = note;
         this.suggestedSupplierId = suggestedSupplierId;
+        this.currencyId = currencyId;
         this.lines = lines != null ? new ArrayList<>(lines) : new ArrayList<>();
     }
 
@@ -120,5 +126,6 @@ public class PurchaseRequisition {
     public String getNote() { return note; }
     public boolean isActive() { return active; }
     public Long getSuggestedSupplierId() { return suggestedSupplierId; }
+    public Long getCurrencyId() { return currencyId; }
     public List<PurchaseRequisitionLine> getLines() { return Collections.unmodifiableList(lines); }
 }

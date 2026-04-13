@@ -46,7 +46,7 @@ class CreatePurchaseRequisitionUseCaseTest {
         PurchaseRequisition result = useCase.execute(
                 LocalDate.of(2026, 7, 1), 1L, 2L,
                 "IT", PurchaseRequisitionPriority.NORMAL,
-                "Test note", null, List.of()
+                "Test note", null, 1L, List.of()
         );
 
         assertThat(result.getCode()).isEqualTo("PR-2607-00001");
@@ -73,7 +73,7 @@ class CreatePurchaseRequisitionUseCaseTest {
         PurchaseRequisition result = useCase.execute(
                 LocalDate.of(2026, 7, 1), 1L, 2L,
                 "HR", PurchaseRequisitionPriority.HIGH,
-                null, null, lines
+                null, null, 1L, lines
         );
 
         assertThat(result.getLines()).hasSize(2);

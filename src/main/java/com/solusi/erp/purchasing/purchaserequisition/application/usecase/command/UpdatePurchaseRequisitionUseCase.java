@@ -10,5 +10,5 @@ import java.util.List;
 public interface UpdatePurchaseRequisitionUseCase {
     PurchaseRequisition execute(Long id, LocalDate requestDate, Long facilityId,
                                 String department, PurchaseRequisitionPriority priority,
-                                String note, Long suggestedSupplierId, List<LineInput> lines);
+                                String note, Long suggestedSupplierId, Long currencyId, List<LineInput> lines);
 }

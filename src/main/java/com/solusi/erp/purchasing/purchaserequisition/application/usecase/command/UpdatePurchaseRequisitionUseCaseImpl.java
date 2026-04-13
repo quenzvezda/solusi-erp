@@ -21,7 +21,7 @@ public class UpdatePurchaseRequisitionUseCaseImpl implements UpdatePurchaseRequi
     @Override
     public PurchaseRequisition execute(Long id, LocalDate requestDate, Long facilityId,
                                         String department, PurchaseRequisitionPriority priority,
-                                        String note, Long suggestedSupplierId, List<LineInput> lines) {
+                                        String note, Long suggestedSupplierId, Long currencyId, List<LineInput> lines) {
         PurchaseRequisition pr = repository.findById(id)
                 .orElseThrow(() -> new DomainException("msg.error.pr.notfound"));
 
@@ -29,7 +29,7 @@ public class UpdatePurchaseRequisitionUseCaseImpl implements UpdatePurchaseRequi
                 ? lines.stream().map(this::toLine).toList()
                 : List.of();
 
-        pr.update(requestDate, facilityId, department, priority, note, suggestedSupplierId, domainLines);
+        pr.update(requestDate, facilityId, department, priority, note, suggestedSupplierId, currencyId, domainLines);
         return repository.save(pr);
     }
 

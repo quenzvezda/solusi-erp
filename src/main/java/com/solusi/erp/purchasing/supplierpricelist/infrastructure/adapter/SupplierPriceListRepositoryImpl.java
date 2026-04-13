@@ -123,4 +123,30 @@ public class SupplierPriceListRepositoryImpl implements SupplierPriceListReposit
         return jpaRepository.existsOverlapping(supplierId, productId, uomId, currencyId,
             effectiveFrom, effectiveTo, excludeId);
     }
+
+    @Override
+    public Optional<SupplierPriceList> findMostRecentActiveSPL(Long supplierId, Long productId,
+                                                                Long uomId, Long currencyId,
+                                                                LocalDate asOfDate) {
+        String query = "SELECT s FROM SupplierPriceListEntity s " +
+                       "WHERE s.supplierId = :supplierId " +
+                       "AND s.productId = :productId " +
+                       "AND s.uomId = :uomId " +
+                       "AND s.currencyId = :currencyId " +
+                       "AND s.active = true " +
+                       "AND s.effectiveFrom <= :asOfDate " +
+                       "AND (s.effectiveTo IS NULL OR s.effectiveTo >= :asOfDate) " +
+                       "ORDER BY s.effectiveFrom DESC";
+        
+        List<SupplierPriceListEntity> results = entityManager.createQuery(query, SupplierPriceListEntity.class)
+            .setParameter("supplierId", supplierId)
+            .setParameter("productId", productId)
+            .setParameter("uomId", uomId)
+            .setParameter("currencyId", currencyId)
+            .setParameter("asOfDate", asOfDate)
+            .setMaxResults(1)
+            .getResultList();
+        
+        return results.isEmpty() ? Optional.empty() : Optional.of(mapper.toDomain(results.get(0)));
+    }
 }

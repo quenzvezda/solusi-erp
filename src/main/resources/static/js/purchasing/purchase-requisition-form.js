@@ -43,6 +43,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── UoM auto-fill when product is selected ─────────────────────────────────
     function initRowBehaviours(row) {
         const productSelect = row.querySelector('.select-product');
+        const supplierSelect = row.querySelector('.select-supplier');
+        const currencyIdHiddenInput = document.querySelector('input[name="currencyId"]');
         if (!productSelect) return;
 
         function waitForTomSelect(el, cb, attempts) {
@@ -77,6 +79,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Lock UoM visually without disabling the underlying select (so form submission includes it)
                     uomTs.control.style.pointerEvents = 'none';
                     uomTs.control.style.opacity = '0.6';
+                    
+                    // Try to auto-fill price from SPL if supplier is also selected
+                    autoFillPriceFromSpl(row, payload, supplierSelect, currencyIdHiddenInput);
                 } else {
                     // No payload yet — fetch from API
                     fetch('/api/lookup/inventory/products/' + encodeURIComponent(value))
@@ -94,12 +99,74 @@ document.addEventListener('DOMContentLoaded', function () {
                                 // Lock UoM visually without disabling the underlying select (so form submission includes it)
                                 uomTs.control.style.pointerEvents = 'none';
                                 uomTs.control.style.opacity = '0.6';
+                                
+                                // Try to auto-fill price from SPL if supplier is also selected
+                                autoFillPriceFromSpl(row, p, supplierSelect, currencyIdHiddenInput);
                             }
                         })
                         .catch(function () {});
                 }
             });
         });
+
+        // Also trigger SPL auto-fill when supplier is selected
+        if (supplierSelect) {
+            waitForTomSelect(supplierSelect, function (ts) {
+                ts.on('change', function () {
+                    const product = productSelect.tomselect ? productSelect.tomselect.getValue() : productSelect.value;
+                    if (product) {
+                        const productItem = productSelect.tomselect ? productSelect.tomselect.options[product] : null;
+                        const payload = productItem && productItem.payload;
+                        if (payload || product) {
+                            autoFillPriceFromSpl(row, payload || { productId: product }, supplierSelect, currencyIdHiddenInput);
+                        }
+                    }
+                });
+            });
+        }
+    }
+
+    function autoFillPriceFromSpl(row, productPayload, supplierSelect, currencyIdHiddenInput) {
+        const supplierId = supplierSelect && supplierSelect.tomselect ? 
+            supplierSelect.tomselect.getValue() : supplierSelect.value;
+        const currencyId = currencyIdHiddenInput ? currencyIdHiddenInput.value : null;
+        
+        if (!supplierId || !productPayload) return;
+
+        const productId = productPayload.id || productPayload.productId;
+        const uomId = productPayload.uomId;
+
+        if (!productId || !uomId || !currencyId) return;
+
+        // Call SPL endpoint to get price
+        fetch('/purchasing/purchase-requisitions/api/spl-price?' +
+            'supplierId=' + encodeURIComponent(supplierId) +
+            '&productId=' + encodeURIComponent(productId) +
+            '&uomId=' + encodeURIComponent(uomId) +
+            '&currencyId=' + encodeURIComponent(currencyId))
+            .then(function (res) {
+                if (res.status === 204) return null; // No SPL found
+                if (!res.ok) throw new Error('Failed to fetch SPL price');
+                return res.json();
+            })
+            .then(function (spl) {
+                if (spl && spl.unitPrice) {
+                    const priceInput = row.querySelector('.input-price');
+                    if (priceInput) {
+                        // Format price for display
+                        const formattedPrice = parseFloat(spl.unitPrice).toLocaleString('en-US', { 
+                            minimumFractionDigits: 2, 
+                            maximumFractionDigits: 4 
+                        });
+                        priceInput.value = formattedPrice;
+                        // Trigger input event to update totals
+                        priceInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                }
+            })
+            .catch(function (err) {
+                console.warn('SPL auto-fill failed:', err);
+            });
     }
 
     // Init behaviours on pre-existing rows

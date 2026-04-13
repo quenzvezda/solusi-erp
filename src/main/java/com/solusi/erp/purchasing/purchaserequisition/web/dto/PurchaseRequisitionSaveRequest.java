@@ -40,9 +40,14 @@ public class PurchaseRequisitionSaveRequest extends BaseAuditResponse {
     private Long approverId;
 
     private Long suggestedSupplierId;
+    
+    @NotNull(message = "{label.pr.currency} {validation.notnull.suffix}")
+    private Long currencyId;
+    
     private String requesterName;
     private String facilityName;
     private String supplierName;
+    private String currencyCode;
 
     @Valid
     private List<PurchaseRequisitionLineRequest> lines = new ArrayList<>();

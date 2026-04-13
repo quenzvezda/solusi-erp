@@ -7,6 +7,7 @@ import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.master.currency.domain.repository.CurrencyRepository;
 import com.solusi.erp.purchasing.purchaserequisition.application.usecase.command.*;
 import com.solusi.erp.purchasing.purchaserequisition.application.usecase.query.*;
 import com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisition;
@@ -14,7 +15,11 @@ import com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequis
 import com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisitionStatus;
 import com.solusi.erp.purchasing.purchaserequisition.infrastructure.persistence.PurchaseRequisitionJpaRepository;
 import com.solusi.erp.purchasing.purchaserequisition.web.dto.*;
+import com.solusi.erp.purchasing.purchaserequisition.web.dto.api.SplPriceResponse;
 import com.solusi.erp.purchasing.purchaserequisition.web.mapper.PurchaseRequisitionWebMapper;
+import com.solusi.erp.purchasing.supplierpricelist.domain.model.SupplierPriceList;
+import com.solusi.erp.purchasing.supplierpricelist.domain.repository.SupplierPriceListRepository;
+import com.solusi.erp.purchasing.supplierpricelist.domain.service.SupplierPriceListResolutionService;
 import com.solusi.erp.security.shared.model.SecurityUser;
 import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
@@ -53,6 +58,8 @@ public class PurchaseRequisitionController {
     private final GetPurchaseRequisitionEditViewUseCase getPurchaseRequisitionEditViewUseCase;
     private final ApprovalRequestRepository approvalRequestRepository;
     private final PurchaseRequisitionJpaRepository purchaseRequisitionJpaRepository;
+    private final SupplierPriceListRepository splRepository;
+    private final CurrencyRepository currencyRepository;
     private final PurchaseRequisitionWebMapper webMapper;
     private final MessageSource messageSource;
 
@@ -83,6 +90,7 @@ public class PurchaseRequisitionController {
         request.setRequestDate(LocalDate.now());
         request.setPriority(PurchaseRequisitionPriority.NORMAL);
         model.addAttribute("prRequest", request);
+        model.addAttribute("currencies", currencyRepository.findByIsActiveTrue());
         return "purchasing/purchase-requisitions/form";
     }
 
@@ -95,7 +103,7 @@ public class PurchaseRequisitionController {
         PurchaseRequisition domain = createPurchaseRequisitionUseCase.execute(
             request.getRequestDate(), request.getRequesterId(), request.getFacilityId(),
             request.getDepartment(), request.getPriority(),
-            request.getNote(), request.getSuggestedSupplierId(), lines
+            request.getNote(), request.getSuggestedSupplierId(), request.getCurrencyId(), lines
         );
         PurchaseRequisitionDetailResponse data = webMapper.toDetailResponse(domain);
         String msg = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
@@ -112,6 +120,7 @@ public class PurchaseRequisitionController {
         }
         model.addAttribute("prRequest", webMapper.toSaveRequest(domain));
         model.addAttribute("auditInfo", webMapper.toDetailResponse(domain));
+        model.addAttribute("currencies", currencyRepository.findByIsActiveTrue());
         return "purchasing/purchase-requisitions/form";
     }
 
@@ -125,7 +134,7 @@ public class PurchaseRequisitionController {
         PurchaseRequisition domain = updatePurchaseRequisitionUseCase.execute(
             id, request.getRequestDate(), request.getFacilityId(),
             request.getDepartment(), request.getPriority(),
-            request.getNote(), request.getSuggestedSupplierId(), lines
+            request.getNote(), request.getSuggestedSupplierId(), request.getCurrencyId(), lines
         );
         PurchaseRequisitionDetailResponse data = webMapper.toDetailResponse(domain);
         String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
@@ -209,6 +218,46 @@ public class PurchaseRequisitionController {
             ))
             .collect(Collectors.toList());
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * SPL auto-fill endpoint: returns matching SPL price for given supplier+product+uom+currency combo.
+     * Used by PR line drawer to auto-fill unitPrice when supplier and product are selected.
+     */
+    @GetMapping("/api/spl-price")
+    @PreAuthorize("hasAuthority('LOOKUP_SUPPLIER-PRICE-LIST')")
+    @ResponseBody
+    public ResponseEntity<?> getSplPrice(
+            @RequestParam Long supplierId,
+            @RequestParam Long productId,
+            @RequestParam Long uomId,
+            @RequestParam Long currencyId) {
+        
+        SupplierPriceListResolutionService resolutionService = 
+            new SupplierPriceListResolutionService(splRepository);
+        
+        Optional<SupplierPriceList> spl = resolutionService.resolveActivePrice(
+            supplierId, productId, uomId, currencyId, LocalDate.now()
+        );
+        
+        if (spl.isPresent()) {
+            SupplierPriceList splDomain = spl.get();
+            SplPriceResponse response = new SplPriceResponse(
+                splDomain.getId(),
+                splDomain.getCode(),
+                splDomain.getUnitPrice(),
+                splDomain.getSupplierId(),
+                splDomain.getProductId(),
+                splDomain.getUomId(),
+                splDomain.getCurrencyId(),
+                splDomain.getEffectiveFrom(),
+                splDomain.getEffectiveTo(),
+                splDomain.isActive()
+            );
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.noContent().build();
+        }
     }
 }
 

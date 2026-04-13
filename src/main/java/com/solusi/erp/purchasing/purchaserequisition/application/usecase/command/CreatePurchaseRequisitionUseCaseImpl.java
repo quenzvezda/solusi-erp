@@ -24,7 +24,7 @@ public class CreatePurchaseRequisitionUseCaseImpl implements CreatePurchaseRequi
     @Override
     public PurchaseRequisition execute(LocalDate requestDate, Long requesterId, Long facilityId,
                                         String department, PurchaseRequisitionPriority priority,
-                                        String note, Long suggestedSupplierId, List<LineInput> lines) {
+                                        String note, Long suggestedSupplierId, Long currencyId, List<LineInput> lines) {
         String code = sequenceGeneratorService.generate("PR");
 
         List<PurchaseRequisitionLine> domainLines = lines != null
@@ -33,7 +33,7 @@ public class CreatePurchaseRequisitionUseCaseImpl implements CreatePurchaseRequi
 
         PurchaseRequisition pr = PurchaseRequisition.createNew(
                 code, requestDate, requesterId, facilityId,
-                department, priority, note, suggestedSupplierId, domainLines
+                department, priority, note, suggestedSupplierId, currencyId, domainLines
         );
         return repository.save(pr);
     }

@@ -2,6 +2,7 @@ package com.solusi.erp.purchasing.purchaserequisition.web.controller;
 
 import com.solusi.erp.common.approval.domain.repository.ApprovalRequestRepository;
 import com.solusi.erp.core.domain.model.AuditMetadata;
+import com.solusi.erp.master.currency.domain.repository.CurrencyRepository;
 import com.solusi.erp.purchasing.purchaserequisition.application.usecase.command.*;
 import com.solusi.erp.purchasing.purchaserequisition.application.usecase.query.*;
 import com.solusi.erp.purchasing.purchaserequisition.domain.model.*;
@@ -38,6 +39,8 @@ public class PurchaseRequisitionControllerTest {
     private GetPurchaseRequisitionEditViewUseCase editViewUc;
     private ApprovalRequestRepository approvalRequestRepository;
     private PurchaseRequisitionJpaRepository purchaseRequisitionJpaRepository;
+    private com.solusi.erp.purchasing.supplierpricelist.domain.repository.SupplierPriceListRepository splRepository;
+    private CurrencyRepository currencyRepository;
     private PurchaseRequisitionWebMapper webMapper;
     private MessageSource messageSource;
     private PurchaseRequisitionController controller;
@@ -53,13 +56,15 @@ public class PurchaseRequisitionControllerTest {
         editViewUc = mock(GetPurchaseRequisitionEditViewUseCase.class);
         approvalRequestRepository = mock(ApprovalRequestRepository.class);
         purchaseRequisitionJpaRepository = mock(PurchaseRequisitionJpaRepository.class);
+        splRepository = mock(com.solusi.erp.purchasing.supplierpricelist.domain.repository.SupplierPriceListRepository.class);
+        currencyRepository = mock(CurrencyRepository.class);
         webMapper = mock(PurchaseRequisitionWebMapper.class);
         messageSource = mock(MessageSource.class);
 
         controller = new PurchaseRequisitionController(
             createUc, updateUc, deleteUc, submitUc, cancelUc,
             findUc, editViewUc, approvalRequestRepository,
-            purchaseRequisitionJpaRepository, webMapper, messageSource
+            purchaseRequisitionJpaRepository, splRepository, currencyRepository, webMapper, messageSource
         );
     }
 
@@ -75,7 +80,7 @@ public class PurchaseRequisitionControllerTest {
             LocalDate.of(2026, 7, 1), 100L, 200L, "IT",
             PurchaseRequisitionPriority.NORMAL,
             PurchaseRequisitionStatus.DRAFT,
-            "Test note", true, null, List.of(line));
+            "Test note", true, null, 1L, List.of(line));
     }
 
     private PurchaseRequisition buildSubmittedPr() {
@@ -84,7 +89,7 @@ public class PurchaseRequisitionControllerTest {
             LocalDate.of(2026, 7, 1), 100L, null, "Finance",
             PurchaseRequisitionPriority.HIGH,
             PurchaseRequisitionStatus.SUBMITTED,
-            null, true, null, List.of());
+            null, true, null, 1L, List.of());
     }
 
     @Test
