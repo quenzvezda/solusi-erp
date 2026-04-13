@@ -65,10 +65,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 const payload = item && item.payload;
                 if (payload && payload.uomId) {
                     const uomTs = uomSelect.tomselect;
-                    if (!uomTs.options[String(payload.uomId)]) {
-                        uomTs.addOption({ id: payload.uomId, name: payload.uomName || payload.uomCode || String(payload.uomId) });
+                    const uomIdStr = String(payload.uomId);
+                    if (!uomTs.options[uomIdStr]) {
+                        uomTs.addOption({ id: payload.uomId, name: payload.uomName || payload.uomCode || uomIdStr });
                     }
-                    uomTs.setValue(String(payload.uomId), true);
+                    uomTs.setValue(uomIdStr);
+                    uomSelect.value = uomIdStr;
                     uomTs.disable();
                 } else {
                     // No payload yet — fetch from API
@@ -78,10 +80,12 @@ document.addEventListener('DOMContentLoaded', function () {
                             const p = data && data.payload;
                             if (p && p.uomId) {
                                 const uomTs = uomSelect.tomselect;
-                                if (!uomTs.options[String(p.uomId)]) {
-                                    uomTs.addOption({ id: p.uomId, name: p.uomName || p.uomCode || String(p.uomId) });
+                                const uomIdStr = String(p.uomId);
+                                if (!uomTs.options[uomIdStr]) {
+                                    uomTs.addOption({ id: p.uomId, name: p.uomName || p.uomCode || uomIdStr });
                                 }
-                                uomTs.setValue(String(p.uomId), true);
+                                uomTs.setValue(uomIdStr);
+                                uomSelect.value = uomIdStr;
                                 uomTs.disable();
                             }
                         })
