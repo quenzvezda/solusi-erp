@@ -21,5 +21,5 @@ public class PurchaseRequisitionSummaryResponse extends BaseAuditResponse {
     private String department;
     private PurchaseRequisitionPriority priority;
     private PurchaseRequisitionStatus status;
-    private int lineCount;
+    private String currencyCode;
 }

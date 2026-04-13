@@ -105,7 +105,6 @@ public class PurchaseRequisitionControllerTest {
         summary.setCode("PR-001");
         summary.setStatus(PurchaseRequisitionStatus.DRAFT);
         summary.setPriority(PurchaseRequisitionPriority.NORMAL);
-        summary.setLineCount(1);
         when(webMapper.toSummaryResponse(any(PurchaseRequisition.class))).thenReturn(summary);
 
         org.springframework.data.domain.Pageable springPageable =

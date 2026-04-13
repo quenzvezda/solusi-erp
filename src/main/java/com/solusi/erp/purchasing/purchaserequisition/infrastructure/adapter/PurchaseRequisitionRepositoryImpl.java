@@ -50,7 +50,7 @@ public class PurchaseRequisitionRepositoryImpl implements PurchaseRequisitionRep
         org.springframework.data.domain.Page<PurchaseRequisitionEntity> springPage =
             (keyword != null && !keyword.isBlank())
                 ? jpaRepository.search(keyword, springPageable)
-                : jpaRepository.findAllWithLines(springPageable);
+                : jpaRepository.findAllWithJoin(springPageable);
         return new Page<>(
             springPage.getContent().stream().map(mapper::toDomain).collect(Collectors.toList()),
             springPage.getNumber(),

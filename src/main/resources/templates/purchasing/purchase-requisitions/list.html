@@ -42,7 +42,8 @@
                                       hx-get="/purchasing/purchase-requisitions"
                                       hx-target="#pr-table-container"
                                       hx-trigger="keyup changed delay:500ms from:#search-input"
-                                      hx-push-url="true">
+                                      hx-push-url="true"
+                                      hx-include="[name='keyword'], [name='sort']">
                                     <input type="text" id="search-input" name="keyword" th:value="${keyword}"
                                            class="form-control form-control-sm"
                                            th:placeholder="#{label.search} + '...'">
@@ -57,20 +58,21 @@
                     <div id="pr-table-container" th:fragment="pr-table-container"
                          hx-get="/purchasing/purchase-requisitions"
                          hx-trigger="refresh-table from:body delay:500ms"
-                         hx-include="[name='keyword'], [name='page']">
+                         hx-include="[name='keyword'], [name='page'], [name='sort']">
                         <input type="hidden" name="page" th:value="${page.number}">
+                        <input type="hidden" name="sort" th:value="${sortField != null && !#strings.isEmpty(sortField) ? sortField + ',' + sortDir : ''}">
 
                         <div class="table-responsive">
                             <table class="table card-table table-vcenter text-nowrap datatable">
                                 <thead>
                                     <tr>
                                         <th th:replace="~{fragments/table :: sortable('code', #{label.pr.column.code})}">Code</th>
-                                        <th th:text="#{label.pr.column.requestDate}">Request Date</th>
-                                        <th th:text="#{label.pr.column.requester}">Requester</th>
-                                        <th th:text="#{label.pr.column.department}">Department</th>
-                                        <th th:text="#{label.pr.column.priority}">Priority</th>
-                                        <th th:text="#{label.pr.column.status}">Status</th>
-                                        <th th:text="#{label.pr.column.lines}">Lines</th>
+                                        <th th:replace="~{fragments/table :: sortable('requestDate', #{label.pr.column.requestDate})}">Request Date</th>
+                                        <th th:replace="~{fragments/table :: sortable('req.name', #{label.pr.column.requester})}">Requester</th>
+                                        <th th:replace="~{fragments/table :: sortable('department', #{label.pr.column.department})}">Department</th>
+                                        <th th:replace="~{fragments/table :: sortable('priority', #{label.pr.column.priority})}">Priority</th>
+                                        <th th:replace="~{fragments/table :: sortable('status', #{label.pr.column.status})}">Status</th>
+                                        <th th:replace="~{fragments/table :: sortable('cur.alias', #{label.pr.column.currency})}">Currency</th>
                                         <th class="text-end" th:text="#{label.actions}">Actions</th>
                                     </tr>
                                 </thead>
@@ -96,7 +98,7 @@
                                                                    (${item.status.name() == 'REJECTED'} ? 'bg-danger-lt' : 'bg-primary-lt'))))"
                                                   th:text="${item.status}">DRAFT</span>
                                         </td>
-                                        <td th:text="${item.lineCount}">0</td>
+                                        <td th:text="${item.currencyCode ?: '-'}">-</td>
                                         <td>
                                             <div class="btn-list flex-nowrap justify-content-end">
                                                 <a th:if="${item.status.name() == 'DRAFT'}"

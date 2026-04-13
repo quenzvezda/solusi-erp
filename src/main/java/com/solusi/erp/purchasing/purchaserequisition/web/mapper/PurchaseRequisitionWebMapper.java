@@ -32,7 +32,7 @@ public abstract class PurchaseRequisitionWebMapper {
     @Autowired
     protected CurrencyJpaRepository currencyRepository;
 
-    @Mapping(target = "lineCount", expression = "java(domain.getLines() != null ? domain.getLines().size() : 0)")
+    @Mapping(target = "currencyCode", source = "currencyId", qualifiedByName = "getCurrencyCode")
     @Mapping(target = "requesterName", source = "requesterId", qualifiedByName = "getRequesterName")
     public abstract PurchaseRequisitionSummaryResponse toSummaryResponse(PurchaseRequisition domain);
 
