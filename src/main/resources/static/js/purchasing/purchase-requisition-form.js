@@ -65,11 +65,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 const payload = item && item.payload;
                 if (payload && payload.uomId) {
                     const uomTs = uomSelect.tomselect;
-                    // Add option if not present, then select it
-                    if (!uomTs.options[payload.uomId]) {
-                        uomTs.addOption({ value: payload.uomId, text: payload.uomName || payload.uomCode || payload.uomId });
+                    if (!uomTs.options[String(payload.uomId)]) {
+                        uomTs.addOption({ id: payload.uomId, name: payload.uomName || payload.uomCode || String(payload.uomId) });
                     }
-                    uomTs.setValue(payload.uomId, true);
+                    uomTs.setValue(String(payload.uomId), true);
                     uomTs.disable();
                 } else {
                     // No payload yet — fetch from API
@@ -79,10 +78,10 @@ document.addEventListener('DOMContentLoaded', function () {
                             const p = data && data.payload;
                             if (p && p.uomId) {
                                 const uomTs = uomSelect.tomselect;
-                                if (!uomTs.options[p.uomId]) {
-                                    uomTs.addOption({ value: p.uomId, text: p.uomName || p.uomCode || p.uomId });
+                                if (!uomTs.options[String(p.uomId)]) {
+                                    uomTs.addOption({ id: p.uomId, name: p.uomName || p.uomCode || String(p.uomId) });
                                 }
-                                uomTs.setValue(p.uomId, true);
+                                uomTs.setValue(String(p.uomId), true);
                                 uomTs.disable();
                             }
                         })
