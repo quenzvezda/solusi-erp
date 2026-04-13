@@ -72,7 +72,7 @@
                                                 initialValue=${prRequest.suggestedSupplierId}, initialText=${prRequest.supplierName})}"></div>
                                         </div>
                                          <div class="col-md-6">
-                                             <label class="form-label required" th:text="#{label.pr.currency}">Currency</label>
+                                             <label class="form-label required" th:text="#{label.currency}">Currency</label>
                                              <select class="form-select erp-input select-currency" th:field="*{currencyId}" th:disabled="${isLocked}" required>
                                                  <option value="">-- Select Currency --</option>
                                                  <option th:each="curr : ${currencies}" th:value="${curr.id}" th:text="${curr.alias}"></option>
