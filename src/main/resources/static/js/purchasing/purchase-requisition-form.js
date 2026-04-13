@@ -209,6 +209,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
             newRow.innerHTML = newRow.innerHTML.replace(/INDEX/g, index);
 
+            // Clean up stale Flatpickr markup copied from template row so the
+            // date input can be freshly initialized after the row is appended.
+            newRow.querySelectorAll('input.flatpickr-alt-input').forEach(function(el) { el.remove(); });
+            newRow.querySelectorAll('input.flatpickr-input[type="hidden"]').forEach(function(el) {
+                el.setAttribute('type', 'date');
+                el.classList.remove('flatpickr-input');
+            });
+            newRow.querySelectorAll('[data-picker-initialized]').forEach(function(el) {
+                el.removeAttribute('data-picker-initialized');
+            });
+
             // Remove stale TomSelect markup from cloned row so it can be re-initialized
             newRow.querySelectorAll('.ts-wrapper').forEach(w => w.remove());
             newRow.querySelectorAll('select.tomselect-initialized').forEach(s => {
@@ -218,6 +229,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             lineContainer.appendChild(newRow);
             updateEmptyMessage();
+
+            // Re-initialize date pickers on newly added row
+            if (window.ErpDateTimePicker) window.ErpDateTimePicker.init(newRow);
 
             // Re-initialize autocomplete on new row
             if (window.ERP && window.ERP.initAutocompleteInContainer) {
