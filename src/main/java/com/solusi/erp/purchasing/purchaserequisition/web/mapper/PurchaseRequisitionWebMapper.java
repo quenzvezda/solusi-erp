@@ -5,6 +5,7 @@ import com.solusi.erp.core.mapper.AuditMapperHelper;
 import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityJpaRepository;
 import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import com.solusi.erp.inventory.uom.infrastructure.persistence.UomJpaRepository;
+import com.solusi.erp.master.currency.infrastructure.persistence.CurrencyJpaRepository;
 import com.solusi.erp.master.party.infrastructure.persistence.PartyJpaRepository;
 import com.solusi.erp.purchasing.purchaserequisition.application.usecase.command.LineInput;
 import com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisition;
@@ -28,6 +29,8 @@ public abstract class PurchaseRequisitionWebMapper {
     protected UomJpaRepository uomRepository;
     @Autowired
     protected FacilityJpaRepository facilityRepository;
+    @Autowired
+    protected CurrencyJpaRepository currencyRepository;
 
     @Mapping(target = "lineCount", expression = "java(domain.getLines() != null ? domain.getLines().size() : 0)")
     @Mapping(target = "requesterName", source = "requesterId", qualifiedByName = "getRequesterName")
@@ -36,6 +39,7 @@ public abstract class PurchaseRequisitionWebMapper {
     @Mapping(target = "requesterName", source = "requesterId", qualifiedByName = "getRequesterName")
     @Mapping(target = "facilityName", source = "facilityId", qualifiedByName = "getFacilityName")
     @Mapping(target = "supplierName", source = "suggestedSupplierId", qualifiedByName = "getSupplierName")
+    @Mapping(target = "currencyCode", source = "currencyId", qualifiedByName = "getCurrencyCode")
     public abstract PurchaseRequisitionDetailResponse toDetailResponse(PurchaseRequisition domain);
 
     @Mapping(target = "requesterName", source = "requesterId", qualifiedByName = "getRequesterName")
@@ -104,5 +108,11 @@ public abstract class PurchaseRequisitionWebMapper {
             String sal = p.getSalutation();
             return (sal != null && !sal.isBlank()) ? sal + " " + p.getName() : p.getName();
         }).orElse(null);
+    }
+
+    @Named("getCurrencyCode")
+    protected String getCurrencyCode(Long id) {
+        if (id == null) return null;
+        return currencyRepository.findById(id).map(c -> c.getAlias()).orElse(null);
     }
 }

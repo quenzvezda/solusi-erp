@@ -50,7 +50,7 @@
 
                 <div class="row row-cards">
                     <!-- Left: Main Content -->
-                    <div th:classappend="${approvalRequestId != null} ? 'col-lg-8' : 'col-12'">
+                    <div class="col-12">
 
                         <div class="card mb-3">
                             <div class="card-body">
@@ -88,6 +88,20 @@
                                     <div class="col-md-4">
                                         <label class="form-label text-secondary" th:text="#{label.pr.suggestedSupplier}">Suggested Supplier</label>
                                         <div class="form-control-plaintext" th:text="${pr.supplierName ?: '-'}">-</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.pr.currency}">Currency</label>
+                                        <div class="form-control-plaintext" th:text="${pr.currencyCode ?: '-'}">-</div>
+                                    </div>
+                                    <div th:if="${approvalRequestId != null}" class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.approval.status}">Approval Status</label>
+                                        <div class="form-control-plaintext">
+                                            <span class="badge"
+                                                  th:classappend="${approvalStatus.name() == 'PENDING'} ? 'bg-warning-lt' :
+                                                                 (${approvalStatus.name() == 'APPROVED'} ? 'bg-success-lt' :
+                                                                 (${approvalStatus.name() == 'REJECTED'} ? 'bg-danger-lt' : 'bg-secondary-lt'))"
+                                                  th:text="${approvalStatus}">PENDING</span>
+                                        </div>
                                     </div>
                                     <div class="col-12" th:if="${pr.note != null && !pr.note.isEmpty()}">
                                         <label class="form-label text-secondary" th:text="#{label.pr.note}">Note</label>
@@ -135,32 +149,6 @@
                             </div>
                         </div>
 
-                    </div>
-
-                    <!-- Right: Approval Info -->
-                    <div class="col-lg-4" th:if="${approvalRequestId != null}">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3 class="card-title" th:text="#{label.approval.info}">Approval Info</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="mb-3">
-                                    <label class="form-label text-muted" th:text="#{label.approval.status}">Status</label>
-                                    <div>
-                                        <span class="badge"
-                                              th:classappend="${approvalStatus.name() == 'PENDING'} ? 'bg-warning-lt' :
-                                                             (${approvalStatus.name() == 'APPROVED'} ? 'bg-success-lt' :
-                                                             (${approvalStatus.name() == 'REJECTED'} ? 'bg-danger-lt' : 'bg-secondary-lt'))"
-                                              th:text="${approvalStatus}">PENDING</span>
-                                    </div>
-                                </div>
-                                <button type="button" class="btn btn-white w-100"
-                                        onclick="ErpDrawer.open('drawer-approval-history')">
-                                    <i class="ti ti-history me-1"></i>
-                                    <span th:text="#{label.approval.history}">View History</span>
-                                </button>
-                            </div>
-                        </div>
                     </div>
 
                 </div>
