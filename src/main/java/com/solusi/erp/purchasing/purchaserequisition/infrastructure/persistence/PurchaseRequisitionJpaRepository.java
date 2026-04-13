@@ -28,9 +28,9 @@ public interface PurchaseRequisitionJpaRepository extends JpaRepository<Purchase
            countQuery = "SELECT COUNT(p) FROM PurchaseRequisitionEntity p")
     Page<PurchaseRequisitionEntity> findAllWithLines(Pageable pageable);
 
-    @Query("SELECT DISTINCT p FROM PurchaseRequisitionEntity p JOIN p.lines l " +
+    @Query("SELECT DISTINCT p FROM PurchaseRequisitionEntity p " +
            "WHERE p.status = com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisitionStatus.APPROVED " +
-           "AND l.suggestedSupplierId = :supplierId")
+           "AND p.suggestedSupplierId = :supplierId")
     List<PurchaseRequisitionEntity> findApprovedBySupplier(@Param("supplierId") Long supplierId);
 
     @Query("SELECT DISTINCT p FROM PurchaseRequisitionEntity p " +

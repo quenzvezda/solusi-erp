@@ -22,7 +22,7 @@ class PurchaseRequisitionTest {
             AuditMetadata.empty(), null,
             1L, new BigDecimal("10.0000"), 1L,
             LocalDate.of(2026, 8, 1),
-            new BigDecimal("50.0000"), null, null, "Line note"
+            new BigDecimal("50.0000"), null, "Line note"
         );
     }
 
@@ -39,6 +39,7 @@ class PurchaseRequisitionTest {
                 1L, 2L, "IT",
                 PurchaseRequisitionPriority.NORMAL,
                 "Initial request",
+                null,
                 new ArrayList<>()
             );
 
@@ -62,6 +63,7 @@ class PurchaseRequisitionTest {
                 LocalDate.of(2026, 7, 14),
                 1L, null, null,
                 PurchaseRequisitionPriority.LOW,
+                null,
                 null,
                 new ArrayList<>()
             );
@@ -90,6 +92,7 @@ class PurchaseRequisitionTest {
                 PurchaseRequisitionStatus.SUBMITTED,
                 "Urgent need",
                 true,
+                null,
                 lines
             );
 
@@ -109,7 +112,7 @@ class PurchaseRequisitionTest {
         void update_whenDraft_updatesMutableFields() {
             PurchaseRequisition pr = PurchaseRequisition.createNew(
                 "PR-001", LocalDate.of(2026, 7, 14),
-                1L, 2L, "IT", PurchaseRequisitionPriority.NORMAL, "Old note", new ArrayList<>()
+                1L, 2L, "IT", PurchaseRequisitionPriority.NORMAL, "Old note", null, new ArrayList<>()
             );
 
             PurchaseRequisitionLine newLine = createValidLine();
@@ -118,6 +121,7 @@ class PurchaseRequisitionTest {
                 3L, "Operations",
                 PurchaseRequisitionPriority.HIGH,
                 "Updated note",
+                null,
                 List.of(newLine)
             );
 
@@ -136,12 +140,12 @@ class PurchaseRequisitionTest {
             PurchaseRequisition pr = new PurchaseRequisition(
                 metadata, "PR-001", LocalDate.of(2026, 7, 14),
                 1L, 2L, "IT", PurchaseRequisitionPriority.NORMAL,
-                PurchaseRequisitionStatus.SUBMITTED, "note", true, new ArrayList<>()
+                PurchaseRequisitionStatus.SUBMITTED, "note", true, null, new ArrayList<>()
             );
 
             assertThatThrownBy(() -> pr.update(
                 LocalDate.of(2026, 7, 20), 3L, "Ops",
-                PurchaseRequisitionPriority.HIGH, "New", List.of()
+                PurchaseRequisitionPriority.HIGH, "New", null, List.of()
             ))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("msg.error.pr.update.not.draft");
@@ -158,6 +162,7 @@ class PurchaseRequisitionTest {
             PurchaseRequisition pr = PurchaseRequisition.createNew(
                 "PR-001", LocalDate.of(2026, 7, 14),
                 1L, 2L, "IT", PurchaseRequisitionPriority.NORMAL, null,
+                null,
                 new ArrayList<>(List.of(createValidLine()))
             );
 
@@ -171,7 +176,7 @@ class PurchaseRequisitionTest {
         void submit_withNoLines_throwsDomainException() {
             PurchaseRequisition pr = PurchaseRequisition.createNew(
                 "PR-001", LocalDate.of(2026, 7, 14),
-                1L, 2L, "IT", PurchaseRequisitionPriority.NORMAL, null, new ArrayList<>()
+                1L, 2L, "IT", PurchaseRequisitionPriority.NORMAL, null, null, new ArrayList<>()
             );
 
             assertThatThrownBy(() -> pr.submit())
@@ -186,7 +191,7 @@ class PurchaseRequisitionTest {
             PurchaseRequisition pr = new PurchaseRequisition(
                 metadata, "PR-001", LocalDate.of(2026, 7, 14),
                 1L, 2L, "IT", PurchaseRequisitionPriority.NORMAL,
-                PurchaseRequisitionStatus.APPROVED, null, true,
+                PurchaseRequisitionStatus.APPROVED, null, true, null,
                 new ArrayList<>(List.of(createValidLine()))
             );
 
@@ -207,7 +212,7 @@ class PurchaseRequisitionTest {
             PurchaseRequisition pr = new PurchaseRequisition(
                 metadata, "PR-001", LocalDate.of(2026, 7, 14),
                 1L, 2L, "IT", PurchaseRequisitionPriority.NORMAL,
-                PurchaseRequisitionStatus.SUBMITTED, null, true,
+                PurchaseRequisitionStatus.SUBMITTED, null, true, null,
                 new ArrayList<>(List.of(createValidLine()))
             );
 
@@ -228,7 +233,7 @@ class PurchaseRequisitionTest {
             PurchaseRequisition pr = new PurchaseRequisition(
                 metadata, "PR-001", LocalDate.of(2026, 7, 14),
                 1L, 2L, "IT", PurchaseRequisitionPriority.NORMAL,
-                PurchaseRequisitionStatus.SUBMITTED, null, true,
+                PurchaseRequisitionStatus.SUBMITTED, null, true, null,
                 new ArrayList<>(List.of(createValidLine()))
             );
 
@@ -247,7 +252,7 @@ class PurchaseRequisitionTest {
         void cancel_fromDraft_changesStatusToCancelled() {
             PurchaseRequisition pr = PurchaseRequisition.createNew(
                 "PR-001", LocalDate.of(2026, 7, 14),
-                1L, 2L, "IT", PurchaseRequisitionPriority.NORMAL, null, new ArrayList<>()
+                1L, 2L, "IT", PurchaseRequisitionPriority.NORMAL, null, null, new ArrayList<>()
             );
 
             pr.cancel();
@@ -262,7 +267,7 @@ class PurchaseRequisitionTest {
             PurchaseRequisition pr = new PurchaseRequisition(
                 metadata, "PR-001", LocalDate.of(2026, 7, 14),
                 1L, 2L, "IT", PurchaseRequisitionPriority.NORMAL,
-                PurchaseRequisitionStatus.SUBMITTED, null, true, new ArrayList<>()
+                PurchaseRequisitionStatus.SUBMITTED, null, true, null, new ArrayList<>()
             );
 
             pr.cancel();
@@ -277,7 +282,7 @@ class PurchaseRequisitionTest {
             PurchaseRequisition pr = new PurchaseRequisition(
                 metadata, "PR-001", LocalDate.of(2026, 7, 14),
                 1L, 2L, "IT", PurchaseRequisitionPriority.NORMAL,
-                PurchaseRequisitionStatus.APPROVED, null, true, new ArrayList<>()
+                PurchaseRequisitionStatus.APPROVED, null, true, null, new ArrayList<>()
             );
 
             pr.cancel();
@@ -292,7 +297,7 @@ class PurchaseRequisitionTest {
             PurchaseRequisition pr = new PurchaseRequisition(
                 metadata, "PR-001", LocalDate.of(2026, 7, 14),
                 1L, 2L, "IT", PurchaseRequisitionPriority.NORMAL,
-                PurchaseRequisitionStatus.CONVERTED, null, true, new ArrayList<>()
+                PurchaseRequisitionStatus.CONVERTED, null, true, null, new ArrayList<>()
             );
 
             assertThatThrownBy(() -> pr.cancel())
@@ -307,7 +312,7 @@ class PurchaseRequisitionTest {
             PurchaseRequisition pr = new PurchaseRequisition(
                 metadata, "PR-001", LocalDate.of(2026, 7, 14),
                 1L, 2L, "IT", PurchaseRequisitionPriority.NORMAL,
-                PurchaseRequisitionStatus.CANCELLED, null, true, new ArrayList<>()
+                PurchaseRequisitionStatus.CANCELLED, null, true, null, new ArrayList<>()
             );
 
             assertThatThrownBy(() -> pr.cancel())
@@ -325,7 +330,7 @@ class PurchaseRequisitionTest {
         void deactivate_fromDraft_setsActiveToFalse() {
             PurchaseRequisition pr = PurchaseRequisition.createNew(
                 "PR-001", LocalDate.of(2026, 7, 14),
-                1L, 2L, "IT", PurchaseRequisitionPriority.NORMAL, null, new ArrayList<>()
+                1L, 2L, "IT", PurchaseRequisitionPriority.NORMAL, null, null, new ArrayList<>()
             );
 
             pr.deactivate();
@@ -340,7 +345,7 @@ class PurchaseRequisitionTest {
             PurchaseRequisition pr = new PurchaseRequisition(
                 metadata, "PR-001", LocalDate.of(2026, 7, 14),
                 1L, 2L, "IT", PurchaseRequisitionPriority.NORMAL,
-                PurchaseRequisitionStatus.SUBMITTED, null, true, new ArrayList<>()
+                PurchaseRequisitionStatus.SUBMITTED, null, true, null, new ArrayList<>()
             );
 
             assertThatThrownBy(() -> pr.deactivate())
@@ -359,7 +364,7 @@ class PurchaseRequisitionTest {
             PurchaseRequisitionLine line = new PurchaseRequisitionLine(
                 AuditMetadata.empty(), null,
                 1L, new BigDecimal("5.0000"), 1L,
-                null, null, null, null, null
+                null, null, null, null
             );
 
             assertThat(line.getQuantity()).isEqualByComparingTo("5.0000");
@@ -371,7 +376,7 @@ class PurchaseRequisitionTest {
             assertThatThrownBy(() -> new PurchaseRequisitionLine(
                 AuditMetadata.empty(), null,
                 1L, BigDecimal.ZERO, 1L,
-                null, null, null, null, null
+                null, null, null, null
             ))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("msg.error.pr.line.quantity.positive");
@@ -383,7 +388,7 @@ class PurchaseRequisitionTest {
             assertThatThrownBy(() -> new PurchaseRequisitionLine(
                 AuditMetadata.empty(), null,
                 1L, new BigDecimal("-1.0000"), 1L,
-                null, null, null, null, null
+                null, null, null, null
             ))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("msg.error.pr.line.quantity.positive");
@@ -395,7 +400,7 @@ class PurchaseRequisitionTest {
             assertThatThrownBy(() -> new PurchaseRequisitionLine(
                 AuditMetadata.empty(), null,
                 1L, null, 1L,
-                null, null, null, null, null
+                null, null, null, null
             ))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("msg.error.pr.line.quantity.positive");
@@ -412,6 +417,7 @@ class PurchaseRequisitionTest {
             PurchaseRequisition pr = PurchaseRequisition.createNew(
                 "PR-001", LocalDate.of(2026, 7, 14),
                 1L, 2L, "IT", PurchaseRequisitionPriority.NORMAL, null,
+                null,
                 new ArrayList<>(List.of(createValidLine()))
             );
 

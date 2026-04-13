@@ -69,13 +69,13 @@ public class PurchaseRequisitionControllerTest {
             AuditMetadata.empty(), 1L, 10L,
             new BigDecimal("5.0000"), 1L,
             LocalDate.of(2026, 8, 1), new BigDecimal("100.00"),
-            null, null, "Test line"
+            null, "Test line"
         );
         return new PurchaseRequisition(metadata, "PR-001",
             LocalDate.of(2026, 7, 1), 100L, 200L, "IT",
             PurchaseRequisitionPriority.NORMAL,
             PurchaseRequisitionStatus.DRAFT,
-            "Test note", true, List.of(line));
+            "Test note", true, null, List.of(line));
     }
 
     private PurchaseRequisition buildSubmittedPr() {
@@ -84,7 +84,7 @@ public class PurchaseRequisitionControllerTest {
             LocalDate.of(2026, 7, 1), 100L, null, "Finance",
             PurchaseRequisitionPriority.HIGH,
             PurchaseRequisitionStatus.SUBMITTED,
-            null, true, List.of());
+            null, true, null, List.of());
     }
 
     @Test

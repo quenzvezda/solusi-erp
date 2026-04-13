@@ -41,7 +41,7 @@ class GetPurchaseRequisitionEditViewUseCaseTest {
                 new AuditMetadata(1L, 1L, null, null, null, null),
                 "PR-2607-00001", LocalDate.of(2026, 7, 1), 10L, 2L,
                 "IT", PurchaseRequisitionPriority.NORMAL,
-                PurchaseRequisitionStatus.DRAFT, "note", true, List.of()
+                PurchaseRequisitionStatus.DRAFT, "note", true, null, List.of()
         );
 
         when(repository.findById(1L)).thenReturn(Optional.of(pr));

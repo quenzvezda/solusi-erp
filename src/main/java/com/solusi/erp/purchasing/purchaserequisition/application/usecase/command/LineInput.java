@@ -5,5 +5,5 @@ import java.time.LocalDate;
 
 public record LineInput(Long productId, BigDecimal quantity, Long uomId,
                         LocalDate requiredDate, BigDecimal estimatedUnitPrice,
-                        Long suggestedSupplierId, String note) {
+                        String note) {
 }

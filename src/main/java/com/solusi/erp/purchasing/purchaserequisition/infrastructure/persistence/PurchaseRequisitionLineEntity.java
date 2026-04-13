@@ -35,9 +35,6 @@ public class PurchaseRequisitionLineEntity extends BaseModel {
     @Column(name = "estimated_unit_price", precision = 19, scale = 4)
     private BigDecimal estimatedUnitPrice;
 
-    @Column(name = "suggested_supplier_id")
-    private Long suggestedSupplierId;
-
     @Column(name = "converted_po_line_id")
     private Long convertedPoLineId;
 

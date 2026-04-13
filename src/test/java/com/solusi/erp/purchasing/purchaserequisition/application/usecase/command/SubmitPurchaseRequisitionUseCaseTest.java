@@ -50,13 +50,13 @@ class SubmitPurchaseRequisitionUseCaseTest {
         PurchaseRequisitionLine line = new PurchaseRequisitionLine(
                 AuditMetadata.empty(), null, 10L, new BigDecimal("5.0000"),
                 1L, LocalDate.of(2026, 7, 15), new BigDecimal("100.0000"),
-                20L, null, "line note"
+                null, "line note"
         );
         PurchaseRequisition existing = new PurchaseRequisition(
                 new AuditMetadata(1L, 1L, null, null, null, null),
                 "PR-2607-00001", LocalDate.of(2026, 7, 1), 10L, 2L,
                 "IT", PurchaseRequisitionPriority.NORMAL,
-                PurchaseRequisitionStatus.DRAFT, "note", true, List.of(line)
+                PurchaseRequisitionStatus.DRAFT, "note", true, null, List.of(line)
         );
 
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
@@ -86,7 +86,7 @@ class SubmitPurchaseRequisitionUseCaseTest {
                 new AuditMetadata(2L, 1L, null, null, null, null),
                 "PR-2607-00002", LocalDate.of(2026, 7, 1), 10L, 2L,
                 "IT", PurchaseRequisitionPriority.NORMAL,
-                PurchaseRequisitionStatus.DRAFT, "note", true, List.of()
+                PurchaseRequisitionStatus.DRAFT, "note", true, null, List.of()
         );
 
         when(repository.findById(2L)).thenReturn(Optional.of(existing));

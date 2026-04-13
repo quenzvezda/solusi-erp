@@ -44,7 +44,7 @@ class UpdatePurchaseRequisitionUseCaseTest {
                 new AuditMetadata(1L, 1L, null, null, null, null),
                 "PR-2607-00001", LocalDate.of(2026, 7, 1), 10L, 2L,
                 "IT", PurchaseRequisitionPriority.NORMAL,
-                PurchaseRequisitionStatus.DRAFT, "old note", true, List.of()
+                PurchaseRequisitionStatus.DRAFT, "old note", true, null, List.of()
         );
 
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
@@ -53,7 +53,7 @@ class UpdatePurchaseRequisitionUseCaseTest {
         PurchaseRequisition result = useCase.execute(
                 1L, LocalDate.of(2026, 8, 1), 3L,
                 "HR", PurchaseRequisitionPriority.HIGH,
-                "updated note", List.of()
+                "updated note", null, List.of()
         );
 
         assertThat(result.getDepartment()).isEqualTo("HR");
@@ -70,7 +70,7 @@ class UpdatePurchaseRequisitionUseCaseTest {
         assertThatThrownBy(() -> useCase.execute(
                 99L, LocalDate.of(2026, 8, 1), 3L,
                 "HR", PurchaseRequisitionPriority.HIGH,
-                "note", List.of()
+                "note", null, List.of()
         ))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("msg.error.pr.notfound");

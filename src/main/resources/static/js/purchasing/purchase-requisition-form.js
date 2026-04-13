@@ -1,10 +1,109 @@
 document.addEventListener('DOMContentLoaded', function () {
     const config = window.PurchaseRequisitionPageConfig || {};
-    if (config.isLocked) return;
 
     const lineContainer = document.getElementById('line-container');
-    const templateSource = document.getElementById('row-template-source');
     const emptyMsg = document.getElementById('empty-msg');
+
+    // ── Grand Total recap ──────────────────────────────────────────────────────
+    function parseNumeric(el) {
+        if (!el) return 0;
+        const raw = el.value.replace(/[^0-9.,-]/g, '').replace(/,/g, '');
+        return parseFloat(raw) || 0;
+    }
+
+    function updateLineTotal(row) {
+        const qty = parseNumeric(row.querySelector('.input-qty'));
+        const price = parseNumeric(row.querySelector('.input-price'));
+        const total = qty * price;
+        const totalEl = row.querySelector('.line-total');
+        if (totalEl) {
+            totalEl.value = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        return total;
+    }
+
+    function updateGrandTotal() {
+        let grand = 0;
+        lineContainer.querySelectorAll('.line-row').forEach(function (row) {
+            grand += updateLineTotal(row);
+        });
+        const grandEl = document.getElementById('recap-grand-total');
+        if (grandEl) {
+            grandEl.textContent = grand.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+    }
+
+    // Delegate input events for qty/price on all current and future rows
+    lineContainer.addEventListener('input', function (e) {
+        if (e.target.matches('.input-qty') || e.target.matches('.input-price')) {
+            updateGrandTotal();
+        }
+    });
+
+    // ── UoM auto-fill when product is selected ─────────────────────────────────
+    function initRowBehaviours(row) {
+        const productSelect = row.querySelector('.select-product');
+        if (!productSelect) return;
+
+        function waitForTomSelect(el, cb, attempts) {
+            if (el.tomselect) { cb(el.tomselect); return; }
+            if ((attempts || 0) < 20) setTimeout(function () { waitForTomSelect(el, cb, (attempts || 0) + 1); }, 100);
+        }
+
+        waitForTomSelect(productSelect, function (ts) {
+            ts.on('change', function (value) {
+                const uomSelect = row.querySelector('.select-uom');
+                if (!uomSelect || !uomSelect.tomselect) return;
+
+                if (!value) {
+                    uomSelect.tomselect.enable();
+                    uomSelect.tomselect.clear();
+                    return;
+                }
+
+                const item = ts.options[value];
+                const payload = item && item.payload;
+                if (payload && payload.uomId) {
+                    const uomTs = uomSelect.tomselect;
+                    // Add option if not present, then select it
+                    if (!uomTs.options[payload.uomId]) {
+                        uomTs.addOption({ value: payload.uomId, text: payload.uomName || payload.uomCode || payload.uomId });
+                    }
+                    uomTs.setValue(payload.uomId, true);
+                    uomTs.disable();
+                } else {
+                    // No payload yet — fetch from API
+                    fetch('/api/lookup/inventory/products/' + encodeURIComponent(value))
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) {
+                            const p = data && data.payload;
+                            if (p && p.uomId) {
+                                const uomTs = uomSelect.tomselect;
+                                if (!uomTs.options[p.uomId]) {
+                                    uomTs.addOption({ value: p.uomId, text: p.uomName || p.uomCode || p.uomId });
+                                }
+                                uomTs.setValue(p.uomId, true);
+                                uomTs.disable();
+                            }
+                        })
+                        .catch(function () {});
+                }
+            });
+        });
+    }
+
+    // Init behaviours on pre-existing rows
+    lineContainer.querySelectorAll('.line-row').forEach(function (row) {
+        initRowBehaviours(row);
+    });
+
+    // Compute initial totals for pre-existing rows
+    updateGrandTotal();
+
+    if (config.isLocked) return;
+
+    // ── Add Line ───────────────────────────────────────────────────────────────
+    const templateSource = document.getElementById('row-template-source');
     const btnAddLine = document.getElementById('btn-add-line');
 
     function getNextIndex() {
@@ -52,6 +151,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (typeof initNumericInputs === 'function') {
                 initNumericInputs(newRow);
             }
+
+            initRowBehaviours(newRow);
         });
     }
 
@@ -62,11 +163,12 @@ document.addEventListener('DOMContentLoaded', function () {
             if (row) {
                 row.remove();
                 updateEmptyMessage();
+                updateGrandTotal();
             }
         }
     });
 
-    // Submit for Approval handler
+    // ── Submit for Approval handler ────────────────────────────────────────────
     const btnSubmitPr = document.getElementById('btn-submit-pr');
     if (btnSubmitPr) {
         btnSubmitPr.addEventListener('click', function () {

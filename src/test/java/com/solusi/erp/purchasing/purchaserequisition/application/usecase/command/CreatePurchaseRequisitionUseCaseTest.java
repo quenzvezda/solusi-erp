@@ -46,7 +46,7 @@ class CreatePurchaseRequisitionUseCaseTest {
         PurchaseRequisition result = useCase.execute(
                 LocalDate.of(2026, 7, 1), 1L, 2L,
                 "IT", PurchaseRequisitionPriority.NORMAL,
-                "Test note", List.of()
+                "Test note", null, List.of()
         );
 
         assertThat(result.getCode()).isEqualTo("PR-2607-00001");
@@ -65,15 +65,15 @@ class CreatePurchaseRequisitionUseCaseTest {
 
         List<LineInput> lines = List.of(
                 new LineInput(10L, new BigDecimal("5.0000"), 1L,
-                        LocalDate.of(2026, 7, 15), new BigDecimal("100.0000"), 20L, "Line 1"),
+                        LocalDate.of(2026, 7, 15), new BigDecimal("100.0000"), "Line 1"),
                 new LineInput(11L, new BigDecimal("3.0000"), 2L,
-                        LocalDate.of(2026, 7, 20), new BigDecimal("200.0000"), null, null)
+                        LocalDate.of(2026, 7, 20), new BigDecimal("200.0000"), null)
         );
 
         PurchaseRequisition result = useCase.execute(
                 LocalDate.of(2026, 7, 1), 1L, 2L,
                 "HR", PurchaseRequisitionPriority.HIGH,
-                null, lines
+                null, null, lines
         );
 
         assertThat(result.getLines()).hasSize(2);

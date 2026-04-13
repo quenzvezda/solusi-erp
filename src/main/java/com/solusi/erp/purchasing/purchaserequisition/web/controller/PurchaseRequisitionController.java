@@ -95,7 +95,7 @@ public class PurchaseRequisitionController {
         PurchaseRequisition domain = createPurchaseRequisitionUseCase.execute(
             request.getRequestDate(), request.getRequesterId(), request.getFacilityId(),
             request.getDepartment(), request.getPriority(),
-            request.getNote(), lines
+            request.getNote(), request.getSuggestedSupplierId(), lines
         );
         PurchaseRequisitionDetailResponse data = webMapper.toDetailResponse(domain);
         String msg = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
@@ -125,7 +125,7 @@ public class PurchaseRequisitionController {
         PurchaseRequisition domain = updatePurchaseRequisitionUseCase.execute(
             id, request.getRequestDate(), request.getFacilityId(),
             request.getDepartment(), request.getPriority(),
-            request.getNote(), lines
+            request.getNote(), request.getSuggestedSupplierId(), lines
         );
         PurchaseRequisitionDetailResponse data = webMapper.toDetailResponse(domain);
         String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());

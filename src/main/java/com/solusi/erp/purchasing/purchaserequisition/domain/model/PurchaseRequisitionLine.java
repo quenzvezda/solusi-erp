@@ -15,14 +15,13 @@ public class PurchaseRequisitionLine {
     private final Long uomId;
     private final LocalDate requiredDate;
     private final BigDecimal estimatedUnitPrice;
-    private final Long suggestedSupplierId;
     private final Long convertedPoLineId;
     private final String note;
 
     public PurchaseRequisitionLine(AuditMetadata metadata, Long headerId,
                                     Long productId, BigDecimal quantity, Long uomId,
                                     LocalDate requiredDate, BigDecimal estimatedUnitPrice,
-                                    Long suggestedSupplierId, Long convertedPoLineId,
+                                    Long convertedPoLineId,
                                     String note) {
         validateQuantity(quantity);
         this.metadata = metadata;
@@ -32,7 +31,6 @@ public class PurchaseRequisitionLine {
         this.uomId = uomId;
         this.requiredDate = requiredDate;
         this.estimatedUnitPrice = estimatedUnitPrice;
-        this.suggestedSupplierId = suggestedSupplierId;
         this.convertedPoLineId = convertedPoLineId;
         this.note = note;
     }
@@ -55,7 +53,6 @@ public class PurchaseRequisitionLine {
     public Long getUomId() { return uomId; }
     public LocalDate getRequiredDate() { return requiredDate; }
     public BigDecimal getEstimatedUnitPrice() { return estimatedUnitPrice; }
-    public Long getSuggestedSupplierId() { return suggestedSupplierId; }
     public Long getConvertedPoLineId() { return convertedPoLineId; }
     public String getNote() { return note; }
 }

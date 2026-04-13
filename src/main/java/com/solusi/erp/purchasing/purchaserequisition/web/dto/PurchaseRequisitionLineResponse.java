@@ -18,7 +18,5 @@ public class PurchaseRequisitionLineResponse {
     private String uomName;
     private LocalDate requiredDate;
     private BigDecimal estimatedUnitPrice;
-    private Long suggestedSupplierId;
-    private String supplierName;
     private String note;
 }

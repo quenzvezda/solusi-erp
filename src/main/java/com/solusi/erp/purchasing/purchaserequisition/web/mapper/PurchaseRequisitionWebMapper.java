@@ -35,20 +35,20 @@ public abstract class PurchaseRequisitionWebMapper {
 
     @Mapping(target = "requesterName", source = "requesterId", qualifiedByName = "getRequesterName")
     @Mapping(target = "facilityName", source = "facilityId", qualifiedByName = "getFacilityName")
+    @Mapping(target = "supplierName", source = "suggestedSupplierId", qualifiedByName = "getSupplierName")
     public abstract PurchaseRequisitionDetailResponse toDetailResponse(PurchaseRequisition domain);
 
     @Mapping(target = "requesterName", source = "requesterId", qualifiedByName = "getRequesterName")
     @Mapping(target = "facilityName", source = "facilityId", qualifiedByName = "getFacilityName")
+    @Mapping(target = "supplierName", source = "suggestedSupplierId", qualifiedByName = "getSupplierName")
     public abstract PurchaseRequisitionSaveRequest toSaveRequest(PurchaseRequisition domain);
 
     @Mapping(target = "productName", source = "productId", qualifiedByName = "getProductName")
     @Mapping(target = "uomName", source = "uomId", qualifiedByName = "getUomName")
-    @Mapping(target = "supplierName", source = "suggestedSupplierId", qualifiedByName = "getSupplierName")
     public abstract PurchaseRequisitionLineRequest toLineRequest(PurchaseRequisitionLine line);
 
     @Mapping(target = "productName", source = "productId", qualifiedByName = "getProductName")
     @Mapping(target = "uomName", source = "uomId", qualifiedByName = "getUomName")
-    @Mapping(target = "supplierName", source = "suggestedSupplierId", qualifiedByName = "getSupplierName")
     public abstract PurchaseRequisitionLineResponse toLineResponse(PurchaseRequisitionLine line);
 
     public abstract LineInput toLineInput(PurchaseRequisitionLineRequest request);

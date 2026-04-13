@@ -39,8 +39,10 @@ public class PurchaseRequisitionSaveRequest extends BaseAuditResponse {
 
     private Long approverId;
 
+    private Long suggestedSupplierId;
     private String requesterName;
     private String facilityName;
+    private String supplierName;
 
     @Valid
     private List<PurchaseRequisitionLineRequest> lines = new ArrayList<>();

@@ -48,6 +48,9 @@ public class PurchaseRequisitionEntity extends BaseModel {
     @Column(name = "is_active", nullable = false)
     private boolean active;
 
+    @Column(name = "suggested_supplier_id")
+    private Long suggestedSupplierId;
+
     @OneToMany(mappedBy = "header", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PurchaseRequisitionLineEntity> lines = new ArrayList<>();
 }

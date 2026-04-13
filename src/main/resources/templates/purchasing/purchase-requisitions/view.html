@@ -85,6 +85,10 @@
                                         <label class="form-label text-secondary" th:text="#{label.pr.department}">Department</label>
                                         <div class="form-control-plaintext" th:text="${pr.department ?: '-'}">-</div>
                                     </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.pr.suggestedSupplier}">Suggested Supplier</label>
+                                        <div class="form-control-plaintext" th:text="${pr.supplierName ?: '-'}">-</div>
+                                    </div>
                                     <div class="col-12" th:if="${pr.note != null && !pr.note.isEmpty()}">
                                         <label class="form-label text-secondary" th:text="#{label.pr.note}">Note</label>
                                         <div class="form-control-plaintext" th:text="${pr.note}">-</div>
@@ -106,7 +110,7 @@
                                             <th th:text="#{label.uom}">UoM</th>
                                             <th th:text="#{label.pr.line.requiredDate}">Required Date</th>
                                             <th class="text-end" th:text="#{label.pr.line.estimatedUnitPrice}">Est. Price</th>
-                                            <th th:text="#{label.pr.line.suggestedSupplier}">Supplier</th>
+                                            <th class="text-end" th:text="#{label.pr.line.total}">Total</th>
                                             <th th:text="#{label.pr.line.note}">Note</th>
                                         </tr>
                                     </thead>
@@ -117,7 +121,7 @@
                                             <td th:text="${line.uomName}">UoM</td>
                                             <td th:text="${line.requiredDate != null ? #temporals.format(line.requiredDate, 'dd MMM yyyy') : '-'}">-</td>
                                             <td class="text-end" th:text="${line.estimatedUnitPrice != null ? #numbers.formatDecimal(line.estimatedUnitPrice, 1, 'COMMA', 2, 'POINT') : '-'}">-</td>
-                                            <td th:text="${line.supplierName ?: '-'}">-</td>
+                                            <td class="text-end" th:text="${(line.quantity != null && line.estimatedUnitPrice != null) ? #numbers.formatDecimal(line.quantity * line.estimatedUnitPrice, 1, 'COMMA', 2, 'POINT') : '-'}">-</td>
                                             <td th:text="${line.note ?: '-'}">-</td>
                                         </tr>
                                         <tr th:if="${pr.lines == null || pr.lines.isEmpty()}">
