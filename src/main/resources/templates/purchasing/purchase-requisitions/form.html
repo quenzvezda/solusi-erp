@@ -75,7 +75,7 @@
                                              <label class="form-label required" th:text="#{label.pr.currency}">Currency</label>
                                              <select class="form-select erp-input select-currency" th:field="*{currencyId}" th:disabled="${isLocked}" required>
                                                  <option value="">-- Select Currency --</option>
-                                                 <option th:each="curr : ${currencies}" th:value="${curr.id}" th:text="${curr.code}"></option>
+                                                 <option th:each="curr : ${currencies}" th:value="${curr.id}" th:text="${curr.alias}"></option>
                                              </select>
                                          </div>
                                         <div class="col-12">
