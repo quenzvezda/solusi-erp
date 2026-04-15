@@ -4,6 +4,11 @@ import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.core.dto.LookupDto;
+import com.solusi.erp.inventory.product.domain.port.ProductLookupProvider;
+import com.solusi.erp.inventory.uom.domain.port.UomLookupProvider;
+import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
+import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import com.solusi.erp.purchasing.supplierpricelist.application.usecase.command.*;
 import com.solusi.erp.purchasing.supplierpricelist.application.usecase.query.*;
 import com.solusi.erp.purchasing.supplierpricelist.domain.model.SupplierPriceList;
@@ -23,7 +28,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Controller
@@ -39,6 +46,10 @@ public class SupplierPriceListController {
     private final GetSupplierPriceListEditViewUseCase getSupplierPriceListEditViewUseCase;
     private final SupplierPriceListWebMapper webMapper;
     private final MessageSource messageSource;
+    private final PartyLookupProvider partyLookupProvider;
+    private final ProductLookupProvider productLookupProvider;
+    private final UomLookupProvider uomLookupProvider;
+    private final CurrencyLookupProvider currencyLookupProvider;
 
     @GetMapping
     @PreAuthorize("hasAuthority('SPL_READ')")
@@ -91,6 +102,7 @@ public class SupplierPriceListController {
             .orElseThrow(() -> new RuntimeException("Supplier price list not found"));
         model.addAttribute("splRequest", webMapper.toSaveRequest(domain));
         model.addAttribute("auditInfo", webMapper.toDetailResponse(domain));
+        model.addAttribute("splUI", buildSPLUI(domain));
         return "purchasing/supplier-price-lists/form";
     }
 
@@ -118,5 +130,35 @@ public class SupplierPriceListController {
         deleteSupplierPriceListUseCase.execute(id);
         String msg = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
         return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
+    }
+
+    private Map<String, Object> buildSPLUI(SupplierPriceList domain) {
+        Map<String, Object> ui = new HashMap<>();
+
+        LookupDto supplier = partyLookupProvider.resolve(domain.getSupplierId());
+        if (supplier != null) {
+            ui.put("supplierText", supplier.name());
+            ui.put("supplierSubtext", supplier.subText());
+        }
+
+        LookupDto product = productLookupProvider.resolve(domain.getProductId());
+        if (product != null) {
+            ui.put("productText", product.name());
+            ui.put("productSubtext", product.subText());
+        }
+
+        LookupDto uom = uomLookupProvider.resolve(domain.getUomId());
+        if (uom != null) {
+            ui.put("uomText", uom.name());
+            ui.put("uomSubtext", uom.subText());
+        }
+
+        LookupDto currency = currencyLookupProvider.resolve(domain.getCurrencyId());
+        if (currency != null) {
+            ui.put("currencyText", currency.name());
+            ui.put("currencySubtext", currency.subText());
+        }
+
+        return ui;
     }
 }

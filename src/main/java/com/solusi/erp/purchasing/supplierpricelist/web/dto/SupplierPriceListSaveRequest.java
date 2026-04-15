@@ -46,9 +46,4 @@ public class SupplierPriceListSaveRequest extends BaseAuditResponse {
     private String note;
 
     private boolean active = true;
-
-    private String supplierName;
-    private String productName;
-    private String uomName;
-    private String currencyName;
 }

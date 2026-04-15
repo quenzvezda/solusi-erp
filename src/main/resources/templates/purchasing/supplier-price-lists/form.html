@@ -46,16 +46,20 @@
                                 <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.spl.code}, isReadonly=true, placeholder=${splRequest.id == null ? '[ Auto Generated ]' : ''})}"></div>
 
                                 <div th:replace="~{fragments/inputs :: autocomplete(field='supplierId', label=#{label.spl.supplier}, required=true, path='parties',
-                                    initialValue=${splRequest.supplierId}, initialText=${splRequest.supplierName})}"></div>
+                                    initialValue=${splRequest.supplierId}, initialText=${splUI != null ? splUI.supplierText : ''},
+                                    initialSubtext=${splUI != null ? splUI.supplierSubtext : ''})}"></div>
 
                                 <div th:replace="~{fragments/inputs :: autocomplete(field='productId', label=#{label.spl.product}, required=true, path='inventory/products',
-                                    initialValue=${splRequest.productId}, initialText=${splRequest.productName})}"></div>
+                                    initialValue=${splRequest.productId}, initialText=${splUI != null ? splUI.productText : ''},
+                                    initialSubtext=${splUI != null ? splUI.productSubtext : ''})}"></div>
 
                                 <div th:replace="~{fragments/inputs :: autocomplete(field='uomId', label=#{label.spl.uom}, required=true, path='inventory/uoms',
-                                    initialValue=${splRequest.uomId}, initialText=${splRequest.uomName})}"></div>
+                                    initialValue=${splRequest.uomId}, initialText=${splUI != null ? splUI.uomText : ''},
+                                    initialSubtext=${splUI != null ? splUI.uomSubtext : ''})}"></div>
 
                                 <div th:replace="~{fragments/inputs :: autocomplete(field='currencyId', label=#{label.spl.currency}, required=true, path='master/currencies',
-                                    initialValue=${splRequest.currencyId}, initialText=${splRequest.currencyName})}"></div>
+                                    initialValue=${splRequest.currencyId}, initialText=${splUI != null ? splUI.currencyText : ''},
+                                    initialSubtext=${splUI != null ? splUI.currencySubtext : ''})}"></div>
                             </div>
 
                             <div class="col-md-6">
