@@ -88,15 +88,18 @@
                                         </div>
                                         <div class="col-md-6">
                                             <div th:replace="~{fragments/inputs :: autocomplete(field='supplierId', label=#{label.po.supplier}, placeholder='', isReadonly=${isLocked}, required=true, id='header-supplier', path='parties',
-                                                initialValue=${poRequest.supplierId}, initialText=${poRequest.supplierName})}"></div>
+                                                initialValue=${poRequest.supplierId}, initialText=${poUI != null ? poUI.supplierText : ''},
+                                                initialSubtext=${poUI != null ? poUI.supplierSubtext : ''})}"></div>
                                         </div>
                                         <div class="col-md-6">
                                             <div th:replace="~{fragments/inputs :: autocomplete(field='facilityId', label=#{label.po.facility}, placeholder='', isReadonly=${isLocked}, id='header-facility', path='inventory/facilities',
-                                                initialValue=${poRequest.facilityId}, initialText=${poRequest.facilityName})}"></div>
+                                                initialValue=${poRequest.facilityId}, initialText=${poUI != null ? poUI.facilityText : ''},
+                                                initialSubtext=${poUI != null ? poUI.facilitySubtext : ''})}"></div>
                                         </div>
                                         <div class="col-md-4">
                                             <div th:replace="~{fragments/inputs :: autocomplete(field='currencyId', label=#{label.po.currency}, placeholder='', isReadonly=${isLocked}, required=true, id='header-currency', path='master/currencies',
-                                                initialValue=${poRequest.currencyId}, initialText=${poRequest.currencyName})}"></div>
+                                                initialValue=${poRequest.currencyId}, initialText=${poUI != null ? poUI.currencyText : ''},
+                                                initialSubtext=${poUI != null ? poUI.currencySubtext : ''})}"></div>
                                         </div>
                                         <div class="col-md-4">
                                             <div th:replace="~{fragments/inputs :: decimal(field='exchangeRate', label=#{label.po.exchangeRate}, isReadonly=${isLocked}, required=true)}"></div>
@@ -155,12 +158,14 @@
                                     <tr th:each="line, stat : *{lines}" class="line-row" th:data-index="${stat.index}">
                                         <td>
                                             <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[' + __${stat.index}__ + '].productId', id='select-product-' + __${stat.index}__, isReadonly=${isLocked}, extraClass='select-product', path='inventory/products',
-                                                initialValue=${line.productId}, initialText=${line.productName})}"></div>
+                                                initialValue=${line.productId}, initialText=${line.productName},
+                                                initialSubtext=${line.productSubtext})}"></div>
                                         </td>
                                         <td><input type="text" th:name="'lines[' + ${stat.index} + '].quantity'" th:value="${line.quantity}" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-qty" th:readonly="${isLocked}"></td>
                                         <td>
                                             <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[' + __${stat.index}__ + '].uomId', id='select-uom-' + __${stat.index}__, isReadonly=${isLocked}, extraClass='select-uom', path='inventory/uoms',
-                                                initialValue=${line.uomId}, initialText=${line.uomName})}"></div>
+                                                initialValue=${line.uomId}, initialText=${line.uomName},
+                                                initialSubtext=${line.uomSubtext})}"></div>
                                         </td>
                                         <td><input type="text" th:name="'lines[' + ${stat.index} + '].unitPrice'" th:value="${line.unitPrice}" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-unit-price" th:readonly="${isLocked}"></td>
                                         <td>

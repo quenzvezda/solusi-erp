@@ -67,18 +67,18 @@
                                         </div>
                                         <div class="col-md-6">
                                             <div th:replace="~{fragments/inputs :: autocomplete(field='requesterId', label=#{label.pr.requester}, placeholder='', isReadonly=${isLocked}, required=true, id='header-requester', path='parties',
-                                                initialValue=${prRequest.requesterId}, initialText=${prRequest.requesterName})}"></div>
+                                                initialValue=${prRequest.requesterId}, initialText=${prUI?.requesterText}, initialSubtext=${prUI?.requesterSubtext})}"></div>
                                         </div>
                                         <div class="col-md-6">
                                             <div th:replace="~{fragments/inputs :: autocomplete(field='facilityId', label=#{label.pr.facility}, placeholder='', isReadonly=${isLocked}, id='header-facility', path='inventory/facilities',
-                                                initialValue=${prRequest.facilityId}, initialText=${prRequest.facilityName})}"></div>
+                                                initialValue=${prRequest.facilityId}, initialText=${prUI?.facilityText}, initialSubtext=${prUI?.facilitySubtext})}"></div>
                                         </div>
                                         <div class="col-md-6">
                                             <div th:replace="~{fragments/inputs :: text(field='department', label=#{label.pr.department}, isReadonly=${isLocked})}"></div>
                                         </div>
                                         <div class="col-md-6">
                                             <div th:replace="~{fragments/inputs :: autocomplete(field='suggestedSupplierId', label=#{label.pr.suggestedSupplier}, placeholder='', isReadonly=${isLocked}, id='header-supplier', path='parties',
-                                                initialValue=${prRequest.suggestedSupplierId}, initialText=${prRequest.supplierName})}"></div>
+                                                initialValue=${prRequest.suggestedSupplierId}, initialText=${prUI?.supplierText}, initialSubtext=${prUI?.supplierSubtext})}"></div>
                                         </div>
                                          <div class="col-md-6">
                                              <label class="form-label required" th:text="#{label.currency}">Currency</label>
@@ -136,12 +136,12 @@
                                     <tr th:each="line, stat : *{lines}" class="line-row" th:data-index="${stat.index}">
                                         <td>
                                             <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[' + __${stat.index}__ + '].productId', id='select-product-' + __${stat.index}__, isReadonly=${isLocked}, extraClass='select-product', path='inventory/products',
-                                                initialValue=${line.productId}, initialText=${line.productName})}"></div>
+                                                initialValue=${line.productId}, initialText=${line.productName}, initialSubtext=${line.productSubtext})}"></div>
                                         </td>
                                         <td><input type="text" th:name="'lines[' + ${stat.index} + '].quantity'" th:value="${line.quantity}" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-qty" th:readonly="${isLocked}"></td>
                                         <td>
                                             <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[' + __${stat.index}__ + '].uomId', id='select-uom-' + __${stat.index}__, isReadonly=${isLocked}, extraClass='select-uom', path='inventory/uoms',
-                                                initialValue=${line.uomId}, initialText=${line.uomName})}"></div>
+                                                initialValue=${line.uomId}, initialText=${line.uomName}, initialSubtext=${line.uomSubtext})}"></div>
                                         </td>
                                         <td><input type="date" th:name="'lines[' + ${stat.index} + '].requiredDate'" th:value="${line.requiredDate}" class="form-control form-control-sm erp-input-sm" th:readonly="${isLocked}" data-picker="date"></td>
                                         <td><input type="text" th:name="'lines[' + ${stat.index} + '].estimatedUnitPrice'" th:value="${line.estimatedUnitPrice}" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-price" th:readonly="${isLocked}"></td>

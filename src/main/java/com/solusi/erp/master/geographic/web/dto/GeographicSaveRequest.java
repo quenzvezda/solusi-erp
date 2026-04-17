@@ -32,6 +32,8 @@ public class GeographicSaveRequest extends BaseAuditResponse {
 
     private String parentName;
 
+    private String parentSubtext;
+
     private Boolean isActive = Boolean.TRUE;
 }
 

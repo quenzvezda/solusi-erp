@@ -1,13 +1,16 @@
 package com.solusi.erp.purchasing.purchaserequisition.web.controller;
 
+import com.solusi.erp.common.approval.application.usecase.query.FindApprovalRequestByReferenceUseCase;
 import com.solusi.erp.common.approval.domain.model.ApprovalRequest;
 import com.solusi.erp.common.approval.domain.model.ApprovalStatus;
-import com.solusi.erp.common.approval.domain.repository.ApprovalRequestRepository;
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.inventory.facility.domain.port.FacilityLookupProvider;
 import com.solusi.erp.master.currency.domain.repository.CurrencyRepository;
+import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import com.solusi.erp.purchasing.purchaserequisition.application.usecase.command.*;
 import com.solusi.erp.purchasing.purchaserequisition.application.usecase.query.*;
 import com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisition;
@@ -38,6 +41,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -56,12 +60,14 @@ public class PurchaseRequisitionController {
     private final CancelPurchaseRequisitionUseCase cancelPurchaseRequisitionUseCase;
     private final FindPurchaseRequisitionsUseCase findPurchaseRequisitionsUseCase;
     private final GetPurchaseRequisitionEditViewUseCase getPurchaseRequisitionEditViewUseCase;
-    private final ApprovalRequestRepository approvalRequestRepository;
+    private final FindApprovalRequestByReferenceUseCase findApprovalRequestByReferenceUseCase;
     private final PurchaseRequisitionJpaRepository purchaseRequisitionJpaRepository;
     private final SupplierPriceListRepository splRepository;
     private final CurrencyRepository currencyRepository;
     private final PurchaseRequisitionWebMapper webMapper;
     private final MessageSource messageSource;
+    private final PartyLookupProvider partyLookupProvider;
+    private final FacilityLookupProvider facilityLookupProvider;
 
     @GetMapping
     @PreAuthorize("hasAuthority('PR_READ')")
@@ -120,6 +126,7 @@ public class PurchaseRequisitionController {
         }
         model.addAttribute("prRequest", webMapper.toSaveRequest(domain));
         model.addAttribute("auditInfo", webMapper.toDetailResponse(domain));
+        model.addAttribute("prUI", buildPRUI(domain));
         model.addAttribute("currencies", currencyRepository.findByIsActiveTrue());
         return "purchasing/purchase-requisitions/form";
     }
@@ -181,7 +188,7 @@ public class PurchaseRequisitionController {
         model.addAttribute("pr", webMapper.toDetailResponse(domain));
 
         Optional<ApprovalRequest> approvalRequest =
-            approvalRequestRepository.findByReference("PURCHASE_REQUISITION", id);
+            findApprovalRequestByReferenceUseCase.execute("PURCHASE_REQUISITION", id);
         approvalRequest.ifPresent(req -> {
             model.addAttribute("approvalRequestId", req.getId());
             model.addAttribute("approvalStatus", req.getStatus());
@@ -258,6 +265,38 @@ public class PurchaseRequisitionController {
         } else {
             return ResponseEntity.noContent().build();
         }
+    }
+
+    /**
+     * Build Trinity Data for PR header autocompletes (requester, facility, suggestedSupplier).
+     * Used by edit form to hydrate initialText and initialSubtext for SSR.
+     */
+    private Map<String, Object> buildPRUI(PurchaseRequisition domain) {
+        Map<String, Object> ui = new HashMap<>();
+
+        LookupDto requester = partyLookupProvider.resolve(domain.getRequesterId());
+        if (requester != null) {
+            ui.put("requesterText", requester.name());
+            ui.put("requesterSubtext", requester.subText());
+        }
+
+        if (domain.getFacilityId() != null) {
+            LookupDto facility = facilityLookupProvider.resolve(domain.getFacilityId());
+            if (facility != null) {
+                ui.put("facilityText", facility.name());
+                ui.put("facilitySubtext", facility.subText());
+            }
+        }
+
+        if (domain.getSuggestedSupplierId() != null) {
+            LookupDto supplier = partyLookupProvider.resolve(domain.getSuggestedSupplierId());
+            if (supplier != null) {
+                ui.put("supplierText", supplier.name());
+                ui.put("supplierSubtext", supplier.subText());
+            }
+        }
+
+        return ui;
     }
 }
 

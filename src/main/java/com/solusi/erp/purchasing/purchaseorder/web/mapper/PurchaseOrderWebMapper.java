@@ -1,12 +1,13 @@
 package com.solusi.erp.purchasing.purchaseorder.web.mapper;
 
 import com.solusi.erp.core.dto.BaseAuditResponse;
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.mapper.AuditMapperHelper;
-import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityJpaRepository;
-import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
-import com.solusi.erp.inventory.uom.infrastructure.persistence.UomJpaRepository;
-import com.solusi.erp.master.currency.infrastructure.persistence.CurrencyJpaRepository;
-import com.solusi.erp.master.party.infrastructure.persistence.PartyJpaRepository;
+import com.solusi.erp.inventory.facility.domain.port.FacilityLookupProvider;
+import com.solusi.erp.inventory.product.domain.port.ProductLookupProvider;
+import com.solusi.erp.inventory.uom.domain.port.UomLookupProvider;
+import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
+import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import com.solusi.erp.purchasing.purchaseorder.application.usecase.command.PoLineInput;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrder;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderLine;
@@ -22,15 +23,15 @@ public abstract class PurchaseOrderWebMapper {
     @Autowired
     protected AuditMapperHelper auditMapperHelper;
     @Autowired
-    protected PartyJpaRepository partyRepository;
+    protected PartyLookupProvider partyLookupProvider;
     @Autowired
-    protected JpaProductRepository productRepository;
+    protected FacilityLookupProvider facilityLookupProvider;
     @Autowired
-    protected UomJpaRepository uomRepository;
+    protected CurrencyLookupProvider currencyLookupProvider;
     @Autowired
-    protected CurrencyJpaRepository currencyRepository;
+    protected ProductLookupProvider productLookupProvider;
     @Autowired
-    protected FacilityJpaRepository facilityRepository;
+    protected UomLookupProvider uomLookupProvider;
 
     @Mapping(target = "lineCount", expression = "java(domain.getLines() != null ? domain.getLines().size() : 0)")
     @Mapping(target = "supplierName", source = "supplierId", qualifiedByName = "getSupplierName")
@@ -41,13 +42,12 @@ public abstract class PurchaseOrderWebMapper {
     @Mapping(target = "currencyName", source = "currencyId", qualifiedByName = "getCurrencyName")
     public abstract PurchaseOrderDetailResponse toDetailResponse(PurchaseOrder domain);
 
-    @Mapping(target = "supplierName", source = "supplierId", qualifiedByName = "getSupplierName")
-    @Mapping(target = "facilityName", source = "facilityId", qualifiedByName = "getFacilityName")
-    @Mapping(target = "currencyName", source = "currencyId", qualifiedByName = "getCurrencyName")
     public abstract PurchaseOrderSaveRequest toSaveRequest(PurchaseOrder domain);
 
     @Mapping(target = "productName", source = "productId", qualifiedByName = "getProductName")
     @Mapping(target = "uomName", source = "uomId", qualifiedByName = "getUomName")
+    @Mapping(target = "productSubtext", source = "productId", qualifiedByName = "getProductSubtext")
+    @Mapping(target = "uomSubtext", source = "uomId", qualifiedByName = "getUomSubtext")
     public abstract PurchaseOrderLineRequest toLineRequest(PurchaseOrderLine line);
 
     @Mapping(target = "productName", source = "productId", qualifiedByName = "getProductName")
@@ -76,33 +76,49 @@ public abstract class PurchaseOrderWebMapper {
     @Named("getSupplierName")
     protected String getSupplierName(Long id) {
         if (id == null) return null;
-        return partyRepository.findById(id).map(p -> {
-            String sal = p.getSalutation();
-            return (sal != null && !sal.isBlank()) ? sal + " " + p.getName() : p.getName();
-        }).orElse(null);
+        LookupDto dto = partyLookupProvider.resolve(id);
+        return dto != null ? dto.name() : null;
     }
 
     @Named("getFacilityName")
     protected String getFacilityName(Long id) {
         if (id == null) return null;
-        return facilityRepository.findById(id).map(f -> f.getName()).orElse(null);
+        LookupDto dto = facilityLookupProvider.resolve(id);
+        return dto != null ? dto.name() : null;
     }
 
     @Named("getCurrencyName")
     protected String getCurrencyName(Long id) {
         if (id == null) return null;
-        return currencyRepository.findById(id).map(c -> c.getName()).orElse(null);
+        LookupDto dto = currencyLookupProvider.resolve(id);
+        return dto != null ? dto.name() : null;
     }
 
     @Named("getProductName")
     protected String getProductName(Long id) {
         if (id == null) return null;
-        return productRepository.findById(id).map(p -> p.getName()).orElse(null);
+        LookupDto dto = productLookupProvider.resolve(id);
+        return dto != null ? dto.name() : null;
     }
 
     @Named("getUomName")
     protected String getUomName(Long id) {
         if (id == null) return null;
-        return uomRepository.findById(id).map(u -> u.getName()).orElse(null);
+        LookupDto dto = uomLookupProvider.resolve(id);
+        return dto != null ? dto.name() : null;
+    }
+
+    @Named("getProductSubtext")
+    protected String getProductSubtext(Long id) {
+        if (id == null) return null;
+        LookupDto dto = productLookupProvider.resolve(id);
+        return dto != null ? dto.subText() : null;
+    }
+
+    @Named("getUomSubtext")
+    protected String getUomSubtext(Long id) {
+        if (id == null) return null;
+        LookupDto dto = uomLookupProvider.resolve(id);
+        return dto != null ? dto.subText() : null;
     }
 }

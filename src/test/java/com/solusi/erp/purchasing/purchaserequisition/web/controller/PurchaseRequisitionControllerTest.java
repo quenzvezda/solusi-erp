@@ -1,8 +1,10 @@
 package com.solusi.erp.purchasing.purchaserequisition.web.controller;
 
-import com.solusi.erp.common.approval.domain.repository.ApprovalRequestRepository;
+import com.solusi.erp.common.approval.application.usecase.query.FindApprovalRequestByReferenceUseCase;
 import com.solusi.erp.core.domain.model.AuditMetadata;
+import com.solusi.erp.inventory.facility.domain.port.FacilityLookupProvider;
 import com.solusi.erp.master.currency.domain.repository.CurrencyRepository;
+import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import com.solusi.erp.purchasing.purchaserequisition.application.usecase.command.*;
 import com.solusi.erp.purchasing.purchaserequisition.application.usecase.query.*;
 import com.solusi.erp.purchasing.purchaserequisition.domain.model.*;
@@ -37,12 +39,14 @@ public class PurchaseRequisitionControllerTest {
     private CancelPurchaseRequisitionUseCase cancelUc;
     private FindPurchaseRequisitionsUseCase findUc;
     private GetPurchaseRequisitionEditViewUseCase editViewUc;
-    private ApprovalRequestRepository approvalRequestRepository;
+    private FindApprovalRequestByReferenceUseCase findApprovalRequestByReferenceUseCase;
     private PurchaseRequisitionJpaRepository purchaseRequisitionJpaRepository;
     private com.solusi.erp.purchasing.supplierpricelist.domain.repository.SupplierPriceListRepository splRepository;
     private CurrencyRepository currencyRepository;
     private PurchaseRequisitionWebMapper webMapper;
     private MessageSource messageSource;
+    private PartyLookupProvider partyLookupProvider;
+    private FacilityLookupProvider facilityLookupProvider;
     private PurchaseRequisitionController controller;
 
     @BeforeEach
@@ -54,17 +58,20 @@ public class PurchaseRequisitionControllerTest {
         cancelUc = mock(CancelPurchaseRequisitionUseCase.class);
         findUc = mock(FindPurchaseRequisitionsUseCase.class);
         editViewUc = mock(GetPurchaseRequisitionEditViewUseCase.class);
-        approvalRequestRepository = mock(ApprovalRequestRepository.class);
+        findApprovalRequestByReferenceUseCase = mock(FindApprovalRequestByReferenceUseCase.class);
         purchaseRequisitionJpaRepository = mock(PurchaseRequisitionJpaRepository.class);
         splRepository = mock(com.solusi.erp.purchasing.supplierpricelist.domain.repository.SupplierPriceListRepository.class);
         currencyRepository = mock(CurrencyRepository.class);
         webMapper = mock(PurchaseRequisitionWebMapper.class);
         messageSource = mock(MessageSource.class);
+        partyLookupProvider = mock(PartyLookupProvider.class);
+        facilityLookupProvider = mock(FacilityLookupProvider.class);
 
         controller = new PurchaseRequisitionController(
             createUc, updateUc, deleteUc, submitUc, cancelUc,
-            findUc, editViewUc, approvalRequestRepository,
-            purchaseRequisitionJpaRepository, splRepository, currencyRepository, webMapper, messageSource
+            findUc, editViewUc, findApprovalRequestByReferenceUseCase,
+            purchaseRequisitionJpaRepository, splRepository, currencyRepository, webMapper, messageSource,
+            partyLookupProvider, facilityLookupProvider
         );
     }
 
@@ -159,6 +166,8 @@ public class PurchaseRequisitionControllerTest {
         assertEquals("purchasing/purchase-requisitions/form", view);
         assertThat(model.getAttribute("prRequest")).isNotNull();
         assertThat(model.getAttribute("auditInfo")).isNotNull();
+        // Assert prUI is present with Trinity Data for header autocompletes
+        assertThat(model.getAttribute("prUI")).isNotNull();
     }
 
     @Test

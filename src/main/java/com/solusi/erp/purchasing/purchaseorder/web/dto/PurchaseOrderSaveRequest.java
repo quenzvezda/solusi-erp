@@ -35,10 +35,6 @@ public class PurchaseOrderSaveRequest extends BaseAuditResponse {
     private String note;
     private PurchaseOrderStatus status;
     private Long approverId;
-    // Display names for autocomplete initial values
-    private String supplierName;
-    private String facilityName;
-    private String currencyName;
     @Valid
     private List<PurchaseOrderLineRequest> lines = new ArrayList<>();
 }

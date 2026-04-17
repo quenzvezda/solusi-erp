@@ -1,8 +1,14 @@
 package com.solusi.erp.purchasing.purchaseorder.web.controller;
 
-import com.solusi.erp.common.approval.domain.repository.ApprovalRequestRepository;
+import com.solusi.erp.common.approval.application.usecase.query.FindApprovalRequestByReferenceUseCase;
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.core.dto.LookupDto;
+import com.solusi.erp.inventory.facility.domain.port.FacilityLookupProvider;
+import com.solusi.erp.inventory.product.domain.port.ProductLookupProvider;
+import com.solusi.erp.inventory.uom.domain.port.UomLookupProvider;
+import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
+import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import com.solusi.erp.purchasing.purchaseorder.application.usecase.command.*;
 import com.solusi.erp.purchasing.purchaseorder.application.usecase.query.*;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.*;
@@ -20,6 +26,7 @@ import org.springframework.ui.Model;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,9 +45,12 @@ public class PurchaseOrderControllerTest {
     private CancelPurchaseOrderUseCase cancelUc;
     private FindPurchaseOrdersUseCase findUc;
     private GetPurchaseOrderEditViewUseCase editViewUc;
-    private ApprovalRequestRepository approvalRequestRepository;
+    private FindApprovalRequestByReferenceUseCase findApprovalRequestByReferenceUseCase;
     private PurchaseOrderWebMapper webMapper;
     private MessageSource messageSource;
+    private PartyLookupProvider partyLookupProvider;
+    private FacilityLookupProvider facilityLookupProvider;
+    private CurrencyLookupProvider currencyLookupProvider;
     private PurchaseOrderController controller;
 
     @BeforeEach
@@ -53,13 +63,17 @@ public class PurchaseOrderControllerTest {
         cancelUc = mock(CancelPurchaseOrderUseCase.class);
         findUc = mock(FindPurchaseOrdersUseCase.class);
         editViewUc = mock(GetPurchaseOrderEditViewUseCase.class);
-        approvalRequestRepository = mock(ApprovalRequestRepository.class);
+        findApprovalRequestByReferenceUseCase = mock(FindApprovalRequestByReferenceUseCase.class);
         webMapper = mock(PurchaseOrderWebMapper.class);
         messageSource = mock(MessageSource.class);
+        partyLookupProvider = mock(PartyLookupProvider.class);
+        facilityLookupProvider = mock(FacilityLookupProvider.class);
+        currencyLookupProvider = mock(CurrencyLookupProvider.class);
 
         controller = new PurchaseOrderController(
             createUc, updateUc, deleteUc, submitUc, sendUc, cancelUc,
-            findUc, editViewUc, approvalRequestRepository, webMapper, messageSource
+            findUc, editViewUc, findApprovalRequestByReferenceUseCase, webMapper, messageSource,
+            partyLookupProvider, facilityLookupProvider, currencyLookupProvider
         );
     }
 
@@ -161,12 +175,26 @@ public class PurchaseOrderControllerTest {
         detail.setId(1L);
         when(webMapper.toDetailResponse(any(PurchaseOrder.class))).thenReturn(detail);
 
+        // Mock LookupProviders for buildPOUI
+        when(partyLookupProvider.resolve(100L)).thenReturn(
+            new LookupDto(100L, "ABC Supplier", "Supplier Code: ABC", null));
+        when(facilityLookupProvider.resolve(200L)).thenReturn(
+            new LookupDto(200L, "Main Warehouse", "Code: WH01", null));
+        when(currencyLookupProvider.resolve(1L)).thenReturn(
+            new LookupDto(1L, "US Dollar", "USD", null));
+
         Model model = new ExtendedModelMap();
         String view = controller.showEditForm(1L, model);
 
         assertEquals("purchasing/purchase-orders/form", view);
         assertThat(model.getAttribute("poRequest")).isNotNull();
         assertThat(model.getAttribute("auditInfo")).isNotNull();
+        assertThat(model.getAttribute("poUI")).isNotNull()
+            .as("poUI should be present for edit form with Trinity Data");
+        
+        @SuppressWarnings("unchecked")
+        Map<String, Object> poUI = (Map<String, Object>) model.getAttribute("poUI");
+        assertThat(poUI).containsKeys("supplierText", "supplierSubtext", "currencyText", "currencySubtext");
     }
 
     @Test

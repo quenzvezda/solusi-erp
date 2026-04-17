@@ -19,6 +19,8 @@ public class PurchaseRequisitionLineRequest {
     private Long productId;
 
     private String productName;
+    
+    private String productSubtext;
 
     @NotNull(message = "{label.qty} {validation.notnull.suffix}")
     @DecimalMin(value = "0.0001", message = "{msg.error.pr.line.quantity.positive}")
@@ -28,6 +30,8 @@ public class PurchaseRequisitionLineRequest {
     private Long uomId;
 
     private String uomName;
+    
+    private String uomSubtext;
 
     private LocalDate requiredDate;
 

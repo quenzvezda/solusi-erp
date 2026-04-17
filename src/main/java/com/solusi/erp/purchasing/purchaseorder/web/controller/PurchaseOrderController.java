@@ -1,12 +1,18 @@
 package com.solusi.erp.purchasing.purchaseorder.web.controller;
 
+import com.solusi.erp.common.approval.application.usecase.query.FindApprovalRequestByReferenceUseCase;
 import com.solusi.erp.common.approval.domain.model.ApprovalRequest;
 import com.solusi.erp.common.approval.domain.model.ApprovalStatus;
-import com.solusi.erp.common.approval.domain.repository.ApprovalRequestRepository;
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.core.dto.LookupDto;
+import com.solusi.erp.inventory.facility.domain.port.FacilityLookupProvider;
+import com.solusi.erp.inventory.product.domain.port.ProductLookupProvider;
+import com.solusi.erp.inventory.uom.domain.port.UomLookupProvider;
+import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
+import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import com.solusi.erp.purchasing.purchaseorder.application.usecase.command.*;
 import com.solusi.erp.purchasing.purchaseorder.application.usecase.query.*;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrder;
@@ -32,7 +38,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -50,9 +58,12 @@ public class PurchaseOrderController {
     private final CancelPurchaseOrderUseCase cancelPurchaseOrderUseCase;
     private final FindPurchaseOrdersUseCase findPurchaseOrdersUseCase;
     private final GetPurchaseOrderEditViewUseCase getPurchaseOrderEditViewUseCase;
-    private final ApprovalRequestRepository approvalRequestRepository;
+    private final FindApprovalRequestByReferenceUseCase findApprovalRequestByReferenceUseCase;
     private final PurchaseOrderWebMapper webMapper;
     private final MessageSource messageSource;
+    private final PartyLookupProvider partyLookupProvider;
+    private final FacilityLookupProvider facilityLookupProvider;
+    private final CurrencyLookupProvider currencyLookupProvider;
 
     @GetMapping
     @PreAuthorize("hasAuthority('PO_READ')")
@@ -113,6 +124,7 @@ public class PurchaseOrderController {
         }
         model.addAttribute("poRequest", webMapper.toSaveRequest(domain));
         model.addAttribute("auditInfo", webMapper.toDetailResponse(domain));
+        model.addAttribute("poUI", buildPOUI(domain));
         return "purchasing/purchase-orders/form";
     }
 
@@ -184,7 +196,7 @@ public class PurchaseOrderController {
         model.addAttribute("po", webMapper.toDetailResponse(domain));
 
         Optional<ApprovalRequest> approvalRequest =
-            approvalRequestRepository.findByReference("PURCHASE_ORDER", id);
+            findApprovalRequestByReferenceUseCase.execute("PURCHASE_ORDER", id);
         approvalRequest.ifPresent(req -> {
             model.addAttribute("approvalRequestId", req.getId());
             model.addAttribute("approvalStatus", req.getStatus());
@@ -199,6 +211,32 @@ public class PurchaseOrderController {
         });
 
         return "purchasing/purchase-orders/view";
+    }
+
+    private Map<String, Object> buildPOUI(PurchaseOrder domain) {
+        Map<String, Object> ui = new HashMap<>();
+
+        LookupDto supplier = partyLookupProvider.resolve(domain.getSupplierId());
+        if (supplier != null) {
+            ui.put("supplierText", supplier.name());
+            ui.put("supplierSubtext", supplier.subText());
+        }
+
+        if (domain.getFacilityId() != null) {
+            LookupDto facility = facilityLookupProvider.resolve(domain.getFacilityId());
+            if (facility != null) {
+                ui.put("facilityText", facility.name());
+                ui.put("facilitySubtext", facility.subText());
+            }
+        }
+
+        LookupDto currency = currencyLookupProvider.resolve(domain.getCurrencyId());
+        if (currency != null) {
+            ui.put("currencyText", currency.name());
+            ui.put("currencySubtext", currency.subText());
+        }
+
+        return ui;
     }
 }
 

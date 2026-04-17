@@ -1,7 +1,7 @@
 package com.solusi.erp.common.news.web.controller;
 
+import com.solusi.erp.common.approval.application.usecase.query.FindApprovalRequestByReferenceUseCase;
 import com.solusi.erp.common.approval.domain.model.ApprovalRequest;
-import com.solusi.erp.common.approval.domain.repository.ApprovalRequestRepository;
 import com.solusi.erp.common.news.application.usecase.command.CreateNewsUseCase;
 import com.solusi.erp.common.news.application.usecase.command.SubmitNewsForApprovalUseCase;
 import com.solusi.erp.common.news.application.usecase.command.UpdateNewsUseCase;
@@ -50,7 +50,7 @@ public class NewsController {
     private final UpdateNewsUseCase updateNewsUseCase;
     private final SubmitNewsForApprovalUseCase submitNewsForApprovalUseCase;
     private final NewsRepository newsRepository;
-    private final ApprovalRequestRepository approvalRequestRepository;
+    private final FindApprovalRequestByReferenceUseCase findApprovalRequestByReferenceUseCase;
     private final NewsWebMapper webMapper;
     private final MessageSource messageSource;
 
@@ -82,7 +82,7 @@ public class NewsController {
         model.addAttribute("news", webMapper.toResponse(news));
 
         Optional<ApprovalRequest> approvalRequest =
-                approvalRequestRepository.findByReference("NEWS", id);
+                findApprovalRequestByReferenceUseCase.execute("NEWS", id);
         approvalRequest.ifPresent(req -> {
             model.addAttribute("approvalRequestId", req.getId());
             model.addAttribute("approvalStatus", req.getStatus());
