@@ -67,18 +67,18 @@
                                         </div>
                                         <div class="col-md-6">
                                             <div th:replace="~{fragments/inputs :: autocomplete(field='requesterId', label=#{label.pr.requester}, placeholder='', isReadonly=${isLocked}, required=true, id='header-requester', path='parties',
-                                                initialValue=${prRequest.requesterId}, initialText=${prUI?.requesterText}, initialSubtext=${prUI?.requesterSubtext})}"></div>
+                                                initialValue=${prRequest.requesterId}, initialText=${prUI != null ? prUI['requesterText'] : ''}, initialSubtext=${prUI != null ? prUI['requesterSubtext'] : ''})}"></div>
                                         </div>
                                         <div class="col-md-6">
                                             <div th:replace="~{fragments/inputs :: autocomplete(field='facilityId', label=#{label.pr.facility}, placeholder='', isReadonly=${isLocked}, id='header-facility', path='inventory/facilities',
-                                                initialValue=${prRequest.facilityId}, initialText=${prUI?.facilityText}, initialSubtext=${prUI?.facilitySubtext})}"></div>
+                                                initialValue=${prRequest.facilityId}, initialText=${prUI != null ? prUI['facilityText'] : ''}, initialSubtext=${prUI != null ? prUI['facilitySubtext'] : ''})}"></div>
                                         </div>
                                         <div class="col-md-6">
                                             <div th:replace="~{fragments/inputs :: text(field='department', label=#{label.pr.department}, isReadonly=${isLocked})}"></div>
                                         </div>
                                         <div class="col-md-6">
                                             <div th:replace="~{fragments/inputs :: autocomplete(field='suggestedSupplierId', label=#{label.pr.suggestedSupplier}, placeholder='', isReadonly=${isLocked}, id='header-supplier', path='parties',
-                                                initialValue=${prRequest.suggestedSupplierId}, initialText=${prUI?.supplierText}, initialSubtext=${prUI?.supplierSubtext})}"></div>
+                                                initialValue=${prRequest.suggestedSupplierId}, initialText=${prUI != null ? prUI['supplierText'] : ''}, initialSubtext=${prUI != null ? prUI['supplierSubtext'] : ''})}"></div>
                                         </div>
                                          <div class="col-md-6">
                                              <label class="form-label required" th:text="#{label.currency}">Currency</label>

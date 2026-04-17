@@ -27,6 +27,10 @@ const ErpDateTimePicker = (function() {
         return (input.getAttribute('type') || '').toLowerCase();
     }
 
+    function isInsideTemplateSource(input) {
+        return typeof input.closest === 'function' && input.closest('#row-template-source') !== null;
+    }
+
     function parseExistingValue(raw) {
         if (!raw) return null;
         const d = new Date(raw);
@@ -87,6 +91,7 @@ const ErpDateTimePicker = (function() {
 
     function initElement(input) {
         if (!input || input.disabled || input.readOnly) return;
+        if (isInsideTemplateSource(input)) return;
         if (input._flatpickr || input.dataset.pickerInitialized === 'true') return;
         if (typeof window.flatpickr !== 'function') return;
 
