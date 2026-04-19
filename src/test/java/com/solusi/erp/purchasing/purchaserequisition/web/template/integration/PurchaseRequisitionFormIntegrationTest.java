@@ -52,9 +52,18 @@ class PurchaseRequisitionFormIntegrationTest {
 
         assertThat(template).contains("field='suggestedSupplierId'");
         assertThat(template).doesNotContain("extraClass='select-supplier'");
+        assertThat(template).contains("field='facilityId'");
+        assertThat(template).contains("label=#{label.pr.facility}");
+        assertThat(template).contains("required=true");
+        assertThat(template).contains("field='suggestedSupplierId'");
+        assertThat(template).contains("label=#{label.pr.suggestedSupplier}");
         assertThat(script).contains("select[name=\"suggestedSupplierId\"]");
         assertThat(script).contains("select[name=\"currencyId\"]");
-        assertThat(script).contains("withProductId(payload, value)");
+        assertThat(script).contains("requiredDate");
+        assertThat(script).contains("minQuantity");
+        assertThat(script).contains("config.lineRequirementWarning");
+        assertThat(script).contains("config.headerChangeWarning");
+        assertThat(script).contains("withProductId(");
         assertThat(script).doesNotContain("input[name=\"currencyId\"]");
         assertThat(script).doesNotContain("supplierSelect.tomselect.getValue() : supplierSelect.value");
         assertThat(script).doesNotContain("autoFillPriceFromSpl(row, payload, supplierSelect, currencySelect);");

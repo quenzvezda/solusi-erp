@@ -11,6 +11,7 @@ import com.solusi.erp.purchasing.purchaserequisition.domain.model.*;
 import com.solusi.erp.purchasing.purchaserequisition.infrastructure.persistence.PurchaseRequisitionJpaRepository;
 import com.solusi.erp.purchasing.purchaserequisition.web.dto.*;
 import com.solusi.erp.purchasing.purchaserequisition.web.mapper.PurchaseRequisitionWebMapper;
+import com.solusi.erp.purchasing.supplierpricelist.domain.model.SupplierPriceList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -222,5 +224,35 @@ public class PurchaseRequisitionControllerTest {
             (org.springframework.data.domain.Page<?>) model.getAttribute("page");
         assertThat(springPage).isNotNull();
         assertEquals(0, springPage.getTotalElements());
+    }
+
+    @Test
+    @DisplayName("getSplPrice uses requiredDate and includes minQuantity in response")
+    void getSplPriceUsesRequiredDateAndReturnsMinQuantity() throws Exception {
+        SupplierPriceList spl = new SupplierPriceList(
+            new AuditMetadata(7L, 1L, null, null, null, null),
+            "SPL-001",
+            1L,
+            2L,
+            3L,
+            4L,
+            new BigDecimal("2500000.0000"),
+            new BigDecimal("10.0000"),
+            LocalDate.of(2026, 4, 1),
+            LocalDate.of(2026, 12, 31),
+            "Contract price",
+            true
+        );
+
+        LocalDate requiredDate = LocalDate.of(2026, 8, 15);
+        when(splRepository.findMostRecentActiveSPL(eq(1L), eq(2L), eq(3L), eq(4L), eq(requiredDate)))
+            .thenReturn(Optional.of(spl));
+
+        org.springframework.http.ResponseEntity<?> entity =
+            controller.getSplPrice(1L, 2L, 3L, 4L, requiredDate);
+
+        assertThat(entity.getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(entity.getBody()).isNotNull();
+        assertThat(entity.getBody().toString()).contains("minQuantity=10.0000");
     }
 }

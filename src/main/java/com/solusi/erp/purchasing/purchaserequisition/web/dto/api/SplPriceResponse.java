@@ -14,6 +14,7 @@ public class SplPriceResponse {
     private Long splId;
     private String splCode;
     private BigDecimal unitPrice;
+    private BigDecimal minQuantity;
     private Long supplierId;
     private Long productId;
     private Long uomId;

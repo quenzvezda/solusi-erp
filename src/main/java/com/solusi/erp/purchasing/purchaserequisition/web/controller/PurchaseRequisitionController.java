@@ -238,13 +238,15 @@ public class PurchaseRequisitionController {
             @RequestParam Long supplierId,
             @RequestParam Long productId,
             @RequestParam Long uomId,
-            @RequestParam Long currencyId) {
+            @RequestParam Long currencyId,
+            @RequestParam(required = false) LocalDate requiredDate) {
         
         SupplierPriceListResolutionService resolutionService = 
             new SupplierPriceListResolutionService(splRepository);
+        LocalDate asOfDate = requiredDate != null ? requiredDate : LocalDate.now();
         
         Optional<SupplierPriceList> spl = resolutionService.resolveActivePrice(
-            supplierId, productId, uomId, currencyId, LocalDate.now()
+            supplierId, productId, uomId, currencyId, asOfDate
         );
         
         if (spl.isPresent()) {
@@ -253,6 +255,7 @@ public class PurchaseRequisitionController {
                 splDomain.getId(),
                 splDomain.getCode(),
                 splDomain.getUnitPrice(),
+                splDomain.getMinQuantity(),
                 splDomain.getSupplierId(),
                 splDomain.getProductId(),
                 splDomain.getUomId(),

@@ -26,6 +26,7 @@ public class PurchaseRequisitionSaveRequest extends BaseAuditResponse {
     @NotNull(message = "{label.pr.requester} {validation.notnull.suffix}")
     private Long requesterId;
 
+    @NotNull(message = "{label.pr.facility} {validation.notnull.suffix}")
     private Long facilityId;
 
     private String department;
@@ -39,6 +40,7 @@ public class PurchaseRequisitionSaveRequest extends BaseAuditResponse {
 
     private Long approverId;
 
+    @NotNull(message = "{label.pr.suggestedSupplier} {validation.notnull.suffix}")
     private Long suggestedSupplierId;
     
     @NotNull(message = "{label.pr.currency} {validation.notnull.suffix}")

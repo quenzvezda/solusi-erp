@@ -3,6 +3,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const lineContainer = document.getElementById('line-container');
     const emptyMsg = document.getElementById('empty-msg');
+    const headerRequesterSelect = document.querySelector('select[name="requesterId"]');
+    const headerFacilitySelect = document.querySelector('select[name="facilityId"]');
+    const headerSupplierSelect = document.querySelector('select[name="suggestedSupplierId"]');
+    const headerCurrencySelect = document.querySelector('select[name="currencyId"]');
 
     // ── Grand Total recap ──────────────────────────────────────────────────────
     function parseNumeric(el) {
@@ -33,6 +37,82 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    function waitForTomSelect(el, cb, attempts) {
+        if (!el) return;
+        if (el.tomselect) { cb(el.tomselect); return; }
+        if ((attempts || 0) < 20) setTimeout(function () { waitForTomSelect(el, cb, (attempts || 0) + 1); }, 100);
+    }
+
+    function getSelectValue(selectEl) {
+        if (!selectEl) return null;
+        return selectEl.tomselect ? selectEl.tomselect.getValue() : selectEl.value;
+    }
+
+    function withProductId(payload, productId) {
+        return Object.assign({ productId: productId }, payload || {});
+    }
+
+    function setNumericInputValue(input, value) {
+        if (!input) return;
+        if (typeof ErpNumeric !== 'undefined') {
+            ErpNumeric.set(input, value);
+        } else {
+            input.value = value != null ? String(value) : '';
+        }
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    function clearLineItems(message) {
+        if (!lineContainer || lineContainer.querySelectorAll('.line-row').length === 0) return;
+        lineContainer.innerHTML = '';
+        updateEmptyMessage();
+        updateGrandTotal();
+        if (message && window.ErpModal) {
+            ErpModal.showWarning(message);
+        }
+    }
+
+    function getRowRequiredDate(row) {
+        const requiredDateInput = row.querySelector('input[name$=".requiredDate"]');
+        return requiredDateInput ? requiredDateInput.value : '';
+    }
+
+    function resolveProductPayload(row, productValue) {
+        const productSelect = row.querySelector('.select-product');
+        if (!productSelect || !productValue) return Promise.resolve(null);
+
+        const productItem = productSelect.tomselect ? productSelect.tomselect.options[productValue] : null;
+        const payload = productItem && productItem.payload;
+        if (payload && payload.uomId) {
+            return Promise.resolve(withProductId(payload, productValue));
+        }
+
+        return fetch('/api/lookup/inventory/products/' + encodeURIComponent(productValue))
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                const p = data && data.payload;
+                if (p && p.uomId) {
+                    return withProductId(p, productValue);
+                }
+                return null;
+            })
+            .catch(function (err) {
+                console.warn('SPL product lookup failed:', err);
+                return null;
+            });
+    }
+
+    function refreshSplPrice(row) {
+        const productSelect = row.querySelector('.select-product');
+        const productValue = productSelect ? getSelectValue(productSelect) : null;
+        if (!productValue) return;
+
+        resolveProductPayload(row, productValue).then(function (payload) {
+            if (!payload) return;
+            autoFillPriceFromSpl(row, payload, headerSupplierSelect, headerCurrencySelect, row);
+        });
+    }
+
     // Delegate input events for qty/price on all current and future rows
     lineContainer.addEventListener('input', function (e) {
         if (e.target.matches('.input-qty') || e.target.matches('.input-price')) {
@@ -43,19 +123,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── UoM auto-fill when product is selected ─────────────────────────────────
     function initRowBehaviours(row) {
         const productSelect = row.querySelector('.select-product');
-        const headerSupplierSelect = document.querySelector('select[name="suggestedSupplierId"]');
         const supplierSelect = row.querySelector('.select-supplier') || headerSupplierSelect;
-        const currencySelect = document.querySelector('select[name="currencyId"]');
+        const requiredDateInput = row.querySelector('input[name$=".requiredDate"]');
         if (!productSelect) return;
-
-        function waitForTomSelect(el, cb, attempts) {
-            if (el.tomselect) { cb(el.tomselect); return; }
-            if ((attempts || 0) < 20) setTimeout(function () { waitForTomSelect(el, cb, (attempts || 0) + 1); }, 100);
-        }
-
-        function withProductId(payload, productId) {
-            return Object.assign({ productId: productId }, payload || {});
-        }
 
         waitForTomSelect(productSelect, function (ts) {
             ts.on('change', function (value) {
@@ -84,32 +154,23 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Lock UoM visually without disabling the underlying select (so form submission includes it)
                     uomTs.control.style.pointerEvents = 'none';
                     uomTs.control.style.opacity = '0.6';
-                    
-                    // Try to auto-fill price from SPL if supplier is also selected
-                    autoFillPriceFromSpl(row, withProductId(payload, value), supplierSelect, currencySelect);
+                    refreshSplPrice(row);
                 } else {
                     // No payload yet — fetch from API
-                    fetch('/api/lookup/inventory/products/' + encodeURIComponent(value))
-                        .then(function (r) { return r.json(); })
-                        .then(function (data) {
-                            const p = data && data.payload;
-                            if (p && p.uomId) {
-                                const uomTs = uomSelect.tomselect;
-                                const uomIdStr = String(p.uomId);
-                                if (!uomTs.options[uomIdStr]) {
-                                    uomTs.addOption({ id: p.uomId, name: p.uomName || p.uomCode || uomIdStr });
-                                }
-                                uomTs.setValue(uomIdStr);
-                                uomSelect.value = uomIdStr;
-                                // Lock UoM visually without disabling the underlying select (so form submission includes it)
-                                uomTs.control.style.pointerEvents = 'none';
-                                uomTs.control.style.opacity = '0.6';
-                                
-                                // Try to auto-fill price from SPL if supplier is also selected
-                                autoFillPriceFromSpl(row, withProductId(p, value), supplierSelect, currencySelect);
-                            }
-                        })
-                        .catch(function () {});
+                    resolveProductPayload(row, value).then(function (payloadData) {
+                        if (!payloadData || !payloadData.uomId) return;
+                        const uomTs = uomSelect.tomselect;
+                        const uomIdStr = String(payloadData.uomId);
+                        if (!uomTs.options[uomIdStr]) {
+                            uomTs.addOption({ id: payloadData.uomId, name: payloadData.uomName || payloadData.uomCode || uomIdStr });
+                        }
+                        uomTs.setValue(uomIdStr);
+                        uomSelect.value = uomIdStr;
+                        // Lock UoM visually without disabling the underlying select (so form submission includes it)
+                        uomTs.control.style.pointerEvents = 'none';
+                        uomTs.control.style.opacity = '0.6';
+                        refreshSplPrice(row);
+                    });
                 }
             });
         });
@@ -118,27 +179,25 @@ document.addEventListener('DOMContentLoaded', function () {
         if (supplierSelect) {
             waitForTomSelect(supplierSelect, function (ts) {
                 ts.on('change', function () {
-                    const product = productSelect.tomselect ? productSelect.tomselect.getValue() : productSelect.value;
-                    if (product) {
-                        const productItem = productSelect.tomselect ? productSelect.tomselect.options[product] : null;
-                        const payload = productItem && productItem.payload;
-                        if (payload || product) {
-                            autoFillPriceFromSpl(row, withProductId(payload, product), supplierSelect, currencySelect);
-                        }
-                    }
+                    refreshSplPrice(row);
                 });
+            });
+        }
+
+        if (requiredDateInput) {
+            requiredDateInput.addEventListener('change', function () {
+                refreshSplPrice(row);
+            });
+            requiredDateInput.addEventListener('input', function () {
+                refreshSplPrice(row);
             });
         }
     }
 
-    function getSelectValue(selectEl) {
-        if (!selectEl) return null;
-        return selectEl.tomselect ? selectEl.tomselect.getValue() : selectEl.value;
-    }
-
-    function autoFillPriceFromSpl(row, productPayload, supplierSelect, currencySelect) {
+    function autoFillPriceFromSpl(row, productPayload, supplierSelect, currencySelect, rowContext) {
         const supplierId = getSelectValue(supplierSelect);
         const currencyId = getSelectValue(currencySelect);
+        const asOfDate = rowContext ? getRowRequiredDate(rowContext) : '';
         
         if (!supplierId || !productPayload) return;
 
@@ -152,25 +211,23 @@ document.addEventListener('DOMContentLoaded', function () {
             'supplierId=' + encodeURIComponent(supplierId) +
             '&productId=' + encodeURIComponent(productId) +
             '&uomId=' + encodeURIComponent(uomId) +
-            '&currencyId=' + encodeURIComponent(currencyId))
+            '&currencyId=' + encodeURIComponent(currencyId) +
+            (asOfDate ? '&requiredDate=' + encodeURIComponent(asOfDate) : ''))
             .then(function (res) {
                 if (res.status === 204) return null; // No SPL found
                 if (!res.ok) throw new Error('Failed to fetch SPL price');
                 return res.json();
             })
             .then(function (spl) {
+                const priceInput = row.querySelector('.input-price');
+                const quantityInput = row.querySelector('.input-qty');
                 if (spl && spl.unitPrice) {
-                    const priceInput = row.querySelector('.input-price');
-                    if (priceInput) {
-                        // Format price for display
-                        const formattedPrice = parseFloat(spl.unitPrice).toLocaleString('en-US', { 
-                            minimumFractionDigits: 2, 
-                            maximumFractionDigits: 4 
-                        });
-                        priceInput.value = formattedPrice;
-                        // Trigger input event to update totals
-                        priceInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    setNumericInputValue(priceInput, spl.unitPrice);
+                    if (quantityInput && spl.minQuantity != null) {
+                        setNumericInputValue(quantityInput, spl.minQuantity);
                     }
+                } else if (priceInput) {
+                    setNumericInputValue(priceInput, 0);
                 }
             })
             .catch(function (err) {
@@ -209,8 +266,39 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    function hasRequiredHeaderSelections() {
+        return !!(
+            getSelectValue(headerRequesterSelect) &&
+            getSelectValue(headerFacilitySelect) &&
+            getSelectValue(headerSupplierSelect) &&
+            getSelectValue(headerCurrencySelect)
+        );
+    }
+
+    function bindHeaderReset(selectEl) {
+        if (!selectEl) return;
+        let previousValue = getSelectValue(selectEl);
+        selectEl.addEventListener('change', function () {
+            const nextValue = getSelectValue(selectEl);
+            if (nextValue === previousValue) return;
+            previousValue = nextValue;
+            clearLineItems(config.headerChangeWarning || 'Header data changed. Existing line items were cleared.');
+        });
+    }
+
+    bindHeaderReset(headerRequesterSelect);
+    bindHeaderReset(headerFacilitySelect);
+    bindHeaderReset(headerSupplierSelect);
+    bindHeaderReset(headerCurrencySelect);
+
     if (btnAddLine) {
         btnAddLine.addEventListener('click', function () {
+            if (!hasRequiredHeaderSelections()) {
+                if (window.ErpModal) {
+                    ErpModal.showWarning(config.lineRequirementWarning || 'Please select Requester, Facility, Supplier, and Currency before adding line items.');
+                }
+                return;
+            }
             const index = getNextIndex();
             const templateRow = templateSource.querySelector('.line-row');
             const newRow = templateRow.cloneNode(true);
