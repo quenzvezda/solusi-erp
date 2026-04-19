@@ -44,6 +44,22 @@ class PurchaseRequisitionFormIntegrationTest {
         assertThat(script).contains("if (isInsideTemplateSource(input)) return;");
     }
 
+    @Test
+    @DisplayName("Price autofill script uses header supplier when line supplier field is absent")
+    void priceAutofillScriptUsesHeaderSupplierWhenLineSupplierFieldIsAbsent() throws Exception {
+        String template = readResource(TEMPLATE);
+        String script = readResource("static/js/purchasing/purchase-requisition-form.js");
+
+        assertThat(template).contains("field='suggestedSupplierId'");
+        assertThat(template).doesNotContain("extraClass='select-supplier'");
+        assertThat(script).contains("select[name=\"suggestedSupplierId\"]");
+        assertThat(script).contains("select[name=\"currencyId\"]");
+        assertThat(script).contains("withProductId(payload, value)");
+        assertThat(script).doesNotContain("input[name=\"currencyId\"]");
+        assertThat(script).doesNotContain("supplierSelect.tomselect.getValue() : supplierSelect.value");
+        assertThat(script).doesNotContain("autoFillPriceFromSpl(row, payload, supplierSelect, currencySelect);");
+    }
+
     private String readResource(String path) throws Exception {
         InputStream is = getClass().getClassLoader().getResourceAsStream(path);
         assertThat(is).as("Resource not found: %s", path).isNotNull();

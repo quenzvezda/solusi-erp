@@ -43,13 +43,18 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── UoM auto-fill when product is selected ─────────────────────────────────
     function initRowBehaviours(row) {
         const productSelect = row.querySelector('.select-product');
-        const supplierSelect = row.querySelector('.select-supplier');
-        const currencyIdHiddenInput = document.querySelector('input[name="currencyId"]');
+        const headerSupplierSelect = document.querySelector('select[name="suggestedSupplierId"]');
+        const supplierSelect = row.querySelector('.select-supplier') || headerSupplierSelect;
+        const currencySelect = document.querySelector('select[name="currencyId"]');
         if (!productSelect) return;
 
         function waitForTomSelect(el, cb, attempts) {
             if (el.tomselect) { cb(el.tomselect); return; }
             if ((attempts || 0) < 20) setTimeout(function () { waitForTomSelect(el, cb, (attempts || 0) + 1); }, 100);
+        }
+
+        function withProductId(payload, productId) {
+            return Object.assign({ productId: productId }, payload || {});
         }
 
         waitForTomSelect(productSelect, function (ts) {
@@ -81,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     uomTs.control.style.opacity = '0.6';
                     
                     // Try to auto-fill price from SPL if supplier is also selected
-                    autoFillPriceFromSpl(row, payload, supplierSelect, currencyIdHiddenInput);
+                    autoFillPriceFromSpl(row, withProductId(payload, value), supplierSelect, currencySelect);
                 } else {
                     // No payload yet — fetch from API
                     fetch('/api/lookup/inventory/products/' + encodeURIComponent(value))
@@ -101,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 uomTs.control.style.opacity = '0.6';
                                 
                                 // Try to auto-fill price from SPL if supplier is also selected
-                                autoFillPriceFromSpl(row, p, supplierSelect, currencyIdHiddenInput);
+                                autoFillPriceFromSpl(row, withProductId(p, value), supplierSelect, currencySelect);
                             }
                         })
                         .catch(function () {});
@@ -118,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         const productItem = productSelect.tomselect ? productSelect.tomselect.options[product] : null;
                         const payload = productItem && productItem.payload;
                         if (payload || product) {
-                            autoFillPriceFromSpl(row, payload || { productId: product }, supplierSelect, currencyIdHiddenInput);
+                            autoFillPriceFromSpl(row, withProductId(payload, product), supplierSelect, currencySelect);
                         }
                     }
                 });
@@ -126,10 +131,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function autoFillPriceFromSpl(row, productPayload, supplierSelect, currencyIdHiddenInput) {
-        const supplierId = supplierSelect && supplierSelect.tomselect ? 
-            supplierSelect.tomselect.getValue() : supplierSelect.value;
-        const currencyId = currencyIdHiddenInput ? currencyIdHiddenInput.value : null;
+    function getSelectValue(selectEl) {
+        if (!selectEl) return null;
+        return selectEl.tomselect ? selectEl.tomselect.getValue() : selectEl.value;
+    }
+
+    function autoFillPriceFromSpl(row, productPayload, supplierSelect, currencySelect) {
+        const supplierId = getSelectValue(supplierSelect);
+        const currencyId = getSelectValue(currencySelect);
         
         if (!supplierId || !productPayload) return;
 
