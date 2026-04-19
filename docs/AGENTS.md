@@ -1,6 +1,6 @@
 # AGENTS.md / Project Architecture & AI Guidelines
 
-> **PENTING**: Jika Anda baru atau sedang melakukan troubleshooting, harap baca **[Documentation Index](index.md)** untuk melihat peta lengkap dokumentasi teknis dan fungsional proyek ini.
+> **PENTING**: Sebelum task apa pun, baca **[Documentation Index](index.md)** untuk melihat peta lengkap dokumentasi teknis dan fungsional proyek ini.
 
 ## 1. Project Overview
 Proyek ini adalah sistem Enterprise Resource Planning (ERP) Monolitik yang dibangun untuk tujuan pembelajaran dan MVP. Aplikasi dirender sepenuhnya di sisi server (Server-Side Rendering/SSR) tanpa memisahkan frontend sebagai Single Page Application (SPA).
@@ -138,136 +138,24 @@ Saat menghasilkan kode:
 6.  **Wajib Membaca Referensi & Contoh Eksisting:** DILARANG keras berasumsi tentang komponen UI, spesifikasi teknis, atau fitur bisnis yang sudah ada. Jika tugas berkaitan dengan modul baru/lama, AI **WAJIB** membaca dokumen spesifikasi teknis di direktori `docs/spec/` dan dokumentasi proses bisnis di `docs/modules/`. AI **DISARANKAN KUAT** untuk memeriksa *source code* serupa yang sudah stabil (seperti `Product` atau `Tax`) sebagai template *best practice* sebelum membuat kode.
 
 ## 9.A Semantic Versioning Automation (WAJIB DITERAPKAN)
-Untuk menjaga konsistensi dan automatisasi versioning, setiap agent **WAJIB** mengikuti protokol berikut setelah menyelesaikan implementasi dan testing:
+Untuk menjaga konsistensi versioning, setiap agent **WAJIB** mengikuti protokol berikut:
 
-### 9.A.1 Automatic Version Bump Decision
-Setelah task implementation + test selesai dan SEMUA test lulus, agent **WAJIB**:
-1.  **Analisis konteks perubahan** untuk menentukan jenis bump:
-    *   **MAJOR (x.0.0)**: Breaking API changes, perubahan arsitektural fundamental, atau perubahan flow bisnis yang signifikan
-    *   **MINOR (0.x.0)**: Penambahan fitur baru, modul baru, atau enhancement yang kompatibel backward
-    *   **PATCH (0.0.x)**: Bug fixes, optimasi performa, refactoring kecil, atau perbaikan dokumentasi
-2.  **Update `pom.xml` version** secara otomatis berdasarkan keputusan di atas
-3.  **Tidak perlu menunggu konfirmasi user** — lakukan update langsung jika task sudah complete dan tested
+1. **Analisis konteks perubahan** untuk menentukan jenis bump:
+   * **MAJOR (x.0.0)**: Breaking API changes, perubahan arsitektural fundamental, atau perubahan flow bisnis yang signifikan
+   * **MINOR (0.x.0)**: Penambahan fitur baru, modul baru, atau enhancement yang kompatibel backward
+   * **PATCH (0.0.x)**: Bug fixes, optimasi performa, refactoring kecil, atau perbaikan dokumentasi
+2. **Update `pom.xml` version** hanya setelah task diterima:
+   * **Feature / refactor / optimize / test**: setelah implementasi + testing sukses
+   * **Bug fix**: setelah user manual verification lolos
+3. **Version format** tetap mengikuti **Semantic Versioning 2.0.0**:
+   * `MAJOR.MINOR.PATCH`
+   * Contoh: `1.0.0` → `1.1.0` → `1.1.1` → `2.0.0`
 
-### 9.A.2 Version Format
-Format versi mengikuti **Semantic Versioning 2.0.0**:
-- **Format:** `MAJOR.MINOR.PATCH`
-- **Contoh progression:** `1.0.0` → `1.1.0` (feature) → `1.1.1` (patch) → `2.0.0` (breaking)
-- **Current version:** Lihat `<version>` di `pom.xml` (currently: `1.0.0`)
-
-### 9.A.3 Implementation Steps
-```bash
-# 1. Cek versi saat ini
-grep '<version>' pom.xml | head -1
-
-# 2. Update versi di pom.xml (ganti 1.0.0 dengan versi baru)
-# Gunakan tool edit untuk mengganti:
-# Old: <version>1.0.0</version>
-# New: <version>1.1.0</version>
-
-# 3. Run full test suite untuk konfirmasi
-.\mvnw.cmd clean test -q
-```
-
----
-
-## 9.B Commit Message Documentation Workflow (WAJIB DITERAPKAN)
-Setelah setiap task (implementation + testing) selesai dengan sukses, agent **WAJIB** membuat/update file `commit.txt` di root project dengan saran pesan commit bahasa inggris format conventional. File ini **JANGAN langsung di-commit** — gunakan sebagai referensi untuk user:
-
-### 9.B.1 Commit Message Format
-Ikuti **Conventional Commits** dengan struktur:
-```
-<type>(<scope>): <subject>
-
-<body>
-
-<footer>
-```
-
-**Penjelasan:**
-- **type**: `feat`, `fix`, `refactor`, `docs`, `chore`, `test`
-- **scope**: Modul atau komponen utama (contoh: `inventory-stock`, `security-user`, `core-pagination`)
-- **subject**: Pernyataan ringkas (imperative mood, lowercase, max 50 chars)
-- **body**: Detail perubahan apa & mengapa (optional, max 72 chars per line)
-- **footer**: Referensi ticket, breaking changes (optional)
-
-### 9.B.2 Commit Message Examples
-```
-feat(inventory-product): add bulk import from CSV
-
-- Support batch product creation with validation
-- Auto-generate product codes using SequenceGeneratorService
-- Add progress tracking for large imports (100+ items)
-
-This enables users to quickly populate product master data
-from external systems (legacy ERP, supplier catalogs).
-```
-
-```
-fix(security-rbac): correct permission filtering in sidebar
-
-Previously, parent menu items required individual permission checks.
-Now uses hasAnyAuthority() to correctly show menu if user has ANY
-child permission.
-
-Fixes: #123
-```
-
-```
-refactor(core-pagination): optimize page resolver query
-
-- Cache Pageable resolution results
-- Reduce database hits by 40% on list views with pagination
-- Backward compatible: no breaking changes
-```
-
-### 9.B.3 File Location & Generation
-- **File path:** `commit.txt` (di root repository, F:\solusi-program-erp\commit.txt)
-- **Update frequency:** Setiap kali task (impl + test) selesai
-- **Format file:** Satu commit message per task (append dengan separator line jika ada multiple)
-- **User workflow:** User membaca file ini sebelum manual git commit
-
-### 9.B.4 Implementation Steps
-```bash
-# Pada akhir task setelah .\mvnw.cmd clean test -q lulus:
-
-# 1. Tentukan jenis perubahan (feat/fix/refactor/etc)
-# 2. Tulis commit message mengikuti format Conventional Commits
-# 3. Create atau update commit.txt dengan isi:
-
----
-Suggested commit message for this task:
-
-feat(inventory-stock): implement stock balance tracking
-
-- Add StockBalance entity with movement history
-- Track IN/OUT movements with MovementType enum
-- Implement StockServiceImpl with balance calculations
-- Add 15 new tests for balance operations
-
-Version bumped: 1.0.0 → 1.1.0 (Minor - new feature)
-
----
-
-# 4. DO NOT commit langsung — biarkan user review & manual commit
-```
-
-### 9.B.5 Breaking Changes Handling
-Jika ada **breaking changes**, WAJIB:
-- Tambahkan `BREAKING CHANGE:` di footer commit message
-- Bump ke MAJOR version (x.0.0)
-- Dokumentasikan migration guide (jika diperlukan)
-
-Contoh:
-```
-refactor(security-auth)!: replace session-based with token-based auth
-
-BREAKING CHANGE: Session-based authentication removed.
-All clients must implement token-based auth using new
-AuthenticationService.authenticateWithToken() method.
-
-Migration guide: docs/migration/v2.0.0-token-migration.md
-```
+## 9.B Git Workflow & Commit Suggestions
+- Commit timing dikendalikan oleh generator prompt helper.
+- Jika commit suggestion diminta, gunakan **Conventional Commits** dalam bahasa Inggris dan jangan tambahkan trailer `Co-authored-by`.
+- Jangan melakukan `git push` atau membuat PR kecuali diminta secara eksplisit.
+- Jangan memakai destructive git commands seperti `reset --hard`, `checkout --`, atau `force push`.
 
 ## 10. Playwright Smoke Test & Frontend Debugging
 
@@ -281,17 +169,14 @@ Untuk menjamin keamanan dan sinkronisasi enkripsi:
 *   **SystemInitializer (Java)**: Sebuah `CommandLineRunner` yang mendeteksi placeholder tersebut dan menggantinya dengan hash BCrypt yang valid untuk password **`admin123`** saat aplikasi pertama kali dijalankan.
 *   **Force Reset**: Semua user baru (termasuk admin) wajib memiliki flag `password_change_required = true` di database.
 
-## 12. Documentation Index
-Baca **[docs/index.md](index.md)** sebagai peta navigasi lengkap seluruh dokumentasi teknis dan fungsional project ini. Agent **WAJIB** baca index ini sebelum explore dokumentasi project.
-
-## 13. Security & Role Permissions
+## 12. Security & Role Permissions
 Aplikasi ini memiliki UI dinamis untuk Manajemen Role (Grouped Permissions) yang secara otomatis akan mengelompokkan daftar _permission_ ke dalam sebuah Folder berdasarkan **kata pertama sebelum underscore (`_`)**. Oleh sebab itu, konvensi penamaan permission sangatlah penting:
 1. **Modul Utama (CRUD)**: Gunakan format `[NAMA_MODUL]_[AKSI]`. 
    Contoh: `GEOGRAPHIC_READ`, `PRODUCT_CREATE`. Ini akan mengelompokkan mereka ke folder `GEOGRAPHIC` dan `PRODUCT`.
 2. **Fitur Lintas Modul (Shared Features)**: Gunakan *Prefix* jenis fiturnya, contohnya `LOOKUP_` untuk autocomplete popup, dan `POPUP_` untuk fitur modal/popup lainnya (misal: Popup selector item di transaksi).
    Contoh: `LOOKUP_GEOGRAPHIC`, `LOOKUP_PRODUCT`, `POPUP_PARTNER`. Ini akan membuat folder `LOOKUP` dan `POPUP` yang bersih dan mudah diatur oleh Administrator di UI tanpa mencampuri izin akses CRUD reguler.
 
-## 14. Global Search Menu & Permission Groups
+## 13. Global Search Menu & Permission Groups
 Selain pengelompokan visual di UI Role, sistem memiliki fitur **Global Search Menu** yang menggunakan entitas `PermissionGroup`.
 - Setiap `Permission` **WAJIB** dikaitkan dengan satu `PermissionGroup` agar modul tersebut dapat muncul di hasil pencarian navbar (jika user punya akses).
 - Detail teknis silakan merujuk ke [docs/spec/search-menu.md](spec/search-menu.md) dan [docs/modules/security/permission-groups.md](modules/security/permission-groups.md).
