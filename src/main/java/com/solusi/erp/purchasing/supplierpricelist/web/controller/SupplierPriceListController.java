@@ -113,7 +113,7 @@ public class SupplierPriceListController {
             @PathVariable Long id,
             @Valid @RequestBody SupplierPriceListSaveRequest request) {
         SupplierPriceList domain = updateSupplierPriceListUseCase.execute(
-            id, request.getProductId(), request.getUomId(), request.getCurrencyId(),
+            id, request.getSupplierId(), request.getProductId(), request.getUomId(), request.getCurrencyId(),
             request.getUnitPrice(), request.getMinQuantity(),
             request.getEffectiveFrom(), request.getEffectiveTo(),
             request.getNote(), request.isActive()

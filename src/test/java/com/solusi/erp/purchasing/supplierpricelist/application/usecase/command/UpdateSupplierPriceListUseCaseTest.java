@@ -46,17 +46,18 @@ class UpdateSupplierPriceListUseCaseTest {
             LocalDate.of(2026, 1, 1), LocalDate.of(2026, 6, 30), "Old", true);
 
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
-        when(repository.existsOverlapping(eq(10L), eq(25L), eq(35L), eq(45L),
+        when(repository.existsOverlapping(eq(15L), eq(25L), eq(35L), eq(45L),
             eq(LocalDate.of(2026, 7, 1)), eq(LocalDate.of(2026, 12, 31)), eq(1L))).thenReturn(false);
         when(repository.save(any(SupplierPriceList.class))).thenAnswer(inv -> inv.getArgument(0));
 
         SupplierPriceList result = useCase.execute(1L,
-            25L, 35L, 45L,
+            15L, 25L, 35L, 45L,
             new BigDecimal("200.0000"), new BigDecimal("5.0000"),
             LocalDate.of(2026, 7, 1), LocalDate.of(2026, 12, 31),
             "Updated", true
         );
 
+        assertThat(result.getSupplierId()).isEqualTo(15L);
         assertThat(result.getProductId()).isEqualTo(25L);
         assertThat(result.getUnitPrice()).isEqualByComparingTo("200.0000");
         assertThat(result.getNote()).isEqualTo("Updated");
@@ -69,7 +70,7 @@ class UpdateSupplierPriceListUseCaseTest {
         when(repository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> useCase.execute(999L,
-            2L, 3L, 4L,
+            2L, 3L, 4L, 5L,
             new BigDecimal("100.0000"), new BigDecimal("1.0000"),
             LocalDate.of(2026, 7, 1), null, null, true
         ))
@@ -91,7 +92,7 @@ class UpdateSupplierPriceListUseCaseTest {
             eq(LocalDate.of(2026, 7, 1)), eq(LocalDate.of(2026, 12, 31)), eq(1L))).thenReturn(true);
 
         assertThatThrownBy(() -> useCase.execute(1L,
-            20L, 30L, 40L,
+            10L, 20L, 30L, 40L,
             new BigDecimal("100.0000"), new BigDecimal("1.0000"),
             LocalDate.of(2026, 7, 1), LocalDate.of(2026, 12, 31), null, true
         ))

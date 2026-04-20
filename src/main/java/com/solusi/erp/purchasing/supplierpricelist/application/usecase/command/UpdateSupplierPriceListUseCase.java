@@ -7,8 +7,8 @@ import java.time.LocalDate;
 
 @FunctionalInterface
 public interface UpdateSupplierPriceListUseCase {
-    SupplierPriceList execute(Long id, Long productId, Long uomId, Long currencyId,
-                              BigDecimal unitPrice, BigDecimal minQuantity,
-                              LocalDate effectiveFrom, LocalDate effectiveTo,
-                              String note, boolean active);
+    SupplierPriceList execute(Long id, Long supplierId, Long productId, Long uomId, Long currencyId,
+                               BigDecimal unitPrice, BigDecimal minQuantity,
+                               LocalDate effectiveFrom, LocalDate effectiveTo,
+                               String note, boolean active);
 }

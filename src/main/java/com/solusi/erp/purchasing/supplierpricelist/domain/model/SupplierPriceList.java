@@ -10,7 +10,7 @@ public class SupplierPriceList {
 
     private final AuditMetadata metadata;
     private final String code;
-    private final Long supplierId;
+    private Long supplierId;
     private Long productId;
     private Long uomId;
     private Long currencyId;
@@ -53,11 +53,13 @@ public class SupplierPriceList {
     }
 
     public void update(Long productId, Long uomId, Long currencyId,
+                       Long supplierId,
                        BigDecimal unitPrice, BigDecimal minQuantity,
                        LocalDate effectiveFrom, LocalDate effectiveTo,
                        String note, boolean active) {
         validateUnitPrice(unitPrice);
         validateDateRange(effectiveFrom, effectiveTo);
+        this.supplierId = supplierId;
         this.productId = productId;
         this.uomId = uomId;
         this.currencyId = currencyId;

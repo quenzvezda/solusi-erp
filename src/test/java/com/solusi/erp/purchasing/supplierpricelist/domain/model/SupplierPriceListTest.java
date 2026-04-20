@@ -166,7 +166,7 @@ class SupplierPriceListTest {
     class Update {
 
         @Test
-        @DisplayName("updates mutable fields; code and supplierId remain unchanged")
+        @DisplayName("updates mutable fields including supplierId; code remains unchanged")
         void update_changesMutableFields() {
             SupplierPriceList spl = SupplierPriceList.createNew(
                 "SPL-001", 1L, 2L, 3L, 4L,
@@ -178,7 +178,7 @@ class SupplierPriceListTest {
             );
 
             spl.update(
-                5L, 6L, 7L,
+                5L, 6L, 7L, 8L,
                 new BigDecimal("250.0000"),
                 new BigDecimal("20.0000"),
                 LocalDate.of(2026, 8, 1),
@@ -188,7 +188,7 @@ class SupplierPriceListTest {
             );
 
             assertThat(spl.getCode()).isEqualTo("SPL-001");
-            assertThat(spl.getSupplierId()).isEqualTo(1L);
+            assertThat(spl.getSupplierId()).isEqualTo(8L);
             assertThat(spl.getProductId()).isEqualTo(5L);
             assertThat(spl.getUomId()).isEqualTo(6L);
             assertThat(spl.getCurrencyId()).isEqualTo(7L);
@@ -212,7 +212,7 @@ class SupplierPriceListTest {
             );
 
             assertThatThrownBy(() -> spl.update(
-                2L, 3L, 4L,
+                2L, 3L, 4L, 5L,
                 BigDecimal.ZERO,
                 new BigDecimal("1.0000"),
                 LocalDate.of(2026, 7, 1),
@@ -234,7 +234,7 @@ class SupplierPriceListTest {
             );
 
             assertThatThrownBy(() -> spl.update(
-                2L, 3L, 4L,
+                2L, 3L, 4L, 5L,
                 new BigDecimal("100.0000"),
                 new BigDecimal("1.0000"),
                 LocalDate.of(2027, 1, 1),

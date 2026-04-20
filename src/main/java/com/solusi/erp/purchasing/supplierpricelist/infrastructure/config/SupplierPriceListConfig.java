@@ -45,9 +45,9 @@ public class SupplierPriceListConfig {
         UpdateSupplierPriceListUseCase pure = new UpdateSupplierPriceListUseCaseImpl(
             supplierPriceListDomainRepository);
         TransactionTemplate tx = new TransactionTemplate(txManager);
-        return (id, productId, uomId, currencyId, unitPrice, minQuantity,
+        return (id, supplierId, productId, uomId, currencyId, unitPrice, minQuantity,
                 effectiveFrom, effectiveTo, note, active) ->
-            tx.execute(status -> pure.execute(id, productId, uomId, currencyId,
+            tx.execute(status -> pure.execute(id, supplierId, productId, uomId, currencyId,
                 unitPrice, minQuantity, effectiveFrom, effectiveTo, note, active));
     }
 
