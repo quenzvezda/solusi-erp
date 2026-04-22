@@ -33,11 +33,14 @@ public class CreatePurchaseOrderUseCaseImpl implements CreatePurchaseOrderUseCas
                                   Long supplierId, Long facilityId, Long currencyId,
                                   BigDecimal exchangeRate, int paymentTermDays,
                                   Long prId, PurchaseOrderType poType, String note, List<PoLineInput> lines) {
-        if (PurchaseOrderType.STANDARD == poType) {
-            if (prId == null) {
+        PurchaseOrderType effectivePoType = poType != null ? poType : PurchaseOrderType.DIRECT;
+        Long normalizedPrId = effectivePoType == PurchaseOrderType.STANDARD ? prId : null;
+
+        if (effectivePoType == PurchaseOrderType.STANDARD) {
+            if (normalizedPrId == null) {
                 throw new DomainException("msg.error.po.standard.pr.required");
             }
-            var pr = purchaseRequisitionRepository.findById(prId)
+            var pr = purchaseRequisitionRepository.findById(normalizedPrId)
                 .orElseThrow(() -> new DomainException("msg.error.po.standard.pr.not.found"));
             if (pr.getStatus() != PurchaseRequisitionStatus.APPROVED) {
                 throw new DomainException("msg.error.po.standard.pr.not.approved");
@@ -52,7 +55,7 @@ public class CreatePurchaseOrderUseCaseImpl implements CreatePurchaseOrderUseCas
 
         PurchaseOrder po = PurchaseOrder.createNew(
                 code, orderDate, expectedDate, supplierId, facilityId,
-                currencyId, exchangeRate, paymentTermDays, prId, poType, note, domainLines
+                currencyId, exchangeRate, paymentTermDays, normalizedPrId, effectivePoType, note, domainLines
         );
         return repository.save(po);
     }

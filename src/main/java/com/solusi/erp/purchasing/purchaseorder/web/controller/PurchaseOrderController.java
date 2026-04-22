@@ -17,6 +17,7 @@ import com.solusi.erp.purchasing.purchaseorder.application.usecase.command.*;
 import com.solusi.erp.purchasing.purchaseorder.application.usecase.query.*;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrder;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderStatus;
+import com.solusi.erp.purchasing.purchaserequisition.domain.repository.PurchaseRequisitionRepository;
 import com.solusi.erp.purchasing.purchaseorder.web.dto.*;
 import com.solusi.erp.purchasing.purchaseorder.web.mapper.PurchaseOrderWebMapper;
 import com.solusi.erp.security.shared.model.SecurityUser;
@@ -58,12 +59,15 @@ public class PurchaseOrderController {
     private final CancelPurchaseOrderUseCase cancelPurchaseOrderUseCase;
     private final FindPurchaseOrdersUseCase findPurchaseOrdersUseCase;
     private final GetPurchaseOrderEditViewUseCase getPurchaseOrderEditViewUseCase;
+    private final FindPurchaseOrderPrSelectorUseCase findPurchaseOrderPrSelectorUseCase;
+    private final FindPurchaseOrderPrLineSelectorUseCase findPurchaseOrderPrLineSelectorUseCase;
     private final FindApprovalRequestByReferenceUseCase findApprovalRequestByReferenceUseCase;
     private final PurchaseOrderWebMapper webMapper;
     private final MessageSource messageSource;
     private final PartyLookupProvider partyLookupProvider;
     private final FacilityLookupProvider facilityLookupProvider;
     private final CurrencyLookupProvider currencyLookupProvider;
+    private final PurchaseRequisitionRepository purchaseRequisitionRepository;
 
     @GetMapping
     @PreAuthorize("hasAuthority('PO_READ')")
@@ -94,6 +98,32 @@ public class PurchaseOrderController {
         request.setPaymentTermDays(30);
         model.addAttribute("poRequest", request);
         return "purchasing/purchase-orders/form";
+    }
+
+    @GetMapping("/selectors/purchase-requisitions")
+    @PreAuthorize("hasAuthority('PO_CREATE')")
+    public String showPrSelector(@RequestParam(required = false) String keyword,
+                                 @RequestParam(required = false) Long supplierId,
+                                 org.springframework.data.domain.Pageable pageable,
+                                 Model model) {
+        model.addAttribute("page", findPurchaseOrderPrSelectorUseCase.execute(keyword, supplierId, pageable));
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("supplierId", supplierId);
+        return "purchasing/purchase-orders/fragments/pr-selector-modal";
+    }
+
+    @GetMapping("/selectors/purchase-requisition-lines")
+    @PreAuthorize("hasAuthority('PO_CREATE')")
+    public String showPrLineSelector(@RequestParam Long prId,
+                                     @RequestParam(required = false) String keyword,
+                                     @RequestParam(required = false) List<Long> excludePrLineIds,
+                                     org.springframework.data.domain.Pageable pageable,
+                                     Model model) {
+        model.addAttribute("page", findPurchaseOrderPrLineSelectorUseCase.execute(prId, keyword, excludePrLineIds, pageable));
+        model.addAttribute("prId", prId);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("excludePrLineIds", excludePrLineIds);
+        return "purchasing/purchase-orders/fragments/pr-line-selector-modal";
     }
 
     @PostMapping("/create")
@@ -236,7 +266,11 @@ public class PurchaseOrderController {
             ui.put("currencySubtext", currency.subText());
         }
 
+        if (domain.getPrId() != null) {
+            purchaseRequisitionRepository.findById(domain.getPrId())
+                .ifPresent(pr -> ui.put("prDisplay", pr.getCode()));
+        }
+
         return ui;
     }
 }
-

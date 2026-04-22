@@ -1,7 +1,13 @@
 package com.solusi.erp.purchasing.purchaseorder.infrastructure.config;
 
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
+import com.solusi.erp.inventory.facility.domain.port.FacilityLookupProvider;
+import com.solusi.erp.inventory.product.domain.port.ProductLookupProvider;
+import com.solusi.erp.inventory.uom.domain.port.UomLookupProvider;
+import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
+import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import com.solusi.erp.purchasing.purchaserequisition.domain.repository.PurchaseRequisitionRepository;
+import com.solusi.erp.purchasing.purchaserequisition.infrastructure.persistence.PurchaseRequisitionJpaRepository;
 import com.solusi.erp.purchasing.purchaseorder.application.usecase.command.*;
 import com.solusi.erp.purchasing.purchaseorder.application.usecase.query.*;
 import com.solusi.erp.purchasing.purchaseorder.domain.port.PurchaseOrderEventPublisher;
@@ -115,5 +121,44 @@ public class PurchaseOrderConfig {
         tx.setReadOnly(true);
         return (id) -> tx.execute(status -> pure.execute(id));
     }
-}
 
+    @Bean
+    public FindPurchaseOrderPrSelectorUseCase findPurchaseOrderPrSelectorUseCase(
+            PurchaseRequisitionJpaRepository purchaseRequisitionJpaRepository,
+            PurchaseOrderJpaRepository purchaseOrderJpaRepository,
+            PartyLookupProvider partyLookupProvider,
+            FacilityLookupProvider facilityLookupProvider,
+            CurrencyLookupProvider currencyLookupProvider,
+            PlatformTransactionManager txManager) {
+        FindPurchaseOrderPrSelectorUseCase pure = new FindPurchaseOrderPrSelectorUseCaseImpl(
+                purchaseRequisitionJpaRepository,
+                purchaseOrderJpaRepository,
+                partyLookupProvider,
+                facilityLookupProvider,
+                currencyLookupProvider
+        );
+        TransactionTemplate tx = new TransactionTemplate(txManager);
+        tx.setReadOnly(true);
+        return (keyword, supplierId, pageable) ->
+                tx.execute(status -> pure.execute(keyword, supplierId, pageable));
+    }
+
+    @Bean
+    public FindPurchaseOrderPrLineSelectorUseCase findPurchaseOrderPrLineSelectorUseCase(
+            PurchaseRequisitionJpaRepository purchaseRequisitionJpaRepository,
+            PurchaseOrderJpaRepository purchaseOrderJpaRepository,
+            ProductLookupProvider productLookupProvider,
+            UomLookupProvider uomLookupProvider,
+            PlatformTransactionManager txManager) {
+        FindPurchaseOrderPrLineSelectorUseCase pure = new FindPurchaseOrderPrLineSelectorUseCaseImpl(
+                purchaseRequisitionJpaRepository,
+                purchaseOrderJpaRepository,
+                productLookupProvider,
+                uomLookupProvider
+        );
+        TransactionTemplate tx = new TransactionTemplate(txManager);
+        tx.setReadOnly(true);
+        return (prId, keyword, excludePrLineIds, pageable) ->
+                tx.execute(status -> pure.execute(prId, keyword, excludePrLineIds, pageable));
+    }
+}

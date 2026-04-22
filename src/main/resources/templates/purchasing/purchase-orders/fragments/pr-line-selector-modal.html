@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div id="po-pr-line-selector-results" th:fragment="po-pr-line-selector-results">
+    <div class="card-header border-0 pb-0">
+        <form class="row g-2"
+              hx-get="/purchasing/purchase-orders/selectors/purchase-requisition-lines"
+              hx-target="#po-pr-line-selector-results"
+              hx-swap="outerHTML">
+            <input type="hidden" name="prId" th:value="${prId}">
+            <th:block th:each="excludePrLineId : ${excludePrLineIds}">
+                <input type="hidden" name="excludePrLineIds" th:value="${excludePrLineId}">
+            </th:block>
+            <div class="col">
+                <input type="search"
+                       class="form-control"
+                       name="keyword"
+                       th:value="${keyword}"
+                       th:placeholder="#{label.po.selector.prLine.search.placeholder}">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-search"></i>
+                    <span class="ms-1" th:text="#{label.search}">Search</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+            <tr>
+                <th class="w-1"></th>
+                <th>Product</th>
+                <th class="text-end">Requested</th>
+                <th class="text-end">Remaining</th>
+                <th>UoM</th>
+                <th class="text-end">Estimated Price</th>
+                <th>Required Date</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${page.isEmpty()}">
+                <td colspan="7" class="text-center text-secondary py-4" th:text="#{label.po.selector.prLine.empty}">No eligible PR lines found.</td>
+            </tr>
+            <tr th:each="row : ${page.content}"
+                th:attr="data-pr-line-id=${row.prLineId},
+                         data-pr-id=${row.prId},
+                         data-pr-code=${row.prCode},
+                         data-product-id=${row.productId},
+                         data-product-name=${row.productName},
+                         data-product-subtext=${row.productSubtext},
+                         data-requested-quantity=${row.requestedQuantity},
+                         data-remaining-quantity=${row.remainingQuantity},
+                         data-uom-id=${row.uomId},
+                         data-uom-name=${row.uomName},
+                         data-uom-subtext=${row.uomSubtext},
+                         data-estimated-unit-price=${row.estimatedUnitPrice},
+                         data-required-date=${row.requiredDate},
+                         data-note=${row.note}">
+                <td>
+                    <label class="form-check m-0">
+                        <input class="form-check-input js-pr-line-selector-item" type="checkbox">
+                    </label>
+                </td>
+                <td>
+                    <div class="fw-semibold" th:text="${row.productName}">Bearing 6204</div>
+                    <div class="text-secondary small" th:text="${row.productSubtext}">BRG-6204</div>
+                    <div class="text-secondary small" th:text="${row.prCode}">PR-001</div>
+                </td>
+                <td class="text-end" th:text="${row.requestedQuantity != null ? #numbers.formatDecimal(row.requestedQuantity, 1, 'COMMA', 2, 'POINT') : '-'}">10.00</td>
+                <td class="text-end" th:text="${row.remainingQuantity != null ? #numbers.formatDecimal(row.remainingQuantity, 1, 'COMMA', 2, 'POINT') : '-'}">6.00</td>
+                <td th:text="${row.uomName}">PCS</td>
+                <td class="text-end" th:text="${row.estimatedUnitPrice != null ? #numbers.formatDecimal(row.estimatedUnitPrice, 1, 'COMMA', 2, 'POINT') : '-'}">100.00</td>
+                <td th:text="${row.requiredDate != null ? #temporals.format(row.requiredDate, 'dd MMM yyyy') : ''}">10 Jul 2026</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+    <div class="card-footer d-flex justify-content-end">
+        <button type="button" class="btn btn-primary js-pr-line-selector-apply">
+            <i class="ti ti-check me-1"></i>
+            <span th:text="#{label.apply}">Apply</span>
+        </button>
+    </div>
+</div>
+</body>
+</html>

@@ -12,12 +12,18 @@ import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import com.solusi.erp.purchasing.purchaseorder.application.usecase.command.*;
 import com.solusi.erp.purchasing.purchaseorder.application.usecase.query.*;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.*;
+import com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisition;
+import com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisitionPriority;
+import com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisitionStatus;
+import com.solusi.erp.purchasing.purchaserequisition.domain.repository.PurchaseRequisitionRepository;
 import com.solusi.erp.purchasing.purchaseorder.web.dto.*;
 import com.solusi.erp.purchasing.purchaseorder.web.mapper.PurchaseOrderWebMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.MessageSource;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.ExtendedModelMap;
@@ -45,12 +51,15 @@ public class PurchaseOrderControllerTest {
     private CancelPurchaseOrderUseCase cancelUc;
     private FindPurchaseOrdersUseCase findUc;
     private GetPurchaseOrderEditViewUseCase editViewUc;
+    private FindPurchaseOrderPrSelectorUseCase findPrSelectorUc;
+    private FindPurchaseOrderPrLineSelectorUseCase findPrLineSelectorUc;
     private FindApprovalRequestByReferenceUseCase findApprovalRequestByReferenceUseCase;
     private PurchaseOrderWebMapper webMapper;
     private MessageSource messageSource;
     private PartyLookupProvider partyLookupProvider;
     private FacilityLookupProvider facilityLookupProvider;
     private CurrencyLookupProvider currencyLookupProvider;
+    private PurchaseRequisitionRepository purchaseRequisitionRepository;
     private PurchaseOrderController controller;
 
     @BeforeEach
@@ -63,17 +72,21 @@ public class PurchaseOrderControllerTest {
         cancelUc = mock(CancelPurchaseOrderUseCase.class);
         findUc = mock(FindPurchaseOrdersUseCase.class);
         editViewUc = mock(GetPurchaseOrderEditViewUseCase.class);
+        findPrSelectorUc = mock(FindPurchaseOrderPrSelectorUseCase.class);
+        findPrLineSelectorUc = mock(FindPurchaseOrderPrLineSelectorUseCase.class);
         findApprovalRequestByReferenceUseCase = mock(FindApprovalRequestByReferenceUseCase.class);
         webMapper = mock(PurchaseOrderWebMapper.class);
         messageSource = mock(MessageSource.class);
         partyLookupProvider = mock(PartyLookupProvider.class);
         facilityLookupProvider = mock(FacilityLookupProvider.class);
         currencyLookupProvider = mock(CurrencyLookupProvider.class);
+        purchaseRequisitionRepository = mock(PurchaseRequisitionRepository.class);
 
         controller = new PurchaseOrderController(
             createUc, updateUc, deleteUc, submitUc, sendUc, cancelUc,
-            findUc, editViewUc, findApprovalRequestByReferenceUseCase, webMapper, messageSource,
-            partyLookupProvider, facilityLookupProvider, currencyLookupProvider
+            findUc, editViewUc, findPrSelectorUc, findPrLineSelectorUc,
+            findApprovalRequestByReferenceUseCase, webMapper, messageSource,
+            partyLookupProvider, facilityLookupProvider, currencyLookupProvider, purchaseRequisitionRepository
         );
     }
 
@@ -111,6 +124,22 @@ public class PurchaseOrderControllerTest {
             BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
             PurchaseOrderStatus.APPROVED,
             30, null, PurchaseOrderType.DIRECT, null, true, List.of());
+    }
+
+    private PurchaseOrder buildDraftStandardPo() {
+        AuditMetadata metadata = new AuditMetadata(4L, 1L, null, null, null, null);
+        PurchaseOrderLine line = new PurchaseOrderLine(
+            AuditMetadata.empty(), 2L, 20L,
+            new BigDecimal("2.0000"), BigDecimal.ZERO, 1L,
+            new BigDecimal("750.00"), BigDecimal.ZERO,
+            501L, "Derived from PR"
+        );
+        return new PurchaseOrder(metadata, "PO-004",
+            LocalDate.of(2026, 7, 2), LocalDate.of(2026, 7, 8),
+            100L, 200L, 1L, BigDecimal.ONE,
+            new BigDecimal("1500.00"), BigDecimal.ZERO, new BigDecimal("1500.00"),
+            PurchaseOrderStatus.DRAFT,
+            30, 10L, PurchaseOrderType.STANDARD, "Standard note", true, List.of(line));
     }
 
     @Test
@@ -160,9 +189,59 @@ public class PurchaseOrderControllerTest {
     }
 
     @Test
+    @DisplayName("showPrSelector returns PR selector fragment with page model")
+    void showPrSelector_returnsFragmentWithPageModel() {
+        org.springframework.data.domain.Page<PurchaseOrderPrSelectorRow> selectorPage = new PageImpl<>(List.of(
+                new PurchaseOrderPrSelectorRow(
+                        10L, "PR-001", LocalDate.of(2026, 7, 1),
+                        100L, "Alpha Supplier", "SUP-001",
+                        200L, "Main Warehouse", "WH-01",
+                        1L, "US Dollar", "USD",
+                        2L
+                )
+        ));
+        when(findPrSelectorUc.execute(eq("alpha"), eq(100L), any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(selectorPage);
+
+        Model model = new ExtendedModelMap();
+        String view = controller.showPrSelector("alpha", 100L, PageRequest.of(0, 10), model);
+
+        assertEquals("purchasing/purchase-orders/fragments/pr-selector-modal", view);
+        assertThat(model.getAttribute("page")).isSameAs(selectorPage);
+        assertEquals("alpha", model.getAttribute("keyword"));
+        assertEquals(100L, model.getAttribute("supplierId"));
+    }
+
+    @Test
+    @DisplayName("showPrLineSelector returns PR line selector fragment with context model")
+    void showPrLineSelector_returnsFragmentWithContextModel() {
+        org.springframework.data.domain.Page<PurchaseOrderPrLineSelectorRow> selectorPage = new PageImpl<>(List.of(
+                new PurchaseOrderPrLineSelectorRow(
+                        100L, 10L, "PR-001",
+                        11L, "Bearing 6204", "BRG-6204",
+                        new BigDecimal("10.0000"), new BigDecimal("6.0000"),
+                        1L, "PCS", "PCS",
+                        new BigDecimal("100.00"), LocalDate.of(2026, 7, 10),
+                        "Line note"
+                )
+        ));
+        when(findPrLineSelectorUc.execute(eq(10L), eq("bearing"), eq(List.of(100L)), any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(selectorPage);
+
+        Model model = new ExtendedModelMap();
+        String view = controller.showPrLineSelector(10L, "bearing", List.of(100L), PageRequest.of(0, 10), model);
+
+        assertEquals("purchasing/purchase-orders/fragments/pr-line-selector-modal", view);
+        assertThat(model.getAttribute("page")).isSameAs(selectorPage);
+        assertEquals(10L, model.getAttribute("prId"));
+        assertEquals("bearing", model.getAttribute("keyword"));
+        assertEquals(List.of(100L), model.getAttribute("excludePrLineIds"));
+    }
+
+    @Test
     @DisplayName("showEditForm returns form view for DRAFT PO")
     void showEditFormShouldReturnFormForDraft() {
-        PurchaseOrder po = buildDraftPo();
+        PurchaseOrder po = buildDraftStandardPo();
         when(editViewUc.execute(1L)).thenReturn(Optional.of(po));
 
         PurchaseOrderSaveRequest saveReq = new PurchaseOrderSaveRequest();
@@ -182,6 +261,23 @@ public class PurchaseOrderControllerTest {
             new LookupDto(200L, "Main Warehouse", "Code: WH01", null));
         when(currencyLookupProvider.resolve(1L)).thenReturn(
             new LookupDto(1L, "US Dollar", "USD", null));
+        when(purchaseRequisitionRepository.findById(10L)).thenReturn(Optional.of(
+            new PurchaseRequisition(
+                new AuditMetadata(10L, 1L, null, null, null, null),
+                "PR-2604-00002",
+                LocalDate.of(2026, 4, 12),
+                300L,
+                200L,
+                "IT",
+                PurchaseRequisitionPriority.NORMAL,
+                PurchaseRequisitionStatus.APPROVED,
+                null,
+                true,
+                100L,
+                1L,
+                List.of()
+            )
+        ));
 
         Model model = new ExtendedModelMap();
         String view = controller.showEditForm(1L, model);
@@ -194,7 +290,8 @@ public class PurchaseOrderControllerTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> poUI = (Map<String, Object>) model.getAttribute("poUI");
-        assertThat(poUI).containsKeys("supplierText", "supplierSubtext", "currencyText", "currencySubtext");
+        assertThat(poUI).containsKeys("supplierText", "supplierSubtext", "currencyText", "currencySubtext", "prDisplay");
+        assertThat(poUI.get("prDisplay")).isEqualTo("PR-2604-00002");
     }
 
     @Test

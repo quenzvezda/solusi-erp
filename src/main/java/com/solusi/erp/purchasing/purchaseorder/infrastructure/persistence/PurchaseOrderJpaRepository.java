@@ -7,7 +7,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface PurchaseOrderJpaRepository extends JpaRepository<PurchaseOrderEntity, Long> {
@@ -26,4 +28,18 @@ public interface PurchaseOrderJpaRepository extends JpaRepository<PurchaseOrderE
     @Query(value = "SELECT DISTINCT p FROM PurchaseOrderEntity p LEFT JOIN FETCH p.lines",
            countQuery = "SELECT COUNT(p) FROM PurchaseOrderEntity p")
     Page<PurchaseOrderEntity> findAllWithLines(Pageable pageable);
+
+    @Query("""
+        select new com.solusi.erp.purchasing.purchaseorder.infrastructure.persistence.PrLineConsumptionRow(
+            line.prLineId,
+            coalesce(sum(line.quantity), 0)
+        )
+        from PurchaseOrderLineEntity line
+        join line.header header
+        where line.prLineId in :prLineIds
+          and header.status in :statuses
+        group by line.prLineId
+    """)
+    List<PrLineConsumptionRow> sumConsumedByPrLineIds(@Param("prLineIds") Set<Long> prLineIds,
+                                                      @Param("statuses") Set<com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderStatus> statuses);
 }

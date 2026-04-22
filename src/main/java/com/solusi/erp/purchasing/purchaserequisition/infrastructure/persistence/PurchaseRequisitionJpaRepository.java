@@ -56,4 +56,36 @@ public interface PurchaseRequisitionJpaRepository extends JpaRepository<Purchase
     @Query("SELECT DISTINCT p FROM PurchaseRequisitionEntity p " +
            "WHERE p.status = com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisitionStatus.APPROVED")
     List<PurchaseRequisitionEntity> findAllApproved();
+
+    @Query("""
+        select distinct pr
+        from PurchaseRequisitionEntity pr
+        left join fetch pr.lines line
+        where pr.status = com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisitionStatus.APPROVED
+          and (:supplierId is null or pr.suggestedSupplierId = :supplierId)
+          and (
+                :keyword is null
+             or lower(pr.code) like lower(concat('%', :keyword, '%'))
+             or lower(coalesce(pr.department, '')) like lower(concat('%', :keyword, '%'))
+          )
+        order by pr.requestDate desc, pr.id desc
+    """)
+    List<PurchaseRequisitionEntity> findApprovedForPoSelector(@Param("supplierId") Long supplierId,
+                                                              @Param("keyword") String keyword);
+
+    @Query("""
+        select line
+        from PurchaseRequisitionLineEntity line
+        join fetch line.header pr
+        where line.header.id = :prId
+          and line.header.status = com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisitionStatus.APPROVED
+          and (
+                :keyword is null
+             or lower(pr.code) like lower(concat('%', :keyword, '%'))
+             or lower(coalesce(line.note, '')) like lower(concat('%', :keyword, '%'))
+          )
+        order by line.id asc
+    """)
+    List<PurchaseRequisitionLineEntity> findApprovedLinesForPoSelector(@Param("prId") Long prId,
+                                                                       @Param("keyword") String keyword);
 }

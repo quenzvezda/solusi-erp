@@ -82,9 +82,10 @@ DRAFT/SUBMITTED ──► CANCELLED
 
 **STANDARD PO:**
 - **Wajib** merujuk ke PR yang berstatus `APPROVED`.
-- Supplier PO **harus sama** dengan `suggestedSupplierId` yang ada di minimal satu baris PR yang dipilih.
-- Sistem memvalidasi di backend — jika PR belum APPROVED atau supplier tidak cocok, sistem menolak penyimpanan.
-- Setelah PO STANDARD dibuat, status PR yang dirujuk berubah ke `CONVERTED`.
+- Pada **create / pre-add flow**, selector PR hanya menampilkan PR yang masih memiliki line dengan **remaining qty > 0**.
+- Saat PR dipilih, field header **supplier**, **facility**, dan **currency** di-derive dari PR lalu di-lock di UI.
+- Tombol **Add Line** untuk STANDARD tidak membuat row kosong; tombol ini membuka selector line PR dan hanya menampilkan line yang masih eligible.
+- Sistem tetap memvalidasi di backend — request STANDARD tanpa PR atau dengan PR yang belum `APPROVED` tetap ditolak.
 
 ### C. Perhitungan Total Otomatis
 - `lineSubtotal = quantity × unitPrice`
@@ -110,13 +111,17 @@ Semua kalkulasi dilakukan di backend (domain layer) — tidak bergantung pada Ja
 
 ## 4. Standar UI/UX
 
-- **Tipe Toggle**: Dua radio button (**DIRECT** / **STANDARD**) di bagian atas form. Memilih STANDARD akan menampilkan field **Referensi PR** untuk memilih PR yang sudah disetujui.
-- **PR Autocomplete**: Saat tipe STANDARD dipilih, field PR Reference menggunakan autocomplete yang hanya menampilkan PR berstatus APPROVED dari supplier yang sama. Endpoint: `GET /purchasing/purchase-requisitions/api/approved?supplierId={id}`.
-- **Drawer Line Item**: Setiap baris item dimasukkan/diedit melalui offcanvas drawer untuk menghindari overflow tabel. Drawer menampilkan semua field baris termasuk kalkulasi otomatis.
+- **Tipe Toggle**: Dua radio button (**DIRECT** / **STANDARD**) di bagian atas form.
+- **STANDARD PR Selector Modal**: Saat tipe STANDARD dipilih pada create flow, field **Referensi PR** tidak lagi memakai select biasa. User memilih PR melalui modal selector berbasis tabel yang mendukung search + pagination.
+- **Derived Header Locking**: Setelah PR dipilih, `supplier`, `facility`, dan `currency` otomatis terisi dari PR dan dikunci di UI.
+- **STANDARD Line Selector Modal**: Tombol **Add Line** pada STANDARD membuka selector line PR multi-select. Sistem mengecualikan line yang sudah habis atau sudah dipilih di draft saat ini.
+- **Edit Header Parity**: Pada edit DRAFT PO, kontrol **PO Type** dan **Referensi PR** memakai struktur visual yang sama dengan create flow, tetapi tetap non-interaktif/locked agar referensi STANDARD tidak berubah diam-diam.
+- **STANDARD Edit Line Expansion**: Pada edit DRAFT STANDARD PO, tombol **Add Line** tetap membuka selector line PR dari referensi yang sama agar user bisa menambahkan sisa line PR yang belum dikonversi, bukan membuat line kosong manual.
+- **DIRECT Line Entry**: Tombol **Add Line** pada DIRECT tetap membuat satu row kosong untuk input manual.
+- **Inline Line Actions**: Tabel line item hanya menyisakan aksi hapus; tidak ada lagi tombol drawer/pensil pada row.
 - **Approval Sidebar**: Pada halaman detail PO, terdapat panel samping yang menampilkan status approval, nama approver saat ini, dan tombol aksi (jika user adalah approver aktif).
 - **Approval History Drawer**: Klik **Riwayat Approval** untuk melihat rantai keputusan lengkap.
 - **Tipe Badge**: Daftar PO menampilkan badge **Direct** (biru) atau **Standard** (hijau) di kolom Tipe.
-- **Dynamic Recap**: Total subtotal, pajak, dan grand total ditampilkan secara real-time di bagian bawah form saat mengisi baris item.
 
 ## 5. Integrasi & Relasi Antar Modul
 
@@ -140,9 +145,9 @@ PO (FULLY_RECEIVED) ────────────────────
 
 | Dari | Ke | Keterangan |
 |------|----|-----------|
-| SPL | PO (semua tipe) | Harga unit dapat di-autofill dari SPL aktif saat memilih produk di drawer |
+| SPL | PO (semua tipe) | Harga unit dapat di-autofill dari SPL aktif saat memilih produk di row line item |
 | PR (APPROVED) | PO STANDARD | PR yang sudah disetujui menjadi referensi wajib PO STANDARD |
-| PO | PR | Setelah PO STANDARD dibuat, status PR dirujuk berubah ke CONVERTED |
+| PO | PR | PO STANDARD menyimpan referensi `prId` dan `prLineId` ke PR asal untuk pelacakan konversi parsial |
 | PO (SENT) | Goods Receipt | GR dibuat berdasarkan PO yang sudah dikirim ke supplier *(Sprint 4)* |
 | PO (FULLY_RECEIVED) | Vendor Bill | Tagihan AP dibuat berdasarkan PO yang sudah fully received *(Sprint 5)* |
 
@@ -186,7 +191,7 @@ Fitur ini dilindungi oleh otoritas berikut:
    | Jangka Waktu Bayar | 30 hari |
    | Catatan | Urgent — stok toner habis |
 
-4. Klik **+ Tambah Item** di tabel baris, isi drawer:
+4. Klik **+ Tambah Item** di tabel baris, isi form line item:
 
    | Field | Nilai |
    |-------|-------|
@@ -221,39 +226,39 @@ Fitur ini dilindungi oleh otoritas berikut:
 **Langkah-langkah:**
 
 1. Buka menu **Pengadaan → Purchase Order**, klik **+ Tambah Baru**.
-2. Pilih tipe **STANDARD**. Field **Referensi PR** muncul.
+2. Pilih tipe **STANDARD**. Klik tombol **Pilih PR** untuk membuka modal selector PR.
 3. Isi header PO:
 
    | Field | Nilai |
    |-------|-------|
    | Tipe PO | STANDARD |
-   | Referensi PR | PR-2604-00002 (Laptop — IT Dept) |
+   | Referensi PR | PR-2604-00002 (dipilih dari modal selector) |
    | Tanggal PO | 12/04/2026 |
    | Tanggal Estimasi Terima | 30/04/2026 |
-   | Supplier | PT Techno Nusantara *(otomatis terisi dari PR)* |
-   | Gudang Penerima | Gudang Utama Jakarta |
-   | Mata Uang | IDR |
+   | Supplier | PT Techno Nusantara *(otomatis terisi dan lock)* |
+   | Gudang Penerima | Gudang Utama Jakarta *(otomatis terisi dan lock bila ada di PR)* |
+   | Mata Uang | IDR *(otomatis terisi dan lock)* |
    | Kurs | 1 |
    | Jangka Waktu Bayar | 45 hari |
 
-4. Klik **+ Tambah Item**, isi drawer:
+4. Klik **+ Tambah Item**. Sistem membuka modal selector **line PR**.
 
    | Field | Nilai |
    |-------|-------|
-   | Produk | Laptop 14 inch Core i5 |
-   | Jumlah | 5 |
-   | Satuan | PCS |
-   | Harga per Satuan | 7.400.000 *(sesuai estimasi PR)* |
+   | Produk | Laptop 14 inch Core i5 *(dipilih dari PR line, locked)* |
+   | Jumlah | 5 *(default ke remaining qty, tetap bisa dikurangi untuk partial PO)* |
+   | Satuan | PCS *(dipilih dari PR line, locked)* |
+   | Harga per Satuan | 7.400.000 *(default dari estimasi PR, tetap editable)* |
    | Pajak | 11% (PPN) |
 
-   Kalkulasi otomatis:
+    Kalkulasi otomatis:
    - Subtotal: Rp 37.000.000
    - Pajak: Rp 4.070.000
    - Total: Rp 41.070.000
 
-5. Klik **Simpan Item**, lalu klik **Simpan**.
+5. Klik **Apply** di modal line selector, lalu klik **Simpan**.
 
-   **Hasil:** PO `PO-2604-00002` tersimpan (DRAFT). Status PR `PR-2604-00002` berubah ke **CONVERTED** secara otomatis.
+   **Hasil:** PO `PO-2604-00002` tersimpan dengan status **DRAFT** dan seluruh line menyimpan referensi `prLineId` ke line PR asal.
 
 6. Submit PO untuk persetujuan.
 

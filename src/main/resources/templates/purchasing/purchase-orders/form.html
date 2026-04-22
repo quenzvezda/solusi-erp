@@ -44,38 +44,46 @@
                                 <div class="col-md-9">
                                     <div class="row g-3">
                                         <!-- PO Type Toggle -->
-                                        <div class="col-md-12" th:if="${poRequest.id == null}">
+                                        <div class="col-md-4">
                                             <label class="form-label" th:text="#{label.po.type}">PO Type</label>
                                             <div class="btn-group w-100" role="group" id="po-type-group">
                                                 <input type="radio" class="btn-check" name="poType" id="po-type-direct" value="DIRECT"
-                                                       th:checked="${poRequest.poType == null || poRequest.poType.name() == 'DIRECT'}">
+                                                       th:checked="${poRequest.poType == null || poRequest.poType.name() == 'DIRECT'}"
+                                                       th:disabled="${poRequest.id != null}">
                                                 <label class="btn btn-outline-primary" for="po-type-direct">
                                                     <i class="ti ti-bolt me-1"></i> <span th:text="#{label.po.type.DIRECT}">Direct</span>
                                                 </label>
                                                 <input type="radio" class="btn-check" name="poType" id="po-type-standard" value="STANDARD"
-                                                       th:checked="${poRequest.poType != null && poRequest.poType.name() == 'STANDARD'}">
+                                                       th:checked="${poRequest.poType != null && poRequest.poType.name() == 'STANDARD'}"
+                                                       th:disabled="${poRequest.id != null}">
                                                 <label class="btn btn-outline-primary" for="po-type-standard">
                                                     <i class="ti ti-file-check me-1"></i> <span th:text="#{label.po.type.STANDARD}">Standard</span>
                                                 </label>
                                             </div>
-                                        </div>
-                                        <!-- PO Type badge (edit mode) -->
-                                        <div class="col-md-4" th:if="${poRequest.id != null}">
-                                            <label class="form-label" th:text="#{label.po.type}">PO Type</label>
-                                            <div class="form-control-plaintext">
-                                                <span class="badge" th:classappend="${poRequest.poType != null && poRequest.poType.name() == 'STANDARD'} ? 'bg-purple-lt' : 'bg-blue-lt'"
-                                                      th:text="${poRequest.poType != null ? #messages.msg('label.po.type.' + poRequest.poType.name()) : 'Direct'}">Direct</span>
-                                                <input type="hidden" name="poType" th:value="${poRequest.poType?.name() ?: 'DIRECT'}">
-                                            </div>
+                                            <input th:if="${poRequest.id != null}" type="hidden" name="poType" th:value="${poRequest.poType?.name() ?: 'DIRECT'}">
                                         </div>
                                         <!-- PR Reference (STANDARD only) -->
-                                        <div class="col-md-8" id="pr-reference-group" style="display:none;">
+                                        <div class="col-md-8" id="pr-reference-group" style="display:none;" th:if="${poRequest.id == null || poRequest.prId != null}">
                                             <label class="form-label required" th:text="#{label.po.prReference}">PR Reference</label>
-                                            <select id="select-pr-reference" name="prId" class="form-select erp-input">
-                                                <option value="" th:text="#{label.po.prReference.select}">Select Approved PR</option>
-                                                <option th:if="${poRequest.prId != null}" th:value="${poRequest.prId}" selected
-                                                        th:text="'PR #' + ${poRequest.prId}">PR #1</option>
-                                            </select>
+                                            <input type="hidden" id="input-pr-id" name="prId" th:value="${poRequest.prId}">
+                                            <div class="input-group">
+                                                <input type="text"
+                                                       id="input-pr-display"
+                                                       class="form-control"
+                                                       readonly
+                                                       th:value="${poUI != null ? poUI['prDisplay'] : ''}"
+                                                       th:placeholder="#{label.po.prReference.select}">
+                                                <button type="button" class="btn btn-outline-primary" id="btn-select-pr"
+                                                        th:disabled="${poRequest.id != null}">
+                                                    <i class="ti ti-search me-1"></i>
+                                                    <span th:text="#{label.po.prReference.selectButton}">Choose PR</span>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary" id="btn-clear-pr"
+                                                        th:disabled="${poRequest.id != null}">
+                                                    <i class="ti ti-x me-1"></i>
+                                                    <span th:text="#{label.clear}">Clear</span>
+                                                </button>
+                                            </div>
                                         </div>
                                         <div class="col-md-4">
                                             <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.po.code}, isReadonly=true, placeholder=${poRequest.id == null ? '[ Auto Generated ]' : ''})}"></div>
@@ -155,7 +163,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="line-container">
-                                    <tr th:each="line, stat : *{lines}" class="line-row" th:data-index="${stat.index}">
+                                    <tr th:each="line, stat : *{lines}" class="line-row" th:data-index="${stat.index}" th:data-derived="${line.prLineId != null}">
                                         <td>
                                             <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[' + __${stat.index}__ + '].productId', id='select-product-' + __${stat.index}__, isReadonly=${isLocked}, extraClass='select-product', path='inventory/products',
                                                 initialValue=${line.productId}, initialText=${line.productName},
@@ -174,18 +182,18 @@
                                             <input type="hidden" th:name="'lines[' + ${stat.index} + '].taxRate'" th:value="${line.taxRate}" class="input-tax-rate">
                                             <input type="hidden" th:name="'lines[' + ${stat.index} + '].lineSubtotal'" th:value="${line.lineSubtotal}">
                                             <input type="hidden" th:name="'lines[' + ${stat.index} + '].lineTax'" th:value="${line.lineTax}">
+                                            <input type="hidden" th:name="'lines[' + ${stat.index} + '].prLineId'" th:value="${line.prLineId}" class="input-pr-line-id">
                                             <input type="hidden" th:name="'lines[' + ${stat.index} + '].note'" th:value="${line.note}" class="input-note">
                                         </td>
                                         <td th:if="!${isLocked}">
                                             <div class="btn-list flex-nowrap">
-                                                <button type="button" class="btn btn-white btn-icon btn-edit-line" title="Edit"><i class="ti ti-edit"></i></button>
                                                 <button type="button" class="btn btn-white btn-icon btn-remove-line text-danger" title="Remove"><i class="ti ti-trash"></i></button>
                                             </div>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
-                            <div id="empty-msg" class="text-center py-4 text-secondary" th:style="${#lists.isEmpty(poRequest.lines)} ? '' : 'display:none'">No lines added yet. Click "Add Line" to start.</div>
+                            <div id="empty-msg" class="text-center py-4 text-secondary" th:style="${#lists.isEmpty(poRequest.lines)} ? '' : 'display:none'" th:text="#{label.po.line.empty}">No lines added yet.</div>
                         </div>
                         <div class="card-footer text-end">
                             <div th:if="${auditInfo != null and auditInfo.id != null}" th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
@@ -215,21 +223,26 @@
                     </td>
                     <td><input type="text" name="lines[INDEX].unitPrice" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-unit-price" value="0.00"></td>
                     <td>
-                        <input type="text" name="lines[INDEX].lineTotal" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end" value="0.00" readonly>
-                        <input type="hidden" name="lines[INDEX].taxRate" class="input-tax-rate" value="0.00">
-                        <input type="hidden" name="lines[INDEX].lineSubtotal" value="0.00">
-                        <input type="hidden" name="lines[INDEX].lineTax" value="0.00">
-                        <input type="hidden" name="lines[INDEX].note" class="input-note" value="">
-                    </td>
-                    <td>
+                         <input type="text" name="lines[INDEX].lineTotal" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end" value="0.00" readonly>
+                         <input type="hidden" name="lines[INDEX].taxRate" class="input-tax-rate" value="0.00">
+                         <input type="hidden" name="lines[INDEX].lineSubtotal" value="0.00">
+                         <input type="hidden" name="lines[INDEX].lineTax" value="0.00">
+                         <input type="hidden" name="lines[INDEX].prLineId" class="input-pr-line-id" value="">
+                         <input type="hidden" name="lines[INDEX].note" class="input-note" value="">
+                     </td>
+                     <td>
                         <div class="btn-list flex-nowrap">
-                            <button type="button" class="btn btn-white btn-icon btn-edit-line" title="Edit"><i class="ti ti-edit"></i></button>
                             <button type="button" class="btn btn-white btn-icon btn-remove-line text-danger" title="Remove"><i class="ti ti-trash"></i></button>
                         </div>
                     </td>
                 </tr>
             </tbody>
         </table>
+
+        <div th:if="${poRequest.id == null}"
+             th:replace="~{fragments/modal-selector :: shell('modal-po-pr-selector', #{label.po.selector.pr.title}, 'po-pr-selector-results', 'modal-xl')}"></div>
+        <div th:if="${poRequest.id == null}"
+             th:replace="~{fragments/modal-selector :: shell('modal-po-pr-line-selector', #{label.po.selector.prLine.title}, 'po-pr-line-selector-results', 'modal-xl')}"></div>
 
         <!-- Submit for Approval Modal -->
         <div class="modal modal-blur fade" id="modal-submit-approval" tabindex="-1" th:if="${poRequest.id != null && poRequest.status != null && poRequest.status.name() == 'DRAFT'}">
@@ -313,9 +326,17 @@
                 csrfHeader: /*[[${_csrf.headerName}]]*/ '',
                 csrfToken: /*[[${_csrf.token}]]*/ '',
                 isNew: /*[[${poRequest.id == null}]]*/ true,
-                poType: /*[[${poRequest.poType?.name() ?: 'DIRECT'}]]*/ 'DIRECT'
+                poType: /*[[${poRequest.poType?.name() ?: 'DIRECT'}]]*/ 'DIRECT',
+                prSelectorUrl: /*[[@{/purchasing/purchase-orders/selectors/purchase-requisitions}]]*/ '',
+                prLineSelectorUrl: /*[[@{/purchasing/purchase-orders/selectors/purchase-requisition-lines}]]*/ '',
+                confirmChangeType: /*[[#{msg.warning.po.standard.changeType}]]*/ '',
+                confirmChangePr: /*[[#{msg.warning.po.standard.changePr}]]*/ '',
+                confirmSwitchToStandard: /*[[#{msg.warning.po.standard.switchToStandard}]]*/ '',
+                prRequiredBeforeLines: /*[[#{msg.error.po.standard.pr.selectFirst}]]*/ '',
+                selectAtLeastOnePrLine: /*[[#{msg.warning.po.standard.prLine.selectAtLeastOne}]]*/ ''
             };
         </script>
+        <script th:src="@{/js/shared/erp-modal-selector.js}" defer></script>
         <script th:src="@{/js/purchasing/purchase-order-form.js}" defer></script>
     </div>
 </body>

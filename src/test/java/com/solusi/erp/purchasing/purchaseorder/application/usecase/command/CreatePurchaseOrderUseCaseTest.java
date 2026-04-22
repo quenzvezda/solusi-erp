@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -104,5 +105,33 @@ class CreatePurchaseOrderUseCaseTest {
         assertThat(result.getLines().get(0).getProductId()).isEqualTo(10L);
         assertThat(result.getLines().get(1).getQuantity()).isEqualByComparingTo("3");
         verify(repository).save(any(PurchaseOrder.class));
+    }
+
+    @Test
+    @DisplayName("execute ignores incoming prId when PO type is DIRECT")
+    void execute_ignoresIncomingPrIdForDirectPo() {
+        when(sequenceGeneratorService.generate("PO")).thenReturn("PO-2607-00004");
+        when(repository.save(any(PurchaseOrder.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        PurchaseOrder result = useCase.execute(
+                LocalDate.of(2026, 7, 1), null,
+                1L, 2L, 3L, BigDecimal.ONE, 30,
+                99L, PurchaseOrderType.DIRECT, "note", List.of()
+        );
+
+        assertThat(result.getPoType()).isEqualTo(PurchaseOrderType.DIRECT);
+        assertThat(result.getPrId()).isNull();
+        verify(repository).save(any(PurchaseOrder.class));
+    }
+
+    @Test
+    @DisplayName("execute rejects STANDARD PO when prId is missing")
+    void execute_rejectsStandardWithoutPrId() {
+        assertThatThrownBy(() -> useCase.execute(
+                LocalDate.of(2026, 7, 1), null,
+                1L, 2L, 3L, BigDecimal.ONE, 30,
+                null, PurchaseOrderType.STANDARD, "note", List.of()
+        )).isInstanceOf(com.solusi.erp.core.exception.DomainException.class)
+                .hasMessage("msg.error.po.standard.pr.required");
     }
 }
