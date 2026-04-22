@@ -1,7 +1,9 @@
 package com.solusi.erp.common.approval.web.mapper;
 
+import com.solusi.erp.common.approval.domain.model.ApprovalRequest;
 import com.solusi.erp.common.approval.signature.domain.model.ApprovalSignature;
 import com.solusi.erp.common.approval.web.dto.ApprovalSignatureResponse;
+import com.solusi.erp.common.approval.web.dto.ApprovalStatusResponse;
 import com.solusi.erp.core.mapper.AuditMapperHelper;
 import com.solusi.erp.core.storage.domain.port.StorageProvider;
 import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
@@ -76,5 +78,40 @@ class ApprovalWebMapperTest {
         ApprovalSignatureResponse response = mapper.toSignatureResponse(sig);
 
         assertThat(response.getSignatureUrl()).isEqualTo(presignedUrl);
+    }
+
+    @Test
+    @DisplayName("toStatusResponse() maps Purchase Requisition approval to PR view URL")
+    void toStatusResponse_mapsPurchaseRequisitionDocumentUrl() {
+        ApprovalRequest request = ApprovalRequest.createNew(
+                "PURCHASE_REQUISITION", 17L, "PR-202604-00001", 1L, 2L);
+
+        ApprovalStatusResponse response = mapper.toStatusResponse(request);
+
+        assertThat(response.getDocumentUrl())
+                .isEqualTo("/purchasing/purchase-requisitions/view/17");
+    }
+
+    @Test
+    @DisplayName("toStatusResponse() maps Purchase Order approval to PO view URL")
+    void toStatusResponse_mapsPurchaseOrderDocumentUrl() {
+        ApprovalRequest request = ApprovalRequest.createNew(
+                "PURCHASE_ORDER", 23L, "PO-202604-00001", 1L, 2L);
+
+        ApprovalStatusResponse response = mapper.toStatusResponse(request);
+
+        assertThat(response.getDocumentUrl())
+                .isEqualTo("/purchasing/purchase-orders/view/23");
+    }
+
+    @Test
+    @DisplayName("toStatusResponse() keeps NEWS mapped to its detail URL")
+    void toStatusResponse_keepsNewsDocumentUrl() {
+        ApprovalRequest request = ApprovalRequest.createNew(
+                "NEWS", 9L, "NEWS-0009", 1L, 2L);
+
+        ApprovalStatusResponse response = mapper.toStatusResponse(request);
+
+        assertThat(response.getDocumentUrl()).isEqualTo("/common/news/9");
     }
 }
