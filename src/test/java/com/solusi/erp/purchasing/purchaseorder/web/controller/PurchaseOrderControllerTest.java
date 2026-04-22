@@ -26,9 +26,11 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -239,6 +241,24 @@ public class PurchaseOrderControllerTest {
     }
 
     @Test
+    @DisplayName("showPrLineSelector allows create and update authorities")
+    void showPrLineSelector_allowsCreateAndUpdateAuthorities() throws Exception {
+        Method method = PurchaseOrderController.class.getMethod(
+            "showPrLineSelector",
+            Long.class,
+            String.class,
+            List.class,
+            org.springframework.data.domain.Pageable.class,
+            Model.class
+        );
+
+        PreAuthorize annotation = method.getAnnotation(PreAuthorize.class);
+
+        assertThat(annotation).isNotNull();
+        assertThat(annotation.value()).isEqualTo("hasAnyAuthority('PO_CREATE', 'PO_UPDATE')");
+    }
+
+    @Test
     @DisplayName("showEditForm returns form view for DRAFT PO")
     void showEditFormShouldReturnFormForDraft() {
         PurchaseOrder po = buildDraftStandardPo();
@@ -248,6 +268,9 @@ public class PurchaseOrderControllerTest {
         saveReq.setId(1L);
         saveReq.setCode("PO-001");
         saveReq.setStatus(PurchaseOrderStatus.DRAFT);
+        PurchaseOrderLineRequest lineRequest = new PurchaseOrderLineRequest();
+        lineRequest.setPrLineId(501L);
+        saveReq.setLines(List.of(lineRequest));
         when(webMapper.toSaveRequest(any(PurchaseOrder.class))).thenReturn(saveReq);
 
         PurchaseOrderDetailResponse detail = new PurchaseOrderDetailResponse();
@@ -278,6 +301,17 @@ public class PurchaseOrderControllerTest {
                 List.of()
             )
         ));
+        when(findPrLineSelectorUc.execute(eq(10L), isNull(), isNull(), any(org.springframework.data.domain.Pageable.class)))
+            .thenReturn(new PageImpl<>(List.of(
+                new PurchaseOrderPrLineSelectorRow(
+                    501L, 10L, "PR-2604-00002",
+                    20L, "Laptop 14 inch Core i5", "LP-14-I5",
+                    new BigDecimal("5.0000"), new BigDecimal("2.0000"),
+                    1L, "PCS", "PCS",
+                    new BigDecimal("7400000.00"), LocalDate.of(2026, 5, 1),
+                    "Derived from PR"
+                )
+            )));
 
         Model model = new ExtendedModelMap();
         String view = controller.showEditForm(1L, model);
@@ -292,6 +326,10 @@ public class PurchaseOrderControllerTest {
         Map<String, Object> poUI = (Map<String, Object>) model.getAttribute("poUI");
         assertThat(poUI).containsKeys("supplierText", "supplierSubtext", "currencyText", "currencySubtext", "prDisplay");
         assertThat(poUI.get("prDisplay")).isEqualTo("PR-2604-00002");
+        PurchaseOrderSaveRequest poRequest = (PurchaseOrderSaveRequest) model.getAttribute("poRequest");
+        assertThat(poRequest.getLines()).singleElement().satisfies(line ->
+            assertThat(line.getMaxQuantity()).isEqualByComparingTo("2.0000")
+        );
     }
 
     @Test

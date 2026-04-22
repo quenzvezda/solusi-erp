@@ -35,23 +35,22 @@ public class CreatePurchaseOrderUseCaseImpl implements CreatePurchaseOrderUseCas
                                   Long prId, PurchaseOrderType poType, String note, List<PoLineInput> lines) {
         PurchaseOrderType effectivePoType = poType != null ? poType : PurchaseOrderType.DIRECT;
         Long normalizedPrId = effectivePoType == PurchaseOrderType.STANDARD ? prId : null;
+        List<PoLineInput> normalizedLines = lines != null ? lines : List.of();
+        if (normalizedLines.isEmpty()) {
+            throw new DomainException("msg.error.po.save.no.lines");
+        }
 
         if (effectivePoType == PurchaseOrderType.STANDARD) {
             if (normalizedPrId == null) {
                 throw new DomainException("msg.error.po.standard.pr.required");
             }
-            var pr = purchaseRequisitionRepository.findById(normalizedPrId)
-                .orElseThrow(() -> new DomainException("msg.error.po.standard.pr.not.found"));
-            if (pr.getStatus() != PurchaseRequisitionStatus.APPROVED) {
-                throw new DomainException("msg.error.po.standard.pr.not.approved");
-            }
+            new StandardPurchaseOrderValidator(purchaseRequisitionRepository, repository)
+                    .validate(normalizedPrId, supplierId, facilityId, currencyId, normalizedLines);
         }
 
         String code = sequenceGeneratorService.generate("PO");
 
-        List<PurchaseOrderLine> domainLines = lines != null
-                ? lines.stream().map(this::toLine).toList()
-                : List.of();
+        List<PurchaseOrderLine> domainLines = normalizedLines.stream().map(this::toLine).toList();
 
         PurchaseOrder po = PurchaseOrder.createNew(
                 code, orderDate, expectedDate, supplierId, facilityId,

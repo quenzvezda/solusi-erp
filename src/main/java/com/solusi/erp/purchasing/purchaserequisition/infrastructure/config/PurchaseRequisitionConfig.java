@@ -8,6 +8,8 @@ import com.solusi.erp.purchasing.purchaserequisition.domain.repository.PurchaseR
 import com.solusi.erp.purchasing.purchaserequisition.infrastructure.adapter.PurchaseRequisitionRepositoryImpl;
 import com.solusi.erp.purchasing.purchaserequisition.infrastructure.persistence.PurchaseRequisitionJpaRepository;
 import com.solusi.erp.purchasing.purchaserequisition.infrastructure.persistence.PurchaseRequisitionPersistenceMapper;
+import com.solusi.erp.purchasing.supplierpricelist.domain.repository.SupplierPriceListRepository;
+import com.solusi.erp.purchasing.supplierpricelist.domain.service.SupplierPriceListResolutionService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -100,5 +102,18 @@ public class PurchaseRequisitionConfig {
         TransactionTemplate tx = new TransactionTemplate(txManager);
         tx.setReadOnly(true);
         return (id) -> tx.execute(status -> pure.execute(id));
+    }
+
+    @Bean
+    public ResolvePurchaseRequisitionSplPriceUseCase resolvePurchaseRequisitionSplPriceUseCase(
+            SupplierPriceListRepository supplierPriceListRepository,
+            PlatformTransactionManager txManager) {
+        ResolvePurchaseRequisitionSplPriceUseCase pure = new ResolvePurchaseRequisitionSplPriceUseCaseImpl(
+                new SupplierPriceListResolutionService(supplierPriceListRepository)
+        );
+        TransactionTemplate tx = new TransactionTemplate(txManager);
+        tx.setReadOnly(true);
+        return (supplierId, productId, uomId, currencyId, requiredDate) ->
+                tx.execute(status -> pure.execute(supplierId, productId, uomId, currencyId, requiredDate));
     }
 }

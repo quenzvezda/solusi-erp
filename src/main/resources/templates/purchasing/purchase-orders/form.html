@@ -169,7 +169,7 @@
                                                 initialValue=${line.productId}, initialText=${line.productName},
                                                 initialSubtext=${line.productSubtext})}"></div>
                                         </td>
-                                        <td><input type="text" th:name="'lines[' + ${stat.index} + '].quantity'" th:value="${line.quantity}" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-qty" th:readonly="${isLocked}"></td>
+                                        <td><input type="text" th:name="'lines[' + ${stat.index} + '].quantity'" th:value="${line.quantity}" th:attr="max=${line.maxQuantity}" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-qty" th:readonly="${isLocked}"></td>
                                         <td>
                                             <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[' + __${stat.index}__ + '].uomId', id='select-uom-' + __${stat.index}__, isReadonly=${isLocked}, extraClass='select-uom', path='inventory/uoms',
                                                 initialValue=${line.uomId}, initialText=${line.uomName},
@@ -241,7 +241,7 @@
 
         <div th:if="${poRequest.id == null}"
              th:replace="~{fragments/modal-selector :: shell('modal-po-pr-selector', #{label.po.selector.pr.title}, 'po-pr-selector-results', 'modal-xl')}"></div>
-        <div th:if="${poRequest.id == null}"
+        <div th:if="${poRequest.id == null || poRequest.prId != null}"
              th:replace="~{fragments/modal-selector :: shell('modal-po-pr-line-selector', #{label.po.selector.prLine.title}, 'po-pr-line-selector-results', 'modal-xl')}"></div>
 
         <!-- Submit for Approval Modal -->
@@ -333,7 +333,9 @@
                 confirmChangePr: /*[[#{msg.warning.po.standard.changePr}]]*/ '',
                 confirmSwitchToStandard: /*[[#{msg.warning.po.standard.switchToStandard}]]*/ '',
                 prRequiredBeforeLines: /*[[#{msg.error.po.standard.pr.selectFirst}]]*/ '',
-                selectAtLeastOnePrLine: /*[[#{msg.warning.po.standard.prLine.selectAtLeastOne}]]*/ ''
+                selectAtLeastOnePrLine: /*[[#{msg.warning.po.standard.prLine.selectAtLeastOne}]]*/ '',
+                prLineSelectorUnavailable: /*[[#{msg.error.po.standard.prLine.selector.unavailable}]]*/ '',
+                prLineQtyClampedPrefix: /*[[#{msg.warning.po.standard.prLine.qtyClampedPrefix}]]*/ ''
             };
         </script>
         <script th:src="@{/js/shared/erp-modal-selector.js}" defer></script>

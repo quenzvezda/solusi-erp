@@ -2,8 +2,10 @@ package com.solusi.erp.purchasing.purchaseorder.application.usecase.command;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.exception.DomainException;
+import com.solusi.erp.purchasing.purchaserequisition.domain.repository.PurchaseRequisitionRepository;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrder;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderLine;
+import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderType;
 import com.solusi.erp.purchasing.purchaseorder.domain.repository.PurchaseOrderRepository;
 
 import java.math.BigDecimal;
@@ -13,9 +15,12 @@ import java.util.List;
 public class UpdatePurchaseOrderUseCaseImpl implements UpdatePurchaseOrderUseCase {
 
     private final PurchaseOrderRepository repository;
+    private final PurchaseRequisitionRepository purchaseRequisitionRepository;
 
-    public UpdatePurchaseOrderUseCaseImpl(PurchaseOrderRepository repository) {
+    public UpdatePurchaseOrderUseCaseImpl(PurchaseOrderRepository repository,
+                                          PurchaseRequisitionRepository purchaseRequisitionRepository) {
         this.repository = repository;
+        this.purchaseRequisitionRepository = purchaseRequisitionRepository;
     }
 
     @Override
@@ -28,6 +33,14 @@ public class UpdatePurchaseOrderUseCaseImpl implements UpdatePurchaseOrderUseCas
         List<PurchaseOrderLine> domainLines = lines != null
                 ? lines.stream().map(this::toLine).toList()
                 : List.of();
+        if (domainLines.isEmpty()) {
+            throw new DomainException("msg.error.po.save.no.lines");
+        }
+
+        if (po.getPoType() == PurchaseOrderType.STANDARD && po.getPrId() != null) {
+            new StandardPurchaseOrderValidator(purchaseRequisitionRepository, repository)
+                    .validate(po.getPrId(), po.getSupplierId(), facilityId, currencyId, lines);
+        }
 
         po.update(orderDate, expectedDate, facilityId, currencyId,
                 exchangeRate, paymentTermDays, note, domainLines);

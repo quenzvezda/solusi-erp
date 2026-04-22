@@ -8,10 +8,9 @@ import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import com.solusi.erp.purchasing.purchaserequisition.application.usecase.command.*;
 import com.solusi.erp.purchasing.purchaserequisition.application.usecase.query.*;
 import com.solusi.erp.purchasing.purchaserequisition.domain.model.*;
-import com.solusi.erp.purchasing.purchaserequisition.infrastructure.persistence.PurchaseRequisitionJpaRepository;
+import com.solusi.erp.purchasing.purchaserequisition.web.dto.api.SplPriceResponse;
 import com.solusi.erp.purchasing.purchaserequisition.web.dto.*;
 import com.solusi.erp.purchasing.purchaserequisition.web.mapper.PurchaseRequisitionWebMapper;
-import com.solusi.erp.purchasing.supplierpricelist.domain.model.SupplierPriceList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,9 +40,8 @@ public class PurchaseRequisitionControllerTest {
     private CancelPurchaseRequisitionUseCase cancelUc;
     private FindPurchaseRequisitionsUseCase findUc;
     private GetPurchaseRequisitionEditViewUseCase editViewUc;
+    private ResolvePurchaseRequisitionSplPriceUseCase resolvePurchaseRequisitionSplPriceUseCase;
     private FindApprovalRequestByReferenceUseCase findApprovalRequestByReferenceUseCase;
-    private PurchaseRequisitionJpaRepository purchaseRequisitionJpaRepository;
-    private com.solusi.erp.purchasing.supplierpricelist.domain.repository.SupplierPriceListRepository splRepository;
     private CurrencyRepository currencyRepository;
     private PurchaseRequisitionWebMapper webMapper;
     private MessageSource messageSource;
@@ -60,9 +58,8 @@ public class PurchaseRequisitionControllerTest {
         cancelUc = mock(CancelPurchaseRequisitionUseCase.class);
         findUc = mock(FindPurchaseRequisitionsUseCase.class);
         editViewUc = mock(GetPurchaseRequisitionEditViewUseCase.class);
+        resolvePurchaseRequisitionSplPriceUseCase = mock(ResolvePurchaseRequisitionSplPriceUseCase.class);
         findApprovalRequestByReferenceUseCase = mock(FindApprovalRequestByReferenceUseCase.class);
-        purchaseRequisitionJpaRepository = mock(PurchaseRequisitionJpaRepository.class);
-        splRepository = mock(com.solusi.erp.purchasing.supplierpricelist.domain.repository.SupplierPriceListRepository.class);
         currencyRepository = mock(CurrencyRepository.class);
         webMapper = mock(PurchaseRequisitionWebMapper.class);
         messageSource = mock(MessageSource.class);
@@ -71,8 +68,8 @@ public class PurchaseRequisitionControllerTest {
 
         controller = new PurchaseRequisitionController(
             createUc, updateUc, deleteUc, submitUc, cancelUc,
-            findUc, editViewUc, findApprovalRequestByReferenceUseCase,
-            purchaseRequisitionJpaRepository, splRepository, currencyRepository, webMapper, messageSource,
+            findUc, editViewUc, resolvePurchaseRequisitionSplPriceUseCase, findApprovalRequestByReferenceUseCase,
+            currencyRepository, webMapper, messageSource,
             partyLookupProvider, facilityLookupProvider
         );
     }
@@ -229,24 +226,22 @@ public class PurchaseRequisitionControllerTest {
     @Test
     @DisplayName("getSplPrice uses requiredDate and includes minQuantity in response")
     void getSplPriceUsesRequiredDateAndReturnsMinQuantity() throws Exception {
-        SupplierPriceList spl = new SupplierPriceList(
-            new AuditMetadata(7L, 1L, null, null, null, null),
+        LocalDate requiredDate = LocalDate.of(2026, 8, 15);
+        SplPriceResponse response = new SplPriceResponse(
+            7L,
             "SPL-001",
+            new BigDecimal("2500000.0000"),
+            new BigDecimal("10.0000"),
             1L,
             2L,
             3L,
             4L,
-            new BigDecimal("2500000.0000"),
-            new BigDecimal("10.0000"),
             LocalDate.of(2026, 4, 1),
             LocalDate.of(2026, 12, 31),
-            "Contract price",
             true
         );
-
-        LocalDate requiredDate = LocalDate.of(2026, 8, 15);
-        when(splRepository.findMostRecentActiveSPL(eq(1L), eq(2L), eq(3L), eq(4L), eq(requiredDate)))
-            .thenReturn(Optional.of(spl));
+        when(resolvePurchaseRequisitionSplPriceUseCase.execute(1L, 2L, 3L, 4L, requiredDate))
+            .thenReturn(Optional.of(response));
 
         org.springframework.http.ResponseEntity<?> entity =
             controller.getSplPrice(1L, 2L, 3L, 4L, requiredDate);
@@ -254,5 +249,19 @@ public class PurchaseRequisitionControllerTest {
         assertThat(entity.getStatusCode().is2xxSuccessful()).isTrue();
         assertThat(entity.getBody()).isNotNull();
         assertThat(entity.getBody().toString()).contains("minQuantity=10.0000");
+    }
+
+    @Test
+    @DisplayName("getSplPrice returns no content when no active SPL matches")
+    void getSplPrice_returnsNoContentWhenNoActiveSplMatches() {
+        LocalDate requiredDate = LocalDate.of(2026, 8, 15);
+        when(resolvePurchaseRequisitionSplPriceUseCase.execute(1L, 2L, 3L, 4L, requiredDate))
+            .thenReturn(Optional.empty());
+
+        org.springframework.http.ResponseEntity<?> entity =
+            controller.getSplPrice(1L, 2L, 3L, 4L, requiredDate);
+
+        assertThat(entity.getStatusCode().value()).isEqualTo(204);
+        assertThat(entity.getBody()).isNull();
     }
 }

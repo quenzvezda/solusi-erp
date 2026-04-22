@@ -17,6 +17,7 @@ import com.solusi.erp.purchasing.purchaseorder.application.usecase.command.*;
 import com.solusi.erp.purchasing.purchaseorder.application.usecase.query.*;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrder;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderStatus;
+import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderType;
 import com.solusi.erp.purchasing.purchaserequisition.domain.repository.PurchaseRequisitionRepository;
 import com.solusi.erp.purchasing.purchaseorder.web.dto.*;
 import com.solusi.erp.purchasing.purchaseorder.web.mapper.PurchaseOrderWebMapper;
@@ -28,6 +29,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -113,7 +115,7 @@ public class PurchaseOrderController {
     }
 
     @GetMapping("/selectors/purchase-requisition-lines")
-    @PreAuthorize("hasAuthority('PO_CREATE')")
+    @PreAuthorize("hasAnyAuthority('PO_CREATE', 'PO_UPDATE')")
     public String showPrLineSelector(@RequestParam Long prId,
                                      @RequestParam(required = false) String keyword,
                                      @RequestParam(required = false) List<Long> excludePrLineIds,
@@ -152,7 +154,9 @@ public class PurchaseOrderController {
         if (domain.getStatus() != PurchaseOrderStatus.DRAFT) {
             return "redirect:/purchasing/purchase-orders/view/" + id;
         }
-        model.addAttribute("poRequest", webMapper.toSaveRequest(domain));
+        PurchaseOrderSaveRequest saveRequest = webMapper.toSaveRequest(domain);
+        enrichStandardLineMaxQuantities(domain, saveRequest);
+        model.addAttribute("poRequest", saveRequest);
         model.addAttribute("auditInfo", webMapper.toDetailResponse(domain));
         model.addAttribute("poUI", buildPOUI(domain));
         return "purchasing/purchase-orders/form";
@@ -272,5 +276,28 @@ public class PurchaseOrderController {
         }
 
         return ui;
+    }
+
+    private void enrichStandardLineMaxQuantities(PurchaseOrder domain, PurchaseOrderSaveRequest saveRequest) {
+        if (domain.getPoType() != PurchaseOrderType.STANDARD
+                || domain.getPrId() == null
+                || saveRequest.getLines() == null
+                || saveRequest.getLines().isEmpty()) {
+            return;
+        }
+
+        Map<Long, java.math.BigDecimal> remainingByPrLineId = findPurchaseOrderPrLineSelectorUseCase
+                .execute(domain.getPrId(), null, null, PageRequest.of(0, 1000))
+                .getContent().stream()
+                .collect(Collectors.toMap(
+                        PurchaseOrderPrLineSelectorRow::prLineId,
+                        PurchaseOrderPrLineSelectorRow::remainingQuantity
+                ));
+
+        saveRequest.getLines().forEach(line -> {
+            if (line.getPrLineId() != null) {
+                line.setMaxQuantity(remainingByPrLineId.get(line.getPrLineId()));
+            }
+        });
     }
 }

@@ -10,8 +10,12 @@ import com.solusi.erp.purchasing.purchaseorder.infrastructure.persistence.Purcha
 import com.solusi.erp.purchasing.purchaseorder.infrastructure.persistence.PurchaseOrderLineEntity;
 import com.solusi.erp.purchasing.purchaseorder.infrastructure.persistence.PurchaseOrderPersistenceMapper;
 
+import java.math.BigDecimal;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class PurchaseOrderRepositoryImpl implements PurchaseOrderRepository {
@@ -56,6 +60,28 @@ public class PurchaseOrderRepositoryImpl implements PurchaseOrderRepository {
             springPage.getSize(),
             springPage.getTotalElements()
         );
+    }
+
+    @Override
+    public Map<Long, BigDecimal> sumCommittedQuantityByPrLineIds(Set<Long> prLineIds) {
+        if (prLineIds == null || prLineIds.isEmpty()) {
+            return Map.of();
+        }
+        return jpaRepository.sumConsumedByPrLineIds(
+                prLineIds,
+                EnumSet.of(
+                        com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderStatus.SUBMITTED,
+                        com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderStatus.APPROVED,
+                        com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderStatus.SENT,
+                        com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderStatus.PARTIALLY_RECEIVED,
+                        com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderStatus.FULLY_RECEIVED,
+                        com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderStatus.BILLED,
+                        com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderStatus.CLOSED
+                )
+        ).stream().collect(Collectors.toMap(
+                row -> row.prLineId(),
+                row -> row.consumedQuantity()
+        ));
     }
 
     @Override

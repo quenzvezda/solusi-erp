@@ -90,12 +90,35 @@ class PurchaseOrderFormIntegrationTest {
     @Test
     @DisplayName("standard add line uses PR line selector in preedit too")
     void standardAddLine_usesPrLineSelectorInPreeditToo() throws Exception {
+        String template = readResource("templates/purchasing/purchase-orders/form.html");
         String script = readResource("static/js/purchasing/purchase-order-form.js");
 
-        assertThat(script).contains("function openPrLineSelector() {\n        if (!window.ERP || !window.ERP.ModalSelector) return;");
+        assertThat(template).contains("th:if=\"${poRequest.id == null || poRequest.prId != null}\"");
+        assertThat(script).contains("function openPrLineSelector() {");
+        assertThat(script).contains("!document.getElementById('modal-po-pr-line-selector')");
         assertThat(script).contains("if (getSelectedPoType() === 'STANDARD') {");
         assertThat(script).contains("openPrLineSelector();");
         assertThat(script).contains("addManualLineRow();");
+    }
+
+    @Test
+    @DisplayName("standard add line warns when PR line selector modal shell is unavailable")
+    void standardAddLine_warnsWhenPrLineSelectorModalShellIsUnavailable() throws Exception {
+        String script = readResource("static/js/purchasing/purchase-order-form.js");
+
+        assertThat(script).contains("document.getElementById('modal-po-pr-line-selector')");
+        assertThat(script).contains("warn(config.prLineSelectorUnavailable)");
+    }
+
+    @Test
+    @DisplayName("standard quantity uses max attribute and clamps back to PR remaining quantity")
+    void standardQuantity_usesMaxAttributeAndClampsToRemainingQuantity() throws Exception {
+        String template = readResource("templates/purchasing/purchase-orders/form.html");
+        String script = readResource("static/js/purchasing/purchase-order-form.js");
+
+        assertThat(template).contains("th:attr=\"max=${line.maxQuantity}\"");
+        assertThat(script).contains("qtyInput.getAttribute('max')");
+        assertThat(script).contains("setNumericInputValue(qtyInput, maxQty)");
     }
 
     @Test

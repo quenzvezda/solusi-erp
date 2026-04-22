@@ -48,9 +48,10 @@ public class PurchaseOrderConfig {
     @Bean
     public UpdatePurchaseOrderUseCase updatePurchaseOrderUseCase(
             PurchaseOrderRepository purchaseOrderDomainRepository,
+            PurchaseRequisitionRepository purchaseRequisitionRepository,
             PlatformTransactionManager txManager) {
         UpdatePurchaseOrderUseCase pure = new UpdatePurchaseOrderUseCaseImpl(
-            purchaseOrderDomainRepository);
+            purchaseOrderDomainRepository, purchaseRequisitionRepository);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         return (id, orderDate, expectedDate, facilityId, currencyId,
                 exchangeRate, paymentTermDays, note, lines) ->

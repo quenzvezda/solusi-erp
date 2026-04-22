@@ -16,13 +16,9 @@ import com.solusi.erp.purchasing.purchaserequisition.application.usecase.query.*
 import com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisition;
 import com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisitionPriority;
 import com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisitionStatus;
-import com.solusi.erp.purchasing.purchaserequisition.infrastructure.persistence.PurchaseRequisitionJpaRepository;
 import com.solusi.erp.purchasing.purchaserequisition.web.dto.*;
 import com.solusi.erp.purchasing.purchaserequisition.web.dto.api.SplPriceResponse;
 import com.solusi.erp.purchasing.purchaserequisition.web.mapper.PurchaseRequisitionWebMapper;
-import com.solusi.erp.purchasing.supplierpricelist.domain.model.SupplierPriceList;
-import com.solusi.erp.purchasing.supplierpricelist.domain.repository.SupplierPriceListRepository;
-import com.solusi.erp.purchasing.supplierpricelist.domain.service.SupplierPriceListResolutionService;
 import com.solusi.erp.security.shared.model.SecurityUser;
 import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
@@ -60,9 +56,8 @@ public class PurchaseRequisitionController {
     private final CancelPurchaseRequisitionUseCase cancelPurchaseRequisitionUseCase;
     private final FindPurchaseRequisitionsUseCase findPurchaseRequisitionsUseCase;
     private final GetPurchaseRequisitionEditViewUseCase getPurchaseRequisitionEditViewUseCase;
+    private final ResolvePurchaseRequisitionSplPriceUseCase resolvePurchaseRequisitionSplPriceUseCase;
     private final FindApprovalRequestByReferenceUseCase findApprovalRequestByReferenceUseCase;
-    private final PurchaseRequisitionJpaRepository purchaseRequisitionJpaRepository;
-    private final SupplierPriceListRepository splRepository;
     private final CurrencyRepository currencyRepository;
     private final PurchaseRequisitionWebMapper webMapper;
     private final MessageSource messageSource;
@@ -206,30 +201,8 @@ public class PurchaseRequisitionController {
     }
 
     /**
-     * Lookup endpoint: returns approved PRs optionally filtered by supplier.
-     * Used by STANDARD PO type to show only approved PRs matching the selected supplier.
-     */
-    @GetMapping("/api/approved")
-    @PreAuthorize("hasAuthority('PR_READ')")
-    @ResponseBody
-    public ResponseEntity<List<Map<String, Object>>> findApprovedPrs(
-            @RequestParam(required = false) Long supplierId) {
-        var results = supplierId != null
-            ? purchaseRequisitionJpaRepository.findApprovedBySupplier(supplierId)
-            : purchaseRequisitionJpaRepository.findAllApproved();
-
-        List<Map<String, Object>> response = results.stream()
-            .map(entity -> Map.<String, Object>of(
-                "id", entity.getId(),
-                "text", entity.getCode() + " (" + entity.getRequestDate() + ")"
-            ))
-            .collect(Collectors.toList());
-        return ResponseEntity.ok(response);
-    }
-
-    /**
      * SPL auto-fill endpoint: returns matching SPL price for given supplier+product+uom+currency combo.
-     * Used by PR line drawer to auto-fill unitPrice when supplier and product are selected.
+     * Used by PR lines to auto-fill unitPrice when supplier and product are selected.
      */
     @GetMapping("/api/spl-price")
     @PreAuthorize("hasAuthority('LOOKUP_SUPPLIER-PRICE-LIST')")
@@ -240,34 +213,10 @@ public class PurchaseRequisitionController {
             @RequestParam Long uomId,
             @RequestParam Long currencyId,
             @RequestParam(required = false) LocalDate requiredDate) {
-        
-        SupplierPriceListResolutionService resolutionService = 
-            new SupplierPriceListResolutionService(splRepository);
-        LocalDate asOfDate = requiredDate != null ? requiredDate : LocalDate.now();
-        
-        Optional<SupplierPriceList> spl = resolutionService.resolveActivePrice(
-            supplierId, productId, uomId, currencyId, asOfDate
-        );
-        
-        if (spl.isPresent()) {
-            SupplierPriceList splDomain = spl.get();
-            SplPriceResponse response = new SplPriceResponse(
-                splDomain.getId(),
-                splDomain.getCode(),
-                splDomain.getUnitPrice(),
-                splDomain.getMinQuantity(),
-                splDomain.getSupplierId(),
-                splDomain.getProductId(),
-                splDomain.getUomId(),
-                splDomain.getCurrencyId(),
-                splDomain.getEffectiveFrom(),
-                splDomain.getEffectiveTo(),
-                splDomain.isActive()
-            );
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.noContent().build();
-        }
+        return resolvePurchaseRequisitionSplPriceUseCase.execute(
+                supplierId, productId, uomId, currencyId, requiredDate
+        ).<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     /**
@@ -302,4 +251,3 @@ public class PurchaseRequisitionController {
         return ui;
     }
 }
-

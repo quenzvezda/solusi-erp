@@ -19,9 +19,11 @@ Purchase Requisition adalah dokumen internal yang dibuat oleh karyawan atau depa
 |-------|-----------|-------|
 | `code` | Nomor dokumen otomatis (format: `PR-yyMM-XXXXX`) | Ya (auto) |
 | `requestDate` | Tanggal pengajuan permintaan | Ya |
-| `requesterId` | Karyawan/user yang mengajukan permintaan | Ya (auto dari login) |
+| `requesterId` | Karyawan/user yang mengajukan permintaan | Ya (dipilih via autocomplete) |
 | `facilityId` | Gudang/lokasi tujuan penerimaan barang | Ya |
 | `department` | Nama departemen pemohon | Tidak |
+| `suggestedSupplierId` | Supplier utama yang dirujuk untuk estimasi harga / konversi STANDARD PO | Ya |
+| `currencyId` | Mata uang estimasi harga | Ya |
 | `priority` | Tingkat urgensi: `LOW`, `NORMAL`, `HIGH`, `URGENT` | Ya (default: NORMAL) |
 | `status` | Status dokumen (lihat lifecycle di bawah) | Ya (auto) |
 | `note` | Catatan tambahan | Tidak |
@@ -34,18 +36,17 @@ Purchase Requisition adalah dokumen internal yang dibuat oleh karyawan atau depa
 | `quantity` | Jumlah yang diminta (wajib > 0) | Ya |
 | `uomId` | Satuan jumlah (misal: PCS, BOX) | Ya |
 | `requiredDate` | Tanggal kebutuhan barang | Tidak |
-| `estimatedUnitPrice` | Estimasi harga per satuan (referensi dari SPL atau manual) | Tidak |
-| `suggestedSupplierId` | Supplier yang disarankan pemohon | Tidak |
+| `estimatedUnitPrice` | Estimasi harga per satuan (referensi dari SPL aktif berdasarkan supplier + currency header, atau manual) | Tidak |
 | `note` | Catatan per baris | Tidak |
 
-> **Penting:** Supplier pada PR berada di level **baris** (`suggestedSupplierId`), bukan di header. Ini memungkinkan satu PR mengandung item dari supplier yang berbeda-beda.
+> **Catatan implementasi saat ini:** Supplier dan currency berada di level **header**. Selector/autofill harga mengikuti kombinasi header `suggestedSupplierId` + `currencyId` dengan item di masing-masing baris.
 
 ## 3. Workflow & Aturan Bisnis (Business Rules)
 
 ### A. Status Lifecycle
 
 ```
-DRAFT ──► SUBMITTED ──► APPROVED ──► CONVERTED
+DRAFT ──► SUBMITTED ──► APPROVED
                    │
                    └──► REJECTED
 DRAFT/SUBMITTED/APPROVED ──► CANCELLED
@@ -57,8 +58,9 @@ DRAFT/SUBMITTED/APPROVED ──► CANCELLED
 | **SUBMITTED** | Sudah diajukan, menunggu persetujuan | Cancel (oleh pembuat), Approve/Reject (oleh approver) |
 | **APPROVED** | Disetujui oleh approver | Cancel, Rujuk sebagai STANDARD PO |
 | **REJECTED** | Ditolak oleh approver | Tidak ada aksi lanjutan (buat PR baru jika diperlukan) |
-| **CONVERTED** | Sudah digunakan sebagai referensi PO | Tidak ada aksi lanjutan |
 | **CANCELLED** | Dibatalkan | Tidak ada aksi lanjutan |
+
+> **Catatan implementasi saat ini:** Enum `CONVERTED` sudah ada di kode, tetapi flow runtime saat ini masih memposisikan PR yang sudah disetujui sebagai referensi STANDARD PO berdasarkan **remaining qty** per line. Dokumen ini mengikuti perilaku runtime yang aktif, bukan target-state yang belum di-wire penuh.
 
 ### B. Aturan Submit
 - PR **tidak dapat di-submit** jika tidak memiliki minimal satu baris item.
@@ -77,33 +79,32 @@ DRAFT/SUBMITTED/APPROVED ──► CANCELLED
 
 ## 4. Standar UI/UX
 
-- **Drawer Line Item**: Setiap baris item dimasukkan melalui offcanvas drawer — klik tombol **+ Tambah Item** atau ikon edit pada baris yang ada. Ini mencegah overflow tabel pada layar sempit.
+- **Inline Line Editor**: Setiap baris item ditambahkan langsung di tabel inline lewat tombol **+ Tambah Item**. Tidak ada lagi offcanvas drawer untuk line item.
+- **Header-first Entry**: User harus mengisi **Requester**, **Facility**, **Supplier**, dan **Currency** di header sebelum dapat menambah line baru.
+- **Auto-fill UoM & SPL Price**: Saat produk dipilih, sistem mengisi UoM default dari produk dan mencoba mengambil `estimatedUnitPrice` dari SPL aktif berdasarkan supplier + currency header serta `requiredDate` pada baris.
+- **Header Change Reset**: Perubahan requester/facility/supplier/currency pada header akan mengosongkan line yang sudah ada untuk mencegah data estimasi menjadi tidak sinkron.
 - **Priority Badge**: Kolom prioritas ditampilkan dengan badge berwarna (URGENT = merah, HIGH = oranye, NORMAL = biru, LOW = abu-abu).
-- **Approval Sidebar**: Pada halaman detail PR, terdapat panel samping yang menampilkan status approval saat ini, nama approver, dan tombol aksi (jika user adalah approver aktif).
 - **Approval History Drawer**: Klik tombol **Riwayat Approval** untuk melihat seluruh rantai keputusan (siapa yang approve/reject, kapan, dan catatan keputusan).
+- **Approval Action Banner**: Jika user adalah approver aktif, tombol aksi approve/reject tampil sebagai banner aksi pada halaman detail.
 - **Status Badge**: Header PR menampilkan badge status yang berubah warna sesuai kondisi dokumen.
 
 ## 5. Integrasi & Relasi Antar Modul
 
 ```
 SPL ────────────────────────────────────────────────────────►
-                                                              PR Form
-                                                              (estimatedUnitPrice referensi)
+                                                               PR Form
+                                                               (estimatedUnitPrice referensi)
 
 PR (APPROVED) ─────────────────────────────────────────────►
-                                                              PO STANDARD
-                                                              (wajib referensi PR)
-
-PR (APPROVED) ─────────────────────────────────────────────►
-                                                              Status berubah ke CONVERTED
-                                                              setelah PO dibuat
+                                                               PO STANDARD
+                                                               (referensi wajib + line selector berbasis remaining qty)
 ```
 
 | Dari | Ke | Keterangan |
 |------|----|-----------|
-| SPL | PR | `estimatedUnitPrice` dapat diambil dari SPL aktif untuk kombinasi supplier + produk yang disarankan |
-| PR | PO (STANDARD) | PR berstatus APPROVED dapat menjadi referensi wajib saat membuat PO tipe STANDARD. Supplier PO harus sama dengan `suggestedSupplierId` di minimal satu baris PR |
-| PR | PR Status | Setelah dirujuk oleh PO STANDARD, status PR berubah ke **CONVERTED** secara otomatis |
+| SPL | PR | `estimatedUnitPrice` dapat diambil dari SPL aktif untuk kombinasi supplier header + produk + UoM + currency |
+| PR | PO (STANDARD) | PR berstatus APPROVED dapat menjadi referensi wajib saat membuat PO tipe STANDARD. Header supplier / facility / currency PO diturunkan dari PR, dan line dipilih berdasarkan remaining qty |
+| PO | PR Line Tracking | STANDARD PO menyimpan `prId` dan `prLineId` untuk pelacakan line asal; perilaku selector saat ini berbasis remaining qty, bukan perubahan status header PR secara otomatis |
 
 ## 6. Keamanan (Security)
 
@@ -119,6 +120,7 @@ Fitur ini dilindungi oleh otoritas berikut:
 | `PR_UPDATE` | Juga digunakan untuk aksi **Cancel** pada PR |
 | `LOOKUP_INVENTORY` | Mencari produk via autocomplete |
 | `LOOKUP_PURCHASING` | Mencari supplier via autocomplete |
+| `LOOKUP_SUPPLIER-PRICE-LIST` | Mengambil estimasi harga otomatis dari SPL aktif |
 
 ## 7. Skenario Input Data
 
@@ -134,12 +136,15 @@ Fitur ini dilindungi oleh otoritas berikut:
    | Field | Nilai |
    |-------|-------|
    | Tanggal Pengajuan | 05/04/2026 |
+   | Requester | Budi Santoso |
    | Gudang Tujuan | Gudang Utama Jakarta |
    | Departemen | Information Technology |
+   | Supplier Disarankan | PT Techno Nusantara |
+   | Mata Uang | IDR |
    | Prioritas | HIGH |
    | Catatan | Untuk onboarding karyawan baru bulan Mei |
 
-3. Klik **+ Tambah Item** untuk membuka drawer, isi baris pertama:
+3. Klik **+ Tambah Item** untuk menambah satu baris inline di tabel, lalu isi baris pertama:
 
    | Field | Nilai |
    |-------|-------|
@@ -148,10 +153,9 @@ Fitur ini dilindungi oleh otoritas berikut:
    | Satuan | PCS |
    | Tanggal Dibutuhkan | 01/05/2026 |
    | Estimasi Harga | 8.500.000 |
-   | Supplier Disarankan | PT Techno Nusantara |
    | Catatan | Minimal RAM 16GB |
 
-4. Klik **Simpan Item** di drawer, lalu klik **Simpan** di form utama.
+4. Klik **Simpan** di form utama.
 
    **Hasil:** PR tersimpan dengan status **DRAFT** dan kode otomatis (misal: `PR-2604-00001`).
 

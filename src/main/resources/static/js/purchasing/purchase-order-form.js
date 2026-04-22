@@ -145,6 +145,8 @@ document.addEventListener('DOMContentLoaded', function () {
         var taxRateInput = row.querySelector('.input-tax-rate');
         if (!qtyInput || !priceInput) return;
 
+        clampQuantityToMax(qtyInput);
+
         var qty = parseFloat((qtyInput.value || '0').replace(/,/g, '')) || 0;
         var price = parseFloat((priceInput.value || '0').replace(/,/g, '')) || 0;
         var taxRate = taxRateInput ? (parseFloat((taxRateInput.value || '0').replace(/,/g, '')) || 0) : 0;
@@ -163,6 +165,19 @@ document.addEventListener('DOMContentLoaded', function () {
             totalInput.value = total.toFixed(2);
             var autoNumeric = typeof AutoNumeric !== 'undefined' ? AutoNumeric.getAutoNumericElement(totalInput) : null;
             if (autoNumeric) autoNumeric.set(totalInput.value);
+        }
+    }
+
+    function clampQuantityToMax(qtyInput) {
+        if (!qtyInput) return;
+        var maxQty = numberValue(qtyInput.getAttribute('max'));
+        if (maxQty === null) return;
+        var qty = parseFloat((qtyInput.value || '0').replace(/,/g, '')) || 0;
+        if (qty <= maxQty) return;
+
+        setNumericInputValue(qtyInput, maxQty);
+        if (config.prLineQtyClampedPrefix) {
+            warn(config.prLineQtyClampedPrefix + maxQty);
         }
     }
 
@@ -288,7 +303,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function openPrLineSelector() {
-        if (!window.ERP || !window.ERP.ModalSelector) return;
+        if (!window.ERP
+            || !window.ERP.ModalSelector
+            || !config.prLineSelectorUrl
+            || !document.getElementById('modal-po-pr-line-selector')) {
+            warn(config.prLineSelectorUnavailable);
+            return;
+        }
         if (!prIdInput || !prIdInput.value) {
             warn(config.prRequiredBeforeLines);
             return;

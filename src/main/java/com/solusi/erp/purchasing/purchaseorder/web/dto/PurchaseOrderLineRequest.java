@@ -18,6 +18,7 @@ public class PurchaseOrderLineRequest {
     private BigDecimal lineSubtotal;
     private BigDecimal lineTax;
     private BigDecimal lineTotal;
+    private BigDecimal maxQuantity;
     // Display names for SSR edit row hydration
     private String productName;
     private String uomName;
