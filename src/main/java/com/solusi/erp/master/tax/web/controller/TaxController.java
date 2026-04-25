@@ -11,6 +11,7 @@ import com.solusi.erp.master.tax.application.usecase.command.UpdateTaxUseCase;
 import com.solusi.erp.master.tax.application.usecase.query.FindTaxesUseCase;
 import com.solusi.erp.master.tax.application.usecase.query.GetTaxEditViewUseCase;
 import com.solusi.erp.master.tax.domain.model.Tax;
+import com.solusi.erp.master.tax.domain.model.TaxCalculationMode;
 import com.solusi.erp.master.tax.web.dto.TaxDetailResponse;
 import com.solusi.erp.master.tax.web.dto.TaxSaveRequest;
 import com.solusi.erp.master.tax.web.dto.TaxSummaryResponse;
@@ -73,6 +74,7 @@ public class TaxController {
         TaxSaveRequest request = new TaxSaveRequest();
         request.setIsActive(true);
         request.setIsSubtract(false);
+        request.setCalculationMode(TaxCalculationMode.EXCLUSIVE);
         model.addAttribute("taxRequest", request);
         return "master/tax/form";
     }
@@ -83,7 +85,7 @@ public class TaxController {
     public ResponseEntity<ApiResponse<TaxDetailResponse>> create(@Valid @RequestBody TaxSaveRequest request) {
         Tax domain = createTaxUseCase.execute(
                 request.getCode(), request.getName(), request.getRate(),
-                request.getNote(), request.getIsSubtract(), request.getIsActive());
+                request.getNote(), request.getIsSubtract(), request.getIsActive(), request.getCalculationMode());
         TaxDetailResponse data = webMapper.toDetailResponse(domain);
         String msg = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(msg, data));
@@ -107,7 +109,7 @@ public class TaxController {
             @Valid @RequestBody TaxSaveRequest request) {
         Tax domain = updateTaxUseCase.execute(
                 id, request.getName(), request.getRate(),
-                request.getNote(), request.getIsSubtract(), request.getIsActive());
+                request.getNote(), request.getIsSubtract(), request.getIsActive(), request.getCalculationMode());
         TaxDetailResponse data = webMapper.toDetailResponse(domain);
         String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
         return ResponseEntity.ok(ApiResponse.success(msg, data));

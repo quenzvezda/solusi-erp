@@ -565,3 +565,89 @@ Port yang sudah ada (referensi / tidak perlu dibuat ulang):
 |------|---------|--------|
 | `PartyLookupProvider` | `master.party.domain.port` | ✅ Done |
 | `PartyReferenceGateway` | `security.user.application.port` | ✅ Done (kontrak berbeda) |
+
+---
+
+## Appendix: Additional Anti-Pattern Cleanup (Post-Roadmap)
+
+Setelah semua Phase di roadmap ini selesai, ditemukan beberapa anti-pattern tambahan yang diselesaikan:
+
+### 1. Approval Read Abstraction (News, PO, PR)
+
+**Masalah:** Controller News, Purchase Order, dan Purchase Request menggunakan direct query ke repository untuk membaca data approval yang sudah dibuat (`ApprovalJpaRepository`), melanggar prinsip dependency inversion.
+
+**Solusi:**
+- Dibuat `ApprovalReadPort` di `common.approval.domain.port` dengan method `findByRelatedId(String relatedId) → Optional<Approval>`
+- Dibuat `ApprovalReadAdapter` di `common.approval.infrastructure.adapter`
+- Wire adapter ke controller News, PO, dan PR melalui config bean masing-masing (`NewsConfig`, `PurchaseOrderConfig`, `PurchaseRequestConfig`)
+
+**Dampak:** Controller tidak lagi inject `ApprovalJpaRepository` secara langsung.
+
+---
+
+### 2. Inventory Report Mapper menggunakan CurrencyLookupProvider
+
+**Masalah:** `InventoryReportMapper` menggunakan direct `CurrencyJpaRepository` untuk resolve currency saat mapping `StockAdjustment` ke DTO report.
+
+**Solusi:**
+- Inject `CurrencyLookupProvider` (port yang sudah ada di `master.currency.domain.port`) ke `InventoryReportMapper`
+- Ganti `currencyRepository.findById(...)` dengan `currencyLookupProvider.resolve(...)`
+- Update `InventoryReportMapperImpl` (infrastructure adapter) untuk menerima `CurrencyLookupProvider`
+
+**Dampak:** Mapper tidak lagi bergantung pada infrastructure layer secara langsung.
+
+---
+
+### 3. Purchase Order Trinity Data/LookupProvider Completion
+
+**Masalah:** `PurchaseOrderController` sudah menggunakan `SupplierLookupProvider`, `CurrencyLookupProvider`, dan `PaymentMethodLookupProvider` untuk pre-edit, tetapi implementasi Trinity Data (kombinasi ketiga provider dalam satu bean) belum lengkap.
+
+**Solusi:**
+- Dibuat `PurchaseOrderTrinityData` record di `purchasing.purchaseorder.application.dto` dengan 3 field: `supplierLookup`, `currencyLookup`, `paymentMethodLookup`
+- Update `PurchaseOrderServiceImpl` untuk menerima `PurchaseOrderTrinityData` di constructor
+- Update bean `PurchaseOrderServiceImpl` di `PurchaseOrderConfig` untuk inject `PurchaseOrderTrinityData`
+- Refactor method `getPurchaseOrderEditView` untuk menggunakan trinity data
+
+**Dampak:** Controller tidak lagi inject 3 provider secara terpisah; lebih clean dan sesuai dengan pola Trinity Data.
+
+---
+
+### 4. Purchase Request Trinity Data/LookupProvider Completion
+
+**Masalah:** Sama seperti PO — `PurchaseRequestController` sudah menggunakan `SupplierLookupProvider` dan `CurrencyLookupProvider`, tetapi belum dibuat Trinity Data pattern.
+
+**Solusi:**
+- Dibuat `PurchaseRequestTrinityData` record di `purchasing.purchaserequest.application.dto` dengan 2 field: `supplierLookup`, `currencyLookup`
+- Update `PurchaseRequestServiceImpl` untuk menerima `PurchaseRequestTrinityData` di constructor
+- Update bean `PurchaseRequestServiceImpl` di `PurchaseRequestConfig` untuk inject `PurchaseRequestTrinityData`
+- Refactor method `getPurchaseRequestEditView` untuk menggunakan trinity data
+
+**Dampak:** Controller lebih clean dan konsisten dengan pola di PO.
+
+---
+
+### 5. Geographic Parent `initialSubtext` Cleanup
+
+**Masalah:** Halaman Geographic (Province/City/District/Village) menampilkan `initialSubtext=''` (kosong) untuk field `parentId`, padahal seharusnya menampilkan kode parent geographic (country code, province code, dll.) sesuai dengan pola LookupDto.
+
+**Solusi:**
+- Update `GeographicServiceImpl.getProvinceEditView()` untuk set `initialSubtext` = country code
+- Update `GeographicServiceImpl.getCityEditView()` untuk set `initialSubtext` = province code
+- Update `GeographicServiceImpl.getDistrictEditView()` untuk set `initialSubtext` = city code
+- Update `GeographicServiceImpl.getVillageEditView()` untuk set `initialSubtext` = district code
+
+**Dampak:** Autocomplete parent geographic sekarang menampilkan subtext (kode) dengan benar di form edit, konsisten dengan autocomplete lainnya.
+
+---
+
+### Ringkasan Cleanup
+
+| Item | Status |
+|------|--------|
+| Approval read abstraction (News/PO/PR) | ✅ Done |
+| Inventory report mapper using CurrencyLookupProvider | ✅ Done |
+| PO Trinity Data/LookupProvider completion | ✅ Done |
+| PR Trinity Data/LookupProvider completion | ✅ Done |
+| Geographic parent `initialSubtext` cleanup | ✅ Done |
+
+**Verifikasi:** `mvn clean test` pass — semua unit test green.

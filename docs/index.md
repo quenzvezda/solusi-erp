@@ -23,6 +23,10 @@ Dokumentasi dikelompokkan ke dalam folder berikut berdasarkan konteksnya:
         - [Chart of Accounts (COA)](modules/accounting/coa.md) — Hierarki akun, business rules, RBAC
         - [Accounting Schema](modules/accounting/accounting-schema.md) — Konfigurasi auto-journal event → debit/credit
         - [Fiscal Year & Accounting Period](modules/accounting/fiscal-year-period.md) — Period Guard, status lifecycle
+    - **[/modules/procurement](modules/procurement/)**: Sprint 2–3 — Procurement Operations
+        - [Supplier Price List (SPL)](modules/procurement/spl.md) — Master harga supplier, soft delete, date range validity
+        - [Purchase Requisition (PR)](modules/procurement/purchase-requisition.md) — Permintaan pembelian internal, approval flow, priority
+        - [Purchase Order (PO)](modules/procurement/purchase-order.md) — Pesanan pembelian resmi, tipe DIRECT/STANDARD, line drawer, approval integration
 - **[/spec](spec/)**: **[PENTING]** Spesifikasi teknis horizontal/shared yang digunakan di seluruh aplikasi. Lihat **[Spec Index](spec/index.md)**.
 - **[/roadmap](roadmap/)**: Rencana pengembangan masa depan dan pelacakan standardisasi arsitektur.
 - **[/workflow](workflow/)**: Panduan prosedur kerja agen (seperti tugas repetitif, troubleshooting, dll).

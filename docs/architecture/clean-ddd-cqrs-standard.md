@@ -273,7 +273,10 @@ private Map<String, Object> buildFacilityUI(Facility domain) {
 | Hanya butuh kode sederhana (misal `Geographic.code`) | ❌ Boleh query langsung dari JPA repo |
 
 **Referensi di Codebase:**
-- `master.party.domain.port.PartyLookupProvider` — dipakai oleh `inventory.facility`
+- `master.party.domain.port.PartyLookupProvider` — dipakai oleh `inventory.facility`, `purchasing.supplierpricelist`
+- `inventory.product.domain.port.ProductLookupProvider` — dipakai oleh `purchasing.supplierpricelist`
+- `inventory.uom.domain.port.UomLookupProvider` — dipakai oleh `purchasing.supplierpricelist`; subText = `code`
+- `master.currency.domain.port.CurrencyLookupProvider` — dipakai oleh `purchasing.supplierpricelist`; subText = `symbol + " - " + alias`, `payload.symbol` = bare symbol
 - Format subText konsisten dengan `PartyLookupController.mapToLookupDto()` (lookup endpoint)
 
 ---

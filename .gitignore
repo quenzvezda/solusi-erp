@@ -44,3 +44,7 @@ build/
 !.vscode/launch.json.example
 !.vscode/tasks.json
 /logs/
+
+.playwright-mcp/
+
+*.png

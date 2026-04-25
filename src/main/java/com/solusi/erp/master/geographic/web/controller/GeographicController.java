@@ -5,9 +5,11 @@ import com.solusi.erp.core.domain.model.DeleteResult;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.master.geographic.application.usecase.command.*;
 import com.solusi.erp.master.geographic.application.usecase.query.*;
 import com.solusi.erp.master.geographic.domain.model.Geographic;
+import com.solusi.erp.master.geographic.domain.port.GeographicLookupProvider;
 import com.solusi.erp.master.geographic.web.dto.*;
 import com.solusi.erp.master.geographic.web.mapper.GeographicWebMapper;
 import com.solusi.erp.master.shared.model.GeographicType;
@@ -45,6 +47,7 @@ public class GeographicController {
     private final GetGeographicEditViewUseCase getGeographicEditViewUseCase;
     private final GeographicWebMapper webMapper;
     private final MessageSource messageSource;
+    private final GeographicLookupProvider geographicLookupProvider;
 
     @GetMapping
     @PreAuthorize("hasAuthority('GEOGRAPHIC_READ')")
@@ -84,6 +87,10 @@ public class GeographicController {
             getGeographicEditViewUseCase.execute(parentId).ifPresent(parent -> {
                 request.setParentId(parentId);
                 request.setParentName(parent.getName());
+                LookupDto parentLookup = geographicLookupProvider.resolve(parentId);
+                if (parentLookup != null) {
+                    request.setParentSubtext(parentLookup.subText());
+                }
                 if (parent.getType() == GeographicType.COUNTRY) {
                     request.setType(GeographicType.STATE_PROVINCE);
                 } else if (parent.getType() == GeographicType.STATE_PROVINCE) {
@@ -115,7 +122,14 @@ public class GeographicController {
     public String showEditForm(@PathVariable Long id, Model model) {
         Geographic domain = getGeographicEditViewUseCase.execute(id)
                 .orElseThrow(() -> new RuntimeException("Geographic not found"));
-        model.addAttribute("geographicRequest", webMapper.toSaveRequest(domain));
+        GeographicSaveRequest request = webMapper.toSaveRequest(domain);
+        if (request.getParentId() != null) {
+            LookupDto parentLookup = geographicLookupProvider.resolve(request.getParentId());
+            if (parentLookup != null) {
+                request.setParentSubtext(parentLookup.subText());
+            }
+        }
+        model.addAttribute("geographicRequest", request);
         model.addAttribute("auditInfo", webMapper.toDetailResponse(domain));
         model.addAttribute("types", GeographicType.values());
         return "master/geographic/form";

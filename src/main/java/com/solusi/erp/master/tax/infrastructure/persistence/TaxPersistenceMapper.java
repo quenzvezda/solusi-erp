@@ -2,6 +2,7 @@ package com.solusi.erp.master.tax.infrastructure.persistence;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.master.tax.domain.model.Tax;
+import com.solusi.erp.master.tax.domain.model.TaxCalculationMode;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
@@ -13,8 +14,18 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface TaxPersistenceMapper {
 
-    @Mapping(target = "metadata", expression = "java(toAuditMetadata(entity))")
-    Tax toDomain(com.solusi.erp.master.tax.infrastructure.persistence.Tax entity);
+    default Tax toDomain(com.solusi.erp.master.tax.infrastructure.persistence.Tax entity) {
+        return new Tax(
+                toAuditMetadata(entity),
+                entity.getCode(),
+                entity.getName(),
+                entity.getRate(),
+                entity.getNote(),
+                entity.getIsSubtract(),
+                entity.getIsActive(),
+                entity.getCalculationMode() != null ? entity.getCalculationMode() : TaxCalculationMode.EXCLUSIVE
+        );
+    }
 
     @Mapping(target = "id", source = "metadata.id")
     @Mapping(target = "version", expression = "java(domain.getMetadata().version() != null ? domain.getMetadata().version().intValue() : null)")

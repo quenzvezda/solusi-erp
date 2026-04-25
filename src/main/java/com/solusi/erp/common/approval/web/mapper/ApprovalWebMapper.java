@@ -83,7 +83,9 @@ public class ApprovalWebMapper {
      * Returns null if the reference type has no known mapping.
      */
     private static final Map<String, String> DOCUMENT_URL_PATTERNS = Map.of(
-            "NEWS", "/common/news/"
+            "NEWS", "/common/news/",
+            "PURCHASE_REQUISITION", "/purchasing/purchase-requisitions/view/",
+            "PURCHASE_ORDER", "/purchasing/purchase-orders/view/"
     );
 
     private String resolveDocumentUrl(String referenceType, Long referenceId) {

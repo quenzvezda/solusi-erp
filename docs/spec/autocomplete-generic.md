@@ -140,6 +140,35 @@ ui.put("ownerCode", owner != null ? owner.subText() : "");
 - ✅ SubText butuh i18n atau logika format kompleks → **wajib** pakai Lookup Provider
 - ❌ SubText hanya field sederhana (misal `Geographic.code`) → boleh query langsung
 
-> Detail teknis dan contoh kode lengkap: [`architecture/clean-ddd-cqrs-standard.md` §8 Pola 4](../architecture/clean-ddd-cqrs-standard.md#pola-4--lookup-provider-port-cross-slice-autocomplete)
+### Controller Pattern: `buildXxxUI()`
 
+Untuk halaman edit SSR, resolusi Trinity Data dilakukan di **controller** via metode private `buildXxxUI(domain)`, bukan di WebMapper. Pattern ini:
+1. Controller inject semua `XxxLookupProvider` yang dibutuhkan (via `@RequiredArgsConstructor`)
+2. Method `buildXxxUI()` memanggil masing-masing provider dan menghasilkan `Map<String, Object>`
+3. Map di-`addAttribute` ke model dengan key `xxxUI`
+4. Template Thymeleaf menggunakan `${xxxUI != null ? xxxUI.supplierText : ''}` untuk setiap autocomplete fragment
+
+```java
+// Controller
+private Map<String, Object> buildSPLUI(SupplierPriceList domain) {
+    Map<String, Object> ui = new HashMap<>();
+    LookupDto supplier = partyLookupProvider.resolve(domain.getSupplierId());
+    if (supplier != null) {
+        ui.put("supplierText", supplier.name());
+        ui.put("supplierSubtext", supplier.subText());
+    }
+    // ... repeat for other references
+    return ui;
+}
+
+// Template
+<div th:replace="~{fragments/inputs :: autocomplete(field='supplierId', ...,
+    initialValue=${splRequest.supplierId},
+    initialText=${splUI != null ? splUI.supplierText : ''},
+    initialSubtext=${splUI != null ? splUI.supplierSubtext : ''})}"></div>
+```
+
+**Prinsip:** WebMapper tetap bersih dari provider cross-slice — tugasnya hanya memetakan domain → DTO (untuk list/detail response). Display data untuk form edit dikelola controller.
+
+> Detail teknis dan contoh kode lengkap: [`architecture/clean-ddd-cqrs-standard.md` §8 Pola 4](../architecture/clean-ddd-cqrs-standard.md#pola-4--lookup-provider-port-cross-slice-autocomplete)
 

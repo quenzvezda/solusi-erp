@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.po.title})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .po-list-content}, ~{:: #page-specific-scripts})}">
+    <div class="po-list-content">
+
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="#{label.po.title}">Purchase Orders</h2>
+                        <div class="text-secondary mt-1" th:text="#{label.po.subtitle}">
+                            Manage purchase orders.
+                        </div>
+                    </div>
+                    <div class="col-auto ms-auto d-print-none" sec:authorize="hasAuthority('PO_CREATE')">
+                        <div class="btn-list">
+                            <a th:href="@{/purchasing/purchase-orders/create}" class="btn btn-primary d-none d-sm-inline-block">
+                                <i class="ti ti-plus icon"></i>
+                                <span th:text="#{label.po.add}">Add Purchase Order</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+
+                <div th:replace="~{fragments/alerts :: success}"></div>
+                <div th:replace="~{fragments/alerts :: error}"></div>
+
+                <div class="card">
+                    <div class="card-body border-bottom py-3">
+                        <div class="d-flex">
+                            <div class="ms-auto text-secondary">
+                                <form th:action="@{/purchasing/purchase-orders}" method="get" class="input-icon"
+                                      hx-get="/purchasing/purchase-orders"
+                                      hx-target="#po-table-container"
+                                      hx-trigger="keyup changed delay:500ms from:#search-input"
+                                      hx-push-url="true">
+                                    <input type="text" id="search-input" name="keyword" th:value="${keyword}"
+                                           class="form-control form-control-sm"
+                                           th:placeholder="#{label.search} + '...'">
+                                    <span class="input-icon-addon">
+                                        <i class="ti ti-search"></i>
+                                    </span>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="po-table-container" th:fragment="po-table-container"
+                         hx-get="/purchasing/purchase-orders"
+                         hx-trigger="refresh-table from:body delay:500ms"
+                         hx-include="[name='keyword'], [name='page']">
+                        <input type="hidden" name="page" th:value="${page.number}">
+
+                        <div class="table-responsive">
+                            <table class="table card-table table-vcenter text-nowrap datatable" id="table-po-list">
+                                <thead>
+                                    <tr>
+                                        <th th:replace="~{fragments/table :: sortable('code', #{label.po.column.code})}">Code</th>
+                                        <th th:text="#{label.po.column.type}">Type</th>
+                                        <th th:text="#{label.po.column.orderDate}">Order Date</th>
+                                        <th th:text="#{label.po.column.supplier}">Supplier</th>
+                                        <th class="text-end" th:text="#{label.po.column.totalAmount}">Total Amount</th>
+                                        <th th:text="#{label.po.column.status}">Status</th>
+                                        <th th:text="#{label.po.column.lines}">Lines</th>
+                                        <th class="text-end" th:text="#{label.actions}">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${page.content}" th:id="'row-' + ${item.id}">
+                                        <td><span class="font-weight-medium" th:text="${item.code}">PO-001</span></td>
+                                        <td>
+                                            <span class="badge"
+                                                  th:classappend="${item.poType != null && item.poType.name() == 'STANDARD'} ? 'bg-purple-lt' : 'bg-blue-lt'"
+                                                  th:text="${item.poType != null ? #messages.msg('label.po.type.' + item.poType.name()) : 'Direct'}">Direct</span>
+                                        </td>
+                                        <td th:text="${#temporals.format(item.orderDate, 'dd MMM yyyy')}">01 Jul 2026</td>
+                                        <td th:text="${item.supplierName ?: '-'}">Supplier</td>
+                                        <td class="text-end" th:text="${item.totalAmount != null ? #numbers.formatDecimal(item.totalAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                        <td>
+                                            <span class="badge"
+                                                  th:classappend="${item.status.name() == 'DRAFT'} ? 'bg-secondary-lt' :
+                                                                   (${item.status.name() == 'SUBMITTED'} ? 'bg-info-lt' :
+                                                                   (${item.status.name() == 'APPROVED'} ? 'bg-success-lt' :
+                                                                   (${item.status.name() == 'SENT'} ? 'bg-primary-lt' :
+                                                                   (${item.status.name() == 'PARTIALLY_RECEIVED'} ? 'bg-warning-lt' :
+                                                                   (${item.status.name() == 'FULLY_RECEIVED'} ? 'bg-azure-lt' :
+                                                                   (${item.status.name() == 'BILLED'} ? 'bg-purple-lt' :
+                                                                   (${item.status.name() == 'CLOSED'} ? 'bg-secondary-lt' :
+                                                                   (${item.status.name() == 'CANCELLED'} ? 'bg-warning-lt' :
+                                                                   (${item.status.name() == 'REJECTED'} ? 'bg-danger-lt' : 'bg-secondary-lt')))))))))"
+                                                  th:text="${item.status}">DRAFT</span>
+                                        </td>
+                                        <td th:text="${item.lineCount}">0</td>
+                                        <td>
+                                            <div class="btn-list flex-nowrap justify-content-end">
+                                                <a th:if="${item.status.name() == 'DRAFT'}"
+                                                   th:href="@{/purchasing/purchase-orders/edit/{id}(id=${item.id})}"
+                                                   class="btn btn-white btn-sm" sec:authorize="hasAuthority('PO_UPDATE')">
+                                                    <i class="ti ti-edit me-1"></i>
+                                                    <span th:text="#{label.edit}">Edit</span>
+                                                </a>
+                                                <a th:if="${item.status.name() != 'DRAFT'}"
+                                                   th:href="@{/purchasing/purchase-orders/view/{id}(id=${item.id})}"
+                                                   class="btn btn-white btn-sm" sec:authorize="hasAuthority('PO_READ')">
+                                                    <i class="ti ti-eye me-1"></i>
+                                                    <span th:text="#{label.view}">View</span>
+                                                </a>
+                                                <button th:if="${item.status.name() == 'DRAFT'}" type="button"
+                                                        class="btn btn-white btn-sm text-danger"
+                                                        sec:authorize="hasAuthority('PO_DELETE')"
+                                                        data-bs-toggle="modal"
+                                                        th:data-bs-target="'#modal-delete-' + ${item.id}">
+                                                    <i class="ti ti-trash me-1"></i>
+                                                    <span th:text="#{label.delete}">Delete</span>
+                                                </button>
+                                            </div>
+                                            <div th:if="${item.status.name() == 'DRAFT'}"
+                                                 th:replace="~{fragments/modals :: delete-confirm(
+                                                    id='modal-delete-' + ${item.id},
+                                                    title=#{label.delete.confirm.title},
+                                                    message=#{msg.delete.confirm(${item.code})},
+                                                    actionUrl='/purchasing/purchase-orders/' + ${item.id},
+                                                    targetId='#row-' + ${item.id}
+                                                )}"></div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${page.empty}">
+                                        <td colspan="8" class="text-center py-4 text-secondary" th:text="#{label.po.empty}">
+                                            No purchase order data found.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="page-specific-scripts" th:fragment="pageScripts">
+    </div>
+</body>
+
+</html>

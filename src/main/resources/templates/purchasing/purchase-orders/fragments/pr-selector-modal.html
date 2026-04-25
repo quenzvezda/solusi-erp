@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div id="po-pr-selector-results" th:fragment="po-pr-selector-results">
+    <div class="card-header border-0 pb-0">
+        <form class="row g-2"
+              hx-get="/purchasing/purchase-orders/selectors/purchase-requisitions"
+              hx-target="#po-pr-selector-results"
+              hx-swap="outerHTML">
+            <input type="hidden" name="supplierId" th:value="${supplierId}">
+            <div class="col">
+                <input type="search"
+                       class="form-control"
+                       name="keyword"
+                       th:value="${keyword}"
+                       th:placeholder="#{label.po.selector.pr.search.placeholder}">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-search"></i>
+                    <span class="ms-1" th:text="#{label.search}">Search</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+            <tr>
+                <th>PR</th>
+                <th>Supplier</th>
+                <th>Facility</th>
+                <th>Currency</th>
+                <th class="text-center">Remaining Lines</th>
+                <th class="w-1"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${page.isEmpty()}">
+                <td colspan="6" class="text-center text-secondary py-4" th:text="#{label.po.selector.pr.empty}">No eligible purchase requisitions found.</td>
+            </tr>
+            <tr th:each="row : ${page.content}"
+                th:attr="data-pr-id=${row.prId},
+                         data-pr-code=${row.prCode},
+                         data-supplier-id=${row.supplierId},
+                         data-supplier-name=${row.supplierName},
+                         data-supplier-subtext=${row.supplierSubtext},
+                         data-facility-id=${row.facilityId},
+                         data-facility-name=${row.facilityName},
+                         data-facility-subtext=${row.facilitySubtext},
+                         data-currency-id=${row.currencyId},
+                         data-currency-name=${row.currencyName},
+                         data-currency-subtext=${row.currencySubtext}">
+                <td>
+                    <div class="fw-semibold" th:text="${row.prCode}">PR-001</div>
+                    <div class="text-secondary small" th:text="${#temporals.format(row.requestDate, 'dd MMM yyyy')}">22 Apr 2026</div>
+                </td>
+                <td>
+                    <div th:text="${row.supplierName}">Alpha Supplier</div>
+                    <div class="text-secondary small" th:text="${row.supplierSubtext}">SUP-001</div>
+                </td>
+                <td>
+                    <div th:text="${row.facilityName}">Main Warehouse</div>
+                    <div class="text-secondary small" th:text="${row.facilitySubtext}">WH-01</div>
+                </td>
+                <td>
+                    <div th:text="${row.currencyName}">US Dollar</div>
+                    <div class="text-secondary small" th:text="${row.currencySubtext}">USD</div>
+                </td>
+                <td class="text-center" th:text="${row.remainingLineCount}">2</td>
+                <td>
+                    <button type="button" class="btn btn-primary btn-sm js-pr-selector-pick" th:text="#{label.choose}">Choose</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+</div>
+</body>
+</html>
