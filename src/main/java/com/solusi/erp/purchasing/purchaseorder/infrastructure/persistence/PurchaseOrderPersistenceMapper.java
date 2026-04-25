@@ -7,14 +7,39 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PurchaseOrderPersistenceMapper {
 
-    @Mapping(target = "metadata", expression = "java(toAuditMetadata(entity))")
-    @Mapping(target = "lines", expression = "java(toLineDomainList(entity.getLines()))")
-    PurchaseOrder toDomain(PurchaseOrderEntity entity);
+    default PurchaseOrder toDomain(PurchaseOrderEntity entity) {
+        return PurchaseOrder.rehydrate(
+                toAuditMetadata(entity),
+                entity.getCode(),
+                entity.getOrderDate(),
+                entity.getExpectedDate(),
+                entity.getSupplierId(),
+                entity.getFacilityId(),
+                entity.getCurrencyId(),
+                entity.getExchangeRate(),
+                entity.getSubtotal(),
+                entity.getTaxAmount(),
+                entity.getTotalAmount(),
+                entity.getStatus(),
+                entity.getPaymentTermDays(),
+                entity.getPrId(),
+                entity.getPoType(),
+                entity.getTaxId(),
+                entity.getTaxCode(),
+                entity.getTaxName(),
+                entity.getTaxRate(),
+                entity.getTaxCalculationMode(),
+                entity.getNote(),
+                entity.isActive(),
+                toLineDomainList(entity.getLines())
+        );
+    }
 
     @Mapping(target = "id", source = "metadata.id")
     @Mapping(target = "version", expression = "java(domain.getMetadata().version() != null ? domain.getMetadata().version().intValue() : null)")
@@ -57,17 +82,20 @@ public interface PurchaseOrderPersistenceMapper {
     }
 
     default PurchaseOrderLine toLineDomain(PurchaseOrderLineEntity entity) {
-        return new PurchaseOrderLine(
-            toLineAuditMetadata(entity),
-            entity.getHeader() != null ? entity.getHeader().getId() : null,
-            entity.getProductId(),
-            entity.getQuantity(),
-            entity.getReceivedQuantity(),
-            entity.getUomId(),
-            entity.getUnitPrice(),
-            entity.getTaxRate(),
-            entity.getPrLineId(),
-            entity.getNote()
+        return PurchaseOrderLine.rehydrate(
+                toLineAuditMetadata(entity),
+                entity.getHeader() != null ? entity.getHeader().getId() : null,
+                entity.getProductId(),
+                entity.getQuantity(),
+                entity.getReceivedQuantity(),
+                entity.getUomId(),
+                entity.getUnitPrice(),
+                entity.getTaxRate(),
+                entity.getLineSubtotal(),
+                entity.getLineTax(),
+                entity.getLineTotal(),
+                entity.getPrLineId(),
+                entity.getNote()
         );
     }
 

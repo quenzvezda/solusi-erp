@@ -27,6 +27,10 @@ Purchase Order adalah dokumen pembelian resmi yang diterbitkan perusahaan kepada
 | `exchangeRate` | Kurs konversi ke IDR (wajib > 0) | Ya |
 | `paymentTermDays` | Jangka waktu pembayaran (hari) | Ya |
 | `prId` | Referensi PR (wajib untuk tipe STANDARD, null untuk DIRECT) | Kondisional |
+| `taxId` | Referensi master tax yang dipilih di header PO | Tidak |
+| `taxName` | Snapshot nama pajak pada saat PO disimpan | Tidak |
+| `taxRate` | Snapshot tarif pajak dalam format persen (misal `11.00`) | Tidak |
+| `taxCalculationMode` | Snapshot mode hitung `EXCLUSIVE` / `INCLUSIVE` | Tidak |
 | `subtotal` | Total sebelum pajak (dihitung otomatis) | Ya (auto) |
 | `taxAmount` | Total pajak (dihitung otomatis) | Ya (auto) |
 | `totalAmount` | Total akhir = subtotal + pajak (dihitung otomatis) | Ya (auto) |
@@ -41,10 +45,9 @@ Purchase Order adalah dokumen pembelian resmi yang diterbitkan perusahaan kepada
 | `quantity` | Jumlah yang dipesan (wajib > 0) | Ya |
 | `uomId` | Satuan jumlah (misal: PCS, BOX) | Ya |
 | `unitPrice` | Harga per satuan (wajib > 0) | Ya |
-| `taxRate` | Persentase pajak (misal: 0.11 untuk PPN 11%) | Tidak (default: 0) |
-| `lineSubtotal` | qty × unitPrice (dihitung otomatis) | Ya (auto) |
-| `lineTax` | lineSubtotal × taxRate (dihitung otomatis) | Ya (auto) |
-| `lineTotal` | lineSubtotal + lineTax (dihitung otomatis) | Ya (auto) |
+| `lineSubtotal` | Nilai DPP hasil kalkulasi header tax | Ya (auto) |
+| `lineTax` | Nilai pajak hasil kalkulasi header tax | Ya (auto) |
+| `lineTotal` | Nilai bruto baris setelah kalkulasi pajak | Ya (auto) |
 | `prLineId` | Referensi ke baris PR asal (untuk STANDARD PO) | Tidak |
 | `receivedQuantity` | Kuantitas yang sudah diterima (diupdate saat Goods Receipt) | Ya (auto, awal: 0) |
 | `note` | Catatan per baris | Tidak |
@@ -88,12 +91,20 @@ DRAFT/SUBMITTED ──► CANCELLED
 - Sistem tetap memvalidasi di backend — request STANDARD tanpa PR atau dengan PR yang belum `APPROVED` tetap ditolak.
 
 ### C. Perhitungan Total Otomatis
-- `lineSubtotal = quantity × unitPrice`
-- `lineTax = lineSubtotal × taxRate`
-- `lineTotal = lineSubtotal + lineTax`
+- Pajak dipilih **sekali di header PO** dari master Tax.
+- `taxRate` header disimpan dalam format persen (`11.00`) lalu dinormalisasi ke decimal (`0.11`) saat kalkulasi domain.
+- Jika `taxCalculationMode = EXCLUSIVE`:
+  - `lineSubtotal = quantity × unitPrice`
+  - `lineTax = lineSubtotal × normalizedTaxRate`
+  - `lineTotal = lineSubtotal + lineTax`
+- Jika `taxCalculationMode = INCLUSIVE`:
+  - `gross = quantity × unitPrice`
+  - `lineSubtotal = gross / (1 + normalizedTaxRate)`
+  - `lineTax = gross - lineSubtotal`
+  - `lineTotal = gross`
 - `subtotal (header) = Σ lineSubtotal semua baris`
 - `taxAmount (header) = Σ lineTax semua baris`
-- `totalAmount (header) = subtotal + taxAmount`
+- `totalAmount (header) = Σ lineTotal semua baris`
 
 Semua kalkulasi dilakukan di backend (domain layer) — tidak bergantung pada JavaScript client.
 
@@ -114,11 +125,12 @@ Semua kalkulasi dilakukan di backend (domain layer) — tidak bergantung pada Ja
 - **Tipe Toggle**: Dua radio button (**DIRECT** / **STANDARD**) di bagian atas form.
 - **STANDARD PR Selector Modal**: Saat tipe STANDARD dipilih pada create flow, field **Referensi PR** tidak lagi memakai select biasa. User memilih PR melalui modal selector berbasis tabel yang mendukung search + pagination.
 - **Derived Header Locking**: Setelah PR dipilih, `supplier`, `facility`, dan `currency` otomatis terisi dari PR dan dikunci di UI.
+- **Header Tax Selector**: Form PO menyediakan satu autocomplete **Tax** di header yang mengambil data dari master Tax aktif. Pemilihan ini mengontrol seluruh perhitungan pajak setiap line.
 - **STANDARD Line Selector Modal**: Tombol **Add Line** pada STANDARD membuka selector line PR multi-select. Sistem mengecualikan line yang sudah habis atau sudah dipilih di draft saat ini.
 - **Edit Header Parity**: Pada edit DRAFT PO, kontrol **PO Type** dan **Referensi PR** memakai struktur visual yang sama dengan create flow, tetapi tetap non-interaktif/locked agar referensi STANDARD tidak berubah diam-diam.
 - **STANDARD Edit Line Expansion**: Pada edit DRAFT STANDARD PO, tombol **Add Line** tetap membuka selector line PR dari referensi yang sama agar user bisa menambahkan sisa line PR yang belum dikonversi, bukan membuat line kosong manual.
 - **DIRECT Line Entry**: Tombol **Add Line** pada DIRECT tetap membuat satu row kosong untuk input manual.
-- **Inline Line Actions**: Tabel line item hanya menyisakan aksi hapus; tidak ada lagi tombol drawer/pensil pada row.
+- **Inline Line Actions**: Tabel line item hanya menyisakan aksi hapus; tidak ada lagi tombol drawer/pensil atau input pajak manual per baris.
 - **Approval Sidebar**: Pada halaman detail PO, terdapat panel samping yang menampilkan status approval, nama approver saat ini, dan tombol aksi (jika user adalah approver aktif).
 - **Approval History Drawer**: Klik **Riwayat Approval** untuk melihat rantai keputusan lengkap.
 - **Tipe Badge**: Daftar PO menampilkan badge **Direct** (biru) atau **Standard** (hijau) di kolom Tipe.
@@ -189,6 +201,7 @@ Fitur ini dilindungi oleh otoritas berikut:
    | Mata Uang | IDR |
    | Kurs | 1 |
    | Jangka Waktu Bayar | 30 hari |
+   | Pajak | PPN 11% Exclusive |
    | Catatan | Urgent — stok toner habis |
 
 4. Klik **+ Tambah Item** di tabel baris, isi form line item:
@@ -199,7 +212,6 @@ Fitur ini dilindungi oleh otoritas berikut:
    | Jumlah | 3 |
    | Satuan | PCS |
    | Harga per Satuan | 285.000 |
-   | Pajak | 11% (PPN) |
    | Catatan | Kompatibel dengan HP P1102 |
 
    Kalkulasi otomatis:
@@ -240,6 +252,7 @@ Fitur ini dilindungi oleh otoritas berikut:
    | Mata Uang | IDR *(otomatis terisi dan lock)* |
    | Kurs | 1 |
    | Jangka Waktu Bayar | 45 hari |
+   | Pajak | PPN 11% Inclusive |
 
 4. Klik **+ Tambah Item**. Sistem membuka modal selector **line PR**.
 
@@ -249,9 +262,7 @@ Fitur ini dilindungi oleh otoritas berikut:
    | Jumlah | 5 *(default ke remaining qty, tetap bisa dikurangi untuk partial PO)* |
    | Satuan | PCS *(dipilih dari PR line, locked)* |
    | Harga per Satuan | 7.400.000 *(default dari estimasi PR, tetap editable)* |
-   | Pajak | 11% (PPN) |
-
-    Kalkulasi otomatis:
+     Kalkulasi otomatis:
    - Subtotal: Rp 37.000.000
    - Pajak: Rp 4.070.000
    - Total: Rp 41.070.000

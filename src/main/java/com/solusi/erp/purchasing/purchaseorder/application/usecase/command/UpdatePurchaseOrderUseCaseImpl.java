@@ -2,6 +2,7 @@ package com.solusi.erp.purchasing.purchaseorder.application.usecase.command;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.exception.DomainException;
+import com.solusi.erp.master.tax.domain.model.TaxCalculationMode;
 import com.solusi.erp.purchasing.purchaserequisition.domain.repository.PurchaseRequisitionRepository;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrder;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderLine;
@@ -25,8 +26,11 @@ public class UpdatePurchaseOrderUseCaseImpl implements UpdatePurchaseOrderUseCas
 
     @Override
     public PurchaseOrder execute(Long id, LocalDate orderDate, LocalDate expectedDate,
-                                  Long facilityId, Long currencyId, BigDecimal exchangeRate,
-                                  int paymentTermDays, String note, List<PoLineInput> lines) {
+                                   Long facilityId, Long currencyId, BigDecimal exchangeRate,
+                                   int paymentTermDays,
+                                   Long taxId, String taxCode, String taxName, BigDecimal taxRate,
+                                   TaxCalculationMode taxCalculationMode,
+                                   String note, List<PoLineInput> lines) {
         PurchaseOrder po = repository.findById(id)
                 .orElseThrow(() -> new DomainException("msg.error.po.notfound"));
 
@@ -43,7 +47,9 @@ public class UpdatePurchaseOrderUseCaseImpl implements UpdatePurchaseOrderUseCas
         }
 
         po.update(orderDate, expectedDate, facilityId, currencyId,
-                exchangeRate, paymentTermDays, note, domainLines);
+                exchangeRate, paymentTermDays,
+                taxId, taxCode, taxName, taxRate, taxCalculationMode,
+                note, domainLines);
         return repository.save(po);
     }
 

@@ -1,6 +1,7 @@
 package com.solusi.erp.purchasing.purchaseorder.application.usecase.command;
 
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
+import com.solusi.erp.master.tax.domain.model.TaxCalculationMode;
 import com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisition;
 import com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisitionLine;
 import com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisitionPriority;
@@ -136,6 +137,33 @@ class CreatePurchaseOrderUseCaseTest {
         assertThat(result.getLines().get(0).getProductId()).isEqualTo(10L);
         assertThat(result.getLines().get(1).getQuantity()).isEqualByComparingTo("3");
         verify(repository).save(any(PurchaseOrder.class));
+    }
+
+    @Test
+    @DisplayName("execute applies header tax snapshot to created purchase order")
+    void execute_appliesHeaderTaxSnapshot() {
+        when(sequenceGeneratorService.generate("PO")).thenReturn("PO-2607-00005");
+        when(repository.save(any(PurchaseOrder.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        List<PoLineInput> lines = List.of(
+                new PoLineInput(10L, new BigDecimal("1"), 1L,
+                        new BigDecimal("10000.00"), BigDecimal.ZERO, null, "Line 1")
+        );
+
+        PurchaseOrder result = useCase.execute(
+                LocalDate.of(2026, 7, 1), null,
+                1L, 2L, 3L, BigDecimal.ONE, 30, null, PurchaseOrderType.DIRECT,
+                10L, "PPN-IN", "PPN 11% Inclusive", new BigDecimal("11.00"),
+                TaxCalculationMode.INCLUSIVE, "Taxed", lines
+        );
+
+        assertThat(result.getTaxId()).isEqualTo(10L);
+        assertThat(result.getTaxCode()).isEqualTo("PPN-IN");
+        assertThat(result.getTaxRate()).isEqualByComparingTo("11.00");
+        assertThat(result.getTaxCalculationMode()).isEqualTo(TaxCalculationMode.INCLUSIVE);
+        assertThat(result.getSubtotal()).isEqualByComparingTo("9009.0090");
+        assertThat(result.getTaxAmount()).isEqualByComparingTo("990.9910");
+        assertThat(result.getTotalAmount()).isEqualByComparingTo("10000.0000");
     }
 
     @Test

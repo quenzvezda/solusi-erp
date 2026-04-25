@@ -3,6 +3,7 @@ package com.solusi.erp.purchasing.purchaseorder.application.usecase.command;
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.exception.DomainException;
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
+import com.solusi.erp.master.tax.domain.model.TaxCalculationMode;
 import com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisitionStatus;
 import com.solusi.erp.purchasing.purchaserequisition.domain.repository.PurchaseRequisitionRepository;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrder;
@@ -30,9 +31,12 @@ public class CreatePurchaseOrderUseCaseImpl implements CreatePurchaseOrderUseCas
 
     @Override
     public PurchaseOrder execute(LocalDate orderDate, LocalDate expectedDate,
-                                  Long supplierId, Long facilityId, Long currencyId,
-                                  BigDecimal exchangeRate, int paymentTermDays,
-                                  Long prId, PurchaseOrderType poType, String note, List<PoLineInput> lines) {
+                                   Long supplierId, Long facilityId, Long currencyId,
+                                   BigDecimal exchangeRate, int paymentTermDays,
+                                   Long prId, PurchaseOrderType poType,
+                                   Long taxId, String taxCode, String taxName, BigDecimal taxRate,
+                                   TaxCalculationMode taxCalculationMode,
+                                   String note, List<PoLineInput> lines) {
         PurchaseOrderType effectivePoType = poType != null ? poType : PurchaseOrderType.DIRECT;
         Long normalizedPrId = effectivePoType == PurchaseOrderType.STANDARD ? prId : null;
         List<PoLineInput> normalizedLines = lines != null ? lines : List.of();
@@ -54,7 +58,9 @@ public class CreatePurchaseOrderUseCaseImpl implements CreatePurchaseOrderUseCas
 
         PurchaseOrder po = PurchaseOrder.createNew(
                 code, orderDate, expectedDate, supplierId, facilityId,
-                currencyId, exchangeRate, paymentTermDays, normalizedPrId, effectivePoType, note, domainLines
+                currencyId, exchangeRate, paymentTermDays, normalizedPrId, effectivePoType,
+                taxId, taxCode, taxName, taxRate, taxCalculationMode,
+                note, domainLines
         );
         return repository.save(po);
     }

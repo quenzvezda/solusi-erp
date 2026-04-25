@@ -2,6 +2,7 @@ package com.solusi.erp.purchasing.purchaseorder.domain.model;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.exception.DomainException;
+import com.solusi.erp.master.tax.domain.model.TaxCalculationMode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -99,6 +100,53 @@ class PurchaseOrderTest {
             assertThat(po.getSubtotal()).isEqualByComparingTo("1000");
             assertThat(po.getTaxAmount()).isEqualByComparingTo("110");
             assertThat(po.getTotalAmount()).isEqualByComparingTo("1110");
+        }
+
+        @Test
+        @DisplayName("inclusive tax keeps line total gross and extracts DPP")
+        void inclusiveTax_keepsGrossAndExtractsBase() {
+            PurchaseOrderLine line = new PurchaseOrderLine(
+                    AuditMetadata.empty(), null,
+                    1L, new BigDecimal("1"), BigDecimal.ZERO, 1L,
+                    new BigDecimal("10000.00"), BigDecimal.ZERO,
+                    null, null
+            );
+
+            PurchaseOrder po = PurchaseOrder.createNew(
+                    "PO-001", LocalDate.of(2026, 7, 14), null,
+                    1L, null, 1L, BigDecimal.ONE, 30, null, PurchaseOrderType.DIRECT,
+                    10L, "PPN-IN", "PPN 11% Inclusive", new BigDecimal("11.00"),
+                    TaxCalculationMode.INCLUSIVE, null, List.of(line)
+            );
+
+            assertThat(po.getSubtotal()).isEqualByComparingTo("9009.0090");
+            assertThat(po.getTaxAmount()).isEqualByComparingTo("990.9910");
+            assertThat(po.getTotalAmount()).isEqualByComparingTo("10000.0000");
+            assertThat(po.getTaxId()).isEqualTo(10L);
+            assertThat(po.getTaxCalculationMode()).isEqualTo(TaxCalculationMode.INCLUSIVE);
+        }
+
+        @Test
+        @DisplayName("exclusive tax adds tax on top of net base")
+        void exclusiveTax_addsTaxOnTopOfNetBase() {
+            PurchaseOrderLine line = new PurchaseOrderLine(
+                    AuditMetadata.empty(), null,
+                    1L, new BigDecimal("2"), BigDecimal.ZERO, 1L,
+                    new BigDecimal("100.00"), BigDecimal.ZERO,
+                    null, null
+            );
+
+            PurchaseOrder po = PurchaseOrder.createNew(
+                    "PO-002", LocalDate.of(2026, 7, 14), null,
+                    1L, null, 1L, BigDecimal.ONE, 30, null, PurchaseOrderType.DIRECT,
+                    11L, "PPN-EX", "PPN 11% Exclusive", new BigDecimal("11.00"),
+                    TaxCalculationMode.EXCLUSIVE, null, List.of(line)
+            );
+
+            assertThat(po.getSubtotal()).isEqualByComparingTo("200.0000");
+            assertThat(po.getTaxAmount()).isEqualByComparingTo("22.0000");
+            assertThat(po.getTotalAmount()).isEqualByComparingTo("222.0000");
+            assertThat(po.getTaxCode()).isEqualTo("PPN-EX");
         }
 
         @Test

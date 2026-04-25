@@ -1,6 +1,7 @@
 package com.solusi.erp.purchasing.purchaseorder.web.dto;
 
 import com.solusi.erp.core.dto.BaseAuditResponse;
+import com.solusi.erp.master.tax.domain.model.TaxCalculationMode;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderStatus;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderType;
 import lombok.Data;
@@ -32,6 +33,11 @@ public class PurchaseOrderDetailResponse extends BaseAuditResponse {
     private int paymentTermDays;
     private Long prId;
     private PurchaseOrderType poType;
+    private Long taxId;
+    private String taxCode;
+    private String taxName;
+    private BigDecimal taxRate;
+    private TaxCalculationMode taxCalculationMode;
     private String note;
     private List<PurchaseOrderLineResponse> lines;
 }

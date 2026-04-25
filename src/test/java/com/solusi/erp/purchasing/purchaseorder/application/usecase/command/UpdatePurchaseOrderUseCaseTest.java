@@ -2,6 +2,7 @@ package com.solusi.erp.purchasing.purchaseorder.application.usecase.command;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.exception.DomainException;
+import com.solusi.erp.master.tax.domain.model.TaxCalculationMode;
 import com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisition;
 import com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisitionLine;
 import com.solusi.erp.purchasing.purchaserequisition.domain.model.PurchaseRequisitionPriority;
@@ -177,5 +178,34 @@ class UpdatePurchaseOrderUseCaseTest {
                 new BigDecimal("750.00"), BigDecimal.ZERO, 100L, "Updated line"))
         )).isInstanceOf(DomainException.class)
             .hasMessage("msg.error.po.standard.header.mismatch");
+    }
+
+    @Test
+    @DisplayName("execute updates header tax snapshot and recalculates totals")
+    void execute_updatesHeaderTaxSnapshotAndTotals() {
+        PurchaseOrder existing = createDraftPo();
+        when(repository.findById(1L)).thenReturn(Optional.of(existing));
+        when(repository.save(any(PurchaseOrder.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        List<PoLineInput> newLines = List.of(
+                new PoLineInput(2L, new BigDecimal("2"), 2L,
+                        new BigDecimal("100.00"), BigDecimal.ZERO, null, "Updated line")
+        );
+
+        PurchaseOrder result = useCase.execute(
+                1L,
+                LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 15),
+                5L, 6L, new BigDecimal("2"), 45,
+                11L, "PPN-EX", "PPN 11% Exclusive", new BigDecimal("11.00"),
+                TaxCalculationMode.EXCLUSIVE,
+                "Updated note", newLines
+        );
+
+        assertThat(result.getTaxId()).isEqualTo(11L);
+        assertThat(result.getTaxCode()).isEqualTo("PPN-EX");
+        assertThat(result.getTaxCalculationMode()).isEqualTo(TaxCalculationMode.EXCLUSIVE);
+        assertThat(result.getSubtotal()).isEqualByComparingTo("200.0000");
+        assertThat(result.getTaxAmount()).isEqualByComparingTo("22.0000");
+        assertThat(result.getTotalAmount()).isEqualByComparingTo("222.0000");
     }
 }

@@ -15,6 +15,14 @@ document.addEventListener('DOMContentLoaded', function () {
     var supplierSelect = document.getElementById('header-supplier');
     var facilitySelect = document.getElementById('header-facility');
     var currencySelect = document.getElementById('header-currency');
+    var taxSelect = document.getElementById('header-tax');
+    var summaryDppEl = document.getElementById('po-summary-dpp');
+    var summaryTaxEl = document.getElementById('po-summary-tax');
+    var summaryGrandTotalEl = document.getElementById('po-summary-grand-total');
+    var taxCodeInput = document.querySelector('[name="taxCode"]');
+    var taxNameInput = document.querySelector('[name="taxName"]');
+    var taxRateHeaderInput = document.querySelector('[name="taxRate"]');
+    var taxCalculationModeInput = document.querySelector('[name="taxCalculationMode"]');
 
     var drawerEl = document.getElementById('drawer-line-detail');
     var drawerInstance = null;
@@ -137,6 +145,106 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateEmptyMessage() {
         if (!emptyMsg || !lineContainer) return;
         emptyMsg.style.display = lineContainer.querySelectorAll('.line-row').length > 0 ? 'none' : '';
+        recalculateOrderSummary();
+    }
+
+    function getLookupValue(selectEl) {
+        if (!selectEl) return '';
+        return selectEl.tomselect ? selectEl.tomselect.getValue() : (selectEl.value || '');
+    }
+
+    function parseDecimalValue(value) {
+        if (value === null || value === undefined) return 0;
+        return parseFloat(String(value).replace(/,/g, '')) || 0;
+    }
+
+    function parseInputDecimal(input) {
+        if (!input) return 0;
+        return parseDecimalValue(input.value);
+    }
+
+    function formatSummaryValue(value) {
+        return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function recalculateOrderSummary() {
+        var dpp = 0;
+        var tax = 0;
+        var grandTotal = 0;
+
+        if (lineContainer) {
+            lineContainer.querySelectorAll('.line-row').forEach(function (row) {
+                dpp += parseInputDecimal(row.querySelector('[name$=".lineSubtotal"]'));
+                tax += parseInputDecimal(row.querySelector('[name$=".lineTax"]'));
+                grandTotal += parseInputDecimal(row.querySelector('[name$=".lineTotal"]'));
+            });
+        }
+
+        if (summaryDppEl) summaryDppEl.textContent = formatSummaryValue(dpp);
+        if (summaryTaxEl) summaryTaxEl.textContent = formatSummaryValue(tax);
+        if (summaryGrandTotalEl) summaryGrandTotalEl.textContent = formatSummaryValue(grandTotal);
+    }
+
+    function isDerivedRow(row) {
+        if (!row) return false;
+        var prLineInput = row.querySelector('.input-pr-line-id');
+        return row.dataset.derived === 'true' || !!(prLineInput && prLineInput.value);
+    }
+
+    function resolveProductPayload(selectEl, productId) {
+        if (!selectEl || !productId) return Promise.resolve(null);
+
+        var productTs = selectEl.tomselect;
+        var selected = productTs ? productTs.options[productId] : null;
+        var payload = selected && selected.payload;
+        if (payload && payload.uomId) {
+            return Promise.resolve(payload);
+        }
+
+        return fetch('/api/lookup/inventory/products/' + encodeURIComponent(productId), {
+            headers: { Accept: 'application/json' }
+        })
+            .then(function (response) { return response.json(); })
+            .then(function (data) { return data && data.payload ? data.payload : null; })
+            .catch(function () { return null; });
+    }
+
+    function syncManualRowProductUom(row) {
+        if (!row) return;
+        if (getSelectedPoType() !== 'DIRECT') return;
+        if (isDerivedRow(row)) return;
+
+        var productSelect = row.querySelector('.select-product');
+        var uomSelect = row.querySelector('.select-uom');
+        if (!productSelect || !uomSelect) return;
+
+        var productId = getLookupValue(productSelect);
+        if (!productId) {
+            clearLookupValue(uomSelect);
+            return;
+        }
+
+        resolveProductPayload(productSelect, productId).then(function (payload) {
+            if (!payload || !payload.uomId) {
+                clearLookupValue(uomSelect);
+                return;
+            }
+            setLookupValue(uomSelect, payload.uomId, payload.uomName, payload.uomSubtext || payload.uomCode, true);
+        });
+    }
+
+    function attachManualRowProductUomSync(row) {
+        var productSelect = row.querySelector('.select-product');
+        if (!productSelect || productSelect.dataset.uomSyncBound === 'true') return;
+
+        waitForLookupReady(productSelect, function (productTs) {
+            if (!productTs || productSelect.dataset.uomSyncBound === 'true') return;
+            productSelect.dataset.uomSyncBound = 'true';
+            productTs.on('change', function () {
+                syncManualRowProductUom(row);
+            });
+            syncManualRowProductUom(row);
+        });
     }
 
     function recalculateLineRow(row) {
@@ -149,23 +257,59 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var qty = parseFloat((qtyInput.value || '0').replace(/,/g, '')) || 0;
         var price = parseFloat((priceInput.value || '0').replace(/,/g, '')) || 0;
-        var taxRate = taxRateInput ? (parseFloat((taxRateInput.value || '0').replace(/,/g, '')) || 0) : 0;
-
-        var subtotal = qty * price;
-        var tax = subtotal * taxRate;
-        var total = subtotal + tax;
+        var headerRate = taxRateHeaderInput ? (parseFloat((taxRateHeaderInput.value || '0').replace(/,/g, '')) || 0) : 0;
+        var normalizedRate = headerRate / 100;
+        var mode = taxCalculationModeInput ? taxCalculationModeInput.value : 'EXCLUSIVE';
+        var gross = qty * price;
+        var subtotal = mode === 'INCLUSIVE' && normalizedRate > 0 ? gross / (1 + normalizedRate) : gross;
+        var tax = mode === 'INCLUSIVE' && normalizedRate > 0 ? gross - subtotal : subtotal * normalizedRate;
+        var total = mode === 'INCLUSIVE' && normalizedRate > 0 ? gross : subtotal + tax;
 
         var subtotalInput = row.querySelector('[name$=".lineSubtotal"]');
         var taxInput = row.querySelector('[name$=".lineTax"]');
         var totalInput = row.querySelector('[name$=".lineTotal"]');
 
-        if (subtotalInput) subtotalInput.value = subtotal.toFixed(2);
-        if (taxInput) taxInput.value = tax.toFixed(2);
+        if (taxRateInput) taxRateInput.value = normalizedRate.toFixed(4);
+        if (subtotalInput) subtotalInput.value = subtotal.toFixed(4);
+        if (taxInput) taxInput.value = tax.toFixed(4);
         if (totalInput) {
-            totalInput.value = total.toFixed(2);
+            totalInput.value = total.toFixed(4);
             var autoNumeric = typeof AutoNumeric !== 'undefined' ? AutoNumeric.getAutoNumericElement(totalInput) : null;
             if (autoNumeric) autoNumeric.set(totalInput.value);
         }
+        recalculateOrderSummary();
+    }
+
+    function recalculateAllLineRows() {
+        if (!lineContainer) return;
+        lineContainer.querySelectorAll('.line-row').forEach(function (row) {
+            recalculateLineRow(row);
+        });
+    }
+
+    function syncHeaderTaxSelection() {
+        if (!taxSelect || !taxSelect.tomselect) return;
+        var value = taxSelect.tomselect.getValue();
+        if (!value) {
+            if (taxCodeInput) taxCodeInput.value = '';
+            if (taxNameInput) taxNameInput.value = '';
+            if (taxRateHeaderInput) taxRateHeaderInput.value = '0';
+            if (taxCalculationModeInput) taxCalculationModeInput.value = 'EXCLUSIVE';
+            recalculateAllLineRows();
+            return;
+        }
+
+        var option = taxSelect.tomselect.options[value] || {};
+        var payload = option.payload || {};
+        var currentCode = taxCodeInput ? taxCodeInput.value : '';
+        var currentName = taxNameInput ? taxNameInput.value : '';
+        var currentRate = taxRateHeaderInput ? taxRateHeaderInput.value : '0';
+        var currentMode = taxCalculationModeInput ? taxCalculationModeInput.value : 'EXCLUSIVE';
+        if (taxCodeInput) taxCodeInput.value = payload.code || currentCode || '';
+        if (taxNameInput) taxNameInput.value = option.name || currentName || '';
+        if (taxRateHeaderInput) taxRateHeaderInput.value = payload.rate || currentRate || '0';
+        if (taxCalculationModeInput) taxCalculationModeInput.value = payload.calculationMode || currentMode || 'EXCLUSIVE';
+        recalculateAllLineRows();
     }
 
     function clampQuantityToMax(qtyInput) {
@@ -212,6 +356,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         attachRowRecalculation(row);
         applyDerivedRowStateFromInputs(row);
+        attachManualRowProductUomSync(row);
         recalculateLineRow(row);
     }
 
@@ -486,6 +631,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     updateEmptyMessage();
                 }
             }
+        });
+    }
+
+    if (taxSelect) {
+        waitForLookupReady(taxSelect, function (ts) {
+            if (!ts) return;
+            ts.on('change', syncHeaderTaxSelection);
+            syncHeaderTaxSelection();
         });
     }
 

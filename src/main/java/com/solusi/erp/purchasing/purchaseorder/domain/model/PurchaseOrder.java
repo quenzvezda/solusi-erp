@@ -2,6 +2,7 @@ package com.solusi.erp.purchasing.purchaseorder.domain.model;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.exception.DomainException;
+import com.solusi.erp.master.tax.domain.model.TaxCalculationMode;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -26,6 +27,11 @@ public class PurchaseOrder {
     private int paymentTermDays;
     private final Long prId;
     private final PurchaseOrderType poType;
+    private Long taxId;
+    private String taxCode;
+    private String taxName;
+    private BigDecimal taxRate;
+    private TaxCalculationMode taxCalculationMode;
     private String note;
     private boolean active;
     private List<PurchaseOrderLine> lines;
@@ -37,6 +43,25 @@ public class PurchaseOrder {
                           BigDecimal subtotal, BigDecimal taxAmount, BigDecimal totalAmount,
                           PurchaseOrderStatus status,
                           int paymentTermDays, Long prId, PurchaseOrderType poType,
+                          String note, boolean active,
+                          List<PurchaseOrderLine> lines) {
+        this(
+                metadata, code, orderDate, expectedDate, supplierId, facilityId, currencyId,
+                exchangeRate, subtotal, taxAmount, totalAmount, status, paymentTermDays, prId, poType,
+                null, null, null, BigDecimal.ZERO, TaxCalculationMode.EXCLUSIVE,
+                note, active, lines
+        );
+    }
+
+    public PurchaseOrder(AuditMetadata metadata, String code,
+                          LocalDate orderDate, LocalDate expectedDate,
+                          Long supplierId, Long facilityId, Long currencyId,
+                          BigDecimal exchangeRate,
+                          BigDecimal subtotal, BigDecimal taxAmount, BigDecimal totalAmount,
+                          PurchaseOrderStatus status,
+                          int paymentTermDays, Long prId, PurchaseOrderType poType,
+                          Long taxId, String taxCode, String taxName, BigDecimal taxRate,
+                          TaxCalculationMode taxCalculationMode,
                           String note, boolean active,
                           List<PurchaseOrderLine> lines) {
         this.metadata = metadata;
@@ -54,9 +79,27 @@ public class PurchaseOrder {
         this.paymentTermDays = paymentTermDays;
         this.prId = prId;
         this.poType = poType != null ? poType : PurchaseOrderType.DIRECT;
+        this.taxId = taxId;
+        this.taxCode = taxCode;
+        this.taxName = taxName;
+        this.taxRate = taxRate != null ? taxRate : BigDecimal.ZERO;
+        this.taxCalculationMode = taxCalculationMode != null ? taxCalculationMode : TaxCalculationMode.EXCLUSIVE;
         this.note = note;
         this.active = active;
         this.lines = lines != null ? new ArrayList<>(lines) : new ArrayList<>();
+    }
+
+    public static PurchaseOrder createNew(String code, LocalDate orderDate,
+                                           LocalDate expectedDate,
+                                            Long supplierId, Long facilityId,
+                                            Long currencyId, BigDecimal exchangeRate,
+                                            int paymentTermDays, Long prId,
+                                            PurchaseOrderType poType,
+                                            String note,
+                                            List<PurchaseOrderLine> lines) {
+        return createNew(code, orderDate, expectedDate, supplierId, facilityId, currencyId, exchangeRate,
+                paymentTermDays, prId, poType, null, null, null, BigDecimal.ZERO,
+                TaxCalculationMode.EXCLUSIVE, note, lines);
     }
 
     public static PurchaseOrder createNew(String code, LocalDate orderDate,
@@ -65,6 +108,8 @@ public class PurchaseOrder {
                                            Long currencyId, BigDecimal exchangeRate,
                                            int paymentTermDays, Long prId,
                                            PurchaseOrderType poType,
+                                           Long taxId, String taxCode, String taxName, BigDecimal taxRate,
+                                           TaxCalculationMode taxCalculationMode,
                                            String note,
                                            List<PurchaseOrderLine> lines) {
         validateExchangeRate(exchangeRate);
@@ -76,7 +121,9 @@ public class PurchaseOrder {
             supplierId, facilityId, currencyId, exchangeRate,
             BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
             PurchaseOrderStatus.DRAFT,
-            paymentTermDays, prId, poType, note, true,
+            paymentTermDays, prId, poType,
+            taxId, taxCode, taxName, taxRate, taxCalculationMode,
+            note, true,
             lines
         );
         po.recalculateTotals();
@@ -87,6 +134,16 @@ public class PurchaseOrder {
                        Long facilityId, Long currencyId,
                        BigDecimal exchangeRate, int paymentTermDays,
                        String note, List<PurchaseOrderLine> lines) {
+        update(orderDate, expectedDate, facilityId, currencyId, exchangeRate, paymentTermDays,
+                this.taxId, this.taxCode, this.taxName, this.taxRate, this.taxCalculationMode, note, lines);
+    }
+
+    public void update(LocalDate orderDate, LocalDate expectedDate,
+                       Long facilityId, Long currencyId,
+                       BigDecimal exchangeRate, int paymentTermDays,
+                       Long taxId, String taxCode, String taxName, BigDecimal taxRate,
+                       TaxCalculationMode taxCalculationMode,
+                       String note, List<PurchaseOrderLine> lines) {
         if (!status.canUpdate()) {
             throw new DomainException("msg.error.po.update.not.draft");
         }
@@ -96,6 +153,11 @@ public class PurchaseOrder {
         this.currencyId = currencyId;
         this.exchangeRate = exchangeRate;
         this.paymentTermDays = paymentTermDays;
+        this.taxId = taxId;
+        this.taxCode = taxCode;
+        this.taxName = taxName;
+        this.taxRate = taxRate != null ? taxRate : BigDecimal.ZERO;
+        this.taxCalculationMode = taxCalculationMode != null ? taxCalculationMode : TaxCalculationMode.EXCLUSIVE;
         this.note = note;
         this.lines = lines != null ? new ArrayList<>(lines) : new ArrayList<>();
         recalculateTotals();
@@ -141,6 +203,15 @@ public class PurchaseOrder {
     }
 
     private void recalculateTotals() {
+        if (hasHeaderTaxSnapshot()) {
+            BigDecimal normalizedRate = this.taxRate.movePointLeft(2);
+            TaxCalculationMode mode = this.taxCalculationMode != null
+                    ? this.taxCalculationMode
+                    : TaxCalculationMode.EXCLUSIVE;
+            this.lines = this.lines.stream()
+                    .map(line -> line.recalculate(normalizedRate, mode))
+                    .toList();
+        }
         this.subtotal = lines.stream()
             .map(PurchaseOrderLine::getLineSubtotal)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -148,6 +219,26 @@ public class PurchaseOrder {
             .map(PurchaseOrderLine::getLineTax)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
         this.totalAmount = this.subtotal.add(this.taxAmount);
+    }
+
+    public static PurchaseOrder rehydrate(AuditMetadata metadata, String code,
+                                          LocalDate orderDate, LocalDate expectedDate,
+                                          Long supplierId, Long facilityId, Long currencyId, BigDecimal exchangeRate,
+                                          BigDecimal subtotal, BigDecimal taxAmount, BigDecimal totalAmount,
+                                          PurchaseOrderStatus status, int paymentTermDays, Long prId, PurchaseOrderType poType,
+                                          Long taxId, String taxCode, String taxName, BigDecimal taxRate,
+                                          TaxCalculationMode taxCalculationMode,
+                                          String note, boolean active, List<PurchaseOrderLine> lines) {
+        return new PurchaseOrder(
+                metadata, code, orderDate, expectedDate, supplierId, facilityId, currencyId, exchangeRate,
+                subtotal, taxAmount, totalAmount, status, paymentTermDays, prId, poType,
+                taxId, taxCode, taxName, taxRate, taxCalculationMode, note, active, lines
+        );
+    }
+
+    private boolean hasHeaderTaxSnapshot() {
+        return taxId != null || taxCode != null || taxName != null
+                || (taxRate != null && taxRate.compareTo(BigDecimal.ZERO) > 0);
     }
 
     private static void validateExchangeRate(BigDecimal exchangeRate) {
@@ -184,6 +275,11 @@ public class PurchaseOrder {
     public int getPaymentTermDays() { return paymentTermDays; }
     public Long getPrId() { return prId; }
     public PurchaseOrderType getPoType() { return poType; }
+    public Long getTaxId() { return taxId; }
+    public String getTaxCode() { return taxCode; }
+    public String getTaxName() { return taxName; }
+    public BigDecimal getTaxRate() { return taxRate; }
+    public TaxCalculationMode getTaxCalculationMode() { return taxCalculationMode; }
     public String getNote() { return note; }
     public boolean isActive() { return active; }
     public List<PurchaseOrderLine> getLines() { return Collections.unmodifiableList(lines); }

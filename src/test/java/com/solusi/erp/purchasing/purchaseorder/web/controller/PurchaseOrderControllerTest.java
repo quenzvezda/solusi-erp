@@ -405,13 +405,21 @@ public class PurchaseOrderControllerTest {
         request.setCurrencyId(1L);
         request.setExchangeRate(BigDecimal.ONE);
         request.setPaymentTermDays(30);
+        request.setTaxId(10L);
+        request.setTaxCode("PPN-IN");
+        request.setTaxName("PPN 11% Inclusive");
+        request.setTaxRate(new BigDecimal("11.00"));
+        request.setTaxCalculationMode(com.solusi.erp.master.tax.domain.model.TaxCalculationMode.INCLUSIVE);
 
         ResponseEntity<ApiResponse<PurchaseOrderDetailResponse>> response = controller.create(request);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().isSuccess()).isTrue();
-        verify(createUc).execute(any(), any(), eq(100L), any(), eq(1L), any(), eq(30), any(), any(), any(), anyList());
+        verify(createUc).execute(any(), any(), eq(100L), any(), eq(1L), any(), eq(30), any(), any(),
+                eq(10L), eq("PPN-IN"), eq("PPN 11% Inclusive"), eq(new BigDecimal("11.00")),
+                eq(com.solusi.erp.master.tax.domain.model.TaxCalculationMode.INCLUSIVE),
+                any(), anyList());
     }
 
     @Test
@@ -432,11 +440,19 @@ public class PurchaseOrderControllerTest {
         request.setCurrencyId(1L);
         request.setExchangeRate(BigDecimal.ONE);
         request.setPaymentTermDays(30);
+        request.setTaxId(11L);
+        request.setTaxCode("PPN-EX");
+        request.setTaxName("PPN 11% Exclusive");
+        request.setTaxRate(new BigDecimal("11.00"));
+        request.setTaxCalculationMode(com.solusi.erp.master.tax.domain.model.TaxCalculationMode.EXCLUSIVE);
 
         ResponseEntity<ApiResponse<PurchaseOrderDetailResponse>> response = controller.update(1L, request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(updateUc).execute(eq(1L), any(), any(), any(), any(), any(), eq(30), any(), anyList());
+        verify(updateUc).execute(eq(1L), any(), any(), any(), any(), any(), eq(30),
+                eq(11L), eq("PPN-EX"), eq("PPN 11% Exclusive"), eq(new BigDecimal("11.00")),
+                eq(com.solusi.erp.master.tax.domain.model.TaxCalculationMode.EXCLUSIVE),
+                any(), anyList());
     }
 
     @Test

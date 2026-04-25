@@ -129,6 +129,54 @@ class PurchaseOrderFormIntegrationTest {
         assertThat(template).doesNotContain("btn-edit-line");
     }
 
+    @Test
+    @DisplayName("form template renders header tax lookup and removes manual line tax drawer")
+    void formTemplate_rendersHeaderTaxLookupAndRemovesManualLineTaxDrawer() throws Exception {
+        String template = readResource("templates/purchasing/purchase-orders/form.html");
+
+        assertThat(template).contains("name=\"taxId\"");
+        assertThat(template).contains("name=\"taxRate\"");
+        assertThat(template).contains("name=\"taxCalculationMode\"");
+        assertThat(template).contains("master/taxes");
+        assertThat(template).doesNotContain("id=\"drawer-tax-rate\"");
+    }
+
+    @Test
+    @DisplayName("form template renders right-side DPP tax and grand total summary card")
+    void formTemplate_rendersRightSideDppTaxAndGrandTotalSummaryCard() throws Exception {
+        String template = readResource("templates/purchasing/purchase-orders/form.html");
+        String script = readResource("static/js/purchasing/purchase-order-form.js");
+
+        assertThat(template).contains("id=\"po-summary-dpp\"");
+        assertThat(template).contains("id=\"po-summary-tax\"");
+        assertThat(template).contains("id=\"po-summary-grand-total\"");
+        assertThat(script).contains("function recalculateOrderSummary()");
+        assertThat(script).contains("recalculateOrderSummary();");
+    }
+
+    @Test
+    @DisplayName("direct manual line product selection auto fills and locks the UoM lookup")
+    void directManualLine_productSelectionAutoFillsAndLocksTheUomLookup() throws Exception {
+        String script = readResource("static/js/purchasing/purchase-order-form.js");
+
+        assertThat(script).contains("function syncManualRowProductUom(row)");
+        assertThat(script).contains("function resolveProductPayload(selectEl, productId)");
+        assertThat(script).contains("setLookupValue(uomSelect, payload.uomId, payload.uomName, payload.uomSubtext, true);");
+        assertThat(script).contains("clearLookupValue(uomSelect);");
+        assertThat(script).contains("if (getSelectedPoType() !== 'DIRECT') return;");
+    }
+
+    @Test
+    @DisplayName("preedit tax initialization keeps existing header tax snapshot when lookup payload is missing")
+    void preeditTaxInitialization_keepsExistingHeaderTaxSnapshotWhenLookupPayloadIsMissing() throws Exception {
+        String script = readResource("static/js/purchasing/purchase-order-form.js");
+
+        assertThat(script).contains("var currentRate = taxRateHeaderInput ? taxRateHeaderInput.value : '0';");
+        assertThat(script).contains("var currentMode = taxCalculationModeInput ? taxCalculationModeInput.value : 'EXCLUSIVE';");
+        assertThat(script).contains("if (taxRateHeaderInput) taxRateHeaderInput.value = payload.rate || currentRate || '0';");
+        assertThat(script).contains("if (taxCalculationModeInput) taxCalculationModeInput.value = payload.calculationMode || currentMode || 'EXCLUSIVE';");
+    }
+
     private String readResource(String path) throws Exception {
         InputStream is = getClass().getClassLoader().getResourceAsStream(path);
         assertThat(is).as("Resource not found: %s", path).isNotNull();

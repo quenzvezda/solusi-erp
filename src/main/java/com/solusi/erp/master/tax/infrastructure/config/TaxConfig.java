@@ -1,9 +1,11 @@
 package com.solusi.erp.master.tax.infrastructure.config;
 
 import com.solusi.erp.master.tax.application.usecase.command.*;
+import com.solusi.erp.master.tax.domain.port.TaxLookupProvider;
 import com.solusi.erp.master.tax.application.usecase.query.*;
 import com.solusi.erp.master.tax.domain.port.TaxInUseChecker;
 import com.solusi.erp.master.tax.domain.repository.TaxRepository;
+import com.solusi.erp.master.tax.infrastructure.adapter.TaxLookupProviderImpl;
 import com.solusi.erp.master.tax.infrastructure.adapter.TaxInUseCheckerImpl;
 import com.solusi.erp.master.tax.infrastructure.adapter.TaxRepositoryImpl;
 import com.solusi.erp.master.tax.infrastructure.persistence.TaxPersistenceMapper;
@@ -32,8 +34,8 @@ public class TaxConfig {
             PlatformTransactionManager txManager) {
         CreateTaxUseCase pure = new CreateTaxUseCaseImpl(taxDomainRepository);
         TransactionTemplate tx = new TransactionTemplate(txManager);
-        return (code, name, rate, note, isSubtract, isActive) ->
-                tx.execute(status -> pure.execute(code, name, rate, note, isSubtract, isActive));
+        return (code, name, rate, note, isSubtract, isActive, calculationMode) ->
+                tx.execute(status -> pure.execute(code, name, rate, note, isSubtract, isActive, calculationMode));
     }
 
     @Bean
@@ -42,8 +44,8 @@ public class TaxConfig {
             PlatformTransactionManager txManager) {
         UpdateTaxUseCase pure = new UpdateTaxUseCaseImpl(taxDomainRepository);
         TransactionTemplate tx = new TransactionTemplate(txManager);
-        return (id, name, rate, note, isSubtract, isActive) ->
-                tx.execute(status -> pure.execute(id, name, rate, note, isSubtract, isActive));
+        return (id, name, rate, note, isSubtract, isActive, calculationMode) ->
+                tx.execute(status -> pure.execute(id, name, rate, note, isSubtract, isActive, calculationMode));
     }
 
     @Bean
@@ -79,6 +81,32 @@ public class TaxConfig {
         TransactionTemplate tx = new TransactionTemplate(txManager);
         tx.setReadOnly(true);
         return (id) -> tx.execute(status -> pure.execute(id));
+    }
+
+    @Bean
+    public GetTaxLookupUseCase getTaxLookupUseCase(
+            com.solusi.erp.master.tax.infrastructure.persistence.TaxJpaRepository taxJpaRepository,
+            PlatformTransactionManager txManager) {
+        GetTaxLookupUseCase pure = new GetTaxLookupUseCaseImpl(taxJpaRepository);
+        TransactionTemplate tx = new TransactionTemplate(txManager);
+        tx.setReadOnly(true);
+        return new GetTaxLookupUseCase() {
+            @Override
+            public java.util.List<com.solusi.erp.core.dto.LookupDto> search(String q, int limit) {
+                return tx.execute(status -> pure.search(q, limit));
+            }
+
+            @Override
+            public com.solusi.erp.core.dto.LookupDto getById(Long id) {
+                return tx.execute(status -> pure.getById(id));
+            }
+        };
+    }
+
+    @Bean
+    public TaxLookupProvider taxLookupProvider(
+            com.solusi.erp.master.tax.infrastructure.persistence.TaxJpaRepository taxJpaRepository) {
+        return new TaxLookupProviderImpl(taxJpaRepository);
     }
 }
 

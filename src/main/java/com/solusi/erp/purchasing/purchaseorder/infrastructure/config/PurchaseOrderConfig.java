@@ -6,6 +6,7 @@ import com.solusi.erp.inventory.product.domain.port.ProductLookupProvider;
 import com.solusi.erp.inventory.uom.domain.port.UomLookupProvider;
 import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
 import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
+import com.solusi.erp.master.tax.domain.model.TaxCalculationMode;
 import com.solusi.erp.purchasing.purchaserequisition.domain.repository.PurchaseRequisitionRepository;
 import com.solusi.erp.purchasing.purchaserequisition.infrastructure.persistence.PurchaseRequisitionJpaRepository;
 import com.solusi.erp.purchasing.purchaseorder.application.usecase.command.*;
@@ -40,9 +41,11 @@ public class PurchaseOrderConfig {
             purchaseOrderDomainRepository, sequenceGeneratorService, purchaseRequisitionRepository);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         return (orderDate, expectedDate, supplierId, facilityId, currencyId,
-                exchangeRate, paymentTermDays, prId, poType, note, lines) ->
+                exchangeRate, paymentTermDays, prId, poType,
+                taxId, taxCode, taxName, taxRate, taxCalculationMode, note, lines) ->
             tx.execute(status -> pure.execute(orderDate, expectedDate, supplierId,
-                facilityId, currencyId, exchangeRate, paymentTermDays, prId, poType, note, lines));
+                facilityId, currencyId, exchangeRate, paymentTermDays, prId, poType,
+                taxId, taxCode, taxName, taxRate, taxCalculationMode, note, lines));
     }
 
     @Bean
@@ -54,9 +57,11 @@ public class PurchaseOrderConfig {
             purchaseOrderDomainRepository, purchaseRequisitionRepository);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         return (id, orderDate, expectedDate, facilityId, currencyId,
-                exchangeRate, paymentTermDays, note, lines) ->
+                exchangeRate, paymentTermDays,
+                taxId, taxCode, taxName, taxRate, taxCalculationMode, note, lines) ->
             tx.execute(status -> pure.execute(id, orderDate, expectedDate,
-                facilityId, currencyId, exchangeRate, paymentTermDays, note, lines));
+                facilityId, currencyId, exchangeRate, paymentTermDays,
+                taxId, taxCode, taxName, taxRate, taxCalculationMode, note, lines));
     }
 
     @Bean

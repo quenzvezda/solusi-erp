@@ -2,6 +2,7 @@ package com.solusi.erp.purchasing.purchaseorder.domain.model;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.exception.DomainException;
+import com.solusi.erp.master.tax.domain.model.TaxCalculationMode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -126,6 +127,42 @@ class PurchaseOrderLineTest {
 
             line.setHeaderId(42L);
             assertThat(line.getHeaderId()).isEqualTo(42L);
+        }
+
+        @Test
+        @DisplayName("recalculate with inclusive tax extracts base from gross")
+        void recalculate_inclusive_extractsBaseFromGross() {
+            PurchaseOrderLine line = new PurchaseOrderLine(
+                    AuditMetadata.empty(), null,
+                    1L, new BigDecimal("1"), BigDecimal.ZERO, 1L,
+                    new BigDecimal("10000.00"), BigDecimal.ZERO,
+                    null, null
+            );
+
+            PurchaseOrderLine recalculated = line.recalculate(new BigDecimal("0.11"), TaxCalculationMode.INCLUSIVE);
+
+            assertThat(recalculated.getTaxRate()).isEqualByComparingTo("0.11");
+            assertThat(recalculated.getLineSubtotal()).isEqualByComparingTo("9009.0090");
+            assertThat(recalculated.getLineTax()).isEqualByComparingTo("990.9910");
+            assertThat(recalculated.getLineTotal()).isEqualByComparingTo("10000.0000");
+        }
+
+        @Test
+        @DisplayName("recalculate with exclusive tax adds tax on top of base")
+        void recalculate_exclusive_addsTaxOnTopOfBase() {
+            PurchaseOrderLine line = new PurchaseOrderLine(
+                    AuditMetadata.empty(), null,
+                    1L, new BigDecimal("2"), BigDecimal.ZERO, 1L,
+                    new BigDecimal("100.00"), BigDecimal.ZERO,
+                    null, null
+            );
+
+            PurchaseOrderLine recalculated = line.recalculate(new BigDecimal("0.11"), TaxCalculationMode.EXCLUSIVE);
+
+            assertThat(recalculated.getTaxRate()).isEqualByComparingTo("0.11");
+            assertThat(recalculated.getLineSubtotal()).isEqualByComparingTo("200.0000");
+            assertThat(recalculated.getLineTax()).isEqualByComparingTo("22.0000");
+            assertThat(recalculated.getLineTotal()).isEqualByComparingTo("222.0000");
         }
     }
 

@@ -98,6 +98,7 @@ public class PurchaseOrderController {
         request.setOrderDate(LocalDate.now());
         request.setExchangeRate(BigDecimal.ONE);
         request.setPaymentTermDays(30);
+        request.setTaxRate(BigDecimal.ZERO);
         model.addAttribute("poRequest", request);
         return "purchasing/purchase-orders/form";
     }
@@ -139,7 +140,10 @@ public class PurchaseOrderController {
             request.getSupplierId(), request.getFacilityId(),
             request.getCurrencyId(), request.getExchangeRate(),
             request.getPaymentTermDays(), request.getPrId(),
-            request.getPoType(), request.getNote(), lines
+            request.getPoType(),
+            request.getTaxId(), request.getTaxCode(), request.getTaxName(), request.getTaxRate(),
+            request.getTaxCalculationMode(),
+            request.getNote(), lines
         );
         PurchaseOrderDetailResponse data = webMapper.toDetailResponse(domain);
         String msg = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
@@ -173,6 +177,8 @@ public class PurchaseOrderController {
             id, request.getOrderDate(), request.getExpectedDate(),
             request.getFacilityId(), request.getCurrencyId(),
             request.getExchangeRate(), request.getPaymentTermDays(),
+            request.getTaxId(), request.getTaxCode(), request.getTaxName(), request.getTaxRate(),
+            request.getTaxCalculationMode(),
             request.getNote(), lines
         );
         PurchaseOrderDetailResponse data = webMapper.toDetailResponse(domain);
@@ -273,6 +279,13 @@ public class PurchaseOrderController {
         if (domain.getPrId() != null) {
             purchaseRequisitionRepository.findById(domain.getPrId())
                 .ifPresent(pr -> ui.put("prDisplay", pr.getCode()));
+        }
+
+        if (domain.getTaxId() != null || domain.getTaxCode() != null || domain.getTaxName() != null) {
+            ui.put("taxText", domain.getTaxName() != null ? domain.getTaxName() : domain.getTaxCode());
+            String subText = (domain.getTaxCode() != null ? domain.getTaxCode() : "")
+                    + (domain.getTaxCalculationMode() != null ? " - " + domain.getTaxCalculationMode().name() : "");
+            ui.put("taxSubtext", subText.strip());
         }
 
         return ui;

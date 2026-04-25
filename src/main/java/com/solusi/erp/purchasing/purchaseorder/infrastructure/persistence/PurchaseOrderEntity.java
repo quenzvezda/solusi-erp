@@ -1,6 +1,7 @@
 package com.solusi.erp.purchasing.purchaseorder.infrastructure.persistence;
 
 import com.solusi.erp.core.model.BaseModel;
+import com.solusi.erp.master.tax.domain.model.TaxCalculationMode;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderStatus;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderType;
 import jakarta.persistence.*;
@@ -38,6 +39,22 @@ public class PurchaseOrderEntity extends BaseModel {
 
     @Column(name = "exchange_rate", nullable = false, precision = 19, scale = 6)
     private BigDecimal exchangeRate;
+
+    @Column(name = "tax_id")
+    private Long taxId;
+
+    @Column(name = "tax_code", length = 50)
+    private String taxCode;
+
+    @Column(name = "tax_name", length = 150)
+    private String taxName;
+
+    @Column(name = "tax_rate", nullable = false, precision = 10, scale = 4)
+    private BigDecimal taxRate = BigDecimal.ZERO;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tax_calculation_mode", nullable = false, length = 20)
+    private TaxCalculationMode taxCalculationMode = TaxCalculationMode.EXCLUSIVE;
 
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal subtotal;
