@@ -2,6 +2,8 @@ package com.solusi.erp.common.approval.infrastructure.config;
 
 import com.solusi.erp.common.approval.application.port.ApprovalEventPublisher;
 import com.solusi.erp.common.approval.application.usecase.*;
+import com.solusi.erp.common.approval.application.usecase.query.FindApprovalRequestByReferenceUseCase;
+import com.solusi.erp.common.approval.application.usecase.query.FindApprovalRequestByReferenceUseCaseImpl;
 import com.solusi.erp.common.approval.domain.repository.ApprovalRequestRepository;
 import com.solusi.erp.common.approval.signature.application.usecase.GetApprovalSignatureUrlUseCase;
 import com.solusi.erp.common.approval.signature.application.usecase.GetApprovalSignatureUrlUseCaseImpl;
@@ -81,5 +83,11 @@ public class ApprovalConfig {
     public GetApprovalSignatureUrlUseCase getApprovalSignatureUrlUseCase(
             ApprovalSignatureRepository signatureRepository) {
         return new GetApprovalSignatureUrlUseCaseImpl(signatureRepository);
+    }
+
+    @Bean
+    public FindApprovalRequestByReferenceUseCase findApprovalRequestByReferenceUseCase(
+            ApprovalRequestRepository repository) {
+        return new FindApprovalRequestByReferenceUseCaseImpl(repository);
     }
 }

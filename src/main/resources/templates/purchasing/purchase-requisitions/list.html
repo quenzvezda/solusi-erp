@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.pr.title})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .pr-list-content}, ~{:: #page-specific-scripts})}">
+    <div class="pr-list-content">
+
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="#{label.pr.title}">Purchase Requisitions</h2>
+                        <div class="text-secondary mt-1" th:text="#{label.pr.subtitle}">
+                            Manage purchase requisition requests.
+                        </div>
+                    </div>
+                    <div class="col-auto ms-auto d-print-none" sec:authorize="hasAuthority('PR_CREATE')">
+                        <div class="btn-list">
+                            <a th:href="@{/purchasing/purchase-requisitions/create}" class="btn btn-primary d-none d-sm-inline-block">
+                                <i class="ti ti-plus icon"></i>
+                                <span th:text="#{label.pr.add}">Add Requisition</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+
+                <div th:replace="~{fragments/alerts :: success}"></div>
+                <div th:replace="~{fragments/alerts :: error}"></div>
+
+                <div class="card">
+                    <div class="card-body border-bottom py-3">
+                        <div class="d-flex">
+                            <div class="ms-auto text-secondary">
+                                <form th:action="@{/purchasing/purchase-requisitions}" method="get" class="input-icon"
+                                      hx-get="/purchasing/purchase-requisitions"
+                                      hx-target="#pr-table-container"
+                                      hx-trigger="keyup changed delay:500ms from:#search-input"
+                                      hx-push-url="true"
+                                      hx-include="[name='keyword'], [name='sort']">
+                                    <input type="text" id="search-input" name="keyword" th:value="${keyword}"
+                                           class="form-control form-control-sm"
+                                           th:placeholder="#{label.search} + '...'">
+                                    <span class="input-icon-addon">
+                                        <i class="ti ti-search"></i>
+                                    </span>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="pr-table-container" th:fragment="pr-table-container"
+                         hx-get="/purchasing/purchase-requisitions"
+                         hx-trigger="refresh-table from:body delay:500ms"
+                         hx-include="[name='keyword'], [name='page'], [name='sort']">
+                        <input type="hidden" name="page" th:value="${page.number}">
+                        <input type="hidden" name="sort" th:value="${sortField != null && !#strings.isEmpty(sortField) ? sortField + ',' + sortDir : ''}">
+
+                        <div class="table-responsive">
+                            <table class="table card-table table-vcenter text-nowrap datatable">
+                                <thead>
+                                    <tr>
+                                        <th th:replace="~{fragments/table :: sortable('code', #{label.pr.column.code})}">Code</th>
+                                        <th th:replace="~{fragments/table :: sortable('requestDate', #{label.pr.column.requestDate})}">Request Date</th>
+                                        <th th:replace="~{fragments/table :: sortable('req.name', #{label.pr.column.requester})}">Requester</th>
+                                        <th th:replace="~{fragments/table :: sortable('department', #{label.pr.column.department})}">Department</th>
+                                        <th th:replace="~{fragments/table :: sortable('priority', #{label.pr.column.priority})}">Priority</th>
+                                        <th th:replace="~{fragments/table :: sortable('status', #{label.pr.column.status})}">Status</th>
+                                        <th th:replace="~{fragments/table :: sortable('cur.alias', #{label.pr.column.currency})}">Currency</th>
+                                        <th class="text-end" th:text="#{label.actions}">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${page.content}" th:id="'row-' + ${item.id}">
+                                        <td><span class="font-weight-medium" th:text="${item.code}">PR-001</span></td>
+                                        <td th:text="${#temporals.format(item.requestDate, 'dd MMM yyyy')}">01 Jul 2026</td>
+                                        <td th:text="${item.requesterName}">Requester</td>
+                                        <td th:text="${item.department ?: '-'}">-</td>
+                                        <td>
+                                            <span class="badge"
+                                                  th:classappend="${item.priority.name() == 'LOW'} ? 'bg-secondary-lt' :
+                                                                   (${item.priority.name() == 'NORMAL'} ? 'bg-info-lt' :
+                                                                   (${item.priority.name() == 'HIGH'} ? 'bg-warning-lt' : 'bg-danger-lt'))"
+                                                  th:text="${item.priority}">NORMAL</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge"
+                                                  th:classappend="${item.status.name() == 'DRAFT'} ? 'bg-secondary-lt' :
+                                                                   (${item.status.name() == 'SUBMITTED'} ? 'bg-info-lt' :
+                                                                   (${item.status.name() == 'APPROVED'} ? 'bg-success-lt' :
+                                                                   (${item.status.name() == 'CANCELLED'} ? 'bg-warning-lt' :
+                                                                   (${item.status.name() == 'REJECTED'} ? 'bg-danger-lt' : 'bg-primary-lt'))))"
+                                                  th:text="${item.status}">DRAFT</span>
+                                        </td>
+                                        <td th:text="${item.currencyCode ?: '-'}">-</td>
+                                        <td>
+                                            <div class="btn-list flex-nowrap justify-content-end">
+                                                <a th:if="${item.status.name() == 'DRAFT'}"
+                                                   th:href="@{/purchasing/purchase-requisitions/edit/{id}(id=${item.id})}"
+                                                   class="btn btn-white btn-sm" sec:authorize="hasAuthority('PR_UPDATE')">
+                                                    <i class="ti ti-edit me-1"></i>
+                                                    <span th:text="#{label.edit}">Edit</span>
+                                                </a>
+                                                <a th:if="${item.status.name() != 'DRAFT'}"
+                                                   th:href="@{/purchasing/purchase-requisitions/view/{id}(id=${item.id})}"
+                                                   class="btn btn-white btn-sm" sec:authorize="hasAuthority('PR_READ')">
+                                                    <i class="ti ti-eye me-1"></i>
+                                                    <span th:text="#{label.view}">View</span>
+                                                </a>
+                                                <button th:if="${item.status.name() == 'DRAFT'}" type="button"
+                                                        class="btn btn-white btn-sm text-danger"
+                                                        sec:authorize="hasAuthority('PR_DELETE')"
+                                                        data-bs-toggle="modal"
+                                                        th:data-bs-target="'#modal-delete-' + ${item.id}">
+                                                    <i class="ti ti-trash me-1"></i>
+                                                    <span th:text="#{label.delete}">Delete</span>
+                                                </button>
+                                            </div>
+                                            <div th:if="${item.status.name() == 'DRAFT'}"
+                                                 th:replace="~{fragments/modals :: delete-confirm(
+                                                    id='modal-delete-' + ${item.id},
+                                                    title=#{label.delete.confirm.title},
+                                                    message=#{msg.delete.confirm(${item.code})},
+                                                    actionUrl='/purchasing/purchase-requisitions/' + ${item.id},
+                                                    targetId='#row-' + ${item.id}
+                                                )}"></div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${page.empty}">
+                                        <td colspan="8" class="text-center py-4 text-secondary" th:text="#{label.pr.empty}">
+                                            No purchase requisition data found.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="page-specific-scripts" th:fragment="pageScripts">
+    </div>
+</body>
+
+</html>

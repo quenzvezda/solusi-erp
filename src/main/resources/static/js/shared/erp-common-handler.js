@@ -307,8 +307,11 @@ function initLookup(el, lookupPath, parentProvider = null) {
  * Automatically initialize all lookups with data-lookup-path attribute
  */
 function initAllLookups(container = document) {
-    container.querySelectorAll('select.erp-input-ts[data-lookup-path]:not(.tomselect-initialized)').forEach(el => {
+    container.querySelectorAll('select[data-lookup-path]:not(.tomselect-initialized)').forEach(el => {
         initLookup(el, el.getAttribute('data-lookup-path'));
         el.classList.add('tomselect-initialized');
     });
 }
+
+window.ERP = window.ERP || {};
+window.ERP.initAutocompleteInContainer = initAllLookups;

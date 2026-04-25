@@ -114,6 +114,26 @@
     opacity: 0.5;
 }
 
+/* Fix: Constrain selected item width in line table autocomplete cells so
+   text overflows with ellipsis rather than expanding the column width.
+   Works in conjunction with table-layout:fixed on #table-lines. */
+.erp-input-ts-sm .ts-control {
+    overflow: hidden !important;
+}
+
+.erp-input-ts-sm .ts-control > .item {
+    overflow: hidden;
+    min-width: 0;
+    flex: 1 1 0%;
+}
+
+.erp-input-ts-sm .ts-control > .item > span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* Hide number spinners globally for a cleaner look */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {

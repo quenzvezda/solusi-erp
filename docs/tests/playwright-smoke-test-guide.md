@@ -1197,6 +1197,91 @@ await page.waitForTimeout(300);
 await selectLineItemTomSelect(page, 0, 'select-container', '');
 ```
 
+### 6.7 Blank/White Page atau Timeout pada Form Load (Template Error) ⭐ PENTING
+
+**Gejala:** 
+- Playwright MCP menunjukkan timeout saat load form
+- Browser menampilkan halaman putih/blank
+- "Internal Server Error" muncul di browser
+
+**Penyebab (SERING TERJADI):**
+- **Template/Thymeleaf error** — property tidak exist pada object yang di-render
+- Contoh: `${curr.code}` ketika Currency object hanya punya `symbol` dan `alias` property
+- Migration failure yang tidak sepenuhnya ter-apply
+- Backend method tidak mengirim object yang expected ke template
+
+**Debugging Steps (HARUS DIIKUTI SETIAP KALI TERJADI):**
+
+#### Step 1: Check Server Logs LANGSUNG (Prioritas #1)
+Jangan tunggu timeout selesai. Segera check server logs dari process yang running:
+
+```powershell
+# Jika server sedang berjalan di async shell
+read_powershell(shellId: "spring_boot_server", delay: 5)
+
+# Cari error pattern:
+# - "Exception processing template"
+# - "SpelEvaluationException"
+# - "Property or field X cannot be found"
+# - "Failed to initialize dependency"
+```
+
+**Contoh error yang terlihat di server logs:**
+```
+org.springframework.expression.spel.SpelEvaluationException: 
+EL1008E: Property or field 'code' cannot be found on object of type 
+'com.solusi.erp.master.currency.domain.model.Currency'
+	at org.thymeleaf.spring6.expression.SPELVariableExpressionEvaluator.evaluate(...)
+```
+
+#### Step 2: Check Browser Console Messages
+Jika server logs tidak menunjukkan error, check browser console:
+
+```
+browser_console_messages(level: "error")
+```
+
+#### Step 3: Inspect Network Requests
+Jika response status adalah 500, lihat apa yang di-return:
+
+```
+browser_network_requests(filter: "/purchasing.*", requestBody: true)
+```
+
+#### Step 4: Take Visual Screenshot (Terakhir)
+Screenshot hanya informatif jika server logs kosong. Gunakan untuk melihat error message yang di-render:
+
+```
+browser_take_screenshot(fullPage: true)
+```
+
+**PENTING:** **Server logs SELALU lebih informatif daripada browser UI karena full stack trace ada di server.**
+
+#### Contoh: Currency Property Error Fix
+
+**Error yang terlihat:**
+```
+Exception evaluating SpringEL expression: "curr.code"
+Property or field 'code' cannot be found on object of type Currency
+```
+
+**Solusi:**
+1. Check Currency domain model → lihat apa saja properties yang public
+2. Ganti template: `${curr.code}` → `${curr.alias}` (misalnya)
+3. Restart server
+4. Re-test form load
+
+**Prevention:**
+- Selalu check domain model properties sebelum menggunakan di template
+- Di Thymeleaf, gunakan `th:object` untuk auto-detect typo:
+  ```html
+  <div th:object="${currency}">
+    <!-- Thymeleaf akan warn jika property tidak exist -->
+    <span th:text="*{alias}"></span>  
+  </div>
+  ```
+- Validasi dengan TDD: buat test untuk template rendering sebelum manual testing
+
 ---
 
 ## 7. Checklist Smoke Test per Modul

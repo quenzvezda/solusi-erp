@@ -15,7 +15,7 @@
 2. [Architecture Principles](#architecture-principles)
 3. [Cross-Cutting Concerns](#cross-cutting-concerns)
 4. [Sprint 1: Accounting Foundation ✅](#sprint-1-accounting-foundation-)
-5. [Sprint 2–3: Procurement Operations](#sprint-2-3-procurement-operations)
+5. [Sprint 2–3: Procurement Operations](#sprint-23-procurement-operations)
 6. [Sprint 4: Goods Receipt & Inventory](#sprint-4-goods-receipt--inventory)
 7. [Sprint 5: Accounts Payable](#sprint-5-accounts-payable)
 8. [Sprint 6: Accounting Core](#sprint-6-accounting-core)

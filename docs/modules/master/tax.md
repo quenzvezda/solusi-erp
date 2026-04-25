@@ -6,6 +6,7 @@ Modul Tax merupakan master data yang digunakan untuk menyimpan dan mengelola ber
 ## 2. Fitur Utama
 *   **Manual Tax Code**: Berbeda dengan mayoritas modul lain, kode pajak (Tax Code) diinput secara manual oleh *user* (bukan *auto-generated*) untuk menyesuaikan dengan kode standar akuntansi atau regulasi pemerintah (contoh: `PPN11`).
 *   **Subtracting Flag (`isSubtract`)**: Mendukung *flag* khusus untuk menentukan apakah suatu pajak sifatnya memotong/mengurangi total nilai transaksi (seperti PPh) atau menambah total nilai transaksi (seperti PPN).
+*   **Calculation Mode**: Pajak kini memiliki mode hitung `EXCLUSIVE` atau `INCLUSIVE`. Mode ini dipakai terutama oleh modul procurement untuk menentukan apakah harga input PO masih perlu ditambah pajak atau justru sudah mengandung pajak.
 *   **Active/Inactive Toggle**: Mendukung aktivasi/deaktivasi data pajak secara dinamis dari form *create* maupun *edit* tanpa harus menghapus data.
 *   **Soft Delete**: Mendukung penghapusan halus (`isActive = false`) untuk mempertahankan integritas data historis pada transaksi lama yang menggunakan pajak tersebut.
 *   **Global Visibility**: Semua daftar pajak (aktif maupun tidak aktif) akan ditampilkan di halaman master data (*List View*) agar admin dapat memonitor atau mengaktifkan kembali pajak yang lama. Namun, pada *dropdown* transaksi, hanya pajak yang aktif (`isActive = true`) yang boleh dimunculkan.
@@ -14,12 +15,17 @@ Modul Tax merupakan master data yang digunakan untuk menyimpan dan mengelola ber
 1.  **Kode Pajak (Code)**: Wajib diisi, harus unik (tidak boleh duplikat di *database*), dan *read-only* saat mode *edit*.
 2.  **Nama Pajak (Name)**: Wajib diisi.
 3.  **Nilai Persentase (Rate)**: Wajib diisi dalam bentuk desimal (contoh: `11.00` untuk 11%). Tidak boleh bernilai negatif.
+4.  **Mode Perhitungan (Calculation Mode)**:
+    *   `EXCLUSIVE`: harga transaksi dianggap belum termasuk pajak; sistem menambahkan pajak di atas DPP.
+    *   `INCLUSIVE`: harga transaksi dianggap sudah termasuk pajak; sistem mengekstrak DPP dan nominal pajak dari nilai bruto.
+5.  **Lookup Transaksi**: Endpoint lookup hanya mengembalikan pajak aktif. Payload lookup menyertakan `code`, `rate`, dan `calculationMode` agar modul transaksi dapat menyimpan snapshot pajak pada dokumen.
 4.  **Hapus Data**: DILARANG keras menggunakan *Hard Delete*. Sistem menggunakan *Soft Delete* (flag `isActive = false`).
 5.  **Security/Permissions**:
     *   `TAX_READ`: Akses daftar dan detail pajak.
     *   `TAX_CREATE`: Akses menambah data pajak baru.
     *   `TAX_UPDATE`: Akses mengubah data pajak yang sudah ada.
     *   `TAX_DELETE`: Akses menghapus (soft-delete) data pajak.
+    *   `LOOKUP_TAX`: Akses lookup pajak aktif untuk modul procurement.
 
 ## 4. Panduan Implementasi UI
 ### Toggle Checkbox Handling (Spring Boot)

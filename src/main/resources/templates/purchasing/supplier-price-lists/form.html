@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout/master :: head(${splRequest.id == null
+    ? #messages.msg('label.spl.add')
+    : #messages.msg('label.spl.edit')})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .spl-form-content}, ~{:: #page-specific-scripts})}">
+    <div class="spl-form-content" id="spl-form-content" th:fragment="spl-form-content">
+
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="${splRequest.id == null
+                            ? #messages.msg('label.spl.add')
+                            : #messages.msg('label.spl.edit')}">
+                            Add Price List
+                        </h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+
+                <form th:action="${splRequest.id == null
+                        ? '/purchasing/supplier-price-lists/create'
+                        : '/purchasing/supplier-price-lists/edit/' + splRequest.id}"
+                    th:object="${splRequest}"
+                    method="post"
+                    class="card"
+                    id="spl-form"
+                    data-ajax-form="true"
+                    data-redirect-on-success="/purchasing/supplier-price-lists">
+
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                    <div class="card-body">
+                        <div class="alert-container"></div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.spl.code}, isReadonly=true, placeholder=${splRequest.id == null ? '[ Auto Generated ]' : ''})}"></div>
+
+                                <div th:replace="~{fragments/inputs :: autocomplete(field='supplierId', label=#{label.spl.supplier}, required=true, path='parties',
+                                    initialValue=${splRequest.supplierId}, initialText=${splUI != null ? splUI['supplierText'] : ''},
+                                    initialSubtext=${splUI != null ? splUI['supplierSubtext'] : ''})}"></div>
+
+                                <div th:replace="~{fragments/inputs :: autocomplete(field='productId', label=#{label.spl.product}, required=true, path='inventory/products',
+                                    initialValue=${splRequest.productId}, initialText=${splUI != null ? splUI['productText'] : ''},
+                                    initialSubtext=${splUI != null ? splUI['productSubtext'] : ''})}"></div>
+
+                                <div th:replace="~{fragments/inputs :: autocomplete(field='uomId', label=#{label.spl.uom}, required=true, path='inventory/uoms',
+                                    initialValue=${splRequest.uomId}, initialText=${splUI != null ? splUI['uomText'] : ''},
+                                    initialSubtext=${splUI != null ? splUI['uomSubtext'] : ''})}"></div>
+
+                                <div th:replace="~{fragments/inputs :: autocomplete(field='currencyId', label=#{label.spl.currency}, required=true, path='master/currencies',
+                                    initialValue=${splRequest.currencyId}, initialText=${splUI != null ? splUI['currencyText'] : ''},
+                                    initialSubtext=${splUI != null ? splUI['currencySubtext'] : ''})}"></div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div th:replace="~{fragments/inputs :: decimal(field='unitPrice', label=#{label.spl.unitPrice}, required=true)}"></div>
+
+                                <div th:replace="~{fragments/inputs :: decimal(field='minQuantity', label=#{label.spl.minQuantity}, required=true)}"></div>
+
+                                <div th:replace="~{fragments/inputs :: date(field='effectiveFrom', value=*{effectiveFrom}, label=#{label.spl.effectiveFrom}, required=true)}"></div>
+
+                                <div th:replace="~{fragments/inputs :: date(field='effectiveTo', value=*{effectiveTo}, label=#{label.spl.effectiveTo})}"></div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" th:text="#{label.spl.note}">Note</label>
+                                    <textarea th:field="*{note}" class="form-control erp-input" rows="3" th:placeholder="#{placeholder.spl.note}"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div th:if="${auditInfo != null and auditInfo.id != null}" th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
+                    </div>
+
+                    <div class="card-footer text-end">
+                        <div class="d-flex align-items-center">
+                            <div id="loading-indicator" class="spinner-border spinner-border-sm text-primary me-2" role="status" style="display: none;"></div>
+                            <a th:href="@{/purchasing/supplier-price-lists}" class="btn btn-link link-secondary" th:text="#{label.cancel}">Cancel</a>
+                            <button type="submit" class="btn btn-primary ms-auto">
+                                <i class="ti ti-device-floppy"></i>
+                                <span th:text="#{label.save}">Save</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="page-specific-scripts" th:fragment="pageScripts">
+        <script th:src="@{/js/purchasing/supplier-price-list-form.js}"></script>
+    </div>
+</body>
+
+</html>

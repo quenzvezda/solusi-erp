@@ -5,7 +5,9 @@ import com.solusi.erp.inventory.uom.application.usecase.command.*;
 import com.solusi.erp.inventory.uom.application.usecase.query.*;
 import com.solusi.erp.inventory.uom.domain.port.UomUsageChecker;
 import com.solusi.erp.inventory.uom.domain.repository.UomRepository;
+import com.solusi.erp.inventory.uom.domain.port.UomLookupProvider;
 import com.solusi.erp.inventory.uom.infrastructure.adapter.UomInUseCheckerComposite;
+import com.solusi.erp.inventory.uom.infrastructure.adapter.UomLookupProviderImpl;
 import com.solusi.erp.inventory.uom.infrastructure.adapter.UomRepositoryImpl;
 import com.solusi.erp.inventory.uom.infrastructure.persistence.UomJpaRepository;
 import com.solusi.erp.inventory.uom.infrastructure.persistence.UomPersistenceMapper;
@@ -22,6 +24,11 @@ import java.util.List;
  */
 @Configuration
 public class UomConfig {
+
+    @Bean
+    public UomLookupProvider uomLookupProvider(UomJpaRepository uomJpaRepository) {
+        return new UomLookupProviderImpl(uomJpaRepository);
+    }
 
     @Bean
     public UomInUseCheckerComposite uomInUseCheckerComposite(List<UomUsageChecker> checkers) {

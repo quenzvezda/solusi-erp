@@ -1,6 +1,7 @@
 package com.solusi.erp.master.tax.web.template.integration;
 
 import com.solusi.erp.master.tax.web.dto.TaxSaveRequest;
+import com.solusi.erp.master.tax.domain.model.TaxCalculationMode;
 import com.solusi.erp.testutils.TemplateTestUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -33,6 +34,7 @@ class TaxFormIntegrationTest {
         req.setRate(BigDecimal.valueOf(11));
         req.setIsActive(true);
         req.setIsSubtract(false);
+        req.setCalculationMode(TaxCalculationMode.EXCLUSIVE);
         return req;
     }
 
@@ -51,6 +53,7 @@ class TaxFormIntegrationTest {
                     TEMPLATE, Map.of("taxRequest", createRequest()), auth("TAX_CREATE"));
             assertThat(html).isNotBlank();
             assertThat(html).contains("/master/taxes/create");
+            assertThat(html).contains("name=\"calculationMode\"");
         });
     }
 
@@ -61,5 +64,6 @@ class TaxFormIntegrationTest {
                 TEMPLATE, Map.of("taxRequest", editRequest()), auth("TAX_UPDATE"));
         assertThat(html).isNotBlank();
         assertThat(html).contains("/master/taxes/edit/1");
+        assertThat(html).contains("name=\"calculationMode\"");
     }
 }

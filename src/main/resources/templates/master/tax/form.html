@@ -42,6 +42,16 @@
                                 <div th:replace="~{fragments/inputs :: text(field='name', label=#{label.tax.name}, required=true, placeholder=#{placeholder.tax.name})}"></div>
                                 
                                 <div th:replace="~{fragments/inputs :: decimal(field='rate', label=#{label.tax.rate}, required=true, placeholder=#{placeholder.tax.rate})}"></div>
+
+                                <div class="mb-3">
+                                    <label class="form-label required" th:text="#{label.tax.calculationMode}">Calculation Mode</label>
+                                    <select th:field="*{calculationMode}" name="calculationMode" class="form-select erp-input">
+                                        <option value="EXCLUSIVE"
+                                                th:text="#{label.tax.calculationMode.exclusive}">Exclusive</option>
+                                        <option value="INCLUSIVE"
+                                                th:text="#{label.tax.calculationMode.inclusive}">Inclusive</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <!-- Right Column: Settings -->

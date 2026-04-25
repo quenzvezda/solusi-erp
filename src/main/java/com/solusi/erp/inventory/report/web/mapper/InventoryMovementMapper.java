@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.report.web.mapper;
 
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.mapper.AuditMapperHelper;
 import com.solusi.erp.inventory.container.infrastructure.persistence.ContainerJpaRepository;
 import com.solusi.erp.inventory.facility.infrastructure.persistence.FacilityJpaRepository;
@@ -7,7 +8,7 @@ import com.solusi.erp.inventory.grid.infrastructure.persistence.GridJpaRepositor
 import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import com.solusi.erp.inventory.report.web.dto.InventoryMovementResponse;
 import com.solusi.erp.inventory.stock.infrastructure.persistence.InventoryMovementEntity;
-import com.solusi.erp.master.currency.domain.repository.CurrencyRepository;
+import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -19,7 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public abstract class InventoryMovementMapper {
 
     @Autowired
-    protected CurrencyRepository currencyRepository;
+    protected CurrencyLookupProvider currencyLookupProvider;
 
     @Autowired
     protected JpaProductRepository productRepository;
@@ -70,6 +71,31 @@ public abstract class InventoryMovementMapper {
         if (currencyId == null) {
             return null;
         }
-        return currencyRepository.findById(currencyId).map(c -> c.getAlias()).orElse(null);
+        
+        LookupDto lookup = currencyLookupProvider.resolve(currencyId);
+        if (lookup == null) {
+            return null;
+        }
+        
+        // Prefer payload.alias for robustness
+        if (lookup.payload() != null) {
+            Object aliasValue = lookup.payload().get("alias");
+            if (aliasValue instanceof String alias) {
+                return alias;
+            }
+        }
+        
+        // Fallback: parse from subText for backward compatibility
+        String subText = lookup.subText();
+        if (subText == null || subText.isEmpty()) {
+            return "";
+        }
+        
+        int delimiterIndex = subText.indexOf(" - ");
+        if (delimiterIndex == -1) {
+            return "";
+        }
+        
+        return subText.substring(delimiterIndex + 3).trim();
     }
 }

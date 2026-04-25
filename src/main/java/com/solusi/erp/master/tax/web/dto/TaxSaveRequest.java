@@ -1,6 +1,7 @@
 package com.solusi.erp.master.tax.web.dto;
 
 import com.solusi.erp.core.dto.BaseAuditResponse;
+import com.solusi.erp.master.tax.domain.model.TaxCalculationMode;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -27,6 +28,9 @@ public class TaxSaveRequest extends BaseAuditResponse {
     @NotNull(message = "{label.tax.rate} {validation.notnull.suffix}")
     @DecimalMin(value = "0.0", message = "{label.tax.rate} {validation.min.suffix}")
     private BigDecimal rate;
+
+    @NotNull(message = "{label.tax.calculationMode} {validation.notnull.suffix}")
+    private TaxCalculationMode calculationMode;
 
     private String note;
     private Boolean isSubtract;

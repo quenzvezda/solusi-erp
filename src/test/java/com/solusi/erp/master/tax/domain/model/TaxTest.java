@@ -58,4 +58,39 @@ class TaxTest {
         tax.softDelete();
         assertThat(tax.getIsActive()).isFalse();
     }
+
+    @Test
+    @DisplayName("createNew stores calculation mode and defaults to EXCLUSIVE")
+    void createNew_storesCalculationModeAndDefaultsExclusive() {
+        Tax explicit = Tax.createNew(
+                "TX-IN", "PPN Inclusive", BigDecimal.valueOf(11), "Gross tax", false, true,
+                TaxCalculationMode.INCLUSIVE
+        );
+        Tax fallback = Tax.createNew(
+                "TX-EX", "PPN Exclusive", BigDecimal.valueOf(11), "Net tax", false, true,
+                null
+        );
+
+        assertThat(explicit.getCalculationMode()).isEqualTo(TaxCalculationMode.INCLUSIVE);
+        assertThat(fallback.getCalculationMode()).isEqualTo(TaxCalculationMode.EXCLUSIVE);
+    }
+
+    @Test
+    @DisplayName("update changes calculation mode without changing code")
+    void update_changesCalculationMode() {
+        Tax tax = Tax.createNew(
+                "TX-01", "PPN", BigDecimal.ONE, "Old Note", false, true,
+                TaxCalculationMode.EXCLUSIVE
+        );
+
+        tax.update("PPN Inclusive", BigDecimal.TEN, "New Note", true, false, TaxCalculationMode.INCLUSIVE);
+
+        assertThat(tax.getName()).isEqualTo("PPN Inclusive");
+        assertThat(tax.getRate()).isEqualByComparingTo(BigDecimal.TEN);
+        assertThat(tax.getNote()).isEqualTo("New Note");
+        assertThat(tax.getIsSubtract()).isTrue();
+        assertThat(tax.getIsActive()).isFalse();
+        assertThat(tax.getCode()).isEqualTo("TX-01");
+        assertThat(tax.getCalculationMode()).isEqualTo(TaxCalculationMode.INCLUSIVE);
+    }
 }

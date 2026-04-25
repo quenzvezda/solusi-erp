@@ -73,15 +73,15 @@
                                                 <i class="ti ti-list-details me-1"></i>
                                                 <span th:text="#{label.view}">View</span>
                                             </a>
-                                            <!-- Link to source document by referenceType -->
-                                            <a th:if="${item.referenceType == 'NEWS'}"
-                                               th:href="@{/common/news/{id}(id=${item.referenceId})}"
+                                            <!-- Link to source document when mapping is available -->
+                                            <a th:if="${item.documentUrl != null}"
+                                               th:href="@{${item.documentUrl}}"
                                                class="btn btn-primary btn-sm"
                                                sec:authorize="hasAuthority('APPROVAL_PROCESS')">
                                                 <i class="ti ti-eye me-1"></i>
                                                 <span th:text="#{label.approval.btn.view-process}">Lihat & Proses</span>
                                             </a>
-                                            <span th:if="${item.referenceType != 'NEWS'}"
+                                            <span th:if="${item.documentUrl == null}"
                                                   class="text-secondary small"
                                                   th:text="'#' + ${item.referenceId}"></span>
                                         </div>

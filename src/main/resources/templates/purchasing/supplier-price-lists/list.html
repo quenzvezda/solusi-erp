@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.spl.title})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .spl-list-content}, ~{:: #page-specific-scripts})}">
+    <div class="spl-list-content">
+
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="#{label.spl.title}">Supplier Price List</h2>
+                        <div class="text-secondary mt-1" th:text="#{label.spl.subtitle}">
+                            Manage supplier product price agreements.
+                        </div>
+                    </div>
+                    <div class="col-auto ms-auto d-print-none" sec:authorize="hasAuthority('SPL_CREATE')">
+                        <div class="btn-list">
+                            <a th:href="@{/purchasing/supplier-price-lists/create}" class="btn btn-primary d-none d-sm-inline-block">
+                                <i class="ti ti-plus icon"></i>
+                                <span th:text="#{label.spl.add}">Add Price List</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+
+                <div th:replace="~{fragments/alerts :: success}"></div>
+                <div th:replace="~{fragments/alerts :: error}"></div>
+
+                <div class="card">
+                    <div class="card-body border-bottom py-3">
+                            <div class="d-flex">
+                                <div class="ms-auto text-secondary">
+                                    <form th:action="@{/purchasing/supplier-price-lists}" method="get" class="input-icon"
+                                          hx-get="/purchasing/supplier-price-lists"
+                                          hx-target="#spl-table-container"
+                                          hx-trigger="keyup changed delay:500ms from:#search-input"
+                                          hx-push-url="true"
+                                          hx-include="[name='keyword'], [name='sortField'], [name='sortDir']">
+                                        <input type="text" id="search-input" name="keyword" th:value="${keyword}"
+                                               class="form-control form-control-sm"
+                                               th:placeholder="#{label.search} + '...'">
+                                        <input type="hidden" name="sortField" th:value="${sortField ?: ''}">
+                                        <input type="hidden" name="sortDir" th:value="${sortDir ?: 'asc'}">
+                                        <span class="input-icon-addon">
+                                            <i class="ti ti-search"></i>
+                                        </span>
+                                    </form>
+                                </div>
+                            </div>
+                    </div>
+
+                    <div id="spl-table-container" th:fragment="spl-table-container"
+                         hx-get="/purchasing/supplier-price-lists"
+                         hx-trigger="refresh-table from:body delay:500ms"
+                         hx-include="[name='keyword'], [name='page'], [name='sortField'], [name='sortDir']">
+                        <input type="hidden" name="page" th:value="${page.number}">
+                        <input type="hidden" name="sortField" th:value="${sortField ?: ''}">
+                        <input type="hidden" name="sortDir" th:value="${sortDir ?: 'asc'}"}
+
+                        <div class="table-responsive">
+                            <table class="table card-table table-vcenter text-nowrap datatable">
+                                <thead>
+                                    <tr>
+                                        <th th:replace="~{fragments/table :: sortable('code', #{label.spl.column.code})}">Code</th>
+                                        <th th:replace="~{fragments/table :: sortable('supplierName', #{label.spl.column.supplier})}">Supplier</th>
+                                        <th th:replace="~{fragments/table :: sortable('productName', #{label.spl.column.product})}">Product</th>
+                                        <th th:text="#{label.spl.column.unitPrice}">Unit Price</th>
+                                        <th th:text="#{label.spl.column.effectiveFrom}">From</th>
+                                        <th th:text="#{label.spl.column.effectiveTo}">To</th>
+                                        <th th:text="#{label.spl.column.isActive}">Active</th>
+                                        <th class="text-end" th:text="#{label.actions}">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${page.content}" th:id="'row-' + ${item.id}">
+                                        <td><span class="font-weight-medium" th:text="${item.code}">SPL-001</span></td>
+                                        <td th:text="${item.supplierName}">Supplier Name</td>
+                                        <td th:text="${item.productName}">Product Name</td>
+                                        <td class="text-end" th:text="${(item.currencySymbol != null ? item.currencySymbol + ' ' : '') + #numbers.formatDecimal(item.unitPrice, 1, 'COMMA', 2, 'POINT')}">Rp 0.00</td>
+                                        <td th:text="${#temporals.format(item.effectiveFrom, 'dd MMM yyyy')}">01 Jul 2026</td>
+                                        <td th:text="${item.effectiveTo != null ? #temporals.format(item.effectiveTo, 'dd MMM yyyy') : '-'}">-</td>
+                                        <td>
+                                            <span th:if="${item.active}" class="badge bg-success-lt">Active</span>
+                                            <span th:unless="${item.active}" class="badge bg-secondary-lt">Inactive</span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-list flex-nowrap justify-content-end">
+                                                <a th:href="@{/purchasing/supplier-price-lists/edit/{id}(id=${item.id})}"
+                                                   class="btn btn-white btn-sm" sec:authorize="hasAuthority('SPL_UPDATE')">
+                                                    <i class="ti ti-edit me-1"></i>
+                                                    <span th:text="#{label.edit}">Edit</span>
+                                                </a>
+                                                <button type="button" class="btn btn-white btn-sm text-danger"
+                                                        sec:authorize="hasAuthority('SPL_DELETE')"
+                                                        data-bs-toggle="modal"
+                                                        th:data-bs-target="'#modal-delete-' + ${item.id}">
+                                                    <i class="ti ti-trash me-1"></i>
+                                                    <span th:text="#{label.delete}">Delete</span>
+                                                </button>
+                                            </div>
+                                            <div th:replace="~{fragments/modals :: delete-confirm(
+                                                id='modal-delete-' + ${item.id},
+                                                title=#{label.delete.confirm.title},
+                                                message=#{msg.delete.confirm(${item.code})},
+                                                actionUrl='/purchasing/supplier-price-lists/' + ${item.id},
+                                                targetId='#row-' + ${item.id}
+                                            )}"></div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${page.empty}">
+                                        <td colspan="8" class="text-center py-4 text-secondary" th:text="#{label.spl.empty}">
+                                            No supplier price list data found.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="page-specific-scripts" th:fragment="pageScripts">
+    </div>
+</body>
+
+</html>

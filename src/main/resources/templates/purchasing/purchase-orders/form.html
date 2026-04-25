@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(${poRequest.id == null
+    ? #messages.msg('label.po.add')
+    : #messages.msg('label.po.edit')})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .po-form-content}, ~{:: #page-specific-scripts})}">
+    <div class="po-form-content" id="po-form-content">
+
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title">
+                            <span th:if="${poRequest.id == null}" th:text="#{label.po.add}">Add Purchase Order</span>
+                            <span th:if="${poRequest.id != null}" th:text="${poRequest.code}">PO-001</span>
+                        </h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body" th:with="isLocked=${poRequest.status != null && poRequest.status.name() != 'DRAFT'}">
+            <div class="container-xl">
+
+                <form th:action="${poRequest.id == null
+                        ? '/purchasing/purchase-orders/create'
+                        : '/purchasing/purchase-orders/edit/' + poRequest.id}"
+                    th:object="${poRequest}"
+                    method="post"
+                    id="po-form"
+                    data-ajax-form="true"
+                    data-redirect-on-success="/purchasing/purchase-orders">
+
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="alert-container"></div>
+
+                            <div class="row g-3">
+                                <div class="col-md-9">
+                                    <div class="row g-3">
+                                        <!-- PO Type Toggle -->
+                                        <div class="col-md-4">
+                                            <label class="form-label" th:text="#{label.po.type}">PO Type</label>
+                                            <div class="btn-group w-100" role="group" id="po-type-group">
+                                                <input type="radio" class="btn-check" name="poType" id="po-type-direct" value="DIRECT"
+                                                       th:checked="${poRequest.poType == null || poRequest.poType.name() == 'DIRECT'}"
+                                                       th:disabled="${poRequest.id != null}">
+                                                <label class="btn btn-outline-primary" for="po-type-direct">
+                                                    <i class="ti ti-bolt me-1"></i> <span th:text="#{label.po.type.DIRECT}">Direct</span>
+                                                </label>
+                                                <input type="radio" class="btn-check" name="poType" id="po-type-standard" value="STANDARD"
+                                                       th:checked="${poRequest.poType != null && poRequest.poType.name() == 'STANDARD'}"
+                                                       th:disabled="${poRequest.id != null}">
+                                                <label class="btn btn-outline-primary" for="po-type-standard">
+                                                    <i class="ti ti-file-check me-1"></i> <span th:text="#{label.po.type.STANDARD}">Standard</span>
+                                                </label>
+                                            </div>
+                                            <input th:if="${poRequest.id != null}" type="hidden" name="poType" th:value="${poRequest.poType?.name() ?: 'DIRECT'}">
+                                        </div>
+                                        <!-- PR Reference (STANDARD only) -->
+                                        <div class="col-md-8" id="pr-reference-group" style="display:none;" th:if="${poRequest.id == null || poRequest.prId != null}">
+                                            <label class="form-label required" th:text="#{label.po.prReference}">PR Reference</label>
+                                            <input type="hidden" id="input-pr-id" name="prId" th:value="${poRequest.prId}">
+                                            <div class="input-group">
+                                                <input type="text"
+                                                       id="input-pr-display"
+                                                       class="form-control"
+                                                       readonly
+                                                       th:value="${poUI != null ? poUI['prDisplay'] : ''}"
+                                                       th:placeholder="#{label.po.prReference.select}">
+                                                <button type="button" class="btn btn-outline-primary" id="btn-select-pr"
+                                                        th:disabled="${poRequest.id != null}">
+                                                    <i class="ti ti-search me-1"></i>
+                                                    <span th:text="#{label.po.prReference.selectButton}">Choose PR</span>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary" id="btn-clear-pr"
+                                                        th:disabled="${poRequest.id != null}">
+                                                    <i class="ti ti-x me-1"></i>
+                                                    <span th:text="#{label.clear}">Clear</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.po.code}, isReadonly=true, placeholder=${poRequest.id == null ? '[ Auto Generated ]' : ''})}"></div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div th:replace="~{fragments/inputs :: date(field='orderDate', value=*{orderDate}, label=#{label.po.orderDate}, isReadonly=${isLocked}, required=true)}"></div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div th:replace="~{fragments/inputs :: date(field='expectedDate', value=*{expectedDate}, label=#{label.po.expectedDate}, isReadonly=${isLocked})}"></div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div th:replace="~{fragments/inputs :: autocomplete(field='supplierId', label=#{label.po.supplier}, placeholder='', isReadonly=${isLocked}, required=true, id='header-supplier', path='parties',
+                                                initialValue=${poRequest.supplierId}, initialText=${poUI != null ? poUI['supplierText'] : ''},
+                                                initialSubtext=${poUI != null ? poUI['supplierSubtext'] : ''})}"></div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div th:replace="~{fragments/inputs :: autocomplete(field='facilityId', label=#{label.po.facility}, placeholder='', isReadonly=${isLocked}, id='header-facility', path='inventory/facilities',
+                                                initialValue=${poRequest.facilityId}, initialText=${poUI != null ? poUI['facilityText'] : ''},
+                                                initialSubtext=${poUI != null ? poUI['facilitySubtext'] : ''})}"></div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div th:replace="~{fragments/inputs :: autocomplete(field='currencyId', label=#{label.po.currency}, placeholder='', isReadonly=${isLocked}, required=true, id='header-currency', path='master/currencies',
+                                                initialValue=${poRequest.currencyId}, initialText=${poUI != null ? poUI['currencyText'] : ''},
+                                                initialSubtext=${poUI != null ? poUI['currencySubtext'] : ''})}"></div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div th:replace="~{fragments/inputs :: decimal(field='exchangeRate', label=#{label.po.exchangeRate}, isReadonly=${isLocked}, required=true)}"></div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div th:replace="~{fragments/inputs :: integer(field='paymentTermDays', label=#{label.po.paymentTermDays}, isReadonly=${isLocked})}"></div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" th:text="#{label.po.tax}">Tax</label>
+                                                <select id="header-tax"
+                                                        name="taxId"
+                                                        th:disabled="${isLocked}"
+                                                        data-lookup-path="master/taxes"
+                                                        class="form-select erp-input-ts">
+                                                    <option value=""></option>
+                                                    <option th:if="${poRequest.taxId != null}"
+                                                            th:value="${poRequest.taxId}"
+                                                            th:text="${poUI != null ? poUI['taxText'] : poRequest.taxName}"
+                                                            th:attr="data-subtext=${poUI != null ? poUI['taxSubtext'] : ''}"
+                                                            selected></option>
+                                                </select>
+                                                <input type="hidden" name="taxCode" th:value="*{taxCode}">
+                                                <input type="hidden" name="taxName" th:value="*{taxName}">
+                                                <input type="hidden" name="taxRate" th:value="*{taxRate}">
+                                                <input type="hidden" name="taxCalculationMode" th:value="*{taxCalculationMode}">
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label" th:text="#{label.po.note}">Note</label>
+                                            <textarea class="form-control erp-input" th:field="*{note}" rows="2" th:readonly="${isLocked}"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 d-flex flex-column justify-content-between bg-secondary-lt rounded-end">
+                                    <div class="px-3 py-3 text-center">
+                                        <div class="text-uppercase text-secondary fw-bold mb-3" style="font-size: 0.65rem; letter-spacing: 0.05em;" th:text="#{label.po.summary.title}">Grand Total</div>
+                                        <div class="mb-3">
+                                            <div class="text-muted mb-1" style="font-size: 0.7rem; text-transform: uppercase;" th:text="#{label.po.summary.dpp}">DPP</div>
+                                            <div class="h3 mb-0 fw-bold" id="po-summary-dpp">0.00</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="text-muted mb-1" style="font-size: 0.7rem; text-transform: uppercase;" th:text="#{label.po.taxAmount}">Tax Amount (PPN)</div>
+                                            <div class="h3 mb-0 fw-bold" id="po-summary-tax">0.00</div>
+                                        </div>
+                                        <div class="pt-2 border-top">
+                                            <div class="text-muted mb-1" style="font-size: 0.7rem; text-transform: uppercase;" th:text="#{label.po.totalAmount}">Total Amount</div>
+                                            <div class="h1 mb-0 text-primary fw-bold" id="po-summary-grand-total" style="font-size: 1.85rem;">0.00</div>
+                                        </div>
+                                    </div>
+                                    <div class="px-3 pb-3 w-100">
+                                        <div class="text-center" sec:authorize="hasAuthority('PO_SUBMIT')">
+                                            <div th:if="${poRequest.id != null && poRequest.status != null && poRequest.status.name() == 'DRAFT'}" class="mt-3">
+                                                <button type="button" class="btn btn-success w-100 py-2" id="btn-submit-po"
+                                                        th:data-submit-url="@{'/purchasing/purchase-orders/' + ${poRequest.id} + '/submit'}">
+                                                    <i class="ti ti-send me-1"></i> <span th:text="#{label.po.action.submit}">Submit for Approval</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="text-center" sec:authorize="hasAuthority('PO_SEND')">
+                                            <div th:if="${poRequest.id != null && poRequest.status != null && poRequest.status.name() == 'APPROVED'}" class="mt-3">
+                                                <button type="button" class="btn btn-primary w-100 py-2" id="btn-send-po"
+                                                        th:data-send-url="@{'/purchasing/purchase-orders/' + ${poRequest.id} + '/send'}">
+                                                    <i class="ti ti-truck me-1"></i> <span th:text="#{label.po.action.send}">Send to Supplier</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title" th:text="#{label.po.line.title}">Order Lines</h3>
+                            <div class="card-actions" th:if="!${isLocked}">
+                                <button type="button" class="btn btn-primary btn-sm" id="btn-add-line"><i class="ti ti-plus"></i> Add Line</button>
+                            </div>
+                        </div>
+                        <div class="table-responsive" style="min-height: 200px;">
+                            <table class="table table-vcenter card-table" id="table-lines">
+                                <thead>
+                                    <tr>
+                                        <th class="required" th:text="#{label.product}" style="width: 30%;">Product</th>
+                                        <th class="text-end required" th:text="#{label.qty}" style="width: 12%;">Qty</th>
+                                        <th class="required" th:text="#{label.uom}" style="width: 15%;">UoM</th>
+                                        <th class="text-end required" th:text="#{label.po.line.unitPrice}" style="width: 15%;">Unit Price</th>
+                                        <th class="text-end" th:text="#{label.po.line.total}" style="width: 15%;">Total</th>
+                                        <th class="w-1" style="width: 80px;" th:if="!${isLocked}"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="line-container">
+                                    <tr th:each="line, stat : *{lines}" class="line-row" th:data-index="${stat.index}" th:data-derived="${line.prLineId != null}">
+                                        <td>
+                                            <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[' + __${stat.index}__ + '].productId', id='select-product-' + __${stat.index}__, isReadonly=${isLocked}, extraClass='select-product', path='inventory/products',
+                                                initialValue=${line.productId}, initialText=${line.productName},
+                                                initialSubtext=${line.productSubtext})}"></div>
+                                        </td>
+                                        <td><input type="text" th:name="'lines[' + ${stat.index} + '].quantity'" th:value="${line.quantity}" th:attr="max=${line.maxQuantity}" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-qty" th:readonly="${isLocked}"></td>
+                                        <td>
+                                            <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[' + __${stat.index}__ + '].uomId', id='select-uom-' + __${stat.index}__, isReadonly=${isLocked}, extraClass='select-uom', path='inventory/uoms',
+                                                initialValue=${line.uomId}, initialText=${line.uomName},
+                                                initialSubtext=${line.uomSubtext})}"></div>
+                                        </td>
+                                        <td><input type="text" th:name="'lines[' + ${stat.index} + '].unitPrice'" th:value="${line.unitPrice}" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-unit-price" th:readonly="${isLocked}"></td>
+                                        <td>
+                                            <input type="text" th:name="'lines[' + ${stat.index} + '].lineTotal'" th:value="${line.lineTotal}" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end" readonly>
+                                            <!-- Hidden fields for drawer-edited values -->
+                                            <input type="hidden" th:name="'lines[' + ${stat.index} + '].taxRate'" th:value="${line.taxRate}" class="input-tax-rate">
+                                            <input type="hidden" th:name="'lines[' + ${stat.index} + '].lineSubtotal'" th:value="${line.lineSubtotal}">
+                                            <input type="hidden" th:name="'lines[' + ${stat.index} + '].lineTax'" th:value="${line.lineTax}">
+                                            <input type="hidden" th:name="'lines[' + ${stat.index} + '].prLineId'" th:value="${line.prLineId}" class="input-pr-line-id">
+                                            <input type="hidden" th:name="'lines[' + ${stat.index} + '].note'" th:value="${line.note}" class="input-note">
+                                        </td>
+                                        <td th:if="!${isLocked}">
+                                            <div class="btn-list flex-nowrap">
+                                                <button type="button" class="btn btn-white btn-icon btn-remove-line text-danger" title="Remove"><i class="ti ti-trash"></i></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div id="empty-msg" class="text-center py-4 text-secondary" th:style="${#lists.isEmpty(poRequest.lines)} ? '' : 'display:none'" th:text="#{label.po.line.empty}">No lines added yet.</div>
+                        </div>
+                        <div class="card-footer text-end">
+                            <div th:if="${auditInfo != null and auditInfo.id != null}" th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
+                            <div class="d-flex align-items-center">
+                                <div id="loading-indicator" class="spinner-border spinner-border-sm text-primary me-2" role="status" style="display: none;"></div>
+                                <a th:href="@{/purchasing/purchase-orders}" class="btn btn-link link-secondary" th:text="#{label.cancel}">Cancel</a>
+                                <button type="submit" class="btn btn-primary ms-auto" th:if="!${isLocked}">
+                                    <i class="ti ti-device-floppy"></i>
+                                    <span th:text="#{label.save}">Save</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <table style="display:none">
+            <tbody id="row-template-source">
+                <tr class="line-row">
+                    <td>
+                        <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[INDEX].productId', id='', isReadonly=false, extraClass='select-product', path='inventory/products')}"></div>
+                    </td>
+                    <td><input type="text" name="lines[INDEX].quantity" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-qty" value="0.0000"></td>
+                    <td>
+                        <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[INDEX].uomId', id='', isReadonly=false, extraClass='select-uom', path='inventory/uoms')}"></div>
+                    </td>
+                    <td><input type="text" name="lines[INDEX].unitPrice" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-unit-price" value="0.00"></td>
+                    <td>
+                         <input type="text" name="lines[INDEX].lineTotal" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end" value="0.00" readonly>
+                         <input type="hidden" name="lines[INDEX].taxRate" class="input-tax-rate" value="0.00">
+                         <input type="hidden" name="lines[INDEX].lineSubtotal" value="0.00">
+                         <input type="hidden" name="lines[INDEX].lineTax" value="0.00">
+                         <input type="hidden" name="lines[INDEX].prLineId" class="input-pr-line-id" value="">
+                         <input type="hidden" name="lines[INDEX].note" class="input-note" value="">
+                     </td>
+                     <td>
+                        <div class="btn-list flex-nowrap">
+                            <button type="button" class="btn btn-white btn-icon btn-remove-line text-danger" title="Remove"><i class="ti ti-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div th:if="${poRequest.id == null}"
+             th:replace="~{fragments/modal-selector :: shell('modal-po-pr-selector', #{label.po.selector.pr.title}, 'po-pr-selector-results', 'modal-xl')}"></div>
+        <div th:if="${poRequest.id == null || poRequest.prId != null}"
+             th:replace="~{fragments/modal-selector :: shell('modal-po-pr-line-selector', #{label.po.selector.prLine.title}, 'po-pr-line-selector-results', 'modal-xl')}"></div>
+
+        <!-- Submit for Approval Modal -->
+        <div class="modal modal-blur fade" id="modal-submit-approval" tabindex="-1" th:if="${poRequest.id != null && poRequest.status != null && poRequest.status.name() == 'DRAFT'}">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" th:text="#{label.po.action.submit}">Submit for Approval</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Select Approver <span class="text-danger ms-1">*</span></label>
+                            <select id="submit-approver" class="erp-input-ts"
+                                    data-lookup-path="parties/by-role-type?roleTypeCode=APPROVER">
+                                <option value="">-- Select Approver --</option>
+                            </select>
+                            <div class="invalid-feedback d-block d-none" id="submit-approver-error">Please select an approver.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{label.cancel}">Cancel</button>
+                        <button type="button" class="btn btn-success" id="btn-confirm-submit-approval">
+                            <i class="ti ti-send me-1"></i> <span th:text="#{label.po.action.submit}">Submit</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="page-specific-scripts" th:fragment="pageScripts">
+        <script th:inline="javascript">
+            window.PurchaseOrderPageConfig = {
+                isLocked: /*[[${isLocked}]]*/ false,
+                submitUrl: /*[[${poRequest.id != null ? '/purchasing/purchase-orders/' + poRequest.id + '/submit' : ''}]]*/ '',
+                csrfHeader: /*[[${_csrf.headerName}]]*/ '',
+                csrfToken: /*[[${_csrf.token}]]*/ '',
+                isNew: /*[[${poRequest.id == null}]]*/ true,
+                poType: /*[[${poRequest.poType?.name() ?: 'DIRECT'}]]*/ 'DIRECT',
+                prSelectorUrl: /*[[@{/purchasing/purchase-orders/selectors/purchase-requisitions}]]*/ '',
+                prLineSelectorUrl: /*[[@{/purchasing/purchase-orders/selectors/purchase-requisition-lines}]]*/ '',
+                confirmChangeType: /*[[#{msg.warning.po.standard.changeType}]]*/ '',
+                confirmChangePr: /*[[#{msg.warning.po.standard.changePr}]]*/ '',
+                confirmSwitchToStandard: /*[[#{msg.warning.po.standard.switchToStandard}]]*/ '',
+                prRequiredBeforeLines: /*[[#{msg.error.po.standard.pr.selectFirst}]]*/ '',
+                selectAtLeastOnePrLine: /*[[#{msg.warning.po.standard.prLine.selectAtLeastOne}]]*/ '',
+                prLineSelectorUnavailable: /*[[#{msg.error.po.standard.prLine.selector.unavailable}]]*/ '',
+                prLineQtyClampedPrefix: /*[[#{msg.warning.po.standard.prLine.qtyClampedPrefix}]]*/ ''
+            };
+        </script>
+        <script th:src="@{/js/shared/erp-modal-selector.js}" defer></script>
+        <script th:src="@{/js/purchasing/purchase-order-form.js}" defer></script>
+    </div>
+</body>
+
+</html>

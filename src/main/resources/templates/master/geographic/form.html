@@ -54,7 +54,7 @@
                                     <div th:replace="~{fragments/inputs :: autocomplete(field='parentId', label=#{label.geographic.parent}, path=${geographicRequest.type != null and geographicRequest.type.name() == 'CITY_MUNICIPALITY' ? 'geographics/provinces' : 'geographics/countries'}, 
                                           initialValue=${geographicRequest.parentId}, 
                                           initialText=${geographicRequest.parentName}, 
-                                          initialSubtext='')}"></div>
+                                          initialSubtext=${geographicRequest.parentSubtext})}"></div>
                                 </div>
                             </div>
                             <div class="col-md-6 border-start-md">
