@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- Drawer Fragments for Goods Receipt Operations -->
+
+<!-- Confirm Delete Dialog -->
+<div th:fragment="confirmDelete(id, title, message, actionUrl)" 
+     th:id="${id}"
+     class="modal modal-blur fade"
+     tabindex="-1"
+     role="dialog"
+     aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-danger"></div>
+            <div class="modal-body text-center py-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-danger icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M12 9l.463 -11.038c.164 -.957.888 -1.962 1.972 -1.962h6.07a2 2 0 0 1 1.972 2.316l -.736 4.968"/>
+                    <path d="M16 16v4a2 2 0 0 1 -2 2h -2.5a2 2 0 0 1 -1 -.381"/>
+                    <path d="M3 7h12v4"/>
+                </svg>
+                <h3 th:text="${title}">Delete Confirmation</h3>
+                <div class="text-muted" th:text="${message}">Are you sure?</div>
+            </div>
+            <div class="modal-footer">
+                <div class="w-100">
+                    <div class="row">
+                        <div class="col"><a href="#" class="btn btn-white w-100" data-bs-dismiss="modal">
+                            Cancel
+                        </a></div>
+                        <div class="col"><button type="button" class="btn btn-danger w-100" data-bs-dismiss="modal" th:data-action-url="${actionUrl}" onclick="ErpForm.deleteAction(this)">Delete</button></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Line Editor Modal (for future inline editing if needed) -->
+<div th:fragment="lineEditor(id, title)" 
+     th:id="${id}"
+     class="offcanvas offcanvas-end"
+     data-bs-backdrop="false"
+     tabindex="-1"
+     role="dialog">
+    <div class="offcanvas-header">
+        <h2 class="offcanvas-title" th:text="${title}">Edit Line</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form id="line-editor-form">
+            <div class="mb-3">
+                <label class="form-label">Product</label>
+                <input type="text" class="form-control" id="line-product" readonly>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Quantity Received</label>
+                <input type="text" class="form-control erp-number-decimal" id="line-qty-received">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Serial Number</label>
+                <input type="text" class="form-control" id="line-serial-number">
+            </div>
+            <div class="d-grid gap-2">
+                <button type="button" class="btn btn-primary" onclick="ErpDrawer.saveLineEditor()">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- PO Selector Modal -->
+<div th:fragment="poSelector(id, title)" 
+     th:id="${id}"
+     class="modal modal-blur fade"
+     tabindex="-1"
+     role="dialog"
+     aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" th:text="${title}">Select Purchase Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="po-search" placeholder="Search PO...">
+                </div>
+                <div id="po-list" style="max-height: 400px; overflow-y: auto;">
+                    <p class="text-muted text-center">No data</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</html>

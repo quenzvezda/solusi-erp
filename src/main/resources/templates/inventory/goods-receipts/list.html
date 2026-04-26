@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.gr.title})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .gr-list-content}, ~{:: #page-specific-scripts})}">
+    <div class="gr-list-content">
+
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="#{label.gr.title}">Goods Receipts</h2>
+                        <div class="text-secondary mt-1" th:text="#{label.gr.subtitle}">
+                            Manage goods receipt documents.
+                        </div>
+                    </div>
+                    <div class="col-auto ms-auto d-print-none" sec:authorize="hasAuthority('GOODS-RECEIPT_CREATE')">
+                        <div class="btn-list">
+                            <a th:href="@{/inventory/goods-receipts/create}" class="btn btn-primary d-none d-sm-inline-block">
+                                <i class="ti ti-plus icon"></i>
+                                <span th:text="#{label.gr.create}">Create Goods Receipt</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+
+                <div th:replace="~{fragments/alerts :: success}"></div>
+                <div th:replace="~{fragments/alerts :: error}"></div>
+
+                <div class="card">
+                    <div class="card-body border-bottom py-3">
+                        <div class="d-flex">
+                            <div class="ms-auto text-secondary">
+                                <form th:action="@{/inventory/goods-receipts}" method="get" class="input-icon"
+                                      hx-get="/inventory/goods-receipts"
+                                      hx-target="#gr-table-container"
+                                      hx-trigger="keyup changed delay:500ms from:#search-input"
+                                      hx-push-url="true">
+                                    <input type="text" id="search-input" name="keyword" th:value="${keyword}"
+                                           class="form-control form-control-sm"
+                                           th:placeholder="#{label.search} + '...'">
+                                    <span class="input-icon-addon">
+                                        <i class="ti ti-search"></i>
+                                    </span>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="gr-table-container" th:fragment="gr-table-container"
+                         hx-get="/inventory/goods-receipts"
+                         hx-trigger="refresh-table from:body delay:500ms"
+                         hx-include="[name='keyword'], [name='page']">
+                        <input type="hidden" name="page" th:value="${page.number}">
+
+                        <div class="table-responsive">
+                            <table class="table card-table table-vcenter text-nowrap datatable" id="table-gr-list">
+                                <thead>
+                                    <tr>
+                                        <th th:replace="~{fragments/table :: sortable('code', #{label.gr.column.code})}">Code</th>
+                                        <th th:text="#{label.gr.column.receiptDate}">Receipt Date</th>
+                                        <th th:text="#{label.gr.column.poCode}">PO Code</th>
+                                        <th th:text="#{label.gr.column.supplier}">Supplier</th>
+                                        <th th:text="#{label.gr.column.status}">Status</th>
+                                        <th th:text="#{label.gr.column.lines}">Lines</th>
+                                        <th class="text-end" th:text="#{label.gr.column.totalAmount}">Total Amount</th>
+                                        <th class="text-end" th:text="#{label.actions}">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${page.content}" th:id="'row-' + ${item.id}">
+                                        <td><span class="font-weight-medium" th:text="${item.code}">GR-001</span></td>
+                                        <td th:text="${#temporals.format(item.receiptDate, 'dd MMM yyyy')}">01 Jul 2026</td>
+                                        <td th:text="${item.poCode ?: '-'}">PO-001</td>
+                                        <td th:text="${item.supplierName ?: '-'}">Supplier</td>
+                                        <td>
+                                            <span class="badge"
+                                                  th:classappend="${item.status == 'DRAFT'} ? 'bg-warning-lt' : 'bg-success-lt'"
+                                                  th:text="${item.status}">DRAFT</span>
+                                        </td>
+                                        <td th:text="${item.lineCount}">0</td>
+                                        <td class="text-end" th:text="${item.totalAmount != null ? #numbers.formatDecimal(item.totalAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                        <td>
+                                            <div class="btn-list flex-nowrap justify-content-end">
+                                                <a th:if="${item.status == 'DRAFT'}"
+                                                   th:href="@{/inventory/goods-receipts/edit/{id}(id=${item.id})}"
+                                                   class="btn btn-white btn-sm" sec:authorize="hasAuthority('GOODS-RECEIPT_UPDATE')">
+                                                    <i class="ti ti-edit me-1"></i>
+                                                    <span th:text="#{label.edit}">Edit</span>
+                                                </a>
+                                                <a th:if="${item.status != 'DRAFT'}"
+                                                   th:href="@{/inventory/goods-receipts/{id}(id=${item.id})}"
+                                                   class="btn btn-white btn-sm" sec:authorize="hasAuthority('GOODS-RECEIPT_READ')">
+                                                    <i class="ti ti-eye me-1"></i>
+                                                    <span th:text="#{label.view}">View</span>
+                                                </a>
+                                                <button th:if="${item.status == 'DRAFT'}" type="button"
+                                                        class="btn btn-white btn-sm text-danger"
+                                                        sec:authorize="hasAuthority('GOODS-RECEIPT_DELETE')"
+                                                        data-bs-toggle="modal"
+                                                        th:data-bs-target="'#modal-delete-' + ${item.id}">
+                                                    <i class="ti ti-trash me-1"></i>
+                                                    <span th:text="#{label.delete}">Delete</span>
+                                                </button>
+                                                <button th:if="${item.status == 'DRAFT'}" type="button"
+                                                        class="btn btn-white btn-sm"
+                                                        sec:authorize="hasAuthority('GOODS-RECEIPT_COMPLETE')"
+                                                        th:data-complete-url="@{'/inventory/goods-receipts/' + ${item.id} + '/complete'}"
+                                                        onclick="ErpForm.postAction(this)">
+                                                    <i class="ti ti-check me-1"></i>
+                                                    <span th:text="#{label.gr.complete}">Complete</span>
+                                                </button>
+                                            </div>
+                                            <div th:if="${item.status == 'DRAFT'}"
+                                                 th:replace="~{fragments/modals :: delete-confirm(
+                                                    id='modal-delete-' + ${item.id},
+                                                    title=#{label.delete.confirm.title},
+                                                    message=#{msg.delete.confirm(${item.code})},
+                                                    actionUrl='/inventory/goods-receipts/' + ${item.id},
+                                                    targetId='#row-' + ${item.id}
+                                                )}"></div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${page.empty}">
+                                        <td colspan="8" class="text-center py-4 text-secondary" th:text="#{label.gr.empty}">
+                                            No goods receipt data found.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="page-specific-scripts"></div>
+</body>
+
+</html>
