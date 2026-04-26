@@ -122,7 +122,7 @@ class CompleteGoodsReceiptUseCaseTest {
         verify(stockService, times(3)).adjust(argThat((StockMovementPayload payload) ->
                 payload.getQuantity().compareTo(BigDecimal.ONE) == 0
                         && payload.getSerialNumber() != null
-                        && payload.getUomId().equals(1L)));
+                        && payload.getUomId() == null));
         verify(stockService).adjust(argThat(payload ->
                 payload.getQuantity().compareTo(BigDecimal.ONE) == 0
                         && "SN-1".equals(payload.getSerialNumber())));
@@ -134,6 +134,34 @@ class CompleteGoodsReceiptUseCaseTest {
                         && payload.getSerialNumber().startsWith("SN-")
                         && !"SN-1".equals(payload.getSerialNumber())
                         && !"SN-2".equals(payload.getSerialNumber())));
+    }
+
+    @Test
+    void complete_serializedNonBaseUomPostsOneBaseUnitPerSerial() {
+        GoodsReceipt receipt = receiptWithLine(
+                true,
+                new BigDecimal("1.5000"),
+                new BigDecimal("6.0000"),
+                2L,
+                BigDecimal.ONE,
+                "SN-1,SN-2"
+        );
+        when(goodsReceiptRepository.findById(1L)).thenReturn(Optional.of(receipt));
+        when(purchaseOrderRepository.findById(receipt.getPoId())).thenReturn(Optional.of(sentPoWithOutstanding("10.0000")));
+
+        completeUseCase.execute(1L);
+
+        verify(stockService, times(6)).adjust(argThat((StockMovementPayload payload) ->
+                payload.getQuantity().compareTo(BigDecimal.ONE) == 0
+                        && payload.getSerialNumber() != null
+                        && payload.getUomId() == null
+                        && payload.getNetPrice().compareTo(new BigDecimal("37.500000")) == 0));
+        verify(stockService).adjust(argThat(payload ->
+                payload.getQuantity().compareTo(BigDecimal.ONE) == 0
+                        && "SN-1".equals(payload.getSerialNumber())));
+        verify(stockService).adjust(argThat(payload ->
+                payload.getQuantity().compareTo(BigDecimal.ONE) == 0
+                        && "SN-2".equals(payload.getSerialNumber())));
     }
 
     @Test
@@ -152,6 +180,11 @@ class CompleteGoodsReceiptUseCaseTest {
     }
 
     private GoodsReceipt receiptWithLine(Boolean serialized, BigDecimal quantityReceived, BigDecimal exchangeRate, String serialNumber) {
+        return receiptWithLine(serialized, quantityReceived, BigDecimal.ZERO, 1L, exchangeRate, serialNumber);
+    }
+
+    private GoodsReceipt receiptWithLine(Boolean serialized, BigDecimal quantityReceived, BigDecimal baseQuantity,
+                                         Long uomId, BigDecimal exchangeRate, String serialNumber) {
         return new GoodsReceipt(
                 new AuditMetadata(1L, 1L, null, null, null, null),
                 "GR-202604-00001",
@@ -169,10 +202,10 @@ class CompleteGoodsReceiptUseCaseTest {
                         3L,
                         serialized,
                         quantityReceived,
-                        1L,
+                        uomId,
                         99L,
                         new BigDecimal("150.0000"),
-                        BigDecimal.ZERO,
+                        baseQuantity,
                         BigDecimal.ZERO,
                         BigDecimal.ZERO,
                         BigDecimal.ZERO,

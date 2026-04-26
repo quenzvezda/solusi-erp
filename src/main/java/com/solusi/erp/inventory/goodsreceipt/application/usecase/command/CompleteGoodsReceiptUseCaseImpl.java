@@ -16,6 +16,7 @@ import com.solusi.erp.purchasing.purchaseorder.domain.repository.PurchaseOrderRe
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
@@ -67,15 +68,15 @@ public class CompleteGoodsReceiptUseCaseImpl implements CompleteGoodsReceiptUseC
     }
 
     private void processSerializedLine(GoodsReceipt receipt, PurchaseOrder po, GoodsReceiptLine line) {
-        List<String> serialNumbers = resolveSerialNumbers(line);
+        int totalUnits = resolveSerializedUnitCount(line);
+        List<String> serialNumbers = resolveSerialNumbers(line, totalUnits);
         for (String serialNumber : serialNumbers) {
-            stockService.adjust(buildBasePayload(receipt, po, line, BigDecimal.ONE, serialNumber));
+            stockService.adjust(buildSerializedPayload(receipt, po, line, serialNumber, totalUnits));
         }
     }
 
-    private List<String> resolveSerialNumbers(GoodsReceiptLine line) {
+    private List<String> resolveSerialNumbers(GoodsReceiptLine line, int totalUnits) {
         List<String> providedSerials = parseProvidedSerialNumbers(line.getSerialNumber());
-        int totalUnits = resolveSerializedUnitCount(line);
         if (providedSerials.size() > totalUnits) {
             throw new DomainException("msg.error.gr.serial.quantity.whole");
         }
@@ -99,14 +100,46 @@ public class CompleteGoodsReceiptUseCaseImpl implements CompleteGoodsReceiptUseC
     }
 
     private int resolveSerializedUnitCount(GoodsReceiptLine line) {
-        if (line.getQuantityReceived() == null) {
+        BigDecimal serializedUnitCount = line.getBaseQuantity();
+        if (serializedUnitCount == null || serializedUnitCount.compareTo(BigDecimal.ZERO) <= 0) {
+            serializedUnitCount = line.getQuantityReceived();
+        }
+        if (serializedUnitCount == null || serializedUnitCount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new DomainException("msg.error.gr.serial.quantity.whole");
         }
         try {
-            return line.getQuantityReceived().abs().intValueExact();
+            return serializedUnitCount.abs().intValueExact();
         } catch (ArithmeticException ex) {
             throw new DomainException("msg.error.gr.serial.quantity.whole");
         }
+    }
+
+    private StockMovementPayload buildSerializedPayload(GoodsReceipt receipt, PurchaseOrder po, GoodsReceiptLine line,
+                                                        String serialNumber, int totalUnits) {
+        BigDecimal quantityReceived = line.getQuantityReceived();
+        if (quantityReceived == null || quantityReceived.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new DomainException("msg.error.gr.serial.quantity.whole");
+        }
+
+        BigDecimal unitPrice = line.getUnitPrice() != null ? line.getUnitPrice() : BigDecimal.ZERO;
+        BigDecimal serializedUnitPrice = unitPrice.multiply(quantityReceived)
+                .divide(BigDecimal.valueOf(totalUnits), 6, RoundingMode.HALF_UP);
+
+        return StockMovementPayload.builder()
+                .productId(line.getProductId())
+                .containerId(line.getContainerId())
+                .serialNumber(serialNumber)
+                .quantity(BigDecimal.ONE)
+                .uomId(null)
+                .movementType(MovementType.RECEIPT)
+                .referenceType(ReferenceType.GOODS_RECEIPT)
+                .referenceId(receipt.getId())
+                .referenceCode(receipt.getCode())
+                .currencyId(receipt.getCurrencyId())
+                .exchangeRate(po.getExchangeRate())
+                .netPrice(serializedUnitPrice)
+                .transactionDate(receipt.getReceiptDate().atStartOfDay())
+                .build();
     }
 
     private StockMovementPayload buildBasePayload(GoodsReceipt receipt, PurchaseOrder po, GoodsReceiptLine line,
