@@ -2,22 +2,22 @@ package com.solusi.erp.inventory.goodsreceipt.domain.model;
 
 import java.math.BigDecimal;
 
-public class GoodsReceiptLine {
+public final class GoodsReceiptLine {
 
     private final Long poLineId;
     private final Long productId;
     private final Long sourceFacilityId;
     private final Boolean serialized;
-    private BigDecimal quantityReceived;
+    private final BigDecimal quantityReceived;
     private final Long uomId;
-    private Long containerId;
-    private BigDecimal unitPrice;
-    private BigDecimal baseQuantity;
-    private BigDecimal inventoryAmount;
-    private BigDecimal taxBaseAmount;
-    private BigDecimal taxAmount;
-    private BigDecimal grIrAmount;
-    private String serialNumber;
+    private final Long containerId;
+    private final BigDecimal unitPrice;
+    private final BigDecimal baseQuantity;
+    private final BigDecimal inventoryAmount;
+    private final BigDecimal taxBaseAmount;
+    private final BigDecimal taxAmount;
+    private final BigDecimal grIrAmount;
+    private final String serialNumber;
 
     private GoodsReceiptLine(Long poLineId, Long productId, Long sourceFacilityId, Boolean serialized,
                              BigDecimal quantityReceived, Long uomId, Long containerId,

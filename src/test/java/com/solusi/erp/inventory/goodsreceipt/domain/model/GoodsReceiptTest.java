@@ -4,14 +4,24 @@ import com.solusi.erp.core.exception.DomainException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("GoodsReceipt Domain Model Tests")
 class GoodsReceiptTest {
+
+    @Test
+    @DisplayName("goods receipt line is an immutable value object")
+    void goodsReceiptLine_isImmutableValueObject() {
+        assertThat(Modifier.isFinal(GoodsReceiptLine.class.getModifiers())).isTrue();
+        assertThat(GoodsReceiptLine.class.getDeclaredFields())
+                .allMatch(field -> Modifier.isFinal(field.getModifiers()), "all fields final");
+    }
 
     @Test
     @DisplayName("complete requires at least one positive-quantity line")

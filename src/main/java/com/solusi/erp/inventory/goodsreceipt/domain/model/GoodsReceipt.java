@@ -5,7 +5,6 @@ import com.solusi.erp.core.exception.DomainException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -36,7 +35,7 @@ public class GoodsReceipt {
         this.exchangeRate = exchangeRate;
         this.status = status;
         this.note = note;
-        this.lines = lines != null ? new ArrayList<>(lines) : new ArrayList<>();
+        this.lines = copyLines(lines);
     }
 
     public static GoodsReceipt createNew(String code, LocalDate receiptDate, Long poId, Long supplierId,
@@ -54,7 +53,7 @@ public class GoodsReceipt {
         }
         this.receiptDate = receiptDate;
         this.note = note;
-        this.lines = lines != null ? new ArrayList<>(lines) : new ArrayList<>();
+        this.lines = copyLines(lines);
     }
 
     public void complete() {
@@ -114,5 +113,9 @@ public class GoodsReceipt {
 
     public List<GoodsReceiptLine> getLines() {
         return Collections.unmodifiableList(lines);
+    }
+
+    private static List<GoodsReceiptLine> copyLines(List<GoodsReceiptLine> lines) {
+        return lines == null ? List.of() : List.copyOf(lines);
     }
 }
