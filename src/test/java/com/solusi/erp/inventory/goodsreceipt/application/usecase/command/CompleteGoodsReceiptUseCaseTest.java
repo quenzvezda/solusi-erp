@@ -10,6 +10,7 @@ import com.solusi.erp.inventory.goodsreceipt.domain.repository.GoodsReceiptRepos
 import com.solusi.erp.inventory.stock.application.dto.StockMovementPayload;
 import com.solusi.erp.inventory.stock.domain.model.ReferenceType;
 import com.solusi.erp.inventory.stock.domain.port.StockService;
+import com.solusi.erp.inventory.uomconversion.domain.port.UomConversionService;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrder;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderLine;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderStatus;
@@ -44,6 +45,8 @@ class CompleteGoodsReceiptUseCaseTest {
     private EnsureOpenPeriodForDateUseCase ensureOpenPeriodForDateUseCase;
     @Mock
     private StockService stockService;
+    @Mock
+    private UomConversionService uomConversionService;
 
     private CompleteGoodsReceiptUseCase completeUseCase;
 
@@ -53,7 +56,8 @@ class CompleteGoodsReceiptUseCaseTest {
                 goodsReceiptRepository,
                 purchaseOrderRepository,
                 ensureOpenPeriodForDateUseCase,
-                stockService
+                stockService,
+                uomConversionService
         );
     }
 
@@ -105,6 +109,8 @@ class CompleteGoodsReceiptUseCaseTest {
         GoodsReceipt receipt = receiptWithLine(true, new BigDecimal("1.5000"), BigDecimal.ONE, null);
         when(goodsReceiptRepository.findById(1L)).thenReturn(Optional.of(receipt));
         when(purchaseOrderRepository.findById(receipt.getPoId())).thenReturn(Optional.of(sentPoWithOutstanding("10.0000")));
+        when(uomConversionService.convertToBaseUom(201L, 1L, new BigDecimal("1.5000")))
+                .thenReturn(new BigDecimal("1.5000"));
 
         assertThatThrownBy(() -> completeUseCase.execute(1L))
                 .isInstanceOf(DomainException.class)
@@ -116,6 +122,8 @@ class CompleteGoodsReceiptUseCaseTest {
         GoodsReceipt receipt = receiptWithLine(true, new BigDecimal("3.0000"), BigDecimal.ONE, "SN-1,SN-2");
         when(goodsReceiptRepository.findById(1L)).thenReturn(Optional.of(receipt));
         when(purchaseOrderRepository.findById(receipt.getPoId())).thenReturn(Optional.of(sentPoWithOutstanding("10.0000")));
+        when(uomConversionService.convertToBaseUom(201L, 1L, new BigDecimal("3.0000")))
+                .thenReturn(new BigDecimal("3.0000"));
 
         completeUseCase.execute(1L);
 
@@ -141,13 +149,15 @@ class CompleteGoodsReceiptUseCaseTest {
         GoodsReceipt receipt = receiptWithLine(
                 true,
                 new BigDecimal("1.5000"),
-                new BigDecimal("6.0000"),
+                BigDecimal.ZERO,
                 2L,
                 BigDecimal.ONE,
                 "SN-1,SN-2"
         );
         when(goodsReceiptRepository.findById(1L)).thenReturn(Optional.of(receipt));
         when(purchaseOrderRepository.findById(receipt.getPoId())).thenReturn(Optional.of(sentPoWithOutstanding("10.0000")));
+        when(uomConversionService.convertToBaseUom(201L, 2L, new BigDecimal("1.5000")))
+                .thenReturn(new BigDecimal("6.0000"));
 
         completeUseCase.execute(1L);
 
@@ -165,10 +175,32 @@ class CompleteGoodsReceiptUseCaseTest {
     }
 
     @Test
+    void complete_whenSerializedNonBaseUomConvertsToFraction_throws() {
+        GoodsReceipt receipt = receiptWithLine(
+                true,
+                new BigDecimal("1.5000"),
+                BigDecimal.ZERO,
+                2L,
+                BigDecimal.ONE,
+                "SN-1"
+        );
+        when(goodsReceiptRepository.findById(1L)).thenReturn(Optional.of(receipt));
+        when(purchaseOrderRepository.findById(receipt.getPoId())).thenReturn(Optional.of(sentPoWithOutstanding("10.0000")));
+        when(uomConversionService.convertToBaseUom(201L, 2L, new BigDecimal("1.5000")))
+                .thenReturn(new BigDecimal("1.5000"));
+
+        assertThatThrownBy(() -> completeUseCase.execute(1L))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.gr.serial.quantity.whole");
+    }
+
+    @Test
     void complete_whenProvidedSerialCountExceedsUnitCount_throws() {
         GoodsReceipt receipt = receiptWithLine(true, new BigDecimal("1.0000"), BigDecimal.ONE, "SN-1,SN-2");
         when(goodsReceiptRepository.findById(1L)).thenReturn(Optional.of(receipt));
         when(purchaseOrderRepository.findById(receipt.getPoId())).thenReturn(Optional.of(sentPoWithOutstanding("10.0000")));
+        when(uomConversionService.convertToBaseUom(201L, 1L, new BigDecimal("1.0000")))
+                .thenReturn(new BigDecimal("1.0000"));
 
         assertThatThrownBy(() -> completeUseCase.execute(1L))
                 .isInstanceOf(DomainException.class)

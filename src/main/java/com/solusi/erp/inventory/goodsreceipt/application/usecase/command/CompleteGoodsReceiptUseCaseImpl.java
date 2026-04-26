@@ -10,6 +10,7 @@ import com.solusi.erp.inventory.stock.application.dto.StockMovementPayload;
 import com.solusi.erp.inventory.stock.domain.model.MovementType;
 import com.solusi.erp.inventory.stock.domain.model.ReferenceType;
 import com.solusi.erp.inventory.stock.domain.port.StockService;
+import com.solusi.erp.inventory.uomconversion.domain.port.UomConversionService;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrder;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderLine;
 import com.solusi.erp.purchasing.purchaseorder.domain.repository.PurchaseOrderRepository;
@@ -29,15 +30,18 @@ public class CompleteGoodsReceiptUseCaseImpl implements CompleteGoodsReceiptUseC
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final EnsureOpenPeriodForDateUseCase ensureOpenPeriodForDateUseCase;
     private final StockService stockService;
+    private final UomConversionService uomConversionService;
 
     public CompleteGoodsReceiptUseCaseImpl(GoodsReceiptRepository goodsReceiptRepository,
                                            PurchaseOrderRepository purchaseOrderRepository,
                                            EnsureOpenPeriodForDateUseCase ensureOpenPeriodForDateUseCase,
-                                           StockService stockService) {
+                                           StockService stockService,
+                                           UomConversionService uomConversionService) {
         this.goodsReceiptRepository = goodsReceiptRepository;
         this.purchaseOrderRepository = purchaseOrderRepository;
         this.ensureOpenPeriodForDateUseCase = ensureOpenPeriodForDateUseCase;
         this.stockService = stockService;
+        this.uomConversionService = uomConversionService;
     }
 
     @Override
@@ -100,9 +104,13 @@ public class CompleteGoodsReceiptUseCaseImpl implements CompleteGoodsReceiptUseC
     }
 
     private int resolveSerializedUnitCount(GoodsReceiptLine line) {
-        BigDecimal serializedUnitCount = line.getBaseQuantity();
-        if (serializedUnitCount == null || serializedUnitCount.compareTo(BigDecimal.ZERO) <= 0) {
-            serializedUnitCount = line.getQuantityReceived();
+        BigDecimal serializedUnitCount = line.getQuantityReceived();
+        if (line.getUomId() != null && serializedUnitCount != null) {
+            serializedUnitCount = uomConversionService.convertToBaseUom(
+                    line.getProductId(),
+                    line.getUomId(),
+                    serializedUnitCount
+            );
         }
         if (serializedUnitCount == null || serializedUnitCount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new DomainException("msg.error.gr.serial.quantity.whole");
