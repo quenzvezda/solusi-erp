@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -414,6 +415,46 @@ class PurchaseOrderTest {
             assertThatThrownBy(() -> po.send())
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("msg.error.po.send.invalid.status");
+        }
+    }
+
+    @Nested
+    @DisplayName("recordReceipt method")
+    class RecordReceipt {
+
+        @Test
+        @DisplayName("recordReceipt partial updates received quantity and status")
+        void recordReceipt_partial_updatesReceivedQuantityAndStatus() {
+            PurchaseOrderLine line = PurchaseOrderLine.rehydrate(
+                    new AuditMetadata(11L, 1L, null, null, null, null),
+                    1L, 10L, new BigDecimal("10.0000"), BigDecimal.ZERO, 1L,
+                    new BigDecimal("100.00"), BigDecimal.ZERO,
+                    new BigDecimal("1000.0000"), BigDecimal.ZERO, new BigDecimal("1000.0000"),
+                    null, null
+            );
+            PurchaseOrder po = createPOWithStatus(PurchaseOrderStatus.SENT, new ArrayList<>(List.of(line)));
+
+            po.recordReceipt(Map.of(11L, new BigDecimal("4.0000")));
+
+            assertThat(po.getLines().get(0).getReceivedQuantity()).isEqualByComparingTo("4.0000");
+            assertThat(po.getStatus()).isEqualTo(PurchaseOrderStatus.PARTIALLY_RECEIVED);
+        }
+
+        @Test
+        @DisplayName("recordReceipt full closes PO into fully received")
+        void recordReceipt_full_marksPoFullyReceived() {
+            PurchaseOrderLine line = PurchaseOrderLine.rehydrate(
+                    new AuditMetadata(12L, 1L, null, null, null, null),
+                    1L, 10L, new BigDecimal("10.0000"), BigDecimal.ZERO, 1L,
+                    new BigDecimal("100.00"), BigDecimal.ZERO,
+                    new BigDecimal("1000.0000"), BigDecimal.ZERO, new BigDecimal("1000.0000"),
+                    null, null
+            );
+            PurchaseOrder po = createPOWithStatus(PurchaseOrderStatus.SENT, new ArrayList<>(List.of(line)));
+
+            po.recordReceipt(Map.of(12L, new BigDecimal("10.0000")));
+
+            assertThat(po.getStatus()).isEqualTo(PurchaseOrderStatus.FULLY_RECEIVED);
         }
     }
 

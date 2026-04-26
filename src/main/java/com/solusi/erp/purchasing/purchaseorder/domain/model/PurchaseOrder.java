@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class PurchaseOrder {
 
@@ -186,6 +187,21 @@ public class PurchaseOrder {
             throw new DomainException("msg.error.po.send.invalid.status");
         }
         this.status = PurchaseOrderStatus.SENT;
+    }
+
+    public void recordReceipt(Map<Long, BigDecimal> receivedByLineId) {
+        if (!status.canReceive()) {
+            throw new DomainException("msg.error.gr.po.invalid.status");
+        }
+        for (PurchaseOrderLine line : lines) {
+            Long lineId = line.getId();
+            if (lineId != null && receivedByLineId.containsKey(lineId)) {
+                line.receive(receivedByLineId.get(lineId));
+            }
+        }
+        boolean fullyReceived = lines.stream()
+                .allMatch(line -> line.getOutstandingQuantity().compareTo(BigDecimal.ZERO) == 0);
+        this.status = fullyReceived ? PurchaseOrderStatus.FULLY_RECEIVED : PurchaseOrderStatus.PARTIALLY_RECEIVED;
     }
 
     public void cancel() {
