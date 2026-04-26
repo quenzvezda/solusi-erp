@@ -23,6 +23,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
@@ -298,5 +300,30 @@ public class StockServiceTest {
         verify(stockBalanceRepository).save(argThat(sb ->
             sb.getQuantity().compareTo(BigDecimal.valueOf(48)) == 0
         ));
+    }
+
+    @Test
+    void receiptCost_isNormalizedToBaseUomBeforeLayerCreation() {
+        StockMovementPayload payload = StockMovementPayload.builder()
+                .productId(1L)
+                .containerId(1L)
+                .quantity(new BigDecimal("10"))
+                .uomId(2L)
+                .movementType(MovementType.RECEIPT)
+                .currencyId(1L)
+                .exchangeRate(new BigDecimal("15000"))
+                .netPrice(new BigDecimal("120.00"))
+                .build();
+
+        product.setIsSerialized(false);
+        when(productRepository.getReferenceById(1L)).thenReturn(product);
+        when(uomConversionService.convertToBaseUom(1L, 2L, new BigDecimal("10"))).thenReturn(new BigDecimal("120"));
+        when(stockBalanceRepository.findByProductContainerSerial(1L, 1L, null)).thenReturn(Optional.empty());
+        when(stockBalanceRepository.save(any(StockBalance.class))).thenAnswer(i -> i.getArgument(0));
+
+        stockService.adjust(payload);
+
+        verify(fifoValuationService).addLayer(eq(1L), eq(1L), isNull(), eq(new BigDecimal("120")),
+                argThat(cost -> cost.originalAmount().compareTo(new BigDecimal("10.000000")) == 0));
     }
 }
