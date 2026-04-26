@@ -112,17 +112,39 @@ class CompleteGoodsReceiptUseCaseTest {
     }
 
     @Test
-    void complete_serializedLineSplitsTransactionQuantityAcrossSerials() {
-        GoodsReceipt receipt = receiptWithLine(true, new BigDecimal("1.0000"), BigDecimal.ONE, "SN-1,SN-2");
+    void complete_serializedLinePostsOneUnitPerSerialAndGeneratesMissingSerials() {
+        GoodsReceipt receipt = receiptWithLine(true, new BigDecimal("3.0000"), BigDecimal.ONE, "SN-1,SN-2");
         when(goodsReceiptRepository.findById(1L)).thenReturn(Optional.of(receipt));
         when(purchaseOrderRepository.findById(receipt.getPoId())).thenReturn(Optional.of(sentPoWithOutstanding("10.0000")));
 
         completeUseCase.execute(1L);
 
-        verify(stockService, times(2)).adjust(argThat((StockMovementPayload payload) ->
-                payload.getQuantity().compareTo(new BigDecimal("0.500000")) == 0
+        verify(stockService, times(3)).adjust(argThat((StockMovementPayload payload) ->
+                payload.getQuantity().compareTo(BigDecimal.ONE) == 0
                         && payload.getSerialNumber() != null
                         && payload.getUomId().equals(1L)));
+        verify(stockService).adjust(argThat(payload ->
+                payload.getQuantity().compareTo(BigDecimal.ONE) == 0
+                        && "SN-1".equals(payload.getSerialNumber())));
+        verify(stockService).adjust(argThat(payload ->
+                payload.getQuantity().compareTo(BigDecimal.ONE) == 0
+                        && "SN-2".equals(payload.getSerialNumber())));
+        verify(stockService).adjust(argThat(payload ->
+                payload.getQuantity().compareTo(BigDecimal.ONE) == 0
+                        && payload.getSerialNumber().startsWith("SN-")
+                        && !"SN-1".equals(payload.getSerialNumber())
+                        && !"SN-2".equals(payload.getSerialNumber())));
+    }
+
+    @Test
+    void complete_whenProvidedSerialCountExceedsUnitCount_throws() {
+        GoodsReceipt receipt = receiptWithLine(true, new BigDecimal("1.0000"), BigDecimal.ONE, "SN-1,SN-2");
+        when(goodsReceiptRepository.findById(1L)).thenReturn(Optional.of(receipt));
+        when(purchaseOrderRepository.findById(receipt.getPoId())).thenReturn(Optional.of(sentPoWithOutstanding("10.0000")));
+
+        assertThatThrownBy(() -> completeUseCase.execute(1L))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.gr.serial.quantity.whole");
     }
 
     private GoodsReceipt draftReceiptWithOneActiveLine() {

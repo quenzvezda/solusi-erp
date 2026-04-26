@@ -16,6 +16,7 @@ import com.solusi.erp.purchasing.purchaseorder.domain.repository.PurchaseOrderRe
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -67,38 +68,45 @@ public class CompleteGoodsReceiptUseCaseImpl implements CompleteGoodsReceiptUseC
 
     private void processSerializedLine(GoodsReceipt receipt, PurchaseOrder po, GoodsReceiptLine line) {
         List<String> serialNumbers = resolveSerialNumbers(line);
-        BigDecimal quantityPerSerial = line.getQuantityReceived()
-                .divide(BigDecimal.valueOf(serialNumbers.size()), 6, java.math.RoundingMode.HALF_UP);
         for (String serialNumber : serialNumbers) {
-            stockService.adjust(buildBasePayload(receipt, po, line, quantityPerSerial, serialNumber));
+            stockService.adjust(buildBasePayload(receipt, po, line, BigDecimal.ONE, serialNumber));
         }
     }
 
     private List<String> resolveSerialNumbers(GoodsReceiptLine line) {
-        String[] providedSerials = StringUtils.hasText(line.getSerialNumber())
-                ? line.getSerialNumber().split(",")
-                : new String[0];
-        int totalUnits = resolveSerializedUnitCount(line, providedSerials);
+        List<String> providedSerials = parseProvidedSerialNumbers(line.getSerialNumber());
+        int totalUnits = resolveSerializedUnitCount(line);
+        if (providedSerials.size() > totalUnits) {
+            throw new DomainException("msg.error.gr.serial.quantity.whole");
+        }
         List<String> serials = new ArrayList<>(totalUnits);
 
-        for (int i = 0; i < totalUnits; i++) {
-            String serialNumber = i < providedSerials.length ? providedSerials[i].trim() : null;
-            if (!StringUtils.hasText(serialNumber)) {
-                serialNumber = SerialNumberGenerator.generate();
-            }
-            serials.add(serialNumber);
+        serials.addAll(providedSerials);
+        while (serials.size() < totalUnits) {
+            serials.add(SerialNumberGenerator.generate());
         }
         return serials;
     }
 
-    private int resolveSerializedUnitCount(GoodsReceiptLine line, String[] providedSerials) {
-        if (providedSerials.length > 0) {
-            return providedSerials.length;
+    private List<String> parseProvidedSerialNumbers(String serialNumber) {
+        if (!StringUtils.hasText(serialNumber)) {
+            return List.of();
         }
-        if (line.getQuantityReceived() == null || line.getQuantityReceived().stripTrailingZeros().scale() > 0) {
+        return Arrays.stream(serialNumber.split(","))
+                .map(String::trim)
+                .filter(StringUtils::hasText)
+                .toList();
+    }
+
+    private int resolveSerializedUnitCount(GoodsReceiptLine line) {
+        if (line.getQuantityReceived() == null) {
             throw new DomainException("msg.error.gr.serial.quantity.whole");
         }
-        return line.getQuantityReceived().abs().intValueExact();
+        try {
+            return line.getQuantityReceived().abs().intValueExact();
+        } catch (ArithmeticException ex) {
+            throw new DomainException("msg.error.gr.serial.quantity.whole");
+        }
     }
 
     private StockMovementPayload buildBasePayload(GoodsReceipt receipt, PurchaseOrder po, GoodsReceiptLine line,
