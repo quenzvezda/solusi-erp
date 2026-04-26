@@ -186,6 +186,24 @@
                             </div>
                         </div>
 
+                        <!-- Goods Receipt document flow (Sprint 4) -->
+                        <div class="btn-list mt-3" th:if="${canCreateGoodsReceipt}">
+                            <a class="btn btn-outline-primary"
+                               sec:authorize="hasAuthority('GOODS-RECEIPT_CREATE')"
+                               th:href="@{/inventory/goods-receipts/create(poId=${po.id})}">
+                                <i class="ti ti-package-import me-1"></i>
+                                <span th:text="#{label.gr.action.create}">Create Goods Receipt</span>
+                            </a>
+                            <a class="btn btn-outline-secondary"
+                               sec:authorize="hasAuthority('GOODS-RECEIPT_READ')"
+                               th:href="@{/inventory/goods-receipts(poId=${po.id})}">
+                                <i class="ti ti-list-details me-1"></i>
+                                <span th:text="#{label.gr.list.title}">Goods Receipts</span>
+                                <span class="badge badge-warning ms-1" th:if="${goodsReceiptCount > 0}" th:text="${goodsReceiptCount}">3</span>
+                                <span class="badge badge-secondary ms-1" th:if="${goodsReceiptCount == 0}">0</span>
+                            </a>
+                        </div>
+
                     </div>
 
                 </div>

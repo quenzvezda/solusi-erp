@@ -28,6 +28,20 @@ class PurchaseOrderViewIntegrationTest {
         assertThat(template).doesNotContain("th:classappend=\"${approvalRequestId != null} ? 'col-lg-8' : 'col-12'\"");
     }
 
+    @Test
+    @DisplayName("po detail template renders goods receipt buttons when can receive")
+    void poDetailTemplate_rendersGoodsReceiptButtons_whenCanReceive() throws Exception {
+        String template = readResource(TEMPLATE);
+
+        assertThat(template).contains("th:if=\"${canCreateGoodsReceipt}\"");
+        assertThat(template).contains("#{label.gr.action.create}");
+        assertThat(template).contains("/inventory/goods-receipts/create");
+        assertThat(template).contains("poId=${po.id}");
+        assertThat(template).contains("goodsReceiptCount");
+        assertThat(template).contains("hasAuthority('GOODS-RECEIPT_CREATE')");
+        assertThat(template).contains("hasAuthority('GOODS-RECEIPT_READ')");
+    }
+
     private String readResource(String path) throws Exception {
         InputStream is = getClass().getClassLoader().getResourceAsStream(path);
         assertThat(is).as("Resource not found: %s", path).isNotNull();

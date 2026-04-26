@@ -73,8 +73,8 @@ ON DUPLICATE KEY UPDATE module_code = module_code;
 -- ============================================================
 INSERT INTO permission_groups (code, name_id, name_en, breadcrumb_id, breadcrumb_en, url_path, icon_class, description_id, description_en, sort_order, created_by_user_id, created_date)
 VALUES
-('INV-11', 'Penerimaan Barang', 'Goods Receipt',
- 'Inventory > Penerimaan Barang', 'Inventory > Goods Receipt',
+('INV-12', 'Penerimaan Barang', 'Goods Receipt',
+ 'Operasional > Transaksi Inventaris > Penerimaan Barang', 'Operations > Inventory Transactions > Goods Receipt',
  '/inventory/goods-receipts', 'ti-package-import',
  'Kelola penerimaan barang dari PO', 'Manage goods receipt from PO',
  220, 1, NOW());
@@ -83,11 +83,11 @@ VALUES
 -- 5. Permissions
 -- ============================================================
 INSERT INTO permissions (name, description, created_by_user_id, created_date, permission_group_id) VALUES
-('GOODS-RECEIPT_READ',   'Melihat daftar penerimaan barang',           1, NOW(), (SELECT id FROM permission_groups WHERE code = 'INV-11')),
-('GOODS-RECEIPT_CREATE', 'Membuat penerimaan barang baru',             1, NOW(), (SELECT id FROM permission_groups WHERE code = 'INV-11')),
-('GOODS-RECEIPT_UPDATE', 'Mengubah penerimaan barang',                 1, NOW(), (SELECT id FROM permission_groups WHERE code = 'INV-11')),
-('GOODS-RECEIPT_DELETE', 'Menghapus penerimaan barang',                1, NOW(), (SELECT id FROM permission_groups WHERE code = 'INV-11')),
-('GOODS-RECEIPT_COMPLETE', 'Menyelesaikan (complete) penerimaan barang', 1, NOW(), (SELECT id FROM permission_groups WHERE code = 'INV-11'));
+('GOODS-RECEIPT_READ',   'Melihat daftar penerimaan barang',           1, NOW(), (SELECT id FROM permission_groups WHERE code = 'INV-12')),
+('GOODS-RECEIPT_CREATE', 'Membuat penerimaan barang baru',             1, NOW(), (SELECT id FROM permission_groups WHERE code = 'INV-12')),
+('GOODS-RECEIPT_UPDATE', 'Mengubah penerimaan barang',                 1, NOW(), (SELECT id FROM permission_groups WHERE code = 'INV-12')),
+('GOODS-RECEIPT_DELETE', 'Menghapus penerimaan barang',                1, NOW(), (SELECT id FROM permission_groups WHERE code = 'INV-12')),
+('GOODS-RECEIPT_COMPLETE', 'Menyelesaikan (complete) penerimaan barang', 1, NOW(), (SELECT id FROM permission_groups WHERE code = 'INV-12'));
 
 -- ============================================================
 -- 6. Grant all goods receipt permissions to ROLE_ADMIN

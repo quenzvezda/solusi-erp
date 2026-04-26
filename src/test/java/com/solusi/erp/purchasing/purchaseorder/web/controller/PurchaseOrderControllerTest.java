@@ -5,6 +5,7 @@ import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.inventory.facility.domain.port.FacilityLookupProvider;
+import com.solusi.erp.inventory.goodsreceipt.application.usecase.query.CountGoodsReceiptsByPoUseCase;
 import com.solusi.erp.inventory.product.domain.port.ProductLookupProvider;
 import com.solusi.erp.inventory.uom.domain.port.UomLookupProvider;
 import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
@@ -56,6 +57,7 @@ public class PurchaseOrderControllerTest {
     private FindPurchaseOrderPrSelectorUseCase findPrSelectorUc;
     private FindPurchaseOrderPrLineSelectorUseCase findPrLineSelectorUc;
     private FindApprovalRequestByReferenceUseCase findApprovalRequestByReferenceUseCase;
+    private CountGoodsReceiptsByPoUseCase countGoodsReceiptsByPoUseCase;
     private PurchaseOrderWebMapper webMapper;
     private MessageSource messageSource;
     private PartyLookupProvider partyLookupProvider;
@@ -77,6 +79,7 @@ public class PurchaseOrderControllerTest {
         findPrSelectorUc = mock(FindPurchaseOrderPrSelectorUseCase.class);
         findPrLineSelectorUc = mock(FindPurchaseOrderPrLineSelectorUseCase.class);
         findApprovalRequestByReferenceUseCase = mock(FindApprovalRequestByReferenceUseCase.class);
+        countGoodsReceiptsByPoUseCase = mock(CountGoodsReceiptsByPoUseCase.class);
         webMapper = mock(PurchaseOrderWebMapper.class);
         messageSource = mock(MessageSource.class);
         partyLookupProvider = mock(PartyLookupProvider.class);
@@ -87,7 +90,7 @@ public class PurchaseOrderControllerTest {
         controller = new PurchaseOrderController(
             createUc, updateUc, deleteUc, submitUc, sendUc, cancelUc,
             findUc, editViewUc, findPrSelectorUc, findPrLineSelectorUc,
-            findApprovalRequestByReferenceUseCase, webMapper, messageSource,
+            findApprovalRequestByReferenceUseCase, countGoodsReceiptsByPoUseCase, webMapper, messageSource,
             partyLookupProvider, facilityLookupProvider, currencyLookupProvider, purchaseRequisitionRepository
         );
     }
@@ -142,6 +145,16 @@ public class PurchaseOrderControllerTest {
             new BigDecimal("1500.00"), BigDecimal.ZERO, new BigDecimal("1500.00"),
             PurchaseOrderStatus.DRAFT,
             30, 10L, PurchaseOrderType.STANDARD, "Standard note", true, List.of(line));
+    }
+
+    private PurchaseOrder buildSentPo() {
+        AuditMetadata metadata = new AuditMetadata(5L, 1L, null, null, null, null);
+        return new PurchaseOrder(metadata, "PO-005",
+            LocalDate.of(2026, 7, 1), null,
+            100L, null, 1L, BigDecimal.ONE,
+            BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+            PurchaseOrderStatus.SENT,
+            30, null, PurchaseOrderType.DIRECT, null, true, List.of());
     }
 
     @Test
@@ -498,5 +511,47 @@ public class PurchaseOrderControllerTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(sendUc).execute(3L);
+    }
+
+    @Test
+    @DisplayName("view populates goods receipt count when receipts exist")
+    void view_populatesGoodsReceiptCountWhenReceiptsExist() {
+        PurchaseOrder po = buildSentPo();
+        when(editViewUc.execute(1L)).thenReturn(Optional.of(po));
+        when(countGoodsReceiptsByPoUseCase.execute(1L)).thenReturn(3L);
+
+        PurchaseOrderDetailResponse detail = new PurchaseOrderDetailResponse();
+        detail.setId(1L);
+        detail.setCode("PO-005");
+        detail.setStatus(PurchaseOrderStatus.SENT);
+        when(webMapper.toDetailResponse(any(PurchaseOrder.class))).thenReturn(detail);
+
+        Model model = new ExtendedModelMap();
+        String view = controller.view(1L, model, null);
+
+        assertEquals("purchasing/purchase-orders/view", view);
+        assertThat(model.getAttribute("goodsReceiptCount")).isEqualTo(3L);
+        assertThat(model.getAttribute("canCreateGoodsReceipt")).isEqualTo(true);
+    }
+
+    @Test
+    @DisplayName("view hides goods receipt count when no receipts")
+    void view_hidesGoodsReceiptCountWhenNoReceipts() {
+        PurchaseOrder po = buildSentPo();
+        when(editViewUc.execute(1L)).thenReturn(Optional.of(po));
+        when(countGoodsReceiptsByPoUseCase.execute(1L)).thenReturn(0L);
+
+        PurchaseOrderDetailResponse detail = new PurchaseOrderDetailResponse();
+        detail.setId(1L);
+        detail.setCode("PO-005");
+        detail.setStatus(PurchaseOrderStatus.SENT);
+        when(webMapper.toDetailResponse(any(PurchaseOrder.class))).thenReturn(detail);
+
+        Model model = new ExtendedModelMap();
+        String view = controller.view(1L, model, null);
+
+        assertEquals("purchasing/purchase-orders/view", view);
+        assertThat(model.getAttribute("goodsReceiptCount")).isEqualTo(0L);
+        assertThat(model.getAttribute("canCreateGoodsReceipt")).isEqualTo(true);
     }
 }

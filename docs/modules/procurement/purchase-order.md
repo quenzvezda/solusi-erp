@@ -163,6 +163,27 @@ PO (FULLY_RECEIVED) ────────────────────
 | PO (SENT) | Goods Receipt | GR dibuat berdasarkan PO yang sudah dikirim ke supplier *(Sprint 4)* |
 | PO (FULLY_RECEIVED) | Vendor Bill | Tagihan AP dibuat berdasarkan PO yang sudah fully received *(Sprint 5)* |
 
+## 5.1. Document Flow: Goods Receipt
+
+Setelah PO berstatus **SENT** atau **PARTIALLY_RECEIVED**, bagian gudang dapat menerima barang melalui dokumen **Goods Receipt (GR)** untuk mencatat penerimaan fisik barang dari supplier.
+
+**Alur Dasar:**
+1. Buka detail PO dengan status SENT/PARTIALLY_RECEIVED
+2. Pada halaman detail PO, tombol **"Create Goods Receipt"** muncul (bersyarat permission `GOODS-RECEIPT_CREATE`)
+3. Klik tombol tersebut untuk membuka form GR pre-populated dengan data line item dari PO
+4. Isi kuantitas barang yang diterima untuk setiap line item
+5. Simpan GR dengan status **DRAFT**
+6. Setelah verifikasi fisik selesai, tekan **Complete** untuk finalisasi GR (status → **COMPLETED**)
+7. Sistem akan update status PO:
+   - Jika semua line item fully received → PO status = **FULLY_RECEIVED**
+   - Jika sebagian → PO status = **PARTIALLY_RECEIVED** (tetap)
+
+**Detail Teknis:**
+- Link dokumentasi: Lihat [docs/modules/inventory/goods-receipt.md](../inventory/goods-receipt.md)
+- Domain entities: `GoodsReceipt`, `GoodsReceiptLine` (inventory module)
+- Use cases: `CreateGoodsReceiptUseCase`, `CompleteGoodsReceiptUseCase`, `CountGoodsReceiptsByPoUseCase`
+- Handling item serialized: GR mendukung tracking nomor seri/batch untuk item tertentu
+
 ## 6. Keamanan (Security)
 
 Fitur ini dilindungi oleh otoritas berikut:
