@@ -193,6 +193,20 @@ public class PurchaseOrder {
         if (!status.canReceive()) {
             throw new DomainException("msg.error.gr.po.invalid.status");
         }
+        if (receivedByLineId == null || receivedByLineId.isEmpty()) {
+            throw new DomainException("msg.error.gr.po.receipt.lines.required");
+        }
+        boolean matchedLine = false;
+        for (PurchaseOrderLine line : lines) {
+            Long lineId = line.getId();
+            if (lineId != null && receivedByLineId.containsKey(lineId)) {
+                matchedLine = true;
+                line.validateReceipt(receivedByLineId.get(lineId));
+            }
+        }
+        if (!matchedLine) {
+            throw new DomainException("msg.error.gr.po.receipt.lines.required");
+        }
         for (PurchaseOrderLine line : lines) {
             Long lineId = line.getId();
             if (lineId != null && receivedByLineId.containsKey(lineId)) {

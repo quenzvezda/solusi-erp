@@ -292,4 +292,70 @@ class PurchaseOrderLineTest {
             );
         }
     }
+
+    @Nested
+    @DisplayName("receive method")
+    class Receive {
+
+        private PurchaseOrderLine createReceivableLine(String orderedQty, String receivedQty) {
+            return PurchaseOrderLine.rehydrate(
+                    new AuditMetadata(1L, 1L, null, null, null, null),
+                    1L, 1L, new BigDecimal(orderedQty), new BigDecimal(receivedQty), 1L,
+                    new BigDecimal("100.00"), BigDecimal.ZERO,
+                    new BigDecimal(orderedQty).multiply(new BigDecimal("100.00")),
+                    BigDecimal.ZERO,
+                    new BigDecimal(orderedQty).multiply(new BigDecimal("100.00")),
+                    null, null
+            );
+        }
+
+        @Test
+        @DisplayName("rejects zero receipt quantity")
+        void receive_zeroQuantity_throwsDomainException() {
+            PurchaseOrderLine line = createReceivableLine("10.0000", "0.0000");
+
+            assertThatThrownBy(() -> line.receive(BigDecimal.ZERO))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("msg.error.gr.line.quantity.positive");
+
+            assertThat(line.getReceivedQuantity()).isEqualByComparingTo("0.0000");
+        }
+
+        @Test
+        @DisplayName("rejects negative receipt quantity")
+        void receive_negativeQuantity_throwsDomainException() {
+            PurchaseOrderLine line = createReceivableLine("10.0000", "0.0000");
+
+            assertThatThrownBy(() -> line.receive(new BigDecimal("-1.0000")))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("msg.error.gr.line.quantity.positive");
+
+            assertThat(line.getReceivedQuantity()).isEqualByComparingTo("0.0000");
+        }
+
+        @Test
+        @DisplayName("rejects receipt quantity that exceeds outstanding amount")
+        void receive_overReceipt_throwsDomainException() {
+            PurchaseOrderLine line = createReceivableLine("10.0000", "8.0000");
+
+            assertThatThrownBy(() -> line.receive(new BigDecimal("2.5000")))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("msg.error.gr.line.exceeds.outstanding");
+
+            assertThat(line.getReceivedQuantity()).isEqualByComparingTo("8.0000");
+            assertThat(line.getOutstandingQuantity()).isEqualByComparingTo("2.0000");
+        }
+
+        @Test
+        @DisplayName("accumulates receipts without exceeding ordered quantity")
+        void receive_cumulativeReceipts_updatesOutstandingQuantity() {
+            PurchaseOrderLine line = createReceivableLine("10.0000", "2.0000");
+
+            line.receive(new BigDecimal("3.0000"));
+            line.receive(new BigDecimal("5.0000"));
+
+            assertThat(line.getReceivedQuantity()).isEqualByComparingTo("10.0000");
+            assertThat(line.getOutstandingQuantity()).isEqualByComparingTo("0.0000");
+        }
+    }
 }

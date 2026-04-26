@@ -111,7 +111,7 @@ public class PurchaseOrderLine {
         return quantity.subtract(receivedQuantity != null ? receivedQuantity : BigDecimal.ZERO);
     }
 
-    public void receive(BigDecimal qty) {
+    public void validateReceipt(BigDecimal qty) {
         if (qty == null || qty.compareTo(BigDecimal.ZERO) <= 0) {
             throw new DomainException("msg.error.gr.line.quantity.positive");
         }
@@ -119,6 +119,11 @@ public class PurchaseOrderLine {
         if (next.compareTo(quantity) > 0) {
             throw new DomainException("msg.error.gr.line.exceeds.outstanding");
         }
+    }
+
+    public void receive(BigDecimal qty) {
+        validateReceipt(qty);
+        BigDecimal next = (receivedQuantity != null ? receivedQuantity : BigDecimal.ZERO).add(qty);
         this.receivedQuantity = next;
     }
 

@@ -32,6 +32,18 @@ class PurchaseOrderTest {
         return createLine(new BigDecimal("10"), new BigDecimal("100"), new BigDecimal("0.11"));
     }
 
+    private PurchaseOrderLine createReceiptLine(long id, String orderedQty, String receivedQty) {
+        return PurchaseOrderLine.rehydrate(
+                new AuditMetadata(id, 1L, null, null, null, null),
+                1L, 10L, new BigDecimal(orderedQty), new BigDecimal(receivedQty), 1L,
+                new BigDecimal("100.00"), BigDecimal.ZERO,
+                new BigDecimal(orderedQty).multiply(new BigDecimal("100.00")),
+                BigDecimal.ZERO,
+                new BigDecimal(orderedQty).multiply(new BigDecimal("100.00")),
+                null, null
+        );
+    }
+
     private PurchaseOrder createDraftPO(List<PurchaseOrderLine> lines) {
         return PurchaseOrder.createNew(
             "PO-202607-00001",
@@ -425,13 +437,7 @@ class PurchaseOrderTest {
         @Test
         @DisplayName("recordReceipt partial updates received quantity and status")
         void recordReceipt_partial_updatesReceivedQuantityAndStatus() {
-            PurchaseOrderLine line = PurchaseOrderLine.rehydrate(
-                    new AuditMetadata(11L, 1L, null, null, null, null),
-                    1L, 10L, new BigDecimal("10.0000"), BigDecimal.ZERO, 1L,
-                    new BigDecimal("100.00"), BigDecimal.ZERO,
-                    new BigDecimal("1000.0000"), BigDecimal.ZERO, new BigDecimal("1000.0000"),
-                    null, null
-            );
+            PurchaseOrderLine line = createReceiptLine(11L, "10.0000", "0.0000");
             PurchaseOrder po = createPOWithStatus(PurchaseOrderStatus.SENT, new ArrayList<>(List.of(line)));
 
             po.recordReceipt(Map.of(11L, new BigDecimal("4.0000")));
@@ -443,18 +449,101 @@ class PurchaseOrderTest {
         @Test
         @DisplayName("recordReceipt full closes PO into fully received")
         void recordReceipt_full_marksPoFullyReceived() {
-            PurchaseOrderLine line = PurchaseOrderLine.rehydrate(
-                    new AuditMetadata(12L, 1L, null, null, null, null),
-                    1L, 10L, new BigDecimal("10.0000"), BigDecimal.ZERO, 1L,
-                    new BigDecimal("100.00"), BigDecimal.ZERO,
-                    new BigDecimal("1000.0000"), BigDecimal.ZERO, new BigDecimal("1000.0000"),
-                    null, null
-            );
+            PurchaseOrderLine line = createReceiptLine(12L, "10.0000", "0.0000");
             PurchaseOrder po = createPOWithStatus(PurchaseOrderStatus.SENT, new ArrayList<>(List.of(line)));
 
             po.recordReceipt(Map.of(12L, new BigDecimal("10.0000")));
 
             assertThat(po.getStatus()).isEqualTo(PurchaseOrderStatus.FULLY_RECEIVED);
+        }
+
+        @Test
+        @DisplayName("recordReceipt rejects invalid status before mutating state")
+        void recordReceipt_invalidStatus_throwsDomainException() {
+            PurchaseOrderLine line = createReceiptLine(13L, "10.0000", "0.0000");
+            PurchaseOrder po = createPOWithStatus(PurchaseOrderStatus.APPROVED, new ArrayList<>(List.of(line)));
+
+            assertThatThrownBy(() -> po.recordReceipt(Map.of(13L, new BigDecimal("1.0000"))))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("msg.error.gr.po.invalid.status");
+
+            assertThat(po.getStatus()).isEqualTo(PurchaseOrderStatus.APPROVED);
+            assertThat(po.getLines().get(0).getReceivedQuantity()).isEqualByComparingTo("0.0000");
+        }
+
+        @Test
+        @DisplayName("recordReceipt rejects empty receipt map")
+        void recordReceipt_emptyReceiptMap_throwsDomainException() {
+            PurchaseOrderLine line = createReceiptLine(14L, "10.0000", "0.0000");
+            PurchaseOrder po = createPOWithStatus(PurchaseOrderStatus.SENT, new ArrayList<>(List.of(line)));
+
+            assertThatThrownBy(() -> po.recordReceipt(Map.of()))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("msg.error.gr.po.receipt.lines.required");
+
+            assertThat(po.getStatus()).isEqualTo(PurchaseOrderStatus.SENT);
+            assertThat(po.getLines().get(0).getReceivedQuantity()).isEqualByComparingTo("0.0000");
+        }
+
+        @Test
+        @DisplayName("recordReceipt rejects receipt map without matching PO lines")
+        void recordReceipt_nonMatchingReceiptMap_throwsDomainException() {
+            PurchaseOrderLine line = createReceiptLine(15L, "10.0000", "0.0000");
+            PurchaseOrder po = createPOWithStatus(PurchaseOrderStatus.SENT, new ArrayList<>(List.of(line)));
+
+            assertThatThrownBy(() -> po.recordReceipt(Map.of(999L, new BigDecimal("1.0000"))))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("msg.error.gr.po.receipt.lines.required");
+
+            assertThat(po.getStatus()).isEqualTo(PurchaseOrderStatus.SENT);
+            assertThat(po.getLines().get(0).getReceivedQuantity()).isEqualByComparingTo("0.0000");
+        }
+
+        @Test
+        @DisplayName("recordReceipt recomputes status from cumulative multi-line receipts")
+        void recordReceipt_cumulativeMultiLine_recomputesStatusFromOutstandingQuantities() {
+            PurchaseOrderLine firstLine = createReceiptLine(16L, "10.0000", "0.0000");
+            PurchaseOrderLine secondLine = createReceiptLine(17L, "5.0000", "0.0000");
+            PurchaseOrder po = createPOWithStatus(
+                    PurchaseOrderStatus.SENT,
+                    new ArrayList<>(List.of(firstLine, secondLine))
+            );
+
+            po.recordReceipt(Map.of(16L, new BigDecimal("4.0000")));
+            assertThat(po.getStatus()).isEqualTo(PurchaseOrderStatus.PARTIALLY_RECEIVED);
+            assertThat(po.getLines().get(0).getOutstandingQuantity()).isEqualByComparingTo("6.0000");
+            assertThat(po.getLines().get(1).getOutstandingQuantity()).isEqualByComparingTo("5.0000");
+
+            po.recordReceipt(Map.of(
+                    16L, new BigDecimal("6.0000"),
+                    17L, new BigDecimal("5.0000")
+            ));
+
+            assertThat(po.getStatus()).isEqualTo(PurchaseOrderStatus.FULLY_RECEIVED);
+            assertThat(po.getLines().get(0).getReceivedQuantity()).isEqualByComparingTo("10.0000");
+            assertThat(po.getLines().get(1).getReceivedQuantity()).isEqualByComparingTo("5.0000");
+        }
+
+        @Test
+        @DisplayName("recordReceipt does not partially mutate lines when one receipt is invalid")
+        void recordReceipt_invalidBatch_keepsAllLinesAndStatusUnchanged() {
+            PurchaseOrderLine firstLine = createReceiptLine(18L, "10.0000", "4.0000");
+            PurchaseOrderLine secondLine = createReceiptLine(19L, "5.0000", "0.0000");
+            PurchaseOrder po = createPOWithStatus(
+                    PurchaseOrderStatus.PARTIALLY_RECEIVED,
+                    new ArrayList<>(List.of(firstLine, secondLine))
+            );
+
+            assertThatThrownBy(() -> po.recordReceipt(Map.of(
+                    18L, new BigDecimal("6.0000"),
+                    19L, new BigDecimal("5.1000")
+            )))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("msg.error.gr.line.exceeds.outstanding");
+
+            assertThat(po.getStatus()).isEqualTo(PurchaseOrderStatus.PARTIALLY_RECEIVED);
+            assertThat(po.getLines().get(0).getReceivedQuantity()).isEqualByComparingTo("4.0000");
+            assertThat(po.getLines().get(1).getReceivedQuantity()).isEqualByComparingTo("0.0000");
         }
     }
 
