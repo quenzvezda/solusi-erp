@@ -11,6 +11,7 @@ import com.solusi.erp.inventory.goodsreceipt.infrastructure.adapter.GoodsReceipt
 import com.solusi.erp.inventory.goodsreceipt.infrastructure.persistence.GoodsReceiptJpaRepository;
 import com.solusi.erp.inventory.goodsreceipt.infrastructure.persistence.GoodsReceiptPersistenceMapper;
 import com.solusi.erp.inventory.goodsreceipt.infrastructure.service.GoodsReceiptSourceResolverRegistry;
+import com.solusi.erp.inventory.product.domain.repository.ProductRepository;
 import com.solusi.erp.inventory.stock.domain.port.StockService;
 import com.solusi.erp.inventory.uomconversion.domain.port.UomConversionService;
 import com.solusi.erp.purchasing.purchaseorder.domain.repository.PurchaseOrderRepository;
@@ -71,8 +72,9 @@ public class GoodsReceiptConfig {
     }
 
     @Bean
-    public GoodsReceiptSourceResolver purchaseOrderGoodsReceiptSourceResolver(PurchaseOrderRepository poRepository) {
-        return new PurchaseOrderGoodsReceiptSourceResolver(poRepository);
+    public GoodsReceiptSourceResolver purchaseOrderGoodsReceiptSourceResolver(PurchaseOrderRepository poRepository,
+                                                                             ProductRepository productRepository) {
+        return new PurchaseOrderGoodsReceiptSourceResolver(poRepository, productRepository);
     }
 
     @Bean

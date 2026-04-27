@@ -9,6 +9,8 @@ import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptStatus;
 import com.solusi.erp.inventory.goodsreceipt.domain.port.GoodsReceiptSourceResolver;
 import com.solusi.erp.inventory.goodsreceipt.infrastructure.adapter.PurchaseOrderGoodsReceiptSourceResolver;
 import com.solusi.erp.inventory.goodsreceipt.infrastructure.service.GoodsReceiptSourceResolverRegistry;
+import com.solusi.erp.inventory.product.domain.model.Product;
+import com.solusi.erp.inventory.product.domain.repository.ProductRepository;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrder;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderLine;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderStatus;
@@ -28,6 +30,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,12 +41,15 @@ class GetGoodsReceiptCreateViewUseCaseTest {
     @Mock
     private PurchaseOrderRepository purchaseOrderRepository;
 
+    @Mock
+    private ProductRepository productRepository;
+
     private GetGoodsReceiptCreateViewUseCase useCase;
 
     @BeforeEach
     void setUp() {
         GoodsReceiptSourceResolverRegistry registry = new GoodsReceiptSourceResolverRegistry(
-                List.of(new PurchaseOrderGoodsReceiptSourceResolver(purchaseOrderRepository))
+                List.of(new PurchaseOrderGoodsReceiptSourceResolver(purchaseOrderRepository, productRepository))
         );
         useCase = new GetGoodsReceiptCreateViewUseCaseImpl(registry);
     }
@@ -51,6 +58,10 @@ class GetGoodsReceiptCreateViewUseCaseTest {
     void buildDraftFromReference_prefillsOutstandingLinesWithZeroQty() {
         PurchaseOrder po = sentPoWithOutstandingLines();
         when(purchaseOrderRepository.findById(7L)).thenReturn(Optional.of(po));
+        
+        Product product = mock(Product.class);
+        when(product.isSerialized()).thenReturn(Boolean.TRUE);
+        when(productRepository.findById(anyLong())).thenReturn(Optional.of(product));
 
         GoodsReceipt draft = useCase.execute(GoodsReceiptReferenceType.PURCHASE_ORDER, 7L);
 
@@ -62,7 +73,7 @@ class GetGoodsReceiptCreateViewUseCaseTest {
         assertThat(draft.getLines()).hasSize(2);
         assertThat(draft.getLines()).extracting(GoodsReceiptLine::getReferenceLineId).containsExactly(101L, 102L);
         assertThat(draft.getLines()).allMatch(line -> line.getQuantityReceived().compareTo(BigDecimal.ZERO) == 0);
-        assertThat(draft.getLines()).allMatch(line -> Boolean.FALSE.equals(line.getSerialized()));
+        assertThat(draft.getLines()).allMatch(line -> Boolean.TRUE.equals(line.getSerialized()));
     }
 
     @Test

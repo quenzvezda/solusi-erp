@@ -85,6 +85,16 @@ public class GoodsReceiptController {
         return "inventory/goods-receipts/form";
     }
 
+    @GetMapping("/edit/{id}")
+    @PreAuthorize("hasAuthority('GOODS-RECEIPT_UPDATE')")
+    public String editForm(@PathVariable Long id, Model model) {
+        GoodsReceipt domain = getGoodsReceiptEditViewUseCase.execute(id)
+            .orElseThrow(() -> new RuntimeException("Goods receipt not found"));
+        GoodsReceiptSaveRequest saveRequest = webMapper.toSaveRequest(domain);
+        model.addAttribute("grRequest", saveRequest);
+        return "inventory/goods-receipts/form";
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('GOODS-RECEIPT_READ')")
     public String view(@PathVariable Long id, Model model) {
@@ -93,16 +103,6 @@ public class GoodsReceiptController {
         GoodsReceiptDetailResponse response = webMapper.toDetailResponse(domain);
         model.addAttribute("gr", response);
         return "inventory/goods-receipts/view";
-    }
-
-    @GetMapping("/{id}/edit")
-    @PreAuthorize("hasAuthority('GOODS-RECEIPT_UPDATE')")
-    public String editForm(@PathVariable Long id, Model model) {
-        GoodsReceipt domain = getGoodsReceiptEditViewUseCase.execute(id)
-            .orElseThrow(() -> new RuntimeException("Goods receipt not found"));
-        GoodsReceiptSaveRequest saveRequest = webMapper.toSaveRequest(domain);
-        model.addAttribute("grRequest", saveRequest);
-        return "inventory/goods-receipts/form";
     }
 
     @PostMapping

@@ -23,6 +23,9 @@ public class GoodsReceiptLineEntity extends BaseModel {
     @Column(name = "product_id", nullable = false)
     private Long productId;
 
+    @Column(name = "is_serialized", nullable = false)
+    private Boolean serialized = Boolean.FALSE;
+
     @Column(name = "quantity_received", nullable = false, precision = 19, scale = 4)
     private BigDecimal quantityReceived;
 

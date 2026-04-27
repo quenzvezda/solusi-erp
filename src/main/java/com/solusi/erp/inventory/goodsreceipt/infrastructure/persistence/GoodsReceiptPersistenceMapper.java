@@ -68,7 +68,7 @@ public interface GoodsReceiptPersistenceMapper {
                 entity.getReferenceLineId(),
                 entity.getProductId(),
                 null,
-                null,
+                entity.getSerialized(),
                 entity.getQuantityReceived(),
                 entity.getUomId(),
                 entity.getContainerId(),
