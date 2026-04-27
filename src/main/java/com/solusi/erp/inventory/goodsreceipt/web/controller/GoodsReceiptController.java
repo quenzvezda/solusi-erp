@@ -127,7 +127,9 @@ public class GoodsReceiptController {
     @PreAuthorize("hasAuthority('GOODS-RECEIPT_COMPLETE')")
     @ResponseBody
     public ResponseEntity<ApiResponse<GoodsReceiptDetailResponse>> complete(@PathVariable Long id) {
-        GoodsReceipt domain = completeGoodsReceiptUseCase.execute(id);
+        completeGoodsReceiptUseCase.execute(id);
+        GoodsReceipt domain = getGoodsReceiptUseCase.execute(id)
+            .orElseThrow(() -> new RuntimeException("Goods receipt not found"));
         GoodsReceiptDetailResponse data = webMapper.toDetailResponse(domain);
         String msg = messageSource.getMessage("msg.success.gr.completed", null, LocaleContextHolder.getLocale());
         return ResponseEntity.ok(ApiResponse.success(msg, data));

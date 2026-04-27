@@ -222,15 +222,27 @@ public class GoodsReceiptControllerTest {
     }
 
     @Test
-    @DisplayName("complete calls use case and redirects to view")
-    void completeShouldCallUseCaseAndRedirect() {
+    @DisplayName("complete calls use case and returns JSON response")
+    void completeShouldCallUseCaseAndReturnResponse() {
+        GoodsReceipt gr = buildDraftGr();
+        
+        when(getUc.execute(1L)).thenReturn(Optional.of(gr));
+        
+        GoodsReceiptDetailResponse detail = new GoodsReceiptDetailResponse();
+        detail.setId(1L);
+        detail.setCode("GR-001");
+        when(webMapper.toDetailResponse(gr)).thenReturn(detail);
+        
         when(messageSource.getMessage(any(), any(), any())).thenReturn("Completed");
 
-        RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
-        String view = controller.complete(1L, redirectAttributes);
+        ResponseEntity<ApiResponse<GoodsReceiptDetailResponse>> response = controller.complete(1L);
 
-        assertEquals("redirect:/inventory/goods-receipts/1", view);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().isSuccess()).isTrue();
+        assertEquals("Completed", response.getBody().getMessage());
         verify(completeUc).execute(1L);
+        verify(getUc).execute(1L);
     }
 
     @Test
