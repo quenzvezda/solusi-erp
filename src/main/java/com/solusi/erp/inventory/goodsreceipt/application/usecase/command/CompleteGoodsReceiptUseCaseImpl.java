@@ -185,7 +185,7 @@ public class CompleteGoodsReceiptUseCaseImpl implements CompleteGoodsReceiptUseC
     private Map<Long, BigDecimal> sumByPoLine(List<GoodsReceiptLine> lines) {
         return lines.stream()
                 .filter(GoodsReceiptLine::hasReceiptQuantity)
-                .collect(Collectors.groupingBy(GoodsReceiptLine::getPoLineId,
+                .collect(Collectors.groupingBy(GoodsReceiptLine::getReferenceLineId,
                         Collectors.mapping(GoodsReceiptLine::getQuantityReceived,
                                 Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
     }

@@ -51,7 +51,7 @@ public class UpdateGoodsReceiptUseCaseImpl implements UpdateGoodsReceiptUseCase 
 
         return commands.stream()
                 .filter(this::hasPositiveQuantity)
-                .map(command -> toLine(goodsReceipt, poLines.get(command.poLineId()), command))
+                .map(command -> toLine(goodsReceipt, poLines.get(command.referenceLineId()), command))
                 .toList();
     }
 
@@ -60,7 +60,7 @@ public class UpdateGoodsReceiptUseCaseImpl implements UpdateGoodsReceiptUseCase 
             throw new DomainException("msg.error.gr.stale.po.changed");
         }
         return GoodsReceiptLine.prefill(
-                command.poLineId(),
+                command.referenceLineId(),
                 command.productId() != null ? command.productId() : poLine.getProductId(),
                 goodsReceipt.getFacilityId(),
                 Boolean.TRUE.equals(command.serialized()),
@@ -88,7 +88,7 @@ public class UpdateGoodsReceiptUseCaseImpl implements UpdateGoodsReceiptUseCase 
                 .collect(Collectors.toMap(PurchaseOrderLine::getId, PurchaseOrderLine::getOutstandingQuantity));
         Map<Long, BigDecimal> requestedByPoLine = commands.stream()
                 .filter(this::hasPositiveQuantity)
-                .collect(Collectors.groupingBy(GoodsReceiptLineCommand::poLineId,
+                .collect(Collectors.groupingBy(GoodsReceiptLineCommand::referenceLineId,
                         Collectors.mapping(GoodsReceiptLineCommand::quantityReceived,
                                 Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
         for (Map.Entry<Long, BigDecimal> entry : requestedByPoLine.entrySet()) {

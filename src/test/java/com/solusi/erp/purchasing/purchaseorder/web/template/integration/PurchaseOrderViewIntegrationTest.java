@@ -36,7 +36,8 @@ class PurchaseOrderViewIntegrationTest {
         assertThat(template).contains("th:if=\"${canCreateGoodsReceipt}\"");
         assertThat(template).contains("#{label.gr.action.create}");
         assertThat(template).contains("/inventory/goods-receipts/create");
-        assertThat(template).contains("poId=${po.id}");
+        assertThat(template).contains("referenceType='PURCHASE_ORDER'");
+        assertThat(template).contains("referenceId=${po.id}");
         assertThat(template).contains("goodsReceiptCount");
         assertThat(template).contains("hasAuthority('GOODS-RECEIPT_CREATE')");
         assertThat(template).contains("hasAuthority('GOODS-RECEIPT_READ')");

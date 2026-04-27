@@ -4,10 +4,12 @@ import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.core.exception.DomainException;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.inventory.goodsreceipt.application.usecase.command.*;
 import com.solusi.erp.inventory.goodsreceipt.application.usecase.query.*;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceipt;
+import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptReferenceType;
 import com.solusi.erp.inventory.goodsreceipt.web.dto.*;
 import com.solusi.erp.inventory.goodsreceipt.web.mapper.GoodsReceiptWebMapper;
 import com.solusi.erp.util.HtmxResponseUtility;
@@ -65,8 +67,19 @@ public class GoodsReceiptController {
 
     @GetMapping("/create")
     @PreAuthorize("hasAuthority('GOODS-RECEIPT_CREATE')")
-    public String createForm(@RequestParam(required = false) Long poId, Model model) {
-        GoodsReceipt draftGr = getGoodsReceiptCreateViewUseCase.execute(poId);
+    public String createForm(@RequestParam(required = false) GoodsReceiptReferenceType referenceType,
+                             @RequestParam(required = false) Long referenceId,
+                             @RequestParam(name = "poId", required = false) Long poId,
+                             Model model) {
+        GoodsReceiptReferenceType effectiveReferenceType = referenceType;
+        Long effectiveReferenceId = referenceId;
+
+        if (effectiveReferenceType == null && effectiveReferenceId == null && poId != null) {
+            effectiveReferenceType = GoodsReceiptReferenceType.PURCHASE_ORDER;
+            effectiveReferenceId = poId;
+        }
+
+        GoodsReceipt draftGr = getGoodsReceiptCreateViewUseCase.execute(effectiveReferenceType, effectiveReferenceId);
         GoodsReceiptSaveRequest request = webMapper.toSaveRequest(draftGr);
         model.addAttribute("grRequest", request);
         return "inventory/goods-receipts/form";
@@ -101,9 +114,10 @@ public class GoodsReceiptController {
 
         GoodsReceipt domain;
         if (request.getId() == null) {
+            validateCreateReferenceType(request.getReferenceType());
             domain = createGoodsReceiptUseCase.execute(
                 request.getReceiptDate(),
-                null,
+                request.getReferenceId(),
                 request.getNotes(),
                 lines
             );
@@ -120,6 +134,12 @@ public class GoodsReceiptController {
             GoodsReceiptDetailResponse data = webMapper.toDetailResponse(domain);
             String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
             return ResponseEntity.ok(ApiResponse.success(msg, data));
+        }
+    }
+
+    private void validateCreateReferenceType(GoodsReceiptReferenceType referenceType) {
+        if (referenceType != GoodsReceiptReferenceType.PURCHASE_ORDER) {
+            throw new DomainException("msg.error.gr.reference.unsupported");
         }
     }
 

@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.goodsreceipt.web.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -9,7 +10,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class GoodsReceiptLineDetailResponse {
     private Long id;
-    private Long poLineId;
+    private Long referenceLineId;
     private Long productId;
     private String productCode;
     private String productName;
@@ -25,4 +26,9 @@ public class GoodsReceiptLineDetailResponse {
     private BigDecimal taxAmount;
     private BigDecimal grIrAmount;
     private String serialNumber;
+
+    @JsonProperty("poLineId")
+    public Long getPoLineId() {
+        return referenceLineId;
+    }
 }

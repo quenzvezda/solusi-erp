@@ -4,6 +4,9 @@ import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptReferenceT
 import com.solusi.erp.inventory.goodsreceipt.web.dto.GoodsReceiptSaveLineRequest;
 import com.solusi.erp.inventory.goodsreceipt.web.dto.GoodsReceiptSaveRequest;
 import com.solusi.erp.testutils.TemplateTestUtils;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -12,6 +15,7 @@ import org.springframework.security.core.Authentication;
 
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
@@ -25,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 class GoodsReceiptFormIntegrationTest {
 
     private static final String CREATE_TEMPLATE = "templates/inventory/goods-receipts/form.html";
+    private static final String FORM_SCRIPT = "static/js/inventory/goods-receipt/goods-receipt-form.js";
 
     @Test
     @DisplayName("create form template renders form with input fields")
@@ -88,9 +93,32 @@ class GoodsReceiptFormIntegrationTest {
     }
 
     @Test
+    @DisplayName("create form preserves generic reference fields for submit")
+    void createForm_preservesGenericReferenceFieldsForSubmit() {
+        GoodsReceiptSaveRequest request = new GoodsReceiptSaveRequest();
+        request.setReceiptDate(LocalDate.of(2026, 7, 1));
+        request.setReferenceType(GoodsReceiptReferenceType.PURCHASE_ORDER);
+        request.setReferenceId(7L);
+        request.setReferenceCode("PO-001");
+        request.setSupplierName("PT Supplier");
+        request.setFacilityName("Main Warehouse");
+
+        assertDoesNotThrow(() -> {
+            String html = TemplateTestUtils.renderWithSecurity(
+                "inventory/goods-receipts/form",
+                Map.of("grRequest", request),
+                auth("GOODS-RECEIPT_CREATE")
+            );
+            assertThat(html).contains("type=\"hidden\" field=\"PURCHASE_ORDER\"");
+            assertThat(html).contains("type=\"hidden\" field=\"7\"");
+        });
+    }
+
+    @Test
     @DisplayName("create form renders through thymeleaf with prefilled lines")
     void createForm_rendersThroughThymeleafWithPrefilledLines() {
         GoodsReceiptSaveLineRequest line = new GoodsReceiptSaveLineRequest();
+        line.setReferenceLineId(99L);
         line.setProductId(10L);
         line.setUomId(20L);
         line.setContainerId(30L);
@@ -110,7 +138,145 @@ class GoodsReceiptFormIntegrationTest {
                 auth("GOODS-RECEIPT_CREATE")
             );
             assertThat(html).isNotBlank();
+            assertThat(html).contains("name=\"lines[0].referenceLineId\"");
+            assertThat(html).contains("value=\"99\"");
         });
+    }
+
+    @Test
+    @DisplayName("form template keeps referenceLineId for existing and new line rows")
+    void formTemplate_keepsReferenceLineIdForExistingAndNewLineRows() throws Exception {
+        String template = readResource(CREATE_TEMPLATE);
+
+        assertThat(template).contains("].referenceLineId'");
+        assertThat(template).contains("name=\"lines[INDEX].referenceLineId\"");
+        assertThat(template).contains("type=\"hidden\"");
+    }
+
+    @Test
+    @DisplayName("form template declares hidden generic reference fields")
+    void formTemplate_declaresHiddenGenericReferenceFields() throws Exception {
+        String template = readResource(CREATE_TEMPLATE);
+
+        assertThat(template).contains("th:field=\"*{referenceType}\"");
+        assertThat(template).contains("th:field=\"*{referenceId}\"");
+        assertThat(template).contains("type=\"hidden\"");
+    }
+
+    @Test
+    @DisplayName("rendered serialized line uses hidden draft fields and drawer-only serial editing contract")
+    void renderedSerializedLine_usesHiddenDraftFieldsAndDrawerOnlySerialEditingContract() {
+        Document html = renderForm(serializedRequestLine());
+        Element row = requireLineRow(html, 0);
+
+        assertThat(findInput(row, "lines[0].serialNumber")).isNotNull();
+        assertThat(findInput(row, "lines[0].serialNumber").attr("type")).isEqualTo("hidden");
+        assertThat(findInput(row, "lines[0].serialNumber").val()).isEqualTo("SN-1,SN-2");
+        assertThat(findInput(row, "lines[0].serialized")).isNotNull();
+        assertThat(findInput(row, "lines[0].serialized").attr("type")).isEqualTo("hidden");
+        assertThat(findInput(row, "lines[0].serialized").val()).isEqualTo("true");
+        assertThat(row.select(".input-sn-single:not([type=hidden]), .chk-serialized, .input-serial-number")).isEmpty();
+        assertThat(row.selectFirst(".btn-edit-detail")).isNotNull();
+        assertThat(row.selectFirst(".detail-mode-label").text()).isEqualTo("Serialized");
+        assertThat(row.selectFirst(".detail-summary").text()).isEqualTo("2 serial(s) drafted");
+
+        assertThat(html.selectFirst("#drawer-serial .input-qty-target")).isNotNull();
+        assertThat(html.selectFirst("#drawer-serial .select-uom-target")).isNotNull();
+        assertThat(html.selectFirst("#drawer-serial .serial-input-container")).isNotNull();
+        assertThat(html.selectFirst("#drawer-serial .txt-total-qty")).isNotNull();
+        assertThat(html.selectFirst("#drawer-non-serial .input-qty-target")).isNotNull();
+        assertThat(html.selectFirst("#drawer-non-serial .select-uom-target")).isNotNull();
+        assertThat(html.selectFirst("#drawer-non-serial .input-qty-base-display")).isNotNull();
+    }
+
+    @Test
+    @DisplayName("rendered serialized line with blank serial csv shows pending summary")
+    void renderedSerializedLine_withBlankSerialCsv_showsPendingSummary() {
+        GoodsReceiptSaveLineRequest line = serializedRequestLine();
+        line.setSerialNumber(" ,  ");
+
+        Document html = renderForm(line);
+        Element row = requireLineRow(html, 0);
+
+        assertThat(row.selectFirst(".detail-summary").text()).isEqualTo("Serial numbers pending");
+    }
+
+    @Test
+    @DisplayName("rendered non-serialized line keeps standard summary path and drawer pattern")
+    void renderedNonSerializedLine_keepsStandardSummaryPathAndDrawerPattern() {
+        Document html = renderForm(nonSerializedRequestLine());
+        Element row = requireLineRow(html, 0);
+
+        assertThat(findInput(row, "lines[0].serialized")).isNotNull();
+        assertThat(findInput(row, "lines[0].serialized").val()).isEqualTo("false");
+        assertThat(findInput(row, "lines[0].serialNumber")).isNotNull();
+        assertThat(findInput(row, "lines[0].serialNumber").attr("type")).isEqualTo("hidden");
+        assertThat(findInput(row, "lines[0].serialNumber").val()).isEmpty();
+        assertThat(row.selectFirst(".detail-mode-label").text()).isEqualTo("Standard");
+        assertThat(row.selectFirst(".detail-summary").text()).isEqualTo("Set quantity and UoM");
+        assertThat(row.select(".input-sn-single:not([type=hidden]), .chk-serialized, .input-serial-number")).isEmpty();
+        assertThat(row.selectFirst(".btn-edit-detail")).isNotNull();
+
+        assertThat(html.selectFirst("#drawer-non-serial .input-qty-target")).isNotNull();
+        assertThat(html.selectFirst("#drawer-non-serial .select-uom-target")).isNotNull();
+        assertThat(html.selectFirst("#drawer-non-serial .btn-save-drawer")).isNotNull();
+    }
+
+    @Test
+    @DisplayName("form script persists serial drawer rows back into the hidden csv field")
+    void formScript_persistsSerialDrawerRowsBackIntoTheHiddenCsvField() throws Exception {
+        String script = readResource(FORM_SCRIPT);
+        String saveDrawerHandler = extractBlock(script, "saveButton.onclick = function ()");
+
+        assertThat(saveDrawerHandler).containsPattern("(?s)if \\(isSerialized\\) \\{.*querySelectorAll\\('\\.input-sn-item'\\).*value\\.trim\\(\\).*serials\\.join\\(','\\).*\\} else \\{\\s*row\\.querySelector\\('\\.input-sn-single'\\)\\.value = '';\\s*\\}");
+        assertThat(saveDrawerHandler).contains("row.querySelector('.input-sn-single').value = serials.join(',');");
+    }
+
+    @Test
+    @DisplayName("form script derives serial drawer rows from computed base quantity")
+    void formScript_derivesSerialDrawerRowsFromComputedBaseQuantity() throws Exception {
+        String script = readResource(FORM_SCRIPT);
+        String updateCalculations = extractBlock(script, "function updateCalculations()");
+
+        assertThat(updateCalculations).contains("var baseQty = targetQty * factor;");
+        assertThat(updateCalculations).contains("setNumericValue(qtyBase, baseQty);");
+        assertThat(updateCalculations).contains("if (totalQty) totalQty.textContent = formatQuantity(baseQty);");
+        assertThat(updateCalculations).containsPattern("if \\(isSerialized\\) syncSerialRows\\(drawer, Math\\.max\\(0, Math\\.floor\\(baseQty\\)\\), row\\);");
+    }
+
+    @Test
+    @DisplayName("form script blocks serialized drawer save when computed base quantity is fractional")
+    void formScript_blocksSerializedDrawerSaveWhenComputedBaseQuantityIsFractional() throws Exception {
+        String script = readResource(FORM_SCRIPT);
+        String saveDrawerHandler = extractBlock(script, "saveButton.onclick = function ()");
+
+        assertThat(saveDrawerHandler).contains("var baseQty = getNumericValue(drawer.querySelector('.input-qty-base'));");
+        assertThat(saveDrawerHandler).containsPattern("if \\(isSerialized && .*baseQty.*\\) \\{\\s*warn\\(");
+        assertThat(saveDrawerHandler).containsPattern("if \\(isSerialized && .*baseQty.*\\) \\{[\\s\\S]*return;[\\s\\S]*\\}\\s*row\\.querySelector\\('\\.input-uom-id'\\)\\.value");
+    }
+
+    @Test
+    @DisplayName("form script builds serialized drawer rows without raw innerHTML interpolation")
+    void formScript_buildsSerializedDrawerRowsWithoutRawInnerHtmlInterpolation() throws Exception {
+        String script = readResource(FORM_SCRIPT);
+        String syncSerialRows = extractBlock(script, "function syncSerialRows(drawer, count, row)");
+
+        assertThat(syncSerialRows).doesNotContain("tr.innerHTML =");
+        assertThat(syncSerialRows).contains("var numberCell = document.createElement('td');");
+        assertThat(syncSerialRows).contains("var serialInput = document.createElement('input');");
+        assertThat(syncSerialRows).contains("serialInput.value = existingSerials[index] || '';");
+        assertThat(syncSerialRows).contains("qtyCell.textContent = '1.00';");
+    }
+
+    @Test
+    @DisplayName("form script routes serialized and standard lines to different drawers")
+    void formScript_routesSerializedAndStandardLinesToDifferentDrawers() throws Exception {
+        String script = readResource(FORM_SCRIPT);
+        String editHandler = extractBlock(script, "editBtn.onclick = function ()");
+
+        assertThat(editHandler).contains("var isSerialized = serializedInput.value === 'true';");
+        assertThat(editHandler).contains("var drawerId = isSerialized ? 'drawer-serial' : 'drawer-non-serial';");
+        assertThat(editHandler).containsPattern("(?s)document\\.getElementById\\(drawerId\\).*if \\(setupDrawer\\(drawer, row, isSerialized\\)\\) \\{\\s*ErpDrawer\\.open\\(drawerId\\);\\s*\\}");
     }
 
     @Test
@@ -153,5 +319,87 @@ class GoodsReceiptFormIntegrationTest {
             }
         }
         return null;
+    }
+
+    private Document renderForm(GoodsReceiptSaveLineRequest line) {
+        GoodsReceiptSaveRequest request = new GoodsReceiptSaveRequest();
+        request.setReceiptDate(LocalDate.of(2026, 7, 1));
+        request.setReferenceType(GoodsReceiptReferenceType.PURCHASE_ORDER);
+        request.setReferenceCode("PO-001");
+        request.setSupplierName("PT Supplier");
+        request.setFacilityName("Main Warehouse");
+        request.setLines(List.of(line));
+
+        String html = TemplateTestUtils.renderWithSecurity(
+            "inventory/goods-receipts/form",
+            Map.of("grRequest", request),
+            auth("GOODS-RECEIPT_CREATE")
+        );
+        assertThat(html).isNotBlank();
+        return Jsoup.parse(html);
+    }
+
+    private GoodsReceiptSaveLineRequest serializedRequestLine() {
+        GoodsReceiptSaveLineRequest line = baseRequestLine();
+        line.setSerialized(Boolean.TRUE);
+        line.setQuantityReceived(BigDecimal.valueOf(2));
+        line.setSerialNumber("SN-1,SN-2");
+        return line;
+    }
+
+    private GoodsReceiptSaveLineRequest nonSerializedRequestLine() {
+        GoodsReceiptSaveLineRequest line = baseRequestLine();
+        line.setSerialized(Boolean.FALSE);
+        line.setQuantityReceived(BigDecimal.valueOf(5));
+        line.setSerialNumber("");
+        return line;
+    }
+
+    private GoodsReceiptSaveLineRequest baseRequestLine() {
+        GoodsReceiptSaveLineRequest line = new GoodsReceiptSaveLineRequest();
+        line.setReferenceLineId(99L);
+        line.setProductId(10L);
+        line.setProductName("Serialized Product");
+        line.setProductCode("P-10");
+        line.setUomId(20L);
+        line.setUomName("Unit");
+        line.setUomCode("PCS");
+        line.setContainerId(30L);
+        line.setContainerName("Main Bin");
+        line.setContainerCode("BIN-01");
+        return line;
+    }
+
+    private Element requireLineRow(Document html, int index) {
+        Element row = html.selectFirst("tr.line-row[data-index=\"" + index + "\"]");
+        assertThat(row).as("Line row %s should be rendered", index).isNotNull();
+        return row;
+    }
+
+    private Element findInput(Element scope, String name) {
+        return scope.selectFirst("input[name=\"" + name + "\"]");
+    }
+
+    private String extractBlock(String script, String marker) {
+        int markerIndex = script.indexOf(marker);
+        assertThat(markerIndex).as("Expected script marker %s", marker).isGreaterThanOrEqualTo(0);
+
+        int braceStart = script.indexOf('{', markerIndex);
+        assertThat(braceStart).as("Opening brace for %s", marker).isGreaterThanOrEqualTo(0);
+
+        int depth = 0;
+        for (int index = braceStart; index < script.length(); index++) {
+            char current = script.charAt(index);
+            if (current == '{') {
+                depth++;
+            } else if (current == '}') {
+                depth--;
+                if (depth == 0) {
+                    return script.substring(braceStart, index + 1);
+                }
+            }
+        }
+
+        throw new IllegalArgumentException("Unbalanced braces for marker: " + marker);
     }
 }

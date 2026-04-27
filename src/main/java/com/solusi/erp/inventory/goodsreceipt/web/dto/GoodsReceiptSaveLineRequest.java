@@ -1,15 +1,18 @@
 package com.solusi.erp.inventory.goodsreceipt.web.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 
 @Data
 @NoArgsConstructor
 public class GoodsReceiptSaveLineRequest {
     private Long id;
-    private Long poLineId;
+    @JsonAlias("poLineId")
+    private Long referenceLineId;
     private Long productId;
     private String productCode;
     private String productName;
@@ -22,4 +25,15 @@ public class GoodsReceiptSaveLineRequest {
     private String containerCode;
     private String containerName;
     private String serialNumber;
+
+    public long getSerialDraftCount() {
+        if (serialNumber == null || serialNumber.isBlank()) {
+            return 0;
+        }
+
+        return Arrays.stream(serialNumber.split(","))
+            .map(String::trim)
+            .filter(value -> !value.isEmpty())
+            .count();
+    }
 }

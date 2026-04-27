@@ -67,6 +67,7 @@ class CreateGoodsReceiptUseCaseTest {
         assertThat(result.getCode()).isEqualTo("GR-202604-00001");
         assertThat(result.getStatus()).isEqualTo(GoodsReceiptStatus.DRAFT);
         assertThat(result.getLines()).hasSize(1);
+        assertThat(result.getLines().getFirst().getReferenceLineId()).isEqualTo(101L);
         assertThat(result.getLines().getFirst().getQuantityReceived()).isEqualByComparingTo("2.0000");
         assertThat(result.getLines().getFirst().getBaseQuantity()).isEqualByComparingTo("0");
         assertThat(result.getLines().getFirst().getSerialized()).isTrue();

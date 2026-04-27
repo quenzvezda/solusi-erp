@@ -77,6 +77,7 @@ class UpdateGoodsReceiptUseCaseTest {
 
         assertThat(result.getNote()).isEqualTo("updated");
         assertThat(result.getLines()).hasSize(1);
+        assertThat(result.getLines().getFirst().getReferenceLineId()).isEqualTo(101L);
         assertThat(result.getLines().getFirst().getQuantityReceived()).isEqualByComparingTo("2.0000");
         assertThat(result.getLines().getFirst().getBaseQuantity()).isEqualByComparingTo("0");
     }

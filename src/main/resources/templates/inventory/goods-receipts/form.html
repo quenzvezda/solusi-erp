@@ -32,8 +32,10 @@
 
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                     <input type="hidden" th:field="*{id}">
+                    <input type="hidden" th:field="*{referenceType}">
+                    <input type="hidden" th:field="*{referenceId}">
 
-                     <div class="card mb-3">
+                      <div class="card mb-3">
                          <div class="card-body">
                              <div class="alert-container"></div>
 
@@ -77,40 +79,46 @@
                                 <thead>
                                     <tr>
                                         <th class="required" th:text="#{label.product}" style="width: 25%;">Product</th>
-                                        <th class="required" th:text="#{label.serialized}" style="width: 8%;">Serialized</th>
                                         <th class="text-end required" th:text="#{label.qty.received}" style="width: 12%;">Qty Received</th>
                                         <th class="required" th:text="#{label.uom}" style="width: 12%;">UoM</th>
                                         <th th:text="#{label.container}" style="width: 15%;">Container</th>
-                                        <th th:text="#{label.serial.number}" style="width: 15%;">Serial Number</th>
-                                        <th class="w-1" style="width: 80px;"></th>
+                                        <th style="width: 18%;">Detail</th>
+                                        <th class="w-1" style="width: 110px;"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="line-container">
                                     <tr th:each="line, stat : *{lines}" class="line-row" th:data-index="${stat.index}">
                                         <td>
+                                            <input type="hidden" th:name="'lines[' + ${stat.index} + '].referenceLineId'" th:value="${line.referenceLineId}">
+                                            <input type="hidden" th:name="'lines[' + ${stat.index} + '].serialized'" th:value="${line.serialized}" class="input-serialized">
+                                            <input type="hidden" th:name="'lines[' + ${stat.index} + '].uomId'" th:value="${line.uomId}" class="input-uom-id">
+                                            <input type="hidden" th:name="'lines[' + ${stat.index} + '].serialNumber'" th:value="${line.serialNumber}" class="input-sn-single">
+                                            <input type="hidden" class="input-uom-alias" th:value="${line.uomName}">
                                             <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[' + __${stat.index}__ + '].productId', id='select-product-' + __${stat.index}__, isReadonly=false, extraClass='select-product', path='inventory/products',
                                                 initialValue=${line.productId}, initialText=${line.productName},
                                                 initialSubtext=${line.productCode})}"></div>
                                         </td>
+                                        <td><input type="text" th:name="'lines[' + ${stat.index} + '].quantityReceived'" th:value="${line.quantityReceived}" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-qty" readonly required></td>
                                         <td>
-                                            <div class="form-check">
-                                                <input type="checkbox" th:name="'lines[' + ${stat.index} + '].serialized'" class="form-check-input chk-serialized" th:checked="${line.serialized}">
-                                            </div>
-                                        </td>
-                                        <td><input type="text" th:name="'lines[' + ${stat.index} + '].quantityReceived'" th:value="${line.quantityReceived}" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-qty" required></td>
-                                        <td>
-                                            <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[' + __${stat.index}__ + '].uomId', id='select-uom-' + __${stat.index}__, isReadonly=false, extraClass='select-uom', path='inventory/uoms',
-                                                initialValue=${line.uomId}, initialText=${line.uomName},
-                                                initialSubtext=${line.uomCode})}"></div>
+                                            <input type="text" class="form-control form-control-sm erp-input-sm input-uom-display" th:value="${line.uomName}" readonly>
                                         </td>
                                         <td>
                                             <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[' + __${stat.index}__ + '].containerId', id='select-container-' + __${stat.index}__, isReadonly=false, extraClass='select-container', path='inventory/containers',
                                                 initialValue=${line.containerId}, initialText=${line.containerName},
                                                 initialSubtext=${line.containerCode})}"></div>
                                         </td>
-                                        <td><input type="text" th:name="'lines[' + ${stat.index} + '].serialNumber'" th:value="${line.serialNumber}" class="form-control form-control-sm erp-input-sm input-serial-number"></td>
+                                        <td>
+                                            <div class="d-flex flex-column gap-1">
+                                                <span class="badge bg-secondary-lt text-secondary detail-mode-label"
+                                                      th:text="${line.serialized} ? 'Serialized' : 'Standard'">Standard</span>
+                                                <div class="small text-secondary detail-summary" th:if="${line.serialized and line.serialDraftCount > 0}" th:text="${line.serialDraftCount} + ' serial(s) drafted'">2 serial(s) drafted</div>
+                                                <div class="small text-secondary detail-summary" th:if="${line.serialized and line.serialDraftCount == 0}">Serial numbers pending</div>
+                                                <div class="small text-secondary detail-summary" th:if="${!line.serialized}">Set quantity and UoM</div>
+                                            </div>
+                                        </td>
                                         <td>
                                             <div class="btn-list flex-nowrap">
+                                                <button type="button" class="btn btn-white btn-icon btn-edit-detail" title="Edit Detail / Qty"><i class="ti ti-pencil"></i></button>
                                                 <button type="button" class="btn btn-white btn-icon btn-remove-line text-danger" title="Remove"><i class="ti ti-trash"></i></button>
                                             </div>
                                         </td>
@@ -121,6 +129,7 @@
                         </div>
                         <div class="card-footer text-end">
                             <div th:if="${auditInfo != null and auditInfo.id != null}" th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
+                            <div class="small text-secondary mb-2"><i class="ti ti-info-circle"></i> Tip: Click the pencil icon to set quantity, UoM, and serial numbers.</div>
                             <div class="d-flex align-items-center">
                                 <div id="loading-indicator" class="spinner-border spinner-border-sm text-primary me-2" role="status" style="display: none;"></div>
                                 <a th:href="@{/inventory/goods-receipts}" class="btn btn-link link-secondary" th:text="#{label.cancel}">Cancel</a>
@@ -139,23 +148,27 @@
             <tbody id="row-template-source">
                 <tr class="line-row">
                     <td>
+                        <input type="hidden" name="lines[INDEX].referenceLineId">
+                        <input type="hidden" name="lines[INDEX].serialized" value="false" class="input-serialized">
+                        <input type="hidden" name="lines[INDEX].uomId" class="input-uom-id">
+                        <input type="hidden" name="lines[INDEX].serialNumber" class="input-sn-single">
+                        <input type="hidden" class="input-uom-alias">
                         <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[INDEX].productId', id='', isReadonly=false, extraClass='select-product', path='inventory/products')}"></div>
                     </td>
-                    <td>
-                        <div class="form-check">
-                            <input type="checkbox" name="lines[INDEX].serialized" class="form-check-input chk-serialized">
-                        </div>
-                    </td>
-                    <td><input type="text" name="lines[INDEX].quantityReceived" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-qty" value="0.0000" required></td>
-                    <td>
-                        <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[INDEX].uomId', id='', isReadonly=false, extraClass='select-uom', path='inventory/uoms')}"></div>
-                    </td>
+                    <td><input type="text" name="lines[INDEX].quantityReceived" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-qty" value="0.0000" readonly required></td>
+                    <td><input type="text" class="form-control form-control-sm erp-input-sm input-uom-display" readonly></td>
                     <td>
                         <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[INDEX].containerId', id='', isReadonly=false, extraClass='select-container', path='inventory/containers')}"></div>
                     </td>
-                    <td><input type="text" name="lines[INDEX].serialNumber" class="form-control form-control-sm erp-input-sm input-serial-number"></td>
+                    <td>
+                        <div class="d-flex flex-column gap-1">
+                            <span class="badge bg-secondary-lt text-secondary detail-mode-label">Standard</span>
+                            <div class="small text-secondary detail-summary">Select product first</div>
+                        </div>
+                    </td>
                     <td>
                         <div class="btn-list flex-nowrap">
+                            <button type="button" class="btn btn-white btn-icon btn-edit-detail" title="Edit Detail / Qty"><i class="ti ti-pencil"></i></button>
                             <button type="button" class="btn btn-white btn-icon btn-remove-line text-danger" title="Remove"><i class="ti ti-trash"></i></button>
                         </div>
                     </td>
@@ -163,9 +176,120 @@
             </tbody>
         </table>
 
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="drawer-non-serial" style="width: 550px;">
+            <div class="offcanvas-header border-bottom">
+                <h2 class="offcanvas-title">Item Detail (Standard)</h2>
+                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"></button>
+            </div>
+            <div class="offcanvas-body p-0 d-flex flex-column">
+                <div class="p-3 border-bottom bg-body-tertiary">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-7">
+                            <label class="form-label xsmall text-uppercase text-secondary required">Target UoM &amp; Qty</label>
+                            <div class="input-group input-group-flat border">
+                                <input type="text" class="form-control form-control-sm erp-number-decimal input-qty-target border-0" style="width: 70px;">
+                                <select class="form-select form-select-sm select-uom-target border-0 border-start" style="flex: 1;"></select>
+                            </div>
+                        </div>
+                        <div class="col-5 text-end">
+                            <div class="text-secondary xsmall text-uppercase">Total Base Qty</div>
+                            <div class="h2 mb-0 font-weight-bold">
+                                <span class="input-qty-base-display">0.0000</span> <span class="txt-base-uom" style="font-size: 0.6em;">Unit</span>
+                            </div>
+                            <input type="hidden" class="input-qty-base erp-number-decimal">
+                        </div>
+                    </div>
+                    <div class="mt-2 xsmall text-muted border-top pt-2">
+                        <i class="ti ti-info-circle"></i> Conversion: 1 <span class="txt-target-uom">?</span> = <span class="txt-factor">1.00</span> <span class="txt-base-uom">?</span>
+                    </div>
+                </div>
+
+                <div class="p-4 text-center flex-fill d-flex flex-column justify-content-center">
+                    <div class="mb-3">
+                        <i class="ti ti-box text-secondary-lt" style="font-size: 4rem;"></i>
+                    </div>
+                    <p class="text-secondary small">This item does not require serial number tracking. <br>All goods receipt details will be saved at line level.</p>
+                </div>
+            </div>
+            <div class="offcanvas-footer p-3 border-top bg-body-tertiary">
+                <div class="row g-2">
+                    <div class="col">
+                        <button type="button" class="btn btn-white w-100" data-bs-dismiss="offcanvas" th:text="#{label.cancel}">Cancel</button>
+                    </div>
+                    <div class="col">
+                        <button type="button" class="btn btn-primary w-100 btn-save-drawer">
+                            <i class="ti ti-check me-1"></i> <span th:text="#{label.apply}">Apply</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="drawer-serial" style="width: 550px;">
+            <div class="offcanvas-header border-bottom">
+                <h2 class="offcanvas-title">Item Detail (Serialized)</h2>
+                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"></button>
+            </div>
+            <div class="offcanvas-body p-0 d-flex flex-column">
+                <div class="p-3 border-bottom bg-body-tertiary">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-6">
+                            <label class="form-label xsmall text-uppercase text-secondary required">Target UoM &amp; Qty</label>
+                            <div class="input-group input-group-flat border">
+                                <input type="text" class="form-control form-control-sm erp-number-decimal input-qty-target border-0" style="width: 60px;">
+                                <select class="form-select form-select-sm select-uom-target border-0 border-start" style="flex: 1;"></select>
+                            </div>
+                        </div>
+                        <div class="col-6 text-end">
+                            <div class="text-secondary xsmall text-uppercase">Total Base Quantity</div>
+                            <div class="h2 mb-0 font-weight-bold">
+                                <span class="txt-total-qty">0.0000</span> <span class="txt-base-uom" style="font-size: 0.6em;">Unit</span>
+                            </div>
+                            <input type="hidden" class="input-qty-base erp-number-decimal">
+                        </div>
+                    </div>
+                    <div class="mt-2 xsmall text-muted border-top pt-2">
+                        <i class="ti ti-info-circle"></i> Each row below represents 1.00 <span class="txt-base-uom">Unit</span>.
+                        Conversion: 1 <span class="txt-target-uom">?</span> = <span class="txt-factor">1.00</span> <span class="txt-base-uom">?</span>
+                    </div>
+                </div>
+
+                <div class="flex-fill overflow-auto" style="max-height: 60vh;">
+                    <table class="table table-vcenter card-table table-striped">
+                        <thead>
+                            <tr>
+                                <th class="sticky-top" style="width: 50px; z-index: 10;">No</th>
+                                <th class="sticky-top" style="z-index: 10;">Serial Number</th>
+                                <th class="sticky-top text-end" style="width: 80px; z-index: 10;">Qty</th>
+                            </tr>
+                        </thead>
+                        <tbody class="serial-input-container">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="offcanvas-footer p-3 border-top bg-body-tertiary">
+                <div class="row g-2">
+                    <div class="col">
+                        <button type="button" class="btn btn-white w-100" data-bs-dismiss="offcanvas" th:text="#{label.cancel}">Cancel</button>
+                    </div>
+                    <div class="col">
+                        <button type="button" class="btn btn-primary w-100 btn-save-drawer">
+                            <i class="ti ti-check me-1"></i> <span th:text="#{label.apply}">Apply</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <div id="page-specific-scripts" th:fragment="pageScripts">
+        <script th:inline="javascript">
+            window.GoodsReceiptPageConfig = {
+                selectProductFirst: 'Please select a product first.'
+            };
+        </script>
         <script th:src="@{/js/inventory/goods-receipt/goods-receipt-form.js}"></script>
     </div>
 </body>

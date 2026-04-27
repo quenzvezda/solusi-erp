@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 
 public record GoodsReceiptLineCommand(
         Long id,
-        Long poLineId,
+        Long referenceLineId,
         Long productId,
         Boolean serialized,
         BigDecimal quantityReceived,

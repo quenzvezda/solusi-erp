@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 
 public final class GoodsReceiptLine {
 
-    private final Long poLineId;
+    private final Long referenceLineId;
     private final Long productId;
     private final Long sourceFacilityId;
     private final Boolean serialized;
@@ -19,12 +19,12 @@ public final class GoodsReceiptLine {
     private final BigDecimal grIrAmount;
     private final String serialNumber;
 
-    private GoodsReceiptLine(Long poLineId, Long productId, Long sourceFacilityId, Boolean serialized,
+    private GoodsReceiptLine(Long referenceLineId, Long productId, Long sourceFacilityId, Boolean serialized,
                              BigDecimal quantityReceived, Long uomId, Long containerId,
                              BigDecimal unitPrice, BigDecimal baseQuantity, BigDecimal inventoryAmount,
                              BigDecimal taxBaseAmount, BigDecimal taxAmount, BigDecimal grIrAmount,
                              String serialNumber) {
-        this.poLineId = poLineId;
+        this.referenceLineId = referenceLineId;
         this.productId = productId;
         this.sourceFacilityId = sourceFacilityId;
         this.serialized = serialized;
@@ -40,24 +40,24 @@ public final class GoodsReceiptLine {
         this.serialNumber = serialNumber;
     }
 
-    public static GoodsReceiptLine prefill(Long poLineId, Long productId, Long sourceFacilityId, Boolean serialized,
+    public static GoodsReceiptLine prefill(Long referenceLineId, Long productId, Long sourceFacilityId, Boolean serialized,
                                            BigDecimal quantityReceived, Long uomId, Long containerId,
                                            BigDecimal unitPrice, BigDecimal baseQuantity, BigDecimal inventoryAmount,
                                            BigDecimal taxBaseAmount, BigDecimal grIrAmount, String serialNumber) {
         return new GoodsReceiptLine(
-                poLineId, productId, sourceFacilityId, serialized, quantityReceived, uomId,
+                referenceLineId, productId, sourceFacilityId, serialized, quantityReceived, uomId,
                 containerId, unitPrice, baseQuantity, inventoryAmount, taxBaseAmount, BigDecimal.ZERO,
                 grIrAmount, serialNumber
         );
     }
 
-    public static GoodsReceiptLine prefill(Long poLineId, Long productId, Long sourceFacilityId, Boolean serialized,
+    public static GoodsReceiptLine prefill(Long referenceLineId, Long productId, Long sourceFacilityId, Boolean serialized,
                                            BigDecimal quantityReceived, Long uomId, Long containerId,
                                            BigDecimal unitPrice, BigDecimal baseQuantity, BigDecimal inventoryAmount,
                                            BigDecimal taxBaseAmount, BigDecimal taxAmount, BigDecimal grIrAmount,
                                            String serialNumber) {
         return new GoodsReceiptLine(
-                poLineId, productId, sourceFacilityId, serialized, quantityReceived, uomId,
+                referenceLineId, productId, sourceFacilityId, serialized, quantityReceived, uomId,
                 containerId, unitPrice, baseQuantity, inventoryAmount, taxBaseAmount, taxAmount,
                 grIrAmount, serialNumber
         );
@@ -67,8 +67,8 @@ public final class GoodsReceiptLine {
         return quantityReceived != null && quantityReceived.compareTo(BigDecimal.ZERO) > 0;
     }
 
-    public Long getPoLineId() {
-        return poLineId;
+    public Long getReferenceLineId() {
+        return referenceLineId;
     }
 
     public Long getProductId() {

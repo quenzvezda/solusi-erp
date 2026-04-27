@@ -80,7 +80,7 @@ class GoodsReceiptPersistenceMapperTest {
     @Test
     void toDomain_defensiveCopiesLines() {
         GoodsReceiptLineEntity lineEntity = new GoodsReceiptLineEntity();
-        lineEntity.setPoLineId(10L);
+        lineEntity.setReferenceLineId(10L);
         lineEntity.setProductId(20L);
         lineEntity.setQuantityReceived(new BigDecimal("5.00"));
 
@@ -100,6 +100,7 @@ class GoodsReceiptPersistenceMapperTest {
 
         // Verify that the lines are immutable (unmodifiable)
         assertThat(domain.getLines()).hasSize(1);
+        assertThat(domain.getLines().getFirst().getReferenceLineId()).isEqualTo(10L);
         assertThat(domain.getLines()).isUnmodifiable();
     }
 }

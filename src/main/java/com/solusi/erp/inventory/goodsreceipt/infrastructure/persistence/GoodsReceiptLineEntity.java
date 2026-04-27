@@ -17,8 +17,8 @@ public class GoodsReceiptLineEntity extends BaseModel {
     @JoinColumn(name = "header_id", nullable = false)
     private GoodsReceiptEntity header;
 
-    @Column(name = "po_line_id", nullable = false)
-    private Long poLineId;
+    @Column(name = "reference_line_id", nullable = false)
+    private Long referenceLineId;
 
     @Column(name = "product_id", nullable = false)
     private Long productId;

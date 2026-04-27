@@ -35,7 +35,7 @@
                             <a th:if="${canCreateGoodsReceipt}"
                                class="btn btn-outline-primary"
                                sec:authorize="hasAuthority('GOODS-RECEIPT_CREATE')"
-                               th:href="@{/inventory/goods-receipts/create(poId=${po.id})}">
+                               th:href="@{/inventory/goods-receipts/create(referenceType='PURCHASE_ORDER',referenceId=${po.id})}">
                                 <i class="ti ti-package-import me-1"></i>
                                 <span th:text="#{label.gr.action.create}">Create Goods Receipt</span>
                             </a>

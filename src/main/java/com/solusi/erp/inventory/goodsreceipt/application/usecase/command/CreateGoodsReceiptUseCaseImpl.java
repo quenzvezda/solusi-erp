@@ -63,7 +63,7 @@ public class CreateGoodsReceiptUseCaseImpl implements CreateGoodsReceiptUseCase 
 
         return commands.stream()
                 .filter(this::hasPositiveQuantity)
-                .map(command -> toLine(po, poLines.get(command.poLineId()), command))
+                .map(command -> toLine(po, poLines.get(command.referenceLineId()), command))
                 .toList();
     }
 
@@ -72,7 +72,7 @@ public class CreateGoodsReceiptUseCaseImpl implements CreateGoodsReceiptUseCase 
             throw new DomainException("msg.error.gr.stale.po.changed");
         }
         return GoodsReceiptLine.prefill(
-                command.poLineId(),
+                command.referenceLineId(),
                 command.productId() != null ? command.productId() : poLine.getProductId(),
                 po.getFacilityId(),
                 Boolean.TRUE.equals(command.serialized()),
@@ -100,7 +100,7 @@ public class CreateGoodsReceiptUseCaseImpl implements CreateGoodsReceiptUseCase 
                 .collect(Collectors.toMap(PurchaseOrderLine::getId, PurchaseOrderLine::getOutstandingQuantity));
         Map<Long, BigDecimal> requestedByPoLine = commands.stream()
                 .filter(this::hasPositiveQuantity)
-                .collect(Collectors.groupingBy(GoodsReceiptLineCommand::poLineId,
+                .collect(Collectors.groupingBy(GoodsReceiptLineCommand::referenceLineId,
                         Collectors.mapping(GoodsReceiptLineCommand::quantityReceived,
                                 Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
         for (Map.Entry<Long, BigDecimal> entry : requestedByPoLine.entrySet()) {

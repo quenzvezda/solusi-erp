@@ -73,7 +73,7 @@ public abstract class GoodsReceiptWebMapper {
     public abstract GoodsReceiptSaveLineRequest toSaveLineRequest(GoodsReceiptLine line);
 
     @Mapping(target = "id", source = "id")
-    @Mapping(target = "poLineId", source = "poLineId")
+    @Mapping(target = "referenceLineId", source = "referenceLineId")
     @Mapping(target = "productId", source = "productId")
     @Mapping(target = "serialized", source = "serialized")
     @Mapping(target = "quantityReceived", source = "quantityReceived")

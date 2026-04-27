@@ -4,15 +4,20 @@ import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeri
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.inventory.goodsreceipt.application.usecase.command.*;
 import com.solusi.erp.inventory.goodsreceipt.application.usecase.query.*;
+import com.solusi.erp.inventory.goodsreceipt.domain.port.GoodsReceiptSourceResolver;
 import com.solusi.erp.inventory.goodsreceipt.domain.repository.GoodsReceiptRepository;
+import com.solusi.erp.inventory.goodsreceipt.infrastructure.adapter.PurchaseOrderGoodsReceiptSourceResolver;
 import com.solusi.erp.inventory.goodsreceipt.infrastructure.adapter.GoodsReceiptRepositoryImpl;
 import com.solusi.erp.inventory.goodsreceipt.infrastructure.persistence.GoodsReceiptJpaRepository;
 import com.solusi.erp.inventory.goodsreceipt.infrastructure.persistence.GoodsReceiptPersistenceMapper;
+import com.solusi.erp.inventory.goodsreceipt.infrastructure.service.GoodsReceiptSourceResolverRegistry;
 import com.solusi.erp.inventory.stock.domain.port.StockService;
 import com.solusi.erp.inventory.uomconversion.domain.port.UomConversionService;
 import com.solusi.erp.purchasing.purchaseorder.domain.repository.PurchaseOrderRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
 
 @Configuration
 public class GoodsReceiptConfig {
@@ -66,8 +71,18 @@ public class GoodsReceiptConfig {
     }
 
     @Bean
-    public GetGoodsReceiptCreateViewUseCase getGoodsReceiptCreateViewUseCase(PurchaseOrderRepository poRepository) {
-        return new GetGoodsReceiptCreateViewUseCaseImpl(poRepository);
+    public GoodsReceiptSourceResolver purchaseOrderGoodsReceiptSourceResolver(PurchaseOrderRepository poRepository) {
+        return new PurchaseOrderGoodsReceiptSourceResolver(poRepository);
+    }
+
+    @Bean
+    public GoodsReceiptSourceResolverRegistry goodsReceiptSourceResolverRegistry(List<GoodsReceiptSourceResolver> resolvers) {
+        return new GoodsReceiptSourceResolverRegistry(resolvers);
+    }
+
+    @Bean
+    public GetGoodsReceiptCreateViewUseCase getGoodsReceiptCreateViewUseCase(GoodsReceiptSourceResolverRegistry registry) {
+        return new GetGoodsReceiptCreateViewUseCaseImpl(registry);
     }
 
     @Bean

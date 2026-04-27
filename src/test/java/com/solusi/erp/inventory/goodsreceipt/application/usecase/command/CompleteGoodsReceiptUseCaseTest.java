@@ -27,6 +27,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -64,6 +65,7 @@ class CompleteGoodsReceiptUseCaseTest {
     @Test
     void complete_callsStockServiceAndUpdatesPurchaseOrder() {
         GoodsReceipt receipt = draftReceiptWithOneActiveLine();
+        assertThat(receipt.getLines().getFirst().getReferenceLineId()).isEqualTo(101L);
         when(goodsReceiptRepository.findById(1L)).thenReturn(Optional.of(receipt));
         when(purchaseOrderRepository.findById(receipt.getPoId())).thenReturn(Optional.of(sentPoWithOutstanding("10.0000")));
 
