@@ -125,11 +125,12 @@ public class GoodsReceiptController {
 
     @PostMapping("/{id}/complete")
     @PreAuthorize("hasAuthority('GOODS-RECEIPT_COMPLETE')")
-    public String complete(@PathVariable Long id, RedirectAttributes ra) {
-        completeGoodsReceiptUseCase.execute(id);
+    @ResponseBody
+    public ResponseEntity<ApiResponse<GoodsReceiptDetailResponse>> complete(@PathVariable Long id) {
+        GoodsReceipt domain = completeGoodsReceiptUseCase.execute(id);
+        GoodsReceiptDetailResponse data = webMapper.toDetailResponse(domain);
         String msg = messageSource.getMessage("msg.success.gr.completed", null, LocaleContextHolder.getLocale());
-        ra.addFlashAttribute("message", msg);
-        return "redirect:/inventory/goods-receipts/" + id;
+        return ResponseEntity.ok(ApiResponse.success(msg, data));
     }
 
     @DeleteMapping("/{id}")
