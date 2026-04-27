@@ -11,9 +11,15 @@ public class GoodsReceiptSaveLineRequest {
     private Long id;
     private Long poLineId;
     private Long productId;
+    private String productCode;
+    private String productName;
     private Boolean serialized;
     private BigDecimal quantityReceived;
     private Long uomId;
+    private String uomCode;
+    private String uomName;
     private Long containerId;
+    private String containerCode;
+    private String containerName;
     private String serialNumber;
 }

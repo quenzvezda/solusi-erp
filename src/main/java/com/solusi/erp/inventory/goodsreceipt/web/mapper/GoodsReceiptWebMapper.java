@@ -3,6 +3,7 @@ package com.solusi.erp.inventory.goodsreceipt.web.mapper;
 import com.solusi.erp.core.dto.BaseAuditResponse;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.mapper.AuditMapperHelper;
+import com.solusi.erp.inventory.container.domain.port.ContainerLookupProvider;
 import com.solusi.erp.inventory.facility.domain.port.FacilityLookupProvider;
 import com.solusi.erp.inventory.goodsreceipt.application.usecase.command.GoodsReceiptLineCommand;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceipt;
@@ -36,6 +37,8 @@ public abstract class GoodsReceiptWebMapper {
     @Autowired
     protected UomLookupProvider uomLookupProvider;
     @Autowired
+    protected ContainerLookupProvider containerLookupProvider;
+    @Autowired
     protected PurchaseOrderRepository purchaseOrderRepository;
 
     @Mapping(target = "lineCount", expression = "java(domain.getLines() != null ? domain.getLines().size() : 0)")
@@ -61,6 +64,12 @@ public abstract class GoodsReceiptWebMapper {
     @Mapping(target = "uomCode", source = "uomId", qualifiedByName = "getUomCode")
     public abstract GoodsReceiptLineDetailResponse toLineDetailResponse(GoodsReceiptLine line);
 
+    @Mapping(target = "productName", source = "productId", qualifiedByName = "getProductName")
+    @Mapping(target = "productCode", source = "productId", qualifiedByName = "getProductCode")
+    @Mapping(target = "uomName", source = "uomId", qualifiedByName = "getUomName")
+    @Mapping(target = "uomCode", source = "uomId", qualifiedByName = "getUomCode")
+    @Mapping(target = "containerName", source = "containerId", qualifiedByName = "getContainerName")
+    @Mapping(target = "containerCode", source = "containerId", qualifiedByName = "getContainerCode")
     public abstract GoodsReceiptSaveLineRequest toSaveLineRequest(GoodsReceiptLine line);
 
     @Mapping(target = "id", source = "id")
@@ -153,6 +162,27 @@ public abstract class GoodsReceiptWebMapper {
     protected String getUomCode(Long id) {
         if (id == null) return null;
         LookupDto dto = uomLookupProvider.resolve(id);
+        return dto != null ? dto.subText() : null;
+    }
+
+    @Named("getUomName")
+    protected String getUomName(Long id) {
+        if (id == null) return null;
+        LookupDto dto = uomLookupProvider.resolve(id);
+        return dto != null ? dto.name() : null;
+    }
+
+    @Named("getContainerName")
+    protected String getContainerName(Long id) {
+        if (id == null) return null;
+        LookupDto dto = containerLookupProvider.resolve(id);
+        return dto != null ? dto.name() : null;
+    }
+
+    @Named("getContainerCode")
+    protected String getContainerCode(Long id) {
+        if (id == null) return null;
+        LookupDto dto = containerLookupProvider.resolve(id);
         return dto != null ? dto.subText() : null;
     }
 

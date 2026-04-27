@@ -53,6 +53,27 @@ class PurchaseOrderViewIntegrationTest {
         assertThat(template).contains("data-send-url");
     }
 
+    @Test
+    @DisplayName("po detail send button requires confirmation modal message")
+    void poDetailTemplate_sendButtonRequiresConfirmationMessage() throws Exception {
+        String template = readResource(TEMPLATE);
+
+        assertThat(template).contains("data-confirm-message");
+        assertThat(template).contains("#{msg.confirm.po.send}");
+    }
+
+    @Test
+    @DisplayName("goods receipt create action keys exist in both locales")
+    void goodsReceiptCreateActionKeys_existInBothLocales() throws Exception {
+        String messagesEn = readResource("messages.properties");
+        String messagesId = readResource("messages_id.properties");
+
+        assertThat(messagesEn).contains("label.gr.action.create=");
+        assertThat(messagesId).contains("label.gr.action.create=");
+        assertThat(messagesEn).contains("label.gr.list.title=");
+        assertThat(messagesId).contains("label.gr.list.title=");
+    }
+
     private String readResource(String path) throws Exception {
         InputStream is = getClass().getClassLoader().getResourceAsStream(path);
         assertThat(is).as("Resource not found: %s", path).isNotNull();

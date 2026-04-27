@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
-<head th:replace="~{layout/master :: head(${grRequest.id == null
-    ? #messages.msg('label.gr.create')
-    : #messages.msg('label.gr.edit')})}">
+<head th:replace="~{layout/master :: head(${grRequest.id == null ? #messages.msg('label.gr.create') : #messages.msg('label.gr.edit')})}">
 </head>
 
 <body th:replace="~{layout/master :: layout(~{:: .gr-form-content}, ~{:: #page-specific-scripts})}">
@@ -25,9 +23,7 @@
         <div class="page-body">
             <div class="container-xl">
 
-                <form th:action="${grRequest.id == null
-                        ? '/inventory/goods-receipts'
-                        : '/inventory/goods-receipts'}"
+                <form th:action="${grRequest.id == null ? '/inventory/goods-receipts' : '/inventory/goods-receipts'}"
                     th:object="${grRequest}"
                     method="post"
                     id="gr-form"
@@ -44,19 +40,19 @@
                              <div class="row g-3">
                                 <div class="col-md-3">
                                     <label class="form-label text-secondary" th:text="#{label.gr.referenceType}">Reference Type</label>
-                                    <div class="form-control-plaintext" th:text="${grRequest.referenceType ?: '-'}">PURCHASE_ORDER</div>
+                                    <div class="form-control-plaintext" th:text="${grRequest.referenceType != null ? grRequest.referenceType : '-'}">PURCHASE_ORDER</div>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label text-secondary" th:text="#{label.gr.referenceCode}">Reference Code</label>
-                                    <div class="form-control-plaintext" th:text="${grRequest.referenceCode ?: '-'}">PO-001</div>
+                                    <div class="form-control-plaintext" th:text="${grRequest.referenceCode != null ? grRequest.referenceCode : '-'}">PO-001</div>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label text-secondary" th:text="#{label.gr.supplier}">Supplier</label>
-                                    <div class="form-control-plaintext" th:text="${grRequest.supplierName ?: '-'}">Supplier</div>
+                                    <div class="form-control-plaintext" th:text="${grRequest.supplierName != null ? grRequest.supplierName : '-'}">Supplier</div>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label text-secondary" th:text="#{label.gr.facility}">Facility</label>
-                                    <div class="form-control-plaintext" th:text="${grRequest.facilityName ?: '-'}">Facility</div>
+                                    <div class="form-control-plaintext" th:text="${grRequest.facilityName != null ? grRequest.facilityName : '-'}">Facility</div>
                                 </div>
                                 <div class="col-md-4">
                                     <div th:replace="~{fragments/inputs :: date(field='receiptDate', value=*{receiptDate}, label=#{label.gr.receiptDate}, isReadonly=false, required=true)}"></div>
@@ -169,7 +165,7 @@
 
     </div>
 
-    <div id="page-specific-scripts">
+    <div id="page-specific-scripts" th:fragment="pageScripts">
         <script th:src="@{/js/inventory/goods-receipt/goods-receipt-form.js}"></script>
     </div>
 </body>
