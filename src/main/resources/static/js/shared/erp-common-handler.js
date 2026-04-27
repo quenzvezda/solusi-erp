@@ -90,19 +90,23 @@ const ErpAction = {
 const ErpForm = {
     /**
      * Perform a POST action via AJAX from a button element.
-     * Button should have data-send-url, data-post-url, or data-action-url attribute.
+     * Button should have a data-*-url attribute (e.g., data-send-url, data-complete-url, data-action-url).
      * Optional: data-confirm-message for confirmation before action.
      */
     postAction: function(buttonEl) {
         if (!buttonEl) return;
         
-        // Extract URL from button data attributes (try multiple common names)
-        const url = buttonEl.getAttribute('data-send-url') || 
-                   buttonEl.getAttribute('data-post-url') || 
-                   buttonEl.getAttribute('data-action-url');
+        // Extract URL from any data-*-url attribute
+        let url = null;
+        for (let attr of buttonEl.attributes) {
+            if (attr.name.match(/^data-.*-url$/) && attr.value) {
+                url = attr.value;
+                break;
+            }
+        }
         
         if (!url) {
-            console.warn('[ErpForm] Button action missing data-send-url, data-post-url, or data-action-url');
+            console.warn('[ErpForm] Button action missing data-*-url attribute (e.g., data-send-url, data-complete-url)');
             return;
         }
 
