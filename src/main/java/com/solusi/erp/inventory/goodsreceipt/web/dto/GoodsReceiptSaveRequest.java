@@ -1,6 +1,7 @@
 package com.solusi.erp.inventory.goodsreceipt.web.dto;
 
 import com.solusi.erp.core.dto.BaseAuditResponse;
+import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptReferenceType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -17,6 +18,12 @@ import java.util.List;
 public class GoodsReceiptSaveRequest extends BaseAuditResponse {
     @NotNull(message = "{label.gr.receiptDate} {validation.notnull.suffix}")
     private LocalDate receiptDate;
+    private GoodsReceiptReferenceType referenceType;
+    private Long referenceId;
+    private String referenceCode;
+    private String supplierName;
+    private String facilityName;
+    private String currencyCode;
     private String notes;
     @Valid
     private List<GoodsReceiptSaveLineRequest> lines = new ArrayList<>();

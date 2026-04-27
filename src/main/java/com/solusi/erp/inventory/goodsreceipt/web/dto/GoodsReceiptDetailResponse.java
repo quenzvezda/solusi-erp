@@ -15,8 +15,9 @@ import java.util.List;
 public class GoodsReceiptDetailResponse extends BaseAuditResponse {
     private String code;
     private LocalDate receiptDate;
-    private Long poId;
-    private String poCode;
+    private String referenceType;
+    private Long referenceId;
+    private String referenceCode;
     private Long supplierId;
     private String supplierName;
     private Long facilityId;

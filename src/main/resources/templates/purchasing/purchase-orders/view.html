@@ -32,6 +32,15 @@
                     </div>
                     <div class="col-auto ms-auto d-print-none">
                         <div class="btn-list">
+                            <button th:if="${canSendPurchaseOrder}"
+                                    type="button"
+                                    class="btn btn-primary"
+                                    sec:authorize="hasAuthority('PO_SEND')"
+                                    th:data-send-url="@{'/purchasing/purchase-orders/' + ${po.id} + '/send'}"
+                                    onclick="ErpForm.postAction(this)">
+                                <i class="ti ti-truck me-1"></i>
+                                <span th:text="#{label.po.action.send}">Send to Supplier</span>
+                            </button>
                             <button th:if="${approvalRequestId != null}"
                                     type="button"
                                     class="btn btn-white"
@@ -186,15 +195,17 @@
                             </div>
                         </div>
 
-                        <!-- Goods Receipt document flow (Sprint 4) -->
+                        <!-- Procurement document flow actions -->
                         <div class="btn-list mt-3" th:if="${canCreateGoodsReceipt}">
                             <a class="btn btn-outline-primary"
+                               th:if="${canCreateGoodsReceipt}"
                                sec:authorize="hasAuthority('GOODS-RECEIPT_CREATE')"
                                th:href="@{/inventory/goods-receipts/create(poId=${po.id})}">
                                 <i class="ti ti-package-import me-1"></i>
                                 <span th:text="#{label.gr.action.create}">Create Goods Receipt</span>
                             </a>
                             <a class="btn btn-outline-secondary"
+                               th:if="${canCreateGoodsReceipt}"
                                sec:authorize="hasAuthority('GOODS-RECEIPT_READ')"
                                th:href="@{/inventory/goods-receipts(poId=${po.id})}">
                                 <i class="ti ti-list-details me-1"></i>

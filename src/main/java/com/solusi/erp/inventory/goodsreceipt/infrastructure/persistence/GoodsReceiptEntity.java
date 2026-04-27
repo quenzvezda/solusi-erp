@@ -1,6 +1,7 @@
 package com.solusi.erp.inventory.goodsreceipt.infrastructure.persistence;
 
 import com.solusi.erp.core.model.BaseModel;
+import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptReferenceType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,8 +23,12 @@ public class GoodsReceiptEntity extends BaseModel {
     @Column(name = "receipt_date", nullable = false)
     private LocalDate receiptDate;
 
-    @Column(name = "po_id", nullable = false)
-    private Long poId;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "reference_type", nullable = false, length = 40)
+    private GoodsReceiptReferenceType referenceType;
+
+    @Column(name = "reference_id", nullable = false)
+    private Long referenceId;
 
     @Column(name = "supplier_id", nullable = false)
     private Long supplierId;
@@ -46,4 +51,13 @@ public class GoodsReceiptEntity extends BaseModel {
 
     @OneToMany(mappedBy = "header", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<GoodsReceiptLineEntity> lines = new ArrayList<>();
+
+    public Long getPoId() {
+        return referenceType == GoodsReceiptReferenceType.PURCHASE_ORDER ? referenceId : null;
+    }
+
+    public void setPoId(Long poId) {
+        this.referenceType = GoodsReceiptReferenceType.PURCHASE_ORDER;
+        this.referenceId = poId;
+    }
 }

@@ -3,6 +3,7 @@ package com.solusi.erp.inventory.goodsreceipt.domain.repository;
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceipt;
+import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptReferenceType;
 
 import java.util.Optional;
 
@@ -16,5 +17,9 @@ public interface GoodsReceiptRepository {
 
     void deleteById(Long id);
 
-    long countByPoId(Long poId);
+    long countByReference(GoodsReceiptReferenceType referenceType, Long referenceId);
+
+    default long countByPoId(Long poId) {
+        return countByReference(GoodsReceiptReferenceType.PURCHASE_ORDER, poId);
+    }
 }

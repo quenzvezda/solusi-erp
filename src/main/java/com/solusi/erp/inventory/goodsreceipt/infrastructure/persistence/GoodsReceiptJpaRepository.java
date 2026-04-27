@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.goodsreceipt.infrastructure.persistence;
 
+import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptReferenceType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,6 +28,6 @@ public interface GoodsReceiptJpaRepository extends JpaRepository<GoodsReceiptEnt
            countQuery = "SELECT COUNT(g) FROM GoodsReceiptEntity g")
     Page<GoodsReceiptEntity> findAllWithLines(Pageable pageable);
 
-    @Query("SELECT COUNT(g) FROM GoodsReceiptEntity g WHERE g.poId = ?1")
-    Long countByPoId(Long poId);
+    @Query("SELECT COUNT(g) FROM GoodsReceiptEntity g WHERE g.referenceType = ?1 AND g.referenceId = ?2")
+    Long countByReference(GoodsReceiptReferenceType referenceType, Long referenceId);
 }

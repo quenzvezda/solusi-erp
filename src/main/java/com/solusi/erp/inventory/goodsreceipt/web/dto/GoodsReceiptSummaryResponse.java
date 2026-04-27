@@ -14,7 +14,8 @@ import java.time.LocalDate;
 public class GoodsReceiptSummaryResponse extends BaseAuditResponse {
     private String code;
     private LocalDate receiptDate;
-    private String poCode;
+    private String referenceType;
+    private String referenceCode;
     private String supplierName;
     private String status;
     private int lineCount;

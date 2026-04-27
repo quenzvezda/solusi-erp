@@ -4,6 +4,7 @@ import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceipt;
+import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptReferenceType;
 import com.solusi.erp.inventory.goodsreceipt.domain.repository.GoodsReceiptRepository;
 import com.solusi.erp.inventory.goodsreceipt.infrastructure.persistence.GoodsReceiptEntity;
 import com.solusi.erp.inventory.goodsreceipt.infrastructure.persistence.GoodsReceiptJpaRepository;
@@ -64,7 +65,7 @@ public class GoodsReceiptRepositoryImpl implements GoodsReceiptRepository {
     }
 
     @Override
-    public long countByPoId(Long poId) {
-        return jpaRepository.countByPoId(poId);
+    public long countByReference(GoodsReceiptReferenceType referenceType, Long referenceId) {
+        return jpaRepository.countByReference(referenceType, referenceId);
     }
 }

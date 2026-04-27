@@ -85,6 +85,83 @@ const ErpAction = {
 };
 
 /**
+ * ERP Form Helper for Direct Button Actions
+ */
+const ErpForm = {
+    /**
+     * Perform a POST action via AJAX from a button element.
+     * Button should have data-send-url, data-post-url, or data-action-url attribute.
+     * Optional: data-confirm-message for confirmation before action.
+     */
+    postAction: function(buttonEl) {
+        if (!buttonEl) return;
+        
+        // Extract URL from button data attributes (try multiple common names)
+        const url = buttonEl.getAttribute('data-send-url') || 
+                   buttonEl.getAttribute('data-post-url') || 
+                   buttonEl.getAttribute('data-action-url');
+        
+        if (!url) {
+            console.warn('[ErpForm] Button action missing data-send-url, data-post-url, or data-action-url');
+            return;
+        }
+
+        // Check for confirmation message
+        const confirmMessage = buttonEl.getAttribute('data-confirm-message');
+        
+        const performAction = () => {
+            // Disable button to prevent double-click
+            const wasDisabled = buttonEl.disabled;
+            buttonEl.disabled = true;
+            
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
+            
+            // Perform fetch with CSRF in header
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    [csrfHeader]: csrfToken || ''
+                }
+            })
+            .then(response => {
+                return response.json().catch(() => ({
+                    success: false,
+                    message: 'Server error: Invalid response format'
+                })).then(data => {
+                    // Check if response indicates failure (HTTP error or API error)
+                    if (!response.ok || data.success === false) {
+                        throw new Error(data.message || 'Action failed');
+                    }
+                    return data;
+                });
+            })
+            .then(data => {
+                // Success - show toast and reload
+                const message = data.message || 'Action completed successfully';
+                ErpModal.showSuccess(message);
+                
+                // Reload page after success
+                setTimeout(() => { window.location.reload(); }, 1500);
+            })
+            .catch(error => {
+                console.error('[ErpForm] Action failed:', error);
+                ErpModal.showError(error.message || 'Action failed. Please try again.');
+                buttonEl.disabled = wasDisabled;
+            });
+        };
+        
+        // If confirmation is required, show it; otherwise perform action immediately
+        if (confirmMessage) {
+            ErpModal.confirm(confirmMessage, performAction);
+        } else {
+            performAction();
+        }
+    }
+};
+
+/**
  * ERP Side Drawer Helper
  */
 const ErpDrawer = (function() {
@@ -188,6 +265,7 @@ class ErpLineManager {
 window.ErpModal = ErpModal;
 window.ErpDrawer = ErpDrawer;
 window.ErpAction = ErpAction;
+window.ErpForm = ErpForm;
 window.ErpNumeric = ErpNumeric;
 
 /**

@@ -37,11 +37,27 @@
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                     <input type="hidden" th:field="*{id}">
 
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <div class="alert-container"></div>
+                     <div class="card mb-3">
+                         <div class="card-body">
+                             <div class="alert-container"></div>
 
-                            <div class="row g-3">
+                             <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label text-secondary" th:text="#{label.gr.referenceType}">Reference Type</label>
+                                    <div class="form-control-plaintext" th:text="${grRequest.referenceType ?: '-'}">PURCHASE_ORDER</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-secondary" th:text="#{label.gr.referenceCode}">Reference Code</label>
+                                    <div class="form-control-plaintext" th:text="${grRequest.referenceCode ?: '-'}">PO-001</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-secondary" th:text="#{label.gr.supplier}">Supplier</label>
+                                    <div class="form-control-plaintext" th:text="${grRequest.supplierName ?: '-'}">Supplier</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-secondary" th:text="#{label.gr.facility}">Facility</label>
+                                    <div class="form-control-plaintext" th:text="${grRequest.facilityName ?: '-'}">Facility</div>
+                                </div>
                                 <div class="col-md-4">
                                     <div th:replace="~{fragments/inputs :: date(field='receiptDate', value=*{receiptDate}, label=#{label.gr.receiptDate}, isReadonly=false, required=true)}"></div>
                                 </div>

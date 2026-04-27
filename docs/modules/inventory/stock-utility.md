@@ -56,48 +56,7 @@ Pola ini memungkinkan navigasi cepat dari laporan ke dokumen sumber tanpa beban 
 
 ## 4. Goods Receipt (GR)
 
-Goods Receipt adalah dokumen untuk mencatat penerimaan fisik barang dari supplier berdasarkan Purchase Order yang telah dikirim (status SENT/PARTIALLY_RECEIVED).
+Goods Receipt adalah dokumen inbound inventory yang saat ini dipakai untuk menerima barang dari **Purchase Order** yang sudah **SENT** atau **PARTIALLY_RECEIVED**. Secara domain, GR sudah memakai konsep referensi generik (`referenceType` + `referenceId`) agar di masa depan bisa dipakai untuk sumber lain seperti return atau hasil produksi.
 
-### 4.1 Konsep Umum
-
-**Goods Receipt** (GR) mewakili event penerimaan barang masuk ke gudang dari supplier untuk memenuhi PO. Setiap GR terdiri dari:
-- **Header GR**: Informasi dokumen (nomor, tanggal, referensi PO, facility)
-- **Line Item GR**: Daftar produk beserta kuantitas yang diterima
-
-### 4.2 Domain Entities
-
-| Entity | Keterangan |
-|--------|-----------|
-| `GoodsReceipt` | Dokumen GR header (status: DRAFT / COMPLETED) |
-| `GoodsReceiptLine` | Baris penerimaan barang per item |
-
-### 4.3 Integration with StockService
-
-Saat GR di-complete, sistem secara otomatis:
-1. Menginvokeasi `StockService.adjust()` dengan `MovementType.RECEIPT` dan `ReferenceType.GOODS_RECEIPT`
-2. Mengkonversi kuantitas ke **base UOM** untuk unit penyimpanan stok
-3. Membuat **Valuation Layer** dengan harga cost dari line item PO (normalized ke base UOM)
-4. Update status PO berdasarkan total received quantity
-
-### 4.4 Normalized Cost Calculation
-
-Harga cost per unit diambil dari **PO line item** dan dinormalisasi ke **base UOM**:
-
-```
-Normalized Cost = (Line Unit Price) / (PO Line UOM → Base UOM Conversion Factor)
-```
-
-Contoh:
-- PO line: 10 BOX @ Rp 50.000/BOX, Base UOM = PCS, 1 BOX = 12 PCS
-- Normalized Cost = Rp 50.000 / 12 = Rp 4.166,67 per PCS
-
-Harga ini digunakan untuk FIFO costing layer dan valuasi stok.
-
-### 4.5 Serialized Item Handling
-
-Jika produk bersifat **Serialized**:
-- GR form meminta input nomor seri per item yang diterima
-- Serial number dapat di-import dari file atau di-generate sistem (format: `SN-YYMM-XXXXX`)
-- Setiap serial number dipetakan ke Valuation Layer individual untuk tracking traceability
-
+Rangkuman detail bisnis GR dipisahkan ke dokumen khusus: [goods-receipt.md](./goods-receipt.md).
 

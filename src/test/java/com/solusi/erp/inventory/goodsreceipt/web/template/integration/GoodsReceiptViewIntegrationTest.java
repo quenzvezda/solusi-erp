@@ -36,12 +36,14 @@ class GoodsReceiptViewIntegrationTest {
     }
 
     @Test
-    @DisplayName("view template contains link to purchase order detail")
-    void viewTemplate_containsPoLink() throws Exception {
+    @DisplayName("view template uses generic reference labels instead of po-only labels")
+    void viewTemplate_usesGenericReferenceLabels() throws Exception {
         String template = readResource(TEMPLATE);
 
-        assertThat(template).contains("label.gr.poCode");
-        assertThat(template).contains("${gr.poCode");
+        assertThat(template).contains("label.gr.referenceType");
+        assertThat(template).contains("label.gr.referenceCode");
+        assertThat(template).contains("${gr.referenceCode");
+        assertThat(template).doesNotContain("label.gr.poCode");
     }
 
     private String readResource(String path) throws Exception {

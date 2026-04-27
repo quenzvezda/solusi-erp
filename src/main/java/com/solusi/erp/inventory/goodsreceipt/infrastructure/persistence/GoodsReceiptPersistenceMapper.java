@@ -3,7 +3,6 @@ package com.solusi.erp.inventory.goodsreceipt.infrastructure.persistence;
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceipt;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptLine;
-import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptStatus;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
@@ -18,7 +17,8 @@ public interface GoodsReceiptPersistenceMapper {
                 toAuditMetadata(entity),
                 entity.getCode(),
                 entity.getReceiptDate(),
-                entity.getPoId(),
+                entity.getReferenceType(),
+                entity.getReferenceId(),
                 entity.getSupplierId(),
                 entity.getFacilityId(),
                 entity.getCurrencyId(),

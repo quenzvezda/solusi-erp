@@ -42,6 +42,17 @@ class PurchaseOrderViewIntegrationTest {
         assertThat(template).contains("hasAuthority('GOODS-RECEIPT_READ')");
     }
 
+    @Test
+    @DisplayName("po detail template renders send button for approved purchase orders")
+    void poDetailTemplate_rendersSendButtonForApprovedPurchaseOrders() throws Exception {
+        String template = readResource(TEMPLATE);
+
+        assertThat(template).contains("canSendPurchaseOrder");
+        assertThat(template).contains("#{label.po.action.send}");
+        assertThat(template).contains("hasAuthority('PO_SEND')");
+        assertThat(template).contains("data-send-url");
+    }
+
     private String readResource(String path) throws Exception {
         InputStream is = getClass().getClassLoader().getResourceAsStream(path);
         assertThat(is).as("Resource not found: %s", path).isNotNull();

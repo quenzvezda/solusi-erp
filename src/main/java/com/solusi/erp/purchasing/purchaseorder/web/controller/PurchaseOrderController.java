@@ -239,6 +239,7 @@ public class PurchaseOrderController {
 
         Long grCount = countGoodsReceiptsByPoUseCase.execute(id);
         model.addAttribute("goodsReceiptCount", grCount);
+        model.addAttribute("canSendPurchaseOrder", domain.getStatus().canSend());
         model.addAttribute("canCreateGoodsReceipt", domain.getStatus().canReceive());
 
         Optional<ApprovalRequest> approvalRequest =

@@ -13,7 +13,8 @@ public class GoodsReceipt {
     private final AuditMetadata metadata;
     private final String code;
     private LocalDate receiptDate;
-    private final Long poId;
+    private final GoodsReceiptReferenceType referenceType;
+    private final Long referenceId;
     private final Long supplierId;
     private final Long facilityId;
     private final Long currencyId;
@@ -22,13 +23,15 @@ public class GoodsReceipt {
     private String note;
     private List<GoodsReceiptLine> lines;
 
-    public GoodsReceipt(AuditMetadata metadata, String code, LocalDate receiptDate, Long poId, Long supplierId,
+    public GoodsReceipt(AuditMetadata metadata, String code, LocalDate receiptDate,
+                        GoodsReceiptReferenceType referenceType, Long referenceId, Long supplierId,
                         Long facilityId, Long currencyId, BigDecimal exchangeRate, GoodsReceiptStatus status,
                         String note, List<GoodsReceiptLine> lines) {
         this.metadata = metadata;
         this.code = code;
         this.receiptDate = receiptDate;
-        this.poId = poId;
+        this.referenceType = referenceType;
+        this.referenceId = referenceId;
         this.supplierId = supplierId;
         this.facilityId = facilityId;
         this.currencyId = currencyId;
@@ -38,13 +41,28 @@ public class GoodsReceipt {
         this.lines = copyLines(lines);
     }
 
-    public static GoodsReceipt createNew(String code, LocalDate receiptDate, Long poId, Long supplierId,
+    public GoodsReceipt(AuditMetadata metadata, String code, LocalDate receiptDate, Long poId, Long supplierId,
+                        Long facilityId, Long currencyId, BigDecimal exchangeRate, GoodsReceiptStatus status,
+                        String note, List<GoodsReceiptLine> lines) {
+        this(metadata, code, receiptDate, GoodsReceiptReferenceType.PURCHASE_ORDER, poId, supplierId,
+                facilityId, currencyId, exchangeRate, status, note, lines);
+    }
+
+    public static GoodsReceipt createNew(String code, LocalDate receiptDate,
+                                         GoodsReceiptReferenceType referenceType, Long referenceId, Long supplierId,
                                          Long facilityId, Long currencyId, BigDecimal exchangeRate,
                                          List<GoodsReceiptLine> lines) {
         return new GoodsReceipt(
-                AuditMetadata.empty(), code, receiptDate, poId, supplierId, facilityId,
+                AuditMetadata.empty(), code, receiptDate, referenceType, referenceId, supplierId, facilityId,
                 currencyId, exchangeRate, GoodsReceiptStatus.DRAFT, null, lines
         );
+    }
+
+    public static GoodsReceipt createNew(String code, LocalDate receiptDate, Long poId, Long supplierId,
+                                         Long facilityId, Long currencyId, BigDecimal exchangeRate,
+                                         List<GoodsReceiptLine> lines) {
+        return createNew(code, receiptDate, GoodsReceiptReferenceType.PURCHASE_ORDER, poId, supplierId,
+                facilityId, currencyId, exchangeRate, lines);
     }
 
     public void update(LocalDate receiptDate, String note, List<GoodsReceiptLine> lines) {
@@ -83,8 +101,16 @@ public class GoodsReceipt {
         return receiptDate;
     }
 
+    public GoodsReceiptReferenceType getReferenceType() {
+        return referenceType;
+    }
+
+    public Long getReferenceId() {
+        return referenceId;
+    }
+
     public Long getPoId() {
-        return poId;
+        return referenceType == GoodsReceiptReferenceType.PURCHASE_ORDER ? referenceId : null;
     }
 
     public Long getSupplierId() {

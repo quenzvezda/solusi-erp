@@ -7,11 +7,13 @@ import com.solusi.erp.inventory.facility.domain.port.FacilityLookupProvider;
 import com.solusi.erp.inventory.goodsreceipt.application.usecase.command.GoodsReceiptLineCommand;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceipt;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptLine;
+import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptReferenceType;
 import com.solusi.erp.inventory.goodsreceipt.web.dto.*;
 import com.solusi.erp.inventory.product.domain.port.ProductLookupProvider;
 import com.solusi.erp.inventory.uom.domain.port.UomLookupProvider;
 import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
 import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
+import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrder;
 import com.solusi.erp.purchasing.purchaseorder.domain.repository.PurchaseOrderRepository;
 import org.mapstruct.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,14 +40,17 @@ public abstract class GoodsReceiptWebMapper {
 
     @Mapping(target = "lineCount", expression = "java(domain.getLines() != null ? domain.getLines().size() : 0)")
     @Mapping(target = "supplierName", source = "supplierId", qualifiedByName = "getSupplierName")
-    @Mapping(target = "poCode", source = "poId", qualifiedByName = "getPoCode")
+    @Mapping(target = "referenceType", source = "referenceType", qualifiedByName = "getReferenceTypeName")
+    @Mapping(target = "referenceCode", expression = "java(resolveReferenceCode(domain.getReferenceType(), domain.getReferenceId()))")
     @Mapping(target = "status", source = "status", qualifiedByName = "getStatusName")
     public abstract GoodsReceiptSummaryResponse toSummaryResponse(GoodsReceipt domain);
 
     @Mapping(target = "supplierName", source = "supplierId", qualifiedByName = "getSupplierName")
     @Mapping(target = "facilityName", source = "facilityId", qualifiedByName = "getFacilityName")
     @Mapping(target = "currencyCode", source = "currencyId", qualifiedByName = "getCurrencyCode")
-    @Mapping(target = "poCode", source = "poId", qualifiedByName = "getPoCode")
+    @Mapping(target = "referenceType", source = "referenceType", qualifiedByName = "getReferenceTypeName")
+    @Mapping(target = "referenceId", source = "referenceId")
+    @Mapping(target = "referenceCode", expression = "java(resolveReferenceCode(domain.getReferenceType(), domain.getReferenceId()))")
     @Mapping(target = "status", source = "status", qualifiedByName = "getStatusName")
     public abstract GoodsReceiptDetailResponse toDetailResponse(GoodsReceipt domain);
 
@@ -101,6 +106,14 @@ public abstract class GoodsReceiptWebMapper {
         // The target already has all mapped fields from the line
     }
 
+    @AfterMapping
+    protected void enrichSaveRequest(GoodsReceipt domain, @MappingTarget GoodsReceiptSaveRequest target) {
+        target.setReferenceCode(resolveReferenceCode(domain.getReferenceType(), domain.getReferenceId()));
+        target.setSupplierName(getSupplierName(domain.getSupplierId()));
+        target.setFacilityName(getFacilityName(domain.getFacilityId()));
+        target.setCurrencyCode(getCurrencyCode(domain.getCurrencyId()));
+    }
+
     @Named("getSupplierName")
     protected String getSupplierName(Long id) {
         if (id == null) return null;
@@ -143,12 +156,24 @@ public abstract class GoodsReceiptWebMapper {
         return dto != null ? dto.subText() : null;
     }
 
-    @Named("getPoCode")
-    protected String getPoCode(Long poId) {
-        if (poId == null) return null;
-        return purchaseOrderRepository.findById(poId)
-            .map(po -> po.getCode())
-            .orElse(null);
+    protected String resolveReferenceCode(GoodsReceiptReferenceType referenceType, Long referenceId) {
+        if (referenceType == null || referenceId == null) {
+            return null;
+        }
+        if (referenceType == GoodsReceiptReferenceType.PURCHASE_ORDER) {
+            return purchaseOrderRepository.findById(referenceId)
+                    .map(PurchaseOrder::getCode)
+                    .orElse(null);
+        }
+        return null;
+    }
+
+    @Named("getReferenceTypeName")
+    protected String getReferenceTypeName(GoodsReceiptReferenceType referenceType) {
+        if (referenceType == null) {
+            return null;
+        }
+        return referenceType.name();
     }
 
     @Named("getStatusName")

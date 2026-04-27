@@ -16,14 +16,6 @@
                             Manage goods receipt documents.
                         </div>
                     </div>
-                    <div class="col-auto ms-auto d-print-none" sec:authorize="hasAuthority('GOODS-RECEIPT_CREATE')">
-                        <div class="btn-list">
-                            <a th:href="@{/inventory/goods-receipts/create}" class="btn btn-primary d-none d-sm-inline-block">
-                                <i class="ti ti-plus icon"></i>
-                                <span th:text="#{label.gr.create}">Create Goods Receipt</span>
-                            </a>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -66,7 +58,8 @@
                                     <tr>
                                         <th th:replace="~{fragments/table :: sortable('code', #{label.gr.column.code})}">Code</th>
                                         <th th:text="#{label.gr.column.receiptDate}">Receipt Date</th>
-                                        <th th:text="#{label.gr.column.poCode}">PO Code</th>
+                                        <th th:text="#{label.gr.column.referenceType}">Reference Type</th>
+                                        <th th:text="#{label.gr.column.referenceCode}">Reference Code</th>
                                         <th th:text="#{label.gr.column.supplier}">Supplier</th>
                                         <th th:text="#{label.gr.column.status}">Status</th>
                                         <th th:text="#{label.gr.column.lines}">Lines</th>
@@ -78,7 +71,8 @@
                                     <tr th:each="item : ${page.content}" th:id="'row-' + ${item.id}">
                                         <td><span class="font-weight-medium" th:text="${item.code}">GR-001</span></td>
                                         <td th:text="${#temporals.format(item.receiptDate, 'dd MMM yyyy')}">01 Jul 2026</td>
-                                        <td th:text="${item.poCode ?: '-'}">PO-001</td>
+                                        <td th:text="${item.referenceType ?: '-'}">PURCHASE_ORDER</td>
+                                        <td th:text="${item.referenceCode ?: '-'}">PO-001</td>
                                         <td th:text="${item.supplierName ?: '-'}">Supplier</td>
                                         <td>
                                             <span class="badge"
@@ -129,7 +123,7 @@
                                         </td>
                                     </tr>
                                     <tr th:if="${page.empty}">
-                                        <td colspan="8" class="text-center py-4 text-secondary" th:text="#{label.gr.empty}">
+                                        <td colspan="9" class="text-center py-4 text-secondary" th:text="#{label.gr.empty}">
                                             No goods receipt data found.
                                         </td>
                                     </tr>

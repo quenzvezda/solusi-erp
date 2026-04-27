@@ -27,10 +27,10 @@ Purchase Order adalah dokumen pembelian resmi yang diterbitkan perusahaan kepada
 | `exchangeRate` | Kurs konversi ke IDR (wajib > 0) | Ya |
 | `paymentTermDays` | Jangka waktu pembayaran (hari) | Ya |
 | `prId` | Referensi PR (wajib untuk tipe STANDARD, null untuk DIRECT) | Kondisional |
-| `taxId` | Referensi master tax yang dipilih di header PO | Tidak |
-| `taxName` | Snapshot nama pajak pada saat PO disimpan | Tidak |
-| `taxRate` | Snapshot tarif pajak dalam format persen (misal `11.00`) | Tidak |
-| `taxCalculationMode` | Snapshot mode hitung `EXCLUSIVE` / `INCLUSIVE` | Tidak |
+| `taxId` | Referensi master tax yang dipilih di header PO | Ya |
+| `taxName` | Snapshot nama pajak pada saat PO disimpan | Ya (auto) |
+| `taxRate` | Snapshot tarif pajak dalam format persen (misal `11.00`) | Ya (auto) |
+| `taxCalculationMode` | Snapshot mode hitung `EXCLUSIVE` / `INCLUSIVE` | Ya (auto) |
 | `subtotal` | Total sebelum pajak (dihitung otomatis) | Ya (auto) |
 | `taxAmount` | Total pajak (dihitung otomatis) | Ya (auto) |
 | `totalAmount` | Total akhir = subtotal + pajak (dihitung otomatis) | Ya (auto) |
@@ -111,9 +111,10 @@ Semua kalkulasi dilakukan di backend (domain layer) — tidak bergantung pada Ja
 ### D. Validasi Umum
 1. **Exchange Rate**: Wajib > 0. Jika mata uang IDR, isi dengan `1`.
 2. **Expected Date**: Tidak boleh lebih awal dari `orderDate`.
-3. **Lines**: PO tidak dapat di-submit jika tidak memiliki minimal satu baris item.
-4. **Edit & Hapus**: Hanya bisa dilakukan saat status **DRAFT**.
-5. **Cancel**: Hanya bisa dilakukan saat status **DRAFT** atau **SUBMITTED**.
+3. **Header Tax**: Wajib dipilih. Bahkan PO non-pajak tetap harus memilih master tax eksplisit seperti **PPN 0% / Non Tax** agar snapshot pajak header tidak pernah null.
+4. **Lines**: PO tidak dapat di-submit jika tidak memiliki minimal satu baris item.
+5. **Edit & Hapus**: Hanya bisa dilakukan saat status **DRAFT**.
+6. **Cancel**: Hanya bisa dilakukan saat status **DRAFT** atau **SUBMITTED**.
 
 ### E. Alur Approval
 - Saat PO di-submit, sistem membuat `ApprovalRequest` secara otomatis.
@@ -126,6 +127,7 @@ Semua kalkulasi dilakukan di backend (domain layer) — tidak bergantung pada Ja
 - **STANDARD PR Selector Modal**: Saat tipe STANDARD dipilih pada create flow, field **Referensi PR** tidak lagi memakai select biasa. User memilih PR melalui modal selector berbasis tabel yang mendukung search + pagination.
 - **Derived Header Locking**: Setelah PR dipilih, `supplier`, `facility`, dan `currency` otomatis terisi dari PR dan dikunci di UI.
 - **Header Tax Selector**: Form PO menyediakan satu autocomplete **Tax** di header yang mengambil data dari master Tax aktif. Pemilihan ini mengontrol seluruh perhitungan pajak setiap line.
+- **Explicit Tax Selection**: Field **Tax** bersifat mandatory. Jika transaksi tidak dikenai pajak, user tetap memilih master tax 0% / non-tax, bukan membiarkannya kosong.
 - **STANDARD Line Selector Modal**: Tombol **Add Line** pada STANDARD membuka selector line PR multi-select. Sistem mengecualikan line yang sudah habis atau sudah dipilih di draft saat ini.
 - **Edit Header Parity**: Pada edit DRAFT PO, kontrol **PO Type** dan **Referensi PR** memakai struktur visual yang sama dengan create flow, tetapi tetap non-interaktif/locked agar referensi STANDARD tidak berubah diam-diam.
 - **STANDARD Edit Line Expansion**: Pada edit DRAFT STANDARD PO, tombol **Add Line** tetap membuka selector line PR dari referensi yang sama agar user bisa menambahkan sisa line PR yang belum dikonversi, bukan membuat line kosong manual.

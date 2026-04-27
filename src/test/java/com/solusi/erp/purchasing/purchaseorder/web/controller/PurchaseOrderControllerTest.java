@@ -554,4 +554,25 @@ public class PurchaseOrderControllerTest {
         assertThat(model.getAttribute("goodsReceiptCount")).isEqualTo(0L);
         assertThat(model.getAttribute("canCreateGoodsReceipt")).isEqualTo(true);
     }
+
+    @Test
+    @DisplayName("view exposes send action when PO is approved")
+    void view_exposesSendActionWhenPoApproved() {
+        PurchaseOrder po = buildApprovedPo();
+        when(editViewUc.execute(3L)).thenReturn(Optional.of(po));
+        when(countGoodsReceiptsByPoUseCase.execute(3L)).thenReturn(0L);
+
+        PurchaseOrderDetailResponse detail = new PurchaseOrderDetailResponse();
+        detail.setId(3L);
+        detail.setCode("PO-003");
+        detail.setStatus(PurchaseOrderStatus.APPROVED);
+        when(webMapper.toDetailResponse(any(PurchaseOrder.class))).thenReturn(detail);
+
+        Model model = new ExtendedModelMap();
+        String view = controller.view(3L, model, null);
+
+        assertEquals("purchasing/purchase-orders/view", view);
+        assertThat(model.getAttribute("canSendPurchaseOrder")).isEqualTo(true);
+        assertThat(model.getAttribute("canCreateGoodsReceipt")).isEqualTo(false);
+    }
 }

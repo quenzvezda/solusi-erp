@@ -35,6 +35,16 @@ class GoodsReceiptListIntegrationTest {
         assertThat(template).contains("${page}");
     }
 
+    @Test
+    @DisplayName("list template is audit-only and uses generic reference columns")
+    void listTemplate_isAuditOnlyAndUsesGenericReferenceColumns() throws Exception {
+        String template = readResource(TEMPLATE);
+
+        assertThat(template).doesNotContain("/inventory/goods-receipts/create");
+        assertThat(template).contains("label.gr.column.referenceType");
+        assertThat(template).contains("label.gr.column.referenceCode");
+    }
+
     private String readResource(String path) throws Exception {
         InputStream is = getClass().getClassLoader().getResourceAsStream(path);
         assertThat(is).as("Resource not found: %s", path).isNotNull();

@@ -111,11 +111,12 @@ public class PurchaseOrder {
                                            PurchaseOrderType poType,
                                            Long taxId, String taxCode, String taxName, BigDecimal taxRate,
                                            TaxCalculationMode taxCalculationMode,
-                                           String note,
-                                           List<PurchaseOrderLine> lines) {
+                                            String note,
+                                            List<PurchaseOrderLine> lines) {
         validateExchangeRate(exchangeRate);
         validateExpectedDate(orderDate, expectedDate);
         validatePoType(poType, prId);
+        validateHeaderTax(taxId, taxCode, taxName);
 
         PurchaseOrder po = new PurchaseOrder(
             AuditMetadata.empty(), code, orderDate, expectedDate,
@@ -148,6 +149,9 @@ public class PurchaseOrder {
         if (!status.canUpdate()) {
             throw new DomainException("msg.error.po.update.not.draft");
         }
+        validateExchangeRate(exchangeRate);
+        validateExpectedDate(orderDate, expectedDate);
+        validateHeaderTax(taxId, taxCode, taxName);
         this.orderDate = orderDate;
         this.expectedDate = expectedDate;
         this.facilityId = facilityId;
@@ -286,6 +290,12 @@ public class PurchaseOrder {
     private static void validatePoType(PurchaseOrderType poType, Long prId) {
         if (PurchaseOrderType.STANDARD == poType && prId == null) {
             throw new DomainException("msg.error.po.standard.pr.required");
+        }
+    }
+
+    private static void validateHeaderTax(Long taxId, String taxCode, String taxName) {
+        if (taxId == null || taxCode == null || taxCode.isBlank() || taxName == null || taxName.isBlank()) {
+            throw new DomainException("msg.error.po.tax.required");
         }
     }
 

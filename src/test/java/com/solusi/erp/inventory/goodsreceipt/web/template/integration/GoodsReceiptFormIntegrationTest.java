@@ -44,6 +44,18 @@ class GoodsReceiptFormIntegrationTest {
         assertThat(template).contains("type=\"submit\"");
     }
 
+    @Test
+    @DisplayName("create form renders read-only purchase-order snapshot header")
+    void createForm_rendersReadonlyReferenceHeader() throws Exception {
+        String template = readResource(CREATE_TEMPLATE);
+
+        assertThat(template).contains("label.gr.referenceType");
+        assertThat(template).contains("label.gr.referenceCode");
+        assertThat(template).contains("label.gr.supplier");
+        assertThat(template).contains("label.gr.facility");
+        assertThat(template).contains("form-control-plaintext");
+    }
+
     private String readResource(String path) throws Exception {
         InputStream is = getClass().getClassLoader().getResourceAsStream(path);
         assertThat(is).as("Resource not found: %s", path).isNotNull();

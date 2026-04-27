@@ -113,19 +113,19 @@ public class GoodsReceiptControllerTest {
     @DisplayName("createForm loads from use case and returns form view")
     void createFormShouldLoadFromUseCaseAndReturnFormView() {
         GoodsReceipt gr = buildDraftGr();
-        when(createViewUc.execute(null)).thenReturn(gr);
+        when(createViewUc.execute(7L)).thenReturn(gr);
 
         GoodsReceiptSaveRequest request = new GoodsReceiptSaveRequest();
         request.setReceiptDate(LocalDate.of(2026, 7, 1));
         when(webMapper.toSaveRequest(any(GoodsReceipt.class))).thenReturn(request);
 
         Model model = new ExtendedModelMap();
-        String view = controller.createForm(null, model);
+        String view = controller.createForm(7L, model);
 
         assertEquals("inventory/goods-receipts/form", view);
         assertThat(model.getAttribute("grRequest")).isNotNull()
             .isInstanceOf(GoodsReceiptSaveRequest.class);
-        verify(createViewUc).execute(null);
+        verify(createViewUc).execute(7L);
     }
 
     @Test

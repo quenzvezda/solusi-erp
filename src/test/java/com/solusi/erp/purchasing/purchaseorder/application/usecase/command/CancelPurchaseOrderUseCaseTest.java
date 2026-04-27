@@ -2,6 +2,7 @@ package com.solusi.erp.purchasing.purchaseorder.application.usecase.command;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.exception.DomainException;
+import com.solusi.erp.master.tax.domain.model.TaxCalculationMode;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrder;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderLine;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderStatus;
@@ -28,6 +29,10 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CancelPurchaseOrderUseCase Tests")
 class CancelPurchaseOrderUseCaseTest {
+    private static final Long TAX_ID = 10L;
+    private static final String TAX_CODE = "NON-TAX";
+    private static final String TAX_NAME = "Non Tax";
+    private static final BigDecimal TAX_RATE = BigDecimal.ZERO;
 
     @Mock
     private PurchaseOrderRepository repository;
@@ -46,7 +51,9 @@ class CancelPurchaseOrderUseCaseTest {
                 null, null
         );
         return PurchaseOrder.createNew("PO-TEST-001", LocalDate.now(), null,
-                1L, 1L, 1L, BigDecimal.ONE, 30, null, PurchaseOrderType.DIRECT, "test", List.of(line));
+                1L, 1L, 1L, BigDecimal.ONE, 30, null, PurchaseOrderType.DIRECT,
+                TAX_ID, TAX_CODE, TAX_NAME, TAX_RATE, TaxCalculationMode.EXCLUSIVE,
+                "test", List.of(line));
     }
 
     @Test

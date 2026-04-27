@@ -56,8 +56,12 @@
                                         </div>
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label text-secondary" th:text="#{label.gr.poCode}">PO Code</label>
-                                        <div class="form-control-plaintext" th:text="${gr.poCode ?: '-'}">PO-001</div>
+                                        <label class="form-label text-secondary" th:text="#{label.gr.referenceType}">Reference Type</label>
+                                        <div class="form-control-plaintext" th:text="${gr.referenceType ?: '-'}">PURCHASE_ORDER</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.gr.referenceCode}">Reference Code</label>
+                                        <div class="form-control-plaintext" th:text="${gr.referenceCode ?: '-'}">PO-001</div>
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label text-secondary" th:text="#{label.gr.supplier}">Supplier</label>

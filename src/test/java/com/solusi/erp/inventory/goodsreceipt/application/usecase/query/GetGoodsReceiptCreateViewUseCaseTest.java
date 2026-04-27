@@ -3,6 +3,7 @@ package com.solusi.erp.inventory.goodsreceipt.application.usecase.query;
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.exception.DomainException;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceipt;
+import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptReferenceType;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptStatus;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrder;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrderLine;
@@ -46,7 +47,10 @@ class GetGoodsReceiptCreateViewUseCaseTest {
 
         GoodsReceipt draft = useCase.execute(7L);
 
-        assertThat(draft.getPoId()).isEqualTo(7L);
+        assertThat(draft.getReferenceType()).isEqualTo(GoodsReceiptReferenceType.PURCHASE_ORDER);
+        assertThat(draft.getReferenceId()).isEqualTo(7L);
+        assertThat(draft.getSupplierId()).isEqualTo(11L);
+        assertThat(draft.getFacilityId()).isEqualTo(3L);
         assertThat(draft.getStatus()).isEqualTo(GoodsReceiptStatus.DRAFT);
         assertThat(draft.getLines()).hasSize(2);
         assertThat(draft.getLines()).allMatch(line -> line.getQuantityReceived().compareTo(BigDecimal.ZERO) == 0);

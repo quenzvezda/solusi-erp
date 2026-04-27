@@ -117,10 +117,11 @@
                                         </div>
                                         <div class="col-md-6">
                                             <div class="mb-3">
-                                                <label class="form-label" th:text="#{label.po.tax}">Tax</label>
+                                                <label class="form-label required" th:text="#{label.po.tax}">Tax</label>
                                                 <select id="header-tax"
                                                         name="taxId"
                                                         th:disabled="${isLocked}"
+                                                        required
                                                         data-lookup-path="master/taxes"
                                                         class="form-select erp-input-ts">
                                                     <option value=""></option>

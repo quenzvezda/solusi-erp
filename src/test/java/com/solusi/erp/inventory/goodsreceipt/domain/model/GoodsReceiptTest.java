@@ -29,6 +29,7 @@ class GoodsReceiptTest {
         GoodsReceipt receipt = GoodsReceipt.createNew(
                 "GR-202604-00001",
                 LocalDate.of(2026, 4, 26),
+                GoodsReceiptReferenceType.PURCHASE_ORDER,
                 7L, 11L, 3L, 1L, BigDecimal.ONE,
                 List.of(GoodsReceiptLine.prefill(
                         101L, 201L, 301L, false,
@@ -55,6 +56,7 @@ class GoodsReceiptTest {
         GoodsReceipt receipt = GoodsReceipt.createNew(
                 "GR-202604-00001",
                 LocalDate.of(2026, 4, 26),
+                GoodsReceiptReferenceType.PURCHASE_ORDER,
                 7L, 11L, 3L, 1L, BigDecimal.ONE,
                 List.of(active)
         );
@@ -63,5 +65,20 @@ class GoodsReceiptTest {
         assertThatThrownBy(() -> receipt.update(LocalDate.of(2026, 4, 27), "late edit", List.of(active)))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("msg.error.gr.completed.immutable");
+    }
+
+    @Test
+    @DisplayName("goods receipt keeps typed reference metadata")
+    void createNew_keepsTypedReferenceMetadata() {
+        GoodsReceipt receipt = GoodsReceipt.createNew(
+                "GR-202604-00002",
+                LocalDate.of(2026, 4, 26),
+                GoodsReceiptReferenceType.PURCHASE_ORDER,
+                7L, 11L, 3L, 1L, BigDecimal.ONE,
+                List.of()
+        );
+
+        assertThat(receipt.getReferenceType()).isEqualTo(GoodsReceiptReferenceType.PURCHASE_ORDER);
+        assertThat(receipt.getReferenceId()).isEqualTo(7L);
     }
 }

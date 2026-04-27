@@ -3,6 +3,7 @@ package com.solusi.erp.inventory.goodsreceipt.infrastructure.persistence;
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceipt;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptLine;
+import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptReferenceType;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptStatus;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
@@ -24,7 +25,8 @@ class GoodsReceiptPersistenceMapperTest {
         entity.setId(100L);
         entity.setCode("GR-202407-00001");
         entity.setReceiptDate(LocalDate.of(2026, 7, 14));
-        entity.setPoId(1L);
+        entity.setReferenceType(GoodsReceiptReferenceType.PURCHASE_ORDER);
+        entity.setReferenceId(1L);
         entity.setSupplierId(2L);
         entity.setFacilityId(3L);
         entity.setCurrencyId(1L);
@@ -41,7 +43,8 @@ class GoodsReceiptPersistenceMapperTest {
         assertThat(domain.getId()).isEqualTo(100L);
         assertThat(domain.getCode()).isEqualTo("GR-202407-00001");
         assertThat(domain.getReceiptDate()).isEqualTo(LocalDate.of(2026, 7, 14));
-        assertThat(domain.getPoId()).isEqualTo(1L);
+        assertThat(domain.getReferenceType()).isEqualTo(GoodsReceiptReferenceType.PURCHASE_ORDER);
+        assertThat(domain.getReferenceId()).isEqualTo(1L);
         assertThat(domain.getSupplierId()).isEqualTo(2L);
         assertThat(domain.getFacilityId()).isEqualTo(3L);
         assertThat(domain.getCurrencyId()).isEqualTo(1L);
@@ -57,6 +60,7 @@ class GoodsReceiptPersistenceMapperTest {
                 new AuditMetadata(100L, 1L, LocalDateTime.now(), 1L, null, null),
                 "GR-202407-00001",
                 LocalDate.of(2026, 7, 14),
+                GoodsReceiptReferenceType.PURCHASE_ORDER,
                 1L, 2L, 3L, 1L,
                 new BigDecimal("1.00"),
                 GoodsReceiptStatus.DRAFT,
@@ -68,6 +72,8 @@ class GoodsReceiptPersistenceMapperTest {
 
         assertThat(entity.getStatus()).isEqualTo(GoodsReceiptStatus.DRAFT);
         assertThat(entity.getCode()).isEqualTo("GR-202407-00001");
+        assertThat(entity.getReferenceType()).isEqualTo(GoodsReceiptReferenceType.PURCHASE_ORDER);
+        assertThat(entity.getReferenceId()).isEqualTo(1L);
         assertThat(entity.getExchangeRate()).isEqualByComparingTo("1.00");
     }
 
@@ -82,7 +88,8 @@ class GoodsReceiptPersistenceMapperTest {
         entity.setId(100L);
         entity.setCode("GR-001");
         entity.setReceiptDate(LocalDate.now());
-        entity.setPoId(1L);
+        entity.setReferenceType(GoodsReceiptReferenceType.PURCHASE_ORDER);
+        entity.setReferenceId(1L);
         entity.setSupplierId(2L);
         entity.setCurrencyId(1L);
         entity.setExchangeRate(BigDecimal.ONE);
