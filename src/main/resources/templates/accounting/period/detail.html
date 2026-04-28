@@ -3,7 +3,7 @@
 
 <head th:replace="~{layout/master :: head(#{label.period.detail.title})}"></head>
 
-<body th:replace="~{layout/master :: layout(~{:: .period-detail-content}, ~{})}">
+<body th:replace="~{layout/master :: layout(~{:: .period-detail-content}, ~{:: #page-specific-scripts})}">
     <div class="period-detail-content">
         <div class="page-header d-print-none">
             <div class="container-xl">
@@ -98,18 +98,24 @@
                                     <td class="text-end" sec:authorize="hasAuthority('ACCOUNTING-PERIOD_UPDATE')">
                                         <button th:if="${period.status == 'NEVER_OPENED'}"
                                                 class="btn btn-sm btn-primary"
-                                                hx-post="__${'/accounting/periods/periods/' + period.id + '/reopen'}__"
-                                                hx-confirm="Open this period?"
+                                                th:attr="hx-post=@{/accounting/periods/periods/{id}/reopen(id=${period.id})},
+                                                         hx-confirm=#{msg.confirm.period.open}"
+                                                hx-target="closest tr"
+                                                hx-swap="outerHTML"
                                                 th:text="#{label.period.status.OPEN}">Open</button>
                                         <button th:if="${period.status == 'OPEN'}"
                                                 class="btn btn-sm btn-warning"
-                                                hx-post="__${'/accounting/periods/periods/' + period.id + '/close'}__"
-                                                hx-confirm="Close this period?"
+                                                th:attr="hx-post=@{/accounting/periods/periods/{id}/close(id=${period.id})},
+                                                         hx-confirm=#{msg.confirm.period.close}"
+                                                hx-target="closest tr"
+                                                hx-swap="outerHTML"
                                                 th:text="#{label.period.close}">Close</button>
                                         <button th:if="${period.status == 'CLOSED'}"
                                                 class="btn btn-sm btn-outline-success"
-                                                hx-post="__${'/accounting/periods/periods/' + period.id + '/reopen'}__"
-                                                hx-confirm="Reopen this period?"
+                                                th:attr="hx-post=@{/accounting/periods/periods/{id}/reopen(id=${period.id})},
+                                                         hx-confirm=#{msg.confirm.period.reopen}"
+                                                hx-target="closest tr"
+                                                hx-swap="outerHTML"
                                                 th:text="#{label.period.reopen}">Reopen</button>
                                     </td>
                                 </tr>
@@ -119,6 +125,32 @@
                 </div>
             </div>
         </div>
+
+        <!-- Standard Modals are included in master layout normally, 
+             but we include here for safety or use programmatic trigger -->
+        <div th:replace="~{fragments/modals :: standard-modals}"></div>
+    </div>
+
+    <div id="page-specific-scripts" th:fragment="pageScripts">
+        <script>
+            // ERP Standard HTMX Confirmation Handler
+            document.body.addEventListener('htmx:confirm', function(evt) {
+                if (!evt.detail.question) return;
+                evt.preventDefault();
+
+                // Use ERP's built-in ErpModal utility (which handles the hidden trigger button)
+                if (window.ErpModal && typeof window.ErpModal.confirm === 'function') {
+                    window.ErpModal.confirm(evt.detail.question, function() {
+                        evt.detail.issueRequest(true);
+                    }, /* Title */ 'Confirmation');
+                } else {
+                    // Fallback if utility not found
+                    if (window.confirm(evt.detail.question)) {
+                        evt.detail.issueRequest(true);
+                    }
+                }
+            });
+        </script>
     </div>
 </body>
 
