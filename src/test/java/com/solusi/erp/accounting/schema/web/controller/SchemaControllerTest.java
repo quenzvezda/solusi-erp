@@ -1,10 +1,13 @@
 package com.solusi.erp.accounting.schema.web.controller;
 
+import com.solusi.erp.accounting.coa.application.usecase.query.CoaSelectorRow;
+import com.solusi.erp.accounting.coa.application.usecase.query.FindCoaSelectorUseCase;
 import com.solusi.erp.accounting.schema.application.usecase.command.CreateSchemaUseCase;
 import com.solusi.erp.accounting.schema.application.usecase.command.DeleteSchemaUseCase;
 import com.solusi.erp.accounting.schema.application.usecase.command.UpdateSchemaUseCase;
 import com.solusi.erp.accounting.schema.application.usecase.query.FindSchemasUseCase;
 import com.solusi.erp.accounting.schema.application.usecase.query.GetSchemaEditViewUseCase;
+import com.solusi.erp.accounting.coa.domain.model.AccountType;
 import com.solusi.erp.accounting.schema.domain.model.AccountingSchema;
 import com.solusi.erp.accounting.schema.domain.model.SchemaEventType;
 import com.solusi.erp.accounting.schema.web.dto.SchemaDetailResponse;
@@ -37,12 +40,13 @@ public class SchemaControllerTest {
     private final DeleteSchemaUseCase deleteSchemaUseCase = mock(DeleteSchemaUseCase.class);
     private final FindSchemasUseCase findSchemasUseCase = mock(FindSchemasUseCase.class);
     private final GetSchemaEditViewUseCase getSchemaEditViewUseCase = mock(GetSchemaEditViewUseCase.class);
+    private final FindCoaSelectorUseCase findCoaSelectorUseCase = mock(FindCoaSelectorUseCase.class);
     private final SchemaWebMapper webMapper = mock(SchemaWebMapper.class);
     private final MessageSource messageSource = mock(MessageSource.class);
 
     private final SchemaController controller = new SchemaController(
             createSchemaUseCase, updateSchemaUseCase, deleteSchemaUseCase,
-            findSchemasUseCase, getSchemaEditViewUseCase, webMapper, messageSource
+            findSchemasUseCase, getSchemaEditViewUseCase, findCoaSelectorUseCase, webMapper, messageSource
     );
 
     // ── helpers ──────────────────────────────────────────────────────────────
@@ -129,6 +133,31 @@ public class SchemaControllerTest {
         assertThat(req).isNotNull();
         assertThat(req.getIsActive()).isTrue();
         assertThat(model.getAttribute("eventTypes")).isEqualTo(SchemaEventType.values());
+    }
+
+    // ── selectors ────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("showAccountSelector — returns selector fragment with paged rows")
+    void showAccountSelector_returnsSelectorFragmentWithPagedRows() {
+        CoaSelectorRow row = new CoaSelectorRow(
+                1L, "1000", "Cash", AccountType.ASSET.name(), 1, false, null, null, null
+        );
+        com.solusi.erp.core.domain.model.Page<CoaSelectorRow> domainPage =
+                new com.solusi.erp.core.domain.model.Page<>(List.of(row), 0, 10, 1L);
+        when(findCoaSelectorUseCase.execute(eq("cash"), eq("ASSET"), any())).thenReturn(domainPage);
+
+        org.springframework.data.domain.Pageable springPageable =
+                org.springframework.data.domain.PageRequest.of(0, 10);
+        Model model = new ExtendedModelMap();
+
+        String view = controller.showAccountSelector("cash", "ASSET", springPageable, model);
+
+        assertEquals("accounting/schema/fragments/account-selector-modal", view);
+        assertThat(model.getAttribute("page")).isInstanceOf(org.springframework.data.domain.Page.class);
+        assertThat(model.getAttribute("keyword")).isEqualTo("cash");
+        assertThat(model.getAttribute("accountType")).isEqualTo("ASSET");
+        assertThat(model.getAttribute("accountTypes")).isEqualTo(AccountType.values());
     }
 
     // ── create ───────────────────────────────────────────────────────────────

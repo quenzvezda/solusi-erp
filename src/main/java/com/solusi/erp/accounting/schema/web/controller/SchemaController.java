@@ -1,5 +1,8 @@
 package com.solusi.erp.accounting.schema.web.controller;
 
+import com.solusi.erp.accounting.coa.application.usecase.query.CoaSelectorRow;
+import com.solusi.erp.accounting.coa.application.usecase.query.FindCoaSelectorUseCase;
+import com.solusi.erp.accounting.coa.domain.model.AccountType;
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.DeleteResult;
 import com.solusi.erp.core.domain.model.Pageable;
@@ -44,6 +47,7 @@ public class SchemaController {
     private final DeleteSchemaUseCase deleteSchemaUseCase;
     private final FindSchemasUseCase findSchemasUseCase;
     private final GetSchemaEditViewUseCase getSchemaEditViewUseCase;
+    private final FindCoaSelectorUseCase findCoaSelectorUseCase;
     private final SchemaWebMapper webMapper;
     private final MessageSource messageSource;
 
@@ -74,6 +78,27 @@ public class SchemaController {
         model.addAttribute("schemaRequest", request);
         model.addAttribute("eventTypes", SchemaEventType.values());
         return "accounting/schema/form";
+    }
+
+    @GetMapping("/selectors/accounts")
+    @PreAuthorize("hasAnyAuthority('ACCOUNTING-SCHEMA_CREATE', 'ACCOUNTING-SCHEMA_UPDATE')")
+    public String showAccountSelector(@RequestParam(required = false) String keyword,
+                                      @RequestParam(required = false) String accountType,
+                                      org.springframework.data.domain.Pageable springPageable,
+                                      Model model) {
+        Pageable domainPageable = PageableMapper.toDomain(springPageable);
+        com.solusi.erp.core.domain.model.Page<CoaSelectorRow> domainPage =
+                findCoaSelectorUseCase.execute(keyword, accountType, domainPageable);
+        Page<CoaSelectorRow> springPage = new PageImpl<>(
+                domainPage.content(),
+                springPageable,
+                domainPage.totalElements()
+        );
+        model.addAttribute("page", springPage);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("accountType", accountType);
+        model.addAttribute("accountTypes", AccountType.values());
+        return "accounting/schema/fragments/account-selector-modal";
     }
 
     @PostMapping("/create")

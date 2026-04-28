@@ -59,6 +59,7 @@ class SchemaFormIntegrationTest {
     void schemaSaveRequest_hasAllFormBindingProperties() {
         List<String> required = Arrays.asList(
                 "eventType", "description", "debitAccountId", "creditAccountId",
+                "debitAccountName", "creditAccountName",
                 "isActive", "id", "version");
         for (String prop : required) {
             assertThat(hasReadableProperty(SchemaSaveRequest.class, prop))
@@ -104,7 +105,106 @@ class SchemaFormIntegrationTest {
         assertThat(raw).contains("*{eventType}");
     }
 
+    @Test
+    @DisplayName("Account selector wiring uses shared modal selector helper and page scripts slot")
+    void accountSelectorWiring_usesSharedModalSelectorHelperAndPageScriptsSlot() throws Exception {
+        String template = readResource("templates/" + TEMPLATE + ".html");
+        String script = readResource("static/js/schema-form.js");
+
+        assertThat(template).contains("layout(~{:: .schema-form-content}, ~{:: #page-specific-scripts})");
+        assertThat(template).contains("id=\"page-specific-scripts\"");
+        assertThat(template).contains("th:src=\"@{/js/shared/erp-modal-selector.js}\"");
+        assertThat(template).contains("th:src=\"@{/js/schema-form.js}\"");
+        assertThat(template).contains("modal-schema-account-selector");
+        assertThat(template).contains("schema-account-selector-results");
+
+        assertThat(script).contains("window.ERP.ModalSelector.open");
+        assertThat(script).contains("window.ERP.ModalSelector.close");
+    }
+
+    @Test
+    @DisplayName("Account selector fragment uses paged table layout")
+    void accountSelectorFragment_usesPagedTableLayout() throws Exception {
+        String template = readResource("templates/accounting/schema/fragments/account-selector-modal.html");
+
+        assertThat(template).contains("hx-target=\"#schema-account-selector-results\"");
+        assertThat(template).contains("${page.isEmpty()}");
+        assertThat(template).contains("th:each=\"row : ${page.content}\"");
+        assertThat(template).contains("fragments/table :: pagination(${page})");
+        assertThat(template).contains("table table-vcenter card-table");
+        assertThat(template).contains("js-schema-account-pick");
+    }
+
+    @Test
+    @DisplayName("Selected account display inputs use PO-style form-control class")
+    void selectedAccountDisplayInputs_usePoStyleFormControlClass() throws Exception {
+        String template = readResource("templates/" + TEMPLATE + ".html");
+        String debitDisplayInput = findTagById(template, "input", "input-debit-account-display");
+        String creditDisplayInput = findTagById(template, "input", "input-credit-account-display");
+
+        assertThat(debitDisplayInput).contains("class=\"form-control\"");
+        assertThat(debitDisplayInput).doesNotContain("erp-input");
+        assertThat(creditDisplayInput).contains("class=\"form-control\"");
+        assertThat(creditDisplayInput).doesNotContain("erp-input");
+    }
+
+    @Test
+    @DisplayName("Hidden account id fields are placed before input-group to preserve left radius")
+    void hiddenAccountIdFields_arePlacedBeforeInputGroup() throws Exception {
+        String template = readResource("templates/" + TEMPLATE + ".html");
+
+        assertHiddenBeforeInputGroup(
+                template,
+                "label.schema.debit.account",
+                "id=\"input-debit-account-id\""
+        );
+        assertHiddenBeforeInputGroup(
+                template,
+                "label.schema.credit.account",
+                "id=\"input-credit-account-id\""
+        );
+    }
+
     // ── utility ─────────────────────────────────────────────────────────────
+
+    private String readResource(String path) throws Exception {
+        InputStream is = getClass().getClassLoader().getResourceAsStream(path);
+        assertThat(is).as("Resource not found: %s", path).isNotNull();
+
+        try (InputStream in = is) {
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
+    }
+
+    private String findTagById(String html, String tag, String id) {
+        String marker = "id=\"" + id + "\"";
+        int markerIndex = html.indexOf(marker);
+        assertThat(markerIndex).as("Tag with id '%s' not found", id).isGreaterThanOrEqualTo(0);
+
+        int start = html.lastIndexOf("<" + tag, markerIndex);
+        assertThat(start).as("Start tag <%s> for id '%s' not found", tag, id).isGreaterThanOrEqualTo(0);
+
+        int end = html.indexOf(">", markerIndex);
+        assertThat(end).as("Tag end for id '%s' not found", id).isGreaterThan(markerIndex);
+
+        return html.substring(start, end + 1);
+    }
+
+    private void assertHiddenBeforeInputGroup(String html, String labelMarker, String hiddenInputMarker) {
+        int sectionStart = html.indexOf(labelMarker);
+        assertThat(sectionStart).as("Section marker '%s' not found", labelMarker).isGreaterThanOrEqualTo(0);
+
+        int inputGroupIndex = html.indexOf("<div class=\"input-group\">", sectionStart);
+        assertThat(inputGroupIndex).as("Input group not found for section '%s'", labelMarker).isGreaterThanOrEqualTo(0);
+
+        int hiddenInputIndex = html.indexOf(hiddenInputMarker, sectionStart);
+        assertThat(hiddenInputIndex).as("Hidden input '%s' not found for section '%s'", hiddenInputMarker, labelMarker)
+                .isGreaterThanOrEqualTo(0);
+
+        assertThat(hiddenInputIndex)
+                .as("Hidden input '%s' should be placed before input-group for '%s'", hiddenInputMarker, labelMarker)
+                .isLessThan(inputGroupIndex);
+    }
 
     private boolean hasReadableProperty(Class<?> clazz, String prop) {
         String getter = "get" + prop.substring(0, 1).toUpperCase() + prop.substring(1);

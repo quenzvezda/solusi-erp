@@ -18,9 +18,11 @@ public class SchemaSaveRequest extends BaseAuditResponse {
 
     @NotNull(message = "{label.schema.debit.account} {validation.notnull.suffix}")
     private Long debitAccountId;
+    private String debitAccountName;
 
     @NotNull(message = "{label.schema.credit.account} {validation.notnull.suffix}")
     private Long creditAccountId;
+    private String creditAccountName;
 
     private Boolean isActive;
 }

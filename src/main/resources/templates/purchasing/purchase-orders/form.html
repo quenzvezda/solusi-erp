@@ -73,15 +73,15 @@
                                                        readonly
                                                        th:value="${poUI != null ? poUI['prDisplay'] : ''}"
                                                        th:placeholder="#{label.po.prReference.select}">
-                                                <button type="button" class="btn btn-outline-primary" id="btn-select-pr"
-                                                        th:disabled="${poRequest.id != null}">
-                                                    <i class="ti ti-search me-1"></i>
-                                                    <span th:text="#{label.po.prReference.selectButton}">Choose PR</span>
+                                                <button type="button" class="btn btn-icon btn-outline-primary" id="btn-select-pr"
+                                                        th:disabled="${poRequest.id != null}"
+                                                        th:attr="title=#{label.po.prReference.selectButton},aria-label=#{label.po.prReference.selectButton}">
+                                                    <i class="ti ti-search"></i>
                                                 </button>
-                                                <button type="button" class="btn btn-outline-secondary" id="btn-clear-pr"
-                                                        th:disabled="${poRequest.id != null}">
-                                                    <i class="ti ti-x me-1"></i>
-                                                    <span th:text="#{label.clear}">Clear</span>
+                                                <button type="button" class="btn btn-icon btn-outline-danger" id="btn-clear-pr"
+                                                        th:disabled="${poRequest.id != null}"
+                                                        th:attr="title=#{label.clear},aria-label=#{label.clear}">
+                                                    <i class="ti ti-x"></i>
                                                 </button>
                                             </div>
                                         </div>

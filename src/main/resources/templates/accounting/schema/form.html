@@ -3,7 +3,7 @@
 
 <head th:replace="~{layout/master :: head(${schemaRequest.id == null ? #messages.msg('label.schema.add') : #messages.msg('label.schema.edit')})}"></head>
 
-<body th:replace="~{layout/master :: layout(~{:: .schema-form-content}, ~{})}">
+<body th:replace="~{layout/master :: layout(~{:: .schema-form-content}, ~{:: #page-specific-scripts})}">
     <div class="schema-form-content">
         <div class="page-header d-print-none">
             <div class="container-xl">
@@ -25,6 +25,8 @@
                       data-redirect-on-success="/accounting/schemas">
 
                     <input type="hidden" th:field="*{version}" />
+                    <input type="hidden" th:field="*{debitAccountName}" id="input-debit-account-name"/>
+                    <input type="hidden" th:field="*{creditAccountName}" id="input-credit-account-name"/>
 
                     <div class="card-body">
                         <div class="alert-container"></div>
@@ -57,20 +59,36 @@
 
                                 <div class="mb-3">
                                     <label class="form-label required" th:text="#{label.schema.debit.account}">Debit Account</label>
-                                    <select th:field="*{debitAccountId}" class="form-select erp-input"
-                                            data-lookup-url="/api/lookup/accounting/coa"
-                                            data-lookup-permission="LOOKUP_COA">
-                                        <option value="" th:text="#{label.select.placeholder}">-- Select --</option>
-                                    </select>
+                                    <input type="hidden" th:field="*{debitAccountId}" id="input-debit-account-id"/>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="input-debit-account-display"
+                                               th:value="${schemaRequest.debitAccountName}"
+                                               readonly th:placeholder="#{label.select.placeholder}"/>
+                                        <button type="button" class="btn btn-outline-primary" id="btn-select-debit-account">
+                                            <i class="ti ti-search"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger" id="btn-clear-debit-account"
+                                                th:style="${schemaRequest.debitAccountId == null ? 'display:none;' : ''}">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div class="mb-3">
                                     <label class="form-label required" th:text="#{label.schema.credit.account}">Credit Account</label>
-                                    <select th:field="*{creditAccountId}" class="form-select erp-input"
-                                            data-lookup-url="/api/lookup/accounting/coa"
-                                            data-lookup-permission="LOOKUP_COA">
-                                        <option value="" th:text="#{label.select.placeholder}">-- Select --</option>
-                                    </select>
+                                    <input type="hidden" th:field="*{creditAccountId}" id="input-credit-account-id"/>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="input-credit-account-display"
+                                               th:value="${schemaRequest.creditAccountName}"
+                                               readonly th:placeholder="#{label.select.placeholder}"/>
+                                        <button type="button" class="btn btn-outline-primary" id="btn-select-credit-account">
+                                            <i class="ti ti-search"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger" id="btn-clear-credit-account"
+                                                th:style="${schemaRequest.creditAccountId == null ? 'display:none;' : ''}">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div class="mb-3">
@@ -97,8 +115,14 @@
                         </div>
                     </div>
                 </form>
+                <div th:replace="~{fragments/modal-selector :: shell('modal-schema-account-selector', #{label.schema.selector.account.title}, 'schema-account-selector-results', 'modal-xl')}"></div>
             </div>
         </div>
+    </div>
+
+    <div id="page-specific-scripts" th:fragment="pageScripts">
+        <script th:src="@{/js/shared/erp-modal-selector.js}" defer></script>
+        <script th:src="@{/js/schema-form.js}" defer></script>
     </div>
 </body>
 

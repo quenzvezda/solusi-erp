@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div id="schema-account-selector-results" th:fragment="schema-account-selector-results">
+    <div class="card-header border-0 pb-0">
+        <form class="row g-2 align-items-end"
+              hx-get="/accounting/schemas/selectors/accounts"
+              hx-target="#schema-account-selector-results"
+              hx-swap="outerHTML">
+            <div class="col-md-6">
+                <input type="search"
+                       class="form-control"
+                       name="keyword"
+                       th:value="${keyword}"
+                       th:placeholder="#{label.schema.selector.search.placeholder}">
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" name="accountType">
+                    <option value="" th:text="#{label.select.placeholder}">-- Select --</option>
+                    <option th:each="type : ${accountTypes}"
+                            th:value="${type.name()}"
+                            th:selected="${type.name() == accountType}"
+                            th:text="#{${'label.coa.type.' + type.name()}}">
+                        Account Type
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-2 d-grid">
+                <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-search"></i>
+                    <span class="ms-1" th:text="#{label.search}">Search</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+            <tr>
+                <th th:text="#{label.coa.column.code}">Code</th>
+                <th th:text="#{label.coa.column.name}">Name</th>
+                <th th:text="#{label.coa.column.parent}">Parent</th>
+                <th th:text="#{label.coa.column.type}">Type</th>
+                <th class="text-center" th:text="#{label.coa.column.level}">Level</th>
+                <th class="w-1"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${page.isEmpty()}">
+                <td colspan="6" class="text-center text-secondary py-4"
+                    th:text="#{label.schema.selector.empty}">No accounts found.</td>
+            </tr>
+            <tr th:each="row : ${page.content}"
+                th:attr="data-id=${row.id},
+                         data-code=${row.code},
+                         data-name=${row.name}">
+                <td>
+                    <div class="fw-semibold" th:text="${row.code}">1000</div>
+                </td>
+                <td>
+                    <div class="fw-semibold"
+                         th:style="'padding-left: ' + (${row.level} - 1) * 20 + 'px'"
+                         th:text="${row.name}">
+                        Account Name
+                    </div>
+                    <div class="text-secondary small" th:if="${row.isHeader}" th:text="#{label.coa.is.header}">Header Account</div>
+                </td>
+                <td>
+                    <div th:if="${row.parentCode != null}" th:text="${row.parentName}">Parent Account</div>
+                    <div th:if="${row.parentCode != null}" class="text-secondary small" th:text="${row.parentCode}">1000</div>
+                    <span th:if="${row.parentCode == null}" class="text-secondary">-</span>
+                </td>
+                <td>
+                    <span class="badge bg-azure-lt" th:if="${row.accountType != null}"
+                          th:text="#{${'label.coa.type.' + row.accountType}}">Asset</span>
+                </td>
+                <td class="text-center" th:text="${row.level}">1</td>
+                <td>
+                    <button type="button" class="btn btn-primary btn-sm js-schema-account-pick"
+                            th:text="#{label.choose}">Choose</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+</div>
+</body>
+</html>

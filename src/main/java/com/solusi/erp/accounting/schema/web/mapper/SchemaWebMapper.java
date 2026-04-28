@@ -55,15 +55,30 @@ public abstract class SchemaWebMapper {
         resolveNames(domain, target);
     }
 
+    @AfterMapping
+    protected void resolveAccountNames(AccountingSchema domain, @MappingTarget SchemaSaveRequest target) {
+        LookupDto debit = coaLookupProvider.resolve(domain.getDebitAccountId());
+        LookupDto credit = coaLookupProvider.resolve(domain.getCreditAccountId());
+        target.setDebitAccountName(formatLookup(debit));
+        target.setCreditAccountName(formatLookup(credit));
+    }
+
     private void resolveNames(AccountingSchema domain, Object target) {
         LookupDto debit = coaLookupProvider.resolve(domain.getDebitAccountId());
         LookupDto credit = coaLookupProvider.resolve(domain.getCreditAccountId());
         if (target instanceof SchemaSummaryResponse s) {
-            s.setDebitAccountName(debit != null ? debit.subText() + " - " + debit.name() : null);
-            s.setCreditAccountName(credit != null ? credit.subText() + " - " + credit.name() : null);
+            s.setDebitAccountName(formatLookup(debit));
+            s.setCreditAccountName(formatLookup(credit));
         } else if (target instanceof SchemaDetailResponse d) {
-            d.setDebitAccountName(debit != null ? debit.subText() + " - " + debit.name() : null);
-            d.setCreditAccountName(credit != null ? credit.subText() + " - " + credit.name() : null);
+            d.setDebitAccountName(formatLookup(debit));
+            d.setCreditAccountName(formatLookup(credit));
         }
+    }
+
+    private String formatLookup(LookupDto lookup) {
+        if (lookup == null) return null;
+        if (lookup.subText() == null || lookup.subText().isBlank()) return lookup.name();
+        if (lookup.name() == null || lookup.name().isBlank()) return lookup.subText();
+        return lookup.subText() + " - " + lookup.name();
     }
 }
