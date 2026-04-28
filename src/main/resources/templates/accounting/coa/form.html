@@ -3,7 +3,7 @@
 
 <head th:replace="~{layout/master :: head(${coaRequest.id == null ? #messages.msg('label.coa.add') : #messages.msg('label.coa.edit')})}"></head>
 
-<body th:replace="~{layout/master :: layout(~{:: .coa-form-content}, ~{})}">
+<body th:replace="~{layout/master :: layout(~{:: .coa-form-content}, ~{:: #page-specific-scripts})}">
     <div class="coa-form-content">
         <div class="page-header d-print-none">
             <div class="container-xl">
@@ -125,6 +125,7 @@
     </div>
 
     <div id="page-specific-scripts" th:fragment="pageScripts">
+        <script th:src="@{/js/shared/erp-modal-selector.js}" defer></script>
         <script th:src="@{/js/coa-form.js}" defer></script>
     </div>
 </body>

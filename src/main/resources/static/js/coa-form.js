@@ -47,13 +47,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function openParentSelector() {
-        var modal = new bootstrap.Modal(document.getElementById('modal-coa-parent-selector'));
-        modal.show();
+        if (!window.ERP
+            || !window.ERP.ModalSelector
+            || !document.getElementById('modal-coa-parent-selector')) {
+            return;
+        }
 
-        // Load initial content via HTMX
-        htmx.ajax('GET', '/accounting/coa/selectors/parent', {
-            target: '#coa-parent-selector-results',
-            swap: 'innerHTML'
+        window.ERP.ModalSelector.open({
+            modalId: 'modal-coa-parent-selector',
+            resultsId: 'coa-parent-selector-results',
+            url: '/accounting/coa/selectors/parent'
         });
     }
 
@@ -76,8 +79,9 @@ document.addEventListener('DOMContentLoaded', function () {
         levelInput.value = level + 1;
 
         // Close modal
-        var modal = bootstrap.Modal.getInstance(document.getElementById('modal-coa-parent-selector'));
-        if (modal) modal.hide();
+        if (window.ERP && window.ERP.ModalSelector) {
+            window.ERP.ModalSelector.close('modal-coa-parent-selector');
+        }
     }
 
     // --- Clear Parent ---

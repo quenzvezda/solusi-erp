@@ -9,6 +9,7 @@ import com.solusi.erp.accounting.coa.application.usecase.command.CreateCoaUseCas
 import com.solusi.erp.accounting.coa.application.usecase.command.DeleteCoaUseCase;
 import com.solusi.erp.accounting.coa.application.usecase.command.UpdateCoaUseCase;
 import com.solusi.erp.accounting.coa.application.usecase.query.FindCoaSelectorUseCase;
+import com.solusi.erp.accounting.coa.application.usecase.query.CoaSelectorRow;
 import com.solusi.erp.accounting.coa.application.usecase.query.FindCoaUseCase;
 import com.solusi.erp.accounting.coa.application.usecase.query.GetCoaEditViewUseCase;
 import com.solusi.erp.accounting.coa.domain.model.AccountType;
@@ -72,8 +73,17 @@ public class CoaController {
     @PreAuthorize("hasAuthority('ACCOUNTING-COA_READ')")
     public String showParentSelector(@RequestParam(required = false) String keyword,
                                      @RequestParam(required = false) String accountType,
+                                     org.springframework.data.domain.Pageable springPageable,
                                      Model model) {
-        model.addAttribute("selectorRows", findCoaSelectorUseCase.execute(keyword, accountType));
+        Pageable domainPageable = PageableMapper.toDomain(springPageable);
+        com.solusi.erp.core.domain.model.Page<CoaSelectorRow> domainPage =
+                findCoaSelectorUseCase.execute(keyword, accountType, domainPageable);
+        Page<CoaSelectorRow> springPage = new PageImpl<>(
+                domainPage.content(),
+                springPageable,
+                domainPage.totalElements()
+        );
+        model.addAttribute("page", springPage);
         model.addAttribute("keyword", keyword);
         model.addAttribute("accountType", accountType);
         model.addAttribute("accountTypes", AccountType.values());

@@ -24,6 +24,21 @@ public interface CoaJpaRepository extends JpaRepository<ChartOfAccount, Long> {
 
     Optional<ChartOfAccount> findByCode(String code);
 
+    @Query("""
+            SELECT c FROM ChartOfAccount c
+            WHERE c.isActive = true
+              AND (:accountType IS NULL OR c.accountType = :accountType)
+              AND (
+                    :keyword IS NULL
+                    OR LOWER(c.code) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                    OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                  )
+            ORDER BY c.code ASC
+            """)
+    Page<ChartOfAccount> findActiveForSelector(@Param("keyword") String keyword,
+                                               @Param("accountType") String accountType,
+                                               Pageable pageable);
+
     @Query("SELECT c FROM ChartOfAccount c WHERE c.isActive = true " +
             "ORDER BY c.code ASC")
     List<ChartOfAccount> findAllForSelector();

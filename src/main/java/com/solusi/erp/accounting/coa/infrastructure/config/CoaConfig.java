@@ -99,10 +99,10 @@ public class CoaConfig {
 
     @Bean
     public FindCoaSelectorUseCase findCoaSelectorUseCase(CoaRepository coaDomainRepository,
-                                                          PlatformTransactionManager txManager) {
+                                                           PlatformTransactionManager txManager) {
         FindCoaSelectorUseCaseImpl pure = new FindCoaSelectorUseCaseImpl(coaDomainRepository);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         tx.setReadOnly(true);
-        return (keyword, accountType) -> tx.execute(status -> pure.execute(keyword, accountType));
+        return (keyword, accountType, pageable) -> tx.execute(status -> pure.execute(keyword, accountType, pageable));
     }
 }

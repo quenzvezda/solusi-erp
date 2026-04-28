@@ -14,6 +14,7 @@ import com.solusi.erp.accounting.coa.web.dto.CoaDetailResponse;
 import com.solusi.erp.accounting.coa.web.dto.CoaSaveRequest;
 import com.solusi.erp.accounting.coa.web.dto.CoaSummaryResponse;
 import com.solusi.erp.accounting.coa.web.mapper.CoaWebMapper;
+import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.DeleteResult;
 import com.solusi.erp.core.dto.ApiResponse;
 import org.junit.jupiter.api.DisplayName;
@@ -22,6 +23,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.ui.ExtendedModelMap;
@@ -264,17 +266,19 @@ public class CoaControllerTest {
     @Test
     @DisplayName("showParentSelector — returns selector fragment with model attributes")
     void showParentSelector_returnsSelectorFragment() throws Exception {
-        List<CoaSelectorRow> rows = List.of(
+        Page<CoaSelectorRow> page = new Page<>(List.of(
                 new CoaSelectorRow(1L, "1000", "Cash", "ASSET", 1, false, null, null, null)
-        );
-        when(findCoaSelectorUseCase.execute(any(), any())).thenReturn(rows);
+        ), 0, 20, 1L);
+        when(findCoaSelectorUseCase.execute(any(), any(), any())).thenReturn(page);
 
-        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+                .build();
 
         mockMvc.perform(get("/accounting/coa/selectors/parent"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("accounting/coa/fragments/coa-selector-modal"))
-                .andExpect(model().attributeExists("selectorRows"));
+                .andExpect(model().attributeExists("page"));
     }
 
     @Test

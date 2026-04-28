@@ -1,7 +1,8 @@
 package com.solusi.erp.accounting.coa.application.usecase.query;
 
-import java.util.List;
+import com.solusi.erp.core.domain.model.Page;
+import com.solusi.erp.core.domain.model.Pageable;
 
 public interface FindCoaSelectorUseCase {
-    List<CoaSelectorRow> execute(String keyword, String accountType);
+    Page<CoaSelectorRow> execute(String keyword, String accountType, Pageable pageable);
 }

@@ -2,6 +2,8 @@ package com.solusi.erp.accounting.coa.application.usecase.query;
 
 import com.solusi.erp.accounting.coa.domain.model.ChartOfAccount;
 import com.solusi.erp.accounting.coa.domain.repository.CoaRepository;
+import com.solusi.erp.core.domain.model.Page;
+import com.solusi.erp.core.domain.model.Pageable;
 
 import java.util.List;
 import java.util.Map;
@@ -16,16 +18,18 @@ public class FindCoaSelectorUseCaseImpl implements FindCoaSelectorUseCase {
     }
 
     @Override
-    public List<CoaSelectorRow> execute(String keyword, String accountType) {
+    public Page<CoaSelectorRow> execute(String keyword, String accountType, Pageable pageable) {
+        Page<ChartOfAccount> selectorPage = repository.findAllActiveForSelector(
+                normalizeKeyword(keyword),
+                normalizeAccountType(accountType),
+                pageable
+        );
         List<ChartOfAccount> allAccounts = repository.findAllActive();
 
-        // Build lookup map for parent info
         Map<Long, ChartOfAccount> accountMap = allAccounts.stream()
                 .collect(Collectors.toMap(ChartOfAccount::getId, a -> a));
 
-        return allAccounts.stream()
-                .filter(a -> matchesKeyword(a, keyword))
-                .filter(a -> matchesAccountType(a, accountType))
+        List<CoaSelectorRow> rows = selectorPage.content().stream()
                 .map(a -> {
                     ChartOfAccount parent = a.getParentId() != null ? accountMap.get(a.getParentId()) : null;
                     return new CoaSelectorRow(
@@ -41,17 +45,15 @@ public class FindCoaSelectorUseCaseImpl implements FindCoaSelectorUseCase {
                     );
                 })
                 .collect(Collectors.toList());
+
+        return new Page<>(rows, selectorPage.page(), selectorPage.size(), selectorPage.totalElements());
     }
 
-    private boolean matchesKeyword(ChartOfAccount account, String keyword) {
-        if (keyword == null || keyword.isBlank()) return true;
-        String lowerKeyword = keyword.toLowerCase();
-        return (account.getCode() != null && account.getCode().toLowerCase().contains(lowerKeyword)) ||
-               (account.getName() != null && account.getName().toLowerCase().contains(lowerKeyword));
+    private String normalizeKeyword(String keyword) {
+        return keyword == null || keyword.isBlank() ? null : keyword.trim();
     }
 
-    private boolean matchesAccountType(ChartOfAccount account, String accountType) {
-        if (accountType == null || accountType.isBlank()) return true;
-        return account.getAccountType() != null && account.getAccountType().name().equals(accountType);
+    private String normalizeAccountType(String accountType) {
+        return accountType == null || accountType.isBlank() ? null : accountType.trim().toUpperCase();
     }
 }
