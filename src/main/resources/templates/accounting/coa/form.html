@@ -117,9 +117,9 @@
                             </button>
                         </div>
                     </div>
-                    <!-- Parent Account Selector Modal -->
-                    <div th:replace="~{fragments/modal-selector :: shell('modal-coa-parent-selector', #{label.coa.parent.selector.title}, 'coa-parent-selector-results', 'modal-xl')}"></div>
                 </form>
+                <!-- Parent Account Selector Modal moved outside form -->
+                <div th:replace="~{fragments/modal-selector :: shell('modal-coa-parent-selector', #{label.coa.parent.selector.title}, 'coa-parent-selector-results', 'modal-xl')}"></div>
             </div>
         </div>
     </div>

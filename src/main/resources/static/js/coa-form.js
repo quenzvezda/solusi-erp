@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var levelInput = document.getElementById('input-level');
     var btnSelectParent = document.getElementById('btn-select-parent');
     var btnClearParent = document.getElementById('btn-clear-parent');
-    var accountTypeSelect = document.querySelector('[name="accountType"]');
+    var accountTypeSelect = document.querySelector('[name="accountType"]') || document.getElementById('accountType');
     var codeInput = document.querySelector('[name="code"]');
     var codePrefixHint = document.getElementById('code-prefix-hint');
     var codePrefixText = document.getElementById('code-prefix-text');
@@ -28,6 +28,41 @@ document.addEventListener('DOMContentLoaded', function () {
         setupModalSelector();
         setupAccountTypeListener();
         setupClearParent();
+        updatePrefixHint();
+
+        // Initial check for edit mode if parent already exists
+        if (parentIdInput && parentIdInput.value && accountTypeSelect && accountTypeSelect.value) {
+            lockAccountType(accountTypeSelect.value);
+            if (btnClearParent) btnClearParent.style.display = 'inline-block';
+        }
+    }
+
+    function lockAccountType(value) {
+        if (!accountTypeSelect) return;
+        
+        accountTypeSelect.value = value;
+        
+        // ERP Form Handler skips disabled elements. 
+        // We use pointer-events and tabindex to simulate disabled state visually and functionally 
+        // while keeping it "enabled" for the form submission.
+        accountTypeSelect.style.pointerEvents = 'none';
+        accountTypeSelect.tabIndex = -1;
+        accountTypeSelect.classList.add('bg-body-tertiary');
+        accountTypeSelect.classList.add('text-muted');
+        
+        updatePrefixHint();
+    }
+
+    function unlockAccountType() {
+        if (!accountTypeSelect) return;
+        
+        accountTypeSelect.style.pointerEvents = 'auto';
+        accountTypeSelect.removeAttribute('tabindex');
+        accountTypeSelect.classList.remove('bg-body-tertiary');
+        accountTypeSelect.classList.remove('text-muted');
+        
+        // Reset value only if unlocking
+        accountTypeSelect.value = '';
         updatePrefixHint();
     }
 
@@ -68,6 +103,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var code = row.getAttribute('data-code');
         var name = row.getAttribute('data-name');
         var level = parseInt(row.getAttribute('data-level')) || 1;
+        var accountType = row.getAttribute('data-account-type');
 
         // Set parent values
         parentIdInput.value = id;
@@ -78,9 +114,19 @@ document.addEventListener('DOMContentLoaded', function () {
         // Auto-derive level
         levelInput.value = level + 1;
 
+        // Lock and set account type
+        if (accountType) {
+            lockAccountType(accountType);
+        }
+
         // Close modal
         if (window.ERP && window.ERP.ModalSelector) {
             window.ERP.ModalSelector.close('modal-coa-parent-selector');
+        }
+
+        // Show clear button
+        if (btnClearParent) {
+            btnClearParent.style.display = 'inline-block';
         }
     }
 
@@ -93,6 +139,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (parentNameInput) parentNameInput.value = '';
                 if (parentCodeInput) parentCodeInput.value = '';
                 levelInput.value = 1;
+
+                unlockAccountType();
 
                 // Hide clear button after clearing
                 btnClearParent.style.display = 'none';
