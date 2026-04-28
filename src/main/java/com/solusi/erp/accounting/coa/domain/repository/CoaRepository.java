@@ -14,4 +14,5 @@ public interface CoaRepository {
     void delete(Long id);
     boolean existsByCode(String code);
     List<ChartOfAccount> search(String keyword, int limit);
+    List<ChartOfAccount> findAllActive();
 }

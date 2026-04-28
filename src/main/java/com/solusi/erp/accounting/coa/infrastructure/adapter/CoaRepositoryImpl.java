@@ -66,4 +66,12 @@ public class CoaRepositoryImpl implements CoaRepository {
                 PageRequest.of(0, limit)
         ).stream().map(mapper::toDomain).collect(Collectors.toList());
     }
+
+    @Override
+    public List<ChartOfAccount> findAllActive() {
+        return jpaRepository.findAllForSelector()
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
 }

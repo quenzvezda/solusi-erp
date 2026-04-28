@@ -25,6 +25,8 @@ public class CoaSaveRequest extends BaseAuditResponse {
     private String accountType;
 
     private Long parentId;
+    private String parentName;
+    private String parentCode;
     private Integer level;
     private Boolean isHeader;
     private String note;
