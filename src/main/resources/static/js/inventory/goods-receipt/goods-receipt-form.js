@@ -421,6 +421,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         var formDirty = false;
+
         form.addEventListener('change', function () {
             formDirty = true;
         });
@@ -429,7 +430,8 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         window.addEventListener('beforeunload', function (e) {
-            if (formDirty && form.offsetParent !== null) {
+            // Don't show warning if form is currently submitting
+            if (formDirty && !form.dataset.isSubmitting && form.offsetParent !== null) {
                 e.preventDefault();
                 e.returnValue = '';
             }

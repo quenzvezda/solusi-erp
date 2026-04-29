@@ -2,6 +2,10 @@
 
 Dokumen ini merangkum **kondisi implementasi aktual** Goods Receipt pada codebase saat ini. Posisi GR sekarang adalah **hybrid**: kontrak create publik sudah bergerak ke model referensi generik, tetapi flow operasional yang benar-benar aktif masih **Purchase Order-driven**.
 
+Catatan Batas Lapisan Web (Penting): Paket web (controller dan mapper) boleh menginjeksi Use Case (application/usecase interfaces), read-only lookup/query ports, dan helper yang berada di paket web itu sendiri (mis. web mappers). Namun, web tidak boleh menginjeksi repository/JpaRepository dari slice lain untuk melakukan cross-slice data access. GoodsReceipt adalah contoh peringatan: sebelumnya `GoodsReceiptWebMapper` menginjeksi `PurchaseOrderRepository` untuk resolusi referenceCode — pola ini adalah anti-pattern dan telah diperbaiki dengan menggunakan `GoodsReceiptReferenceLookupProvider`. Contoh positif: `PurchaseOrderWebMapper` dan `PurchaseRequisitionWebMapper` hanya mengandalkan LookupProvider untuk resolusi label dan prefill form.
+
+Rujukan aturan: web may use lookup/query ports; web may not use repositories. LookupProvider dimaksudkan untuk resolusi label ringan (name/code/subText) dan prefill edit-form. Enrichment yang aware bisnis harus ditempatkan di query/read port atau application read model.
+
 ## 1. Ringkasan Implementasi Saat Ini
 
 1. **Entrypoint create kanonik sudah generik**:

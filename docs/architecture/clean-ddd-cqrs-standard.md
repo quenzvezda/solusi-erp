@@ -270,7 +270,7 @@ private Map<String, Object> buildFacilityUI(Facility domain) {
 | Entity provider dipakai oleh ≥ 2 consumer slice | ✅ Wajib — hindari duplikasi format |
 | Entity provider hanya dipakai 1 consumer | ⚠️ Opsional — boleh query langsung, tapi provider port lebih future-proof |
 | SubText memerlukan i18n / logika format kompleks | ✅ Wajib — pastikan konsistensi |
-| Hanya butuh kode sederhana (misal `Geographic.code`) | ❌ Boleh query langsung dari JPA repo |
+| Hanya butuh kode sederhana (misal `Geographic.code`) | ⚠️ Boleh query langsung dari JPA repo — hanya jika akses dilakukan dalam implementasi provider/infrastruktur atau bagian non-web internal dari slice yang sama (mis. domain service atau infrastructure/adapter). Secara tegas: web/controller dan web/mapper TIDAK boleh melakukan query JPA langsung untuk cross-slice reads. |
 
 **Referensi di Codebase:**
 - `master.party.domain.port.PartyLookupProvider` — dipakai oleh `inventory.facility`, `purchasing.supplierpricelist`
@@ -287,6 +287,8 @@ private Map<String, Object> buildFacilityUI(Facility domain) {
 ✅ domain/port/     → interface Java murni, boleh dipakai di application layer
 ✅ infrastructure/adapter/ → satu-satunya tempat yang boleh import JpaRepository slice lain
 ✅ Inject Use Case interface antar slice hanya melalui port / domain/port/
+✅ web/controller & web/mapper → boleh menginjeksi Use Case interfaces, read-only Lookup/Query ports, dan helper yang berada di paket web itu sendiri (mis. web mappers)
+❌ Jangan menginjeksi JpaRepository atau mengimport entity/domain model dari slice lain di **web** untuk melakukan cross-slice data access. Untuk resolusi label ringan gunakan LookupProvider; untuk enrichment yang memerlukan logika bisnis gunakan query/read port atau application read model.
 ❌ Import domain model atau entity dari slice lain di application/domain layer
 ❌ Import JpaRepository slice lain di use case atau domain service
 ❌ @ManyToOne ke entity slice lain — gunakan Long referenceId

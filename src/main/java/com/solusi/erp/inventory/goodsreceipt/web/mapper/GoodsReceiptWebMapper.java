@@ -9,13 +9,12 @@ import com.solusi.erp.inventory.goodsreceipt.application.usecase.command.GoodsRe
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceipt;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptLine;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptReferenceType;
+import com.solusi.erp.inventory.goodsreceipt.domain.port.GoodsReceiptReferenceLookupProvider;
 import com.solusi.erp.inventory.goodsreceipt.web.dto.*;
 import com.solusi.erp.inventory.product.domain.port.ProductLookupProvider;
 import com.solusi.erp.inventory.uom.domain.port.UomLookupProvider;
 import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
 import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
-import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrder;
-import com.solusi.erp.purchasing.purchaseorder.domain.repository.PurchaseOrderRepository;
 import org.mapstruct.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -39,7 +38,7 @@ public abstract class GoodsReceiptWebMapper {
     @Autowired
     protected ContainerLookupProvider containerLookupProvider;
     @Autowired
-    protected PurchaseOrderRepository purchaseOrderRepository;
+    protected GoodsReceiptReferenceLookupProvider referenceLookupProvider;
 
     @Mapping(target = "lineCount", expression = "java(domain.getLines() != null ? domain.getLines().size() : 0)")
     @Mapping(target = "supplierName", source = "supplierId", qualifiedByName = "getSupplierName")
@@ -62,6 +61,7 @@ public abstract class GoodsReceiptWebMapper {
     @Mapping(target = "productName", source = "productId", qualifiedByName = "getProductName")
     @Mapping(target = "productCode", source = "productId", qualifiedByName = "getProductCode")
     @Mapping(target = "uomCode", source = "uomId", qualifiedByName = "getUomCode")
+    @Mapping(target = "containerCode", source = "containerId", qualifiedByName = "getContainerCode")
     public abstract GoodsReceiptLineDetailResponse toLineDetailResponse(GoodsReceiptLine line);
 
     @Mapping(target = "productName", source = "productId", qualifiedByName = "getProductName")
@@ -187,15 +187,7 @@ public abstract class GoodsReceiptWebMapper {
     }
 
     protected String resolveReferenceCode(GoodsReceiptReferenceType referenceType, Long referenceId) {
-        if (referenceType == null || referenceId == null) {
-            return null;
-        }
-        if (referenceType == GoodsReceiptReferenceType.PURCHASE_ORDER) {
-            return purchaseOrderRepository.findById(referenceId)
-                    .map(PurchaseOrder::getCode)
-                    .orElse(null);
-        }
-        return null;
+        return referenceLookupProvider.resolveReferenceCode(referenceType, referenceId);
     }
 
     @Named("getReferenceTypeName")

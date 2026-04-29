@@ -4,7 +4,9 @@ import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeri
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.inventory.goodsreceipt.application.usecase.command.*;
 import com.solusi.erp.inventory.goodsreceipt.application.usecase.query.*;
+import com.solusi.erp.inventory.goodsreceipt.domain.port.GoodsReceiptReferenceLookupProvider;
 import com.solusi.erp.inventory.goodsreceipt.domain.port.GoodsReceiptSourceResolver;
+import com.solusi.erp.inventory.goodsreceipt.infrastructure.adapter.GoodsReceiptReferenceLookupProviderImpl;
 import com.solusi.erp.inventory.goodsreceipt.domain.repository.GoodsReceiptRepository;
 import com.solusi.erp.inventory.goodsreceipt.infrastructure.adapter.PurchaseOrderGoodsReceiptSourceResolver;
 import com.solusi.erp.inventory.goodsreceipt.infrastructure.adapter.GoodsReceiptRepositoryImpl;
@@ -75,6 +77,11 @@ public class GoodsReceiptConfig {
     public GoodsReceiptSourceResolver purchaseOrderGoodsReceiptSourceResolver(PurchaseOrderRepository poRepository,
                                                                              ProductRepository productRepository) {
         return new PurchaseOrderGoodsReceiptSourceResolver(poRepository, productRepository);
+    }
+
+    @Bean
+    public GoodsReceiptReferenceLookupProvider goodsReceiptReferenceLookupProvider(PurchaseOrderRepository poRepository) {
+        return new GoodsReceiptReferenceLookupProviderImpl(poRepository);
     }
 
     @Bean

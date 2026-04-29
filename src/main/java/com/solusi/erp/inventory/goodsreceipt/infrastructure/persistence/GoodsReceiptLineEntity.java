@@ -35,6 +35,9 @@ public class GoodsReceiptLineEntity extends BaseModel {
     @Column(name = "container_id")
     private Long containerId;
 
+    @Column(name = "unit_price", nullable = false, precision = 19, scale = 4)
+    private BigDecimal unitPrice;
+
     @Column(name = "base_quantity", nullable = false, precision = 19, scale = 4)
     private BigDecimal baseQuantity;
 

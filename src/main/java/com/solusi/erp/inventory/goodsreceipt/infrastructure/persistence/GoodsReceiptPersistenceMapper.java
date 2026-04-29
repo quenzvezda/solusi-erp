@@ -72,7 +72,7 @@ public interface GoodsReceiptPersistenceMapper {
                 entity.getQuantityReceived(),
                 entity.getUomId(),
                 entity.getContainerId(),
-                null,
+                entity.getUnitPrice(),
                 entity.getBaseQuantity(),
                 entity.getInventoryAmount(),
                 entity.getTaxBaseAmount(),

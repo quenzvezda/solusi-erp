@@ -209,6 +209,32 @@ class CompleteGoodsReceiptUseCaseTest {
                 .hasMessageContaining("msg.error.gr.serial.quantity.whole");
     }
 
+    @Test
+    void complete_snapshotsPricesAndAmountsFromPurchaseOrder() {
+        BigDecimal qtyReceived = new BigDecimal("5.0000");
+        GoodsReceipt receipt = receiptWithLine(false, qtyReceived, BigDecimal.ONE, null);
+
+        // PO Line with Price 100 and Tax 10% (0.1)
+        PurchaseOrder po = sentPoWithPriceAndTax("100.0000", "0.1000");
+
+        when(goodsReceiptRepository.findById(1L)).thenReturn(Optional.of(receipt));
+        when(purchaseOrderRepository.findById(receipt.getPoId())).thenReturn(Optional.of(po));
+        when(uomConversionService.convertToBaseUom(201L, 1L, qtyReceived)).thenReturn(qtyReceived);
+
+        completeUseCase.execute(1L);
+
+        verify(goodsReceiptRepository).save(argThat(saved -> {
+            GoodsReceiptLine line = saved.getLines().getFirst();
+            // inventoryAmount = 5 * 100 = 500.0000
+            // taxAmount = 500 * 0.1 = 50.0000
+            // grIrAmount = 500 + 50 = 550.0000
+            return line.getUnitPrice().compareTo(new BigDecimal("100.0000")) == 0 &&
+                    line.getInventoryAmount().compareTo(new BigDecimal("500.0000")) == 0 &&
+                    line.getTaxAmount().compareTo(new BigDecimal("50.0000")) == 0 &&
+                    line.getGrIrAmount().compareTo(new BigDecimal("550.0000")) == 0;
+        }));
+    }
+
     private GoodsReceipt draftReceiptWithOneActiveLine() {
         return receiptWithLine(false, new BigDecimal("3.0000"), BigDecimal.ONE, null);
     }
@@ -246,6 +272,50 @@ class CompleteGoodsReceiptUseCaseTest {
                         BigDecimal.ZERO,
                         serialNumber
                 ))
+        );
+    }
+
+    private PurchaseOrder sentPoWithPriceAndTax(String unitPrice, String taxRate) {
+        BigDecimal quantity = new BigDecimal("10.0000");
+        PurchaseOrderLine line = PurchaseOrderLine.rehydrate(
+                new AuditMetadata(101L, 1L, null, null, null, null),
+                7L,
+                201L,
+                quantity,
+                BigDecimal.ZERO,
+                1L,
+                new BigDecimal(unitPrice),
+                new BigDecimal(taxRate),
+                new BigDecimal(unitPrice).multiply(quantity),
+                new BigDecimal(unitPrice).multiply(quantity).multiply(new BigDecimal(taxRate)),
+                new BigDecimal(unitPrice).multiply(quantity).multiply(BigDecimal.ONE.add(new BigDecimal(taxRate))),
+                null,
+                null
+        );
+        return PurchaseOrder.rehydrate(
+                new AuditMetadata(7L, 1L, null, null, null, null),
+                "PO-0007",
+                LocalDate.of(2026, 4, 20),
+                LocalDate.of(2026, 4, 25),
+                11L,
+                3L,
+                1L,
+                BigDecimal.ONE,
+                new BigDecimal("1000.0000"),
+                BigDecimal.ZERO,
+                new BigDecimal("1000.0000"),
+                PurchaseOrderStatus.SENT,
+                14,
+                null,
+                PurchaseOrderType.DIRECT,
+                null,
+                null,
+                null,
+                BigDecimal.ZERO,
+                null,
+                null,
+                true,
+                List.of(line)
         );
     }
 

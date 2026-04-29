@@ -54,6 +54,10 @@ public class CompleteGoodsReceiptUseCaseImpl implements CompleteGoodsReceiptUseC
                 .orElseThrow(() -> new DomainException("msg.error.po.notfound"));
         validateLatestOutstanding(po, receipt.getLines());
 
+        // Snapshot values from reference document before completing
+        List<GoodsReceiptLine> snapshottedLines = snapshotReferenceValues(receipt, po);
+        receipt.update(receipt.getReceiptDate(), receipt.getNote(), snapshottedLines);
+
         receipt.complete();
         for (GoodsReceiptLine line : receipt.getLines()) {
             if (!line.hasReceiptQuantity()) {
@@ -69,6 +73,52 @@ public class CompleteGoodsReceiptUseCaseImpl implements CompleteGoodsReceiptUseC
         po.recordReceipt(sumByPoLine(receipt.getLines()));
         goodsReceiptRepository.save(receipt);
         purchaseOrderRepository.save(po);
+    }
+
+    private List<GoodsReceiptLine> snapshotReferenceValues(GoodsReceipt receipt, PurchaseOrder po) {
+        Map<Long, PurchaseOrderLine> poLines = po.getLines().stream()
+                .collect(Collectors.toMap(PurchaseOrderLine::getId, l -> l));
+
+        return receipt.getLines().stream().map(line -> {
+            PurchaseOrderLine poLine = poLines.get(line.getReferenceLineId());
+            if (poLine == null) return line;
+
+            BigDecimal unitPrice = poLine.getUnitPrice();
+            BigDecimal quantityReceived = line.getQuantityReceived();
+
+            // Calculate base quantity
+            BigDecimal baseQuantity = quantityReceived;
+            if (line.getUomId() != null) {
+                baseQuantity = uomConversionService.convertToBaseUom(
+                        line.getProductId(),
+                        line.getUomId(),
+                        quantityReceived
+                );
+            }
+
+            // Amounts snapshot
+            BigDecimal inventoryAmount = quantityReceived.multiply(unitPrice).setScale(4, RoundingMode.HALF_UP);
+            BigDecimal taxBaseAmount = inventoryAmount; // Currently assuming tax base is net amount
+            BigDecimal taxAmount = inventoryAmount.multiply(poLine.getTaxRate()).setScale(4, RoundingMode.HALF_UP);
+            BigDecimal grIrAmount = inventoryAmount.add(taxAmount).setScale(4, RoundingMode.HALF_UP);
+
+            return GoodsReceiptLine.prefill(
+                    line.getReferenceLineId(),
+                    line.getProductId(),
+                    line.getSourceFacilityId(),
+                    line.getSerialized(),
+                    quantityReceived,
+                    line.getUomId(),
+                    line.getContainerId(),
+                    unitPrice,
+                    baseQuantity,
+                    inventoryAmount,
+                    taxBaseAmount,
+                    taxAmount,
+                    grIrAmount,
+                    line.getSerialNumber()
+            );
+        }).toList();
     }
 
     private void processSerializedLine(GoodsReceipt receipt, PurchaseOrder po, GoodsReceiptLine line) {

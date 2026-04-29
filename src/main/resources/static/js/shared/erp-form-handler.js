@@ -103,6 +103,9 @@ const ErpFormHandler = (function () {
         const indicator = form.querySelector('.spinner-border') || document.getElementById('loading-indicator');
         const redirectUrl = form.dataset.redirectOnSuccess;
 
+        form.dataset.isSubmitting = 'true';
+        let skipSubmittingReset = false;
+
         clearErrors(form);
         if (indicator) indicator.style.display = 'inline-block';
         if (submitBtn) submitBtn.disabled = true;
@@ -187,6 +190,7 @@ const ErpFormHandler = (function () {
 
             if (response.ok && result.success) {
                 if (redirectUrl) {
+                    skipSubmittingReset = true;
                     sessionStorage.setItem('erp_pending_success', result.message || i18n.successGeneric);
                     setTimeout(() => {
                         window.location.href = redirectUrl;
@@ -206,6 +210,9 @@ const ErpFormHandler = (function () {
         } finally {
             if (indicator) indicator.style.display = 'none';
             if (submitBtn) submitBtn.disabled = false;
+            if (!skipSubmittingReset) {
+                delete form.dataset.isSubmitting;
+            }
         }
     };
 
