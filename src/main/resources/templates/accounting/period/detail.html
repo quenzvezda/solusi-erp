@@ -98,21 +98,21 @@
                                     <td class="text-end" sec:authorize="hasAuthority('ACCOUNTING-PERIOD_UPDATE')">
                                         <button th:if="${period.status == 'NEVER_OPENED'}"
                                                 class="btn btn-sm btn-primary"
-                                                th:attr="hx-post=@{/accounting/periods/periods/{id}/reopen(id=${period.id})},
+                                                th:attr="hx-post=@{'/accounting/periods/periods/' + ${period.id} + '/reopen'},
                                                          hx-confirm=#{msg.confirm.period.open}"
                                                 hx-target="closest tr"
                                                 hx-swap="outerHTML"
                                                 th:text="#{label.period.status.OPEN}">Open</button>
                                         <button th:if="${period.status == 'OPEN'}"
                                                 class="btn btn-sm btn-warning"
-                                                th:attr="hx-post=@{/accounting/periods/periods/{id}/close(id=${period.id})},
+                                                th:attr="hx-post=@{'/accounting/periods/periods/' + ${period.id} + '/close'},
                                                          hx-confirm=#{msg.confirm.period.close}"
                                                 hx-target="closest tr"
                                                 hx-swap="outerHTML"
                                                 th:text="#{label.period.close}">Close</button>
                                         <button th:if="${period.status == 'CLOSED'}"
                                                 class="btn btn-sm btn-outline-success"
-                                                th:attr="hx-post=@{/accounting/periods/periods/{id}/reopen(id=${period.id})},
+                                                th:attr="hx-post=@{'/accounting/periods/periods/' + ${period.id} + '/reopen'},
                                                          hx-confirm=#{msg.confirm.period.reopen}"
                                                 hx-target="closest tr"
                                                 hx-swap="outerHTML"
