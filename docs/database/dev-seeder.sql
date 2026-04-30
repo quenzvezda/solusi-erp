@@ -22,6 +22,8 @@
 --   D020__parties.sql
 --   D030__users.sql
 --   D040__user_profiles.sql
+--   D050__master_taxes.sql
+--   D060__master_bank_accounts.sql
 --   D100__inventory_facilities.sql
 --   D110__inventory_grids.sql
 --   D120__inventory_containers.sql
@@ -40,6 +42,8 @@
 -- D020 : party role type APPROVER + seed parties, addresses, contacts, identifications
 -- D030 : seed users dev
 -- D040 : seed user profiles dev
+-- D050 : tax master samples (inclusive, exclusive, subtractive, non-tax)
+-- D060 : bank and cash account samples referencing seeded parties
 -- D100 : facilities
 -- D110 : grids
 -- D120 : containers
@@ -57,6 +61,8 @@
 --
 --   docker exec -i mariadb-local mariadb -uroot -proot erp-test < docs/database/dev-seeder/D001__cleanup_core.sql
 --   docker exec -i mariadb-local mariadb -uroot -proot erp-test < docs/database/dev-seeder/D010__security_roles.sql
+--   docker exec -i mariadb-local mariadb -uroot -proot erp-test < docs/database/dev-seeder/D050__master_taxes.sql
+--   docker exec -i mariadb-local mariadb -uroot -proot erp-test < docs/database/dev-seeder/D060__master_bank_accounts.sql
 --   ...
 --   docker exec -i mariadb-local mariadb -uroot -proot erp-test < docs/database/dev-seeder/D220__accounting_schema.sql
 --
@@ -65,6 +71,8 @@
 -- ============================================================
 --   mariadb -h localhost -P 3307 -uroot -proot erp-test < docs/database/dev-seeder/D001__cleanup_core.sql
 --   mariadb -h localhost -P 3307 -uroot -proot erp-test < docs/database/dev-seeder/D010__security_roles.sql
+--   mariadb -h localhost -P 3307 -uroot -proot erp-test < docs/database/dev-seeder/D050__master_taxes.sql
+--   mariadb -h localhost -P 3307 -uroot -proot erp-test < docs/database/dev-seeder/D060__master_bank_accounts.sql
 --   ...
 --   mariadb -h localhost -P 3307 -uroot -proot erp-test < docs/database/dev-seeder/D220__accounting_schema.sql
 --
