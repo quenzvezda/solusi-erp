@@ -1,6 +1,7 @@
 package com.solusi.erp.accounting.journal.domain.model;
 
 import com.solusi.erp.accounting.schema.domain.model.SchemaEventType;
+import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.exception.DomainException;
 import org.junit.jupiter.api.Test;
 
@@ -91,5 +92,42 @@ class JournalEntryTest {
         assertThatThrownBy(entry::validateBalanced)
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("msg.error.journal.unbalanced");
+    }
+
+    @Test
+    void journalLine_rejectsBothDebitAndCreditNonZero() {
+        assertThatThrownBy(() -> new JournalLine(101L, new BigDecimal("10.0000"), new BigDecimal("5.0000")))
+                .isInstanceOf(DomainException.class);
+    }
+
+    @Test
+    void journalLine_rejectsNegativeAmount() {
+        assertThatThrownBy(() -> JournalLine.debit(101L, new BigDecimal("-10.0000")))
+                .isInstanceOf(DomainException.class);
+    }
+
+    @Test
+    void journalEntry_rejectsEmptyLinesAtConstructionAndFactory() {
+        assertThatThrownBy(() -> new JournalEntry(
+                AuditMetadata.empty(),
+                SchemaEventType.GOODS_RECEIPT,
+                "GOODS_RECEIPT",
+                6L,
+                "GR-0006",
+                LocalDate.now(),
+                "Auto journal",
+                JournalStatus.POSTED,
+                List.of()
+        )).isInstanceOf(DomainException.class);
+
+        assertThatThrownBy(() -> JournalEntry.createPosted(
+                SchemaEventType.GOODS_RECEIPT,
+                "GOODS_RECEIPT",
+                6L,
+                "GR-0006",
+                LocalDate.now(),
+                "Auto journal",
+                List.of()
+        )).isInstanceOf(DomainException.class);
     }
 }

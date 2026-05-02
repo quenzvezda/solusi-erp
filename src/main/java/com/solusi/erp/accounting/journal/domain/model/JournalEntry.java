@@ -105,6 +105,9 @@ public class JournalEntry {
     }
 
     private static List<JournalLine> copyLines(List<JournalLine> lines) {
-        return lines == null ? List.of() : List.copyOf(lines);
+        if (lines == null || lines.isEmpty()) {
+            throw new DomainException("msg.error.journal.lines.required");
+        }
+        return List.copyOf(lines);
     }
 }
