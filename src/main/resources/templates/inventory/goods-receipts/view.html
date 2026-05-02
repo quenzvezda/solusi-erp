@@ -113,7 +113,7 @@
                                             <td class="text-end" th:text="${line.baseQuantity != null ? #numbers.formatDecimal(line.baseQuantity, 1, 'COMMA', 4, 'POINT') : '-'}">100.0000</td>
                                             <td th:text="${line.uomCode ?: '-'}">KG</td>
                                             <td th:text="${line.containerCode ?: '-'}">-</td>
-                                            <td th:text="${line.serialNumber ?: '-'}">-</td>
+                                            <td th:text="${line.serialDisplay ?: '-'}">-</td>
                                             <td class="text-end" th:text="${line.unitPrice != null ? #numbers.formatDecimal(line.unitPrice, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
                                             <td class="text-end" th:text="${line.inventoryAmount != null ? #numbers.formatDecimal(line.inventoryAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
                                             <td class="text-end" th:text="${line.taxAmount != null ? #numbers.formatDecimal(line.taxAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
@@ -142,6 +142,7 @@
                                                 class="btn btn-success"
                                                 sec:authorize="hasAuthority('GOODS-RECEIPT_COMPLETE')"
                                                 th:data-complete-url="@{'/inventory/goods-receipts/' + ${gr.id} + '/complete'}"
+                                                th:data-redirect-url="@{'/inventory/goods-receipts/' + ${gr.id}}"
                                                 onclick="ErpForm.postAction(this)">
                                             <i class="ti ti-check me-1"></i>
                                             <span th:text="#{label.gr.complete}">Complete</span>

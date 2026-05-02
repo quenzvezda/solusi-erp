@@ -16,6 +16,18 @@
                             <span th:if="${grRequest.id != null}" th:text="#{label.gr.edit}">Edit Goods Receipt</span>
                         </h2>
                     </div>
+                    <div class="col-auto ms-auto" th:if="${grRequest.id != null and grRequest.status == 'DRAFT'}">
+                        <button type="button"
+                                class="btn btn-outline-success"
+                                sec:authorize="hasAuthority('GOODS-RECEIPT_COMPLETE')"
+                                th:data-complete-url="@{'/inventory/goods-receipts/' + ${grRequest.id} + '/complete'}"
+                                th:data-redirect-url="@{'/inventory/goods-receipts/' + ${grRequest.id}}"
+                                th:data-confirm-message="#{msg.confirm.gr.complete}"
+                                onclick="ErpForm.postAction(this)">
+                            <i class="ti ti-check me-1"></i>
+                            <span th:text="#{label.gr.complete}">Complete</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -81,7 +93,7 @@
                                         <th class="required" th:text="#{label.product}" style="width: 25%;">Product</th>
                                         <th class="text-end required" th:text="#{label.qty.received}" style="width: 12%;">Qty Received</th>
                                         <th class="required" th:text="#{label.uom}" style="width: 12%;">UoM</th>
-                                        <th th:text="#{label.container}" style="width: 15%;">Container</th>
+                                        <th class="required" th:text="#{label.container}" style="width: 15%;">Container</th>
                                         <th style="width: 18%;">Detail</th>
                                         <th class="w-1" style="width: 110px;"></th>
                                     </tr>
@@ -133,10 +145,12 @@
                             <div class="d-flex align-items-center">
                                 <div id="loading-indicator" class="spinner-border spinner-border-sm text-primary me-2" role="status" style="display: none;"></div>
                                 <a th:href="@{/inventory/goods-receipts}" class="btn btn-link link-secondary" th:text="#{label.cancel}">Cancel</a>
-                                <button type="submit" class="btn btn-primary ms-auto">
-                                    <i class="ti ti-device-floppy"></i>
-                                    <span th:text="#{label.save}">Save</span>
-                                </button>
+                                <div class="ms-auto">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="ti ti-device-floppy"></i>
+                                        <span th:text="#{label.save}">Save</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -282,15 +296,23 @@
             </div>
         </div>
 
+        <div th:replace="~{fragments/modal-selector :: shell('modal-gr-po-line-selector', #{label.gr.selector.poLine.title}, 'gr-po-line-selector-results', 'modal-xl')}"></div>
     </div>
 
     <div id="page-specific-scripts" th:fragment="pageScripts">
         <script th:inline="javascript">
             window.GoodsReceiptPageConfig = {
-                selectProductFirst: 'Please select a product first.'
+                selectProductFirst: 'Please select a product first.',
+                poLineSelectorUrl: /*[[@{/inventory/goods-receipts/selectors/purchase-order-lines}]]*/ '',
+                poLineSelectorUnavailable: /*[[#{msg.error.gr.poLine.selector.unavailable}]]*/ '',
+                selectAtLeastOnePoLine: /*[[#{msg.warning.gr.poLine.selectAtLeastOne}]]*/ '',
+                noNewPoLineApplied: /*[[#{msg.warning.gr.poLine.noNewApplied}]]*/ '',
+                containerRequired: /*[[#{msg.warning.gr.line.container.required}]]*/ '',
+                poLineSelectorTitle: /*[[#{label.gr.selector.poLine.title}]]*/ 'Choose Purchase Order Lines'
             };
         </script>
-        <script th:src="@{/js/inventory/goods-receipt/goods-receipt-form.js}"></script>
+        <script th:src="@{/js/shared/erp-modal-selector.js}" defer></script>
+        <script th:src="@{/js/inventory/goods-receipt/goods-receipt-form.js}" defer></script>
     </div>
 </body>
 

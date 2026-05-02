@@ -112,11 +112,17 @@ const ErpForm = {
 
         // Check for confirmation message
         const confirmMessage = buttonEl.getAttribute('data-confirm-message');
+        const redirectUrl = buttonEl.getAttribute('data-redirect-url');
         
         const performAction = () => {
             // Disable button to prevent double-click
             const wasDisabled = buttonEl.disabled;
             buttonEl.disabled = true;
+
+            // Suppress beforeunload warnings for intentional navigation after action success
+            const ajaxForms = document.querySelectorAll('form[data-ajax-form="true"]');
+            window.__erpSuppressBeforeUnload = true;
+            ajaxForms.forEach(form => { form.dataset.isSubmitting = 'true'; });
             
             // Get CSRF token
             const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
@@ -142,8 +148,14 @@ const ErpForm = {
                 });
             })
             .then(data => {
-                // Success - show toast and reload
                 const message = data.message || 'Action completed successfully';
+                if (redirectUrl) {
+                    sessionStorage.setItem('erp_pending_success', message);
+                    setTimeout(() => { window.location.href = redirectUrl; }, 100);
+                    return;
+                }
+
+                // Success - show toast and reload
                 ErpModal.showSuccess(message);
                 
                 // Reload page after success
@@ -151,6 +163,8 @@ const ErpForm = {
             })
             .catch(error => {
                 console.error('[ErpForm] Action failed:', error);
+                window.__erpSuppressBeforeUnload = false;
+                ajaxForms.forEach(form => { delete form.dataset.isSubmitting; });
                 ErpModal.showError(error.message || 'Action failed. Please try again.');
                 buttonEl.disabled = wasDisabled;
             });

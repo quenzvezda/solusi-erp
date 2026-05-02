@@ -24,9 +24,30 @@ public interface GoodsReceiptJpaRepository extends JpaRepository<GoodsReceiptEnt
            "LOWER(g.note) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<GoodsReceiptEntity> search(@Param("keyword") String keyword, Pageable pageable);
 
+    @Query(value = "SELECT DISTINCT g FROM GoodsReceiptEntity g LEFT JOIN FETCH g.lines WHERE " +
+           "g.referenceType = :referenceType AND g.referenceId = :referenceId AND (" +
+           "LOWER(g.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(g.note) LIKE LOWER(CONCAT('%', :keyword, '%'))) ",
+           countQuery = "SELECT COUNT(g) FROM GoodsReceiptEntity g WHERE " +
+           "g.referenceType = :referenceType AND g.referenceId = :referenceId AND (" +
+           "LOWER(g.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(g.note) LIKE LOWER(CONCAT('%', :keyword, '%'))) ")
+    Page<GoodsReceiptEntity> searchByReference(@Param("keyword") String keyword,
+                                               @Param("referenceType") GoodsReceiptReferenceType referenceType,
+                                               @Param("referenceId") Long referenceId,
+                                               Pageable pageable);
+
     @Query(value = "SELECT DISTINCT g FROM GoodsReceiptEntity g LEFT JOIN FETCH g.lines",
            countQuery = "SELECT COUNT(g) FROM GoodsReceiptEntity g")
     Page<GoodsReceiptEntity> findAllWithLines(Pageable pageable);
+
+    @Query(value = "SELECT DISTINCT g FROM GoodsReceiptEntity g LEFT JOIN FETCH g.lines WHERE " +
+           "g.referenceType = :referenceType AND g.referenceId = :referenceId",
+           countQuery = "SELECT COUNT(g) FROM GoodsReceiptEntity g WHERE " +
+           "g.referenceType = :referenceType AND g.referenceId = :referenceId")
+    Page<GoodsReceiptEntity> findAllWithLinesByReference(@Param("referenceType") GoodsReceiptReferenceType referenceType,
+                                                         @Param("referenceId") Long referenceId,
+                                                         Pageable pageable);
 
     @Query("SELECT COUNT(g) FROM GoodsReceiptEntity g WHERE g.referenceType = ?1 AND g.referenceId = ?2")
     Long countByReference(GoodsReceiptReferenceType referenceType, Long referenceId);

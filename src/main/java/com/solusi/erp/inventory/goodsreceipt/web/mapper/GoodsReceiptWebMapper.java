@@ -121,6 +121,7 @@ public abstract class GoodsReceiptWebMapper {
         target.setSupplierName(getSupplierName(domain.getSupplierId()));
         target.setFacilityName(getFacilityName(domain.getFacilityId()));
         target.setCurrencyCode(getCurrencyCode(domain.getCurrencyId()));
+        target.setStatus(getStatusName(domain.getStatus()));
     }
 
     @Named("getSupplierName")

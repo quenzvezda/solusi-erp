@@ -1,6 +1,7 @@
 package com.solusi.erp.inventory.goodsreceipt.web.dto;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -18,9 +19,14 @@ public class GoodsReceiptSaveLineRequest {
     private String productName;
     private Boolean serialized;
     private BigDecimal quantityReceived;
+    private BigDecimal orderedQuantity;
+    private BigDecimal receivedToDateQuantity;
+    private BigDecimal remainingQuantity;
     private Long uomId;
     private String uomCode;
     private String uomName;
+    private BigDecimal unitPrice;
+    @NotNull(message = "{label.container} {validation.notnull.suffix}")
     private Long containerId;
     private String containerCode;
     private String containerName;

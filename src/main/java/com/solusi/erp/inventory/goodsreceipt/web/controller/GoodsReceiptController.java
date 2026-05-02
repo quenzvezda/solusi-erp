@@ -10,6 +10,7 @@ import com.solusi.erp.inventory.goodsreceipt.application.usecase.command.*;
 import com.solusi.erp.inventory.goodsreceipt.application.usecase.query.*;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceipt;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptReferenceType;
+import com.solusi.erp.inventory.goodsreceipt.domain.port.GoodsReceiptReferenceLookupProvider;
 import com.solusi.erp.inventory.goodsreceipt.web.dto.*;
 import com.solusi.erp.inventory.goodsreceipt.web.mapper.GoodsReceiptWebMapper;
 import com.solusi.erp.util.HtmxResponseUtility;
@@ -24,9 +25,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Controller
@@ -45,14 +46,24 @@ public class GoodsReceiptController {
     private final GetGoodsReceiptCreateViewUseCase getGoodsReceiptCreateViewUseCase;
     private final GoodsReceiptWebMapper webMapper;
     private final MessageSource messageSource;
+    private final GoodsReceiptReferenceLookupProvider referenceLookupProvider;
 
     @GetMapping
     @PreAuthorize("hasAuthority('GOODS-RECEIPT_READ')")
     public String list(@RequestParam(required = false) String keyword,
+                       @RequestParam(required = false) GoodsReceiptReferenceType referenceType,
+                       @RequestParam(required = false) Long referenceId,
+                       @RequestParam(name = "poId", required = false) Long poId,
                        org.springframework.data.domain.Pageable springPageable,
                        Model model) {
+        ReferenceFilter filter = canonicalizeReferenceFilter(referenceType, referenceId, poId);
         Pageable domainPageable = PageableMapper.toDomain(springPageable);
-        Page<GoodsReceipt> domainPage = findGoodsReceiptsUseCase.execute(keyword, domainPageable);
+        Page<GoodsReceipt> domainPage = findGoodsReceiptsUseCase.execute(
+            keyword,
+            filter.referenceType(),
+            filter.referenceId(),
+            domainPageable
+        );
 
         List<GoodsReceiptSummaryResponse> content = domainPage.content().stream()
             .map(webMapper::toSummaryResponse)
@@ -62,6 +73,9 @@ public class GoodsReceiptController {
             new PageImpl<>(content, springPageable, domainPage.totalElements());
         model.addAttribute("page", springPage);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("activeReferenceType", filter.referenceType() != null ? filter.referenceType().name() : null);
+        model.addAttribute("activeReferenceId", filter.referenceId());
+        model.addAttribute("activeReferenceCode", resolveReferenceCode(filter.referenceType(), filter.referenceId()));
         return "inventory/goods-receipts/list";
     }
 
@@ -71,18 +85,74 @@ public class GoodsReceiptController {
                              @RequestParam(required = false) Long referenceId,
                              @RequestParam(name = "poId", required = false) Long poId,
                              Model model) {
-        GoodsReceiptReferenceType effectiveReferenceType = referenceType;
-        Long effectiveReferenceId = referenceId;
-
-        if (effectiveReferenceType == null && effectiveReferenceId == null && poId != null) {
-            effectiveReferenceType = GoodsReceiptReferenceType.PURCHASE_ORDER;
-            effectiveReferenceId = poId;
-        }
-
-        GoodsReceipt draftGr = getGoodsReceiptCreateViewUseCase.execute(effectiveReferenceType, effectiveReferenceId);
+        ReferenceFilter filter = canonicalizeReferenceFilter(referenceType, referenceId, poId);
+        GoodsReceipt draftGr = getGoodsReceiptCreateViewUseCase.execute(filter.referenceType(), filter.referenceId());
         GoodsReceiptSaveRequest request = webMapper.toSaveRequest(draftGr);
         model.addAttribute("grRequest", request);
         return "inventory/goods-receipts/form";
+    }
+
+    @GetMapping("/selectors/purchase-order-lines")
+    @PreAuthorize("hasAnyAuthority('GOODS-RECEIPT_CREATE', 'GOODS-RECEIPT_UPDATE')")
+    public String showPurchaseOrderLineSelector(@RequestParam GoodsReceiptReferenceType referenceType,
+                                                 @RequestParam Long referenceId,
+                                                 @RequestParam(required = false) String keyword,
+                                                 @RequestParam(required = false) List<Long> excludeReferenceLineIds,
+                                                 org.springframework.data.domain.Pageable springPageable,
+                                                 Model model) {
+        validateCreateReferenceType(referenceType);
+
+        GoodsReceipt draft = getGoodsReceiptCreateViewUseCase.execute(referenceType, referenceId);
+        Map<Long, GoodsReceiptReferenceLookupProvider.ReferenceLineSnapshot> snapshotsFromLookup =
+            referenceLookupProvider.resolveReferenceLineSnapshots(referenceType, referenceId);
+        final Map<Long, GoodsReceiptReferenceLookupProvider.ReferenceLineSnapshot> lineSnapshots =
+            snapshotsFromLookup != null ? snapshotsFromLookup : Map.of();
+
+        List<GoodsReceiptSaveLineRequest> filteredLines = draft.getLines().stream()
+            .map(webMapper::toSaveLineRequest)
+            .peek(line -> applyReferenceSnapshot(line, lineSnapshots.get(line.getReferenceLineId())))
+            .filter(line -> excludeReferenceLineIds == null
+                || line.getReferenceLineId() == null
+                || !excludeReferenceLineIds.contains(line.getReferenceLineId()))
+            .filter(line -> {
+                if (keyword == null || keyword.isBlank()) {
+                    return true;
+                }
+                String normalizedKeyword = keyword.toLowerCase();
+                String productName = line.getProductName() != null ? line.getProductName().toLowerCase() : "";
+                String productCode = line.getProductCode() != null ? line.getProductCode().toLowerCase() : "";
+                return productName.contains(normalizedKeyword) || productCode.contains(normalizedKeyword);
+            })
+            .collect(Collectors.toList());
+
+        int start = (int) springPageable.getOffset();
+        int end = Math.min(start + springPageable.getPageSize(), filteredLines.size());
+        List<GoodsReceiptSaveLineRequest> pageContent = start >= filteredLines.size()
+            ? List.of()
+            : filteredLines.subList(start, end);
+
+        model.addAttribute("page", new PageImpl<>(pageContent, springPageable, filteredLines.size()));
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("referenceType", referenceType);
+        model.addAttribute("referenceId", referenceId);
+        model.addAttribute("excludeReferenceLineIds", excludeReferenceLineIds == null ? List.of() : excludeReferenceLineIds);
+        return "inventory/goods-receipts/fragments/po-line-selector-modal";
+    }
+
+    private ReferenceFilter canonicalizeReferenceFilter(GoodsReceiptReferenceType referenceType,
+                                                        Long referenceId,
+                                                        Long poId) {
+        if (referenceType == null && referenceId == null && poId != null) {
+            return new ReferenceFilter(GoodsReceiptReferenceType.PURCHASE_ORDER, poId);
+        }
+        return new ReferenceFilter(referenceType, referenceId);
+    }
+
+    private String resolveReferenceCode(GoodsReceiptReferenceType referenceType, Long referenceId) {
+        if (referenceType == null || referenceId == null) {
+            return null;
+        }
+        return referenceLookupProvider.resolveReferenceCode(referenceType, referenceId);
     }
 
     @GetMapping("/edit/{id}")
@@ -137,6 +207,21 @@ public class GoodsReceiptController {
         }
     }
 
+    private void applyReferenceSnapshot(
+        GoodsReceiptSaveLineRequest line,
+        GoodsReceiptReferenceLookupProvider.ReferenceLineSnapshot snapshot
+    ) {
+        if (line == null || snapshot == null) {
+            return;
+        }
+        line.setOrderedQuantity(snapshot.orderedQuantity());
+        line.setReceivedToDateQuantity(snapshot.receivedToDateQuantity());
+        line.setRemainingQuantity(snapshot.remainingQuantity());
+        if (line.getUnitPrice() == null) {
+            line.setUnitPrice(snapshot.unitPrice());
+        }
+    }
+
     private void validateCreateReferenceType(GoodsReceiptReferenceType referenceType) {
         if (referenceType != GoodsReceiptReferenceType.PURCHASE_ORDER) {
             throw new DomainException("msg.error.gr.reference.unsupported");
@@ -161,5 +246,8 @@ public class GoodsReceiptController {
         deleteGoodsReceiptUseCase.execute(id);
         String msg = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
         return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
+    }
+
+    private record ReferenceFilter(GoodsReceiptReferenceType referenceType, Long referenceId) {
     }
 }

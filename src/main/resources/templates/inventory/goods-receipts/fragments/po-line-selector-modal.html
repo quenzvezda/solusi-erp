@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div id="gr-po-line-selector-results" th:fragment="gr-po-line-selector-results">
+    <div class="card-header border-0 pb-0">
+        <form class="row g-2"
+              hx-get="/inventory/goods-receipts/selectors/purchase-order-lines"
+              hx-target="#gr-po-line-selector-results"
+              hx-swap="outerHTML">
+            <input type="hidden" name="referenceType" th:value="${referenceType}">
+            <input type="hidden" name="referenceId" th:value="${referenceId}">
+            <th:block th:each="excludeReferenceLineId : ${excludeReferenceLineIds}">
+                <input type="hidden" name="excludeReferenceLineIds" th:value="${excludeReferenceLineId}">
+            </th:block>
+            <div class="col">
+                <input type="search"
+                       class="form-control"
+                       name="keyword"
+                       th:value="${keyword}"
+                       th:placeholder="#{label.gr.selector.poLine.search.placeholder}">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-search"></i>
+                    <span class="ms-1" th:text="#{label.search}">Search</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+            <tr>
+                <th class="w-1"></th>
+                <th th:text="#{label.product}">Product</th>
+                <th th:text="#{label.uom}">UoM</th>
+                <th class="text-end" th:text="#{label.gr.selector.poLine.column.remainingQty}">Remaining Qty</th>
+                <th class="text-end" th:text="#{label.gr.selector.poLine.column.unitPrice}">PO Unit Price</th>
+                <th th:text="#{label.gr.column.referenceType}">Type</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${page.isEmpty()}">
+                <td colspan="6" class="text-center text-secondary py-4" th:text="#{label.gr.selector.poLine.empty}">No eligible PO lines found.</td>
+            </tr>
+            <tr th:each="row : ${page.content}"
+                th:attr="data-reference-line-id=${row.referenceLineId},
+                         data-product-id=${row.productId},
+                         data-product-name=${row.productName},
+                         data-product-subtext=${row.productCode},
+                         data-uom-id=${row.uomId},
+                         data-uom-name=${row.uomName},
+                         data-uom-subtext=${row.uomCode},
+                         data-serialized=${row.serialized}">
+                <td>
+                    <label class="form-check m-0">
+                        <input class="form-check-input js-gr-po-line-selector-item" type="checkbox">
+                    </label>
+                </td>
+                <td>
+                    <div class="fw-semibold" th:text="${row.productName}">Product</div>
+                    <div class="text-secondary small" th:text="${row.productCode}">PRD-001</div>
+                    <div class="text-secondary small">
+                        <span th:text="#{label.gr.selector.poLine.meta.ordered}">Ordered</span>:
+                        <span th:text="${row.orderedQuantity != null ? #numbers.formatDecimal(row.orderedQuantity, 1, 'COMMA', 2, 'POINT') : '-'}">0.0000</span>
+                        <span class="mx-1">|</span>
+                        <span th:text="#{label.gr.selector.poLine.meta.received}">Received</span>:
+                        <span th:text="${row.receivedToDateQuantity != null ? #numbers.formatDecimal(row.receivedToDateQuantity, 1, 'COMMA', 2, 'POINT') : '-'}">0.0000</span>
+                    </div>
+                </td>
+                <td th:text="${row.uomName}">PCS</td>
+                <td class="text-end" th:text="${row.remainingQuantity != null ? #numbers.formatDecimal(row.remainingQuantity, 1, 'COMMA', 2, 'POINT') : '-'}">0.0000</td>
+                <td class="text-end" th:text="${row.unitPrice != null ? #numbers.formatDecimal(row.unitPrice, 1, 'COMMA', 2, 'POINT') : '-'}">100.0000</td>
+                <td>
+                    <span class="badge"
+                          th:classappend="${row.serialized} ? 'bg-azure-lt text-azure' : 'bg-secondary-lt text-secondary'"
+                          th:text="${row.serialized} ? 'Serialized' : 'Standard'">Standard</span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+    <div class="card-footer d-flex justify-content-end">
+        <button type="button" class="btn btn-primary js-gr-po-line-selector-apply">
+            <i class="ti ti-check me-1"></i>
+            <span th:text="#{label.apply}">Apply</span>
+        </button>
+    </div>
+</div>
+</body>
+</html>

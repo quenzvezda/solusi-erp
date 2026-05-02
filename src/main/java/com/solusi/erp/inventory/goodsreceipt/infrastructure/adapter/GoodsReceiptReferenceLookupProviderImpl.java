@@ -5,6 +5,9 @@ import com.solusi.erp.inventory.goodsreceipt.domain.port.GoodsReceiptReferenceLo
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrder;
 import com.solusi.erp.purchasing.purchaseorder.domain.repository.PurchaseOrderRepository;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 public class GoodsReceiptReferenceLookupProviderImpl implements GoodsReceiptReferenceLookupProvider {
 
     private final PurchaseOrderRepository purchaseOrderRepository;
@@ -24,5 +27,33 @@ public class GoodsReceiptReferenceLookupProviderImpl implements GoodsReceiptRefe
                     .orElse(null);
         }
         return null;
+    }
+
+    @Override
+    public Map<Long, ReferenceLineSnapshot> resolveReferenceLineSnapshots(GoodsReceiptReferenceType referenceType,
+                                                                          Long referenceId) {
+        if (referenceType != GoodsReceiptReferenceType.PURCHASE_ORDER || referenceId == null) {
+            return Map.of();
+        }
+        return purchaseOrderRepository.findById(referenceId)
+            .map(po -> {
+                Map<Long, ReferenceLineSnapshot> snapshots = new LinkedHashMap<>();
+                po.getLines().forEach(line -> {
+                    if (line.getId() == null) {
+                        return;
+                    }
+                    snapshots.put(
+                        line.getId(),
+                        new ReferenceLineSnapshot(
+                            line.getQuantity(),
+                            line.getReceivedQuantity(),
+                            line.getOutstandingQuantity(),
+                            line.getUnitPrice()
+                        )
+                    );
+                });
+                return snapshots;
+            })
+            .orElseGet(Map::of);
     }
 }

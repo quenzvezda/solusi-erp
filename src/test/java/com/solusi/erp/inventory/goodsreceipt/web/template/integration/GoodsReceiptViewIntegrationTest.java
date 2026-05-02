@@ -36,6 +36,23 @@ class GoodsReceiptViewIntegrationTest {
     }
 
     @Test
+    @DisplayName("view template redirects back to detail page after complete")
+    void viewTemplate_redirectsBackToDetailPageAfterComplete() throws Exception {
+        String template = readResource(TEMPLATE);
+
+        assertThat(template).contains("data-redirect-url");
+        assertThat(template).contains("th:data-redirect-url=\"@{'/inventory/goods-receipts/' + ${gr.id}}\"");
+    }
+
+    @Test
+    @DisplayName("view template renders serial values using bracketed display format")
+    void viewTemplate_rendersSerialValuesUsingBracketedDisplayFormat() throws Exception {
+        String template = readResource(TEMPLATE);
+
+        assertThat(template).contains("line.serialDisplay");
+    }
+
+    @Test
     @DisplayName("view template uses generic reference labels instead of po-only labels")
     void viewTemplate_usesGenericReferenceLabels() throws Exception {
         String template = readResource(TEMPLATE);

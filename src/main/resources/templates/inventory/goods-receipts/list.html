@@ -28,7 +28,19 @@
 
                 <div class="card">
                     <div class="card-body border-bottom py-3">
-                        <div class="d-flex">
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <div th:if="${activeReferenceType != null && activeReferenceId != null}"
+                                 class="d-inline-flex align-items-center gap-2">
+                                <span class="badge bg-blue-lt text-blue d-inline-flex align-items-center gap-1">
+                                    <span th:text="#{label.gr.filter.reference}">Reference</span>
+                                    <span class="fw-bold" th:text="${activeReferenceCode ?: '#' + activeReferenceId}">PO-001</span>
+                                </span>
+                                <a th:href="@{/inventory/goods-receipts(keyword=${keyword})}"
+                                   class="btn btn-sm btn-ghost-secondary"
+                                   th:title="#{label.gr.filter.clear}">
+                                    <i class="ti ti-x"></i>
+                                </a>
+                            </div>
                             <div class="ms-auto text-secondary">
                                 <form th:action="@{/inventory/goods-receipts}" method="get" class="input-icon"
                                       hx-get="/inventory/goods-receipts"
@@ -38,6 +50,8 @@
                                     <input type="text" id="search-input" name="keyword" th:value="${keyword}"
                                            class="form-control form-control-sm"
                                            th:placeholder="#{label.search} + '...'">
+                                    <input type="hidden" name="referenceType" th:if="${activeReferenceType != null}" th:value="${activeReferenceType}">
+                                    <input type="hidden" name="referenceId" th:if="${activeReferenceId != null}" th:value="${activeReferenceId}">
                                     <span class="input-icon-addon">
                                         <i class="ti ti-search"></i>
                                     </span>
@@ -49,7 +63,7 @@
                     <div id="gr-table-container" th:fragment="gr-table-container"
                          hx-get="/inventory/goods-receipts"
                          hx-trigger="refresh-table from:body delay:500ms"
-                         hx-include="[name='keyword'], [name='page']">
+                         hx-include="[name='keyword'], [name='page'], [name='referenceType'], [name='referenceId']">
                         <input type="hidden" name="page" th:value="${page.number}">
 
                         <div class="table-responsive">
@@ -102,14 +116,6 @@
                                                         th:data-bs-target="'#modal-delete-' + ${item.id}">
                                                     <i class="ti ti-trash me-1"></i>
                                                     <span th:text="#{label.delete}">Delete</span>
-                                                </button>
-                                                <button th:if="${item.status == 'DRAFT'}" type="button"
-                                                        class="btn btn-white btn-sm"
-                                                        sec:authorize="hasAuthority('GOODS-RECEIPT_COMPLETE')"
-                                                        th:data-complete-url="@{'/inventory/goods-receipts/' + ${item.id} + '/complete'}"
-                                                        onclick="ErpForm.postAction(this)">
-                                                    <i class="ti ti-check me-1"></i>
-                                                    <span th:text="#{label.gr.complete}">Complete</span>
                                                 </button>
                                             </div>
                                             <div th:if="${item.status == 'DRAFT'}"

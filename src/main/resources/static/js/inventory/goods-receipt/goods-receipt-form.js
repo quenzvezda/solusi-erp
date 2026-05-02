@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', function () {
     var emptyMsg = document.getElementById('empty-msg');
     var btnAddLine = document.getElementById('btn-add-line');
     var form = document.getElementById('gr-form');
+    var referenceTypeInput = form ? form.querySelector('input[name="referenceType"]') : null;
+    var referenceIdInput = form ? form.querySelector('input[name="referenceId"]') : null;
     var nextIndex = (lineContainer && lineContainer.querySelectorAll('tr.line-row').length) || 0;
 
     function warn(message) {
@@ -22,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     currencySymbol: '',
                     decimalCharacter: '.',
                     digitGroupSeparator: ',',
-                    decimalPlaces: 4,
+                    decimalPlaces: 2,
                     modifyValueOnWheel: false
                 });
                 input.setAttribute('data-autonumeric', 'true');
@@ -63,6 +65,190 @@ document.addEventListener('DOMContentLoaded', function () {
         return value.split(',')
             .map(function (item) { return item.trim(); })
             .filter(Boolean);
+    }
+
+    function waitForLookupReady(selectEl, callback) {
+        if (!selectEl || typeof callback !== 'function') return;
+        var attempts = 0;
+        var maxAttempts = 50;
+        (function tick() {
+            if (selectEl.tomselect) {
+                callback(selectEl.tomselect);
+                return;
+            }
+            attempts += 1;
+            if (attempts >= maxAttempts) return;
+            setTimeout(tick, 50);
+        })();
+    }
+
+    function setLookupValue(selectEl, value, text, subtext) {
+        if (!selectEl || value === null || value === undefined || value === '') return;
+        waitForLookupReady(selectEl, function (ts) {
+            var key = String(value);
+            if (!ts.options[key]) {
+                ts.addOption({
+                    id: key,
+                    name: text || key,
+                    subText: subtext || '',
+                    payload: {
+                        uomId: selectEl.closest('tr')?.querySelector('.input-uom-id')?.value,
+                        uomName: selectEl.closest('tr')?.querySelector('.input-uom-alias')?.value,
+                        isSerialized: selectEl.closest('tr')?.querySelector('.input-serialized')?.value === 'true'
+                    }
+                });
+            }
+            ts.setValue(key, true);
+        });
+    }
+
+    function lockLookup(selectEl) {
+        if (!selectEl) return;
+        waitForLookupReady(selectEl, function (ts) {
+            if (!ts) return;
+            ts.lock();
+            ts.wrapper.classList.add('bg-body-tertiary');
+            ts.wrapper.style.pointerEvents = 'none';
+            ts.wrapper.style.opacity = '0.7';
+        });
+    }
+
+    function hasReferenceLine(row) {
+        var referenceLineInput = row ? row.querySelector('input[name$=".referenceLineId"]') : null;
+        return !!(referenceLineInput && referenceLineInput.value);
+    }
+
+    function hasPurchaseOrderReference() {
+        return referenceTypeInput
+            && referenceIdInput
+            && referenceTypeInput.value === 'PURCHASE_ORDER'
+            && referenceIdInput.value;
+    }
+
+    function currentReferenceLineIds() {
+        if (!lineContainer) return [];
+        return Array.from(lineContainer.querySelectorAll('input[name$=".referenceLineId"]'))
+            .map(function (input) { return input.value; })
+            .filter(function (value) { return !!value; });
+    }
+
+    function buildPoLineSelectorUrl() {
+        var params = new URLSearchParams();
+        params.set('referenceType', referenceTypeInput.value);
+        params.set('referenceId', referenceIdInput.value);
+        currentReferenceLineIds().forEach(function (id) {
+            params.append('excludeReferenceLineIds', id);
+        });
+        return config.poLineSelectorUrl + '?' + params.toString();
+    }
+
+    function ensurePoLineSelectorModal() {
+        var modalEl = document.getElementById('modal-gr-po-line-selector');
+        if (modalEl) return modalEl;
+
+        var wrapper = document.createElement('div');
+        wrapper.innerHTML = [
+            '<div class="modal modal-blur fade" id="modal-gr-po-line-selector" tabindex="-1" aria-hidden="true">',
+            '  <div class="modal-dialog modal-xl">',
+            '    <div class="modal-content">',
+            '      <div class="modal-header">',
+            '        <h5 class="modal-title">' + (config.poLineSelectorTitle || 'Choose Purchase Order Lines') + '</h5>',
+            '        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>',
+            '      </div>',
+            '      <div class="modal-body p-0">',
+            '        <div class="card border-0 rounded-0"><div class="card-body p-0"><div id="gr-po-line-selector-results"></div></div></div>',
+            '      </div>',
+            '    </div>',
+            '  </div>',
+            '</div>'
+        ].join('');
+        modalEl = wrapper.firstElementChild;
+        if (!modalEl) return null;
+        document.body.appendChild(modalEl);
+        return modalEl;
+    }
+
+    function openPoLineSelector() {
+        if (!config.poLineSelectorUrl) {
+            warn(config.poLineSelectorUnavailable || 'PO line selector is unavailable.');
+            return;
+        }
+
+        var modalEl = ensurePoLineSelectorModal();
+        if (!modalEl) {
+            warn(config.poLineSelectorUnavailable || 'PO line selector is unavailable.');
+            return;
+        }
+
+        var url = buildPoLineSelectorUrl();
+        if (window.ERP && window.ERP.ModalSelector) {
+            window.ERP.ModalSelector.open({
+                modalId: 'modal-gr-po-line-selector',
+                resultsId: 'gr-po-line-selector-results',
+                url: url
+            });
+            return;
+        }
+
+        if (window.htmx) {
+            window.htmx.ajax('GET', url, {
+                target: '#gr-po-line-selector-results',
+                swap: 'outerHTML'
+            });
+        } else {
+            fetch(url, { headers: { 'HX-Request': 'true' } })
+                .then(function (response) { return response.text(); })
+                .then(function (html) {
+                    var target = document.getElementById('gr-po-line-selector-results');
+                    if (!target) return;
+                    var wrapper = document.createElement('div');
+                    wrapper.innerHTML = html.trim();
+                    var next = wrapper.firstElementChild;
+                    if (next) target.replaceWith(next);
+                });
+        }
+
+        if (window.bootstrap && window.bootstrap.Modal && window.bootstrap.Modal.getOrCreateInstance) {
+            window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
+    }
+
+    function parsePoLinePayload(row) {
+        return {
+            referenceLineId: row.dataset.referenceLineId || '',
+            productId: row.dataset.productId || '',
+            productName: row.dataset.productName || '',
+            productSubtext: row.dataset.productSubtext || '',
+            uomId: row.dataset.uomId || '',
+            uomName: row.dataset.uomName || '',
+            uomSubtext: row.dataset.uomSubtext || '',
+            serialized: row.dataset.serialized === 'true'
+        };
+    }
+
+    function appendSelectedPoLine(payload) {
+        var newRow = createNewRow();
+        if (!newRow) return false;
+
+        var referenceLineInput = newRow.querySelector('input[name$=".referenceLineId"]');
+        var productSelect = newRow.querySelector('.select-product');
+        var uomIdInput = newRow.querySelector('.input-uom-id');
+        var uomAliasInput = newRow.querySelector('.input-uom-alias');
+        var uomDisplayInput = newRow.querySelector('.input-uom-display');
+        var serializedInput = newRow.querySelector('.input-serialized');
+        var qtyInput = newRow.querySelector('.input-qty');
+
+        if (referenceLineInput) referenceLineInput.value = payload.referenceLineId;
+        if (uomIdInput) uomIdInput.value = payload.uomId;
+        if (uomAliasInput) uomAliasInput.value = payload.uomName;
+        if (uomDisplayInput) uomDisplayInput.value = payload.uomName;
+        if (serializedInput) serializedInput.value = payload.serialized ? 'true' : 'false';
+        if (qtyInput) setNumericValue(qtyInput, 0);
+
+        setLookupValue(productSelect, payload.productId, payload.productName, payload.productSubtext);
+        lockLookup(productSelect);
+        updateDetailSummary(newRow);
+        return true;
     }
 
     function updateEmptyMessage() {
@@ -293,12 +479,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function setupLookup(selectEl, path) {
-        if (!selectEl || typeof initLookup !== 'function') return null;
+        if (!selectEl || selectEl.tomselect || typeof initLookup !== 'function') return null;
         return initLookup(selectEl, path);
     }
 
     function initializeLineRow(row) {
         initializeDecimalFields(row);
+        if (window.ERP && window.ERP.initAutocompleteInContainer) {
+            window.ERP.initAutocompleteInContainer(row);
+        }
 
         var productSelect = row.querySelector('.select-product');
         var containerSelect = row.querySelector('.select-container');
@@ -310,6 +499,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         setupLookup(productSelect, 'inventory/products');
         setupLookup(containerSelect, 'inventory/containers');
+
+        if (hasReferenceLine(row)) {
+            lockLookup(productSelect);
+        }
 
         if (productSelect && productSelect.tomselect) {
             productSelect.tomselect.on('change', function (value) {
@@ -351,16 +544,24 @@ document.addEventListener('DOMContentLoaded', function () {
         updateDetailSummary(row);
     }
 
-    function createNewRow() {
-        if (!templateSource || !lineContainer) return null;
-        var template = templateSource.querySelector('tr');
+    function createRowFromTemplate(index) {
+        var template = templateSource ? templateSource.querySelector('tr') : null;
         if (!template) return null;
 
-        var html = template.outerHTML.replace(/\[INDEX\]/g, '[' + nextIndex + ']').replace(/INDEX/g, nextIndex);
-        var tempDiv = document.createElement('div');
-        tempDiv.innerHTML = html;
+        var newRow = template.cloneNode(true);
+        newRow.innerHTML = newRow.innerHTML.replace(/\[INDEX\]/g, '[' + index + ']').replace(/INDEX/g, index);
+        newRow.querySelectorAll('.ts-wrapper').forEach(function (wrapper) { wrapper.remove(); });
+        newRow.querySelectorAll('select.tomselect-initialized').forEach(function (selectEl) {
+            selectEl.classList.remove('tomselect-initialized', 'tomselected', 'ts-hidden-accessible');
+            selectEl.style.display = '';
+        });
+        return newRow;
+    }
 
-        var newRow = tempDiv.querySelector('tr');
+    function createNewRow() {
+        if (!lineContainer) return null;
+
+        var newRow = createRowFromTemplate(nextIndex);
         if (!newRow) return null;
 
         newRow.setAttribute('data-index', nextIndex);
@@ -374,6 +575,10 @@ document.addEventListener('DOMContentLoaded', function () {
     if (btnAddLine) {
         btnAddLine.addEventListener('click', function (e) {
             e.preventDefault();
+            if (hasPurchaseOrderReference()) {
+                openPoLineSelector();
+                return;
+            }
             createNewRow();
         });
     }
@@ -386,14 +591,65 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    document.body.addEventListener('click', function (evt) {
+        var applyBtn = evt.target.closest('.js-gr-po-line-selector-apply');
+        if (!applyBtn) return;
+
+        var selectedRows = Array.from(document.querySelectorAll('#gr-po-line-selector-results .js-gr-po-line-selector-item:checked'))
+            .map(function (checkbox) { return checkbox.closest('tr'); })
+            .filter(function (row) { return !!row; });
+
+        if (selectedRows.length === 0) {
+            warn(config.selectAtLeastOnePoLine || 'Select at least one PO line first.');
+            return;
+        }
+
+        var existingReferenceLineIds = new Set(currentReferenceLineIds());
+        var appendedCount = 0;
+        selectedRows.forEach(function (row) {
+            var payload = parsePoLinePayload(row);
+            if (payload.referenceLineId && existingReferenceLineIds.has(payload.referenceLineId)) {
+                return;
+            }
+            if (appendSelectedPoLine(payload)) {
+                appendedCount += 1;
+            }
+            if (payload.referenceLineId) {
+                existingReferenceLineIds.add(payload.referenceLineId);
+            }
+        });
+
+        if (appendedCount === 0) {
+            warn(config.noNewPoLineApplied || 'Selected PO lines are already on this draft.');
+            return;
+        }
+
+        if (window.ERP && window.ERP.ModalSelector) {
+            window.ERP.ModalSelector.close('modal-gr-po-line-selector');
+            return;
+        }
+
+        var modalEl = document.getElementById('modal-gr-po-line-selector');
+        if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+            var modalInstance = window.bootstrap.Modal.getInstance(modalEl)
+                || (window.bootstrap.Modal.getOrCreateInstance ? window.bootstrap.Modal.getOrCreateInstance(modalEl) : null);
+            if (modalInstance) modalInstance.hide();
+        }
+    });
+
     updateEmptyMessage();
 
     if (form) {
         form.addEventListener('submit', function (e) {
-            if (lineContainer && lineContainer.querySelectorAll('tr.line-row').length === 0) {
+            function blockSubmit(message) {
                 e.preventDefault();
-                warn('Please add at least one receipt line.');
+                e.stopImmediatePropagation();
+                warn(message);
                 return false;
+            }
+
+            if (lineContainer && lineContainer.querySelectorAll('tr.line-row').length === 0) {
+                return blockSubmit('Please add at least one receipt line.');
             }
 
             var lines = lineContainer.querySelectorAll('tr.line-row');
@@ -401,24 +657,26 @@ document.addEventListener('DOMContentLoaded', function () {
                 var productInput = lines[i].querySelector('[name*=".productId"]');
                 var qtyInput = lines[i].querySelector('.input-qty');
                 var uomInput = lines[i].querySelector('.input-uom-id');
+                var containerInput = lines[i].querySelector('.select-container');
+                var rawContainerValue = containerInput && containerInput.tomselect
+                    ? containerInput.tomselect.getValue()
+                    : (containerInput ? containerInput.value : '');
+                var containerValue = rawContainerValue == null ? '' : String(rawContainerValue).trim();
 
                 if (!productInput || !productInput.value) {
-                    e.preventDefault();
-                    warn('Please select a product in line ' + (i + 1));
-                    return false;
+                    return blockSubmit('Please select a product in line ' + (i + 1));
                 }
                 if (!qtyInput || getNumericValue(qtyInput) <= 0) {
-                    e.preventDefault();
-                    warn('Please enter a valid quantity in line ' + (i + 1));
-                    return false;
+                    return blockSubmit('Please enter a valid quantity in line ' + (i + 1));
                 }
                 if (!uomInput || !uomInput.value) {
-                    e.preventDefault();
-                    warn('Please set the UoM detail in line ' + (i + 1));
-                    return false;
+                    return blockSubmit('Please set the UoM detail in line ' + (i + 1));
+                }
+                if (!containerValue || containerValue === 'null' || containerValue === 'undefined') {
+                    return blockSubmit((config.containerRequired || 'Please select a container in line') + ' ' + (i + 1));
                 }
             }
-        });
+        }, true);
 
         var formDirty = false;
 
@@ -431,7 +689,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         window.addEventListener('beforeunload', function (e) {
             // Don't show warning if form is currently submitting
-            if (formDirty && !form.dataset.isSubmitting && form.offsetParent !== null) {
+            if (formDirty && !form.dataset.isSubmitting && !window.__erpSuppressBeforeUnload && form.offsetParent !== null) {
                 e.preventDefault();
                 e.returnValue = '';
             }

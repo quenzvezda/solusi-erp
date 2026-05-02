@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
@@ -30,5 +32,16 @@ public class GoodsReceiptLineDetailResponse {
     @JsonProperty("poLineId")
     public Long getPoLineId() {
         return referenceLineId;
+    }
+
+    public String getSerialDisplay() {
+        if (serialNumber == null || serialNumber.isBlank()) {
+            return null;
+        }
+        return Arrays.stream(serialNumber.split(","))
+            .map(String::trim)
+            .filter(value -> !value.isEmpty())
+            .map(value -> "(" + value + ")")
+            .collect(Collectors.joining(", "));
     }
 }

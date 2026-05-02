@@ -24,6 +24,7 @@ public class GoodsReceiptSaveRequest extends BaseAuditResponse {
     private String supplierName;
     private String facilityName;
     private String currencyCode;
+    private String status;
     private String notes;
     @Valid
     private List<GoodsReceiptSaveLineRequest> lines = new ArrayList<>();

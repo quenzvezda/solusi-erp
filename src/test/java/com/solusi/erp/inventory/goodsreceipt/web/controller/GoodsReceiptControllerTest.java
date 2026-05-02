@@ -10,14 +10,19 @@ import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceipt;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptLine;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptReferenceType;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptStatus;
+import com.solusi.erp.inventory.goodsreceipt.domain.port.GoodsReceiptReferenceLookupProvider;
 import com.solusi.erp.inventory.goodsreceipt.web.dto.*;
 import com.solusi.erp.inventory.goodsreceipt.web.mapper.GoodsReceiptWebMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
@@ -27,6 +32,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -51,6 +57,7 @@ public class GoodsReceiptControllerTest {
     private GetGoodsReceiptCreateViewUseCase createViewUc;
     private GoodsReceiptWebMapper webMapper;
     private MessageSource messageSource;
+    private GoodsReceiptReferenceLookupProvider referenceLookupProvider;
     private GoodsReceiptController controller;
 
     @BeforeEach
@@ -65,10 +72,11 @@ public class GoodsReceiptControllerTest {
         createViewUc = mock(GetGoodsReceiptCreateViewUseCase.class);
         webMapper = mock(GoodsReceiptWebMapper.class);
         messageSource = mock(MessageSource.class);
+        referenceLookupProvider = mock(GoodsReceiptReferenceLookupProvider.class);
 
         controller = new GoodsReceiptController(
             createUc, updateUc, deleteUc, completeUc, findUc, getUc, editViewUc, createViewUc,
-            webMapper, messageSource
+            webMapper, messageSource, referenceLookupProvider
         );
     }
 
@@ -94,7 +102,7 @@ public class GoodsReceiptControllerTest {
         GoodsReceipt gr = buildDraftGr();
         com.solusi.erp.core.domain.model.Page<GoodsReceipt> domainPage =
             new com.solusi.erp.core.domain.model.Page<>(List.of(gr), 0, 20, 1L);
-        when(findUc.execute(any(), any())).thenReturn(domainPage);
+        when(findUc.execute(any(), any(), any(), any())).thenReturn(domainPage);
 
         GoodsReceiptSummaryResponse summary = new GoodsReceiptSummaryResponse();
         summary.setId(1L);
@@ -107,13 +115,67 @@ public class GoodsReceiptControllerTest {
             org.springframework.data.domain.PageRequest.of(0, 20);
         Model model = new ExtendedModelMap();
 
-        String view = controller.list(null, springPageable, model);
+        String view = controller.list(null, null, null, null, springPageable, model);
 
         assertEquals("inventory/goods-receipts/list", view);
         Object pageObj = model.getAttribute("page");
         assertThat(pageObj).isInstanceOf(org.springframework.data.domain.Page.class);
         org.springframework.data.domain.Page<?> springPage = (org.springframework.data.domain.Page<?>) pageObj;
         assertEquals(1, springPage.getTotalElements());
+    }
+
+    @Test
+    @DisplayName("list canonicalizes legacy poId filter into purchase-order reference filter context")
+    void listShouldCanonicalizeLegacyPoIdFilterContext() throws Exception {
+        GoodsReceipt gr = buildDraftGr();
+        com.solusi.erp.core.domain.model.Page<GoodsReceipt> domainPage =
+            new com.solusi.erp.core.domain.model.Page<>(List.of(gr), 0, 20, 1L);
+        when(findUc.execute(any(), any(), any(), any())).thenReturn(domainPage);
+
+        GoodsReceiptSummaryResponse summary = new GoodsReceiptSummaryResponse();
+        summary.setId(1L);
+        summary.setCode("GR-001");
+        summary.setStatus("DRAFT");
+        summary.setLineCount(1);
+        when(webMapper.toSummaryResponse(any(GoodsReceipt.class))).thenReturn(summary);
+
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller)
+            .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+            .build();
+
+        mockMvc.perform(get("/inventory/goods-receipts").param("poId", "7"))
+            .andExpect(status().isOk())
+            .andExpect(view().name("inventory/goods-receipts/list"))
+            .andExpect(model().attribute("activeReferenceType", GoodsReceiptReferenceType.PURCHASE_ORDER.name()))
+            .andExpect(model().attribute("activeReferenceId", 7L));
+    }
+
+    @Test
+    @DisplayName("list keeps explicit reference filter context from referenceType/referenceId query params")
+    void listShouldKeepExplicitReferenceFilterContext() throws Exception {
+        GoodsReceipt gr = buildDraftGr();
+        com.solusi.erp.core.domain.model.Page<GoodsReceipt> domainPage =
+            new com.solusi.erp.core.domain.model.Page<>(List.of(gr), 0, 20, 1L);
+        when(findUc.execute(any(), any(), any(), any())).thenReturn(domainPage);
+
+        GoodsReceiptSummaryResponse summary = new GoodsReceiptSummaryResponse();
+        summary.setId(1L);
+        summary.setCode("GR-001");
+        summary.setStatus("DRAFT");
+        summary.setLineCount(1);
+        when(webMapper.toSummaryResponse(any(GoodsReceipt.class))).thenReturn(summary);
+
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller)
+            .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+            .build();
+
+        mockMvc.perform(get("/inventory/goods-receipts")
+                .param("referenceType", "PURCHASE_ORDER")
+                .param("referenceId", "7"))
+            .andExpect(status().isOk())
+            .andExpect(view().name("inventory/goods-receipts/list"))
+            .andExpect(model().attribute("activeReferenceType", GoodsReceiptReferenceType.PURCHASE_ORDER.name()))
+            .andExpect(model().attribute("activeReferenceId", 7L));
     }
 
     @Test
@@ -382,6 +444,16 @@ public class GoodsReceiptControllerTest {
     }
 
     @Test
+    @DisplayName("line detail response formats serial values as bracketed comma list")
+    void lineDetailResponseFormatsSerialValuesAsBracketedCommaList() {
+        GoodsReceiptLineDetailResponse detailResponse = new GoodsReceiptLineDetailResponse();
+        detailResponse.setSerialNumber("SN-001, SN-002,SN-003");
+
+        assertThat(detailResponse.getSerialDisplay())
+            .isEqualTo("(SN-001), (SN-002), (SN-003)");
+    }
+
+    @Test
     @DisplayName("save line request accepts legacy poLineId input alias")
     void saveLineRequestAcceptsLegacyPoLineIdInputAlias() throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -395,5 +467,101 @@ public class GoodsReceiptControllerTest {
 
         assertThat(request.getReferenceLineId()).isEqualTo(77L);
         assertThat(request.getProductId()).isEqualTo(33L);
+    }
+
+    @Test
+    @DisplayName("save line request requires container id")
+    void saveLineRequestRequiresContainerId() {
+        Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+        GoodsReceiptSaveLineRequest line = new GoodsReceiptSaveLineRequest();
+        line.setProductId(100L);
+        line.setQuantityReceived(new BigDecimal("1.00"));
+        line.setUomId(1L);
+
+        Set<ConstraintViolation<GoodsReceiptSaveLineRequest>> violations = validator.validate(line);
+
+        assertThat(violations)
+            .extracting(v -> v.getPropertyPath().toString())
+            .contains("containerId");
+    }
+
+    @Test
+    @DisplayName("selector endpoint opens purchase-order line modal from add line button")
+    void selectorEndpointShouldOpenPurchaseOrderLineModal() throws Exception {
+        GoodsReceipt draft = buildDraftGr();
+        when(createViewUc.execute(GoodsReceiptReferenceType.PURCHASE_ORDER, 7L)).thenReturn(draft);
+
+        GoodsReceiptSaveLineRequest selectorRow = new GoodsReceiptSaveLineRequest();
+        selectorRow.setReferenceLineId(10L);
+        selectorRow.setProductId(100L);
+        selectorRow.setProductName("Samsung Galaxy S24 Ultra");
+        selectorRow.setProductCode("P-100");
+        selectorRow.setUomId(1L);
+        selectorRow.setUomName("Pieces");
+        selectorRow.setUomCode("PCS");
+        selectorRow.setSerialized(false);
+        when(webMapper.toSaveLineRequest(any(GoodsReceiptLine.class))).thenReturn(selectorRow);
+
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller)
+            .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+            .build();
+
+        mockMvc.perform(get("/inventory/goods-receipts/selectors/purchase-order-lines")
+                .param("referenceType", "PURCHASE_ORDER")
+                .param("referenceId", "7")
+                .param("excludeReferenceLineIds", "10"))
+            .andExpect(status().isOk())
+            .andExpect(view().name("inventory/goods-receipts/fragments/po-line-selector-modal"))
+            .andExpect(model().attributeExists("page"));
+    }
+
+    @Test
+    @DisplayName("selector endpoint enriches line with PO snapshot quantities and unit price")
+    void selectorEndpointShouldEnrichLineWithPoSnapshot() {
+        GoodsReceipt draft = buildDraftGr();
+        when(createViewUc.execute(GoodsReceiptReferenceType.PURCHASE_ORDER, 7L)).thenReturn(draft);
+
+        GoodsReceiptSaveLineRequest selectorRow = new GoodsReceiptSaveLineRequest();
+        selectorRow.setReferenceLineId(10L);
+        selectorRow.setProductId(100L);
+        selectorRow.setProductName("Samsung Galaxy S24 Ultra");
+        selectorRow.setProductCode("P-100");
+        selectorRow.setUomId(1L);
+        selectorRow.setUomName("Pieces");
+        selectorRow.setUomCode("PCS");
+        selectorRow.setSerialized(false);
+        when(webMapper.toSaveLineRequest(any(GoodsReceiptLine.class))).thenReturn(selectorRow);
+
+        when(referenceLookupProvider.resolveReferenceLineSnapshots(GoodsReceiptReferenceType.PURCHASE_ORDER, 7L))
+            .thenReturn(java.util.Map.of(
+                10L,
+                new GoodsReceiptReferenceLookupProvider.ReferenceLineSnapshot(
+                    new BigDecimal("8.00"),
+                    new BigDecimal("3.00"),
+                    new BigDecimal("5.00"),
+                    new BigDecimal("125000.00")
+                )
+            ));
+
+        Model model = new ExtendedModelMap();
+        String view = controller.showPurchaseOrderLineSelector(
+            GoodsReceiptReferenceType.PURCHASE_ORDER,
+            7L,
+            null,
+            null,
+            org.springframework.data.domain.PageRequest.of(0, 20),
+            model
+        );
+
+        assertThat(view).isEqualTo("inventory/goods-receipts/fragments/po-line-selector-modal");
+        Object pageObj = model.getAttribute("page");
+        assertThat(pageObj).isInstanceOf(org.springframework.data.domain.Page.class);
+        org.springframework.data.domain.Page<?> page = (org.springframework.data.domain.Page<?>) pageObj;
+        assertThat(page.getContent()).hasSize(1);
+        GoodsReceiptSaveLineRequest row = (GoodsReceiptSaveLineRequest) page.getContent().get(0);
+        assertThat(row.getOrderedQuantity()).isEqualByComparingTo("8.00");
+        assertThat(row.getReceivedToDateQuantity()).isEqualByComparingTo("3.00");
+        assertThat(row.getRemainingQuantity()).isEqualByComparingTo("5.00");
+        assertThat(row.getUnitPrice()).isEqualByComparingTo("125000.00");
     }
 }

@@ -9,7 +9,10 @@ import java.util.Optional;
 
 public interface GoodsReceiptRepository {
 
-    Page<GoodsReceipt> findAll(String keyword, Pageable pageable);
+    Page<GoodsReceipt> findAll(String keyword,
+                              GoodsReceiptReferenceType referenceType,
+                              Long referenceId,
+                              Pageable pageable);
 
     GoodsReceipt save(GoodsReceipt goodsReceipt);
 

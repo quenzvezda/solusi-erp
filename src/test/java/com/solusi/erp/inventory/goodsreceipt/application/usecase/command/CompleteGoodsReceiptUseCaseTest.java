@@ -147,6 +147,32 @@ class CompleteGoodsReceiptUseCaseTest {
     }
 
     @Test
+    void complete_serializedLinePersistsResolvedSerialCsvIntoGoodsReceiptLine() {
+        GoodsReceipt receipt = receiptWithLine(true, new BigDecimal("3.0000"), BigDecimal.ONE, "SN-1,SN-2");
+        when(goodsReceiptRepository.findById(1L)).thenReturn(Optional.of(receipt));
+        when(purchaseOrderRepository.findById(receipt.getPoId())).thenReturn(Optional.of(sentPoWithOutstanding("10.0000")));
+        when(uomConversionService.convertToBaseUom(201L, 1L, new BigDecimal("3.0000")))
+                .thenReturn(new BigDecimal("3.0000"));
+
+        completeUseCase.execute(1L);
+
+        verify(goodsReceiptRepository).save(argThat(saved -> {
+            GoodsReceiptLine savedLine = saved.getLines().getFirst();
+            String csv = savedLine.getSerialNumber();
+            if (csv == null) {
+                return false;
+            }
+            List<String> serials = java.util.Arrays.stream(csv.split(","))
+                .map(String::trim)
+                .filter(value -> !value.isEmpty())
+                .toList();
+            return serials.size() == 3
+                && serials.contains("SN-1")
+                && serials.contains("SN-2");
+        }));
+    }
+
+    @Test
     void complete_serializedNonBaseUomPostsOneBaseUnitPerSerial() {
         GoodsReceipt receipt = receiptWithLine(
                 true,

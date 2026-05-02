@@ -136,6 +136,7 @@ Semua kalkulasi dilakukan di backend (domain layer) — tidak bergantung pada Ja
 - **Approval Sidebar**: Pada halaman detail PO, terdapat panel samping yang menampilkan status approval, nama approver saat ini, dan tombol aksi (jika user adalah approver aktif).
 - **Approval History Drawer**: Klik **Riwayat Approval** untuk melihat rantai keputusan lengkap.
 - **Tipe Badge**: Daftar PO menampilkan badge **Direct** (biru) atau **Standard** (hijau) di kolom Tipe.
+- **PO Detail -> GR Actions**: Detail PO menyediakan dua aksi terpisah: **Create Goods Receipt** (ke halaman pre-add GR jika masih ada outstanding) dan **Goods Receipts** (ke daftar GR yang sudah terealisasi dari PO tersebut). Link list menggunakan filter kanonik `referenceType=PURCHASE_ORDER&referenceId={poId}` (dengan fallback `poId` untuk kompatibilitas URL lama).
 
 ## 5. Integrasi & Relasi Antar Modul
 
@@ -170,12 +171,12 @@ PO (FULLY_RECEIVED) ────────────────────
 Setelah PO berstatus **SENT** atau **PARTIALLY_RECEIVED**, bagian gudang dapat menerima barang melalui dokumen **Goods Receipt (GR)** untuk mencatat penerimaan fisik barang dari supplier.
 
 **Alur Dasar:**
-1. Buka detail PO dengan status SENT/PARTIALLY_RECEIVED
-2. Pada halaman detail PO, tombol **"Create Goods Receipt"** muncul (bersyarat permission `GOODS-RECEIPT_CREATE`)
-3. Klik tombol tersebut untuk membuka form GR pre-populated dengan data line item dari PO
-4. Isi kuantitas barang yang diterima untuk setiap line item
-5. Simpan GR dengan status **DRAFT**
-6. Setelah verifikasi fisik selesai, tekan **Complete** untuk finalisasi GR (status → **COMPLETED**)
+1. Buka detail PO dengan status SENT/PARTIALLY_RECEIVED.
+2. Gunakan tombol **Create Goods Receipt** untuk membuka halaman pre-add GR (hanya relevan jika masih ada line outstanding).
+3. Gunakan tombol **Goods Receipts** untuk membuka halaman list GR yang sudah terealisasi dari PO ini.
+4. Link list GR menggunakan filter kanonik `referenceType=PURCHASE_ORDER&referenceId={poId}`; `poId` dipertahankan hanya sebagai fallback legacy.
+5. Dari pre-add GR, isi kuantitas barang yang diterima untuk setiap line item lalu simpan sebagai **DRAFT**.
+6. Setelah verifikasi fisik selesai, tekan **Complete** untuk finalisasi GR (status → **COMPLETED**).
 7. Sistem akan update status PO:
    - Jika semua line item fully received → PO status = **FULLY_RECEIVED**
    - Jika sebagian → PO status = **PARTIALLY_RECEIVED** (tetap)

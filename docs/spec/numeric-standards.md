@@ -59,3 +59,13 @@ Untuk menjaga agar form tidak terlihat kosong (null) saat pertama kali dibuka, d
 @Builder.Default
 private BigDecimal amount = new BigDecimal("0.00");
 ```
+
+---
+
+## 5. Konsistensi Precision di Dynamic Lines & Modal
+
+Untuk mencegah mismatch tampilan antara row awal (render server) dan row hasil action JS (Add Line/Apply Selector), gunakan aturan berikut:
+
+1. Nilai desimal untuk qty/harga selalu ditampilkan dengan **2 angka di belakang koma** pada UI.
+2. Formatter angka pada modal selector dan input dynamic row harus memakai helper yang sama (hindari formatter ad-hoc yang menghasilkan 3–4 desimal).
+3. Jika nilai sumber memiliki skala lebih tinggi, lakukan normalisasi untuk display saja; nilai backend tetap disimpan sebagai `BigDecimal` penuh sesuai kebutuhan domain.

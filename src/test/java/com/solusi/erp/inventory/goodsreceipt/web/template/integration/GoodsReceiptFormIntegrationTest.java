@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 class GoodsReceiptFormIntegrationTest {
 
     private static final String CREATE_TEMPLATE = "templates/inventory/goods-receipts/form.html";
+    private static final String PO_LINE_SELECTOR_TEMPLATE = "templates/inventory/goods-receipts/fragments/po-line-selector-modal.html";
     private static final String FORM_SCRIPT = "static/js/inventory/goods-receipt/goods-receipt-form.js";
 
     @Test
@@ -288,6 +289,129 @@ class GoodsReceiptFormIntegrationTest {
         assertHasGetter("getUomCode");
         assertHasGetter("getContainerName");
         assertHasGetter("getContainerCode");
+    }
+
+    @Test
+    @DisplayName("form template includes purchase-order line selector modal shell")
+    void formTemplate_includesPurchaseOrderLineSelectorModalShell() throws Exception {
+        String template = readResource(CREATE_TEMPLATE);
+
+        assertThat(template).contains("modal-gr-po-line-selector");
+        assertThat(template).contains("gr-po-line-selector-results");
+        assertThat(template).contains("btn-add-line");
+    }
+
+    @Test
+    @DisplayName("form script builds selector URL with excludeReferenceLineIds to prevent duplicate lines")
+    void formScript_buildsSelectorUrlWithExcludeReferenceLineIds() throws Exception {
+        String script = readResource(FORM_SCRIPT);
+
+        assertThat(script).contains("excludeReferenceLineIds");
+        assertThat(script).contains("modal-gr-po-line-selector");
+        assertThat(script).contains("window.ERP.ModalSelector.open");
+    }
+
+    @Test
+    @DisplayName("selector modal template shows remaining quantity and PO unit price")
+    void selectorModalTemplate_showsRemainingQuantityAndPoUnitPrice() throws Exception {
+        String template = readResource(PO_LINE_SELECTOR_TEMPLATE);
+
+        assertThat(template).contains("label.gr.selector.poLine.column.remainingQty");
+        assertThat(template).contains("label.gr.selector.poLine.column.unitPrice");
+        assertThat(template).contains("row.remainingQuantity");
+        assertThat(template).contains("row.unitPrice");
+    }
+
+    @Test
+    @DisplayName("selector modal formats numeric columns with two decimal places")
+    void selectorModal_formatsNumericColumnsWithTwoDecimals() throws Exception {
+        String template = readResource(PO_LINE_SELECTOR_TEMPLATE);
+
+        assertThat(template).contains("formatDecimal(row.orderedQuantity, 1, 'COMMA', 2, 'POINT')");
+        assertThat(template).contains("formatDecimal(row.receivedToDateQuantity, 1, 'COMMA', 2, 'POINT')");
+        assertThat(template).contains("formatDecimal(row.remainingQuantity, 1, 'COMMA', 2, 'POINT')");
+        assertThat(template).contains("formatDecimal(row.unitPrice, 1, 'COMMA', 2, 'POINT')");
+    }
+
+    @Test
+    @DisplayName("form script cleans tomselect wrappers before creating dynamic line rows")
+    void formScript_cleansTomSelectWrappersBeforeCreatingDynamicLineRows() throws Exception {
+        String script = readResource(FORM_SCRIPT);
+
+        assertThat(script).contains("querySelectorAll('.ts-wrapper').forEach");
+        assertThat(script).contains("classList.remove('tomselect-initialized', 'tomselected', 'ts-hidden-accessible')");
+    }
+
+    @Test
+    @DisplayName("form script uses tomselect option shape for product prefill from PO selector")
+    void formScript_usesTomSelectOptionShapeForProductPrefill() throws Exception {
+        String script = readResource(FORM_SCRIPT);
+
+        assertThat(script).contains("id: key");
+        assertThat(script).contains("name: text || key");
+    }
+
+    @Test
+    @DisplayName("form script locks referenced product lookup so PO-derived product cannot be changed")
+    void formScript_locksReferencedProductLookup() throws Exception {
+        String script = readResource(FORM_SCRIPT);
+
+        assertThat(script).contains("function lockLookup(selectEl)");
+        assertThat(script).contains("input[name$=\".referenceLineId\"]");
+        assertThat(script).contains("lockLookup(productSelect);");
+    }
+
+    @Test
+    @DisplayName("form script validates container selection before submit")
+    void formScript_validatesContainerSelectionBeforeSubmit() throws Exception {
+        String script = readResource(FORM_SCRIPT);
+
+        assertThat(script).contains("Please select a container in line");
+        assertThat(script).contains(".select-container");
+    }
+
+    @Test
+    @DisplayName("form script blocks ajax submit when client-side validation fails")
+    void formScript_blocksAjaxSubmitWhenClientValidationFails() throws Exception {
+        String script = readResource(FORM_SCRIPT);
+
+        assertThat(script).contains("e.stopImmediatePropagation();");
+        assertThat(script).contains("}, true);");
+    }
+
+    @Test
+    @DisplayName("form script suppresses browser beforeunload warning during intentional navigation")
+    void formScript_suppressesBeforeUnloadWarningDuringIntentionalNavigation() throws Exception {
+        String script = readResource(FORM_SCRIPT);
+
+        assertThat(script).contains("!window.__erpSuppressBeforeUnload");
+    }
+
+    @Test
+    @DisplayName("form script keeps decimal inputs consistent with global numeric precision")
+    void formScript_usesTwoDecimalPrecisionForDynamicNumericInputs() throws Exception {
+        String script = readResource(FORM_SCRIPT);
+
+        assertThat(script).contains("decimalPlaces: 2");
+    }
+
+    @Test
+    @DisplayName("form template marks container column as required")
+    void formTemplate_marksContainerColumnAsRequired() throws Exception {
+        String template = readResource(CREATE_TEMPLATE);
+
+        assertThat(template).contains("<th class=\"required\" th:text=\"#{label.container}\"");
+    }
+
+    @Test
+    @DisplayName("form script provides fallback modal shell when selector modal is missing")
+    void formScript_providesFallbackModalShellWhenSelectorModalIsMissing() throws Exception {
+        String script = readResource(FORM_SCRIPT);
+
+        assertThat(script).contains("function ensurePoLineSelectorModal()");
+        assertThat(script).contains("modal-gr-po-line-selector");
+        assertThat(script).contains("document.body.appendChild(modalEl);");
+        assertThat(script).contains("window.bootstrap.Modal.getOrCreateInstance(modalEl).show();");
     }
 
     private Authentication auth(String... authorities) {

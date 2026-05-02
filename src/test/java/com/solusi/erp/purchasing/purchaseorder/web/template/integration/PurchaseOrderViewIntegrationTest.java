@@ -38,6 +38,8 @@ class PurchaseOrderViewIntegrationTest {
         assertThat(template).contains("/inventory/goods-receipts/create");
         assertThat(template).contains("referenceType='PURCHASE_ORDER'");
         assertThat(template).contains("referenceId=${po.id}");
+        assertThat(template).contains("/inventory/goods-receipts(referenceType='PURCHASE_ORDER',referenceId=${po.id})");
+        assertThat(template).doesNotContain("/inventory/goods-receipts(poId=${po.id})");
         assertThat(template).contains("goodsReceiptCount");
         assertThat(template).contains("hasAuthority('GOODS-RECEIPT_CREATE')");
         assertThat(template).contains("hasAuthority('GOODS-RECEIPT_READ')");

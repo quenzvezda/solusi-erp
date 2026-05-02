@@ -45,12 +45,25 @@ public class GoodsReceiptRepositoryImpl implements GoodsReceiptRepository {
     }
 
     @Override
-    public Page<GoodsReceipt> findAll(String keyword, Pageable pageable) {
+    public Page<GoodsReceipt> findAll(String keyword,
+                                      GoodsReceiptReferenceType referenceType,
+                                      Long referenceId,
+                                      Pageable pageable) {
         org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
-        org.springframework.data.domain.Page<GoodsReceiptEntity> springPage =
-            (keyword != null && !keyword.isBlank())
-                ? jpaRepository.search(keyword, springPageable)
-                : jpaRepository.findAllWithLines(springPageable);
+        boolean hasKeyword = keyword != null && !keyword.isBlank();
+        boolean hasReferenceFilter = referenceType != null && referenceId != null;
+
+        org.springframework.data.domain.Page<GoodsReceiptEntity> springPage;
+        if (hasReferenceFilter && hasKeyword) {
+            springPage = jpaRepository.searchByReference(keyword, referenceType, referenceId, springPageable);
+        } else if (hasReferenceFilter) {
+            springPage = jpaRepository.findAllWithLinesByReference(referenceType, referenceId, springPageable);
+        } else if (hasKeyword) {
+            springPage = jpaRepository.search(keyword, springPageable);
+        } else {
+            springPage = jpaRepository.findAllWithLines(springPageable);
+        }
+
         return new Page<>(
             springPage.getContent().stream().map(mapper::toDomain).collect(Collectors.toList()),
             springPage.getNumber(),

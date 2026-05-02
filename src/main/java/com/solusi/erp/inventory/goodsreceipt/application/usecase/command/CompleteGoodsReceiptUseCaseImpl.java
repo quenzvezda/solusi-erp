@@ -56,7 +56,8 @@ public class CompleteGoodsReceiptUseCaseImpl implements CompleteGoodsReceiptUseC
 
         // Snapshot values from reference document before completing
         List<GoodsReceiptLine> snapshottedLines = snapshotReferenceValues(receipt, po);
-        receipt.update(receipt.getReceiptDate(), receipt.getNote(), snapshottedLines);
+        List<GoodsReceiptLine> completionReadyLines = enrichSerializedLinesWithResolvedSerials(snapshottedLines);
+        receipt.update(receipt.getReceiptDate(), receipt.getNote(), completionReadyLines);
 
         receipt.complete();
         for (GoodsReceiptLine line : receipt.getLines()) {
@@ -117,6 +118,32 @@ public class CompleteGoodsReceiptUseCaseImpl implements CompleteGoodsReceiptUseC
                     taxAmount,
                     grIrAmount,
                     line.getSerialNumber()
+            );
+        }).toList();
+    }
+
+    private List<GoodsReceiptLine> enrichSerializedLinesWithResolvedSerials(List<GoodsReceiptLine> lines) {
+        return lines.stream().map(line -> {
+            if (!Boolean.TRUE.equals(line.getSerialized()) || !line.hasReceiptQuantity()) {
+                return line;
+            }
+            int totalUnits = resolveSerializedUnitCount(line);
+            List<String> serialNumbers = resolveSerialNumbers(line, totalUnits);
+            return GoodsReceiptLine.prefill(
+                    line.getReferenceLineId(),
+                    line.getProductId(),
+                    line.getSourceFacilityId(),
+                    line.getSerialized(),
+                    line.getQuantityReceived(),
+                    line.getUomId(),
+                    line.getContainerId(),
+                    line.getUnitPrice(),
+                    line.getBaseQuantity(),
+                    line.getInventoryAmount(),
+                    line.getTaxBaseAmount(),
+                    line.getTaxAmount(),
+                    line.getGrIrAmount(),
+                    String.join(",", serialNumbers)
             );
         }).toList();
     }

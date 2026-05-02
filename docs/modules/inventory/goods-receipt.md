@@ -30,7 +30,7 @@ Rujukan aturan: web may use lookup/query ports; web may not use repositories. Lo
 | Resolver aktif | Baru `PurchaseOrderGoodsReceiptSourceResolver` |
 | Save draft | Masih memanggil use case PO-based (`referenceId` diperlakukan sebagai `poId`) |
 | Complete | Masih memuat ulang PO dari `receipt.getPoId()` |
-| List | Dipakai sebagai audit/listing GR dengan keyword search |
+| List | Dipakai sebagai audit/listing GR dengan keyword search, mendukung filter kanonik `referenceType/referenceId` (fallback `poId` legacy), dan menampilkan chip filter aktif yang bisa di-clear langsung di halaman list |
 
 ### B. Scope Generic vs Scope Aktual
 
@@ -70,7 +70,7 @@ Rujukan aturan: web may use lookup/query ports; web may not use repositories. Lo
 | `serialized` | Penanda item serial |
 | `quantityReceived` | Qty transaksi yang diterima |
 | `uomId` | UoM transaksi |
-| `containerId` | Container tujuan; saat ini masih nullable di persistence dan belum divalidasi mandatory |
+| `containerId` | Container tujuan; wajib di request save/update (frontend + backend validation), meski kolom persistence tetap nullable untuk kompatibilitas data lama |
 | `baseQuantity` | Snapshot qty base untuk valuasi; pada draft awal masih placeholder |
 | `inventoryAmount` | Snapshot nilai inventory; saat ini masih placeholder pada draft/save flow |
 | `taxBaseAmount` | Snapshot basis pajak; saat ini masih placeholder |
@@ -106,10 +106,13 @@ Rujukan aturan: web may use lookup/query ports; web may not use repositories. Lo
   - non-serialized: drawer qty + target UoM
   - serialized: drawer qty + target UoM + grid serial per unit base
 - Draft serial disimpan sebagai **CSV** pada hidden field `serialNumber`.
+- Line yang berasal dari dokumen sumber (punya `referenceLineId`) mengunci field **product** agar tidak bisa diubah manual.
+- Tombol **Add Line** membuka modal selector line PO (multi-select), bukan membuat line bebas tanpa referensi.
 
 ### C. Save / Update Draft
 
 - Hanya line dengan qty > 0 yang benar-benar dipersist.
+- `containerId` wajib terisi per line; validasi dilakukan di client (blocking submit) dan backend (`@NotNull`) agar draft tidak lolos dengan container kosong.
 - Outstanding quantity dibandingkan lagi ke kondisi PO terbaru.
 - Jika source line tidak lagi cocok dengan kondisi PO terbaru, sistem melempar error stale draft.
 - Walaupun UI punya tombol **Add Line**, line baru tetap harus punya `referenceLineId` yang valid terhadap PO aktif agar bisa lolos save/complete.
@@ -128,7 +131,9 @@ Saat GR di-complete, sistem saat ini melakukan:
    - harus menghasilkan bilangan bulat
    - serial yang kurang akan **auto-generated**
    - stock diposting **1 unit per serial**
-7. memanggil `po.recordReceipt(...)` untuk update received quantity dan status PO
+7. serial hasil resolve/generate dipersist kembali ke `GoodsReceiptLine.serialNumber` agar tampil konsisten di halaman view GR (format tampilan: `(serial1), (serial2), ...`)
+8. memanggil `po.recordReceipt(...)` untuk update received quantity dan status PO
+9. aksi complete dari halaman view mendukung redirect sukses tetap ke halaman detail GR (tanpa prompt beforeunload tambahan)
 
 ## 5. Posisi Accounting Saat Ini
 

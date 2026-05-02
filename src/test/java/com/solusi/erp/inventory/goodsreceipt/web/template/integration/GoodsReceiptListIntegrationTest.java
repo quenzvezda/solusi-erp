@@ -45,6 +45,17 @@ class GoodsReceiptListIntegrationTest {
         assertThat(template).contains("label.gr.column.referenceCode");
     }
 
+    @Test
+    @DisplayName("list template exposes active reference filter chip and clear action")
+    void listTemplate_exposesActiveReferenceFilterChipAndClearAction() throws Exception {
+        String template = readResource(TEMPLATE);
+
+        assertThat(template).contains("label.gr.filter.reference");
+        assertThat(template).contains("label.gr.filter.clear");
+        assertThat(template).contains("activeReferenceType");
+        assertThat(template).contains("activeReferenceId");
+    }
+
     private String readResource(String path) throws Exception {
         InputStream is = getClass().getClassLoader().getResourceAsStream(path);
         assertThat(is).as("Resource not found: %s", path).isNotNull();
