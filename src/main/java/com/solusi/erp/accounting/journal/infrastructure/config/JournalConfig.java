@@ -11,8 +11,6 @@ import com.solusi.erp.accounting.journal.infrastructure.persistence.JournalPersi
 import com.solusi.erp.accounting.schema.domain.repository.SchemaRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
 
@@ -38,11 +36,8 @@ public class JournalConfig {
     @Bean
     public PostJournalForEventUseCase postJournalForEventUseCase(SchemaRepository schemaDomainRepository,
                                                                   JournalEntryRepository journalEntryRepository,
-                                                                  JournalPolicyResolver journalPolicyResolver,
-                                                                  PlatformTransactionManager txManager) {
-        PostJournalForEventUseCase pure = new PostJournalForEventUseCaseImpl(
+                                                                  JournalPolicyResolver journalPolicyResolver) {
+        return new PostJournalForEventUseCaseImpl(
                 schemaDomainRepository, journalEntryRepository, journalPolicyResolver);
-        TransactionTemplate tx = new TransactionTemplate(txManager);
-        return command -> tx.execute(status -> { pure.execute(command); return null; });
     }
 }

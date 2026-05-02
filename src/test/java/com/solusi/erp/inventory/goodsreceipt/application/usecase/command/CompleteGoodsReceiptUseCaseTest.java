@@ -436,5 +436,6 @@ class CompleteGoodsReceiptUseCaseTest {
         assertThatThrownBy(() -> completeUseCase.execute(1L))
                 .isInstanceOf(com.solusi.erp.core.exception.DomainException.class);
         verify(goodsReceiptRepository, never()).save(any());
+        verify(purchaseOrderRepository, never()).save(any());
     }
 }

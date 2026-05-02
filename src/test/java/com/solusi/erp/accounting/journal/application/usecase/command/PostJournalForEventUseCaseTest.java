@@ -56,7 +56,11 @@ class PostJournalForEventUseCaseTest {
 
         useCase.execute(command());
 
-        verify(journalEntryRepository).save(any(JournalEntry.class));
+        verify(journalEntryRepository).save(argThat(entry ->
+                "GOODS_RECEIPT".equals(entry.getSourceType())
+                && entry.getSourceId().equals(6L)
+                && entry.getLines().size() == 2
+        ));
     }
 
     @Test

@@ -20,6 +20,8 @@ import com.solusi.erp.inventory.uomconversion.domain.port.UomConversionService;
 import com.solusi.erp.purchasing.purchaseorder.domain.repository.PurchaseOrderRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
 
@@ -56,8 +58,12 @@ public class GoodsReceiptConfig {
                                                                    EnsureOpenPeriodForDateUseCase ensureOpenPeriod,
                                                                    StockService stockService,
                                                                    UomConversionService uomConversionService,
-                                                                   PostJournalForEventUseCase postJournalForEventUseCase) {
-        return new CompleteGoodsReceiptUseCaseImpl(repository, poRepository, ensureOpenPeriod, stockService, uomConversionService, postJournalForEventUseCase);
+                                                                   PostJournalForEventUseCase postJournalForEventUseCase,
+                                                                   PlatformTransactionManager txManager) {
+        CompleteGoodsReceiptUseCase pure = new CompleteGoodsReceiptUseCaseImpl(
+                repository, poRepository, ensureOpenPeriod, stockService, uomConversionService, postJournalForEventUseCase);
+        TransactionTemplate tx = new TransactionTemplate(txManager);
+        return id -> tx.execute(status -> { pure.execute(id); return null; });
     }
 
     @Bean
