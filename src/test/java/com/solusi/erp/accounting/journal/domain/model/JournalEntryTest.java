@@ -101,6 +101,12 @@ class JournalEntryTest {
     }
 
     @Test
+    void journalLine_rejectsBothDebitAndCreditZero() {
+        assertThatThrownBy(() -> new JournalLine(101L, BigDecimal.ZERO, BigDecimal.ZERO))
+                .isInstanceOf(DomainException.class);
+    }
+
+    @Test
     void journalLine_rejectsNegativeAmount() {
         assertThatThrownBy(() -> JournalLine.debit(101L, new BigDecimal("-10.0000")))
                 .isInstanceOf(DomainException.class);

@@ -9,10 +9,13 @@ public record JournalLine(Long accountId, BigDecimal debitAmount, BigDecimal cre
         debitAmount = debitAmount == null ? BigDecimal.ZERO : debitAmount;
         creditAmount = creditAmount == null ? BigDecimal.ZERO : creditAmount;
 
-        if (debitAmount.signum() < 0 || creditAmount.signum() < 0) {
+        int debitSign = debitAmount.signum();
+        int creditSign = creditAmount.signum();
+
+        if (debitSign < 0 || creditSign < 0) {
             throw new DomainException("msg.error.journal.invalid.amount");
         }
-        if (debitAmount.signum() > 0 && creditAmount.signum() > 0) {
+        if ((debitSign > 0) == (creditSign > 0)) {
             throw new DomainException("msg.error.journal.invalid.line");
         }
     }
