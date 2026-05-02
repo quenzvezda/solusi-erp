@@ -140,14 +140,27 @@ Saat GR di-complete, sistem saat ini melakukan:
 | Area | Status saat ini | Catatan |
 |---|---|---|
 | Accounting Period | **Wajib** | Dicek saat `COMPLETE` melalui `EnsureOpenPeriodForDateUseCase` |
-| Accounting Schema | **Belum wajib** | Tidak ada lookup/validasi schema di slice GR saat ini |
-| COA validation | **Belum ada** | Masih deferred |
-| Real journal posting | **Belum ada** | GR saat ini belum membuat journal entry langsung |
+| Accounting Schema | **Wajib** | Schema aktif untuk `GOODS_RECEIPT` wajib ada saat `COMPLETE` |
+| COA validation | **Via schema** | Dilakukan oleh `GoodsReceiptJournalPolicy` saat build lines |
+| Real journal posting | **Aktif** | `PostJournalForEventUseCase` dipanggil synchronous dalam transaksi yang sama |
 
 Artinya, untuk pertanyaan dependency:
 
 - **Period: ya, wajib ada dan harus OPEN saat COMPLETE**
-- **Accounting schema: belum wajib untuk implementasi GR sekarang**
+- **Accounting schema: wajib aktif untuk event `GOODS_RECEIPT` saat COMPLETE**
+
+### Atomic Completion Flow
+
+`COMPLETE` bersifat atomic — stock posting + PO update + journal posting dalam satu transaksi:
+1. Validasi period OPEN
+2. Snapshot harga dari PO
+3. Post stock movement
+4. Update PO received quantity
+5. Post journal: `Dr Inventory` + `Dr Input Tax` (jika ada) + `Cr GR/IR Clearing`
+6. Simpan GR dan PO
+
+Jika journal gagal (schema tidak ada, tidak aktif, atau tidak balance), seluruh transaksi rollback.
+Idempotency dijaga via unique key `(source_type, source_id)` di tabel `acc_journal_entries`.
 
 ## 6. Integrasi dengan Purchase Order
 
