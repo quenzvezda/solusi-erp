@@ -32,8 +32,8 @@ public class SchemaConfig {
                                                     PlatformTransactionManager txManager) {
         CreateSchemaUseCase pure = new CreateSchemaUseCaseImpl(schemaDomainRepository);
         TransactionTemplate tx = new TransactionTemplate(txManager);
-        return (eventType, description, debitAccountId, creditAccountId, isActive) ->
-                tx.execute(status -> pure.execute(eventType, description, debitAccountId, creditAccountId, isActive));
+        return (eventType, description, debitAccountId, creditAccountId, taxAccountId, isActive) ->
+                tx.execute(status -> pure.execute(eventType, description, debitAccountId, creditAccountId, taxAccountId, isActive));
     }
 
     @Bean
@@ -41,8 +41,8 @@ public class SchemaConfig {
                                                     PlatformTransactionManager txManager) {
         UpdateSchemaUseCase pure = new UpdateSchemaUseCaseImpl(schemaDomainRepository);
         TransactionTemplate tx = new TransactionTemplate(txManager);
-        return (id, description, debitAccountId, creditAccountId, isActive) ->
-                tx.execute(status -> pure.execute(id, description, debitAccountId, creditAccountId, isActive));
+        return (id, description, debitAccountId, creditAccountId, taxAccountId, isActive) ->
+                tx.execute(status -> pure.execute(id, description, debitAccountId, creditAccountId, taxAccountId, isActive));
     }
 
     @Bean

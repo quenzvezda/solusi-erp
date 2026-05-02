@@ -35,10 +35,23 @@ class CreateSchemaUseCaseTest {
         when(repository.save(any(AccountingSchema.class))).thenAnswer(i -> i.getArgument(0));
 
         AccountingSchema result = useCase.execute(SchemaEventType.GOODS_RECEIPT, "GR schema",
-                1L, 2L, true);
+                1L, 2L, null, true);
 
         assertThat(result.getEventType()).isEqualTo(SchemaEventType.GOODS_RECEIPT);
         assertThat(result.getDescription()).isEqualTo("GR schema");
+        verify(repository).save(any(AccountingSchema.class));
+    }
+
+    @Test
+    @DisplayName("execute saves schema with tax account id")
+    void execute_savesSchemaWithTaxAccountId() {
+        when(repository.existsByEventTypeAndIsActiveTrue(SchemaEventType.GOODS_RECEIPT)).thenReturn(false);
+        when(repository.save(any(AccountingSchema.class))).thenAnswer(i -> i.getArgument(0));
+
+        AccountingSchema result = useCase.execute(SchemaEventType.GOODS_RECEIPT, "GR schema",
+                1L, 2L, 3L, true);
+
+        assertThat(result.getTaxAccountId()).isEqualTo(3L);
         verify(repository).save(any(AccountingSchema.class));
     }
 
@@ -48,7 +61,7 @@ class CreateSchemaUseCaseTest {
         when(repository.existsByEventTypeAndIsActiveTrue(SchemaEventType.GOODS_RECEIPT)).thenReturn(true);
 
         assertThatThrownBy(() -> useCase.execute(SchemaEventType.GOODS_RECEIPT, "desc",
-                1L, 2L, true))
+                1L, 2L, null, true))
                 .isInstanceOf(DomainException.class);
 
         verify(repository, never()).save(any());
@@ -57,15 +70,13 @@ class CreateSchemaUseCaseTest {
     @Test
     @DisplayName("execute allows inactive duplicate — no duplicate check for inactive")
     void execute_allowsInactiveDuplicate() {
-        // isActive=false bypasses the duplicate check
         when(repository.save(any(AccountingSchema.class))).thenAnswer(i -> i.getArgument(0));
 
         AccountingSchema result = useCase.execute(SchemaEventType.GOODS_RECEIPT, "desc",
-                1L, 2L, false);
+                1L, 2L, null, false);
 
         assertThat(result).isNotNull();
         verify(repository).save(any(AccountingSchema.class));
-        // existsByEventTypeAndIsActiveTrue should NOT be called when isActive is false
         verify(repository, never()).existsByEventTypeAndIsActiveTrue(any());
     }
 }

@@ -14,7 +14,7 @@ public class UpdateSchemaUseCaseImpl implements UpdateSchemaUseCase {
 
     @Override
     public AccountingSchema execute(Long id, String description, Long debitAccountId,
-                                     Long creditAccountId, Boolean isActive) {
+                                    Long creditAccountId, Long taxAccountId, Boolean isActive) {
         AccountingSchema schema = repository.findById(id)
                 .orElseThrow(() -> new DomainException("msg.error.schema.notfound"));
         if (Boolean.TRUE.equals(isActive)) {
@@ -24,7 +24,7 @@ public class UpdateSchemaUseCaseImpl implements UpdateSchemaUseCase {
                         throw new DomainException("msg.error.common.duplicate");
                     });
         }
-        schema.update(description, debitAccountId, creditAccountId, isActive);
+        schema.update(description, debitAccountId, creditAccountId, taxAccountId, isActive);
         return repository.save(schema);
     }
 }

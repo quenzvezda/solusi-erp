@@ -36,16 +36,33 @@ class UpdateSchemaUseCaseTest {
     void execute_updatesAndReturnsSchema() {
         AuditMetadata meta = new AuditMetadata(1L, 1L, null, null, null, null);
         AccountingSchema existing = new AccountingSchema(meta, SchemaEventType.GOODS_RECEIPT,
-                "old", 1L, 2L, true);
+                "old", 1L, 2L, null, true);
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
         when(repository.findByEventTypeAndIsActiveTrue(SchemaEventType.GOODS_RECEIPT))
-                .thenReturn(Optional.of(existing)); // same schema, no conflict
+                .thenReturn(Optional.of(existing));
         when(repository.save(any(AccountingSchema.class))).thenAnswer(i -> i.getArgument(0));
 
-        AccountingSchema result = useCase.execute(1L, "new desc", 10L, 20L, true);
+        AccountingSchema result = useCase.execute(1L, "new desc", 10L, 20L, null, true);
 
         assertThat(result.getDescription()).isEqualTo("new desc");
         assertThat(result.getDebitAccountId()).isEqualTo(10L);
+        verify(repository).save(any(AccountingSchema.class));
+    }
+
+    @Test
+    @DisplayName("execute updates tax account id")
+    void execute_updatesTaxAccountId() {
+        AuditMetadata meta = new AuditMetadata(1L, 1L, null, null, null, null);
+        AccountingSchema existing = new AccountingSchema(meta, SchemaEventType.GOODS_RECEIPT,
+                "old", 1L, 2L, null, true);
+        when(repository.findById(1L)).thenReturn(Optional.of(existing));
+        when(repository.findByEventTypeAndIsActiveTrue(SchemaEventType.GOODS_RECEIPT))
+                .thenReturn(Optional.of(existing));
+        when(repository.save(any(AccountingSchema.class))).thenAnswer(i -> i.getArgument(0));
+
+        AccountingSchema result = useCase.execute(1L, "new desc", 10L, 20L, 30L, true);
+
+        assertThat(result.getTaxAccountId()).isEqualTo(30L);
         verify(repository).save(any(AccountingSchema.class));
     }
 
@@ -54,7 +71,7 @@ class UpdateSchemaUseCaseTest {
     void execute_throwsWhenNotFound() {
         when(repository.findById(999L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> useCase.execute(999L, "desc", 1L, 2L, true))
+        assertThatThrownBy(() -> useCase.execute(999L, "desc", 1L, 2L, null, true))
                 .isInstanceOf(DomainException.class);
 
         verify(repository, never()).save(any());
@@ -65,16 +82,16 @@ class UpdateSchemaUseCaseTest {
     void execute_throwsWhenDuplicateActiveEventType() {
         AuditMetadata meta1 = new AuditMetadata(1L, 1L, null, null, null, null);
         AccountingSchema existing = new AccountingSchema(meta1, SchemaEventType.GOODS_RECEIPT,
-                "old", 1L, 2L, true);
+                "old", 1L, 2L, null, true);
         AuditMetadata meta2 = new AuditMetadata(2L, 1L, null, null, null, null);
         AccountingSchema otherActive = new AccountingSchema(meta2, SchemaEventType.GOODS_RECEIPT,
-                "other", 3L, 4L, true);
+                "other", 3L, 4L, null, true);
 
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
         when(repository.findByEventTypeAndIsActiveTrue(SchemaEventType.GOODS_RECEIPT))
-                .thenReturn(Optional.of(otherActive)); // different ID = conflict
+                .thenReturn(Optional.of(otherActive));
 
-        assertThatThrownBy(() -> useCase.execute(1L, "desc", 10L, 20L, true))
+        assertThatThrownBy(() -> useCase.execute(1L, "desc", 10L, 20L, null, true))
                 .isInstanceOf(DomainException.class);
 
         verify(repository, never()).save(any());
@@ -85,11 +102,11 @@ class UpdateSchemaUseCaseTest {
     void execute_skipsDuplicateCheckWhenInactive() {
         AuditMetadata meta = new AuditMetadata(1L, 1L, null, null, null, null);
         AccountingSchema existing = new AccountingSchema(meta, SchemaEventType.GOODS_RECEIPT,
-                "old", 1L, 2L, true);
+                "old", 1L, 2L, null, true);
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
         when(repository.save(any(AccountingSchema.class))).thenAnswer(i -> i.getArgument(0));
 
-        AccountingSchema result = useCase.execute(1L, "desc", 10L, 20L, false);
+        AccountingSchema result = useCase.execute(1L, "desc", 10L, 20L, null, false);
 
         assertThat(result.getIsActive()).isFalse();
         verify(repository, never()).findByEventTypeAndIsActiveTrue(any());

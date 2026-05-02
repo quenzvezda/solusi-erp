@@ -15,12 +15,13 @@ public class CreateSchemaUseCaseImpl implements CreateSchemaUseCase {
 
     @Override
     public AccountingSchema execute(SchemaEventType eventType, String description,
-                                     Long debitAccountId, Long creditAccountId, Boolean isActive) {
+                                    Long debitAccountId, Long creditAccountId,
+                                    Long taxAccountId, Boolean isActive) {
         if (Boolean.TRUE.equals(isActive) && repository.existsByEventTypeAndIsActiveTrue(eventType)) {
             throw new DomainException("msg.error.common.duplicate");
         }
         AccountingSchema schema = AccountingSchema.createNew(eventType, description,
-                debitAccountId, creditAccountId, isActive);
+                debitAccountId, creditAccountId, taxAccountId, isActive);
         return repository.save(schema);
     }
 }

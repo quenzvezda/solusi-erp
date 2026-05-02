@@ -39,7 +39,7 @@ class DeleteSchemaUseCaseTest {
     void execute_hardDeletesWhenNotInUse() {
         AuditMetadata meta = new AuditMetadata(1L, 1L, null, null, null, null);
         AccountingSchema schema = new AccountingSchema(meta, SchemaEventType.GOODS_RECEIPT,
-                "desc", 1L, 2L, true);
+                "desc", 1L, 2L, null, true);
         when(repository.findById(1L)).thenReturn(Optional.of(schema));
         when(inUseChecker.isInUse(1L)).thenReturn(false);
 
@@ -55,7 +55,7 @@ class DeleteSchemaUseCaseTest {
     void execute_softDeletesWhenInUse() {
         AuditMetadata meta = new AuditMetadata(1L, 1L, null, null, null, null);
         AccountingSchema schema = new AccountingSchema(meta, SchemaEventType.GOODS_RECEIPT,
-                "desc", 1L, 2L, true);
+                "desc", 1L, 2L, null, true);
         when(repository.findById(1L)).thenReturn(Optional.of(schema));
         when(inUseChecker.isInUse(1L)).thenReturn(true);
 
