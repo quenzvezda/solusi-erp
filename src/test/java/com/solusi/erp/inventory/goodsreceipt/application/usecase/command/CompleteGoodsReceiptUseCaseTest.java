@@ -1,6 +1,9 @@
 package com.solusi.erp.inventory.goodsreceipt.application.usecase.command;
 
+import com.solusi.erp.accounting.journal.application.usecase.command.JournalPostingCommand;
+import com.solusi.erp.accounting.journal.application.usecase.command.PostJournalForEventUseCase;
 import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeriodForDateUseCase;
+import com.solusi.erp.accounting.schema.domain.model.SchemaEventType;
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.exception.DomainException;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceipt;
@@ -31,6 +34,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.times;
@@ -48,6 +53,8 @@ class CompleteGoodsReceiptUseCaseTest {
     private StockService stockService;
     @Mock
     private UomConversionService uomConversionService;
+    @Mock
+    private PostJournalForEventUseCase postJournalForEventUseCase;
 
     private CompleteGoodsReceiptUseCase completeUseCase;
 
@@ -58,7 +65,8 @@ class CompleteGoodsReceiptUseCaseTest {
                 purchaseOrderRepository,
                 ensureOpenPeriodForDateUseCase,
                 stockService,
-                uomConversionService
+                uomConversionService,
+                postJournalForEventUseCase
         );
     }
 
@@ -392,5 +400,41 @@ class CompleteGoodsReceiptUseCaseTest {
                 true,
                 List.of(line)
         );
+    }
+
+    @Test
+    void complete_postsJournalForGoodsReceipt() {
+        GoodsReceipt receipt = receiptWithLine(false, new BigDecimal("5.0000"), BigDecimal.ONE, null);
+        PurchaseOrder po = sentPoWithPriceAndTax("100.0000", "0.1000");
+        when(goodsReceiptRepository.findById(1L)).thenReturn(Optional.of(receipt));
+        when(purchaseOrderRepository.findById(receipt.getPoId())).thenReturn(Optional.of(po));
+        when(uomConversionService.convertToBaseUom(201L, 1L, new BigDecimal("5.0000")))
+                .thenReturn(new BigDecimal("5.0000"));
+
+        completeUseCase.execute(1L);
+
+        verify(postJournalForEventUseCase).execute(argThat((JournalPostingCommand cmd) ->
+                cmd.eventType() == SchemaEventType.GOODS_RECEIPT
+                && cmd.sourceId().equals(1L)
+                && cmd.inventoryAmount().compareTo(new BigDecimal("500.0000")) == 0
+                && cmd.taxAmount().compareTo(new BigDecimal("50.0000")) == 0
+                && cmd.totalAmount().compareTo(new BigDecimal("550.0000")) == 0
+        ));
+    }
+
+    @Test
+    void complete_whenJournalFails_doesNotSaveReceipt() {
+        GoodsReceipt receipt = receiptWithLine(false, new BigDecimal("5.0000"), BigDecimal.ONE, null);
+        PurchaseOrder po = sentPoWithPriceAndTax("100.0000", "0.1000");
+        when(goodsReceiptRepository.findById(1L)).thenReturn(Optional.of(receipt));
+        when(purchaseOrderRepository.findById(receipt.getPoId())).thenReturn(Optional.of(po));
+        when(uomConversionService.convertToBaseUom(201L, 1L, new BigDecimal("5.0000")))
+                .thenReturn(new BigDecimal("5.0000"));
+        doThrow(new com.solusi.erp.core.exception.DomainException("msg.error.journal.schema.notfound"))
+                .when(postJournalForEventUseCase).execute(any());
+
+        assertThatThrownBy(() -> completeUseCase.execute(1L))
+                .isInstanceOf(com.solusi.erp.core.exception.DomainException.class);
+        verify(goodsReceiptRepository, never()).save(any());
     }
 }

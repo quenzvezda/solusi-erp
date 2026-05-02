@@ -1,6 +1,9 @@
 package com.solusi.erp.inventory.goodsreceipt.application.usecase.command;
 
+import com.solusi.erp.accounting.journal.application.usecase.command.JournalPostingCommand;
+import com.solusi.erp.accounting.journal.application.usecase.command.PostJournalForEventUseCase;
 import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeriodForDateUseCase;
+import com.solusi.erp.accounting.schema.domain.model.SchemaEventType;
 import com.solusi.erp.core.exception.DomainException;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceipt;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptLine;
@@ -31,17 +34,20 @@ public class CompleteGoodsReceiptUseCaseImpl implements CompleteGoodsReceiptUseC
     private final EnsureOpenPeriodForDateUseCase ensureOpenPeriodForDateUseCase;
     private final StockService stockService;
     private final UomConversionService uomConversionService;
+    private final PostJournalForEventUseCase postJournalForEventUseCase;
 
     public CompleteGoodsReceiptUseCaseImpl(GoodsReceiptRepository goodsReceiptRepository,
                                            PurchaseOrderRepository purchaseOrderRepository,
                                            EnsureOpenPeriodForDateUseCase ensureOpenPeriodForDateUseCase,
                                            StockService stockService,
-                                           UomConversionService uomConversionService) {
+                                           UomConversionService uomConversionService,
+                                           PostJournalForEventUseCase postJournalForEventUseCase) {
         this.goodsReceiptRepository = goodsReceiptRepository;
         this.purchaseOrderRepository = purchaseOrderRepository;
         this.ensureOpenPeriodForDateUseCase = ensureOpenPeriodForDateUseCase;
         this.stockService = stockService;
         this.uomConversionService = uomConversionService;
+        this.postJournalForEventUseCase = postJournalForEventUseCase;
     }
 
     @Override
@@ -72,6 +78,28 @@ public class CompleteGoodsReceiptUseCaseImpl implements CompleteGoodsReceiptUseC
         }
 
         po.recordReceipt(sumByPoLine(receipt.getLines()));
+
+        BigDecimal inventoryTotal = receipt.getLines().stream()
+                .map(GoodsReceiptLine::getInventoryAmount)
+                .filter(a -> a != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal taxTotal = receipt.getLines().stream()
+                .map(GoodsReceiptLine::getTaxAmount)
+                .filter(a -> a != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        postJournalForEventUseCase.execute(new JournalPostingCommand(
+                SchemaEventType.GOODS_RECEIPT,
+                "GOODS_RECEIPT",
+                receipt.getId(),
+                receipt.getCode(),
+                receipt.getReceiptDate(),
+                "Auto journal for goods receipt " + receipt.getCode(),
+                inventoryTotal,
+                taxTotal,
+                inventoryTotal.add(taxTotal)
+        ));
+
         goodsReceiptRepository.save(receipt);
         purchaseOrderRepository.save(po);
     }

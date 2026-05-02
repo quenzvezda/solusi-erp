@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.goodsreceipt.infrastructure.config;
 
+import com.solusi.erp.accounting.journal.application.usecase.command.PostJournalForEventUseCase;
 import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeriodForDateUseCase;
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.inventory.goodsreceipt.application.usecase.command.*;
@@ -54,8 +55,9 @@ public class GoodsReceiptConfig {
                                                                    PurchaseOrderRepository poRepository,
                                                                    EnsureOpenPeriodForDateUseCase ensureOpenPeriod,
                                                                    StockService stockService,
-                                                                   UomConversionService uomConversionService) {
-        return new CompleteGoodsReceiptUseCaseImpl(repository, poRepository, ensureOpenPeriod, stockService, uomConversionService);
+                                                                   UomConversionService uomConversionService,
+                                                                   PostJournalForEventUseCase postJournalForEventUseCase) {
+        return new CompleteGoodsReceiptUseCaseImpl(repository, poRepository, ensureOpenPeriod, stockService, uomConversionService, postJournalForEventUseCase);
     }
 
     @Bean
