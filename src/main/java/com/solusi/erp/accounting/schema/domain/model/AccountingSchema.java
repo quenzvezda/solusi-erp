@@ -44,7 +44,7 @@ public class AccountingSchema {
 
     public void update(String description, Long debitAccountId,
                        Long creditAccountId, Boolean isActive) {
-        update(description, debitAccountId, creditAccountId, null, isActive);
+        update(description, debitAccountId, creditAccountId, this.taxAccountId, isActive);
     }
 
     public void update(String description, Long debitAccountId,

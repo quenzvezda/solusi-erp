@@ -65,6 +65,21 @@ class AccountingSchemaTest {
     }
 
     @Test
+    @DisplayName("legacy update overload preserves existing tax account")
+    void update_legacyOverload_preservesTaxAccountId() {
+        AccountingSchema schema = AccountingSchema.createNew(
+                SchemaEventType.GOODS_RECEIPT, "old", 1L, 2L, 30L, true);
+
+        schema.update("new", 10L, 20L, false);
+
+        assertThat(schema.getDescription()).isEqualTo("new");
+        assertThat(schema.getDebitAccountId()).isEqualTo(10L);
+        assertThat(schema.getCreditAccountId()).isEqualTo(20L);
+        assertThat(schema.getTaxAccountId()).isEqualTo(30L);
+        assertThat(schema.getIsActive()).isFalse();
+    }
+
+    @Test
     @DisplayName("softDelete sets isActive to false")
     void softDelete_setsIsActiveFalse() {
         AccountingSchema schema = AccountingSchema.createNew(
