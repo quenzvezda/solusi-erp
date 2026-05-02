@@ -12,6 +12,7 @@ public interface SchemaPersistenceMapper {
 
     @Mapping(target = "metadata", expression = "java(toAuditMetadata(entity))")
     @Mapping(target = "eventType", source = "eventType", qualifiedByName = "toSchemaEventType")
+    @Mapping(target = "taxAccountId", source = "taxAccountId")
     com.solusi.erp.accounting.schema.domain.model.AccountingSchema toDomain(AccountingSchema entity);
 
     @Mapping(target = "id", source = "metadata.id")
@@ -21,6 +22,7 @@ public interface SchemaPersistenceMapper {
     @Mapping(target = "updatedDate", source = "metadata.updatedDate")
     @Mapping(target = "updatedBy", source = "metadata.updatedBy")
     @Mapping(target = "eventType", source = "eventType", qualifiedByName = "eventTypeToString")
+    @Mapping(target = "taxAccountId", source = "taxAccountId")
     AccountingSchema toEntity(com.solusi.erp.accounting.schema.domain.model.AccountingSchema domain);
 
     default AuditMetadata toAuditMetadata(AccountingSchema entity) {

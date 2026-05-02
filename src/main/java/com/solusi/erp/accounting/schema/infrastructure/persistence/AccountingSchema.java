@@ -25,6 +25,9 @@ public class AccountingSchema extends BaseModel {
     @Column(name = "credit_account_id", nullable = false)
     private Long creditAccountId;
 
+    @Column(name = "tax_account_id")
+    private Long taxAccountId;
+
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
 

@@ -23,11 +23,13 @@ public abstract class SchemaWebMapper {
     @Mapping(target = "eventType", expression = "java(domain.getEventType() != null ? domain.getEventType().name() : null)")
     @Mapping(target = "debitAccountName", ignore = true)
     @Mapping(target = "creditAccountName", ignore = true)
+    @Mapping(target = "taxAccountName", ignore = true)
     public abstract SchemaSummaryResponse toSummaryResponse(AccountingSchema domain);
 
     @Mapping(target = "eventType", expression = "java(domain.getEventType() != null ? domain.getEventType().name() : null)")
     @Mapping(target = "debitAccountName", ignore = true)
     @Mapping(target = "creditAccountName", ignore = true)
+    @Mapping(target = "taxAccountName", ignore = true)
     public abstract SchemaDetailResponse toDetailResponse(AccountingSchema domain);
 
     @Mapping(target = "eventType", expression = "java(domain.getEventType() != null ? domain.getEventType().name() : null)")
@@ -59,19 +61,24 @@ public abstract class SchemaWebMapper {
     protected void resolveAccountNames(AccountingSchema domain, @MappingTarget SchemaSaveRequest target) {
         LookupDto debit = coaLookupProvider.resolve(domain.getDebitAccountId());
         LookupDto credit = coaLookupProvider.resolve(domain.getCreditAccountId());
+        LookupDto tax = coaLookupProvider.resolve(domain.getTaxAccountId());
         target.setDebitAccountName(formatLookup(debit));
         target.setCreditAccountName(formatLookup(credit));
+        target.setTaxAccountName(formatLookup(tax));
     }
 
     private void resolveNames(AccountingSchema domain, Object target) {
         LookupDto debit = coaLookupProvider.resolve(domain.getDebitAccountId());
         LookupDto credit = coaLookupProvider.resolve(domain.getCreditAccountId());
+        LookupDto tax = coaLookupProvider.resolve(domain.getTaxAccountId());
         if (target instanceof SchemaSummaryResponse s) {
             s.setDebitAccountName(formatLookup(debit));
             s.setCreditAccountName(formatLookup(credit));
+            s.setTaxAccountName(formatLookup(tax));
         } else if (target instanceof SchemaDetailResponse d) {
             d.setDebitAccountName(formatLookup(debit));
             d.setCreditAccountName(formatLookup(credit));
+            d.setTaxAccountName(formatLookup(tax));
         }
     }
 

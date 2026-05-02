@@ -53,7 +53,7 @@ public class SchemaControllerTest {
 
     private AccountingSchema sampleDomain() {
         return AccountingSchema.createNew(SchemaEventType.GOODS_RECEIPT,
-                "Goods receipt schema", 1L, 2L, true);
+                "Goods receipt schema", 1L, 2L, 3L, true);
     }
 
     private SchemaSummaryResponse sampleSummary() {
@@ -65,6 +65,8 @@ public class SchemaControllerTest {
         dto.setDebitAccountName("1000 - Cash");
         dto.setCreditAccountId(2L);
         dto.setCreditAccountName("2000 - Accounts Payable");
+        dto.setTaxAccountId(3L);
+        dto.setTaxAccountName("2150 - VAT Output");
         dto.setIsActive(true);
         return dto;
     }
@@ -78,6 +80,8 @@ public class SchemaControllerTest {
         dto.setDebitAccountName("1000 - Cash");
         dto.setCreditAccountId(2L);
         dto.setCreditAccountName("2000 - Accounts Payable");
+        dto.setTaxAccountId(3L);
+        dto.setTaxAccountName("2150 - VAT Output");
         dto.setIsActive(true);
         return dto;
     }
@@ -88,6 +92,8 @@ public class SchemaControllerTest {
         req.setDescription("Goods receipt schema");
         req.setDebitAccountId(1L);
         req.setCreditAccountId(2L);
+        req.setTaxAccountId(3L);
+        req.setTaxAccountName("2150 - VAT Output");
         req.setIsActive(true);
         return req;
     }
@@ -167,7 +173,7 @@ public class SchemaControllerTest {
     void create_returnsCreatedResponse() {
         AccountingSchema domain = sampleDomain();
         SchemaDetailResponse detail = sampleDetail();
-        when(createSchemaUseCase.execute(any(), any(), any(), any(), any()))
+        when(createSchemaUseCase.execute(any(), any(), any(), any(), any(), any()))
                 .thenReturn(domain);
         when(webMapper.toDetailResponse(any(AccountingSchema.class))).thenReturn(detail);
         when(messageSource.getMessage(eq("msg.success.create"), any(), any())).thenReturn("Created");
@@ -178,6 +184,14 @@ public class SchemaControllerTest {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().isSuccess()).isTrue();
         assertThat(response.getBody().getData().getId()).isEqualTo(1L);
+        verify(createSchemaUseCase).execute(
+                eq(SchemaEventType.GOODS_RECEIPT),
+                eq("Goods receipt schema"),
+                eq(1L),
+                eq(2L),
+                eq(3L),
+                eq(true)
+        );
     }
 
     @Test
@@ -231,7 +245,7 @@ public class SchemaControllerTest {
     void update_returnsOkResponse() {
         AccountingSchema domain = sampleDomain();
         SchemaDetailResponse detail = sampleDetail();
-        when(updateSchemaUseCase.execute(any(), any(), any(), any(), any()))
+        when(updateSchemaUseCase.execute(any(), any(), any(), any(), any(), any()))
                 .thenReturn(domain);
         when(webMapper.toDetailResponse(any(AccountingSchema.class))).thenReturn(detail);
         when(messageSource.getMessage(eq("msg.success.update"), any(), any())).thenReturn("Updated");
@@ -241,6 +255,14 @@ public class SchemaControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().isSuccess()).isTrue();
+        verify(updateSchemaUseCase).execute(
+                eq(1L),
+                eq("Goods receipt schema"),
+                eq(1L),
+                eq(2L),
+                eq(3L),
+                eq(true)
+        );
     }
 
     // ── delete ───────────────────────────────────────────────────────────────

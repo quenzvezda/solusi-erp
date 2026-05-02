@@ -58,8 +58,8 @@ class SchemaFormIntegrationTest {
     @DisplayName("SchemaSaveRequest has all properties referenced in form template")
     void schemaSaveRequest_hasAllFormBindingProperties() {
         List<String> required = Arrays.asList(
-                "eventType", "description", "debitAccountId", "creditAccountId",
-                "debitAccountName", "creditAccountName",
+                "eventType", "description", "debitAccountId", "creditAccountId", "taxAccountId",
+                "debitAccountName", "creditAccountName", "taxAccountName",
                 "isActive", "id", "version");
         for (String prop : required) {
             assertThat(hasReadableProperty(SchemaSaveRequest.class, prop))
@@ -117,9 +117,13 @@ class SchemaFormIntegrationTest {
         assertThat(template).contains("th:src=\"@{/js/schema-form.js}\"");
         assertThat(template).contains("modal-schema-account-selector");
         assertThat(template).contains("schema-account-selector-results");
+        assertThat(template).contains("id=\"btn-select-tax-account\"");
+        assertThat(template).contains("id=\"btn-clear-tax-account\"");
 
         assertThat(script).contains("window.ERP.ModalSelector.open");
         assertThat(script).contains("window.ERP.ModalSelector.close");
+        assertThat(script).contains("input-tax-account-id");
+        assertThat(script).contains("input-tax-account-display");
     }
 
     @Test
@@ -141,11 +145,14 @@ class SchemaFormIntegrationTest {
         String template = readResource("templates/" + TEMPLATE + ".html");
         String debitDisplayInput = findTagById(template, "input", "input-debit-account-display");
         String creditDisplayInput = findTagById(template, "input", "input-credit-account-display");
+        String taxDisplayInput = findTagById(template, "input", "input-tax-account-display");
 
         assertThat(debitDisplayInput).contains("class=\"form-control\"");
         assertThat(debitDisplayInput).doesNotContain("erp-input");
         assertThat(creditDisplayInput).contains("class=\"form-control\"");
         assertThat(creditDisplayInput).doesNotContain("erp-input");
+        assertThat(taxDisplayInput).contains("class=\"form-control\"");
+        assertThat(taxDisplayInput).doesNotContain("erp-input");
     }
 
     @Test
@@ -162,6 +169,11 @@ class SchemaFormIntegrationTest {
                 template,
                 "label.schema.credit.account",
                 "id=\"input-credit-account-id\""
+        );
+        assertHiddenBeforeInputGroup(
+                template,
+                "label.schema.tax.account",
+                "id=\"input-tax-account-id\""
         );
     }
 

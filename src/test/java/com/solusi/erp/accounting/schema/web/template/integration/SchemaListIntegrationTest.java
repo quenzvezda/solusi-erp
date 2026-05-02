@@ -44,6 +44,8 @@ class SchemaListIntegrationTest {
 
     private Map<String, Object> modelWithOneSchema() {
         SchemaSummaryResponse dto = TestDtoFactory.sampleSchemaSummaryResponse();
+        dto.setTaxAccountId(3L);
+        dto.setTaxAccountName("2150 - VAT Output");
         var page = new PageImpl<>(List.of(dto), PageRequest.of(0, 20), 1);
         return Map.of("page", page, "keyword", "",
                 "eventTypes", SchemaEventType.values());
@@ -92,6 +94,7 @@ class SchemaListIntegrationTest {
                 auth("ACCOUNTING-SCHEMA_READ", "ACCOUNTING-SCHEMA_UPDATE"));
 
         assertThat(html).contains("Goods receipt schema");
+        assertThat(html).contains("2150 - VAT Output");
         assertThat(html).contains("/accounting/schemas/edit");
     }
 

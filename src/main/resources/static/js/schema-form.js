@@ -5,10 +5,15 @@ document.addEventListener('DOMContentLoaded', function () {
     var creditAccountIdInput = document.getElementById('input-credit-account-id');
     var creditAccountNameInput = document.getElementById('input-credit-account-name');
     var creditAccountDisplayInput = document.getElementById('input-credit-account-display');
+    var taxAccountIdInput = document.getElementById('input-tax-account-id');
+    var taxAccountNameInput = document.getElementById('input-tax-account-name');
+    var taxAccountDisplayInput = document.getElementById('input-tax-account-display');
     var btnSelectDebitAccount = document.getElementById('btn-select-debit-account');
     var btnSelectCreditAccount = document.getElementById('btn-select-credit-account');
+    var btnSelectTaxAccount = document.getElementById('btn-select-tax-account');
     var btnClearDebitAccount = document.getElementById('btn-clear-debit-account');
     var btnClearCreditAccount = document.getElementById('btn-clear-credit-account');
+    var btnClearTaxAccount = document.getElementById('btn-clear-tax-account');
 
     var activeTarget = null;
 
@@ -24,6 +29,12 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    if (btnSelectTaxAccount) {
+        btnSelectTaxAccount.addEventListener('click', function () {
+            openSelector('tax');
+        });
+    }
+
     if (btnClearDebitAccount) {
         btnClearDebitAccount.addEventListener('click', function () {
             clearAccount('debit');
@@ -33,6 +44,12 @@ document.addEventListener('DOMContentLoaded', function () {
     if (btnClearCreditAccount) {
         btnClearCreditAccount.addEventListener('click', function () {
             clearAccount('credit');
+        });
+    }
+
+    if (btnClearTaxAccount) {
+        btnClearTaxAccount.addEventListener('click', function () {
+            clearAccount('tax');
         });
     }
 
@@ -81,10 +98,18 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        if (creditAccountIdInput) creditAccountIdInput.value = account.id || '';
-        if (creditAccountNameInput) creditAccountNameInput.value = displayValue;
-        if (creditAccountDisplayInput) creditAccountDisplayInput.value = displayValue;
-        if (btnClearCreditAccount) btnClearCreditAccount.style.display = account.id ? 'inline-block' : 'none';
+        if (target === 'credit') {
+            if (creditAccountIdInput) creditAccountIdInput.value = account.id || '';
+            if (creditAccountNameInput) creditAccountNameInput.value = displayValue;
+            if (creditAccountDisplayInput) creditAccountDisplayInput.value = displayValue;
+            if (btnClearCreditAccount) btnClearCreditAccount.style.display = account.id ? 'inline-block' : 'none';
+            return;
+        }
+
+        if (taxAccountIdInput) taxAccountIdInput.value = account.id || '';
+        if (taxAccountNameInput) taxAccountNameInput.value = displayValue;
+        if (taxAccountDisplayInput) taxAccountDisplayInput.value = displayValue;
+        if (btnClearTaxAccount) btnClearTaxAccount.style.display = account.id ? 'inline-block' : 'none';
     }
 
     function clearAccount(target) {
@@ -96,9 +121,17 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        if (creditAccountIdInput) creditAccountIdInput.value = '';
-        if (creditAccountNameInput) creditAccountNameInput.value = '';
-        if (creditAccountDisplayInput) creditAccountDisplayInput.value = '';
-        if (btnClearCreditAccount) btnClearCreditAccount.style.display = 'none';
+        if (target === 'credit') {
+            if (creditAccountIdInput) creditAccountIdInput.value = '';
+            if (creditAccountNameInput) creditAccountNameInput.value = '';
+            if (creditAccountDisplayInput) creditAccountDisplayInput.value = '';
+            if (btnClearCreditAccount) btnClearCreditAccount.style.display = 'none';
+            return;
+        }
+
+        if (taxAccountIdInput) taxAccountIdInput.value = '';
+        if (taxAccountNameInput) taxAccountNameInput.value = '';
+        if (taxAccountDisplayInput) taxAccountDisplayInput.value = '';
+        if (btnClearTaxAccount) btnClearTaxAccount.style.display = 'none';
     }
 });

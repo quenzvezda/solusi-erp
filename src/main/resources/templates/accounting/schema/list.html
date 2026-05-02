@@ -55,6 +55,7 @@
                                         <th th:text="#{label.schema.column.description}">Description</th>
                                         <th th:text="#{label.schema.column.debit}">Debit Account</th>
                                         <th th:text="#{label.schema.column.credit}">Credit Account</th>
+                                        <th th:text="#{label.schema.column.tax}">Tax Account</th>
                                         <th th:text="#{label.schema.column.status}">Status</th>
                                         <th class="w-1" th:text="#{label.actions}">Actions</th>
                                     </tr>
@@ -67,6 +68,7 @@
                                         <td th:text="${item.description}">Description</td>
                                         <td th:text="${item.debitAccountName}">Debit</td>
                                         <td th:text="${item.creditAccountName}">Credit</td>
+                                        <td th:text="${item.taxAccountName}">Tax</td>
                                         <td>
                                             <span class="badge badge-outline text-green" th:if="${item.isActive}">
                                                 <span class="badge-dot bg-success me-1"></span>
@@ -98,7 +100,7 @@
                                         </td>
                                     </tr>
                                     <tr th:if="${page.isEmpty()}">
-                                        <td colspan="6" class="text-center py-4 text-secondary"
+                                        <td colspan="7" class="text-center py-4 text-secondary"
                                             th:text="#{label.schema.empty}">No data.</td>
                                     </tr>
                                 </tbody>

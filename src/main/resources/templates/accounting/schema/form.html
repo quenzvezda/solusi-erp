@@ -27,6 +27,7 @@
                     <input type="hidden" th:field="*{version}" />
                     <input type="hidden" th:field="*{debitAccountName}" id="input-debit-account-name"/>
                     <input type="hidden" th:field="*{creditAccountName}" id="input-credit-account-name"/>
+                    <input type="hidden" th:field="*{taxAccountName}" id="input-tax-account-name"/>
 
                     <div class="card-body">
                         <div class="alert-container"></div>
@@ -86,6 +87,23 @@
                                         </button>
                                         <button type="button" class="btn btn-outline-danger" id="btn-clear-credit-account"
                                                 th:style="${schemaRequest.creditAccountId == null ? 'display:none;' : ''}">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label required" th:text="#{label.schema.tax.account}">Tax Account</label>
+                                    <input type="hidden" th:field="*{taxAccountId}" id="input-tax-account-id"/>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="input-tax-account-display"
+                                               th:value="${schemaRequest.taxAccountName}"
+                                               readonly th:placeholder="#{label.select.placeholder}"/>
+                                        <button type="button" class="btn btn-outline-primary" id="btn-select-tax-account">
+                                            <i class="ti ti-search"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger" id="btn-clear-tax-account"
+                                                th:style="${schemaRequest.taxAccountId == null ? 'display:none;' : ''}">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>

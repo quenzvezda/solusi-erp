@@ -114,7 +114,7 @@ public class SchemaController {
         AccountingSchema domain = createSchemaUseCase.execute(
                 eventType,
                 request.getDescription(),
-                request.getDebitAccountId(), request.getCreditAccountId(),
+                request.getDebitAccountId(), request.getCreditAccountId(), request.getTaxAccountId(),
                 request.getIsActive());
         SchemaDetailResponse data = webMapper.toDetailResponse(domain);
         String msg = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
@@ -140,7 +140,7 @@ public class SchemaController {
             @Valid @RequestBody SchemaSaveRequest request) {
         AccountingSchema domain = updateSchemaUseCase.execute(
                 id, request.getDescription(),
-                request.getDebitAccountId(), request.getCreditAccountId(),
+                request.getDebitAccountId(), request.getCreditAccountId(), request.getTaxAccountId(),
                 request.getIsActive());
         SchemaDetailResponse data = webMapper.toDetailResponse(domain);
         String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());

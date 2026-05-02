@@ -15,5 +15,7 @@ public class SchemaSummaryResponse extends BaseAuditResponse {
     private String debitAccountName;
     private Long creditAccountId;
     private String creditAccountName;
+    private Long taxAccountId;
+    private String taxAccountName;
     private Boolean isActive;
 }

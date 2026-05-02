@@ -24,5 +24,9 @@ public class SchemaSaveRequest extends BaseAuditResponse {
     private Long creditAccountId;
     private String creditAccountName;
 
+    @NotNull(message = "{label.schema.tax.account} {validation.notnull.suffix}")
+    private Long taxAccountId;
+    private String taxAccountName;
+
     private Boolean isActive;
 }
