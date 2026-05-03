@@ -40,6 +40,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.solusi.erp.accounting.journal.domain.model.JournalPosition;
+import com.solusi.erp.accounting.journal.domain.model.JournalVariable;
+
 @Controller
 @RequestMapping("/accounting/schemas")
 @RequiredArgsConstructor
@@ -52,6 +55,7 @@ public class SchemaController {
     private final FindSchemasUseCase findSchemasUseCase;
     private final GetSchemaEditViewUseCase getSchemaEditViewUseCase;
     private final FindCoaSelectorUseCase findCoaSelectorUseCase;
+    private final SimulateSchemaUseCase simulateSchemaUseCase;
     private final SchemaWebMapper webMapper;
     private final MessageSource messageSource;
 
@@ -81,6 +85,8 @@ public class SchemaController {
         request.setIsActive(true);
         model.addAttribute("schemaRequest", request);
         model.addAttribute("eventTypes", SchemaEventType.values());
+        model.addAttribute("journalVariables", JournalVariable.values());
+        model.addAttribute("journalPositions", JournalPosition.values());
         return "accounting/schema/form";
     }
 
@@ -133,6 +139,8 @@ public class SchemaController {
         model.addAttribute("schemaRequest", webMapper.toSaveRequest(domain));
         model.addAttribute("auditInfo", webMapper.toDetailResponse(domain));
         model.addAttribute("eventTypes", SchemaEventType.values());
+        model.addAttribute("journalVariables", JournalVariable.values());
+        model.addAttribute("journalPositions", JournalPosition.values());
         return "accounting/schema/form";
     }
 
