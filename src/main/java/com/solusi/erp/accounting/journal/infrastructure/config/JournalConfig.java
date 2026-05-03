@@ -40,4 +40,14 @@ public class JournalConfig {
         return new PostJournalForEventUseCaseImpl(
                 schemaDomainRepository, journalEntryRepository, journalPolicyResolver);
     }
+
+    @Bean
+    public com.solusi.erp.accounting.journal.application.usecase.query.FindJournalEntriesUseCase findJournalEntriesUseCase(com.solusi.erp.accounting.journal.domain.port.JournalEntryQueryPort queryPort) {
+        return new com.solusi.erp.accounting.journal.application.usecase.query.FindJournalEntriesUseCaseImpl(queryPort);
+    }
+
+    @Bean
+    public com.solusi.erp.accounting.journal.application.usecase.query.GetJournalEntryDetailUseCase getJournalEntryDetailUseCase(com.solusi.erp.accounting.journal.domain.port.JournalEntryQueryPort queryPort) {
+        return new com.solusi.erp.accounting.journal.application.usecase.query.GetJournalEntryDetailUseCaseImpl(queryPort);
+    }
 }
