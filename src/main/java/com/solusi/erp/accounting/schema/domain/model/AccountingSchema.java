@@ -42,6 +42,10 @@ public class AccountingSchema {
         return List.copyOf(newLines);
     }
 
+    public void softDelete() {
+        this.isActive = false;
+    }
+
     public Long getId() { return metadata.id(); }
     public AuditMetadata getMetadata() { return metadata; }
     public SchemaEventType getEventType() { return eventType; }

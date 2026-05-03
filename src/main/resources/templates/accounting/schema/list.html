@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-
 <head th:replace="~{layout/master :: head(#{label.schema.title})}"></head>
-
 <body th:replace="~{layout/master :: layout(~{:: .schema-list-content}, ~{})}">
     <div class="schema-list-content">
         <div class="page-header d-print-none">
@@ -23,7 +21,6 @@
                 </div>
             </div>
         </div>
-
         <div class="page-body">
             <div class="container-xl">
                 <div class="card">
@@ -53,9 +50,7 @@
                                     <tr>
                                         <th th:text="#{label.schema.column.event}">Event Type</th>
                                         <th th:text="#{label.schema.column.description}">Description</th>
-                                        <th th:text="#{label.schema.column.debit}">Debit Account</th>
-                                        <th th:text="#{label.schema.column.credit}">Credit Account</th>
-                                        <th th:text="#{label.schema.column.tax}">Tax Account</th>
+                                        <th th:text="#{label.schema.column.mappings}">Mappings</th>
                                         <th th:text="#{label.schema.column.status}">Status</th>
                                         <th class="w-1" th:text="#{label.actions}">Actions</th>
                                     </tr>
@@ -66,9 +61,9 @@
                                             <span class="badge bg-blue-lt" th:text="#{${'label.schema.event.' + item.eventType}}">Event</span>
                                         </td>
                                         <td th:text="${item.description}">Description</td>
-                                        <td th:text="${item.debitAccountName}">Debit</td>
-                                        <td th:text="${item.creditAccountName}">Credit</td>
-                                        <td th:text="${item.taxAccountName}">Tax</td>
+                                        <td>
+                                            <span class="badge bg-info-lt" th:text="${#lists.size(item.lines)} + ' lines'">3 lines</span>
+                                        </td>
                                         <td>
                                             <span class="badge badge-outline text-green" th:if="${item.isActive}">
                                                 <span class="badge-dot bg-success me-1"></span>
@@ -100,7 +95,7 @@
                                         </td>
                                     </tr>
                                     <tr th:if="${page.isEmpty()}">
-                                        <td colspan="7" class="text-center py-4 text-secondary"
+                                        <td colspan="5" class="text-center py-4 text-secondary"
                                             th:text="#{label.schema.empty}">No data.</td>
                                     </tr>
                                 </tbody>
@@ -113,5 +108,4 @@
         </div>
     </div>
 </body>
-
 </html>
