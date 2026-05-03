@@ -1,31 +1,39 @@
 package com.solusi.erp.accounting.schema.web.dto;
 
 import com.solusi.erp.core.dto.BaseAuditResponse;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 public class SchemaSaveRequest extends BaseAuditResponse {
 
-    @NotNull(message = "{label.schema.event.type} {validation.notnull.suffix}")
+    @NotBlank(message = "{label.schema.event.type} {validation.notblank.suffix}")
     private String eventType;
 
     private String description;
 
-    @NotNull(message = "{label.schema.debit.account} {validation.notnull.suffix}")
-    private Long debitAccountId;
-    private String debitAccountName;
-
-    @NotNull(message = "{label.schema.credit.account} {validation.notnull.suffix}")
-    private Long creditAccountId;
-    private String creditAccountName;
-
-    private Long taxAccountId;
-    private String taxAccountName;
-
+    @NotNull(message = "{label.schema.column.status} {validation.notnull.suffix}")
     private Boolean isActive;
+
+    @NotEmpty(message = "{validation.notempty.suffix}")
+    private List<SchemaLineRequest> lines = new ArrayList<>();
+
+    @Data
+    public static class SchemaLineRequest {
+        private Long id;
+        @NotNull private String variable;
+        @NotNull private Long accountId;
+        private String accountCode;
+        private String accountName;
+        @NotNull private String position;
+    }
 }

@@ -5,31 +5,28 @@ import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.mapper.AuditMapperHelper;
 import com.solusi.erp.accounting.coa.domain.port.CoaLookupProvider;
 import com.solusi.erp.accounting.schema.domain.model.AccountingSchema;
+import com.solusi.erp.accounting.schema.domain.model.AccountingSchemaLine;
+import com.solusi.erp.accounting.journal.domain.model.JournalVariable;
+import com.solusi.erp.accounting.journal.domain.model.JournalPosition;
 import com.solusi.erp.accounting.schema.web.dto.SchemaDetailResponse;
 import com.solusi.erp.accounting.schema.web.dto.SchemaSaveRequest;
 import com.solusi.erp.accounting.schema.web.dto.SchemaSummaryResponse;
 import org.mapstruct.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public abstract class SchemaWebMapper {
-
     @Autowired
     protected AuditMapperHelper auditMapperHelper;
-
+    
     @Autowired
     protected CoaLookupProvider coaLookupProvider;
 
     @Mapping(target = "eventType", expression = "java(domain.getEventType() != null ? domain.getEventType().name() : null)")
-    @Mapping(target = "debitAccountName", ignore = true)
-    @Mapping(target = "creditAccountName", ignore = true)
-    @Mapping(target = "taxAccountName", ignore = true)
     public abstract SchemaSummaryResponse toSummaryResponse(AccountingSchema domain);
 
     @Mapping(target = "eventType", expression = "java(domain.getEventType() != null ? domain.getEventType().name() : null)")
-    @Mapping(target = "debitAccountName", ignore = true)
-    @Mapping(target = "creditAccountName", ignore = true)
-    @Mapping(target = "taxAccountName", ignore = true)
     public abstract SchemaDetailResponse toDetailResponse(AccountingSchema domain);
 
     @Mapping(target = "eventType", expression = "java(domain.getEventType() != null ? domain.getEventType().name() : null)")
@@ -47,45 +44,55 @@ public abstract class SchemaWebMapper {
         }
     }
 
-    @AfterMapping
-    protected void resolveAccountNames(AccountingSchema domain, @MappingTarget SchemaSummaryResponse target) {
-        resolveNames(domain, target);
+    public AccountingSchemaLine toDomainLine(SchemaSaveRequest.SchemaLineRequest dto) {
+        if (dto == null) return null;
+        return new AccountingSchemaLine(
+            dto.getId(),
+            JournalVariable.valueOf(dto.getVariable()),
+            dto.getAccountId(),
+            JournalPosition.valueOf(dto.getPosition())
+        );
     }
-
+    
     @AfterMapping
-    protected void resolveAccountNames(AccountingSchema domain, @MappingTarget SchemaDetailResponse target) {
-        resolveNames(domain, target);
-    }
-
-    @AfterMapping
-    protected void resolveAccountNames(AccountingSchema domain, @MappingTarget SchemaSaveRequest target) {
-        LookupDto debit = coaLookupProvider.resolve(domain.getDebitAccountId());
-        LookupDto credit = coaLookupProvider.resolve(domain.getCreditAccountId());
-        LookupDto tax = coaLookupProvider.resolve(domain.getTaxAccountId());
-        target.setDebitAccountName(formatLookup(debit));
-        target.setCreditAccountName(formatLookup(credit));
-        target.setTaxAccountName(formatLookup(tax));
-    }
-
-    private void resolveNames(AccountingSchema domain, Object target) {
-        LookupDto debit = coaLookupProvider.resolve(domain.getDebitAccountId());
-        LookupDto credit = coaLookupProvider.resolve(domain.getCreditAccountId());
-        LookupDto tax = coaLookupProvider.resolve(domain.getTaxAccountId());
-        if (target instanceof SchemaSummaryResponse s) {
-            s.setDebitAccountName(formatLookup(debit));
-            s.setCreditAccountName(formatLookup(credit));
-            s.setTaxAccountName(formatLookup(tax));
-        } else if (target instanceof SchemaDetailResponse d) {
-            d.setDebitAccountName(formatLookup(debit));
-            d.setCreditAccountName(formatLookup(credit));
-            d.setTaxAccountName(formatLookup(tax));
+    protected void mapLines(AccountingSchema domain, @MappingTarget SchemaSaveRequest target) {
+        if (domain.getLines() != null) {
+            target.setLines(domain.getLines().stream().map(this::toLineRequest).collect(Collectors.toList()));
         }
     }
 
-    private String formatLookup(LookupDto lookup) {
-        if (lookup == null) return null;
-        if (lookup.subText() == null || lookup.subText().isBlank()) return lookup.name();
-        if (lookup.name() == null || lookup.name().isBlank()) return lookup.subText();
-        return lookup.subText() + " - " + lookup.name();
+    @AfterMapping
+    protected void mapLines(AccountingSchema domain, @MappingTarget SchemaDetailResponse target) {
+        if (domain.getLines() != null) {
+            target.setLines(domain.getLines().stream().map(this::toLineRequest).collect(Collectors.toList()));
+        }
+    }
+
+    @AfterMapping
+    protected void mapLines(AccountingSchema domain, @MappingTarget SchemaSummaryResponse target) {
+        if (domain.getLines() != null) {
+            target.setLines(domain.getLines().stream().map(this::toLineRequest).collect(Collectors.toList()));
+        }
+    }
+
+    protected SchemaSaveRequest.SchemaLineRequest toLineRequest(AccountingSchemaLine domainLine) {
+        if (domainLine == null) return null;
+        SchemaSaveRequest.SchemaLineRequest req = new SchemaSaveRequest.SchemaLineRequest();
+        req.setId(domainLine.id());
+        req.setAccountId(domainLine.accountId());
+        if (domainLine.variable() != null) {
+            req.setVariable(domainLine.variable().name());
+        }
+        if (domainLine.position() != null) {
+            req.setPosition(domainLine.position().name());
+        }
+        
+        LookupDto lookup = coaLookupProvider.resolve(domainLine.accountId());
+        if (lookup != null) {
+            req.setAccountCode(lookup.subText());
+            req.setAccountName(lookup.name());
+        }
+        
+        return req;
     }
 }
