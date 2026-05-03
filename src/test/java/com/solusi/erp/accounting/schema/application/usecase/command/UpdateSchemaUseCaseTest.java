@@ -50,6 +50,23 @@ class UpdateSchemaUseCaseTest {
     }
 
     @Test
+    void execute_throwsWhenActivatingAndDuplicateExists() {
+        List<AccountingSchemaLine> lines = List.of(
+                new AccountingSchemaLine(null, JournalVariable.GR_INVENTORY_AMT, 101L, JournalPosition.DEBIT)
+        );
+        AccountingSchema existing = AccountingSchema.createNew(
+                SchemaEventType.GOODS_RECEIPT, "old", false, lines);
+        when(repository.findById(1L)).thenReturn(Optional.of(existing));
+        when(repository.existsByEventTypeAndIsActiveTrue(SchemaEventType.GOODS_RECEIPT)).thenReturn(true);
+
+        assertThatThrownBy(() -> useCase.execute(1L, "new", true, lines))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.common.duplicate");
+
+        verify(repository, never()).save(any());
+    }
+
+    @Test
     void execute_throwsWhenNotFound() {
         when(repository.findById(1L)).thenReturn(Optional.empty());
 
