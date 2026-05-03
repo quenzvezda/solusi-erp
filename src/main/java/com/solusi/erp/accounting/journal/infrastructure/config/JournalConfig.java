@@ -42,6 +42,11 @@ public class JournalConfig {
     }
 
     @Bean
+    public com.solusi.erp.accounting.journal.domain.port.JournalEntryQueryPort journalEntryQueryPort(JournalEntryJpaRepository jpaRepository, JournalPersistenceMapper mapper) {
+        return new com.solusi.erp.accounting.journal.infrastructure.adapter.JournalEntryQueryPortImpl(jpaRepository, mapper);
+    }
+
+    @Bean
     public com.solusi.erp.accounting.journal.application.usecase.query.FindJournalEntriesUseCase findJournalEntriesUseCase(com.solusi.erp.accounting.journal.domain.port.JournalEntryQueryPort queryPort) {
         return new com.solusi.erp.accounting.journal.application.usecase.query.FindJournalEntriesUseCaseImpl(queryPort);
     }
