@@ -30,3 +30,14 @@ CREATE TABLE acc_journal_lines (
     CONSTRAINT fk_acc_journal_lines_entry FOREIGN KEY (journal_entry_id)
         REFERENCES acc_journal_entries(id) ON DELETE CASCADE
 );
+
+INSERT INTO permission_groups (name, breadcrumb_id, breadcrumb_en, icon_class, url, created_by, created_date)
+VALUES (
+  'Journal Entry',
+  'Finance & Accounting > General Ledger > Journal Entry',
+  'Finance & Accounting > General Ledger > Journal Entry',
+  'ti-receipt-2',
+  '/accounting/journal-entries',
+  1,
+  NOW()
+);
