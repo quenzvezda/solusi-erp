@@ -54,12 +54,16 @@ Soft-delete (`is_active`) allows accounts to be retired without breaking histori
 ### 2.2 Accounting Schema (`accounting.schema`)
 
 The Accounting Schema is a configuration table that maps each named business event (`SchemaEventType`)
-to a specific debit account and a specific credit account from the COA. It acts as the lookup table
-consumed by the `AutoJournalService` (Sprint 6+): when a Goods Receipt is confirmed, the service
-looks up the `GOODS_RECEIPT` schema row to obtain the inventory debit account and the GR/IR clearing
-credit account — **without** any hardcoded account codes in application logic. Only one active schema
-row may exist per event type (unique constraint), enforcing a single source of truth for each
-business event's accounting treatment.
+to a dynamic set of journal lines (`AccountingSchemaLine`). It acts as the formula-driven lookup table
+consumed by the `AutoJournalService` (Sprint 6+). When an event occurs (e.g., a Goods Receipt), the system
+looks up the active schema for that event. The schema contains user-defined rules mapping specific
+transaction amounts (`JournalVariable`, e.g., `GR_INVENTORY_AMT`, `GR_TAX_AMT`) to specific COA accounts
+and positions (DEBIT/CREDIT).
+
+This dynamic approach replaces hardcoded debit/credit accounts, allowing for extreme flexibility
+(e.g., configuring multi-line journals for taxes or discounts without changing application code).
+Only one active schema row may exist per event type (unique constraint), enforcing a single source of truth.
+To prevent user configuration errors, schemas must pass a mathematical balance simulation before they can be saved.
 
 ### 2.3 Fiscal Year & Accounting Period (`accounting.period`)
 

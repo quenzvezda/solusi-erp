@@ -156,10 +156,10 @@ Artinya, untuk pertanyaan dependency:
 2. Snapshot harga dari PO
 3. Post stock movement
 4. Update PO received quantity
-5. Post journal: `Dr Inventory` + `Dr Input Tax` (jika ada) + `Cr GR/IR Clearing`
+5. Post journal: Menggunakan `PostJournalForEventUseCase` yang akan memuat `AccountingSchema` untuk `GOODS_RECEIPT`. Jurnal akan dibentuk berdasarkan *mapping* dinamis yang diatur user pada skema (misal memetakan variabel `GR_INVENTORY_AMT` ke akun persediaan, `GR_TAX_AMT` ke akun pajak masukan, dan `GR_GRAND_TOTAL` ke akun GR/IR). Jika ada variabel bernilai 0 (misal tidak ada pajak), baris tersebut akan otomatis di-*skip*.
 6. Simpan GR dan PO
 
-Jika journal gagal (schema tidak ada, tidak aktif, atau tidak balance), seluruh transaksi rollback.
+Jika journal gagal (schema tidak ada, tidak aktif, atau rumus/mapping tidak *balance*), seluruh transaksi rollback.
 Idempotency dijaga via unique key `(source_type, source_id)` di tabel `acc_journal_entries`.
 
 ## 6. Integrasi dengan Purchase Order
