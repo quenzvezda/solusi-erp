@@ -55,6 +55,14 @@
                                                   th:text="${gr.status}">DRAFT</span>
                                         </div>
                                     </div>
+                                    <div class="col-md-4" th:if="${gr.status == 'COMPLETED'}">
+                                        <label class="form-label text-secondary" th:text="#{label.journal}">Journal Entry</label>
+                                        <div class="form-control-plaintext">
+                                            <a th:href="@{/accounting/journal-entries(sourceType='GOODS_RECEIPT', sourceCode=${gr.code})}" class="btn btn-sm btn-outline-primary">
+                                                <i class="ti ti-external-link me-1"></i> <span th:text="#{label.view}">View</span>
+                                            </a>
+                                        </div>
+                                    </div>
                                     <div class="col-md-4">
                                         <label class="form-label text-secondary" th:text="#{label.gr.referenceType}">Reference Type</label>
                                         <div class="form-control-plaintext" th:text="${gr.referenceType ?: '-'}">PURCHASE_ORDER</div>
