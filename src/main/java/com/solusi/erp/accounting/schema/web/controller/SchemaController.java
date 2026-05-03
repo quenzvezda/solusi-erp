@@ -13,10 +13,14 @@ import com.solusi.erp.accounting.schema.application.usecase.command.DeleteSchema
 import com.solusi.erp.accounting.schema.application.usecase.command.UpdateSchemaUseCase;
 import com.solusi.erp.accounting.schema.application.usecase.query.FindSchemasUseCase;
 import com.solusi.erp.accounting.schema.application.usecase.query.GetSchemaEditViewUseCase;
+import com.solusi.erp.accounting.schema.application.usecase.query.SimulateSchemaUseCase;
 import com.solusi.erp.accounting.schema.domain.model.AccountingSchema;
+import com.solusi.erp.accounting.schema.domain.model.AccountingSchemaLine;
 import com.solusi.erp.accounting.schema.domain.model.SchemaEventType;
 import com.solusi.erp.accounting.schema.web.dto.SchemaDetailResponse;
 import com.solusi.erp.accounting.schema.web.dto.SchemaSaveRequest;
+import com.solusi.erp.accounting.schema.web.dto.SchemaSimulationRequest;
+import com.solusi.erp.accounting.schema.web.dto.SchemaSimulationResponse;
 import com.solusi.erp.accounting.schema.web.dto.SchemaSummaryResponse;
 import com.solusi.erp.accounting.schema.web.mapper.SchemaWebMapper;
 import com.solusi.erp.util.HtmxResponseUtility;
@@ -158,5 +162,15 @@ public class SchemaController {
         }
         String msg = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
         return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
+    }
+
+    @PostMapping("/simulate")
+    @ResponseBody
+    @PreAuthorize("hasAnyAuthority('ACCOUNTING-SCHEMA_CREATE', 'ACCOUNTING-SCHEMA_UPDATE')")
+    public ResponseEntity<SchemaSimulationResponse> simulate(@RequestBody SchemaSimulationRequest request) {
+        List<AccountingSchemaLine> lines = request.getLines().stream()
+            .map(webMapper::toDomainLine)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(simulateSchemaUseCase.execute(lines, request.getMockValues()));
     }
 }
