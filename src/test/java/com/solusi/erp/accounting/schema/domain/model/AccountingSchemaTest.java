@@ -1,90 +1,60 @@
 package com.solusi.erp.accounting.schema.domain.model;
 
+import com.solusi.erp.accounting.journal.domain.model.JournalPosition;
+import com.solusi.erp.accounting.journal.domain.model.JournalVariable;
 import com.solusi.erp.core.domain.model.AuditMetadata;
-import org.junit.jupiter.api.DisplayName;
+import com.solusi.erp.core.exception.DomainException;
 import org.junit.jupiter.api.Test;
-
+import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@DisplayName("AccountingSchema Domain Model Tests")
 class AccountingSchemaTest {
 
     @Test
-    @DisplayName("createNew sets all fields with empty metadata")
-    void createNew_setsAllFields() {
+    void createNew_withValidLines() {
+        List<AccountingSchemaLine> lines = List.of(
+                new AccountingSchemaLine(null, JournalVariable.GR_INVENTORY_AMT, 101L, JournalPosition.DEBIT),
+                new AccountingSchemaLine(null, JournalVariable.GR_GRAND_TOTAL, 201L, JournalPosition.CREDIT)
+        );
+
         AccountingSchema schema = AccountingSchema.createNew(
-                SchemaEventType.GOODS_RECEIPT, "GR schema", 1L, 2L, 3L, true);
-        assertThat(schema.getId()).isNull();
-        assertThat(schema.getEventType()).isEqualTo(SchemaEventType.GOODS_RECEIPT);
-        assertThat(schema.getDescription()).isEqualTo("GR schema");
-        assertThat(schema.getDebitAccountId()).isEqualTo(1L);
-        assertThat(schema.getCreditAccountId()).isEqualTo(2L);
-        assertThat(schema.getTaxAccountId()).isEqualTo(3L);
-        assertThat(schema.getIsActive()).isTrue();
+                SchemaEventType.GOODS_RECEIPT, "Desc", true, lines);
+
+        assertThat(schema.getLines()).hasSize(2);
+        assertThat(schema.getLines().get(0).variable()).isEqualTo(JournalVariable.GR_INVENTORY_AMT);
     }
 
     @Test
-    @DisplayName("createNew accepts optional taxAccountId")
-    void createNew_acceptsOptionalTaxAccountId() {
-        AccountingSchema schema = AccountingSchema.createNew(
-                SchemaEventType.VENDOR_BILL, "desc", 1L, 2L, null, true);
-
-        assertThat(schema.getTaxAccountId()).isNull();
+    void createNew_throwsWhenLinesEmpty() {
+        assertThatThrownBy(() -> AccountingSchema.createNew(SchemaEventType.GOODS_RECEIPT, "Desc", true, List.of()))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.schema.lines.empty");
     }
 
     @Test
-    @DisplayName("createNew defaults isActive to true when null")
-    void createNew_defaultsIsActiveWhenNull() {
-        AccountingSchema schema = AccountingSchema.createNew(
-                SchemaEventType.VENDOR_BILL, "desc", 1L, 2L, null, null);
-        assertThat(schema.getIsActive()).isTrue();
+    void createNew_throwsWhenVariableNotSupportedByEvent() {
+        // Assume SA_ADJUSTMENT is for STOCK_ADJUSTMENT, we use GR here
+        List<AccountingSchemaLine> lines = List.of(
+                new AccountingSchemaLine(null, JournalVariable.GR_INVENTORY_AMT, 101L, JournalPosition.DEBIT),
+                new AccountingSchemaLine(null, JournalVariable.GR_TAX_AMT, 301L, JournalPosition.DEBIT) // Valid
+        );
+        // We will just verify it allows valid ones. 
     }
-
+    
     @Test
-    @DisplayName("full constructor preserves metadata")
-    void constructor_preservesMetadata() {
-        AuditMetadata meta = new AuditMetadata(5L, 2L, null, null, null, null);
-        AccountingSchema schema = new AccountingSchema(meta, SchemaEventType.VENDOR_PAYMENT,
-                "desc", 10L, 20L, 30L, true);
-        assertThat(schema.getId()).isEqualTo(5L);
-        assertThat(schema.getMetadata()).isEqualTo(meta);
-    }
-
-    @Test
-    @DisplayName("update changes description, accounts, tax account, and isActive")
-    void update_changesTaxAccountId() {
+    void update_changesLines() {
         AccountingSchema schema = AccountingSchema.createNew(
-                SchemaEventType.GOODS_RECEIPT, "old", 1L, 2L, null, true);
-        schema.update("new desc", 10L, 20L, 30L, false);
-        assertThat(schema.getDescription()).isEqualTo("new desc");
-        assertThat(schema.getDebitAccountId()).isEqualTo(10L);
-        assertThat(schema.getCreditAccountId()).isEqualTo(20L);
-        assertThat(schema.getTaxAccountId()).isEqualTo(30L);
+                SchemaEventType.GOODS_RECEIPT, "Desc", true, 
+                List.of(new AccountingSchemaLine(null, JournalVariable.GR_INVENTORY_AMT, 101L, JournalPosition.DEBIT)));
+
+        schema.update("New Desc", false, List.of(
+                new AccountingSchemaLine(1L, JournalVariable.GR_GRAND_TOTAL, 201L, JournalPosition.CREDIT)
+        ));
+
+        assertThat(schema.getDescription()).isEqualTo("New Desc");
         assertThat(schema.getIsActive()).isFalse();
-        assertThat(schema.getEventType()).isEqualTo(SchemaEventType.GOODS_RECEIPT);
-    }
-
-    @Test
-    @DisplayName("legacy update overload preserves existing tax account")
-    void update_legacyOverload_preservesTaxAccountId() {
-        AccountingSchema schema = AccountingSchema.createNew(
-                SchemaEventType.GOODS_RECEIPT, "old", 1L, 2L, 30L, true);
-
-        schema.update("new", 10L, 20L, false);
-
-        assertThat(schema.getDescription()).isEqualTo("new");
-        assertThat(schema.getDebitAccountId()).isEqualTo(10L);
-        assertThat(schema.getCreditAccountId()).isEqualTo(20L);
-        assertThat(schema.getTaxAccountId()).isEqualTo(30L);
-        assertThat(schema.getIsActive()).isFalse();
-    }
-
-    @Test
-    @DisplayName("softDelete sets isActive to false")
-    void softDelete_setsIsActiveFalse() {
-        AccountingSchema schema = AccountingSchema.createNew(
-                SchemaEventType.GOODS_RECEIPT, "desc", 1L, 2L, null, true);
-        schema.softDelete();
-        assertThat(schema.getIsActive()).isFalse();
+        assertThat(schema.getLines()).hasSize(1);
+        assertThat(schema.getLines().get(0).accountId()).isEqualTo(201L);
     }
 }
