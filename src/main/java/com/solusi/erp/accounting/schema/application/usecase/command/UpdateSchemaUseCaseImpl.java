@@ -1,11 +1,12 @@
 package com.solusi.erp.accounting.schema.application.usecase.command;
 
-import com.solusi.erp.core.exception.DomainException;
 import com.solusi.erp.accounting.schema.domain.model.AccountingSchema;
+import com.solusi.erp.accounting.schema.domain.model.AccountingSchemaLine;
 import com.solusi.erp.accounting.schema.domain.repository.SchemaRepository;
+import com.solusi.erp.core.exception.DomainException;
+import java.util.List;
 
 public class UpdateSchemaUseCaseImpl implements UpdateSchemaUseCase {
-
     private final SchemaRepository repository;
 
     public UpdateSchemaUseCaseImpl(SchemaRepository repository) {
@@ -13,18 +14,15 @@ public class UpdateSchemaUseCaseImpl implements UpdateSchemaUseCase {
     }
 
     @Override
-    public AccountingSchema execute(Long id, String description, Long debitAccountId,
-                                    Long creditAccountId, Long taxAccountId, Boolean isActive) {
+    public AccountingSchema execute(Long id, String description, Boolean isActive, List<AccountingSchemaLine> lines) {
         AccountingSchema schema = repository.findById(id)
-                .orElseThrow(() -> new DomainException("msg.error.schema.notfound"));
-        if (Boolean.TRUE.equals(isActive)) {
-            repository.findByEventTypeAndIsActiveTrue(schema.getEventType())
-                    .filter(existing -> !existing.getId().equals(id))
-                    .ifPresent(existing -> {
-                        throw new DomainException("msg.error.common.duplicate");
-                    });
+                .orElseThrow(() -> new DomainException("msg.error.notfound"));
+        
+        if (Boolean.TRUE.equals(isActive) && !Boolean.TRUE.equals(schema.getIsActive()) && repository.existsByEventTypeAndIsActiveTrue(schema.getEventType())) {
+            throw new DomainException("msg.error.common.duplicate");
         }
-        schema.update(description, debitAccountId, creditAccountId, taxAccountId, isActive);
+
+        schema.update(description, isActive, lines);
         return repository.save(schema);
     }
 }

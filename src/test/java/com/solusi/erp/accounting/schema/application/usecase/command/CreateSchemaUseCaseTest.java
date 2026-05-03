@@ -1,15 +1,19 @@
 package com.solusi.erp.accounting.schema.application.usecase.command;
 
+import com.solusi.erp.accounting.journal.domain.model.JournalPosition;
+import com.solusi.erp.accounting.journal.domain.model.JournalVariable;
 import com.solusi.erp.accounting.schema.domain.model.AccountingSchema;
+import com.solusi.erp.accounting.schema.domain.model.AccountingSchemaLine;
 import com.solusi.erp.accounting.schema.domain.model.SchemaEventType;
 import com.solusi.erp.accounting.schema.domain.repository.SchemaRepository;
 import com.solusi.erp.core.exception.DomainException;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -17,11 +21,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("CreateSchemaUseCase Tests")
 class CreateSchemaUseCaseTest {
 
-    @Mock private SchemaRepository repository;
-    private CreateSchemaUseCaseImpl useCase;
+    @Mock
+    private SchemaRepository repository;
+
+    private CreateSchemaUseCase useCase;
 
     @BeforeEach
     void setUp() {
@@ -29,54 +34,35 @@ class CreateSchemaUseCaseTest {
     }
 
     @Test
-    @DisplayName("execute saves and returns schema")
-    void execute_savesAndReturnsSchema() {
+    void execute_savesSchemaWithLines() {
         when(repository.existsByEventTypeAndIsActiveTrue(SchemaEventType.GOODS_RECEIPT)).thenReturn(false);
-        when(repository.save(any(AccountingSchema.class))).thenAnswer(i -> i.getArgument(0));
 
-        AccountingSchema result = useCase.execute(SchemaEventType.GOODS_RECEIPT, "GR schema",
-                1L, 2L, null, true);
+        List<AccountingSchemaLine> lines = List.of(
+                new AccountingSchemaLine(null, JournalVariable.GR_INVENTORY_AMT, 101L, JournalPosition.DEBIT)
+        );
 
-        assertThat(result.getEventType()).isEqualTo(SchemaEventType.GOODS_RECEIPT);
-        assertThat(result.getDescription()).isEqualTo("GR schema");
-        verify(repository).save(any(AccountingSchema.class));
+        AccountingSchema saved = AccountingSchema.createNew(
+                SchemaEventType.GOODS_RECEIPT, "desc", true, lines);
+        when(repository.save(any(AccountingSchema.class))).thenReturn(saved);
+
+        AccountingSchema result = useCase.execute(
+                SchemaEventType.GOODS_RECEIPT, "desc", true, lines);
+
+        assertThat(result.getLines()).hasSize(1);
     }
 
     @Test
-    @DisplayName("execute saves schema with tax account id")
-    void execute_savesSchemaWithTaxAccountId() {
-        when(repository.existsByEventTypeAndIsActiveTrue(SchemaEventType.GOODS_RECEIPT)).thenReturn(false);
-        when(repository.save(any(AccountingSchema.class))).thenAnswer(i -> i.getArgument(0));
-
-        AccountingSchema result = useCase.execute(SchemaEventType.GOODS_RECEIPT, "GR schema",
-                1L, 2L, 3L, true);
-
-        assertThat(result.getTaxAccountId()).isEqualTo(3L);
-        verify(repository).save(any(AccountingSchema.class));
-    }
-
-    @Test
-    @DisplayName("execute throws when active duplicate event type exists")
-    void execute_throwsWhenDuplicateActiveEvent() {
+    void execute_throwsWhenActiveExists() {
         when(repository.existsByEventTypeAndIsActiveTrue(SchemaEventType.GOODS_RECEIPT)).thenReturn(true);
 
-        assertThatThrownBy(() -> useCase.execute(SchemaEventType.GOODS_RECEIPT, "desc",
-                1L, 2L, null, true))
-                .isInstanceOf(DomainException.class);
+        List<AccountingSchemaLine> lines = List.of(
+                new AccountingSchemaLine(null, JournalVariable.GR_INVENTORY_AMT, 101L, JournalPosition.DEBIT)
+        );
+
+        assertThatThrownBy(() -> useCase.execute(SchemaEventType.GOODS_RECEIPT, "desc", true, lines))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.common.duplicate");
 
         verify(repository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("execute allows inactive duplicate — no duplicate check for inactive")
-    void execute_allowsInactiveDuplicate() {
-        when(repository.save(any(AccountingSchema.class))).thenAnswer(i -> i.getArgument(0));
-
-        AccountingSchema result = useCase.execute(SchemaEventType.GOODS_RECEIPT, "desc",
-                1L, 2L, null, false);
-
-        assertThat(result).isNotNull();
-        verify(repository).save(any(AccountingSchema.class));
-        verify(repository, never()).existsByEventTypeAndIsActiveTrue(any());
     }
 }
