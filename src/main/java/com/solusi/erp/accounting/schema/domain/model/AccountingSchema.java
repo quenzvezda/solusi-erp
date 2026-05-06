@@ -12,16 +12,40 @@ public class AccountingSchema {
     private Boolean isActive;
     private List<AccountingSchemaLine> lines;
 
-    public AccountingSchema(AuditMetadata metadata, SchemaEventType eventType, String description, Boolean isActive, List<AccountingSchemaLine> lines) {
+    private AccountingSchema(AuditMetadata metadata,
+                             SchemaEventType eventType,
+                             String description,
+                             Boolean isActive,
+                             List<AccountingSchemaLine> lines,
+                             boolean validateLines) {
         this.metadata = metadata;
         this.eventType = eventType;
         this.description = description;
         this.isActive = isActive;
-        this.lines = validateLines(eventType, lines);
+        this.lines = validateLines ? validateLines(eventType, lines) : copyLines(lines);
     }
 
-    public static AccountingSchema createNew(SchemaEventType eventType, String description, Boolean isActive, List<AccountingSchemaLine> lines) {
-        return new AccountingSchema(AuditMetadata.empty(), eventType, description, isActive != null ? isActive : true, lines);
+    public AccountingSchema(AuditMetadata metadata,
+                            SchemaEventType eventType,
+                            String description,
+                            Boolean isActive,
+                            List<AccountingSchemaLine> lines) {
+        this(metadata, eventType, description, isActive, lines, true);
+    }
+
+    public static AccountingSchema createNew(SchemaEventType eventType,
+                                             String description,
+                                             Boolean isActive,
+                                             List<AccountingSchemaLine> lines) {
+        return new AccountingSchema(AuditMetadata.empty(), eventType, description, isActive != null ? isActive : true, lines, true);
+    }
+
+    public static AccountingSchema reconstitute(AuditMetadata metadata,
+                                                SchemaEventType eventType,
+                                                String description,
+                                                Boolean isActive,
+                                                List<AccountingSchemaLine> lines) {
+        return new AccountingSchema(metadata, eventType, description, isActive, lines, false);
     }
 
     public void update(String description, Boolean isActive, List<AccountingSchemaLine> lines) {
@@ -29,17 +53,24 @@ public class AccountingSchema {
         this.isActive = isActive != null ? isActive : true;
         this.lines = validateLines(this.eventType, lines);
     }
-    
+
     private List<AccountingSchemaLine> validateLines(SchemaEventType type, List<AccountingSchemaLine> newLines) {
         if (newLines == null || newLines.isEmpty()) {
-            throw new DomainException("msg.error.schema.lines.empty");
+            throw new DomainException("msg.err.schema.lines.empty");
         }
         for (AccountingSchemaLine line : newLines) {
-            if (line.variable().getSupportedEvent() != type) {
-                throw new DomainException("msg.error.schema.variable.unsupported");
+            if (line.getVar().getSupportedEvent() != type) {
+                throw new DomainException("msg.err.schema.var.unsupported");
             }
         }
         return List.copyOf(newLines);
+    }
+
+    private List<AccountingSchemaLine> copyLines(List<AccountingSchemaLine> sourceLines) {
+        if (sourceLines == null || sourceLines.isEmpty()) {
+            return List.of();
+        }
+        return List.copyOf(sourceLines);
     }
 
     public void softDelete() {

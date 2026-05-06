@@ -1,25 +1,29 @@
 package com.solusi.erp.accounting.schema.web.mapper;
 
-import com.solusi.erp.core.dto.BaseAuditResponse;
-import com.solusi.erp.core.dto.LookupDto;
-import com.solusi.erp.core.mapper.AuditMapperHelper;
 import com.solusi.erp.accounting.coa.domain.port.CoaLookupProvider;
+import com.solusi.erp.accounting.journal.domain.model.JournalPosition;
+import com.solusi.erp.accounting.journal.domain.model.JournalVariable;
 import com.solusi.erp.accounting.schema.domain.model.AccountingSchema;
 import com.solusi.erp.accounting.schema.domain.model.AccountingSchemaLine;
-import com.solusi.erp.accounting.journal.domain.model.JournalVariable;
-import com.solusi.erp.accounting.journal.domain.model.JournalPosition;
 import com.solusi.erp.accounting.schema.web.dto.SchemaDetailResponse;
 import com.solusi.erp.accounting.schema.web.dto.SchemaSaveRequest;
 import com.solusi.erp.accounting.schema.web.dto.SchemaSummaryResponse;
-import org.mapstruct.*;
+import com.solusi.erp.core.dto.BaseAuditResponse;
+import com.solusi.erp.core.dto.LookupDto;
+import com.solusi.erp.core.mapper.AuditMapperHelper;
+import org.mapstruct.AfterMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.ReportingPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public abstract class SchemaWebMapper {
     @Autowired
     protected AuditMapperHelper auditMapperHelper;
-    
     @Autowired
     protected CoaLookupProvider coaLookupProvider;
 
@@ -45,15 +49,17 @@ public abstract class SchemaWebMapper {
     }
 
     public AccountingSchemaLine toDomainLine(SchemaSaveRequest.SchemaLineRequest dto) {
-        if (dto == null) return null;
+        if (dto == null) {
+            return null;
+        }
         return new AccountingSchemaLine(
-            dto.getId(),
-            JournalVariable.valueOf(dto.getVariable()),
-            dto.getAccountId(),
-            JournalPosition.valueOf(dto.getPosition())
+                dto.getId(),
+                JournalVariable.valueOf(dto.getVariable()),
+                dto.getAccountId(),
+                JournalPosition.valueOf(dto.getPosition())
         );
     }
-    
+
     @AfterMapping
     protected void mapLines(AccountingSchema domain, @MappingTarget SchemaSaveRequest target) {
         if (domain.getLines() != null) {
@@ -76,23 +82,23 @@ public abstract class SchemaWebMapper {
     }
 
     protected SchemaSaveRequest.SchemaLineRequest toLineRequest(AccountingSchemaLine domainLine) {
-        if (domainLine == null) return null;
+        if (domainLine == null) {
+            return null;
+        }
         SchemaSaveRequest.SchemaLineRequest req = new SchemaSaveRequest.SchemaLineRequest();
-        req.setId(domainLine.id());
-        req.setAccountId(domainLine.accountId());
-        if (domainLine.variable() != null) {
-            req.setVariable(domainLine.variable().name());
+        req.setId(domainLine.getId());
+        req.setAccountId(domainLine.getAccountId());
+        if (domainLine.getVar() != null) {
+            req.setVariable(domainLine.getVar().name());
         }
-        if (domainLine.position() != null) {
-            req.setPosition(domainLine.position().name());
+        if (domainLine.getPosition() != null) {
+            req.setPosition(domainLine.getPosition().name());
         }
-        
-        LookupDto lookup = coaLookupProvider.resolve(domainLine.accountId());
+        LookupDto lookup = coaLookupProvider.resolve(domainLine.getAccountId());
         if (lookup != null) {
             req.setAccountCode(lookup.subText());
             req.setAccountName(lookup.name());
         }
-        
         return req;
     }
 }

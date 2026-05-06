@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Objects;
 
 public class PostJournalForEventUseCaseImpl implements PostJournalForEventUseCase {
-
     private final SchemaRepository schemaRepository;
     private final JournalEntryRepository journalEntryRepository;
 
@@ -30,15 +29,17 @@ public class PostJournalForEventUseCaseImpl implements PostJournalForEventUseCas
         }
 
         AccountingSchema schema = schemaRepository.findByEventTypeAndIsActiveTrue(command.eventType())
-                .orElseThrow(() -> new DomainException("msg.error.journal.schema.notfound"));
+                .orElseThrow(() -> new DomainException("msg.err.journal.schema.notfound"));
 
         List<JournalLine> lines = schema.getLines().stream()
                 .map(schemaLine -> {
-                    BigDecimal value = command.values().getOrDefault(schemaLine.variable(), BigDecimal.ZERO);
-                    if (value.compareTo(BigDecimal.ZERO) == 0) return null;
-                    return schemaLine.position() == JournalPosition.DEBIT
-                            ? JournalLine.debit(schemaLine.accountId(), value)
-                            : JournalLine.credit(schemaLine.accountId(), value);
+                    BigDecimal value = command.values().getOrDefault(schemaLine.getVar(), BigDecimal.ZERO);
+                    if (value == null || value.compareTo(BigDecimal.ZERO) == 0) {
+                        return null;
+                    }
+                    return schemaLine.getPosition() == JournalPosition.DEBIT
+                            ? JournalLine.debit(schemaLine.getAccountId(), value)
+                            : JournalLine.credit(schemaLine.getAccountId(), value);
                 })
                 .filter(Objects::nonNull)
                 .toList();
