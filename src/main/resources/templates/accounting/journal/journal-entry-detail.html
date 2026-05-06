@@ -30,18 +30,21 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label text-muted" th:text="#{label.journal.sourceType}">Source Type</label>
-                                <div class="form-control-plaintext" th:text="${journal.eventType}">GOODS_RECEIPT</div>
+                                <div class="form-control-plaintext" th:text="#{${'label.schema.event.' + journal.eventType}}">Goods Receipt</div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label text-muted" th:text="#{label.journal.sourceCode}">Source Code</label>
                                 <div class="form-control-plaintext">
-                                    <a th:if="${journal.eventType == 'GOODS_RECEIPT'}" th:href="@{/inventory/goods-receipts/view/{id}(id=${journal.sourceCode})}" th:text="${journal.sourceCode}" class="text-primary">GR-001</a>
-                                    <span th:unless="${journal.eventType == 'GOODS_RECEIPT'}" th:text="${journal.sourceCode}">SRC-001</span>
+                                    <a th:if="${journal.sourceType == 'GOODS_RECEIPT' and journal.sourceId != null}"
+                                       th:href="@{/inventory/goods-receipts/{id}(id=${journal.sourceId})}"
+                                       th:text="${journal.sourceCode}"
+                                       class="text-primary">GR-001</a>
+                                    <span th:unless="${journal.sourceType == 'GOODS_RECEIPT' and journal.sourceId != null}" th:text="${journal.sourceCode}">SRC-001</span>
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label text-muted" th:text="#{label.journal.postingDate}">Posting Date</label>
-                                <div class="form-control-plaintext" th:text="${#temporals.format(journal.postingDate, 'dd/MM/yyyy')}">01/01/2026</div>
+                                <div class="form-control-plaintext" th:text="${journal.postingDate != null ? #temporals.format(journal.postingDate, 'dd/MM/yyyy') : '-'}">01/01/2026</div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label text-muted" th:text="#{label.status}">Status</label>
@@ -54,7 +57,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="card mb-3">
                     <div class="card-header">
                         <h3 class="card-title" th:text="#{label.journal.lines}">Journal Lines</h3>
@@ -70,22 +72,27 @@
                             </thead>
                             <tbody>
                                 <tr th:each="line : ${journal.lines}">
-                                    <td th:text="${line.accountId}">101</td>
-                                    <td class="text-end" th:text="${#numbers.formatDecimal(line.debitAmount, 1, 'COMMA', 4, 'POINT')}">100.00</td>
-                                    <td class="text-end" th:text="${#numbers.formatDecimal(line.creditAmount, 1, 'COMMA', 4, 'POINT')}">0.00</td>
+                                    <td>
+                                        <div th:if="${line.accountName != null}">
+                                            <div th:text="${line.accountName}">Inventory</div>
+                                            <div class="text-secondary small" th:if="${line.accountCode != null}" th:text="${line.accountCode}">1101.01</div>
+                                        </div>
+                                        <span th:unless="${line.accountName != null}" th:text="${line.accountId}">101</span>
+                                    </td>
+                                    <td class="text-end" th:text="${#numbers.formatDecimal(line.debitAmount, 1, 'COMMA', 2, 'POINT')}">100.00</td>
+                                    <td class="text-end" th:text="${#numbers.formatDecimal(line.creditAmount, 1, 'COMMA', 2, 'POINT')}">0.00</td>
                                 </tr>
                             </tbody>
                             <tfoot>
                                 <tr>
                                     <th class="text-end" th:text="#{label.total}">Total</th>
-                                    <th class="text-end fw-bold" th:text="${#numbers.formatDecimal(journal.totalDebit, 1, 'COMMA', 4, 'POINT')}">100.00</th>
-                                    <th class="text-end fw-bold" th:text="${#numbers.formatDecimal(journal.totalCredit, 1, 'COMMA', 4, 'POINT')}">100.00</th>
+                                    <th class="text-end fw-bold" th:text="${#numbers.formatDecimal(journal.totalDebit, 1, 'COMMA', 2, 'POINT')}">100.00</th>
+                                    <th class="text-end fw-bold" th:text="${#numbers.formatDecimal(journal.totalCredit, 1, 'COMMA', 2, 'POINT')}">100.00</th>
                                 </tr>
                             </tfoot>
                         </table>
                     </div>
                 </div>
-
                 <div th:replace="~{fragments/audit-info :: audit-info(${journal})}"></div>
             </div>
         </div>

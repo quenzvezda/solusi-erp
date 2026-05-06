@@ -11,6 +11,7 @@ import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
@@ -27,6 +28,7 @@ public class JournalEntryQueryPortImpl implements JournalEntryQueryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<JournalEntry> findJournalEntries(JournalEntryFilter filter, Pageable pageable) {
         Specification<JournalEntryEntity> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -56,6 +58,7 @@ public class JournalEntryQueryPortImpl implements JournalEntryQueryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<JournalEntry> getJournalEntryDetail(Long id) {
         return jpaRepository.findById(id).map(mapper::toDomain);
     }

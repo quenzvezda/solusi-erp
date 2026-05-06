@@ -21,16 +21,21 @@
                                 <label class="form-label" th:text="#{label.journal.sourceType}">Source Type</label>
                                 <select name="sourceType" class="form-select form-select-sm" onchange="this.form.submit()">
                                     <option value="" th:text="#{label.all}">All</option>
-                                    <option th:each="type : ${eventTypes}" th:value="${type.name()}" th:text="${type.name()}" th:selected="${filter.sourceType == type}"></option>
+                                    <option th:each="type : ${eventTypes}"
+                                            th:val="${type.name()}"
+                                            th:text="#{${'label.schema.event.' + type.name()}}"
+                                            th:selected="${filter.sourceType == type}">
+                                        Goods Receipt
+                                    </option>
                                 </select>
                             </div>
                             <div>
                                 <label class="form-label" th:text="#{label.journal.sourceCode}">Source Code</label>
-                                <input type="text" name="sourceCode" class="form-control form-control-sm" th:value="${filter.sourceCode}" th:placeholder="#{placeholder.journal.sourceCode}">
+                                <input type="text" name="sourceCode" class="form-control form-control-sm" th:val="${filter.sourceCode}" th:placeholder="#{placeholder.journal.sourceCode}">
                             </div>
                             <div>
                                 <label class="form-label" th:text="#{label.journal.code}">Journal Code</label>
-                                <input type="text" name="journalCode" class="form-control form-control-sm" th:value="${filter.journalCode}" th:placeholder="#{placeholder.journal.code}">
+                                <input type="text" name="journalCode" class="form-control form-control-sm" th:val="${filter.journalCode}" th:placeholder="#{placeholder.journal.code}">
                             </div>
                             <div>
                                 <button type="submit" class="btn btn-sm btn-primary"><i class="ti ti-search me-1"></i> <span th:text="#{label.search}">Search</span></button>
@@ -52,16 +57,16 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr th:if="${page.content.isEmpty()}">
+                                <tr th:if="${page.empty}">
                                     <td colspan="7" class="text-center text-muted" th:text="#{msg.no.data.found}">No data found</td>
                                 </tr>
                                 <tr th:each="entry : ${page.content}">
                                     <td><a th:href="@{/accounting/journal-entries/{id}(id=${entry.id})}" th:text="${entry.journalCode}">JNL-001</a></td>
-                                    <td th:text="${entry.sourceType}">GOODS_RECEIPT</td>
+                                    <td th:text="#{${'label.schema.event.' + entry.eventType}}">Goods Receipt</td>
                                     <td th:text="${entry.sourceCode}">GR-001</td>
-                                    <td th:text="${#temporals.format(entry.postingDate, 'dd/MM/yyyy')}">01/01/2026</td>
-                                    <td class="text-end" th:text="${#numbers.formatDecimal(entry.totalDebit, 1, 'COMMA', 4, 'POINT')}">100.00</td>
-                                    <td class="text-end" th:text="${#numbers.formatDecimal(entry.totalCredit, 1, 'COMMA', 4, 'POINT')}">100.00</td>
+                                    <td th:text="${entry.postingDate != null ? #temporals.format(entry.postingDate, 'dd/MM/yyyy') : '-'}">01/01/2026</td>
+                                    <td class="text-end" th:text="${#numbers.formatDecimal(entry.totalDebit, 1, 'COMMA', 2, 'POINT')}">100.00</td>
+                                    <td class="text-end" th:text="${#numbers.formatDecimal(entry.totalCredit, 1, 'COMMA', 2, 'POINT')}">100.00</td>
                                     <td><span class="badge bg-success" th:text="${entry.status}">POSTED</span></td>
                                 </tr>
                             </tbody>

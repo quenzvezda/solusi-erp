@@ -16,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -97,5 +98,20 @@ class JournalEntryQueryPortImplTest {
         when(jpaRepository.findById(1L)).thenReturn(Optional.empty());
         port.getJournalEntryDetail(1L);
         verify(jpaRepository).findById(1L);
+    }
+
+    @Test
+    void readMethods_areTransactionalReadOnly() throws NoSuchMethodException {
+        Transactional findAllTx = JournalEntryQueryPortImpl.class
+                .getMethod("findJournalEntries", JournalEntryFilter.class, Pageable.class)
+                .getAnnotation(Transactional.class);
+        Transactional detailTx = JournalEntryQueryPortImpl.class
+                .getMethod("getJournalEntryDetail", Long.class)
+                .getAnnotation(Transactional.class);
+
+        assertThat(findAllTx).isNotNull();
+        assertThat(findAllTx.readOnly()).isTrue();
+        assertThat(detailTx).isNotNull();
+        assertThat(detailTx.readOnly()).isTrue();
     }
 }
