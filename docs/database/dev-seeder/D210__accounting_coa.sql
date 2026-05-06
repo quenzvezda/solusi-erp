@@ -1,13 +1,5 @@
 -- Development seeder accounting chart of accounts.
 
--- Remove seeded schema rows that still reference the dev COA hierarchy before replacing it.
-DELETE schema_mapping
-FROM acc_accounting_schemas schema_mapping
-INNER JOIN acc_chart_of_accounts seeded_coa
-    ON seeded_coa.id = schema_mapping.debit_account_id
-    OR seeded_coa.id = schema_mapping.credit_account_id
-WHERE seeded_coa.code REGEXP '^[1-5][0-9]{3}$';
-
 -- Replace the dev COA hierarchy owned by this seeder.
 DELETE FROM acc_chart_of_accounts
 WHERE code REGEXP '^[1-5][0-9]{3}$';
@@ -64,6 +56,7 @@ VALUES
 ('1130', 'Backup/Savings Bank Account',        'ASSET',     'DEBIT',  @coa_cash,              3, 0, 'Secondary reserve bank account.',                          1, 1, 1, NOW(), 1, NOW()),
 ('1210', 'Trade Receivable',                   'ASSET',     'DEBIT',  @coa_receivables,       3, 0, 'Outstanding receivables from customer invoices.',         1, 1, 1, NOW(), 1, NOW()),
 ('1220', 'Employee and Other Receivable',      'ASSET',     'DEBIT',  @coa_receivables,       3, 0, 'Miscellaneous short-term receivables.',                    1, 1, 1, NOW(), 1, NOW()),
+('1230', 'Tax Receivable (Input VAT)',          'ASSET',     'DEBIT',  @coa_receivables,       3, 0, 'Deductible VAT on supplier invoices (PPN Masukan).',      1, 1, 1, NOW(), 1, NOW()),
 ('1310', 'Merchandise Inventory',              'ASSET',     'DEBIT',  @coa_inventory,         3, 0, 'Inventory held for resale and operational stock.',         1, 1, 1, NOW(), 1, NOW()),
 ('1320', 'Prepaid Expenses',                   'ASSET',     'DEBIT',  @coa_inventory,         3, 0, 'Prepaid rent, insurance, and service contracts.',         1, 1, 1, NOW(), 1, NOW()),
 ('1410', 'Land/Building',                      'ASSET',     'DEBIT',  @coa_fixed_assets,      3, 0, 'Office, warehouse, and building ownership cost.',         1, 1, 1, NOW(), 1, NOW()),

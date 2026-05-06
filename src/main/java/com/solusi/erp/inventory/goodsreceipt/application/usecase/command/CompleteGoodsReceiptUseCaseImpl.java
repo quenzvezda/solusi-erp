@@ -2,6 +2,7 @@ package com.solusi.erp.inventory.goodsreceipt.application.usecase.command;
 
 import com.solusi.erp.accounting.journal.application.usecase.command.JournalPostingCommand;
 import com.solusi.erp.accounting.journal.application.usecase.command.PostJournalForEventUseCase;
+import com.solusi.erp.accounting.journal.domain.model.JournalVariable;
 import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeriodForDateUseCase;
 import com.solusi.erp.accounting.schema.domain.model.SchemaEventType;
 import com.solusi.erp.core.exception.DomainException;
@@ -95,9 +96,11 @@ public class CompleteGoodsReceiptUseCaseImpl implements CompleteGoodsReceiptUseC
                 receipt.getCode(),
                 receipt.getReceiptDate(),
                 "Auto journal for goods receipt " + receipt.getCode(),
-                inventoryTotal,
-                taxTotal,
-                inventoryTotal.add(taxTotal)
+                Map.of(
+                        JournalVariable.GR_INVENTORY_AMT, inventoryTotal,
+                        JournalVariable.GR_TAX_AMT, taxTotal,
+                        JournalVariable.GR_GRAND_TOTAL, inventoryTotal.add(taxTotal)
+                )
         ));
 
         goodsReceiptRepository.save(receipt);

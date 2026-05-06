@@ -1,10 +1,11 @@
 package com.solusi.erp.accounting.journal.application.usecase.command;
 
+import com.solusi.erp.accounting.journal.domain.model.JournalVariable;
 import com.solusi.erp.accounting.schema.domain.model.SchemaEventType;
-import com.solusi.erp.core.exception.DomainException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Map;
 
 public record JournalPostingCommand(
         SchemaEventType eventType,
@@ -13,13 +14,6 @@ public record JournalPostingCommand(
         String sourceCode,
         LocalDate postingDate,
         String description,
-        BigDecimal inventoryAmount,
-        BigDecimal taxAmount,
-        BigDecimal totalAmount
+        Map<JournalVariable, BigDecimal> values
 ) {
-    public JournalPostingCommand {
-        if (inventoryAmount.add(taxAmount).compareTo(totalAmount) != 0) {
-            throw new DomainException("msg.error.journal.unbalanced");
-        }
-    }
 }

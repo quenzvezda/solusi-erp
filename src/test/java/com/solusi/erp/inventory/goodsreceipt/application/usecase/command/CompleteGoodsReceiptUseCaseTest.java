@@ -2,6 +2,7 @@ package com.solusi.erp.inventory.goodsreceipt.application.usecase.command;
 
 import com.solusi.erp.accounting.journal.application.usecase.command.JournalPostingCommand;
 import com.solusi.erp.accounting.journal.application.usecase.command.PostJournalForEventUseCase;
+import com.solusi.erp.accounting.journal.domain.model.JournalVariable;
 import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeriodForDateUseCase;
 import com.solusi.erp.accounting.schema.domain.model.SchemaEventType;
 import com.solusi.erp.core.domain.model.AuditMetadata;
@@ -416,9 +417,9 @@ class CompleteGoodsReceiptUseCaseTest {
         verify(postJournalForEventUseCase).execute(argThat((JournalPostingCommand cmd) ->
                 cmd.eventType() == SchemaEventType.GOODS_RECEIPT
                 && cmd.sourceId().equals(1L)
-                && cmd.inventoryAmount().compareTo(new BigDecimal("500.0000")) == 0
-                && cmd.taxAmount().compareTo(new BigDecimal("50.0000")) == 0
-                && cmd.totalAmount().compareTo(new BigDecimal("550.0000")) == 0
+                && cmd.values().get(JournalVariable.GR_INVENTORY_AMT).compareTo(new BigDecimal("500.0000")) == 0
+                && cmd.values().get(JournalVariable.GR_TAX_AMT).compareTo(new BigDecimal("50.0000")) == 0
+                && cmd.values().get(JournalVariable.GR_GRAND_TOTAL).compareTo(new BigDecimal("550.0000")) == 0
         ));
     }
 

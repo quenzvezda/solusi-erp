@@ -1,7 +1,5 @@
 package com.solusi.erp.accounting.journal.infrastructure.config;
 
-import com.solusi.erp.accounting.journal.application.policy.GoodsReceiptJournalPolicy;
-import com.solusi.erp.accounting.journal.application.policy.JournalPolicyResolver;
 import com.solusi.erp.accounting.journal.application.usecase.command.PostJournalForEventUseCase;
 import com.solusi.erp.accounting.journal.application.usecase.command.PostJournalForEventUseCaseImpl;
 import com.solusi.erp.accounting.journal.domain.repository.JournalEntryRepository;
@@ -11,8 +9,6 @@ import com.solusi.erp.accounting.journal.infrastructure.persistence.JournalPersi
 import com.solusi.erp.accounting.schema.domain.repository.SchemaRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.List;
 
 @Configuration
 public class JournalConfig {
@@ -29,16 +25,9 @@ public class JournalConfig {
     }
 
     @Bean
-    public JournalPolicyResolver journalPolicyResolver() {
-        return new JournalPolicyResolver(List.of(new GoodsReceiptJournalPolicy()));
-    }
-
-    @Bean
     public PostJournalForEventUseCase postJournalForEventUseCase(SchemaRepository schemaDomainRepository,
-                                                                  JournalEntryRepository journalEntryRepository,
-                                                                  JournalPolicyResolver journalPolicyResolver) {
-        return new PostJournalForEventUseCaseImpl(
-                schemaDomainRepository, journalEntryRepository, journalPolicyResolver);
+                                                                  JournalEntryRepository journalEntryRepository) {
+        return new PostJournalForEventUseCaseImpl(schemaDomainRepository, journalEntryRepository);
     }
 
     @Bean
