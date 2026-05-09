@@ -29,7 +29,7 @@ public class PostJournalForEventUseCaseImpl implements PostJournalForEventUseCas
         }
 
         AccountingSchema schema = schemaRepository.findByEventTypeAndIsActiveTrue(command.eventType())
-                .orElseThrow(() -> new DomainException("msg.err.journal.schema.notfound"));
+                .orElseThrow(() -> new DomainException("msg.error.journal.schema.notfound"));
 
         List<JournalLine> lines = schema.getLines().stream()
                 .map(schemaLine -> {
