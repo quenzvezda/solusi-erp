@@ -27,8 +27,6 @@ class SchemaListIntegrationTest {
 
     private static final String TEMPLATE = "accounting/schema/list";
 
-    // ── helpers ──────────────────────────────────────────────────────────────
-
     private Authentication auth(String... authorities) {
         TestingAuthenticationToken token =
                 new TestingAuthenticationToken("testuser", "n/a", authorities);
@@ -49,19 +47,14 @@ class SchemaListIntegrationTest {
                 "eventTypes", SchemaEventType.values());
     }
 
-    // ── baseline render ─────────────────────────────────────────────────────
-
     @Test
     @DisplayName("Template renders without error for user with ACCOUNTING-SCHEMA_READ")
     void withSchemaRead_templateRendersSuccessfully() {
         String html = TemplateTestUtils.renderWithSecurity(
                 TEMPLATE, modelWithEmptyPage(), auth("ACCOUNTING-SCHEMA_READ"));
-
         assertThat(html).isNotBlank();
         assertThat(html).contains("schema-table-container");
     }
-
-    // ── Add button (ACCOUNTING-SCHEMA_CREATE) ───────────────────────────────
 
     @Test
     @DisplayName("sec:authorize — ACCOUNTING-SCHEMA_CREATE shows Add button")
@@ -69,7 +62,6 @@ class SchemaListIntegrationTest {
         String html = TemplateTestUtils.renderWithSecurity(
                 TEMPLATE, modelWithEmptyPage(),
                 auth("ACCOUNTING-SCHEMA_READ", "ACCOUNTING-SCHEMA_CREATE"));
-
         assertThat(html).contains("/accounting/schemas/create");
     }
 
@@ -78,11 +70,8 @@ class SchemaListIntegrationTest {
     void withoutSchemaCreate_addButtonIsHidden() {
         String html = TemplateTestUtils.renderWithSecurity(
                 TEMPLATE, modelWithEmptyPage(), auth("ACCOUNTING-SCHEMA_READ"));
-
         assertThat(html).doesNotContain("/accounting/schemas/create");
     }
-
-    // ── Edit button (ACCOUNTING-SCHEMA_UPDATE) ──────────────────────────────
 
     @Test
     @DisplayName("sec:authorize — ACCOUNTING-SCHEMA_UPDATE shows Edit button")
@@ -90,7 +79,6 @@ class SchemaListIntegrationTest {
         String html = TemplateTestUtils.renderWithSecurity(
                 TEMPLATE, modelWithOneSchema(),
                 auth("ACCOUNTING-SCHEMA_READ", "ACCOUNTING-SCHEMA_UPDATE"));
-
         assertThat(html).contains("Goods receipt schema");
         assertThat(html).contains("/accounting/schemas/edit");
     }
@@ -100,12 +88,9 @@ class SchemaListIntegrationTest {
     void withoutSchemaUpdate_editButtonIsHidden() {
         String html = TemplateTestUtils.renderWithSecurity(
                 TEMPLATE, modelWithOneSchema(), auth("ACCOUNTING-SCHEMA_READ"));
-
         assertThat(html).contains("Goods receipt schema");
         assertThat(html).doesNotContain("/accounting/schemas/edit");
     }
-
-    // ── Delete button (ACCOUNTING-SCHEMA_DELETE) ────────────────────────────
 
     @Test
     @DisplayName("sec:authorize — ACCOUNTING-SCHEMA_DELETE shows Delete button")
@@ -113,7 +98,6 @@ class SchemaListIntegrationTest {
         String html = TemplateTestUtils.renderWithSecurity(
                 TEMPLATE, modelWithOneSchema(),
                 auth("ACCOUNTING-SCHEMA_READ", "ACCOUNTING-SCHEMA_DELETE"));
-
         assertThat(html).contains("Goods receipt schema");
         assertThat(html).contains("modal-delete-1");
     }
@@ -123,7 +107,6 @@ class SchemaListIntegrationTest {
     void withoutSchemaDelete_deleteButtonIsHidden() {
         String html = TemplateTestUtils.renderWithSecurity(
                 TEMPLATE, modelWithOneSchema(), auth("ACCOUNTING-SCHEMA_READ"));
-
         assertThat(html).contains("Goods receipt schema");
         assertThat(html).doesNotContain("modal-delete-1");
     }

@@ -1,8 +1,11 @@
 package com.solusi.erp.accounting.coa.web.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.solusi.erp.accounting.coa.application.usecase.command.CreateCoaUseCase;
 import com.solusi.erp.accounting.coa.application.usecase.command.DeleteCoaUseCase;
 import com.solusi.erp.accounting.coa.application.usecase.command.UpdateCoaUseCase;
+import com.solusi.erp.accounting.coa.application.usecase.query.CoaSelectorRow;
+import com.solusi.erp.accounting.coa.application.usecase.query.FindCoaSelectorUseCase;
 import com.solusi.erp.accounting.coa.application.usecase.query.FindCoaUseCase;
 import com.solusi.erp.accounting.coa.application.usecase.query.GetCoaEditViewUseCase;
 import com.solusi.erp.accounting.coa.domain.model.AccountType;
@@ -11,13 +14,18 @@ import com.solusi.erp.accounting.coa.web.dto.CoaDetailResponse;
 import com.solusi.erp.accounting.coa.web.dto.CoaSaveRequest;
 import com.solusi.erp.accounting.coa.web.dto.CoaSummaryResponse;
 import com.solusi.erp.accounting.coa.web.mapper.CoaWebMapper;
+import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.DeleteResult;
 import com.solusi.erp.core.dto.ApiResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 
@@ -27,7 +35,14 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 @DisplayName("CoaController — Unit Test")
 public class CoaControllerTest {
@@ -36,13 +51,16 @@ public class CoaControllerTest {
     private final UpdateCoaUseCase updateCoaUseCase = mock(UpdateCoaUseCase.class);
     private final DeleteCoaUseCase deleteCoaUseCase = mock(DeleteCoaUseCase.class);
     private final FindCoaUseCase findCoaUseCase = mock(FindCoaUseCase.class);
+    private final FindCoaSelectorUseCase findCoaSelectorUseCase = mock(FindCoaSelectorUseCase.class);
     private final GetCoaEditViewUseCase getCoaEditViewUseCase = mock(GetCoaEditViewUseCase.class);
     private final CoaWebMapper webMapper = mock(CoaWebMapper.class);
     private final MessageSource messageSource = mock(MessageSource.class);
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final CoaController controller = new CoaController(
             createCoaUseCase, updateCoaUseCase, deleteCoaUseCase,
-            findCoaUseCase, getCoaEditViewUseCase, webMapper, messageSource
+            findCoaUseCase, findCoaSelectorUseCase, getCoaEditViewUseCase,
+            webMapper, messageSource
     );
 
     // ── helpers ──────────────────────────────────────────────────────────────
@@ -241,5 +259,52 @@ public class CoaControllerTest {
         ResponseEntity<Void> response = controller.delete(1L);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    // ── Integration Tests (MockMvc) ─────────────────────────────────────────
+
+    @Test
+    @DisplayName("showParentSelector — returns selector fragment with model attributes")
+    void showParentSelector_returnsSelectorFragment() throws Exception {
+        Page<CoaSelectorRow> page = new Page<>(List.of(
+                new CoaSelectorRow(1L, "1000", "Cash", "ASSET", 1, false, null, null, null)
+        ), 0, 20, 1L);
+        when(findCoaSelectorUseCase.execute(any(), any(), any())).thenReturn(page);
+
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+                .build();
+
+        mockMvc.perform(get("/accounting/coa/selectors/parent"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("accounting/coa/fragments/coa-selector-modal"))
+                .andExpect(model().attributeExists("page"));
+    }
+
+    @Test
+    @DisplayName("create — with parent sets level correctly via MockMvc")
+    void create_withParent_setsLevelCorrectly() throws Exception {
+        ChartOfAccount domain = sampleDomain();
+        CoaDetailResponse detail = sampleDetail();
+        when(createCoaUseCase.execute(any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(domain);
+        when(webMapper.toDetailResponse(any(ChartOfAccount.class))).thenReturn(detail);
+        when(messageSource.getMessage(eq("msg.success.create"), any(), any())).thenReturn("Created");
+
+        CoaSaveRequest request = new CoaSaveRequest();
+        request.setCode("1100");
+        request.setName("Cash");
+        request.setAccountType("ASSET");
+        request.setParentId(1L);
+        request.setLevel(2);
+        request.setIsHeader(false);
+        request.setIsActive(true);
+
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+
+        mockMvc.perform(post("/accounting/coa/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated());
     }
 }

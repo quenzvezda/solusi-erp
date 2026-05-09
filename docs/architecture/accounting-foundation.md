@@ -54,12 +54,16 @@ Soft-delete (`is_active`) allows accounts to be retired without breaking histori
 ### 2.2 Accounting Schema (`accounting.schema`)
 
 The Accounting Schema is a configuration table that maps each named business event (`SchemaEventType`)
-to a specific debit account and a specific credit account from the COA. It acts as the lookup table
-consumed by the `AutoJournalService` (Sprint 6+): when a Goods Receipt is confirmed, the service
-looks up the `GOODS_RECEIPT` schema row to obtain the inventory debit account and the GR/IR clearing
-credit account — **without** any hardcoded account codes in application logic. Only one active schema
-row may exist per event type (unique constraint), enforcing a single source of truth for each
-business event's accounting treatment.
+to a dynamic set of journal lines (`AccountingSchemaLine`). It acts as the formula-driven lookup table
+consumed by the `AutoJournalService` (Sprint 6+). When an event occurs (e.g., a Goods Receipt), the system
+looks up the active schema for that event. The schema contains user-defined rules mapping specific
+transaction amounts (`JournalVariable`, e.g., `GR_INVENTORY_AMT`, `GR_TAX_AMT`) to specific COA accounts
+and positions (DEBIT/CREDIT).
+
+This dynamic approach replaces hardcoded debit/credit accounts, allowing for extreme flexibility
+(e.g., configuring multi-line journals for taxes or discounts without changing application code).
+Only one active schema row may exist per event type (unique constraint), enforcing a single source of truth.
+To prevent user configuration errors, schemas must pass a mathematical balance simulation before they can be saved.
 
 ### 2.3 Fiscal Year & Accounting Period (`accounting.period`)
 
@@ -124,7 +128,7 @@ enforcement mechanism relied upon by all posting use cases from Sprint 6 onwards
 
 ```
 accounting.coa                accounting.schema
-  CoaLookupProvider  ◄──────── SchemaWriteUseCase
+  CoaLookupProvider  ◄──────── Create/UpdateSchemaUseCase
   (port interface)             (resolves display names
                                 for debit/credit accounts)
 
@@ -177,7 +181,7 @@ com.solusi.erp.accounting
 │   │
 │   ├── infrastructure
 │   │   ├── persistence
-│   │   │   ├── ChartOfAccountEntity.java    (JPA Entity — extends BaseModel)
+│   │   │   ├── ChartOfAccount.java          (JPA Entity — extends BaseModel)
 │   │   │   ├── CoaJpaRepository.java        (Spring Data JPA)
 │   │   │   └── CoaPersistenceMapper.java    (Entity ↔ Domain model)
 │   │   ├── adapter
@@ -206,39 +210,41 @@ com.solusi.erp.accounting
 │   │   │                                     VENDOR_PAYMENT|CUSTOMER_INVOICE|
 │   │   │                                     GOODS_ISSUE|CUSTOMER_RECEIPT|
 │   │   │                                     STOCK_ADJUSTMENT_IN|STOCK_ADJUSTMENT_OUT)
-│   │   └── repository
-│   │       └── AccountingSchemaRepository.java
+│   │   ├── repository
+│   │   │   └── SchemaRepository.java
+│   │   └── port
+│   │       └── SchemaInUseChecker.java
 │   │
 │   ├── application
 │   │   └── usecase
 │   │       ├── command
-│   │       │   ├── CreateAccountingSchemaUseCase(Impl)
-│   │       │   ├── UpdateAccountingSchemaUseCase(Impl)
-│   │       │   └── DeleteAccountingSchemaUseCase(Impl)
+│   │       │   ├── CreateSchemaUseCase(Impl)
+│   │       │   ├── UpdateSchemaUseCase(Impl)
+│   │       │   └── DeleteSchemaUseCase(Impl)
 │   │       └── query
-│   │           ├── FindAccountingSchemaUseCase(Impl)
+│   │           ├── FindSchemasUseCase(Impl)
 │   │           └── GetSchemaEditViewUseCase(Impl)
 │   │
 │   ├── infrastructure
 │   │   ├── persistence
-│   │   │   ├── AccountingSchemaEntity.java
-│   │   │   ├── AccountingSchemaJpaRepository.java
-│   │   │   └── AccountingSchemaPersistenceMapper.java
+│   │   │   ├── AccountingSchema.java
+│   │   │   ├── SchemaJpaRepository.java
+│   │   │   └── SchemaPersistenceMapper.java
 │   │   ├── adapter
-│   │   │   ├── AccountingSchemaRepositoryImpl.java
-│   │   │   └── SchemaLookupProviderImpl.java
+│   │   │   ├── SchemaRepositoryImpl.java
+│   │   │   └── SchemaInUseCheckerImpl.java
 │   │   └── config
-│   │       └── AccountingSchemaConfig.java  (Composition Root)
+│   │       └── SchemaConfig.java            (Composition Root)
 │   │
 │   └── web
 │       ├── controller
-│       │   └── AccountingSchemaController.java
+│       │   └── SchemaController.java
 │       ├── dto
-│       │   ├── AccountingSchemaSaveRequest.java
-│       │   ├── AccountingSchemaDetailResponse.java
-│       │   └── AccountingSchemaSummaryResponse.java
+│       │   ├── SchemaSaveRequest.java
+│       │   ├── SchemaDetailResponse.java
+│       │   └── SchemaSummaryResponse.java
 │       └── mapper
-│           └── AccountingSchemaWebMapper.java
+│           └── SchemaWebMapper.java
 │
 └── period
     ├── domain
@@ -249,41 +255,47 @@ com.solusi.erp.accounting
     │   ├── repository
     │   │   └── FiscalYearRepository.java
     │   └── port
-    │       └── FiscalYearInUseChecker.java  (cross-module guard port)
+    │       ├── FiscalYearInUseChecker.java      (cross-module guard port)
+    │       └── OpenAccountingPeriodLookup.java  (period guard lookup port)
     │
     ├── application
     │   └── usecase
     │       ├── command
     │       │   ├── CreateFiscalYearUseCase(Impl)
-    │       │   ├── OpenPeriodUseCase(Impl)
+    │       │   ├── UpdateFiscalYearUseCase(Impl)
+    │       │   ├── DeleteFiscalYearUseCase(Impl)
     │       │   ├── ClosePeriodUseCase(Impl)
     │       │   └── ReopenPeriodUseCase(Impl)
     │       └── query
-    │           ├── FindFiscalYearUseCase(Impl)
-    │           └── FindOpenPeriodUseCase(Impl)   (Period Guard query)
+    │           ├── FindFiscalYearsUseCase(Impl)
+    │           ├── GetFiscalYearDetailUseCase(Impl)
+    │           └── EnsureOpenPeriodForDateUseCase(Impl)   (Period Guard query)
     │
     ├── infrastructure
     │   ├── persistence
-    │   │   ├── FiscalYearEntity.java
-    │   │   ├── AccountingPeriodEntity.java
+    │   │   ├── FiscalYear.java
+    │   │   ├── AccountingPeriod.java
     │   │   ├── FiscalYearJpaRepository.java
     │   │   ├── AccountingPeriodJpaRepository.java
-    │   │   └── FiscalYearPersistenceMapper.java
+    │   │   ├── FiscalYearPersistenceMapper.java
+    │   │   └── PeriodPersistenceMapper.java
     │   ├── adapter
     │   │   ├── FiscalYearRepositoryImpl.java
-    │   │   └── FiscalYearInUseCheckerImpl.java
+    │   │   ├── FiscalYearInUseCheckerImpl.java
+    │   │   └── OpenAccountingPeriodLookupImpl.java
     │   └── config
     │       └── PeriodConfig.java            (Composition Root)
     │
     └── web
         ├── controller
-        │   └── FiscalYearController.java
+        │   └── PeriodController.java
         ├── dto
         │   ├── FiscalYearSaveRequest.java
         │   ├── FiscalYearDetailResponse.java
-        │   └── PeriodStatusUpdateRequest.java
+        │   ├── FiscalYearSummaryResponse.java
+        │   └── PeriodResponse.java
         └── mapper
-            └── FiscalYearWebMapper.java
+            └── PeriodWebMapper.java
 ```
 
 ---
@@ -300,7 +312,7 @@ domain/model/ChartOfAccount.java   ← pure Java, business rules only
         │
         │  mapped by
         ▼
-infrastructure/persistence/ChartOfAccountEntity.java  ← @Entity, @Table, etc.
+infrastructure/persistence/ChartOfAccount.java  ← @Entity, @Table, etc.
         │
         │  translated by
         ▼
@@ -388,7 +400,7 @@ accounting.coa.domain.port.CoaLookupProvider      (interface — owned by COA mo
 accounting.coa.infrastructure.adapter.CoaLookupProviderImpl
 
         ↑ injected into
-accounting.schema.application.usecase.command.CreateAccountingSchemaUseCaseImpl
+accounting.schema.application.usecase.command.CreateSchemaUseCaseImpl
 ```
 
 This means:
@@ -512,7 +524,7 @@ modules to generate a correctly formed journal entry.
 Sprint 4: GoodsReceiptConfirmUseCase
 │
 │  Step 1 — PERIOD GUARD
-│  ├─► FindOpenPeriodUseCase (accounting.period)
+│  ├─► EnsureOpenPeriodForDateUseCase (accounting.period)
 │  │       SELECT * FROM acc_accounting_periods
 │  │       WHERE status = 'OPEN'
 │  │         AND start_date <= :receiptDate

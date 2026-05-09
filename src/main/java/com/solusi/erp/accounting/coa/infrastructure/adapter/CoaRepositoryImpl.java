@@ -50,6 +50,18 @@ public class CoaRepositoryImpl implements CoaRepository {
     }
 
     @Override
+    public Page<ChartOfAccount> findAllActiveForSelector(String keyword, String accountType, Pageable pageable) {
+        var springPageable = PageableMapper.toSpring(pageable);
+        var springPage = jpaRepository.findActiveForSelector(keyword, accountType, springPageable);
+        return new Page<>(
+                springPage.getContent().stream().map(mapper::toDomain).collect(Collectors.toList()),
+                springPage.getNumber(),
+                springPage.getSize(),
+                springPage.getTotalElements()
+        );
+    }
+
+    @Override
     public void delete(Long id) {
         jpaRepository.deleteById(id);
     }
@@ -65,5 +77,13 @@ public class CoaRepositoryImpl implements CoaRepository {
                 keyword != null ? keyword : "",
                 PageRequest.of(0, limit)
         ).stream().map(mapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ChartOfAccount> findAllActive() {
+        return jpaRepository.findAllForSelector()
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
     }
 }

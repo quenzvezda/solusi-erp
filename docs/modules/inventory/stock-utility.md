@@ -53,3 +53,10 @@ Di sisi UI/Controller, gunakan Map routing untuk membuat hyperlink dinamis:
 | `STOCK_ADJUSTMENT` | `/inventory/adjustments/%d/edit` |
 
 Pola ini memungkinkan navigasi cepat dari laporan ke dokumen sumber tanpa beban query yang besar.
+
+## 4. Goods Receipt (GR)
+
+Goods Receipt adalah dokumen inbound inventory yang saat ini dipakai untuk menerima barang dari **Purchase Order** yang sudah **SENT** atau **PARTIALLY_RECEIVED**. Secara domain, GR sudah memakai konsep referensi generik (`referenceType` + `referenceId`) agar di masa depan bisa dipakai untuk sumber lain seperti return atau hasil produksi.
+
+Rangkuman detail bisnis GR dipisahkan ke dokumen khusus: [goods-receipt.md](./goods-receipt.md).
+

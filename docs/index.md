@@ -27,7 +27,9 @@ Dokumentasi dikelompokkan ke dalam folder berikut berdasarkan konteksnya:
         - [Supplier Price List (SPL)](modules/procurement/spl.md) — Master harga supplier, soft delete, date range validity
         - [Purchase Requisition (PR)](modules/procurement/purchase-requisition.md) — Permintaan pembelian internal, approval flow, priority
         - [Purchase Order (PO)](modules/procurement/purchase-order.md) — Pesanan pembelian resmi, tipe DIRECT/STANDARD, line drawer, approval integration
-- **[/spec](spec/)**: **[PENTING]** Spesifikasi teknis horizontal/shared yang digunakan di seluruh aplikasi. Lihat **[Spec Index](spec/index.md)**.
+    - **[/modules/inventory](modules/inventory/)**: Sprint 4+ — Inventory Operations
+        - [Goods Receipt (GR)](modules/inventory/goods-receipt.md) — Penerimaan barang dari dokumen sumber (saat ini operasional: Purchase Order)
+- **[/spec](spec/)**: **[PENTING]** Spesifikasi teknis horizontal/shared yang digunakan di seluruh aplikasi (line-item form, modal selector, action buttons, submission flow, dsb). Lihat **[Spec Index](spec/index.md)**.
 - **[/roadmap](roadmap/)**: Rencana pengembangan masa depan dan pelacakan standardisasi arsitektur.
 - **[/workflow](workflow/)**: Panduan prosedur kerja agen (seperti tugas repetitif, troubleshooting, dll).
 

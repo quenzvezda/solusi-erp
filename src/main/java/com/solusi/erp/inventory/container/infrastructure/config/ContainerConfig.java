@@ -3,9 +3,11 @@ package com.solusi.erp.inventory.container.infrastructure.config;
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.inventory.container.application.usecase.command.*;
 import com.solusi.erp.inventory.container.application.usecase.query.*;
+import com.solusi.erp.inventory.container.domain.port.ContainerLookupProvider;
 import com.solusi.erp.inventory.container.domain.repository.ContainerRepository;
 import com.solusi.erp.inventory.container.infrastructure.adapter.ContainerGridUsageChecker;
 import com.solusi.erp.inventory.container.infrastructure.adapter.ContainerInUseCheckerComposite;
+import com.solusi.erp.inventory.container.infrastructure.adapter.ContainerLookupProviderImpl;
 import com.solusi.erp.inventory.container.infrastructure.adapter.ContainerRepositoryImpl;
 import com.solusi.erp.inventory.container.domain.port.ContainerUsageChecker;
 import com.solusi.erp.inventory.container.infrastructure.persistence.ContainerJpaRepository;
@@ -29,6 +31,11 @@ public class ContainerConfig {
             ContainerJpaRepository jpaRepository,
             ContainerPersistenceMapper mapper) {
         return new ContainerRepositoryImpl(jpaRepository, mapper);
+    }
+
+    @Bean
+    public ContainerLookupProvider containerLookupProvider(ContainerJpaRepository containerJpaRepository) {
+        return new ContainerLookupProviderImpl(containerJpaRepository);
     }
 
     @Bean

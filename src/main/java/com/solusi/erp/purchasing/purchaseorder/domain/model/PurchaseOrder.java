@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class PurchaseOrder {
 
@@ -110,11 +111,12 @@ public class PurchaseOrder {
                                            PurchaseOrderType poType,
                                            Long taxId, String taxCode, String taxName, BigDecimal taxRate,
                                            TaxCalculationMode taxCalculationMode,
-                                           String note,
-                                           List<PurchaseOrderLine> lines) {
+                                            String note,
+                                            List<PurchaseOrderLine> lines) {
         validateExchangeRate(exchangeRate);
         validateExpectedDate(orderDate, expectedDate);
         validatePoType(poType, prId);
+        validateHeaderTax(taxId, taxCode, taxName);
 
         PurchaseOrder po = new PurchaseOrder(
             AuditMetadata.empty(), code, orderDate, expectedDate,
@@ -147,6 +149,9 @@ public class PurchaseOrder {
         if (!status.canUpdate()) {
             throw new DomainException("msg.error.po.update.not.draft");
         }
+        validateExchangeRate(exchangeRate);
+        validateExpectedDate(orderDate, expectedDate);
+        validateHeaderTax(taxId, taxCode, taxName);
         this.orderDate = orderDate;
         this.expectedDate = expectedDate;
         this.facilityId = facilityId;
@@ -186,6 +191,35 @@ public class PurchaseOrder {
             throw new DomainException("msg.error.po.send.invalid.status");
         }
         this.status = PurchaseOrderStatus.SENT;
+    }
+
+    public void recordReceipt(Map<Long, BigDecimal> receivedByLineId) {
+        if (!status.canReceive()) {
+            throw new DomainException("msg.error.gr.po.invalid.status");
+        }
+        if (receivedByLineId == null || receivedByLineId.isEmpty()) {
+            throw new DomainException("msg.error.gr.po.receipt.lines.required");
+        }
+        boolean matchedLine = false;
+        for (PurchaseOrderLine line : lines) {
+            Long lineId = line.getId();
+            if (lineId != null && receivedByLineId.containsKey(lineId)) {
+                matchedLine = true;
+                line.validateReceipt(receivedByLineId.get(lineId));
+            }
+        }
+        if (!matchedLine) {
+            throw new DomainException("msg.error.gr.po.receipt.lines.required");
+        }
+        for (PurchaseOrderLine line : lines) {
+            Long lineId = line.getId();
+            if (lineId != null && receivedByLineId.containsKey(lineId)) {
+                line.receive(receivedByLineId.get(lineId));
+            }
+        }
+        boolean fullyReceived = lines.stream()
+                .allMatch(line -> line.getOutstandingQuantity().compareTo(BigDecimal.ZERO) == 0);
+        this.status = fullyReceived ? PurchaseOrderStatus.FULLY_RECEIVED : PurchaseOrderStatus.PARTIALLY_RECEIVED;
     }
 
     public void cancel() {
@@ -256,6 +290,12 @@ public class PurchaseOrder {
     private static void validatePoType(PurchaseOrderType poType, Long prId) {
         if (PurchaseOrderType.STANDARD == poType && prId == null) {
             throw new DomainException("msg.error.po.standard.pr.required");
+        }
+    }
+
+    private static void validateHeaderTax(Long taxId, String taxCode, String taxName) {
+        if (taxId == null || taxCode == null || taxCode.isBlank() || taxName == null || taxName.isBlank()) {
+            throw new DomainException("msg.error.po.tax.required");
         }
     }
 

@@ -61,6 +61,8 @@ Pisahkan dua bentuk data:
 Rule:
 - jangan kirim JPA entity ke view
 - payload hanya berisi data yang benar-benar dibutuhkan consumer
+- untuk consumer berbasis TomSelect, bentuk payload option harus konsisten (`id`, `name`, opsional `subText`) agar prefill/setValue tidak gagal diam-diam
+- metadata tambahan (mis. `remainingQuantity`, `orderedQuantity`, `receivedQuantity`, `unitPrice`) boleh dikirim sebagai `data-*` untuk memperkaya modal tanpa menambah coupling ke entity
 
 ## 5. Query-level exclusion rules
 
@@ -82,7 +84,10 @@ Gunakan tombol aksi per baris, misalnya `.js-pr-selector-pick`.
 
 Gunakan checkbox per baris + tombol apply di footer fragmen, misalnya `.js-pr-line-selector-apply`.
 
-Consumer JS bertanggung jawab memvalidasi bahwa minimal satu row dipilih sebelum apply.
+Consumer JS bertanggung jawab memvalidasi bahwa minimal satu row dipilih sebelum apply, lalu:
+- membuat row baru berdasarkan template yang sudah bersih dari artefak plugin UI lama,
+- mencegah duplikasi line yang sudah ada di draft,
+- menampilkan warning yang jelas jika tidak ada row yang berhasil ditambahkan.
 
 ## 7. Reference implementation pertama
 

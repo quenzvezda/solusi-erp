@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-
 <head th:replace="~{layout/master :: head(${schemaRequest.id == null ? #messages.msg('label.schema.add') : #messages.msg('label.schema.edit')})}"></head>
-
-<body th:replace="~{layout/master :: layout(~{:: .schema-form-content}, ~{})}">
+<body th:replace="~{layout/master :: layout(~{:: .schema-form-content}, ~{:: #page-specific-scripts})}">
     <div class="schema-form-content">
         <div class="page-header d-print-none">
             <div class="container-xl">
@@ -16,63 +14,35 @@
                 </div>
             </div>
         </div>
-
         <div class="page-body">
             <div class="container-xl">
                 <form th:action="${schemaRequest.id == null ? '/accounting/schemas/create' : '/accounting/schemas/edit/' + schemaRequest.id}"
                       th:object="${schemaRequest}" method="post" class="card"
                       data-ajax-form="true"
-                      data-redirect-on-success="/accounting/schemas">
-
+                      data-redirect-on-success="/accounting/schemas"
+                      id="schema-form">
                     <input type="hidden" th:field="*{version}" />
-
                     <div class="card-body">
                         <div class="alert-container"></div>
-
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <h3 class="card-title" th:text="#{label.schema.event.type}">Event Mapping</h3>
-
                                 <div class="mb-3">
                                     <label class="form-label required" th:text="#{label.schema.event.type}">Event Type</label>
                                     <select th:field="*{eventType}" class="form-select erp-input"
-                                            th:disabled="${schemaRequest.id != null}">
+                                            th:disabled="${schemaRequest.id != null}" id="event-type-select">
                                         <option value="" th:text="#{label.select.placeholder}">-- Select --</option>
                                         <option th:each="type : ${eventTypes}"
                                                 th:value="${type.name()}"
                                                 th:text="#{${'label.schema.event.' + type.name()}}">Type</option>
                                     </select>
-                                    <input th:if="${schemaRequest.id != null}" type="hidden" th:field="*{eventType}" />
+                                    <input th:if="${schemaRequest.id != null}" type="hidden" th:field="*{eventType}" id="hidden-event-type"/>
                                 </div>
-
                                 <div class="mb-3">
                                     <label class="form-label" th:text="#{label.schema.description}">Description</label>
-                                    <textarea th:field="*{description}" class="form-control erp-input" rows="3"
+                                    <textarea th:field="*{description}" class="form-control erp-input" rows="2"
                                               th:placeholder="#{placeholder.schema.description}"></textarea>
                                 </div>
-                            </div>
-
-                            <div class="col-md-6 border-start-md">
-                                <h3 class="card-title">Account Mapping</h3>
-
-                                <div class="mb-3">
-                                    <label class="form-label required" th:text="#{label.schema.debit.account}">Debit Account</label>
-                                    <select th:field="*{debitAccountId}" class="form-select erp-input"
-                                            data-lookup-url="/api/lookup/accounting/coa"
-                                            data-lookup-permission="LOOKUP_COA">
-                                        <option value="" th:text="#{label.select.placeholder}">-- Select --</option>
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label required" th:text="#{label.schema.credit.account}">Credit Account</label>
-                                    <select th:field="*{creditAccountId}" class="form-select erp-input"
-                                            data-lookup-url="/api/lookup/accounting/coa"
-                                            data-lookup-permission="LOOKUP_COA">
-                                        <option value="" th:text="#{label.select.placeholder}">-- Select --</option>
-                                    </select>
-                                </div>
-
                                 <div class="mb-3">
                                     <label class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" th:field="*{isActive}">
@@ -82,10 +52,56 @@
                             </div>
                         </div>
 
+                        <div class="card mt-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h3 class="card-title">Journal Mapping Lines</h3>
+                                <button type="button" class="btn btn-sm btn-primary" id="btn-add-line">Add Line</button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table card-table table-vcenter" id="lines-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Variable</th>
+                                            <th>Account</th>
+                                            <th>Position</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="lines-container">
+                                        <tr th:each="line, stat : ${schemaRequest.lines}" class="schema-line">
+                                            <input type="hidden" th:name="|lines[${stat.index}].id|" th:value="${line.id}"/>
+                                            <td>
+                                                <select class="form-select variable-select" th:name="|lines[${stat.index}].variable|">
+                                                    <option th:each="var : ${journalVariables}" 
+                                                            th:data-event="${var.supportedEvent.name()}"
+                                                            th:value="${var.name()}" 
+                                                            th:text="${var.name()}"
+                                                            th:selected="${line.variable == var.name()}"></option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <div class="input-group">
+                                                    <input type="hidden" th:name="|lines[${stat.index}].accountId|" th:value="${line.accountId}" class="account-id"/>
+                                                    <input type="text" class="form-control account-display" th:value="${line.accountName}" readonly/>
+                                                    <button type="button" class="btn btn-outline-primary btn-select-account"><i class="ti ti-search"></i></button>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <select class="form-select" th:name="|lines[${stat.index}].position|">
+                                                    <option value="DEBIT" th:selected="${line.position == 'DEBIT'}">Debit</option>
+                                                    <option value="CREDIT" th:selected="${line.position == 'CREDIT'}">Credit</option>
+                                                </select>
+                                            </td>
+                                            <td><button type="button" class="btn btn-icon btn-danger btn-remove-line"><i class="ti ti-trash"></i></button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
                         <div th:if="${auditInfo != null and auditInfo.id != null}"
                              th:replace="~{fragments/audit-info :: audit-info(${auditInfo})}"></div>
                     </div>
-
                     <div class="card-footer text-end">
                         <div class="d-flex align-items-center">
                             <div id="loading-indicator" class="spinner-border spinner-border-sm text-primary me-2" role="status" style="display: none;"></div>
@@ -97,9 +113,40 @@
                         </div>
                     </div>
                 </form>
+                <div th:replace="~{fragments/modal-selector :: shell('modal-schema-account-selector', #{label.schema.selector.account.title}, 'schema-account-selector-results', 'modal-xl')}"></div>
             </div>
         </div>
     </div>
+    <div id="page-specific-scripts" th:fragment="pageScripts">
+        <template id="line-template">
+            <tr class="schema-line">
+                <input type="hidden" name="lines[INDEX].id" value=""/>
+                <td>
+                    <select class="form-select variable-select" name="lines[INDEX].variable">
+                        <option th:each="var : ${journalVariables}" 
+                                th:data-event="${var.supportedEvent.name()}"
+                                th:value="${var.name()}" 
+                                th:text="${var.name()}"></option>
+                    </select>
+                </td>
+                <td>
+                    <div class="input-group">
+                        <input type="hidden" name="lines[INDEX].accountId" value="" class="account-id"/>
+                        <input type="text" class="form-control account-display" value="" readonly/>
+                        <button type="button" class="btn btn-outline-primary btn-select-account"><i class="ti ti-search"></i></button>
+                    </div>
+                </td>
+                <td>
+                    <select class="form-select" name="lines[INDEX].position">
+                        <option value="DEBIT">Debit</option>
+                        <option value="CREDIT">Credit</option>
+                    </select>
+                </td>
+                <td><button type="button" class="btn btn-icon btn-danger btn-remove-line"><i class="ti ti-trash"></i></button></td>
+            </tr>
+        </template>
+        <script th:src="@{/js/shared/erp-modal-selector.js}" defer></script>
+        <script th:src="@{/js/schema-form.js}" defer></script>
+    </div>
 </body>
-
 </html>

@@ -1,7 +1,6 @@
 package com.solusi.erp.inventory.stock.infrastructure.config;
 
 import com.solusi.erp.inventory.container.domain.port.ContainerUsageChecker;
-import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import com.solusi.erp.inventory.stock.domain.port.StockService;
 import com.solusi.erp.inventory.stock.domain.repository.StockBalanceRepository;
 import com.solusi.erp.inventory.stock.domain.repository.ValuationLayerRepository;
@@ -54,14 +53,13 @@ public class StockConfig {
     public StockService stockService(
             StockBalanceRepository stockBalanceDomainRepository,
             InventoryMovementJpaRepository inventoryMovementJpaRepository,
-            JpaProductRepository productRepository,
             UomConversionService uomConversionService,
             FifoValuationService fifoValuationService,
             MessageSource messageSource,
             PlatformTransactionManager txManager) {
         StockServiceImpl pure = new StockServiceImpl(
                 stockBalanceDomainRepository, inventoryMovementJpaRepository,
-                productRepository, uomConversionService,
+                uomConversionService,
                 fifoValuationService, messageSource);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         return (payload) -> tx.executeWithoutResult(status -> pure.adjust(payload));

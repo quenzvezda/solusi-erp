@@ -9,6 +9,7 @@ import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.inventory.facility.domain.port.FacilityLookupProvider;
+import com.solusi.erp.inventory.goodsreceipt.application.usecase.query.CountGoodsReceiptsByPoUseCase;
 import com.solusi.erp.inventory.product.domain.port.ProductLookupProvider;
 import com.solusi.erp.inventory.uom.domain.port.UomLookupProvider;
 import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
@@ -64,6 +65,7 @@ public class PurchaseOrderController {
     private final FindPurchaseOrderPrSelectorUseCase findPurchaseOrderPrSelectorUseCase;
     private final FindPurchaseOrderPrLineSelectorUseCase findPurchaseOrderPrLineSelectorUseCase;
     private final FindApprovalRequestByReferenceUseCase findApprovalRequestByReferenceUseCase;
+    private final CountGoodsReceiptsByPoUseCase countGoodsReceiptsByPoUseCase;
     private final PurchaseOrderWebMapper webMapper;
     private final MessageSource messageSource;
     private final PartyLookupProvider partyLookupProvider;
@@ -234,6 +236,11 @@ public class PurchaseOrderController {
         PurchaseOrder domain = getPurchaseOrderEditViewUseCase.execute(id)
             .orElseThrow(() -> new RuntimeException("Purchase order not found"));
         model.addAttribute("po", webMapper.toDetailResponse(domain));
+
+        Long grCount = countGoodsReceiptsByPoUseCase.execute(id);
+        model.addAttribute("goodsReceiptCount", grCount);
+        model.addAttribute("canSendPurchaseOrder", domain.getStatus().canSend());
+        model.addAttribute("canCreateGoodsReceipt", domain.getStatus().canReceive());
 
         Optional<ApprovalRequest> approvalRequest =
             findApprovalRequestByReferenceUseCase.execute("PURCHASE_ORDER", id);

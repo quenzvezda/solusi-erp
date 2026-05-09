@@ -44,6 +44,19 @@ Untuk efisiensi, satu file HTML harus menangani mode pembuatan (*Add*) dan perub
 - **Conditional Titles**: Gunakan `th:text="${object.id == null ? 'Add' : 'Edit'}"`.
 - **Locking Logic**: Jika dokumen sudah diproses (Status COMPLETED), seluruh input (button, select, input) harus otomatis di-disable secara global via JavaScript.
 
+### 4.1 Line Turunan Dokumen vs Line Manual
+
+Pada form yang bisa bersumber dari dokumen lain (contoh: GR dari PO), line harus dibedakan tegas:
+
+- **Line turunan dokumen** (`referenceLineId` terisi): field identitas line seperti `product`/`uom` diperlakukan sebagai snapshot referensi dan harus di-lock.
+- **Line manual** (tanpa referensi): field identitas line boleh editable sesuai rule domain.
+- Tombol **Add Line** pada mode turunan dokumen membuka **modal selector** agar line baru tetap memiliki referensi valid, bukan row kosong bebas.
+
+### 4.2 Mandatory Marker + Backend Validation
+
+- Field wajib pada tabel line wajib menampilkan indikator visual konsisten (misalnya asterisk merah pada header kolom).
+- Validasi UI hanya sebagai guard cepat; backend tetap menjadi sumber kebenaran (`@Valid`/constraint DTO) untuk mencegah data invalid tersimpan.
+
 ---
 
 ## 5. Sinkronisasi Data

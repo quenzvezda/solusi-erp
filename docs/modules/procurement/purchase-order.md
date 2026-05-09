@@ -27,10 +27,10 @@ Purchase Order adalah dokumen pembelian resmi yang diterbitkan perusahaan kepada
 | `exchangeRate` | Kurs konversi ke IDR (wajib > 0) | Ya |
 | `paymentTermDays` | Jangka waktu pembayaran (hari) | Ya |
 | `prId` | Referensi PR (wajib untuk tipe STANDARD, null untuk DIRECT) | Kondisional |
-| `taxId` | Referensi master tax yang dipilih di header PO | Tidak |
-| `taxName` | Snapshot nama pajak pada saat PO disimpan | Tidak |
-| `taxRate` | Snapshot tarif pajak dalam format persen (misal `11.00`) | Tidak |
-| `taxCalculationMode` | Snapshot mode hitung `EXCLUSIVE` / `INCLUSIVE` | Tidak |
+| `taxId` | Referensi master tax yang dipilih di header PO | Ya |
+| `taxName` | Snapshot nama pajak pada saat PO disimpan | Ya (auto) |
+| `taxRate` | Snapshot tarif pajak dalam format persen (misal `11.00`) | Ya (auto) |
+| `taxCalculationMode` | Snapshot mode hitung `EXCLUSIVE` / `INCLUSIVE` | Ya (auto) |
 | `subtotal` | Total sebelum pajak (dihitung otomatis) | Ya (auto) |
 | `taxAmount` | Total pajak (dihitung otomatis) | Ya (auto) |
 | `totalAmount` | Total akhir = subtotal + pajak (dihitung otomatis) | Ya (auto) |
@@ -111,9 +111,10 @@ Semua kalkulasi dilakukan di backend (domain layer) — tidak bergantung pada Ja
 ### D. Validasi Umum
 1. **Exchange Rate**: Wajib > 0. Jika mata uang IDR, isi dengan `1`.
 2. **Expected Date**: Tidak boleh lebih awal dari `orderDate`.
-3. **Lines**: PO tidak dapat di-submit jika tidak memiliki minimal satu baris item.
-4. **Edit & Hapus**: Hanya bisa dilakukan saat status **DRAFT**.
-5. **Cancel**: Hanya bisa dilakukan saat status **DRAFT** atau **SUBMITTED**.
+3. **Header Tax**: Wajib dipilih. Bahkan PO non-pajak tetap harus memilih master tax eksplisit seperti **PPN 0% / Non Tax** agar snapshot pajak header tidak pernah null.
+4. **Lines**: PO tidak dapat di-submit jika tidak memiliki minimal satu baris item.
+5. **Edit & Hapus**: Hanya bisa dilakukan saat status **DRAFT**.
+6. **Cancel**: Hanya bisa dilakukan saat status **DRAFT** atau **SUBMITTED**.
 
 ### E. Alur Approval
 - Saat PO di-submit, sistem membuat `ApprovalRequest` secara otomatis.
@@ -126,6 +127,7 @@ Semua kalkulasi dilakukan di backend (domain layer) — tidak bergantung pada Ja
 - **STANDARD PR Selector Modal**: Saat tipe STANDARD dipilih pada create flow, field **Referensi PR** tidak lagi memakai select biasa. User memilih PR melalui modal selector berbasis tabel yang mendukung search + pagination.
 - **Derived Header Locking**: Setelah PR dipilih, `supplier`, `facility`, dan `currency` otomatis terisi dari PR dan dikunci di UI.
 - **Header Tax Selector**: Form PO menyediakan satu autocomplete **Tax** di header yang mengambil data dari master Tax aktif. Pemilihan ini mengontrol seluruh perhitungan pajak setiap line.
+- **Explicit Tax Selection**: Field **Tax** bersifat mandatory. Jika transaksi tidak dikenai pajak, user tetap memilih master tax 0% / non-tax, bukan membiarkannya kosong.
 - **STANDARD Line Selector Modal**: Tombol **Add Line** pada STANDARD membuka selector line PR multi-select. Sistem mengecualikan line yang sudah habis atau sudah dipilih di draft saat ini.
 - **Edit Header Parity**: Pada edit DRAFT PO, kontrol **PO Type** dan **Referensi PR** memakai struktur visual yang sama dengan create flow, tetapi tetap non-interaktif/locked agar referensi STANDARD tidak berubah diam-diam.
 - **STANDARD Edit Line Expansion**: Pada edit DRAFT STANDARD PO, tombol **Add Line** tetap membuka selector line PR dari referensi yang sama agar user bisa menambahkan sisa line PR yang belum dikonversi, bukan membuat line kosong manual.
@@ -134,6 +136,7 @@ Semua kalkulasi dilakukan di backend (domain layer) — tidak bergantung pada Ja
 - **Approval Sidebar**: Pada halaman detail PO, terdapat panel samping yang menampilkan status approval, nama approver saat ini, dan tombol aksi (jika user adalah approver aktif).
 - **Approval History Drawer**: Klik **Riwayat Approval** untuk melihat rantai keputusan lengkap.
 - **Tipe Badge**: Daftar PO menampilkan badge **Direct** (biru) atau **Standard** (hijau) di kolom Tipe.
+- **PO Detail -> GR Actions**: Detail PO menyediakan dua aksi terpisah: **Create Goods Receipt** (ke halaman pre-add GR jika masih ada outstanding) dan **Goods Receipts** (ke daftar GR yang sudah terealisasi dari PO tersebut). Link list menggunakan filter kanonik `referenceType=PURCHASE_ORDER&referenceId={poId}` (dengan fallback `poId` untuk kompatibilitas URL lama).
 
 ## 5. Integrasi & Relasi Antar Modul
 
@@ -162,6 +165,27 @@ PO (FULLY_RECEIVED) ────────────────────
 | PO | PR | PO STANDARD menyimpan referensi `prId` dan `prLineId` ke PR asal untuk pelacakan konversi parsial |
 | PO (SENT) | Goods Receipt | GR dibuat berdasarkan PO yang sudah dikirim ke supplier *(Sprint 4)* |
 | PO (FULLY_RECEIVED) | Vendor Bill | Tagihan AP dibuat berdasarkan PO yang sudah fully received *(Sprint 5)* |
+
+## 5.1. Document Flow: Goods Receipt
+
+Setelah PO berstatus **SENT** atau **PARTIALLY_RECEIVED**, bagian gudang dapat menerima barang melalui dokumen **Goods Receipt (GR)** untuk mencatat penerimaan fisik barang dari supplier.
+
+**Alur Dasar:**
+1. Buka detail PO dengan status SENT/PARTIALLY_RECEIVED.
+2. Gunakan tombol **Create Goods Receipt** untuk membuka halaman pre-add GR (hanya relevan jika masih ada line outstanding).
+3. Gunakan tombol **Goods Receipts** untuk membuka halaman list GR yang sudah terealisasi dari PO ini.
+4. Link list GR menggunakan filter kanonik `referenceType=PURCHASE_ORDER&referenceId={poId}`; `poId` dipertahankan hanya sebagai fallback legacy.
+5. Dari pre-add GR, isi kuantitas barang yang diterima untuk setiap line item lalu simpan sebagai **DRAFT**.
+6. Setelah verifikasi fisik selesai, tekan **Complete** untuk finalisasi GR (status → **COMPLETED**).
+7. Sistem akan update status PO:
+   - Jika semua line item fully received → PO status = **FULLY_RECEIVED**
+   - Jika sebagian → PO status = **PARTIALLY_RECEIVED** (tetap)
+
+**Detail Teknis:**
+- Link dokumentasi: Lihat [docs/modules/inventory/goods-receipt.md](../inventory/goods-receipt.md)
+- Domain entities: `GoodsReceipt`, `GoodsReceiptLine` (inventory module)
+- Use cases: `CreateGoodsReceiptUseCase`, `CompleteGoodsReceiptUseCase`, `CountGoodsReceiptsByPoUseCase`
+- Handling item serialized: GR mendukung tracking nomor seri/batch untuk item tertentu
 
 ## 6. Keamanan (Security)
 

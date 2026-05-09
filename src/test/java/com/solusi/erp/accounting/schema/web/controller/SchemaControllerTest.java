@@ -1,10 +1,17 @@
 package com.solusi.erp.accounting.schema.web.controller;
 
+import com.solusi.erp.accounting.coa.application.usecase.query.CoaSelectorRow;
+import com.solusi.erp.accounting.coa.application.usecase.query.FindCoaSelectorUseCase;
 import com.solusi.erp.accounting.schema.application.usecase.command.CreateSchemaUseCase;
 import com.solusi.erp.accounting.schema.application.usecase.command.DeleteSchemaUseCase;
 import com.solusi.erp.accounting.schema.application.usecase.command.UpdateSchemaUseCase;
 import com.solusi.erp.accounting.schema.application.usecase.query.FindSchemasUseCase;
 import com.solusi.erp.accounting.schema.application.usecase.query.GetSchemaEditViewUseCase;
+import com.solusi.erp.accounting.schema.application.usecase.query.SimulateSchemaUseCase;
+import com.solusi.erp.accounting.schema.domain.model.AccountingSchemaLine;
+import com.solusi.erp.accounting.journal.domain.model.JournalPosition;
+import com.solusi.erp.accounting.journal.domain.model.JournalVariable;
+import com.solusi.erp.accounting.coa.domain.model.AccountType;
 import com.solusi.erp.accounting.schema.domain.model.AccountingSchema;
 import com.solusi.erp.accounting.schema.domain.model.SchemaEventType;
 import com.solusi.erp.accounting.schema.web.dto.SchemaDetailResponse;
@@ -21,6 +28,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,19 +45,21 @@ public class SchemaControllerTest {
     private final DeleteSchemaUseCase deleteSchemaUseCase = mock(DeleteSchemaUseCase.class);
     private final FindSchemasUseCase findSchemasUseCase = mock(FindSchemasUseCase.class);
     private final GetSchemaEditViewUseCase getSchemaEditViewUseCase = mock(GetSchemaEditViewUseCase.class);
+    private final FindCoaSelectorUseCase findCoaSelectorUseCase = mock(FindCoaSelectorUseCase.class);
+    private final SimulateSchemaUseCase simulateSchemaUseCase = mock(SimulateSchemaUseCase.class);
     private final SchemaWebMapper webMapper = mock(SchemaWebMapper.class);
     private final MessageSource messageSource = mock(MessageSource.class);
 
     private final SchemaController controller = new SchemaController(
             createSchemaUseCase, updateSchemaUseCase, deleteSchemaUseCase,
-            findSchemasUseCase, getSchemaEditViewUseCase, webMapper, messageSource
+            findSchemasUseCase, getSchemaEditViewUseCase, findCoaSelectorUseCase, simulateSchemaUseCase, webMapper, messageSource
     );
-
-    // ── helpers ──────────────────────────────────────────────────────────────
 
     private AccountingSchema sampleDomain() {
         return AccountingSchema.createNew(SchemaEventType.GOODS_RECEIPT,
-                "Goods receipt schema", 1L, 2L, true);
+                "Goods receipt schema", true, List.of(
+                        new AccountingSchemaLine(null, com.solusi.erp.accounting.journal.domain.model.JournalVariable.GR_INVENTORY_AMT, 101L, com.solusi.erp.accounting.journal.domain.model.JournalPosition.DEBIT)
+                ));
     }
 
     private SchemaSummaryResponse sampleSummary() {
@@ -57,11 +67,8 @@ public class SchemaControllerTest {
         dto.setId(1L);
         dto.setEventType("GOODS_RECEIPT");
         dto.setDescription("Goods receipt schema");
-        dto.setDebitAccountId(1L);
-        dto.setDebitAccountName("1000 - Cash");
-        dto.setCreditAccountId(2L);
-        dto.setCreditAccountName("2000 - Accounts Payable");
         dto.setIsActive(true);
+        dto.setLines(new ArrayList<>());
         return dto;
     }
 
@@ -70,11 +77,8 @@ public class SchemaControllerTest {
         dto.setId(1L);
         dto.setEventType("GOODS_RECEIPT");
         dto.setDescription("Goods receipt schema");
-        dto.setDebitAccountId(1L);
-        dto.setDebitAccountName("1000 - Cash");
-        dto.setCreditAccountId(2L);
-        dto.setCreditAccountName("2000 - Accounts Payable");
         dto.setIsActive(true);
+        dto.setLines(new ArrayList<>());
         return dto;
     }
 
@@ -82,13 +86,10 @@ public class SchemaControllerTest {
         SchemaSaveRequest req = new SchemaSaveRequest();
         req.setEventType("GOODS_RECEIPT");
         req.setDescription("Goods receipt schema");
-        req.setDebitAccountId(1L);
-        req.setCreditAccountId(2L);
+        req.setLines(new ArrayList<>());
         req.setIsActive(true);
         return req;
     }
-
-    // ── list ─────────────────────────────────────────────────────────────────
 
     @Test
     @DisplayName("list — returns correct view and model attributes")
@@ -102,7 +103,6 @@ public class SchemaControllerTest {
         org.springframework.data.domain.Pageable springPageable =
                 org.springframework.data.domain.PageRequest.of(0, 20);
         Model model = new ExtendedModelMap();
-
         String view = controller.list(null, springPageable, model);
 
         assertEquals("accounting/schema/list", view);
@@ -115,15 +115,11 @@ public class SchemaControllerTest {
         assertThat(model.getAttribute("eventTypes")).isEqualTo(SchemaEventType.values());
     }
 
-    // ── showCreateForm ───────────────────────────────────────────────────────
-
     @Test
     @DisplayName("showCreateForm — returns form view with correct defaults")
     void showCreateForm_returnsFormViewWithDefaults() {
         Model model = new ExtendedModelMap();
-
         String view = controller.showCreateForm(model);
-
         assertEquals("accounting/schema/form", view);
         SchemaSaveRequest req = (SchemaSaveRequest) model.getAttribute("schemaRequest");
         assertThat(req).isNotNull();
@@ -131,24 +127,50 @@ public class SchemaControllerTest {
         assertThat(model.getAttribute("eventTypes")).isEqualTo(SchemaEventType.values());
     }
 
-    // ── create ───────────────────────────────────────────────────────────────
+    @Test
+    @DisplayName("showAccountSelector — returns selector fragment with paged rows")
+    void showAccountSelector_returnsSelectorFragmentWithPagedRows() {
+        CoaSelectorRow row = new CoaSelectorRow(
+                1L, "1000", "Cash", AccountType.ASSET.name(), 1, false, null, null, null
+        );
+        com.solusi.erp.core.domain.model.Page<CoaSelectorRow> domainPage =
+                new com.solusi.erp.core.domain.model.Page<>(List.of(row), 0, 10, 1L);
+        when(findCoaSelectorUseCase.execute(eq("cash"), eq("ASSET"), any())).thenReturn(domainPage);
+
+        org.springframework.data.domain.Pageable springPageable =
+                org.springframework.data.domain.PageRequest.of(0, 10);
+        Model model = new ExtendedModelMap();
+        String view = controller.showAccountSelector("cash", "ASSET", springPageable, model);
+
+        assertEquals("accounting/schema/fragments/account-selector-modal", view);
+        assertThat(model.getAttribute("page")).isInstanceOf(org.springframework.data.domain.Page.class);
+        assertThat(model.getAttribute("keyword")).isEqualTo("cash");
+        assertThat(model.getAttribute("accountType")).isEqualTo("ASSET");
+        assertThat(model.getAttribute("accountTypes")).isEqualTo(AccountType.values());
+    }
 
     @Test
-    @DisplayName("create — valid request returns CREATED with data")
+    @DisplayName("create — valid req returns CREATED with data")
     void create_returnsCreatedResponse() {
         AccountingSchema domain = sampleDomain();
         SchemaDetailResponse detail = sampleDetail();
-        when(createSchemaUseCase.execute(any(), any(), any(), any(), any()))
+        when(createSchemaUseCase.execute(any(), any(), any(), any()))
                 .thenReturn(domain);
         when(webMapper.toDetailResponse(any(AccountingSchema.class))).thenReturn(detail);
         when(messageSource.getMessage(eq("msg.success.create"), any(), any())).thenReturn("Created");
 
-        ResponseEntity<ApiResponse<SchemaDetailResponse>> response = controller.create(validRequest());
+        ResponseEntity<ApiResponse<SchemaDetailResponse>> res = controller.create(validRequest());
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().isSuccess()).isTrue();
-        assertThat(response.getBody().getData().getId()).isEqualTo(1L);
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(res.getBody()).isNotNull();
+        assertThat(res.getBody().isSuccess()).isTrue();
+        assertThat(res.getBody().getData().getId()).isEqualTo(1L);
+        verify(createSchemaUseCase).execute(
+                eq(SchemaEventType.GOODS_RECEIPT),
+                eq("Goods receipt schema"),
+                eq(true),
+                anyList()
+        );
     }
 
     @Test
@@ -156,18 +178,14 @@ public class SchemaControllerTest {
     void create_returnsBadRequestForInvalidEventType() {
         SchemaSaveRequest req = validRequest();
         req.setEventType("INVALID");
-
-        ResponseEntity<ApiResponse<SchemaDetailResponse>> response = controller.create(req);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().isSuccess()).isFalse();
+        ResponseEntity<ApiResponse<SchemaDetailResponse>> res = controller.create(req);
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(res.getBody()).isNotNull();
+        assertThat(res.getBody().isSuccess()).isFalse();
     }
 
-    // ── showEditForm ─────────────────────────────────────────────────────────
-
     @Test
-    @DisplayName("showEditForm — populates model with request and audit info")
+    @DisplayName("showEditForm — populates model with req and audit info")
     void showEditForm_populatesModel() {
         AccountingSchema domain = sampleDomain();
         when(getSchemaEditViewUseCase.execute(1L)).thenReturn(Optional.of(domain));
@@ -190,31 +208,32 @@ public class SchemaControllerTest {
     void showEditForm_throwsWhenNotFound() {
         when(getSchemaEditViewUseCase.execute(999L)).thenReturn(Optional.empty());
         Model model = new ExtendedModelMap();
-
         assertThatThrownBy(() -> controller.showEditForm(999L, model))
                 .isInstanceOf(RuntimeException.class);
     }
 
-    // ── update ───────────────────────────────────────────────────────────────
-
     @Test
-    @DisplayName("update — valid request returns OK")
+    @DisplayName("update — valid req returns OK")
     void update_returnsOkResponse() {
         AccountingSchema domain = sampleDomain();
         SchemaDetailResponse detail = sampleDetail();
-        when(updateSchemaUseCase.execute(any(), any(), any(), any(), any()))
+        when(updateSchemaUseCase.execute(any(), any(), any(), any()))
                 .thenReturn(domain);
         when(webMapper.toDetailResponse(any(AccountingSchema.class))).thenReturn(detail);
         when(messageSource.getMessage(eq("msg.success.update"), any(), any())).thenReturn("Updated");
 
-        ResponseEntity<ApiResponse<SchemaDetailResponse>> response = controller.update(1L, validRequest());
+        ResponseEntity<ApiResponse<SchemaDetailResponse>> res = controller.update(1L, validRequest());
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().isSuccess()).isTrue();
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(res.getBody()).isNotNull();
+        assertThat(res.getBody().isSuccess()).isTrue();
+        verify(updateSchemaUseCase).execute(
+                eq(1L),
+                eq("Goods receipt schema"),
+                eq(true),
+                anyList()
+        );
     }
-
-    // ── delete ───────────────────────────────────────────────────────────────
 
     @Test
     @DisplayName("delete — hard delete returns OK")
@@ -222,9 +241,9 @@ public class SchemaControllerTest {
         when(deleteSchemaUseCase.execute(1L)).thenReturn(DeleteResult.HARD_DELETED);
         when(messageSource.getMessage(eq("msg.success.delete"), any(), any())).thenReturn("Deleted");
 
-        ResponseEntity<Void> response = controller.delete(1L);
+        ResponseEntity<Void> res = controller.delete(1L);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     @Test
@@ -233,8 +252,8 @@ public class SchemaControllerTest {
         when(deleteSchemaUseCase.execute(1L)).thenReturn(DeleteResult.SOFT_DELETED);
         when(messageSource.getMessage(eq("msg.success.deactivated"), any(), any())).thenReturn("Deactivated");
 
-        ResponseEntity<Void> response = controller.delete(1L);
+        ResponseEntity<Void> res = controller.delete(1L);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 }

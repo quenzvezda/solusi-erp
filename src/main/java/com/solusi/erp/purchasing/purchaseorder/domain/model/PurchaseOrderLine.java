@@ -13,7 +13,7 @@ public class PurchaseOrderLine {
     private Long headerId;
     private final Long productId;
     private final BigDecimal quantity;
-    private final BigDecimal receivedQuantity;
+    private BigDecimal receivedQuantity;
     private final Long uomId;
     private final BigDecimal unitPrice;
     private final BigDecimal taxRate;
@@ -105,6 +105,26 @@ public class PurchaseOrderLine {
                 base, tax, base.add(tax).setScale(4, RoundingMode.HALF_UP),
                 prLineId, note
         );
+    }
+
+    public BigDecimal getOutstandingQuantity() {
+        return quantity.subtract(receivedQuantity != null ? receivedQuantity : BigDecimal.ZERO);
+    }
+
+    public void validateReceipt(BigDecimal qty) {
+        if (qty == null || qty.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new DomainException("msg.error.gr.line.quantity.positive");
+        }
+        BigDecimal next = (receivedQuantity != null ? receivedQuantity : BigDecimal.ZERO).add(qty);
+        if (next.compareTo(quantity) > 0) {
+            throw new DomainException("msg.error.gr.line.exceeds.outstanding");
+        }
+    }
+
+    public void receive(BigDecimal qty) {
+        validateReceipt(qty);
+        BigDecimal next = (receivedQuantity != null ? receivedQuantity : BigDecimal.ZERO).add(qty);
+        this.receivedQuantity = next;
     }
 
     private static void validateQuantity(BigDecimal quantity) {
