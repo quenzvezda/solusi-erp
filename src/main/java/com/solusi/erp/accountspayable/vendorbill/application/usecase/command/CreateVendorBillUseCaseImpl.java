@@ -1,0 +1,91 @@
+package com.solusi.erp.accountspayable.vendorbill.application.usecase.command;
+
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBill;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillGrRef;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillLine;
+import com.solusi.erp.accountspayable.vendorbill.domain.repository.VendorBillRepository;
+import com.solusi.erp.core.exception.DomainException;
+import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
+public class CreateVendorBillUseCaseImpl implements CreateVendorBillUseCase {
+
+    private final VendorBillRepository vendorBillRepository;
+    private final SequenceGeneratorService sequenceGeneratorService;
+
+    public CreateVendorBillUseCaseImpl(VendorBillRepository vendorBillRepository,
+                                       SequenceGeneratorService sequenceGeneratorService) {
+        this.vendorBillRepository = vendorBillRepository;
+        this.sequenceGeneratorService = sequenceGeneratorService;
+    }
+
+    @Override
+    public VendorBill execute(Long vendorId,
+                              String vendorInvoiceNumber,
+                              LocalDate billDate,
+                              LocalDate dueDate,
+                              Long currencyId,
+                              String notes,
+                              List<Long> grIds,
+                              List<VendorBillLineCommand> lines) {
+        validateDates(billDate, dueDate);
+
+        VendorBill vendorBill = VendorBill.createNew(
+                sequenceGeneratorService.generate("VENDOR-BILL"),
+                vendorId,
+                vendorInvoiceNumber,
+                billDate,
+                dueDate,
+                currencyId,
+                notes,
+                toGrRefs(grIds),
+                toLines(lines)
+        );
+
+        return vendorBillRepository.save(vendorBill);
+    }
+
+    private void validateDates(LocalDate billDate, LocalDate dueDate) {
+        if (billDate != null && dueDate != null && dueDate.isBefore(billDate)) {
+            throw new DomainException("msg.error.vb.due.before.bill");
+        }
+    }
+
+    private List<VendorBillGrRef> toGrRefs(List<Long> grIds) {
+        if (grIds == null) {
+            return List.of();
+        }
+        return grIds.stream()
+                .map(grId -> new VendorBillGrRef(null, grId))
+                .toList();
+    }
+
+    private List<VendorBillLine> toLines(List<VendorBillLineCommand> lines) {
+        if (lines == null) {
+            return List.of();
+        }
+        return lines.stream()
+                .map(this::toLine)
+                .toList();
+    }
+
+    private VendorBillLine toLine(VendorBillLineCommand line) {
+        return new VendorBillLine(
+                line.id(),
+                line.grLineId(),
+                line.productId(),
+                line.productName(),
+                line.description(),
+                line.qtyBilled(),
+                line.uomId(),
+                line.uomName(),
+                line.unitPrice(),
+                line.inventoryAmount(),
+                line.taxAmount(),
+                BigDecimal.ZERO
+        );
+    }
+}
