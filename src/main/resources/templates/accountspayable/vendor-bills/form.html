@@ -25,7 +25,7 @@
             <div class="container-xl">
                 <form th:action="@{/accounts-payable/vendor-bills}" th:object="${form.request}" method="post" id="vendor-bill-form" data-ajax-form="true"
                       data-redirect-on-success="/accounts-payable/vendor-bills">
-                    <input type="hidden" th:name="${_csrf.paramName}" th:value="${_csrf.token}">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                     <input type="hidden" th:field="*{id}">
                     <div id="selected-gr-ids">
                         <input th:each="grId, stat : *{grIds}"

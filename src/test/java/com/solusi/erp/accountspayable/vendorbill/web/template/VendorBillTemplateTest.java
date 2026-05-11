@@ -1,11 +1,22 @@
 package com.solusi.erp.accountspayable.vendorbill.web.template;
 
+import com.solusi.erp.accountspayable.vendorbill.web.dto.VendorBillFormView;
+import com.solusi.erp.accountspayable.vendorbill.web.dto.VendorBillSaveRequest;
+import com.solusi.erp.testutils.TemplateTestUtils;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.Authentication;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.ResourceBundle;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 class VendorBillTemplateTest {
 
@@ -33,8 +44,49 @@ class VendorBillTemplateTest {
 
         assertThat(template).contains("vendor-bill-lines-body");
         assertThat(template).contains("selected-gr-ids");
+        assertThat(template).contains("_csrf.parameterName");
+        assertThat(template).doesNotContain("_csrf.paramName");
         assertThat(modal).contains("js-vb-gr-select");
         assertThat(modal).contains("data-lines-url");
+    }
+
+    @Test
+    void create_form_template_should_render_with_security_context() {
+        VendorBillSaveRequest request = new VendorBillSaveRequest();
+        request.setVendorId(1L);
+        request.setCurrencyId(1L);
+        request.setVendorInvoiceNumber("INV-001");
+        request.setBillDate(LocalDate.of(2026, 5, 11));
+        request.setDueDate(LocalDate.of(2026, 5, 18));
+
+        assertDoesNotThrow(() -> {
+            String html = TemplateTestUtils.renderWithSecurity(
+                    "accountspayable/vendor-bills/form",
+                    Map.of("form", new VendorBillFormView(request, List.of())),
+                    auth("VENDOR-BILL_CREATE"));
+
+            assertThat(html).isNotBlank();
+            assertThat(html).contains("vendor-bill-form");
+        });
+    }
+
+    @Test
+    void shared_message_bundle_should_include_vendor_bill_filter_keys() {
+        ResourceBundle english = ResourceBundle.getBundle("messages", Locale.ENGLISH);
+        ResourceBundle indonesian = ResourceBundle.getBundle("messages", Locale.forLanguageTag("id"));
+
+        assertThat(english.containsKey("label.vendor")).isTrue();
+        assertThat(english.containsKey("label.filter")).isTrue();
+        assertThat(indonesian.containsKey("label.vendor")).isTrue();
+        assertThat(indonesian.containsKey("label.filter")).isTrue();
+    }
+
+    @Test
+    void vendor_bill_menu_migration_should_move_entry_under_finance_accounting() throws Exception {
+        String migration = readResource("db/migration/V59__Move_Vendor_Bill_Menu_To_Accounting.sql");
+
+        assertThat(migration).contains("Finance & Accounting > Account Payable > Vendor Bill");
+        assertThat(migration).contains("Keuangan & Akuntansi > Hutang Usaha > Tagihan Vendor");
     }
 
     @Test
@@ -52,5 +104,11 @@ class VendorBillTemplateTest {
             assertThat(inputStream).as("Resource not found: %s", path).isNotNull();
             return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
         }
+    }
+
+    private Authentication auth(String... authorities) {
+        TestingAuthenticationToken token = new TestingAuthenticationToken("testuser", "n/a", authorities);
+        token.setAuthenticated(true);
+        return token;
     }
 }
