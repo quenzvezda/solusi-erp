@@ -1,0 +1,25 @@
+package com.solusi.erp.accountspayable.vendorbill.application.usecase.query;
+
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
+public record VendorBillDetailView(
+        Long id,
+        String code,
+        Long vendorId,
+        String vendorInvoiceNumber,
+        LocalDate billDate,
+        LocalDate dueDate,
+        Long currencyId,
+        VendorBillStatus status,
+        BigDecimal subtotal,
+        BigDecimal taxAmount,
+        BigDecimal totalAmount,
+        String notes,
+        List<Long> grIds,
+        List<VendorBillLineView> lines
+) {
+}

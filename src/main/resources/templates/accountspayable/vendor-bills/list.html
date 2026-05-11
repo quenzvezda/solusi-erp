@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.vb.title})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .vendor-bill-list-content}, ~{:: #page-specific-scripts})}">
+    <div class="vendor-bill-list-content">
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="#{label.vb.title}">Vendor Bills</h2>
+                        <div class="text-secondary mt-1" th:text="#{label.vb.subtitle}">Manage vendor invoices.</div>
+                    </div>
+                    <div class="col-auto ms-auto" sec:authorize="hasAuthority('VENDOR-BILL_CREATE')">
+                        <a th:href="@{/accounts-payable/vendor-bills/create}" class="btn btn-primary">
+                            <i class="ti ti-plus me-1"></i><span th:text="#{label.vb.create}">Create Vendor Bill</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+                <div th:replace="~{fragments/alerts :: success}"></div>
+                <div th:replace="~{fragments/alerts :: error}"></div>
+
+                <div class="card">
+                    <div class="card-body border-bottom py-3">
+                        <form th:action="@{/accounts-payable/vendor-bills}" method="get" class="row g-2 align-items-center">
+                            <div class="col-md-4">
+                                <div class="input-icon">
+                                    <input type="text" name="keyword" th:value="${keyword}" class="form-control form-control-sm"
+                                           th:placeholder="#{label.search} + '...'">
+                                    <span class="input-icon-addon"><i class="ti ti-search"></i></span>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="number" name="vendorId" th:value="${vendorId}" class="form-control form-control-sm"
+                                       th:placeholder="#{label.vendor}">
+                            </div>
+                            <div class="col-md-2">
+                                <select name="status" class="form-select form-select-sm">
+                                    <option value="" th:text="#{label.all}">All</option>
+                                    <option th:each="item : ${statuses}" th:value="${item}" th:text="${item}"
+                                            th:selected="${item == status}">DRAFT</option>
+                                </select>
+                            </div>
+                            <div class="col-auto">
+                                <button type="submit" class="btn btn-sm btn-primary">
+                                    <i class="ti ti-filter me-1"></i><span th:text="#{label.filter}">Filter</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="vendor-bill-table-container" th:fragment="vendor-bill-table-container">
+                        <div class="table-responsive">
+                            <table class="table card-table table-vcenter text-nowrap">
+                                <thead>
+                                    <tr>
+                                        <th th:text="#{label.vb.code}">Code</th>
+                                        <th th:text="#{label.vb.vendorInvoiceNumber}">Vendor Invoice</th>
+                                        <th th:text="#{label.vb.billDate}">Bill Date</th>
+                                        <th th:text="#{label.vb.dueDate}">Due Date</th>
+                                        <th th:text="#{label.vb.status}">Status</th>
+                                        <th class="text-end" th:text="#{label.vb.totalAmount}">Total</th>
+                                        <th class="text-end" th:text="#{label.actions}">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${page.content}" th:id="'row-' + ${item.id}">
+                                        <td><span class="fw-medium" th:text="${item.code}">VB-001</span></td>
+                                        <td th:text="${item.vendorInvoiceNumber}">INV-001</td>
+                                        <td th:text="${item.billDate != null ? #temporals.format(item.billDate, 'dd MMM yyyy') : '-'}">10 May 2026</td>
+                                        <td th:text="${item.dueDate != null ? #temporals.format(item.dueDate, 'dd MMM yyyy') : '-'}">20 May 2026</td>
+                                        <td>
+                                            <span class="badge"
+                                                  th:classappend="${item.status == 'DRAFT'} ? 'bg-warning-lt' : (${item.status == 'CONFIRMED'} ? 'bg-success-lt' : 'bg-secondary-lt')"
+                                                  th:text="${item.status}">DRAFT</span>
+                                        </td>
+                                        <td class="text-end" th:text="${item.totalAmount != null ? #numbers.formatDecimal(item.totalAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                        <td>
+                                            <div class="btn-list flex-nowrap justify-content-end">
+                                                <a th:href="@{/accounts-payable/vendor-bills/{id}(id=${item.id})}" class="btn btn-white btn-sm"
+                                                   sec:authorize="hasAuthority('VENDOR-BILL_READ')">
+                                                    <i class="ti ti-eye me-1"></i><span th:text="#{label.view}">View</span>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${page.empty}">
+                                        <td colspan="7" class="text-center py-4 text-secondary" th:text="#{label.vb.empty}">
+                                            No vendor bills found.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-specific-scripts"></div>
+</body>
+
+</html>

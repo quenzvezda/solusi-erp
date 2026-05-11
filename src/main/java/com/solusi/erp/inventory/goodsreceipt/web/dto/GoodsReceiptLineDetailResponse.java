@@ -27,6 +27,8 @@ public class GoodsReceiptLineDetailResponse {
     private BigDecimal inventoryAmount;
     private BigDecimal taxAmount;
     private BigDecimal grIrAmount;
+    private BigDecimal billedQuantity;
+    private String billingStatus;
     private String serialNumber;
 
     @JsonProperty("poLineId")

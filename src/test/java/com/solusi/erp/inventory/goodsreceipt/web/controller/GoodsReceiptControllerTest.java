@@ -11,6 +11,7 @@ import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptLine;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptReferenceType;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptStatus;
 import com.solusi.erp.inventory.goodsreceipt.domain.port.GoodsReceiptReferenceLookupProvider;
+import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableGrQueryPort;
 import com.solusi.erp.inventory.goodsreceipt.web.dto.*;
 import com.solusi.erp.inventory.goodsreceipt.web.mapper.GoodsReceiptWebMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,6 +59,7 @@ public class GoodsReceiptControllerTest {
     private GoodsReceiptWebMapper webMapper;
     private MessageSource messageSource;
     private GoodsReceiptReferenceLookupProvider referenceLookupProvider;
+    private BillableGrQueryPort billableGrQueryPort;
     private GoodsReceiptController controller;
 
     @BeforeEach
@@ -73,10 +75,11 @@ public class GoodsReceiptControllerTest {
         webMapper = mock(GoodsReceiptWebMapper.class);
         messageSource = mock(MessageSource.class);
         referenceLookupProvider = mock(GoodsReceiptReferenceLookupProvider.class);
+        billableGrQueryPort = mock(BillableGrQueryPort.class);
 
         controller = new GoodsReceiptController(
             createUc, updateUc, deleteUc, completeUc, findUc, getUc, editViewUc, createViewUc,
-            webMapper, messageSource, referenceLookupProvider
+            webMapper, messageSource, referenceLookupProvider, billableGrQueryPort
         );
     }
 
@@ -253,6 +256,32 @@ public class GoodsReceiptControllerTest {
         assertThat(model.getAttribute("gr")).isNotNull()
             .isInstanceOf(GoodsReceiptDetailResponse.class);
         verify(getUc).execute(1L);
+    }
+
+    @Test
+    @DisplayName("detail should show billing status per line")
+    void detail_should_show_billing_status_per_line() {
+        GoodsReceipt gr = buildDraftGr();
+        when(getUc.execute(1L)).thenReturn(Optional.of(gr));
+        when(billableGrQueryPort.sumConfirmedBilledQtyByGrId(1L))
+            .thenReturn(java.util.Map.of(10L, new BigDecimal("2.0000")));
+
+        GoodsReceiptLineDetailResponse line = new GoodsReceiptLineDetailResponse();
+        line.setId(10L);
+        line.setQuantityReceived(new BigDecimal("5.0000"));
+        GoodsReceiptDetailResponse detail = new GoodsReceiptDetailResponse();
+        detail.setId(1L);
+        detail.setCode("GR-001");
+        detail.setLines(List.of(line));
+        when(webMapper.toDetailResponse(any(GoodsReceipt.class))).thenReturn(detail);
+
+        Model model = new ExtendedModelMap();
+        String view = controller.view(1L, model);
+
+        assertEquals("inventory/goods-receipts/view", view);
+        GoodsReceiptDetailResponse response = (GoodsReceiptDetailResponse) model.getAttribute("gr");
+        assertThat(response.getLines().get(0).getBilledQuantity()).isEqualByComparingTo("2.0000");
+        assertThat(response.getLines().get(0).getBillingStatus()).isEqualTo("PARTIAL_BILLED");
     }
 
     @Test

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+<div th:fragment="modal(billableGrs)" class="modal fade" id="grLineSelectorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" th:text="#{label.vb.select.gr.lines}">Select GR Lines</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-vcenter">
+                        <thead>
+                            <tr>
+                                <th th:text="#{label.gr.code}">GR Code</th>
+                                <th th:text="#{label.po.code}">PO Code</th>
+                                <th class="text-end" th:text="#{label.actions}">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="gr : ${billableGrs}">
+                                <td th:text="${gr.grCode()}">GR-001</td>
+                                <td th:text="${gr.poCode()}">PO-001</td>
+                                <td class="text-end">
+                                     <button type="button" class="btn btn-sm btn-primary js-vb-gr-select"
+                                             th:data-lines-url="@{'/accounts-payable/vendor-bills/billable-grs/' + ${gr.grId()} + '/lines'}"
+                                             th:data-gr-id="${gr.grId()}"
+                                             th:data-gr-code="${gr.grCode()}">
+                                         <i class="ti ti-plus me-1"></i><span th:text="#{label.select}">Select</span>
+                                     </button>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(billableGrs)}">
+                                <td colspan="3" class="text-center text-secondary py-4" th:text="#{label.vb.no.billable.gr}">
+                                    No billable goods receipts.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+</html>

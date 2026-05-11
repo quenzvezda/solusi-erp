@@ -47,6 +47,14 @@ public class VendorBillRepositoryImpl implements VendorBillRepository {
         entity.getLines().addAll(lineEntities);
 
         entity.getGrRefs().clear();
+        if (entity.getId() == null && !bill.getGrRefs().isEmpty()) {
+            VendorBillEntity savedHeader = jpaRepository.save(entity);
+            savedHeader.getGrRefs().clear();
+            savedHeader.getGrRefs().addAll(mapper.toGrRefEntityList(bill.getGrRefs(), savedHeader));
+            VendorBillEntity savedWithRefs = jpaRepository.save(savedHeader);
+            return mapper.toDomain(savedWithRefs);
+        }
+
         entity.getGrRefs().addAll(mapper.toGrRefEntityList(bill.getGrRefs(), entity));
 
         VendorBillEntity saved = jpaRepository.save(entity);

@@ -108,6 +108,7 @@
                                             <th class="text-end" th:text="#{label.base.qty}">Base Qty</th>
                                             <th th:text="#{label.uom}">UoM</th>
                                             <th th:text="#{label.container}">Container</th>
+                                            <th th:text="#{goodsreceipt.billing.status}">Billing</th>
                                             <th th:text="#{label.serial}">Serial</th>
                                             <th class="text-end" th:text="#{label.unit.price}">Unit Price</th>
                                             <th class="text-end" th:text="#{label.inventory.amount}">Inventory Amt</th>
@@ -121,13 +122,18 @@
                                             <td class="text-end" th:text="${line.baseQuantity != null ? #numbers.formatDecimal(line.baseQuantity, 1, 'COMMA', 4, 'POINT') : '-'}">100.0000</td>
                                             <td th:text="${line.uomCode ?: '-'}">KG</td>
                                             <td th:text="${line.containerCode ?: '-'}">-</td>
+                                            <td>
+                                                <span class="badge bg-green-lt" th:if="${line.billingStatus == 'FULLY_BILLED'}" th:text="#{goodsreceipt.billing.fully}">Fully billed</span>
+                                                <span class="badge bg-yellow-lt" th:if="${line.billingStatus == 'PARTIAL_BILLED'}" th:text="#{goodsreceipt.billing.partial}">Partial</span>
+                                                <span class="badge bg-secondary-lt" th:if="${line.billingStatus == 'UNBILLED'}" th:text="#{goodsreceipt.billing.unbilled}">Unbilled</span>
+                                            </td>
                                             <td th:text="${line.serialDisplay ?: '-'}">-</td>
                                             <td class="text-end" th:text="${line.unitPrice != null ? #numbers.formatDecimal(line.unitPrice, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
                                             <td class="text-end" th:text="${line.inventoryAmount != null ? #numbers.formatDecimal(line.inventoryAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
                                             <td class="text-end" th:text="${line.taxAmount != null ? #numbers.formatDecimal(line.taxAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
                                         </tr>
                                         <tr th:if="${#lists.isEmpty(gr.lines)}">
-                                            <td colspan="9" class="text-center py-4 text-secondary" th:text="#{label.gr.line.empty}">
+                                            <td colspan="10" class="text-center py-4 text-secondary" th:text="#{label.gr.line.empty}">
                                                 No lines added.
                                             </td>
                                         </tr>

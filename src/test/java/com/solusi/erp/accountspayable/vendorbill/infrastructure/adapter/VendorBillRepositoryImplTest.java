@@ -5,6 +5,7 @@ import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillGrRef;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillLine;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.persistence.VendorBillEntity;
+import com.solusi.erp.accountspayable.vendorbill.infrastructure.persistence.VendorBillGrRefEntity;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.persistence.VendorBillJpaRepository;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.persistence.VendorBillLineEntity;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.persistence.VendorBillPersistenceMapper;
@@ -24,6 +25,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -63,6 +65,32 @@ class VendorBillRepositoryImplTest {
         verify(jpaRepository).findById(10L);
     }
 
+    @Test
+    void save_new_bill_should_attach_gr_refs_after_header_id_is_assigned() {
+        VendorBill domain = newBill();
+        VendorBill savedDomain = sampleBill();
+        VendorBillEntity entity = new VendorBillEntity();
+        entity.setLines(new ArrayList<>());
+        entity.setGrRefs(new ArrayList<>());
+
+        when(mapper.toEntity(domain)).thenReturn(entity);
+        when(mapper.toLineEntityList(eq(domain.getLines()), eq(entity))).thenReturn(List.of());
+        when(jpaRepository.save(entity)).thenAnswer(invocation -> {
+            entity.setId(10L);
+            return entity;
+        });
+        when(mapper.toGrRefEntityList(eq(domain.getGrRefs()), eq(entity))).thenAnswer(invocation -> {
+            assertThat(entity.getId()).isEqualTo(10L);
+            return List.of(new VendorBillGrRefEntity());
+        });
+        when(mapper.toDomain(entity)).thenReturn(savedDomain);
+
+        VendorBill saved = repository.save(domain);
+
+        assertThat(saved).isSameAs(savedDomain);
+        assertThat(entity.getGrRefs()).hasSize(1);
+    }
+
     private VendorBill sampleBill() {
         return new VendorBill(
                 new AuditMetadata(10L, 1L, LocalDateTime.now(), 1L, LocalDateTime.now(), 1L),
@@ -92,6 +120,25 @@ class VendorBillRepositoryImplTest {
                         new BigDecimal("11.0000"),
                         new BigDecimal("111.0000")
                 ))
+        );
+    }
+
+    private VendorBill newBill() {
+        return new VendorBill(
+                AuditMetadata.empty(),
+                "VB-202605-00001",
+                22L,
+                "INV-123",
+                LocalDate.of(2026, 5, 1),
+                LocalDate.of(2026, 5, 31),
+                1L,
+                VendorBillStatus.DRAFT,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                "note",
+                List.of(new VendorBillGrRef(null, 99L)),
+                List.of()
         );
     }
 }

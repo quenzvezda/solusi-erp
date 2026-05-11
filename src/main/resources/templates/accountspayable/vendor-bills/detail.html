@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.vb.detail})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .vendor-bill-detail-content}, ~{:: #page-specific-scripts})}">
+    <div class="vendor-bill-detail-content">
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title">
+                            <span th:text="${bill.code}">VB-001</span>
+                            <span class="badge ms-2"
+                                  th:classappend="${bill.status == 'DRAFT'} ? 'bg-warning-lt' : (${bill.status == 'CONFIRMED'} ? 'bg-success-lt' : 'bg-secondary-lt')"
+                                  th:text="${bill.status}">DRAFT</span>
+                        </h2>
+                    </div>
+                    <div class="col-auto ms-auto">
+                        <a th:href="@{/accounts-payable/vendor-bills}" class="btn btn-secondary">
+                            <i class="ti ti-arrow-left me-1"></i><span th:text="#{label.back}">Back</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label text-secondary" th:text="#{label.vb.code}">Code</label>
+                                <div class="form-control-plaintext fw-bold" th:text="${bill.code}">VB-001</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-secondary" th:text="#{label.vb.vendorInvoiceNumber}">Vendor Invoice</label>
+                                <div class="form-control-plaintext" th:text="${bill.vendorInvoiceNumber}">INV-001</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-secondary" th:text="#{label.vb.billDate}">Bill Date</label>
+                                <div class="form-control-plaintext" th:text="${bill.billDate != null ? #temporals.format(bill.billDate, 'dd MMM yyyy') : '-'}">10 May 2026</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-secondary" th:text="#{label.vb.dueDate}">Due Date</label>
+                                <div class="form-control-plaintext" th:text="${bill.dueDate != null ? #temporals.format(bill.dueDate, 'dd MMM yyyy') : '-'}">20 May 2026</div>
+                            </div>
+                            <div class="col-md-3" th:if="${bill.status == 'CONFIRMED'}">
+                                <label class="form-label text-secondary" th:text="#{label.journal}">Journal Entry</label>
+                                <div class="form-control-plaintext">
+                                    <a th:href="@{/accounting/journal-entries(sourceType='VENDOR_BILL', sourceCode=${bill.code})}" class="btn btn-sm btn-outline-primary">
+                                        <i class="ti ti-external-link me-1"></i><span th:text="#{label.view}">View</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-md-9">
+                                <label class="form-label text-secondary" th:text="#{label.notes}">Notes</label>
+                                <div class="form-control-plaintext" th:text="${bill.notes ?: '-'}">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title" th:text="#{label.vb.lines}">Bill Lines</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th th:text="#{label.product}">Product</th>
+                                    <th class="text-end" th:text="#{label.qty}">Qty</th>
+                                    <th th:text="#{label.uom}">UoM</th>
+                                    <th class="text-end" th:text="#{label.unit.price}">Unit Price</th>
+                                    <th class="text-end" th:text="#{label.inventory.amount}">Inventory</th>
+                                    <th class="text-end" th:text="#{label.tax.amount}">Tax</th>
+                                    <th class="text-end" th:text="#{label.total}">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="line : ${bill.lines}">
+                                    <td th:text="${line.productName}">Product</td>
+                                    <td class="text-end" th:text="${line.qtyBilled != null ? #numbers.formatDecimal(line.qtyBilled, 1, 'COMMA', 4, 'POINT') : '-'}">0.0000</td>
+                                    <td th:text="${line.uomName ?: '-'}">PCS</td>
+                                    <td class="text-end" th:text="${line.unitPrice != null ? #numbers.formatDecimal(line.unitPrice, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                    <td class="text-end" th:text="${line.inventoryAmount != null ? #numbers.formatDecimal(line.inventoryAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                    <td class="text-end" th:text="${line.taxAmount != null ? #numbers.formatDecimal(line.taxAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                    <td class="text-end fw-bold" th:text="${line.lineTotal != null ? #numbers.formatDecimal(line.lineTotal, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(bill.lines)}">
+                                    <td colspan="7" class="text-center py-4 text-secondary" th:text="#{label.vb.lines.empty}">No lines.</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="6" class="text-end" th:text="#{label.total}">Total</th>
+                                    <th class="text-end" th:text="${bill.totalAmount != null ? #numbers.formatDecimal(bill.totalAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div class="card-footer text-end" th:if="${bill.status == 'DRAFT'}">
+                        <button type="button" class="btn btn-outline-danger"
+                                sec:authorize="hasAuthority('VENDOR-BILL_DELETE')"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modal-delete-vendor-bill">
+                            <i class="ti ti-trash me-1"></i><span th:text="#{label.delete}">Delete</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-warning"
+                                sec:authorize="hasAuthority('VENDOR-BILL_CANCEL')"
+                                th:data-post-url="@{'/accounts-payable/vendor-bills/' + ${bill.id} + '/cancel'}"
+                                th:data-redirect-url="@{/accounts-payable/vendor-bills}"
+                                th:data-confirm-message="#{msg.confirm.vb.cancel}"
+                                onclick="ErpForm.postAction(this)">
+                            <i class="ti ti-ban me-1"></i><span th:text="#{label.cancel}">Cancel</span>
+                        </button>
+                        <button type="button" class="btn btn-success"
+                                sec:authorize="hasAuthority('VENDOR-BILL_CONFIRM')"
+                                th:data-post-url="@{'/accounts-payable/vendor-bills/' + ${bill.id} + '/confirm'}"
+                                th:data-confirm-message="#{msg.confirm.vb.confirm}"
+                                onclick="ErpForm.postAction(this)">
+                            <i class="ti ti-check me-1"></i><span th:text="#{label.vb.confirm}">Confirm</span>
+                        </button>
+                    </div>
+                </div>
+                <div th:replace="~{fragments/modals :: delete-confirm(
+                        id='modal-delete-vendor-bill',
+                        title=#{label.delete.confirm.title},
+                        message=#{msg.confirm.vb.delete},
+                        actionUrl=@{'/accounts-payable/vendor-bills/' + ${bill.id}},
+                        targetId='body')}"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-specific-scripts"></div>
+</body>
+
+</html>

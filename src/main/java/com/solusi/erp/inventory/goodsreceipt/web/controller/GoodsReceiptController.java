@@ -11,6 +11,7 @@ import com.solusi.erp.inventory.goodsreceipt.application.usecase.query.*;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceipt;
 import com.solusi.erp.inventory.goodsreceipt.domain.model.GoodsReceiptReferenceType;
 import com.solusi.erp.inventory.goodsreceipt.domain.port.GoodsReceiptReferenceLookupProvider;
+import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableGrQueryPort;
 import com.solusi.erp.inventory.goodsreceipt.web.dto.*;
 import com.solusi.erp.inventory.goodsreceipt.web.mapper.GoodsReceiptWebMapper;
 import com.solusi.erp.util.HtmxResponseUtility;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -47,6 +49,7 @@ public class GoodsReceiptController {
     private final GoodsReceiptWebMapper webMapper;
     private final MessageSource messageSource;
     private final GoodsReceiptReferenceLookupProvider referenceLookupProvider;
+    private final BillableGrQueryPort billableGrQueryPort;
 
     @GetMapping
     @PreAuthorize("hasAuthority('GOODS-RECEIPT_READ')")
@@ -171,8 +174,31 @@ public class GoodsReceiptController {
         GoodsReceipt domain = getGoodsReceiptUseCase.execute(id)
             .orElseThrow(() -> new RuntimeException("Goods receipt not found"));
         GoodsReceiptDetailResponse response = webMapper.toDetailResponse(domain);
+        enrichBillingStatus(id, response);
         model.addAttribute("gr", response);
         return "inventory/goods-receipts/view";
+    }
+
+    private void enrichBillingStatus(Long goodsReceiptId, GoodsReceiptDetailResponse response) {
+        if (response == null || response.getLines() == null || response.getLines().isEmpty()) {
+            return;
+        }
+        Map<Long, BigDecimal> billedQtyMap = billableGrQueryPort.sumConfirmedBilledQtyByGrId(goodsReceiptId);
+        response.getLines().forEach(line -> {
+            BigDecimal billedQty = billedQtyMap.getOrDefault(line.getId(), BigDecimal.ZERO);
+            line.setBilledQuantity(billedQty);
+            line.setBillingStatus(resolveBillingStatus(line.getQuantityReceived(), billedQty));
+        });
+    }
+
+    private String resolveBillingStatus(BigDecimal receivedQty, BigDecimal billedQty) {
+        if (billedQty == null || billedQty.compareTo(BigDecimal.ZERO) <= 0) {
+            return "UNBILLED";
+        }
+        if (receivedQty != null && billedQty.compareTo(receivedQty) >= 0) {
+            return "FULLY_BILLED";
+        }
+        return "PARTIAL_BILLED";
     }
 
     @PostMapping

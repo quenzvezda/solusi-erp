@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 public final class GoodsReceiptLine {
 
+    private final Long id;
     private final Long referenceLineId;
     private final Long productId;
     private final Long sourceFacilityId;
@@ -19,11 +20,12 @@ public final class GoodsReceiptLine {
     private final BigDecimal grIrAmount;
     private final String serialNumber;
 
-    private GoodsReceiptLine(Long referenceLineId, Long productId, Long sourceFacilityId, Boolean serialized,
+    private GoodsReceiptLine(Long id, Long referenceLineId, Long productId, Long sourceFacilityId, Boolean serialized,
                              BigDecimal quantityReceived, Long uomId, Long containerId,
                              BigDecimal unitPrice, BigDecimal baseQuantity, BigDecimal inventoryAmount,
                              BigDecimal taxBaseAmount, BigDecimal taxAmount, BigDecimal grIrAmount,
                              String serialNumber) {
+        this.id = id;
         this.referenceLineId = referenceLineId;
         this.productId = productId;
         this.sourceFacilityId = sourceFacilityId;
@@ -45,7 +47,7 @@ public final class GoodsReceiptLine {
                                            BigDecimal unitPrice, BigDecimal baseQuantity, BigDecimal inventoryAmount,
                                            BigDecimal taxBaseAmount, BigDecimal grIrAmount, String serialNumber) {
         return new GoodsReceiptLine(
-                referenceLineId, productId, sourceFacilityId, serialized, quantityReceived, uomId,
+                null, referenceLineId, productId, sourceFacilityId, serialized, quantityReceived, uomId,
                 containerId, unitPrice, baseQuantity, inventoryAmount, taxBaseAmount, BigDecimal.ZERO,
                 grIrAmount, serialNumber
         );
@@ -57,7 +59,19 @@ public final class GoodsReceiptLine {
                                            BigDecimal taxBaseAmount, BigDecimal taxAmount, BigDecimal grIrAmount,
                                            String serialNumber) {
         return new GoodsReceiptLine(
-                referenceLineId, productId, sourceFacilityId, serialized, quantityReceived, uomId,
+                null, referenceLineId, productId, sourceFacilityId, serialized, quantityReceived, uomId,
+                containerId, unitPrice, baseQuantity, inventoryAmount, taxBaseAmount, taxAmount,
+                grIrAmount, serialNumber
+        );
+    }
+
+    public static GoodsReceiptLine reconstitute(Long id, Long referenceLineId, Long productId, Long sourceFacilityId,
+                                                Boolean serialized, BigDecimal quantityReceived, Long uomId,
+                                                Long containerId, BigDecimal unitPrice, BigDecimal baseQuantity,
+                                                BigDecimal inventoryAmount, BigDecimal taxBaseAmount,
+                                                BigDecimal taxAmount, BigDecimal grIrAmount, String serialNumber) {
+        return new GoodsReceiptLine(
+                id, referenceLineId, productId, sourceFacilityId, serialized, quantityReceived, uomId,
                 containerId, unitPrice, baseQuantity, inventoryAmount, taxBaseAmount, taxAmount,
                 grIrAmount, serialNumber
         );
@@ -65,6 +79,10 @@ public final class GoodsReceiptLine {
 
     public boolean hasReceiptQuantity() {
         return quantityReceived != null && quantityReceived.compareTo(BigDecimal.ZERO) > 0;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public Long getReferenceLineId() {
