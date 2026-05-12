@@ -3,7 +3,7 @@
 > Tanggal: 2026-05-11  
 > Konteks: Follow-up setelah implementasi Vendor Bill Sprint 5 dan manual QA awal  
 > Referensi utama: [2026-05-10-vendor-bill-sprint5.md](2026-05-10-vendor-bill-sprint5.md)  
-> Status: Draft keputusan desain sebelum dibuat plan implementasi
+> Status: **FINAL — semua open questions resolved, siap untuk implementation plan**
 
 ---
 
@@ -299,13 +299,15 @@ Detail desain final perlu diputuskan di plan implementasi.
 
 ---
 
-## Open Implementation Questions
+## Open Implementation Questions — All Resolved ✅
 
-1. Apakah `base_currency_id` disimpan di setiap dokumen finansial, atau cukup di Journal Entry?
-2. Saat selected references mixed exchange rate, apakah UI wajib manual input rate atau boleh default dari latest reference? Rekomendasi saat ini: wajib manual input.
-3. Apakah Vendor Bill line perlu menyimpan original/base split secara eksplisit, atau cukup header exchange rate + original line amount dan base dihitung saat posting?
-4. Apakah existing GR journal data perlu migration backfill untuk original amount/base amount?
-5. Apakah Journal Entry UI perlu langsung ditingkatkan untuk menampilkan original currency dan base amount?
+| # | Pertanyaan | Keputusan | Alasan |
+|---|---|---|---|
+| 1 | `base_currency_id` disimpan di setiap dokumen finansial, atau cukup di Journal Entry? | ✅ **Journal Entry saja** | Konsisten dengan pola GR (tidak simpan `base_currency_id`). Base currency (IDR) praktis tidak berubah. Dokumen sumber cukup simpan `currency_id` + `exchange_rate`, base currency di-resolve saat posting via lookup `Currency.isDefault = true`. |
+| 2 | Mixed exchange rate di selected references? | ✅ **Wajib manual input** (sudah confirmed di section Exchange Rate Inheritance Rule) | Rule #4: jika banyak source reference dipilih dan exchange rate berbeda, UI tampilkan kondisi mixed rate dan user wajib mengisi rate Vendor Bill secara manual. |
+| 3 | VB line simpan original/base split eksplisit, atau compute saat posting? | ✅ **Compute saat posting** — header `exchange_rate` × line `line_total` | Konsisten dengan pola GR line (tidak simpan base amount terpisah). Satu sumber kebenaran: header rate × line amount. Remainder method di line terakhir untuk cegah rounding akumulatif. |
+| 4 | Existing GR journal data perlu migration backfill? | ✅ **Tidak backfill** | Project learning/MVP — data existing adalah dev/testing data, bukan production. Kolom baru di `acc_journal_lines` cukup `NULLABLE` dengan semantic: `NULL` = transaksi base currency / single currency (backward compatible). |
+| 5 | Journal Entry UI perlu ditingkatkan untuk tampilkan original currency dan base amount? | ✅ **Ya, upgrade minimal di Sprint 5** | Tanpa UI, tidak bisa verifikasi FX variance journal saat manual QA. Scope dibatasi: hanya **detail view** (read-only), tambah kolom Currency/Rate/Original DR/Original CR. Conditional render — hanya muncul jika `original_currency_id != NULL`. Journal lama (GR tanpa original currency) tampil "—". |
 
 ---
 
