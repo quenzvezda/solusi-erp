@@ -40,6 +40,7 @@ class UpdateVendorBillUseCaseTest {
                 LocalDate.of(2026, 5, 10),
                 LocalDate.of(2026, 5, 20),
                 1L,
+                BigDecimal.ONE,
                 VendorBillStatus.CONFIRMED,
                 new BigDecimal("100.0000"),
                 new BigDecimal("11.0000"),
@@ -56,6 +57,7 @@ class UpdateVendorBillUseCaseTest {
                 LocalDate.of(2026, 5, 10),
                 LocalDate.of(2026, 5, 20),
                 1L,
+                BigDecimal.ONE,
                 "updated",
                 List.of(),
                 List.of()

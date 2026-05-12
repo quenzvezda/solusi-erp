@@ -134,6 +134,7 @@ class ConfirmVendorBillUseCaseTest {
                 LocalDate.of(2026, 5, 10),
                 LocalDate.of(2026, 5, 20),
                 1L,
+                BigDecimal.ONE,
                 VendorBillStatus.DRAFT,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,
@@ -223,6 +224,11 @@ class ConfirmVendorBillUseCaseTest {
         @Override
         public BigDecimal sumConfirmedBilledQty(Long grLineId, Long excludeBillId) {
             return confirmedBilledQty.getOrDefault(grLineId, BigDecimal.ZERO);
+        }
+
+        @Override
+        public BigDecimal getGrExchangeRate(Long grLineId) {
+            return BigDecimal.ONE;
         }
     }
 

@@ -16,7 +16,7 @@ class GetVendorBillCreateViewUseCaseTest {
     @Test
     void execute_should_load_billable_grs_for_vendor_and_currency() {
         FakeBillableGrQueryPort port = new FakeBillableGrQueryPort();
-        port.billableGrs = List.of(new BillableGrView(88L, "GR-001", 77L, "PO-001", 10L, 1L));
+        port.billableGrs = List.of(new BillableGrView(88L, "GR-001", 77L, "PO-001", 10L, 1L, BigDecimal.ONE));
 
         VendorBillCreateView result = new GetVendorBillCreateViewUseCaseImpl(port).execute(10L, 1L);
 
@@ -63,6 +63,11 @@ class GetVendorBillCreateViewUseCaseTest {
         @Override
         public BigDecimal sumConfirmedBilledQty(Long grLineId, Long excludeBillId) {
             throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public BigDecimal getGrExchangeRate(Long grLineId) {
+            return BigDecimal.ONE;
         }
     }
 }

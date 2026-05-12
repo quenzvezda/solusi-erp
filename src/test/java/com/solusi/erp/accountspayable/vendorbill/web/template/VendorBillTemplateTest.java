@@ -25,7 +25,7 @@ class VendorBillTemplateTest {
         String template = readResource("templates/accountspayable/vendor-bills/list.html");
 
         assertThat(template).contains("hasAuthority('VENDOR-BILL_CREATE')");
-        assertThat(template).contains("/accounts-payable/vendor-bills/create");
+        assertThat(template).contains("/accounts-payable/vendor-bills/select-references");
     }
 
     @Test
@@ -90,13 +90,12 @@ class VendorBillTemplateTest {
     }
 
     @Test
-    void form_script_should_fetch_gr_lines_and_append_rows() throws Exception {
+    void form_script_should_remove_line_rows() throws Exception {
         String script = readResource("static/js/accountspayable/vendor-bills/form.js");
 
-        assertThat(script).contains("fetch(linesUrl");
-        assertThat(script).contains("appendLine");
-        assertThat(script).contains("lines[");
-        assertThat(script).contains("grIds[");
+        assertThat(script).contains("js-vb-line-remove");
+        assertThat(script).contains("closest(\".vendor-bill-line-row\")");
+        assertThat(script).doesNotContain("fetch(linesUrl");
     }
 
     private String readResource(String path) throws Exception {

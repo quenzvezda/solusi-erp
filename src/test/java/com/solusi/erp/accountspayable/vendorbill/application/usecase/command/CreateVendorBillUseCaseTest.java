@@ -41,6 +41,7 @@ class CreateVendorBillUseCaseTest {
                 LocalDate.of(2026, 5, 10),
                 LocalDate.of(2026, 5, 9),
                 1L,
+                BigDecimal.ONE,
                 "notes",
                 List.of(99L),
                 List.of()
@@ -56,6 +57,7 @@ class CreateVendorBillUseCaseTest {
                 LocalDate.of(2026, 5, 10),
                 LocalDate.of(2026, 5, 20),
                 1L,
+                BigDecimal.ONE,
                 "notes",
                 List.of(88L),
                 List.of(new VendorBillLineCommand(

@@ -4,7 +4,6 @@
     var form = document.getElementById("vendor-bill-form");
     var lineBody = document.getElementById("vendor-bill-lines-body");
     var selectedGrIds = document.getElementById("selected-gr-ids");
-    var loadBillableGrsButton = document.getElementById("btn-load-billable-grs");
 
     if (!form || !lineBody || !selectedGrIds) {
         return;
@@ -97,51 +96,6 @@
         if (removeButton) {
             removeButton.closest(".vendor-bill-line-row").remove();
             updateEmptyRow();
-            return;
         }
-
-        var selectButton = event.target.closest(".js-vb-gr-select");
-        if (!selectButton) {
-            return;
-        }
-
-        var linesUrl = selectButton.dataset.linesUrl;
-        var grId = selectButton.dataset.grId;
-        if (!linesUrl || !grId) {
-            return;
-        }
-
-        fetch(linesUrl, { headers: { "Accept": "application/json" } })
-            .then(function (response) { return response.json(); })
-            .then(function (payload) {
-                var lines = payload && Array.isArray(payload.data) ? payload.data : [];
-                var appended = false;
-                lines.forEach(function (line) {
-                    appended = appendLine(line) || appended;
-                });
-                if (appended) {
-                    addGrId(grId);
-                }
-                var modalEl = document.getElementById("grLineSelectorModal");
-                if (modalEl && window.bootstrap && window.bootstrap.Modal) {
-                    var modal = window.bootstrap.Modal.getInstance(modalEl)
-                        || window.bootstrap.Modal.getOrCreateInstance(modalEl);
-                    modal.hide();
-                }
-            });
     });
-
-    if (loadBillableGrsButton) {
-        loadBillableGrsButton.addEventListener("click", function () {
-            var vendorId = form.querySelector('[name="vendorId"]')?.value;
-            var currencyId = form.querySelector('[name="currencyId"]')?.value;
-            if (!vendorId || !currencyId) {
-                return;
-            }
-            window.location.href = "/accounts-payable/vendor-bills/create?vendorId="
-                + encodeURIComponent(vendorId)
-                + "&currencyId="
-                + encodeURIComponent(currencyId);
-        });
-    }
 })();

@@ -22,4 +22,5 @@ public class JournalEntryDetailResponse extends BaseAuditResponse {
     private List<JournalLineResponse> lines;
     private BigDecimal totalDebit;
     private BigDecimal totalCredit;
+    private boolean hasMultiCurrencyLines;
 }

@@ -9,6 +9,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +30,8 @@ public class VendorBillSaveRequest extends BaseAuditResponse {
     private LocalDate dueDate;
     @NotNull
     private Long currencyId;
+    @NotNull
+    private BigDecimal exchangeRate = BigDecimal.ONE;
     private String notes;
     private List<Long> grIds = new ArrayList<>();
     @Valid

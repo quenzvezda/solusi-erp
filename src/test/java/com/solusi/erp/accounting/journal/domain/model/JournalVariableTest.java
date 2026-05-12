@@ -21,7 +21,9 @@ class JournalVariableTest {
         assertThat(JournalVariable.getVariablesForEvent(SchemaEventType.VENDOR_BILL)).containsExactlyInAnyOrder(
                 JournalVariable.VB_GRIR_CLEARING_AMT,
                 JournalVariable.VB_TAX_AMT,
-                JournalVariable.VB_AP_TOTAL
+                JournalVariable.VB_AP_TOTAL,
+                JournalVariable.VB_FX_LOSS_AMT,
+                JournalVariable.VB_FX_GAIN_AMT
         );
 
         assertThat(JournalVariable.getVariablesForEvent(SchemaEventType.VENDOR_PAYMENT)).containsExactlyInAnyOrder(

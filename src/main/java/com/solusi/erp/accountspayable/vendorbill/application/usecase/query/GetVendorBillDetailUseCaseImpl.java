@@ -30,6 +30,7 @@ public class GetVendorBillDetailUseCaseImpl implements GetVendorBillDetailUseCas
                 bill.getBillDate(),
                 bill.getDueDate(),
                 bill.getCurrencyId(),
+                bill.getExchangeRate(),
                 bill.getStatus(),
                 bill.getSubtotal(),
                 bill.getTaxAmount(),

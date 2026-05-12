@@ -67,7 +67,7 @@ class VendorBillTest {
 
         VendorBill bill = VendorBill.createNew(
                 "VB-202605-00001", 20L, "INV-001", LocalDate.of(2026, 5, 1),
-                LocalDate.of(2026, 5, 31), 1L, "notes", List.of(grRef), List.of(line)
+                LocalDate.of(2026, 5, 31), 1L, BigDecimal.ONE, "notes", List.of(grRef), List.of(line)
         );
 
         assertThat(bill.getStatus()).isEqualTo(VendorBillStatus.DRAFT);
@@ -92,7 +92,7 @@ class VendorBillTest {
     private VendorBill draftBill(List<VendorBillLine> lines) {
         return VendorBill.createNew(
                 "VB-202605-00001", 20L, "INV-001", LocalDate.of(2026, 5, 1),
-                LocalDate.of(2026, 5, 31), 1L, "notes",
+                LocalDate.of(2026, 5, 31), 1L, BigDecimal.ONE, "notes",
                 List.of(new VendorBillGrRef(null, 15L)), lines
         );
     }

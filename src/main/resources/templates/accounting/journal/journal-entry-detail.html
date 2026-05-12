@@ -39,7 +39,11 @@
                                        th:href="@{/inventory/goods-receipts/{id}(id=${journal.sourceId})}"
                                        th:text="${journal.sourceCode}"
                                        class="text-primary">GR-001</a>
-                                    <span th:unless="${journal.sourceType == 'GOODS_RECEIPT' and journal.sourceId != null}" th:text="${journal.sourceCode}">SRC-001</span>
+                                    <a th:if="${journal.sourceType == 'VENDOR_BILL' and journal.sourceId != null}"
+                                       th:href="@{/accounts-payable/vendor-bills/{id}(id=${journal.sourceId})}"
+                                       th:text="${journal.sourceCode}"
+                                       class="text-primary">VB-001</a>
+                                    <span th:unless="${(journal.sourceType == 'GOODS_RECEIPT' or journal.sourceType == 'VENDOR_BILL') and journal.sourceId != null}" th:text="${journal.sourceCode}">SRC-001</span>
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">

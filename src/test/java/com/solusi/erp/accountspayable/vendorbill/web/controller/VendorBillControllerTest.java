@@ -42,6 +42,7 @@ class VendorBillControllerTest {
     private GetVendorBillDetailUseCase detailUseCase;
     private GetVendorBillCreateViewUseCase createViewUseCase;
     private FindBillableGrLinesUseCase findBillableGrLinesUseCase;
+    private FindBillableReferencesUseCase findBillableReferencesUseCase;
     private VendorBillWebMapper webMapper;
     private MessageSource messageSource;
     private VendorBillController controller;
@@ -57,6 +58,7 @@ class VendorBillControllerTest {
         detailUseCase = mock(GetVendorBillDetailUseCase.class);
         createViewUseCase = mock(GetVendorBillCreateViewUseCase.class);
         findBillableGrLinesUseCase = mock(FindBillableGrLinesUseCase.class);
+        findBillableReferencesUseCase = mock(FindBillableReferencesUseCase.class);
         webMapper = mock(VendorBillWebMapper.class);
         messageSource = mock(MessageSource.class);
         controller = new VendorBillController(
@@ -69,6 +71,7 @@ class VendorBillControllerTest {
                 detailUseCase,
                 createViewUseCase,
                 findBillableGrLinesUseCase,
+                findBillableReferencesUseCase,
                 webMapper,
                 messageSource
         );
@@ -113,6 +116,7 @@ class VendorBillControllerTest {
                 LocalDate.of(2026, 5, 10),
                 LocalDate.of(2026, 5, 20),
                 1L,
+                BigDecimal.ONE,
                 VendorBillStatus.CONFIRMED,
                 new BigDecimal("100.0000"),
                 BigDecimal.ZERO,
@@ -148,6 +152,7 @@ class VendorBillControllerTest {
                 LocalDate.of(2026, 5, 10),
                 LocalDate.of(2026, 5, 20),
                 1L,
+                BigDecimal.ONE,
                 "notes",
                 List.of(88L),
                 List.of()
@@ -164,6 +169,7 @@ class VendorBillControllerTest {
                 LocalDate.of(2026, 5, 10),
                 LocalDate.of(2026, 5, 20),
                 1L,
+                BigDecimal.ONE,
                 "notes",
                 List.of(88L),
                 List.of()

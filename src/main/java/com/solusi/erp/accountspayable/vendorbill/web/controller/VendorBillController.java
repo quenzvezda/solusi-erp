@@ -39,6 +39,7 @@ public class VendorBillController {
     private final GetVendorBillDetailUseCase getVendorBillDetailUseCase;
     private final GetVendorBillCreateViewUseCase getVendorBillCreateViewUseCase;
     private final FindBillableGrLinesUseCase findBillableGrLinesUseCase;
+    private final FindBillableReferencesUseCase findBillableReferencesUseCase;
     private final VendorBillWebMapper webMapper;
     private final MessageSource messageSource;
 
@@ -64,13 +65,38 @@ public class VendorBillController {
         return "accountspayable/vendor-bills/list";
     }
 
+    @GetMapping("/select-references")
+    @PreAuthorize("hasAuthority('VENDOR-BILL_CREATE')")
+    public String selectReferences(@RequestParam(required = false) Long vendorId,
+                                   @RequestParam(required = false) Long currencyId,
+                                   Model model) {
+        model.addAttribute("references", findBillableReferencesUseCase.execute(vendorId, currencyId));
+        model.addAttribute("vendorId", vendorId);
+        model.addAttribute("currencyId", currencyId);
+        return "accountspayable/vendor-bills/select-references";
+    }
+
+    @PostMapping("/create-from-references")
+    @PreAuthorize("hasAuthority('VENDOR-BILL_CREATE')")
+    public String createFromReferences(@RequestParam(name = "selectedGrIds") List<Long> selectedGrIds,
+                                       org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("selectedGrIds", selectedGrIds);
+        return "redirect:/accounts-payable/vendor-bills/create";
+    }
+
     @GetMapping("/create")
     @PreAuthorize("hasAuthority('VENDOR-BILL_CREATE')")
     public String createForm(@RequestParam(required = false) Long vendorId,
                              @RequestParam(required = false) Long currencyId,
+                             @ModelAttribute("selectedGrIds") List<Long> selectedGrIds,
                              Model model) {
         VendorBillCreateView view = getVendorBillCreateViewUseCase.execute(vendorId, currencyId);
-        model.addAttribute("form", webMapper.toFormView(view));
+        VendorBillFormView form = webMapper.toFormView(view);
+        if (selectedGrIds != null && !selectedGrIds.isEmpty()) {
+            form.request().setGrIds(selectedGrIds);
+            form.request().setLines(prefillLines(selectedGrIds));
+        }
+        model.addAttribute("form", form);
         return "accountspayable/vendor-bills/form";
     }
 
@@ -100,6 +126,7 @@ public class VendorBillController {
                 command.billDate(),
                 command.dueDate(),
                 command.currencyId(),
+                command.exchangeRate(),
                 command.notes(),
                 command.grIds(),
                 command.lines()
@@ -120,6 +147,7 @@ public class VendorBillController {
                 command.billDate(),
                 command.dueDate(),
                 command.currencyId(),
+                command.exchangeRate(),
                 command.notes(),
                 command.grIds(),
                 command.lines()
@@ -150,6 +178,28 @@ public class VendorBillController {
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         deleteVendorBillUseCase.execute(id);
         return ResponseEntity.ok(success("msg.success.delete"));
+    }
+
+    private List<VendorBillLineRequest> prefillLines(List<Long> grIds) {
+        return grIds.stream()
+                .flatMap(grId -> findBillableGrLinesUseCase.execute(grId).stream())
+                .map(this::toLineRequest)
+                .toList();
+    }
+
+    private VendorBillLineRequest toLineRequest(BillableGrLineView line) {
+        VendorBillLineRequest request = new VendorBillLineRequest();
+        request.setGrLineId(line.grLineId());
+        request.setProductId(line.productId());
+        request.setProductName(line.productName());
+        request.setDescription(line.productName());
+        request.setQtyBilled(line.outstandingQty());
+        request.setUomId(line.uomId());
+        request.setUomName(line.uomName());
+        request.setUnitPrice(line.unitPrice());
+        request.setInventoryAmount(line.inventoryAmount());
+        request.setTaxAmount(line.taxAmount());
+        return request;
     }
 
     private ApiResponse<Void> success(String messageKey) {

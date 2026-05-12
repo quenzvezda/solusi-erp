@@ -9,6 +9,7 @@ import com.solusi.erp.accounting.journal.web.dto.JournalLineResponse;
 import com.solusi.erp.core.dto.BaseAuditResponse;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.mapper.AuditMapperHelper;
+import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -29,6 +30,9 @@ public abstract class JournalEntryWebMapper {
     @Autowired
     protected CoaLookupProvider coaLookupProvider;
 
+    @Autowired
+    protected CurrencyLookupProvider currencyLookupProvider;
+
     @Mapping(target = "journalCode", source = "id", qualifiedByName = "formatJournalCode")
     @Mapping(target = "postingDate", source = "journalDate")
     @Mapping(target = "totalDebit", source = "lines", qualifiedByName = "calcTotalDebit")
@@ -39,10 +43,12 @@ public abstract class JournalEntryWebMapper {
     @Mapping(target = "postingDate", source = "journalDate")
     @Mapping(target = "totalDebit", source = "lines", qualifiedByName = "calcTotalDebit")
     @Mapping(target = "totalCredit", source = "lines", qualifiedByName = "calcTotalCredit")
+    @Mapping(target = "hasMultiCurrencyLines", source = "lines", qualifiedByName = "hasMultiCurrencyLines")
     public abstract JournalEntryDetailResponse toDetailResponse(JournalEntry domain);
 
     @Mapping(target = "accountCode", source = "accountId", qualifiedByName = "resolveAccountCode")
     @Mapping(target = "accountName", source = "accountId", qualifiedByName = "resolveAccountName")
+    @Mapping(target = "originalCurrencyCode", source = "originalCurrencyId", qualifiedByName = "resolveCurrencyCode")
     public abstract JournalLineResponse toLineResponse(JournalLine line);
 
     @AfterMapping
@@ -78,6 +84,11 @@ public abstract class JournalEntryWebMapper {
         return lines.stream().map(JournalLine::creditAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    @Named("hasMultiCurrencyLines")
+    protected boolean hasMultiCurrencyLines(List<JournalLine> lines) {
+        return lines != null && lines.stream().anyMatch(line -> line.originalCurrencyId() != null);
+    }
+
     @Named("resolveAccountCode")
     protected String resolveAccountCode(Long accountId) {
         return resolveAccount(accountId).map(LookupDto::subText).orElse(null);
@@ -86,6 +97,15 @@ public abstract class JournalEntryWebMapper {
     @Named("resolveAccountName")
     protected String resolveAccountName(Long accountId) {
         return resolveAccount(accountId).map(LookupDto::name).orElse(null);
+    }
+
+    @Named("resolveCurrencyCode")
+    protected String resolveCurrencyCode(Long currencyId) {
+        if (currencyId == null || currencyLookupProvider == null) {
+            return null;
+        }
+        LookupDto lookup = currencyLookupProvider.resolve(currencyId);
+        return lookup != null ? lookup.subText() : null;
     }
 
     private Optional<LookupDto> resolveAccount(Long accountId) {

@@ -41,6 +41,9 @@ public class VendorBillEntity extends BaseModel {
     @Column(name = "currency_id", nullable = false)
     private Long currencyId;
 
+    @Column(name = "exchange_rate", nullable = false, precision = 19, scale = 6)
+    private BigDecimal exchangeRate = BigDecimal.ONE;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private VendorBillStatus status;

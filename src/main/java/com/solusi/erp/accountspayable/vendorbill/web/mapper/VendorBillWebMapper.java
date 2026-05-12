@@ -26,6 +26,7 @@ public class VendorBillWebMapper {
                 command.billDate(),
                 command.dueDate(),
                 command.currencyId(),
+                command.exchangeRate(),
                 command.notes(),
                 command.grIds(),
                 command.lines()
@@ -54,6 +55,7 @@ public class VendorBillWebMapper {
         response.setBillDate(view.billDate());
         response.setDueDate(view.dueDate());
         response.setCurrencyId(view.currencyId());
+        response.setExchangeRate(view.exchangeRate());
         response.setStatus(view.status() != null ? view.status().name() : null);
         response.setSubtotal(view.subtotal());
         response.setTaxAmount(view.taxAmount());
@@ -68,6 +70,7 @@ public class VendorBillWebMapper {
         VendorBillSaveRequest request = new VendorBillSaveRequest();
         request.setVendorId(view.vendorId());
         request.setCurrencyId(view.currencyId());
+        request.setExchangeRate(view.exchangeRate());
         return new VendorBillFormView(request, view.billableGrs());
     }
 
@@ -86,6 +89,7 @@ public class VendorBillWebMapper {
                 request.getBillDate(),
                 request.getDueDate(),
                 request.getCurrencyId(),
+                request.getExchangeRate(),
                 request.getNotes(),
                 request.getGrIds() == null ? List.of() : List.copyOf(request.getGrIds()),
                 toLineCommands(request.getLines())

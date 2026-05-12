@@ -4,9 +4,11 @@ import com.solusi.erp.accounting.journal.application.usecase.command.PostJournal
 import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeriodForDateUseCase;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.command.*;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.query.*;
+import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableApReferenceProvider;
 import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableGrQueryPort;
 import com.solusi.erp.accountspayable.vendorbill.domain.repository.VendorBillRepository;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.adapter.BillableGrQueryAdapter;
+import com.solusi.erp.accountspayable.vendorbill.infrastructure.adapter.GoodsReceiptBillableReferenceProvider;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.adapter.VendorBillRepositoryImpl;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.persistence.VendorBillJpaRepository;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.persistence.VendorBillPersistenceMapper;
@@ -16,6 +18,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import java.util.List;
 
 @Configuration
 public class VendorBillConfig {
@@ -32,14 +36,28 @@ public class VendorBillConfig {
     }
 
     @Bean
+    public BillableApReferenceProvider goodsReceiptBillableReferenceProvider(NamedParameterJdbcTemplate jdbcTemplate) {
+        return new GoodsReceiptBillableReferenceProvider(jdbcTemplate);
+    }
+
+    @Bean
+    public FindBillableReferencesUseCase findBillableReferencesUseCase(List<BillableApReferenceProvider> providers,
+                                                                       PlatformTransactionManager txManager) {
+        FindBillableReferencesUseCase pure = new FindBillableReferencesUseCaseImpl(providers);
+        TransactionTemplate tx = new TransactionTemplate(txManager);
+        tx.setReadOnly(true);
+        return (vendorId, currencyId) -> tx.execute(status -> pure.execute(vendorId, currencyId));
+    }
+
+    @Bean
     public CreateVendorBillUseCase createVendorBillUseCase(VendorBillRepository repository,
                                                            SequenceGeneratorService sequenceGeneratorService,
                                                            PlatformTransactionManager txManager) {
         CreateVendorBillUseCase pure = new CreateVendorBillUseCaseImpl(repository, sequenceGeneratorService);
         TransactionTemplate tx = new TransactionTemplate(txManager);
-        return (vendorId, vendorInvoiceNumber, billDate, dueDate, currencyId, notes, grIds, lines) ->
+        return (vendorId, vendorInvoiceNumber, billDate, dueDate, currencyId, exchangeRate, notes, grIds, lines) ->
                 tx.execute(status -> pure.execute(
-                        vendorId, vendorInvoiceNumber, billDate, dueDate, currencyId, notes, grIds, lines));
+                        vendorId, vendorInvoiceNumber, billDate, dueDate, currencyId, exchangeRate, notes, grIds, lines));
     }
 
     @Bean
@@ -47,9 +65,9 @@ public class VendorBillConfig {
                                                            PlatformTransactionManager txManager) {
         UpdateVendorBillUseCase pure = new UpdateVendorBillUseCaseImpl(repository);
         TransactionTemplate tx = new TransactionTemplate(txManager);
-        return (id, vendorId, vendorInvoiceNumber, billDate, dueDate, currencyId, notes, grIds, lines) ->
+        return (id, vendorId, vendorInvoiceNumber, billDate, dueDate, currencyId, exchangeRate, notes, grIds, lines) ->
                 tx.execute(status -> pure.execute(
-                        id, vendorId, vendorInvoiceNumber, billDate, dueDate, currencyId, notes, grIds, lines));
+                        id, vendorId, vendorInvoiceNumber, billDate, dueDate, currencyId, exchangeRate, notes, grIds, lines));
     }
 
     @Bean

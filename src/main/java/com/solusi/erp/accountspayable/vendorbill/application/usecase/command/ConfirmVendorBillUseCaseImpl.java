@@ -69,6 +69,7 @@ public class ConfirmVendorBillUseCaseImpl implements ConfirmVendorBillUseCase {
                 bill.getBillDate(),
                 bill.getDueDate(),
                 bill.getCurrencyId(),
+                bill.getExchangeRate(),
                 VendorBillStatus.DRAFT,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,
@@ -79,6 +80,21 @@ public class ConfirmVendorBillUseCaseImpl implements ConfirmVendorBillUseCase {
         );
         confirmedBill.confirm(total, BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP), total);
 
+        BigDecimal originalTotal = confirmedLines.stream()
+                .map(VendorBillLine::getLineTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(4, RoundingMode.HALF_UP);
+        BigDecimal apBaseTotal = originalTotal.multiply(confirmedBill.getExchangeRate()).setScale(4, RoundingMode.HALF_UP);
+        BigDecimal grirBaseTotal = confirmedLines.stream()
+                .map(line -> line.getLineTotal()
+                        .multiply(billableGrQueryPort.getGrExchangeRate(line.getGrLineId()))
+                        .setScale(4, RoundingMode.HALF_UP))
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(4, RoundingMode.HALF_UP);
+        BigDecimal fxVariance = apBaseTotal.subtract(grirBaseTotal).setScale(4, RoundingMode.HALF_UP);
+        BigDecimal fxLoss = fxVariance.signum() > 0 ? fxVariance : BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
+        BigDecimal fxGain = fxVariance.signum() < 0 ? fxVariance.abs() : BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
+
         postJournalForEventUseCase.execute(new JournalPostingCommand(
                 SchemaEventType.VENDOR_BILL,
                 "VENDOR_BILL",
@@ -87,9 +103,20 @@ public class ConfirmVendorBillUseCaseImpl implements ConfirmVendorBillUseCase {
                 confirmedBill.getBillDate(),
                 "Auto journal for vendor bill " + confirmedBill.getCode(),
                 Map.of(
-                        JournalVariable.VB_GRIR_CLEARING_AMT, total,
+                        JournalVariable.VB_GRIR_CLEARING_AMT, grirBaseTotal,
                         JournalVariable.VB_TAX_AMT, BigDecimal.ZERO,
-                        JournalVariable.VB_AP_TOTAL, total
+                        JournalVariable.VB_AP_TOTAL, apBaseTotal,
+                        JournalVariable.VB_FX_LOSS_AMT, fxLoss,
+                        JournalVariable.VB_FX_GAIN_AMT, fxGain
+                ),
+                confirmedBill.getCurrencyId(),
+                confirmedBill.getExchangeRate(),
+                Map.of(
+                        JournalVariable.VB_GRIR_CLEARING_AMT, originalTotal,
+                        JournalVariable.VB_TAX_AMT, BigDecimal.ZERO,
+                        JournalVariable.VB_AP_TOTAL, originalTotal,
+                        JournalVariable.VB_FX_LOSS_AMT, fxLoss,
+                        JournalVariable.VB_FX_GAIN_AMT, fxGain
                 )
         ));
 

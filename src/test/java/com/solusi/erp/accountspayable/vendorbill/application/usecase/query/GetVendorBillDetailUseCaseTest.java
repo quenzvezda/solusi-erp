@@ -54,6 +54,7 @@ class GetVendorBillDetailUseCaseTest {
                 LocalDate.of(2026, 5, 10),
                 LocalDate.of(2026, 5, 20),
                 1L,
+                BigDecimal.ONE,
                 VendorBillStatus.CONFIRMED,
                 new BigDecimal("100.0000"),
                 BigDecimal.ZERO,

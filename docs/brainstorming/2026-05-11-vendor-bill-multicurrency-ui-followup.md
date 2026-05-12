@@ -327,3 +327,26 @@ Plan sebaiknya dibagi menjadi beberapa task:
 
 Urutan ini mengurangi risiko karena fondasi journal dan data model diselesaikan sebelum UI wizard bergantung pada struktur baru.
 
+---
+
+## Implementation Note — 2026-05-12
+
+Brainstorming ini sudah diimplementasikan pada branch `feature/sprint-5-vendor-bill` sebagai follow-up Vendor Bill Sprint 5.
+
+Key implementation notes:
+
+- Journal line sudah mendukung multi-currency audit fields: original currency, exchange rate, original debit, dan original credit, sementara balancing tetap memakai base debit/credit.
+- Vendor Bill sekarang menyimpan `exchange_rate` sebagai snapshot kurs invoice dan menggunakannya saat posting AP.
+- Vendor Bill confirmation sekarang menghitung base AP amount dari Vendor Bill rate dan membandingkannya dengan GR/IR base amount dari GR rate.
+- FX variance Vendor Bill diposting melalui `VB_FX_LOSS_AMT` atau `VB_FX_GAIN_AMT`; zero amount tetap mengikuti schema engine behavior untuk skip line.
+- Dev seeder CoA dan accounting schema sudah ditambahkan untuk Foreign Exchange Gain/Loss agar konfigurasi manual tidak tertinggal saat reset database dev.
+- Create Vendor Bill flow sudah menjadi 2-step wizard: pilih billable AP references terlebih dahulu, lalu form header/lines diprefill dari selected references.
+- AP billable reference dibuat generik melalui provider abstraction; implementasi aktif saat ini adalah Goods Receipt provider.
+- Journal Entry detail sudah menampilkan kolom multi-currency secara conditional saat journal line memiliki original currency.
+- Regression tests dan Thymeleaf/static template tests sudah disesuaikan dengan flow wizard dan FX variables baru.
+
+Known follow-up:
+
+- Mixed exchange rate selected references masih perlu diperhalus pada UX agar user mendapat indikator eksplisit ketika rate source berbeda dan wajib mengisi Vendor Bill exchange rate manual.
+- Step 2 wizard masih perlu validasi server-side yang lebih eksplisit untuk memastikan selected references tetap satu vendor dan satu currency setelah redirect/prefill.
+

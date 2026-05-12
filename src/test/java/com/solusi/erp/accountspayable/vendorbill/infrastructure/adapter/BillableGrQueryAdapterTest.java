@@ -40,7 +40,7 @@ class BillableGrQueryAdapterTest {
     @Test
     @SuppressWarnings("unchecked")
     void findBillableGrs_should_query_with_confirmed_status() {
-        List<BillableGrView> expected = List.of(new BillableGrView(1L, "GR-1", 2L, "PO-1", 3L, 4L));
+        List<BillableGrView> expected = List.of(new BillableGrView(1L, "GR-1", 2L, "PO-1", 3L, 4L, BigDecimal.ONE));
         when(jdbcTemplate.query(any(String.class), any(MapSqlParameterSource.class), any(RowMapper.class)))
                 .thenReturn((List) expected);
 

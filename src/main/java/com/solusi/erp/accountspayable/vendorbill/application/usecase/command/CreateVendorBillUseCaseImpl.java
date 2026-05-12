@@ -28,6 +28,7 @@ public class CreateVendorBillUseCaseImpl implements CreateVendorBillUseCase {
                               LocalDate billDate,
                               LocalDate dueDate,
                               Long currencyId,
+                              BigDecimal exchangeRate,
                               String notes,
                               List<Long> grIds,
                               List<VendorBillLineCommand> lines) {
@@ -40,6 +41,7 @@ public class CreateVendorBillUseCaseImpl implements CreateVendorBillUseCase {
                 billDate,
                 dueDate,
                 currencyId,
+                exchangeRate,
                 notes,
                 toGrRefs(grIds),
                 toLines(lines)

@@ -14,7 +14,7 @@
                         <div class="text-secondary mt-1" th:text="#{label.vb.subtitle}">Manage vendor invoices.</div>
                     </div>
                     <div class="col-auto ms-auto" sec:authorize="hasAuthority('VENDOR-BILL_CREATE')">
-                        <a th:href="@{/accounts-payable/vendor-bills/create}" class="btn btn-primary">
+                        <a th:href="@{/accounts-payable/vendor-bills/select-references}" class="btn btn-primary">
                             <i class="ti ti-plus me-1"></i><span th:text="#{label.vb.create}">Create Vendor Bill</span>
                         </a>
                     </div>

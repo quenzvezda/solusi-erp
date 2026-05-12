@@ -14,6 +14,7 @@ public record VendorBillDetailView(
         LocalDate billDate,
         LocalDate dueDate,
         Long currencyId,
+        BigDecimal exchangeRate,
         VendorBillStatus status,
         BigDecimal subtotal,
         BigDecimal taxAmount,

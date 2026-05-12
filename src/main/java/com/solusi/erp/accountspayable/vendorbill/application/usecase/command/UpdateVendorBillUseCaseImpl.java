@@ -26,6 +26,7 @@ public class UpdateVendorBillUseCaseImpl implements UpdateVendorBillUseCase {
                               LocalDate billDate,
                               LocalDate dueDate,
                               Long currencyId,
+                              BigDecimal exchangeRate,
                               String notes,
                               List<Long> grIds,
                               List<VendorBillLineCommand> lines) {
@@ -43,6 +44,7 @@ public class UpdateVendorBillUseCaseImpl implements UpdateVendorBillUseCase {
                 billDate,
                 dueDate,
                 currencyId,
+                exchangeRate,
                 VendorBillStatus.DRAFT,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,

@@ -17,6 +17,7 @@ public class VendorBill {
     private final LocalDate billDate;
     private final LocalDate dueDate;
     private final Long currencyId;
+    private final BigDecimal exchangeRate;
     private VendorBillStatus status;
     private BigDecimal subtotal;
     private BigDecimal taxAmount;
@@ -26,9 +27,9 @@ public class VendorBill {
     private final List<VendorBillLine> lines;
 
     public VendorBill(AuditMetadata metadata, String code, Long vendorId, String vendorInvoiceNumber,
-                      LocalDate billDate, LocalDate dueDate, Long currencyId, VendorBillStatus status,
-                      BigDecimal subtotal, BigDecimal taxAmount, BigDecimal totalAmount, String notes,
-                      List<VendorBillGrRef> grRefs, List<VendorBillLine> lines) {
+                      LocalDate billDate, LocalDate dueDate, Long currencyId, BigDecimal exchangeRate,
+                      VendorBillStatus status, BigDecimal subtotal, BigDecimal taxAmount, BigDecimal totalAmount,
+                      String notes, List<VendorBillGrRef> grRefs, List<VendorBillLine> lines) {
         this.metadata = metadata;
         this.code = code;
         this.vendorId = vendorId;
@@ -36,6 +37,7 @@ public class VendorBill {
         this.billDate = billDate;
         this.dueDate = dueDate;
         this.currencyId = currencyId;
+        this.exchangeRate = exchangeRate == null ? BigDecimal.ONE : exchangeRate;
         this.status = status;
         this.subtotal = subtotal;
         this.taxAmount = taxAmount;
@@ -46,11 +48,12 @@ public class VendorBill {
     }
 
     public static VendorBill createNew(String code, Long vendorId, String vendorInvoiceNumber,
-                                       LocalDate billDate, LocalDate dueDate, Long currencyId, String notes,
+                                       LocalDate billDate, LocalDate dueDate, Long currencyId,
+                                       BigDecimal exchangeRate, String notes,
                                        List<VendorBillGrRef> grRefs, List<VendorBillLine> lines) {
         return new VendorBill(
                 AuditMetadata.empty(), code, vendorId, vendorInvoiceNumber, billDate, dueDate, currencyId,
-                VendorBillStatus.DRAFT, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, notes,
+                exchangeRate, VendorBillStatus.DRAFT, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, notes,
                 grRefs, lines
         );
     }
@@ -101,6 +104,10 @@ public class VendorBill {
 
     public Long getCurrencyId() {
         return currencyId;
+    }
+
+    public BigDecimal getExchangeRate() {
+        return exchangeRate;
     }
 
     public VendorBillStatus getStatus() {

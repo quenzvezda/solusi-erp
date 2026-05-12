@@ -37,6 +37,14 @@ public class PostJournalForEventUseCaseImpl implements PostJournalForEventUseCas
                     if (value == null || value.compareTo(BigDecimal.ZERO) == 0) {
                         return null;
                     }
+                    if (command.originalCurrencyId() != null && command.originalValues() != null) {
+                        BigDecimal originalValue = command.originalValues().getOrDefault(schemaLine.getVar(), value);
+                        return schemaLine.getPosition() == JournalPosition.DEBIT
+                                ? JournalLine.debitWithOriginal(schemaLine.getAccountId(), value,
+                                command.originalCurrencyId(), command.exchangeRate(), originalValue)
+                                : JournalLine.creditWithOriginal(schemaLine.getAccountId(), value,
+                                command.originalCurrencyId(), command.exchangeRate(), originalValue);
+                    }
                     return schemaLine.getPosition() == JournalPosition.DEBIT
                             ? JournalLine.debit(schemaLine.getAccountId(), value)
                             : JournalLine.credit(schemaLine.getAccountId(), value);

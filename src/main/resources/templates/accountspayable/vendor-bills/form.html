@@ -39,16 +39,17 @@
                             <div class="row g-3">
                                 <div class="col-md-3">
                                     <label class="form-label" th:text="#{label.vendor}">Vendor</label>
-                                    <input type="number" class="form-control" th:field="*{vendorId}" required>
+                                    <input type="hidden" th:field="*{vendorId}">
+                                    <input type="text" class="form-control bg-light" th:value="*{vendorId}" readonly>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label" th:text="#{label.currency}">Currency</label>
-                                    <input type="number" class="form-control" th:field="*{currencyId}" required>
+                                    <input type="hidden" th:field="*{currencyId}">
+                                    <input type="text" class="form-control bg-light" th:value="*{currencyId}" readonly>
                                 </div>
-                                <div class="col-md-3 d-flex align-items-end">
-                                    <button type="button" class="btn btn-outline-primary w-100" id="btn-load-billable-grs">
-                                        <i class="ti ti-refresh me-1"></i><span th:text="#{label.vb.load.grs}">Load GRs</span>
-                                    </button>
+                                <div class="col-md-3">
+                                    <label class="form-label" th:text="#{label.vb.exchangeRate}">Exchange Rate</label>
+                                    <input type="text" class="form-control text-end" th:field="*{exchangeRate}" data-autonumeric="decimal" required>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label" th:text="#{label.vb.vendorInvoiceNumber}">Vendor Invoice</label>
@@ -73,12 +74,6 @@
                     <div class="card">
                         <div class="card-header">
                             <h3 class="card-title" th:text="#{label.vb.lines}">Bill Lines</h3>
-                            <div class="card-actions">
-                                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
-                                        data-bs-target="#grLineSelectorModal">
-                                    <i class="ti ti-plus me-1"></i><span th:text="#{label.vb.select.gr.lines}">Select GR Lines</span>
-                                </button>
-                            </div>
                         </div>
                         <div class="table-responsive">
                             <table class="table table-vcenter card-table">
@@ -133,8 +128,6 @@
                         </div>
                     </div>
                 </form>
-
-                <div th:replace="~{accountspayable/vendor-bills/gr-line-selector-modal :: modal(${form.billableGrs})}"></div>
             </div>
         </div>
     </div>

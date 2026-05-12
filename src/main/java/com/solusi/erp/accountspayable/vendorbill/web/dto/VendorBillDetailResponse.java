@@ -19,6 +19,7 @@ public class VendorBillDetailResponse extends BaseAuditResponse {
     private LocalDate billDate;
     private LocalDate dueDate;
     private Long currencyId;
+    private BigDecimal exchangeRate;
     private String status;
     private BigDecimal subtotal;
     private BigDecimal taxAmount;

@@ -11,6 +11,8 @@ public enum JournalVariable {
     VB_GRIR_CLEARING_AMT(SchemaEventType.VENDOR_BILL),
     VB_TAX_AMT(SchemaEventType.VENDOR_BILL),
     VB_AP_TOTAL(SchemaEventType.VENDOR_BILL),
+    VB_FX_LOSS_AMT(SchemaEventType.VENDOR_BILL),
+    VB_FX_GAIN_AMT(SchemaEventType.VENDOR_BILL),
     VP_AP_AMT(SchemaEventType.VENDOR_PAYMENT),
     VP_BANK_OUT_AMT(SchemaEventType.VENDOR_PAYMENT),
     CI_AR_AMT(SchemaEventType.CUSTOMER_INVOICE),

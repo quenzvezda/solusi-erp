@@ -17,5 +17,7 @@ public interface BillableGrQueryPort {
 
     BigDecimal sumConfirmedBilledQty(Long grLineId, Long excludeBillId);
 
+    BigDecimal getGrExchangeRate(Long grLineId);
+
     record GrLineData(BigDecimal quantityReceived, BigDecimal grIrAmount) {}
 }

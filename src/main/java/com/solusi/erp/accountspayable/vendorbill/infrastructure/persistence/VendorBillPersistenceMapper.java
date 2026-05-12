@@ -22,6 +22,7 @@ public interface VendorBillPersistenceMapper {
                 entity.getBillDate(),
                 entity.getDueDate(),
                 entity.getCurrencyId(),
+                entity.getExchangeRate(),
                 entity.getStatus(),
                 entity.getSubtotal(),
                 entity.getTaxAmount(),

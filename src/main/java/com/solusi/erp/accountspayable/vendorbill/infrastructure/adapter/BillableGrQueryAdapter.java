@@ -22,7 +22,8 @@ public class BillableGrQueryAdapter implements BillableGrQueryPort {
                 po.id AS po_id,
                 po.code AS po_code,
                 gr.supplier_id AS vendor_id,
-                gr.currency_id AS currency_id
+                gr.currency_id AS currency_id,
+                gr.exchange_rate AS exchange_rate
             FROM pur_goods_receipts gr
             JOIN pur_goods_receipt_lines grl ON grl.header_id = gr.id
             LEFT JOIN pur_purchase_orders po ON po.id = gr.reference_id
@@ -103,6 +104,13 @@ public class BillableGrQueryAdapter implements BillableGrQueryPort {
               AND (:excludeBillId IS NULL OR vb.id <> :excludeBillId)
             """;
 
+    private static final String SQL_GET_GR_EXCHANGE_RATE = """
+            SELECT gr.exchange_rate
+            FROM pur_goods_receipts gr
+            JOIN pur_goods_receipt_lines grl ON grl.header_id = gr.id
+            WHERE grl.id = :grLineId
+            """;
+
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
     public BillableGrQueryAdapter(NamedParameterJdbcTemplate jdbcTemplate) {
@@ -158,6 +166,12 @@ public class BillableGrQueryAdapter implements BillableGrQueryPort {
         return jdbcTemplate.queryForObject(SQL_SUM_CONFIRMED_BILLED_QTY, params, BigDecimal.class);
     }
 
+    @Override
+    public BigDecimal getGrExchangeRate(Long grLineId) {
+        MapSqlParameterSource params = new MapSqlParameterSource("grLineId", grLineId);
+        return jdbcTemplate.queryForObject(SQL_GET_GR_EXCHANGE_RATE, params, BigDecimal.class);
+    }
+
     private static MapSqlParameterSource baseParams() {
         return new MapSqlParameterSource("confirmedStatus", STATUS_CONFIRMED);
     }
@@ -169,7 +183,8 @@ public class BillableGrQueryAdapter implements BillableGrQueryPort {
                 rs.getLong("po_id"),
                 rs.getString("po_code"),
                 rs.getLong("vendor_id"),
-                rs.getLong("currency_id")
+                rs.getLong("currency_id"),
+                rs.getBigDecimal("exchange_rate")
         );
     }
 
