@@ -29,12 +29,21 @@ class VendorBillTemplateTest {
     }
 
     @Test
-    void detail_template_should_expose_cancel_and_delete_actions() throws Exception {
+    void detail_template_should_expose_cancel_action() throws Exception {
         String template = readResource("templates/accountspayable/vendor-bills/detail.html");
 
         assertThat(template).contains("hasAuthority('VENDOR-BILL_CANCEL')");
         assertThat(template).contains("/cancel");
+        assertThat(template).doesNotContain("hasAuthority('VENDOR-BILL_DELETE')");
+    }
+
+    @Test
+    void list_template_should_expose_delete_action() throws Exception {
+        String template = readResource("templates/accountspayable/vendor-bills/list.html");
+
         assertThat(template).contains("hasAuthority('VENDOR-BILL_DELETE')");
+        assertThat(template).contains("fragments/modals :: delete-confirm");
+        assertThat(template).contains("targetId='#row-' + ${item.id}");
     }
 
     @Test
@@ -62,7 +71,7 @@ class VendorBillTemplateTest {
         assertDoesNotThrow(() -> {
             String html = TemplateTestUtils.renderWithSecurity(
                     "accountspayable/vendor-bills/form",
-                    Map.of("form", new VendorBillFormView(request, List.of())),
+                    Map.of("form", new VendorBillFormView(request, null, null, false, List.of())),
                     auth("VENDOR-BILL_CREATE"));
 
             assertThat(html).isNotBlank();

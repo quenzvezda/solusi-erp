@@ -17,7 +17,8 @@ Rujukan aturan: web may use lookup/query ports; web may not use repositories. Lo
 5. **Lifecycle tetap sederhana**:
    - `DRAFT -> COMPLETED`
    - dokumen `COMPLETED` tidak bisa diubah lagi.
-6. **Accounting period OPEN wajib lolos saat COMPLETE**, tetapi **accounting schema belum menjadi dependency wajib** di GR saat ini.
+6. **Accounting period OPEN dan accounting schema aktif wajib lolos saat COMPLETE**.
+7. **Tax timing invoice-based**: GR hanya mem-post nilai net/DPP; Input VAT dipost saat Vendor Bill dikonfirmasi.
 
 ## 2. Kontrak Fitur yang Aktif
 
@@ -156,7 +157,7 @@ Artinya, untuk pertanyaan dependency:
 2. Snapshot harga dari PO
 3. Post stock movement
 4. Update PO received quantity
-5. Post journal: Menggunakan `PostJournalForEventUseCase` yang akan memuat `AccountingSchema` untuk `GOODS_RECEIPT`. Jurnal akan dibentuk berdasarkan *mapping* dinamis yang diatur user pada skema (misal memetakan variabel `GR_INVENTORY_AMT` ke akun persediaan, `GR_TAX_AMT` ke akun pajak masukan, dan `GR_GRAND_TOTAL` ke akun GR/IR). Jika ada variabel bernilai 0 (misal tidak ada pajak), baris tersebut akan otomatis di-*skip*.
+5. Post journal: Menggunakan `PostJournalForEventUseCase` yang akan memuat `AccountingSchema` untuk `GOODS_RECEIPT`. Jurnal akan dibentuk berdasarkan *mapping* dinamis yang diatur user pada skema. Pada tax timing saat ini, `GR_INVENTORY_AMT` berisi nilai net/DPP, `GR_TAX_AMT` dikirim `0`, dan `GR_GRAND_TOTAL` berisi nilai net/DPP yang dikreditkan ke GR/IR. Baris schema bernilai 0 akan otomatis di-*skip*.
 6. Simpan GR dan PO
 
 Jika journal gagal (schema tidak ada, tidak aktif, atau rumus/mapping tidak *balance*), seluruh transaksi rollback.

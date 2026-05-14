@@ -98,8 +98,8 @@ public class CompleteGoodsReceiptUseCaseImpl implements CompleteGoodsReceiptUseC
                 "Auto journal for goods receipt " + receipt.getCode(),
                 Map.of(
                         JournalVariable.GR_INVENTORY_AMT, inventoryTotal,
-                        JournalVariable.GR_TAX_AMT, taxTotal,
-                        JournalVariable.GR_GRAND_TOTAL, inventoryTotal.add(taxTotal)
+                        JournalVariable.GR_TAX_AMT, BigDecimal.ZERO,
+                        JournalVariable.GR_GRAND_TOTAL, inventoryTotal
                 )
         ));
 

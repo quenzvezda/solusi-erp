@@ -12,6 +12,7 @@ import com.solusi.erp.core.exception.DomainException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -75,5 +77,66 @@ class PostJournalForEventUseCaseTest {
         useCase.execute(command());
 
         verify(journalRepository).save(any(JournalEntry.class));
+    }
+
+    @Test
+    void execute_skipsWhenSourceAlreadyPosted() {
+        when(journalRepository.existsBySource("GOODS_RECEIPT", 6L)).thenReturn(true);
+
+        useCase.execute(command());
+
+        verifyNoInteractions(schemaRepository);
+        verify(journalRepository, never()).save(any());
+    }
+
+    @Test
+    void execute_skipsZeroValueSchemaLines() {
+        AccountingSchema schema = AccountingSchema.createNew(SchemaEventType.GOODS_RECEIPT, "GR", true, List.of(
+                new AccountingSchemaLine(null, JournalVariable.GR_INVENTORY_AMT, 1L, JournalPosition.DEBIT),
+                new AccountingSchemaLine(null, JournalVariable.GR_TAX_AMT, 3L, JournalPosition.DEBIT),
+                new AccountingSchemaLine(null, JournalVariable.GR_GRAND_TOTAL, 2L, JournalPosition.CREDIT)
+        ));
+        when(schemaRepository.findByEventTypeAndIsActiveTrue(SchemaEventType.GOODS_RECEIPT))
+                .thenReturn(Optional.of(schema));
+        when(journalRepository.existsBySource("GOODS_RECEIPT", 6L)).thenReturn(false);
+
+        useCase.execute(command());
+
+        ArgumentCaptor<JournalEntry> captor = ArgumentCaptor.forClass(JournalEntry.class);
+        verify(journalRepository).save(captor.capture());
+        assertThat(captor.getValue().getLines())
+                .extracting("accountId")
+                .containsExactly(1L, 2L);
+    }
+
+    @Test
+    void execute_preservesOriginalCurrencyAmountsOnDebitAndCreditLines() {
+        when(schemaRepository.findByEventTypeAndIsActiveTrue(SchemaEventType.GOODS_RECEIPT))
+                .thenReturn(Optional.of(schema()));
+        when(journalRepository.existsBySource("GOODS_RECEIPT", 6L)).thenReturn(false);
+        JournalPostingCommand command = new JournalPostingCommand(
+                SchemaEventType.GOODS_RECEIPT, "GOODS_RECEIPT", 6L, "GR-0006",
+                LocalDate.now(), "Auto journal",
+                Map.of(
+                        JournalVariable.GR_INVENTORY_AMT, new BigDecimal("1600000"),
+                        JournalVariable.GR_GRAND_TOTAL, new BigDecimal("1600000")
+                ),
+                99L,
+                new BigDecimal("16000"),
+                Map.of(
+                        JournalVariable.GR_INVENTORY_AMT, new BigDecimal("100"),
+                        JournalVariable.GR_GRAND_TOTAL, new BigDecimal("100")
+                )
+        );
+
+        useCase.execute(command);
+
+        ArgumentCaptor<JournalEntry> captor = ArgumentCaptor.forClass(JournalEntry.class);
+        verify(journalRepository).save(captor.capture());
+        assertThat(captor.getValue().getLines()).hasSize(2);
+        assertThat(captor.getValue().getLines().get(0).originalCurrencyId()).isEqualTo(99L);
+        assertThat(captor.getValue().getLines().get(0).exchangeRate()).isEqualByComparingTo("16000");
+        assertThat(captor.getValue().getLines().get(0).originalDebitAmount()).isEqualByComparingTo("100");
+        assertThat(captor.getValue().getLines().get(1).originalCreditAmount()).isEqualByComparingTo("100");
     }
 }

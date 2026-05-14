@@ -50,7 +50,7 @@ class CreateVendorBillUseCaseTest {
     }
 
     @Test
-    void create_should_set_status_draft_and_zero_amounts() {
+    void create_should_set_status_draft_and_amounts() {
         VendorBill result = useCase.execute(
                 10L,
                 "INV-001",
@@ -77,11 +77,11 @@ class CreateVendorBillUseCaseTest {
 
         assertThat(result.getCode()).isEqualTo("VB-202605-00001");
         assertThat(result.getStatus()).isEqualTo(VendorBillStatus.DRAFT);
-        assertThat(result.getSubtotal()).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(result.getTaxAmount()).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(result.getTotalAmount()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(result.getSubtotal()).isEqualByComparingTo("20.0000");
+        assertThat(result.getTaxAmount()).isEqualByComparingTo("2.2000");
+        assertThat(result.getTotalAmount()).isEqualByComparingTo("22.2000");
         assertThat(result.getLines()).hasSize(1);
-        assertThat(result.getLines().getFirst().getLineTotal()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(result.getLines().getFirst().getLineTotal()).isEqualByComparingTo("20.0000");
     }
 
     private static final class FixedSequenceGeneratorService extends SequenceGeneratorService {

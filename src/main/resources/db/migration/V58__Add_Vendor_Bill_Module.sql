@@ -65,13 +65,20 @@ CREATE TABLE IF NOT EXISTS ap_vendor_bill_lines (
     inventory_amount DECIMAL(19,4) NOT NULL DEFAULT 0,
     tax_amount       DECIMAL(19,4) NOT NULL DEFAULT 0,
     line_total       DECIMAL(19,4) NOT NULL DEFAULT 0,
+    created_by_user_id BIGINT     NULL,
+    created_date     DATETIME     NOT NULL,
+    updated_by_user_id BIGINT     NULL,
+    updated_date     DATETIME     NOT NULL,
+    version          BIGINT       NOT NULL DEFAULT 1,
     PRIMARY KEY (id),
     KEY idx_ap_vb_lines_bill (bill_id),
     KEY idx_ap_vb_lines_gr_line (gr_line_id),
-    CONSTRAINT fk_ap_vb_line_bill    FOREIGN KEY (bill_id)    REFERENCES ap_vendor_bills(id) ON DELETE CASCADE,
-    CONSTRAINT fk_ap_vb_line_gr_line FOREIGN KEY (gr_line_id) REFERENCES pur_goods_receipt_lines(id),
-    CONSTRAINT fk_ap_vb_line_product FOREIGN KEY (product_id) REFERENCES products(id),
-    CONSTRAINT fk_ap_vb_line_uom     FOREIGN KEY (uom_id)     REFERENCES unit_of_measures(id)
+    CONSTRAINT fk_ap_vb_line_bill       FOREIGN KEY (bill_id)            REFERENCES ap_vendor_bills(id) ON DELETE CASCADE,
+    CONSTRAINT fk_ap_vb_line_gr_line    FOREIGN KEY (gr_line_id)         REFERENCES pur_goods_receipt_lines(id),
+    CONSTRAINT fk_ap_vb_line_product    FOREIGN KEY (product_id)         REFERENCES products(id),
+    CONSTRAINT fk_ap_vb_line_uom        FOREIGN KEY (uom_id)             REFERENCES unit_of_measures(id),
+    CONSTRAINT fk_ap_vb_line_created_by FOREIGN KEY (created_by_user_id) REFERENCES users(id),
+    CONSTRAINT fk_ap_vb_line_updated_by FOREIGN KEY (updated_by_user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================

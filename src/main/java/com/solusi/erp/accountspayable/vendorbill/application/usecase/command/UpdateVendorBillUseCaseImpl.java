@@ -35,7 +35,9 @@ public class UpdateVendorBillUseCaseImpl implements UpdateVendorBillUseCase {
 
         validateDraftOnly(existing);
         validateDates(billDate, dueDate);
+        validateLines(lines);
 
+        List<VendorBillLine> billLines = toLines(lines);
         VendorBill updated = new VendorBill(
                 existing.getMetadata(),
                 existing.getCode(),
@@ -46,12 +48,12 @@ public class UpdateVendorBillUseCaseImpl implements UpdateVendorBillUseCase {
                 currencyId,
                 exchangeRate,
                 VendorBillStatus.DRAFT,
-                BigDecimal.ZERO,
-                BigDecimal.ZERO,
-                BigDecimal.ZERO,
+                sumLineTotals(billLines),
+                sumTaxAmounts(billLines),
+                sumGrossAmounts(billLines),
                 notes,
                 toGrRefs(grIds),
-                toLines(lines)
+                billLines
         );
 
         return vendorBillRepository.save(updated);
@@ -66,6 +68,12 @@ public class UpdateVendorBillUseCaseImpl implements UpdateVendorBillUseCase {
     private void validateDates(LocalDate billDate, LocalDate dueDate) {
         if (billDate != null && dueDate != null && dueDate.isBefore(billDate)) {
             throw new DomainException("msg.error.vb.due.before.bill");
+        }
+    }
+
+    private void validateLines(List<VendorBillLineCommand> lines) {
+        if (lines == null || lines.isEmpty()) {
+            throw new DomainException("msg.err.vb.lines.required");
         }
     }
 
@@ -98,7 +106,23 @@ public class UpdateVendorBillUseCaseImpl implements UpdateVendorBillUseCase {
                 line.unitPrice(),
                 line.inventoryAmount(),
                 line.taxAmount(),
-                BigDecimal.ZERO
+                line.inventoryAmount() == null ? BigDecimal.ZERO : line.inventoryAmount()
         );
+    }
+
+    private BigDecimal sumLineTotals(List<VendorBillLine> lines) {
+        return lines.stream()
+                .map(VendorBillLine::getLineTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal sumTaxAmounts(List<VendorBillLine> lines) {
+        return lines.stream()
+                .map(VendorBillLine::getTaxAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal sumGrossAmounts(List<VendorBillLine> lines) {
+        return sumLineTotals(lines).add(sumTaxAmounts(lines));
     }
 }

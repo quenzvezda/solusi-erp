@@ -418,8 +418,8 @@ class CompleteGoodsReceiptUseCaseTest {
                 cmd.eventType() == SchemaEventType.GOODS_RECEIPT
                 && cmd.sourceId().equals(1L)
                 && cmd.values().get(JournalVariable.GR_INVENTORY_AMT).compareTo(new BigDecimal("500.0000")) == 0
-                && cmd.values().get(JournalVariable.GR_TAX_AMT).compareTo(new BigDecimal("50.0000")) == 0
-                && cmd.values().get(JournalVariable.GR_GRAND_TOTAL).compareTo(new BigDecimal("550.0000")) == 0
+                && cmd.values().get(JournalVariable.GR_TAX_AMT).compareTo(BigDecimal.ZERO) == 0
+                && cmd.values().get(JournalVariable.GR_GRAND_TOTAL).compareTo(new BigDecimal("500.0000")) == 0
         ));
     }
 

@@ -24,9 +24,10 @@
         <div class="page-body">
             <div class="container-xl">
                 <form th:action="@{/accounts-payable/vendor-bills}" th:object="${form.request}" method="post" id="vendor-bill-form" data-ajax-form="true"
-                      data-redirect-on-success="/accounts-payable/vendor-bills">
+                      data-redirect-on-success="/accounts-payable/vendor-bills"
+                      th:data-line-required-message="#{msg.err.vb.lines.required}">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                    <input type="hidden" th:field="*{id}">
+                    <input type="hidden" name="id" th:value="*{id}">
                     <div id="selected-gr-ids">
                         <input th:each="grId, stat : *{grIds}"
                                type="hidden"
@@ -38,34 +39,35 @@
                         <div class="card-body">
                             <div class="row g-3">
                                 <div class="col-md-3">
-                                    <label class="form-label" th:text="#{label.vendor}">Vendor</label>
-                                    <input type="hidden" th:field="*{vendorId}">
-                                    <input type="text" class="form-control bg-light" th:value="*{vendorId}" readonly>
+                                    <label class="form-label required" th:text="#{label.vendor}">Vendor</label>
+                                    <input type="hidden" name="vendorId" th:value="*{vendorId}">
+                                    <input type="text" class="form-control bg-light" th:value="${form.vendorName != null ? form.vendorName : form.request.vendorId}" readonly>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label" th:text="#{label.currency}">Currency</label>
-                                    <input type="hidden" th:field="*{currencyId}">
-                                    <input type="text" class="form-control bg-light" th:value="*{currencyId}" readonly>
+                                    <label class="form-label required" th:text="#{label.currency}">Currency</label>
+                                    <input type="hidden" name="currencyId" th:value="*{currencyId}">
+                                    <input type="text" class="form-control bg-light" th:value="${form.currencyCode != null ? form.currencyCode : form.request.currencyId}" readonly>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label" th:text="#{label.vb.exchangeRate}">Exchange Rate</label>
-                                    <input type="text" class="form-control text-end" th:field="*{exchangeRate}" data-autonumeric="decimal" required>
+                                    <label class="form-label required" th:text="#{label.vb.exchangeRate}">Exchange Rate</label>
+                                    <input type="text" class="form-control text-end" name="exchangeRate" th:value="*{exchangeRate}" data-autonumeric="decimal" required>
+                                    <div class="form-hint" th:if="${form.exchangeRateRequired}" th:text="#{label.vb.exchangeRate.mixedHint}">Selected references use mixed rates; enter invoice rate manually.</div>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label" th:text="#{label.vb.vendorInvoiceNumber}">Vendor Invoice</label>
-                                    <input type="text" class="form-control" th:field="*{vendorInvoiceNumber}" required>
+                                    <label class="form-label required" th:text="#{label.vb.vendorInvoiceNumber}">Vendor Invoice</label>
+                                    <input type="text" class="form-control" name="vendorInvoiceNumber" th:value="*{vendorInvoiceNumber}" required>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label" th:text="#{label.vb.billDate}">Bill Date</label>
-                                    <input type="date" class="form-control" th:field="*{billDate}" required>
+                                    <label class="form-label required" th:text="#{label.vb.billDate}">Bill Date</label>
+                                    <input type="date" class="form-control" name="billDate" th:value="*{billDate}" data-picker="date" required>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label" th:text="#{label.vb.dueDate}">Due Date</label>
-                                    <input type="date" class="form-control" th:field="*{dueDate}" required>
+                                    <label class="form-label required" th:text="#{label.vb.dueDate}">Due Date</label>
+                                    <input type="date" class="form-control" name="dueDate" th:value="*{dueDate}" data-picker="date" required>
                                 </div>
                                 <div class="col-md-9">
                                     <label class="form-label" th:text="#{label.notes}">Notes</label>
-                                    <input type="text" class="form-control" th:field="*{notes}">
+                                    <input type="text" class="form-control" name="notes" th:value="*{notes}">
                                 </div>
                             </div>
                         </div>
@@ -80,16 +82,20 @@
                                 <thead>
                                     <tr>
                                         <th th:text="#{label.product}">Product</th>
-                                        <th class="text-end" th:text="#{label.qty}">Qty</th>
+                                        <th class="text-end" style="width: 8rem;" th:text="#{label.qty}">Qty</th>
                                         <th th:text="#{label.uom}">UoM</th>
                                         <th class="text-end" th:text="#{label.unit.price}">Unit Price</th>
+                                        <th class="text-end" th:text="#{label.vb.recap.dpp}">DPP</th>
                                         <th class="text-end" th:text="#{label.tax.amount}">Tax</th>
                                         <th class="text-end" th:text="#{label.actions}">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="vendor-bill-lines-body">
                                     <tr th:each="line, stat : *{lines}" class="vendor-bill-line-row"
-                                        th:data-gr-line-id="${line.grLineId}">
+                                        th:data-gr-line-id="${line.grLineId}"
+                                        th:data-quantity-received="${line.qtyBilled}"
+                                        th:data-inventory-amount="${line.inventoryAmount}"
+                                        th:data-tax-amount="${line.taxAmount}">
                                         <td>
                                             <input type="hidden" th:name="'lines[' + ${stat.index} + '].id'" th:value="${line.id}">
                                             <input type="hidden" th:name="'lines[' + ${stat.index} + '].grLineId'" th:value="${line.grLineId}">
@@ -101,14 +107,15 @@
                                             <input type="hidden" th:name="'lines[' + ${stat.index} + '].taxAmount'" th:value="${line.taxAmount}">
                                             <span th:text="${line.productName}">Product</span>
                                         </td>
-                                        <td><input type="text" class="form-control form-control-sm text-end" th:name="'lines[' + ${stat.index} + '].qtyBilled'" th:value="${line.qtyBilled}"></td>
+                                        <td><input type="text" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end js-vb-qty" th:name="'lines[' + ${stat.index} + '].qtyBilled'" th:value="${line.qtyBilled != null ? #numbers.formatDecimal(line.qtyBilled, 1, 'COMMA', 2, 'POINT') : '0.00'}"></td>
                                         <td>
                                             <input type="hidden" th:name="'lines[' + ${stat.index} + '].uomId'" th:value="${line.uomId}">
                                             <input type="hidden" th:name="'lines[' + ${stat.index} + '].uomName'" th:value="${line.uomName}">
                                             <span th:text="${line.uomName}">PCS</span>
                                         </td>
                                         <td class="text-end" th:text="${line.unitPrice != null ? #numbers.formatDecimal(line.unitPrice, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
-                                        <td class="text-end" th:text="${line.taxAmount != null ? #numbers.formatDecimal(line.taxAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                        <td class="text-end js-vb-line-dpp">0.00</td>
+                                        <td class="text-end js-vb-line-tax" th:text="${line.taxAmount != null ? #numbers.formatDecimal(line.taxAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
                                         <td class="text-end">
                                             <button type="button" class="btn btn-white btn-icon text-danger js-vb-line-remove">
                                                 <i class="ti ti-trash"></i>
@@ -116,10 +123,32 @@
                                         </td>
                                     </tr>
                                     <tr id="vendor-bill-lines-empty" th:if="${#lists.isEmpty(form.request.lines)}">
-                                        <td colspan="6" class="text-center py-4 text-secondary" th:text="#{label.vb.lines.empty}">No lines selected.</td>
+                                        <td colspan="7" class="text-center py-4 text-secondary" th:text="#{label.vb.lines.empty}">No lines selected.</td>
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                        <div class="card-body border-top">
+                            <div class="row justify-content-end">
+                                <div class="col-md-5 col-lg-4">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-secondary" th:text="#{label.vb.recap.dpp}">DPP</span>
+                                        <strong id="vb-recap-dpp">0.00</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-secondary" th:text="#{label.vb.recap.tax}">Tax</span>
+                                        <strong id="vb-recap-tax">0.00</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-secondary" th:text="#{label.vb.recap.total}">Total Invoice</span>
+                                        <strong id="vb-recap-total">0.00</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-secondary" th:text="#{label.vb.recap.totalBase}">Total Base</span>
+                                        <strong id="vb-recap-total-base">0.00</strong>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="card-footer text-end">
                             <button type="submit" class="btn btn-primary">

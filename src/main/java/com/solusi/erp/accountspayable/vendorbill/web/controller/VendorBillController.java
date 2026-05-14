@@ -3,6 +3,7 @@ package com.solusi.erp.accountspayable.vendorbill.web.controller;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.command.*;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.query.*;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableApReference;
 import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableGrLineView;
 import com.solusi.erp.accountspayable.vendorbill.web.dto.*;
 import com.solusi.erp.accountspayable.vendorbill.web.mapper.VendorBillWebMapper;
@@ -10,6 +11,7 @@ import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
+import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -22,6 +24,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @Controller
@@ -80,7 +84,10 @@ public class VendorBillController {
     @PreAuthorize("hasAuthority('VENDOR-BILL_CREATE')")
     public String createFromReferences(@RequestParam(name = "selectedGrIds") List<Long> selectedGrIds,
                                        org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
-        redirectAttributes.addFlashAttribute("selectedGrIds", selectedGrIds);
+        String selectedIds = selectedGrIds.stream()
+                .map(String::valueOf)
+                .collect(java.util.stream.Collectors.joining(","));
+        redirectAttributes.addAttribute("selectedGrIds", selectedIds);
         return "redirect:/accounts-payable/vendor-bills/create";
     }
 
@@ -88,13 +95,30 @@ public class VendorBillController {
     @PreAuthorize("hasAuthority('VENDOR-BILL_CREATE')")
     public String createForm(@RequestParam(required = false) Long vendorId,
                              @RequestParam(required = false) Long currencyId,
-                             @ModelAttribute("selectedGrIds") List<Long> selectedGrIds,
+                             @RequestParam(required = false) String selectedGrIds,
                              Model model) {
-        VendorBillCreateView view = getVendorBillCreateViewUseCase.execute(vendorId, currencyId);
+        List<Long> selectedIds = parseSelectedGrIds(selectedGrIds);
+        SelectedReferenceContext selectedContext = selectedIds.isEmpty() ? null : resolveSelectedReferenceContext(selectedIds);
+        Long resolvedVendorId = selectedContext != null ? selectedContext.vendorId() : vendorId;
+        Long resolvedCurrencyId = selectedContext != null ? selectedContext.currencyId() : currencyId;
+        VendorBillCreateView view = getVendorBillCreateViewUseCase.execute(resolvedVendorId, resolvedCurrencyId);
         VendorBillFormView form = webMapper.toFormView(view);
-        if (selectedGrIds != null && !selectedGrIds.isEmpty()) {
-            form.request().setGrIds(selectedGrIds);
-            form.request().setLines(prefillLines(selectedGrIds));
+        VendorBillSaveRequest request = form.request();
+        request.setBillDate(LocalDate.now());
+        request.setDueDate(LocalDate.now());
+        if (selectedContext != null) {
+            request.setVendorId(selectedContext.vendorId());
+            request.setCurrencyId(selectedContext.currencyId());
+            request.setExchangeRate(selectedContext.exchangeRate());
+            request.setGrIds(selectedIds);
+            request.setLines(prefillLines(selectedIds));
+            form = new VendorBillFormView(
+                    request,
+                    selectedContext.vendorName(),
+                    selectedContext.currencyCode(),
+                    selectedContext.exchangeRateRequired(),
+                    form.billableGrs()
+            );
         }
         model.addAttribute("form", form);
         return "accountspayable/vendor-bills/form";
@@ -175,9 +199,59 @@ public class VendorBillController {
     @DeleteMapping("/{id}")
     @ResponseBody
     @PreAuthorize("hasAuthority('VENDOR-BILL_DELETE')")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         deleteVendorBillUseCase.execute(id);
-        return ResponseEntity.ok(success("msg.success.delete"));
+        return HtmxResponseUtility.okWithRefreshTableAndSuccess(message("msg.success.delete"));
+    }
+
+    private List<Long> parseSelectedGrIds(String selectedGrIds) {
+        if (selectedGrIds == null || selectedGrIds.isBlank()) {
+            return List.of();
+        }
+        return java.util.Arrays.stream(selectedGrIds.split(","))
+                .map(String::trim)
+                .filter(value -> !value.isBlank())
+                .map(Long::valueOf)
+                .toList();
+    }
+
+    private SelectedReferenceContext resolveSelectedReferenceContext(List<Long> selectedGrIds) {
+        List<BillableApReference> references = findBillableReferencesUseCase.execute(null, null).stream()
+                .filter(reference -> "GOODS_RECEIPT".equals(reference.sourceType()))
+                .filter(reference -> selectedGrIds.contains(reference.sourceId()))
+                .toList();
+        if (references.size() != selectedGrIds.size()) {
+            throw new IllegalArgumentException("Selected references are no longer billable.");
+        }
+
+        Long vendorId = references.getFirst().vendorId();
+        Long currencyId = references.getFirst().currencyId();
+        boolean mixedVendor = references.stream().anyMatch(reference -> !vendorId.equals(reference.vendorId()));
+        boolean mixedCurrency = references.stream().anyMatch(reference -> !currencyId.equals(reference.currencyId()));
+        if (mixedVendor || mixedCurrency) {
+            throw new IllegalArgumentException("Selected references must have the same vendor and currency.");
+        }
+
+        BigDecimal firstRate = references.getFirst().exchangeRate();
+        boolean mixedRate = references.stream().anyMatch(reference -> firstRate.compareTo(reference.exchangeRate()) != 0);
+        return new SelectedReferenceContext(
+                vendorId,
+                references.getFirst().vendorName(),
+                currencyId,
+                references.getFirst().currencyCode(),
+                mixedRate ? BigDecimal.ONE : firstRate,
+                mixedRate
+        );
+    }
+
+    private record SelectedReferenceContext(
+            Long vendorId,
+            String vendorName,
+            Long currencyId,
+            String currencyCode,
+            BigDecimal exchangeRate,
+            boolean exchangeRateRequired
+    ) {
     }
 
     private List<VendorBillLineRequest> prefillLines(List<Long> grIds) {

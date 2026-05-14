@@ -82,10 +82,12 @@ class BillableGrQueryAdapterTest {
     }
 
     @Test
-    void getGrLineData_should_return_quantity_and_grir_amount() {
+    void getGrLineData_should_return_quantity_inventory_tax_and_grir_amount() {
         BillableGrQueryPort.GrLineData expected = new BillableGrQueryPort.GrLineData(
                 new BigDecimal("7.0000"),
-                new BigDecimal("70.0000")
+                new BigDecimal("70.0000"),
+                new BigDecimal("7.7000"),
+                new BigDecimal("77.7000")
         );
         when(jdbcTemplate.queryForObject(any(String.class), any(MapSqlParameterSource.class), any(RowMapper.class)))
                 .thenReturn(expected);

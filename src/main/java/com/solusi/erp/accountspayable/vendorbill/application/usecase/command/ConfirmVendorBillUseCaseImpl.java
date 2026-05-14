@@ -51,15 +51,21 @@ public class ConfirmVendorBillUseCaseImpl implements ConfirmVendorBillUseCase {
         Map<Long, GrLineContext> contexts = buildGrLineContexts(bill.getId(), currentQtyByGrLine);
         Map<Long, BigDecimal> accumulatedQtyByGrLine = new HashMap<>();
         Map<Long, BigDecimal> accumulatedTotalByGrLine = new HashMap<>();
+        Map<Long, BigDecimal> accumulatedTaxByGrLine = new HashMap<>();
 
         List<VendorBillLine> confirmedLines = bill.getLines().stream()
                 .map(line -> recalculateLine(line, contexts.get(line.getGrLineId()),
-                        accumulatedQtyByGrLine, accumulatedTotalByGrLine))
+                        accumulatedQtyByGrLine, accumulatedTotalByGrLine, accumulatedTaxByGrLine))
                 .toList();
-        BigDecimal total = confirmedLines.stream()
+        BigDecimal subtotal = confirmedLines.stream()
                 .map(VendorBillLine::getLineTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .setScale(4, RoundingMode.HALF_UP);
+        BigDecimal taxTotal = confirmedLines.stream()
+                .map(VendorBillLine::getTaxAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(4, RoundingMode.HALF_UP);
+        BigDecimal total = subtotal.add(taxTotal).setScale(4, RoundingMode.HALF_UP);
 
         VendorBill confirmedBill = new VendorBill(
                 bill.getMetadata(),
@@ -78,20 +84,18 @@ public class ConfirmVendorBillUseCaseImpl implements ConfirmVendorBillUseCase {
                 bill.getGrRefs(),
                 confirmedLines
         );
-        confirmedBill.confirm(total, BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP), total);
+        confirmedBill.confirm(subtotal, taxTotal, total);
 
-        BigDecimal originalTotal = confirmedLines.stream()
-                .map(VendorBillLine::getLineTotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .setScale(4, RoundingMode.HALF_UP);
-        BigDecimal apBaseTotal = originalTotal.multiply(confirmedBill.getExchangeRate()).setScale(4, RoundingMode.HALF_UP);
+        BigDecimal apBaseTotal = total.multiply(confirmedBill.getExchangeRate()).setScale(4, RoundingMode.HALF_UP);
+        BigDecimal taxBaseTotal = taxTotal.multiply(confirmedBill.getExchangeRate()).setScale(4, RoundingMode.HALF_UP);
+        BigDecimal vendorBillGrirBaseTotal = subtotal.multiply(confirmedBill.getExchangeRate()).setScale(4, RoundingMode.HALF_UP);
         BigDecimal grirBaseTotal = confirmedLines.stream()
                 .map(line -> line.getLineTotal()
                         .multiply(billableGrQueryPort.getGrExchangeRate(line.getGrLineId()))
                         .setScale(4, RoundingMode.HALF_UP))
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .setScale(4, RoundingMode.HALF_UP);
-        BigDecimal fxVariance = apBaseTotal.subtract(grirBaseTotal).setScale(4, RoundingMode.HALF_UP);
+        BigDecimal fxVariance = vendorBillGrirBaseTotal.subtract(grirBaseTotal).setScale(4, RoundingMode.HALF_UP);
         BigDecimal fxLoss = fxVariance.signum() > 0 ? fxVariance : BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
         BigDecimal fxGain = fxVariance.signum() < 0 ? fxVariance.abs() : BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
 
@@ -104,7 +108,7 @@ public class ConfirmVendorBillUseCaseImpl implements ConfirmVendorBillUseCase {
                 "Auto journal for vendor bill " + confirmedBill.getCode(),
                 Map.of(
                         JournalVariable.VB_GRIR_CLEARING_AMT, grirBaseTotal,
-                        JournalVariable.VB_TAX_AMT, BigDecimal.ZERO,
+                        JournalVariable.VB_TAX_AMT, taxBaseTotal,
                         JournalVariable.VB_AP_TOTAL, apBaseTotal,
                         JournalVariable.VB_FX_LOSS_AMT, fxLoss,
                         JournalVariable.VB_FX_GAIN_AMT, fxGain
@@ -112,9 +116,9 @@ public class ConfirmVendorBillUseCaseImpl implements ConfirmVendorBillUseCase {
                 confirmedBill.getCurrencyId(),
                 confirmedBill.getExchangeRate(),
                 Map.of(
-                        JournalVariable.VB_GRIR_CLEARING_AMT, originalTotal,
-                        JournalVariable.VB_TAX_AMT, BigDecimal.ZERO,
-                        JournalVariable.VB_AP_TOTAL, originalTotal,
+                        JournalVariable.VB_GRIR_CLEARING_AMT, subtotal,
+                        JournalVariable.VB_TAX_AMT, taxTotal,
+                        JournalVariable.VB_AP_TOTAL, total,
                         JournalVariable.VB_FX_LOSS_AMT, fxLoss,
                         JournalVariable.VB_FX_GAIN_AMT, fxGain
                 )
@@ -133,7 +137,8 @@ public class ConfirmVendorBillUseCaseImpl implements ConfirmVendorBillUseCase {
                 throw new DomainException("msg.err.vb.qty.exceed.outstanding");
             }
             BigDecimal confirmedTotal = billableGrQueryPort.sumConfirmedLineTotals(grLineId, billId);
-            contexts.put(grLineId, new GrLineContext(grLineData, outstanding, currentQty, confirmedTotal));
+            BigDecimal confirmedTaxAmount = billableGrQueryPort.sumConfirmedTaxAmounts(grLineId, billId);
+            contexts.put(grLineId, new GrLineContext(grLineData, outstanding, currentQty, confirmedTotal, confirmedTaxAmount));
         });
         return contexts;
     }
@@ -141,20 +146,31 @@ public class ConfirmVendorBillUseCaseImpl implements ConfirmVendorBillUseCase {
     private VendorBillLine recalculateLine(VendorBillLine line,
                                            GrLineContext context,
                                            Map<Long, BigDecimal> accumulatedQtyByGrLine,
-                                           Map<Long, BigDecimal> accumulatedTotalByGrLine) {
+                                           Map<Long, BigDecimal> accumulatedTotalByGrLine,
+                                           Map<Long, BigDecimal> accumulatedTaxByGrLine) {
         Long grLineId = line.getGrLineId();
         BigDecimal accumulatedQty = accumulatedQtyByGrLine.merge(grLineId, line.getQtyBilled(), BigDecimal::add);
         BigDecimal accumulatedTotal = accumulatedTotalByGrLine.getOrDefault(grLineId, BigDecimal.ZERO);
+        BigDecimal accumulatedTax = accumulatedTaxByGrLine.getOrDefault(grLineId, BigDecimal.ZERO);
 
         BigDecimal lineTotal = isLastBillLine(context, accumulatedQty)
-                ? context.grLineData().grIrAmount()
+                ? context.grLineData().inventoryAmount()
                 .subtract(context.confirmedLineTotal())
                 .subtract(accumulatedTotal)
                 .setScale(4, RoundingMode.HALF_UP)
                 : line.getQtyBilled()
-                .multiply(context.grLineData().grIrAmount())
+                .multiply(context.grLineData().inventoryAmount())
+                .divide(context.grLineData().quantityReceived(), 4, RoundingMode.HALF_UP);
+        BigDecimal taxAmount = isLastBillLine(context, accumulatedQty)
+                ? context.grLineData().taxAmount()
+                .subtract(context.confirmedTaxAmount())
+                .subtract(accumulatedTax)
+                .setScale(4, RoundingMode.HALF_UP)
+                : line.getQtyBilled()
+                .multiply(context.grLineData().taxAmount())
                 .divide(context.grLineData().quantityReceived(), 4, RoundingMode.HALF_UP);
         accumulatedTotalByGrLine.merge(grLineId, lineTotal, BigDecimal::add);
+        accumulatedTaxByGrLine.merge(grLineId, taxAmount, BigDecimal::add);
 
         return new VendorBillLine(
                 line.getId(),
@@ -166,8 +182,8 @@ public class ConfirmVendorBillUseCaseImpl implements ConfirmVendorBillUseCase {
                 line.getUomId(),
                 line.getUomName(),
                 line.getUnitPrice(),
-                line.getInventoryAmount(),
-                line.getTaxAmount(),
+                lineTotal,
+                taxAmount,
                 lineTotal
         );
     }
@@ -180,6 +196,7 @@ public class ConfirmVendorBillUseCaseImpl implements ConfirmVendorBillUseCase {
     private record GrLineContext(BillableGrQueryPort.GrLineData grLineData,
                                  BigDecimal outstandingQty,
                                  BigDecimal currentQty,
-                                 BigDecimal confirmedLineTotal) {
+                                 BigDecimal confirmedLineTotal,
+                                 BigDecimal confirmedTaxAmount) {
     }
 }

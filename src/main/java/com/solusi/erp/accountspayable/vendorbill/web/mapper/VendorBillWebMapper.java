@@ -71,7 +71,7 @@ public class VendorBillWebMapper {
         request.setVendorId(view.vendorId());
         request.setCurrencyId(view.currencyId());
         request.setExchangeRate(view.exchangeRate());
-        return new VendorBillFormView(request, view.billableGrs());
+        return new VendorBillFormView(request, null, null, false, view.billableGrs());
     }
 
     public List<VendorBillSummaryResponse> toSummaryResponses(List<VendorBillSummaryView> views) {

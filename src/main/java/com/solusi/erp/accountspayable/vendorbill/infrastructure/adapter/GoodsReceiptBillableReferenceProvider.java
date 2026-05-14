@@ -21,7 +21,7 @@ public class GoodsReceiptBillableReferenceProvider implements BillableApReferenc
                 gr.supplier_id AS vendor_id,
                 p.name AS vendor_name,
                 gr.currency_id AS currency_id,
-                c.code AS currency_code,
+                c.alias AS currency_code,
                 gr.exchange_rate AS exchange_rate,
                 COALESCE(SUM((grl.quantity_received - COALESCE(billed.billed_qty, 0))
                     * (grl.gr_ir_amount / NULLIF(grl.quantity_received, 0))), 0) AS outstanding_amount,
@@ -43,7 +43,7 @@ public class GoodsReceiptBillableReferenceProvider implements BillableApReferenc
               AND gr.status = 'COMPLETED'
               AND (grl.quantity_received - COALESCE(billed.billed_qty, 0)) > 0
             GROUP BY gr.id, gr.code, gr.receipt_date, gr.supplier_id, p.name,
-                     gr.currency_id, c.code, gr.exchange_rate, gr.status
+                     gr.currency_id, c.alias, gr.exchange_rate, gr.status
             ORDER BY gr.receipt_date DESC, gr.id DESC
             """;
 

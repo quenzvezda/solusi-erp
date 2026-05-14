@@ -81,13 +81,22 @@ public class BillableGrQueryAdapter implements BillableGrQueryPort {
             """;
 
     private static final String SQL_GET_GR_LINE_DATA = """
-            SELECT grl.quantity_received, grl.gr_ir_amount
+            SELECT grl.quantity_received, grl.inventory_amount, grl.tax_amount, grl.gr_ir_amount
             FROM pur_goods_receipt_lines grl
             WHERE grl.id = :grLineId
             """;
 
     private static final String SQL_SUM_CONFIRMED_LINE_TOTALS = """
             SELECT COALESCE(SUM(vbl.line_total), 0)
+            FROM ap_vendor_bill_lines vbl
+            JOIN ap_vendor_bills vb ON vb.id = vbl.bill_id
+            WHERE vb.status = :confirmedStatus
+              AND vbl.gr_line_id = :grLineId
+              AND (:excludeBillId IS NULL OR vb.id <> :excludeBillId)
+            """;
+
+    private static final String SQL_SUM_CONFIRMED_TAX_AMOUNTS = """
+            SELECT COALESCE(SUM(vbl.tax_amount), 0)
             FROM ap_vendor_bill_lines vbl
             JOIN ap_vendor_bills vb ON vb.id = vbl.bill_id
             WHERE vb.status = :confirmedStatus
@@ -147,7 +156,7 @@ public class BillableGrQueryAdapter implements BillableGrQueryPort {
     public GrLineData getGrLineData(Long grLineId) {
         MapSqlParameterSource params = new MapSqlParameterSource("grLineId", grLineId);
         return jdbcTemplate.queryForObject(SQL_GET_GR_LINE_DATA, params,
-                (rs, rowNum) -> new GrLineData(rs.getBigDecimal("quantity_received"), rs.getBigDecimal("gr_ir_amount")));
+                (rs, rowNum) -> new GrLineData(rs.getBigDecimal("quantity_received"), rs.getBigDecimal("inventory_amount"), rs.getBigDecimal("tax_amount"), rs.getBigDecimal("gr_ir_amount")));
     }
 
     @Override
@@ -156,6 +165,14 @@ public class BillableGrQueryAdapter implements BillableGrQueryPort {
                 .addValue("grLineId", grLineId)
                 .addValue("excludeBillId", excludeBillId);
         return jdbcTemplate.queryForObject(SQL_SUM_CONFIRMED_LINE_TOTALS, params, BigDecimal.class);
+    }
+
+    @Override
+    public BigDecimal sumConfirmedTaxAmounts(Long grLineId, Long excludeBillId) {
+        MapSqlParameterSource params = baseParams()
+                .addValue("grLineId", grLineId)
+                .addValue("excludeBillId", excludeBillId);
+        return jdbcTemplate.queryForObject(SQL_SUM_CONFIRMED_TAX_AMOUNTS, params, BigDecimal.class);
     }
 
     @Override

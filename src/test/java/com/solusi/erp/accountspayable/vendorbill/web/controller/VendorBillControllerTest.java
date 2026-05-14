@@ -3,8 +3,10 @@ package com.solusi.erp.accountspayable.vendorbill.web.controller;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.command.*;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.query.*;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableApReference;
 import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableGrLineView;
 import com.solusi.erp.accountspayable.vendorbill.web.dto.VendorBillDetailResponse;
+import com.solusi.erp.accountspayable.vendorbill.web.dto.VendorBillFormView;
 import com.solusi.erp.accountspayable.vendorbill.web.dto.VendorBillSaveCommand;
 import com.solusi.erp.accountspayable.vendorbill.web.dto.VendorBillSaveRequest;
 import com.solusi.erp.accountspayable.vendorbill.web.dto.VendorBillSummaryResponse;
@@ -174,6 +176,60 @@ class VendorBillControllerTest {
                 List.of(88L),
                 List.of()
         );
+    }
+
+    @Test
+    void createForm_should_prefill_reference_metadata_and_today_dates() {
+        BillableApReference reference = new BillableApReference(
+                "GOODS_RECEIPT",
+                88L,
+                "GR-001",
+                LocalDate.of(2026, 5, 12),
+                10L,
+                "PT Vendor",
+                1L,
+                "IDR",
+                new BigDecimal("1.000000"),
+                new BigDecimal("100.0000"),
+                1,
+                "COMPLETED"
+        );
+        BillableGrLineView line = new BillableGrLineView(
+                1001L,
+                88L,
+                2001L,
+                "Product A",
+                "PRD-A",
+                new BigDecimal("10.0000"),
+                1L,
+                "PCS",
+                new BigDecimal("1.0000"),
+                new BigDecimal("10.0000"),
+                BigDecimal.ZERO,
+                new BigDecimal("10.0000"),
+                new BigDecimal("1.0000")
+        );
+        VendorBillSaveRequest request = new VendorBillSaveRequest();
+        VendorBillCreateView view = new VendorBillCreateView(10L, 1L, BigDecimal.ONE, List.of());
+        when(findBillableReferencesUseCase.execute(null, null)).thenReturn(List.of(reference));
+        when(createViewUseCase.execute(10L, 1L)).thenReturn(view);
+        when(webMapper.toFormView(view)).thenReturn(new VendorBillFormView(request, null, null, false, List.of()));
+        when(findBillableGrLinesUseCase.execute(88L)).thenReturn(List.of(line));
+
+        Model model = new ExtendedModelMap();
+        String result = controller.createForm(null, null, "88", model);
+
+        assertThat(result).isEqualTo("accountspayable/vendor-bills/form");
+        VendorBillFormView form = (VendorBillFormView) model.getAttribute("form");
+        assertThat(form).isNotNull();
+        assertThat(form.vendorName()).isEqualTo("PT Vendor");
+        assertThat(form.currencyCode()).isEqualTo("IDR");
+        assertThat(form.request().getVendorId()).isEqualTo(10L);
+        assertThat(form.request().getCurrencyId()).isEqualTo(1L);
+        assertThat(form.request().getExchangeRate()).isEqualByComparingTo("1.000000");
+        assertThat(form.request().getBillDate()).isEqualTo(LocalDate.now());
+        assertThat(form.request().getDueDate()).isEqualTo(LocalDate.now());
+        assertThat(form.request().getLines()).hasSize(1);
     }
 
     @Test

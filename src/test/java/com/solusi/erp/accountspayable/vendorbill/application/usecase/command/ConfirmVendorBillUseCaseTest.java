@@ -88,16 +88,16 @@ class ConfirmVendorBillUseCaseTest {
                 line(1001L, "2.0000"),
                 line(1002L, "1.0000")
         ));
-        billableGrQueryPort.grLineData.put(1001L, grLineData("10.0000", "100.0000"));
-        billableGrQueryPort.grLineData.put(1002L, grLineData("5.0000", "55.0000"));
+        billableGrQueryPort.grLineData.put(1001L, grLineData("10.0000", "100.0000", "11.0000"));
+        billableGrQueryPort.grLineData.put(1002L, grLineData("5.0000", "55.0000", "6.0500"));
 
         useCase.execute(1L);
 
         VendorBill saved = vendorBillRepository.saved;
         assertThat(saved.getStatus()).isEqualTo(VendorBillStatus.CONFIRMED);
         assertThat(saved.getSubtotal()).isEqualByComparingTo("31.0000");
-        assertThat(saved.getTaxAmount()).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(saved.getTotalAmount()).isEqualByComparingTo("31.0000");
+        assertThat(saved.getTaxAmount()).isEqualByComparingTo("3.4100");
+        assertThat(saved.getTotalAmount()).isEqualByComparingTo("34.4100");
 
         JournalPostingCommand command = postJournalForEventUseCase.command;
         assertThat(command.eventType()).isEqualTo(SchemaEventType.VENDOR_BILL);
@@ -106,8 +106,8 @@ class ConfirmVendorBillUseCaseTest {
         assertThat(command.sourceCode()).isEqualTo("VB-202605-00001");
         assertThat(command.postingDate()).isEqualTo(LocalDate.of(2026, 5, 10));
         assertThat(command.values().get(JournalVariable.VB_GRIR_CLEARING_AMT)).isEqualByComparingTo("31.0000");
-        assertThat(command.values().get(JournalVariable.VB_TAX_AMT)).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(command.values().get(JournalVariable.VB_AP_TOTAL)).isEqualByComparingTo("31.0000");
+        assertThat(command.values().get(JournalVariable.VB_TAX_AMT)).isEqualByComparingTo("3.4100");
+        assertThat(command.values().get(JournalVariable.VB_AP_TOTAL)).isEqualByComparingTo("34.4100");
         assertThat(ensureOpenPeriodForDateUseCase.date).isEqualTo(LocalDate.of(2026, 5, 10));
     }
 
@@ -162,8 +162,17 @@ class ConfirmVendorBillUseCaseTest {
         );
     }
 
-    private static BillableGrQueryPort.GrLineData grLineData(String quantityReceived, String grIrAmount) {
-        return new BillableGrQueryPort.GrLineData(new BigDecimal(quantityReceived), new BigDecimal(grIrAmount));
+    private static BillableGrQueryPort.GrLineData grLineData(String quantityReceived, String inventoryAmount) {
+        return grLineData(quantityReceived, inventoryAmount, "0.0000");
+    }
+
+    private static BillableGrQueryPort.GrLineData grLineData(String quantityReceived, String inventoryAmount, String taxAmount) {
+        return new BillableGrQueryPort.GrLineData(
+                new BigDecimal(quantityReceived),
+                new BigDecimal(inventoryAmount),
+                new BigDecimal(taxAmount),
+                new BigDecimal(inventoryAmount).add(new BigDecimal(taxAmount))
+        );
     }
 
     private static final class InMemoryVendorBillRepository implements VendorBillRepository {
@@ -194,6 +203,7 @@ class ConfirmVendorBillUseCaseTest {
     private static final class FakeBillableGrQueryPort implements BillableGrQueryPort {
         private final Map<Long, GrLineData> grLineData = new HashMap<>();
         private final Map<Long, BigDecimal> confirmedLineTotals = new HashMap<>();
+        private final Map<Long, BigDecimal> confirmedTaxAmounts = new HashMap<>();
         private final Map<Long, BigDecimal> confirmedBilledQty = new HashMap<>();
 
         @Override
@@ -219,6 +229,11 @@ class ConfirmVendorBillUseCaseTest {
         @Override
         public BigDecimal sumConfirmedLineTotals(Long grLineId, Long excludeBillId) {
             return confirmedLineTotals.getOrDefault(grLineId, BigDecimal.ZERO);
+        }
+
+        @Override
+        public BigDecimal sumConfirmedTaxAmounts(Long grLineId, Long excludeBillId) {
+            return confirmedTaxAmounts.getOrDefault(grLineId, BigDecimal.ZERO);
         }
 
         @Override

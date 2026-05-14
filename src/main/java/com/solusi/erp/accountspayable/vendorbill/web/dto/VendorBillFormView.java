@@ -6,6 +6,9 @@ import java.util.List;
 
 public record VendorBillFormView(
         VendorBillSaveRequest request,
+        String vendorName,
+        String currencyCode,
+        boolean exchangeRateRequired,
         List<BillableGrView> billableGrs
 ) {
 }

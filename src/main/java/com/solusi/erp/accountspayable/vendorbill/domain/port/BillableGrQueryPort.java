@@ -15,9 +15,11 @@ public interface BillableGrQueryPort {
 
     BigDecimal sumConfirmedLineTotals(Long grLineId, Long excludeBillId);
 
+    BigDecimal sumConfirmedTaxAmounts(Long grLineId, Long excludeBillId);
+
     BigDecimal sumConfirmedBilledQty(Long grLineId, Long excludeBillId);
 
     BigDecimal getGrExchangeRate(Long grLineId);
 
-    record GrLineData(BigDecimal quantityReceived, BigDecimal grIrAmount) {}
+    record GrLineData(BigDecimal quantityReceived, BigDecimal inventoryAmount, BigDecimal taxAmount, BigDecimal grIrAmount) {}
 }

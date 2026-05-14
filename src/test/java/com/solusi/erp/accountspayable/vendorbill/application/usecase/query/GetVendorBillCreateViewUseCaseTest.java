@@ -61,6 +61,11 @@ class GetVendorBillCreateViewUseCaseTest {
         }
 
         @Override
+        public BigDecimal sumConfirmedTaxAmounts(Long grLineId, Long excludeBillId) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public BigDecimal sumConfirmedBilledQty(Long grLineId, Long excludeBillId) {
             throw new UnsupportedOperationException();
         }

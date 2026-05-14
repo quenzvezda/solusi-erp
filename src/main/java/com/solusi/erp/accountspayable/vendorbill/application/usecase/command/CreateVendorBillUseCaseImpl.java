@@ -33,8 +33,11 @@ public class CreateVendorBillUseCaseImpl implements CreateVendorBillUseCase {
                               List<Long> grIds,
                               List<VendorBillLineCommand> lines) {
         validateDates(billDate, dueDate);
+        validateLines(lines);
 
-        VendorBill vendorBill = VendorBill.createNew(
+        List<VendorBillLine> billLines = toLines(lines);
+        VendorBill vendorBill = new VendorBill(
+                com.solusi.erp.core.domain.model.AuditMetadata.empty(),
                 sequenceGeneratorService.generate("VENDOR-BILL"),
                 vendorId,
                 vendorInvoiceNumber,
@@ -42,9 +45,13 @@ public class CreateVendorBillUseCaseImpl implements CreateVendorBillUseCase {
                 dueDate,
                 currencyId,
                 exchangeRate,
+                com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus.DRAFT,
+                sumLineTotals(billLines),
+                sumTaxAmounts(billLines),
+                sumGrossAmounts(billLines),
                 notes,
                 toGrRefs(grIds),
-                toLines(lines)
+                billLines
         );
 
         return vendorBillRepository.save(vendorBill);
@@ -53,6 +60,12 @@ public class CreateVendorBillUseCaseImpl implements CreateVendorBillUseCase {
     private void validateDates(LocalDate billDate, LocalDate dueDate) {
         if (billDate != null && dueDate != null && dueDate.isBefore(billDate)) {
             throw new DomainException("msg.error.vb.due.before.bill");
+        }
+    }
+
+    private void validateLines(List<VendorBillLineCommand> lines) {
+        if (lines == null || lines.isEmpty()) {
+            throw new DomainException("msg.err.vb.lines.required");
         }
     }
 
@@ -87,7 +100,23 @@ public class CreateVendorBillUseCaseImpl implements CreateVendorBillUseCase {
                 line.unitPrice(),
                 line.inventoryAmount(),
                 line.taxAmount(),
-                BigDecimal.ZERO
+                line.inventoryAmount() == null ? BigDecimal.ZERO : line.inventoryAmount()
         );
+    }
+
+    private BigDecimal sumLineTotals(List<VendorBillLine> lines) {
+        return lines.stream()
+                .map(VendorBillLine::getLineTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal sumTaxAmounts(List<VendorBillLine> lines) {
+        return lines.stream()
+                .map(VendorBillLine::getTaxAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal sumGrossAmounts(List<VendorBillLine> lines) {
+        return sumLineTotals(lines).add(sumTaxAmounts(lines));
     }
 }

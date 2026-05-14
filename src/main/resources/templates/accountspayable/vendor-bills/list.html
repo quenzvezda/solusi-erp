@@ -88,6 +88,19 @@
                                                    sec:authorize="hasAuthority('VENDOR-BILL_READ')">
                                                     <i class="ti ti-eye me-1"></i><span th:text="#{label.view}">View</span>
                                                 </a>
+                                                <button type="button" class="btn btn-white btn-sm text-danger"
+                                                        th:if="${item.status == 'DRAFT'}"
+                                                        sec:authorize="hasAuthority('VENDOR-BILL_DELETE')"
+                                                        data-bs-toggle="modal"
+                                                        th:data-bs-target="'#modal-delete-vendor-bill-' + ${item.id}">
+                                                    <i class="ti ti-trash me-1"></i><span th:text="#{label.delete}">Delete</span>
+                                                </button>
+                                                <div th:replace="~{fragments/modals :: delete-confirm(
+                                                        id='modal-delete-vendor-bill-' + ${item.id},
+                                                        title=#{label.delete.confirm.title},
+                                                        message=#{msg.confirm.vb.delete},
+                                                        actionUrl=@{'/accounts-payable/vendor-bills/' + ${item.id}},
+                                                        targetId='#row-' + ${item.id})}"></div>
                                             </div>
                                         </td>
                                     </tr>
