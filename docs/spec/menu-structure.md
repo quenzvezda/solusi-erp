@@ -56,13 +56,14 @@ Dokumen ini mendefinisikan standar hirarki menu (Breadcrumb) yang digunakan di s
     - *Future: Purchase Requisition, Purchase Order, Purchase Return, Purchase Report*
 
 ### C. Finance & Accounting (Keuangan)
-- **Account Receivable (Sales Billing)**
+- **Account Receivable (Sales Billing)** (`ti-file-invoice`)
     - *Future: Billing, Receipt*
-- **Account Payable (Purchase Invoice)**
-    - *Future: Invoice, Payment*
-- **General Ledger**
+- **Account Payable** (`ti-receipt`)
+    - Vendor Bill (`AP-01`, `ti-file-invoice`)
+    - *Future: Payment*
+- **General Ledger** (`ti-book`)
     - *Future: Journal Entry, Accounting Schema, Accounting Period*
-- **Adjustments**
+- **Adjustments** (`ti-adjustments-alt`)
     - *Future: Debit Memo, Credit Memo, Manual Billing/Invoice*
 
 ### D. Production (Riset/Upcoming)

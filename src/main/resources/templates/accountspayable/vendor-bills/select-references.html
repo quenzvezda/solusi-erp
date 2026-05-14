@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout/master :: head(#{label.vb.selectReferences})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .vendor-bill-reference-content}, ~{:: #page-specific-scripts})}">
+    <div class="vendor-bill-reference-content">
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="#{label.vb.selectReferences}">Select Billable References</h2>
+                        <div class="text-secondary mt-1" th:text="#{label.vb.selectReferences.subtitle}">Choose goods receipts to create a vendor bill.</div>
+                    </div>
+                    <div class="col-auto ms-auto">
+                        <a th:href="@{/accounts-payable/vendor-bills}" class="btn btn-secondary">
+                            <i class="ti ti-arrow-left me-1"></i><span th:text="#{label.back}">Back</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+                <form th:action="@{/accounts-payable/vendor-bills/create-from-references}" method="post" id="vendor-bill-reference-form">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <div class="alert alert-danger d-none" id="reference-validation-message"></div>
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="table table-vcenter card-table">
+                                <thead>
+                                    <tr>
+                                        <th class="w-1"></th>
+                                        <th th:text="#{label.vb.sourceType}">Source Type</th>
+                                        <th th:text="#{label.vb.sourceCode}">Document Code</th>
+                                        <th th:text="#{label.vb.sourceDate}">Date</th>
+                                        <th th:text="#{label.vb.vendor}">Vendor</th>
+                                        <th th:text="#{label.vb.currency}">Currency</th>
+                                        <th class="text-end" th:text="#{label.vb.exchangeRate}">Exchange Rate</th>
+                                        <th class="text-end" th:text="#{label.vb.outstandingAmount}">Outstanding</th>
+                                        <th class="text-end" th:text="#{label.vb.outstandingLines}">Lines</th>
+                                        <th th:text="#{label.vb.status}">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="ref : ${references}">
+                                        <td>
+                                            <input type="checkbox" class="form-check-input js-reference-checkbox"
+                                                   name="selectedGrIds"
+                                                   th:value="${ref.sourceId}"
+                                                   th:data-vendor-id="${ref.vendorId}"
+                                                   th:data-currency-id="${ref.currencyId}">
+                                        </td>
+                                        <td><span class="badge bg-blue-lt" th:text="${ref.sourceType}">GOODS_RECEIPT</span></td>
+                                        <td th:text="${ref.sourceCode}">GR-001</td>
+                                        <td th:text="${ref.sourceDate != null ? #temporals.format(ref.sourceDate, 'dd MMM yyyy') : '-'}">12 May 2026</td>
+                                        <td th:text="${ref.vendorName}">Vendor</td>
+                                        <td th:text="${ref.currencyCode}">IDR</td>
+                                        <td class="text-end" th:text="${ref.exchangeRate != null ? #numbers.formatDecimal(ref.exchangeRate, 1, 'COMMA', 6, 'POINT') : '-'}">1.000000</td>
+                                        <td class="text-end" th:text="${ref.outstandingAmount != null ? #numbers.formatDecimal(ref.outstandingAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                        <td class="text-end" th:text="${ref.outstandingLineCount}">1</td>
+                                        <td><span class="badge bg-success-lt" th:text="${ref.status}">COMPLETED</span></td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(references)}">
+                                        <td colspan="10" class="text-center py-4 text-secondary" th:text="#{label.vb.noBillableReferences}">No billable references found.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="card-footer text-end">
+                            <button type="submit" class="btn btn-primary" id="btn-continue-references" disabled>
+                                <span th:text="#{label.vb.continue}">Continue</span><i class="ti ti-arrow-right ms-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <th:block id="page-specific-scripts">
+        <script th:src="@{/js/accountspayable/vendor-bills/select-references.js}"></script>
+    </th:block>
+</body>
+
+</html>

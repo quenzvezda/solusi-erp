@@ -31,6 +31,10 @@ public class JournalPersistenceMapper {
             lineEntity.setAccountId(line.accountId());
             lineEntity.setDebitAmount(line.debitAmount());
             lineEntity.setCreditAmount(line.creditAmount());
+            lineEntity.setOriginalCurrencyId(line.originalCurrencyId());
+            lineEntity.setExchangeRate(line.exchangeRate());
+            lineEntity.setOriginalDebitAmount(line.originalDebitAmount());
+            lineEntity.setOriginalCreditAmount(line.originalCreditAmount());
             lineEntities.add(lineEntity);
         }
         entity.setLines(lineEntities);
@@ -39,7 +43,15 @@ public class JournalPersistenceMapper {
 
     public JournalEntry toDomain(JournalEntryEntity entity) {
         List<JournalLine> lines = entity.getLines().stream()
-                .map(l -> new JournalLine(l.getAccountId(), l.getDebitAmount(), l.getCreditAmount()))
+                .map(l -> new JournalLine(
+                        l.getAccountId(),
+                        l.getDebitAmount(),
+                        l.getCreditAmount(),
+                        l.getOriginalCurrencyId(),
+                        l.getExchangeRate(),
+                        l.getOriginalDebitAmount(),
+                        l.getOriginalCreditAmount()
+                ))
                 .toList();
 
         AuditMetadata metadata = new AuditMetadata(

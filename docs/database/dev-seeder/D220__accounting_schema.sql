@@ -15,8 +15,10 @@ SET @coa_grir_clearing         = (SELECT id FROM acc_chart_of_accounts WHERE cod
 SET @coa_tax_payable           = (SELECT id FROM acc_chart_of_accounts WHERE code = '2130' AND is_active = 1 AND is_header = 0);
 SET @coa_product_sales         = (SELECT id FROM acc_chart_of_accounts WHERE code = '4110' AND is_active = 1 AND is_header = 0);
 SET @coa_inventory_gain        = (SELECT id FROM acc_chart_of_accounts WHERE code = '4230' AND is_active = 1 AND is_header = 0);
+SET @coa_fx_gain               = (SELECT id FROM acc_chart_of_accounts WHERE code = '4240' AND is_active = 1 AND is_header = 0);
 SET @coa_cogs_material         = (SELECT id FROM acc_chart_of_accounts WHERE code = '5110' AND is_active = 1 AND is_header = 0);
 SET @coa_inventory_loss        = (SELECT id FROM acc_chart_of_accounts WHERE code = '5130' AND is_active = 1 AND is_header = 0);
+SET @coa_fx_loss               = (SELECT id FROM acc_chart_of_accounts WHERE code = '5140' AND is_active = 1 AND is_header = 0);
 
 INSERT INTO acc_accounting_schemas (
     event_type,
@@ -73,7 +75,9 @@ VALUES
 (@schema_gr,  'GR_GRAND_TOTAL',        @coa_grir_clearing,         'CREDIT'),
 (@schema_vb,  'VB_GRIR_CLEARING_AMT',  @coa_grir_clearing,         'DEBIT'),
 (@schema_vb,  'VB_TAX_AMT',            @coa_input_vat,             'DEBIT'),
+(@schema_vb,  'VB_FX_LOSS_AMT',        @coa_fx_loss,               'DEBIT'),
 (@schema_vb,  'VB_AP_TOTAL',           @coa_accounts_payable,      'CREDIT'),
+(@schema_vb,  'VB_FX_GAIN_AMT',        @coa_fx_gain,               'CREDIT'),
 (@schema_vp,  'VP_AP_AMT',             @coa_accounts_payable,      'DEBIT'),
 (@schema_vp,  'VP_BANK_OUT_AMT',       @coa_main_bank,             'CREDIT'),
 (@schema_ci,  'CI_AR_AMT',             @coa_trade_receivable,      'DEBIT'),
@@ -90,4 +94,4 @@ VALUES
 
 -- Validation queries for manual checks.
 -- SELECT event_type, COUNT(*) AS header_count FROM acc_accounting_schemas WHERE event_type IN ('GOODS_RECEIPT','VENDOR_BILL','VENDOR_PAYMENT','CUSTOMER_INVOICE','GOODS_ISSUE','CUSTOMER_RECEIPT','STOCK_ADJUSTMENT_IN','STOCK_ADJUSTMENT_OUT') GROUP BY event_type;
--- SELECT s.event_type, COUNT(l.id) AS line_count FROM acc_accounting_schemas s LEFT JOIN acc_schema_lines l ON l.schema_id = s.id WHERE s.event_type IN ('GOODS_RECEIPT','VENDOR_BILL','VENDOR_PAYMENT','CUSTOMER_INVOICE','GOODS_ISSUE','CUSTOMER_RECEIPT','STOCK_ADJUSTMENT_IN','STOCK_ADJUSTMENT_OUT') GROUP BY s.event_type ORDER BY s.event_type; -- Expected: 3,3,2,3,2,2,2,2
+-- SELECT s.event_type, COUNT(l.id) AS line_count FROM acc_accounting_schemas s LEFT JOIN acc_schema_lines l ON l.schema_id = s.id WHERE s.event_type IN ('GOODS_RECEIPT','VENDOR_BILL','VENDOR_PAYMENT','CUSTOMER_INVOICE','GOODS_ISSUE','CUSTOMER_RECEIPT','STOCK_ADJUSTMENT_IN','STOCK_ADJUSTMENT_OUT') GROUP BY s.event_type ORDER BY s.event_type; -- Expected: 3,5,2,3,2,2,2,2

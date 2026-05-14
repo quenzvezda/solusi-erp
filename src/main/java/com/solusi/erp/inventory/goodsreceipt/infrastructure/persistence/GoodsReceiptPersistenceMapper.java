@@ -64,7 +64,8 @@ public interface GoodsReceiptPersistenceMapper {
     }
 
     default GoodsReceiptLine toLineDomain(GoodsReceiptLineEntity entity) {
-        return GoodsReceiptLine.prefill(
+        return GoodsReceiptLine.reconstitute(
+                entity.getId(),
                 entity.getReferenceLineId(),
                 entity.getProductId(),
                 null,

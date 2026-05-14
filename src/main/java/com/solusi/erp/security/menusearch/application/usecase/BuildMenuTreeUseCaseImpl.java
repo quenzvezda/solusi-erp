@@ -27,6 +27,7 @@ public class BuildMenuTreeUseCaseImpl implements BuildMenuTreeUseCase {
             Map.entry("Procurement (Purchase)", "ti-shopping-cart"),
             Map.entry("Finance & Accounting", "ti-calculator"),
             Map.entry("Account Receivable (Sales Billing)", "ti-file-invoice"),
+            Map.entry("Account Payable", "ti-receipt"),
             Map.entry("Account Payable (Purchase Invoice)", "ti-receipt"),
             Map.entry("General Ledger", "ti-book"),
             Map.entry("Adjustments", "ti-adjustments-alt"),

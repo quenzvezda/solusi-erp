@@ -11,4 +11,8 @@ public class JournalLineResponse {
     private String accountName;
     private BigDecimal debitAmount;
     private BigDecimal creditAmount;
+    private String originalCurrencyCode;
+    private BigDecimal exchangeRate;
+    private BigDecimal originalDebitAmount;
+    private BigDecimal originalCreditAmount;
 }

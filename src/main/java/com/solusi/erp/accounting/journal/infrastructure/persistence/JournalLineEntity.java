@@ -28,4 +28,16 @@ public class JournalLineEntity extends BaseModel {
 
     @Column(name = "credit_amount", nullable = false, precision = 19, scale = 4)
     private BigDecimal creditAmount;
+
+    @Column(name = "original_currency_id")
+    private Long originalCurrencyId;
+
+    @Column(name = "exchange_rate", precision = 19, scale = 6)
+    private BigDecimal exchangeRate;
+
+    @Column(name = "original_debit_amount", precision = 19, scale = 4)
+    private BigDecimal originalDebitAmount;
+
+    @Column(name = "original_credit_amount", precision = 19, scale = 4)
+    private BigDecimal originalCreditAmount;
 }

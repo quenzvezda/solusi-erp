@@ -140,7 +140,9 @@ public enum JournalVariable {
     // VENDOR_BILL
     VB_GRIR_CLEARING_AMT(VENDOR_BILL),
     VB_TAX_AMT(VENDOR_BILL),
+    VB_FX_LOSS_AMT(VENDOR_BILL),
     VB_AP_TOTAL(VENDOR_BILL),
+    VB_FX_GAIN_AMT(VENDOR_BILL),
 
     // VENDOR_PAYMENT
     VP_AP_AMT(VENDOR_PAYMENT),
@@ -204,8 +206,8 @@ postJournalForEventUseCase.execute(new JournalPostingCommand(
     "Auto journal for goods receipt " + receipt.getCode(),
     Map.of(
         JournalVariable.GR_INVENTORY_AMT, inventoryTotal,
-        JournalVariable.GR_TAX_AMT,       taxTotal,
-        JournalVariable.GR_GRAND_TOTAL,   inventoryTotal.add(taxTotal)
+        JournalVariable.GR_TAX_AMT,       BigDecimal.ZERO,
+        JournalVariable.GR_GRAND_TOTAL,   inventoryTotal
     )
 ));
 ```
@@ -215,10 +217,11 @@ postJournalForEventUseCase.execute(new JournalPostingCommand(
 | Modul | Use Case | Event Type |
 |---|---|---|
 | Goods Receipt | `CompleteGoodsReceiptUseCaseImpl` | `GOODS_RECEIPT` |
+| Vendor Bill | `ConfirmVendorBillUseCaseImpl` | `VENDOR_BILL` |
 
 ### Cara Menambah Integrasi Baru
 
-Untuk event baru (contoh: Vendor Bill):
+Untuk event baru berikutnya (contoh: Vendor Payment):
 
 1. **Tambah `SchemaEventType`** (jika belum ada) — sudah ada semua di enum
 2. **Tambah `JournalVariable`** (jika variable baru dibutuhkan)
@@ -237,10 +240,9 @@ Untuk event baru (contoh: Vendor Bill):
 ┌─────────────────────────────────────────────┐
 │  @Transactional                              │
 │                                             │
-│  CompleteGoodsReceiptUseCase                │
+│  CompleteGoodsReceiptUseCase / ConfirmVendorBillUseCase │
 │    ├── validate period open                 │
-│    ├── update stock                         │
-│    ├── update PO receipt status             │
+│    ├── update operational aggregate         │
 │    └── PostJournalForEventUseCase  ◄────────┤
 │         └── save JournalEntry               │
 │                                             │

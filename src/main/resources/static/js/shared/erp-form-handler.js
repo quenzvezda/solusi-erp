@@ -271,11 +271,13 @@ const ErpFormHandler = (function () {
         }
     };
 
-    return {
+    window.ErpFormHandler = {
         init: init,
         showSuccess: showSuccess,
         showWarning: showWarning
     };
+
+    return window.ErpFormHandler;
 })();
 
 /**

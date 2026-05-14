@@ -21,7 +21,7 @@ Sistem mendukung 8 jenis event yang dapat memicu auto-posting jurnal:
 | Event Type | Trigger Operasional | Status |
 |---|---|---|
 | `GOODS_RECEIPT` | GR dikonfirmasi (Complete) | ✅ Live |
-| `VENDOR_BILL` | Invoice vendor dikonfirmasi | 🔲 Sprint 5 |
+| `VENDOR_BILL` | Invoice vendor dikonfirmasi | ✅ Live |
 | `VENDOR_PAYMENT` | Pembayaran ke vendor dikonfirmasi | 🔲 Sprint 5 |
 | `CUSTOMER_INVOICE` | Invoice ke customer dikonfirmasi | 🔲 Sprint 6+ |
 | `GOODS_ISSUE` | Barang keluar gudang dikonfirmasi | 🔲 Sprint 6+ |
@@ -40,13 +40,13 @@ PO (disetujui)
     │  → Tidak ada jurnal
     ▼
 Goods Receipt (Complete) ──────────────────────────── ✅ Auto-Journal
-    │  DR Merchandise Inventory (1310)   = nilai barang
-    │  DR Tax Receivable / Input VAT (1230) = PPN masukan
-    │  CR GR/IR Clearing (2120)          = total bruto
+    │  DR Merchandise Inventory (1310)   = nilai barang net/DPP
+    │  CR GR/IR Clearing (2120)          = nilai barang net/DPP
     ▼
-Vendor Bill (Confirm) ─────────────────────────────── 🔲 Auto-Journal
-    │  DR GR/IR Clearing (2120)          = nilai GR yang di-match
-    │  CR Accounts Payable (2110)        = hutang ke vendor
+Vendor Bill (Confirm) ─────────────────────────────── ✅ Auto-Journal
+    │  DR GR/IR Clearing (2120)          = nilai GR net yang di-match
+    │  DR Tax Receivable / Input VAT (1230) = PPN masukan invoice
+    │  CR Accounts Payable (2110)        = total bruto invoice
     ▼
 Vendor Payment (Confirm) ──────────────────────────── 🔲 Auto-Journal
        DR Accounts Payable (2110)        = jumlah dibayar
@@ -78,24 +78,30 @@ Jika invoice vendor berbeda nilai dari GR → selisih dicatat sebagai **price va
 | `GR_TAX_AMT` | 1230 — Tax Receivable (Input VAT) | **Debit** |
 | `GR_GRAND_TOTAL` | 2120 — GR/IR Clearing | **Credit** |
 
-> `GR_GRAND_TOTAL = GR_INVENTORY_AMT + GR_TAX_AMT`
+> Tax timing saat ini invoice-based: `GR_TAX_AMT = 0` dan baris tax di-skip oleh engine.  
+> `GR_GRAND_TOTAL = GR_INVENTORY_AMT` sehingga GR/IR hanya menampung nilai net/DPP.
 
-Karena Input VAT diklaim pada saat GR, maka pada saat Vendor Bill, `VB_TAX_AMT = 0`.
+Input VAT diakui saat Vendor Bill dikonfirmasi, bukan saat GR complete.
 
 ---
 
-### 4.2 VENDOR_BILL *(planned Sprint 5)*
+### 4.2 VENDOR_BILL
 
-**Trigger:** `ConfirmVendorBillUseCase` (belum diimplementasi).
+**Trigger:** `ConfirmVendorBillUseCase` selesai dieksekusi.
 
 | Variable | Akun COA | Posisi |
 |---|---|---|
 | `VB_GRIR_CLEARING_AMT` | 2120 — GR/IR Clearing | **Debit** |
 | `VB_TAX_AMT` | 1230 — Tax Receivable (Input VAT) | **Debit** |
+| `VB_FX_LOSS_AMT` | FX Loss account | **Debit** |
 | `VB_AP_TOTAL` | 2110 — Accounts Payable | **Credit** |
+| `VB_FX_GAIN_AMT` | FX Gain account | **Credit** |
 
-> `VB_TAX_AMT = 0` jika tax sudah diklaim di GR.  
-> `VB_TAX_AMT > 0` hanya jika invoice dibuat langsung tanpa GR sebelumnya.
+> `VB_GRIR_CLEARING_AMT = subtotal/DPP invoice`  
+> `VB_TAX_AMT = tax invoice`  
+> `VB_AP_TOTAL = subtotal + tax`
+
+Untuk invoice multi-currency, nilai journal dipost dalam base currency menggunakan exchange rate Vendor Bill. FX variance pada clearing GR/IR dipost ke variable `VB_FX_LOSS_AMT` atau `VB_FX_GAIN_AMT` jika ada selisih kurs pada porsi net/DPP.
 
 ---
 
