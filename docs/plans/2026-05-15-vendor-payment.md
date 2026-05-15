@@ -136,7 +136,7 @@ Steps:
 
 ---
 
-### Task 6: Infrastructure Layer
+### Task 6: Infrastructure Layer [x]
 JPA entities, persistence mapper, repository impl, cross-slice adapters, config.
 
 **Depends on:** Task 5
