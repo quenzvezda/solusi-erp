@@ -201,7 +201,7 @@ Steps:
 
 ---
 
-### Task 8: Web Layer
+### Task 8: Web Layer [x]
 Controller, DTOs, web mapper.
 
 **Depends on:** Task 7
