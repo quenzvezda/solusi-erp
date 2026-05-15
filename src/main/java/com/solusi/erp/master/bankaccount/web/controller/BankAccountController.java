@@ -13,7 +13,7 @@ import com.solusi.erp.master.bankaccount.web.dto.*;
 import com.solusi.erp.master.bankaccount.web.mapper.BankAccountWebMapper;
 import com.solusi.erp.master.geographic.domain.port.GeographicLookupProvider;
 import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
-import com.solusi.erp.master.shared.model.AccountType;
+import com.solusi.erp.master.shared.model.PaymentType;
 import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -74,7 +74,7 @@ public class BankAccountController {
     @PreAuthorize("hasAuthority('BANK-ACCOUNT_CREATE')")
     public String showCreateForm(Model model) {
         model.addAttribute("bankAccountRequest", new BankAccountSaveRequest());
-        model.addAttribute("accountTypes", AccountType.values());
+        model.addAttribute("accountTypes", PaymentType.values());
         return "master/bank-accounts/form";
     }
 
@@ -85,8 +85,9 @@ public class BankAccountController {
             @Valid @RequestBody BankAccountSaveRequest request) {
         BankAccount domain = createBankAccountUseCase.execute(
                 request.getBankName(), request.getBranch(), request.getAccountName(),
-                request.getAccountNo(), request.getAccountType(), request.getNote(),
-                request.getCityId(), request.getPartyId(), request.getIsActive());
+                request.getAccountNo(), PaymentType.valueOf(request.getAccountType()),
+                request.getNote(), request.getCityId(), request.getPartyId(),
+                request.getIsActive(), request.getCurrencyId(), request.getCoaId());
         BankAccountDetailResponse data = webMapper.toDetailResponse(domain);
         String msg = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(msg, data));
@@ -99,7 +100,7 @@ public class BankAccountController {
                 .orElseThrow(() -> new RuntimeException("BankAccount not found"));
         model.addAttribute("bankAccountRequest", webMapper.toSaveRequest(domain));
         model.addAttribute("auditInfo", webMapper.toDetailResponse(domain));
-        model.addAttribute("accountTypes", AccountType.values());
+        model.addAttribute("accountTypes", PaymentType.values());
 
         LookupDto cityLookup = geographicLookupProvider.resolve(domain.getCityId());
         model.addAttribute("selectedCity", cityLookup != null ? cityLookup.name() : domain.getCityName());
@@ -118,8 +119,9 @@ public class BankAccountController {
             @Valid @RequestBody BankAccountSaveRequest request) {
         BankAccount domain = updateBankAccountUseCase.execute(
                 id, request.getBankName(), request.getBranch(), request.getAccountName(),
-                request.getAccountNo(), request.getAccountType(), request.getNote(),
-                request.getCityId(), request.getPartyId(), request.getIsActive());
+                request.getAccountNo(), PaymentType.valueOf(request.getAccountType()),
+                request.getNote(), request.getCityId(), request.getPartyId(),
+                request.getIsActive(), request.getCurrencyId(), request.getCoaId());
         BankAccountDetailResponse data = webMapper.toDetailResponse(domain);
         String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
         return ResponseEntity.ok(ApiResponse.success(msg, data));

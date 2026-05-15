@@ -38,8 +38,8 @@ public class BankAccountConfig {
             PlatformTransactionManager txManager) {
         CreateBankAccountUseCase pure = new CreateBankAccountUseCaseImpl(bankAccountDomainRepository, sequenceGeneratorService);
         TransactionTemplate tx = new TransactionTemplate(txManager);
-        return (bankName, branch, accountName, accountNo, accountType, note, cityId, partyId, isActive) ->
-                tx.execute(status -> pure.execute(bankName, branch, accountName, accountNo, accountType, note, cityId, partyId, isActive));
+        return (bankName, branch, accountName, accountNo, accountType, note, cityId, partyId, isActive, currencyId, coaId) ->
+                tx.execute(status -> pure.execute(bankName, branch, accountName, accountNo, accountType, note, cityId, partyId, isActive, currencyId, coaId));
     }
 
     @Bean
@@ -48,8 +48,8 @@ public class BankAccountConfig {
             PlatformTransactionManager txManager) {
         UpdateBankAccountUseCase pure = new UpdateBankAccountUseCaseImpl(bankAccountDomainRepository);
         TransactionTemplate tx = new TransactionTemplate(txManager);
-        return (id, bankName, branch, accountName, accountNo, accountType, note, cityId, partyId, isActive) ->
-                tx.execute(status -> pure.execute(id, bankName, branch, accountName, accountNo, accountType, note, cityId, partyId, isActive));
+        return (id, bankName, branch, accountName, accountNo, accountType, note, cityId, partyId, isActive, currencyId, coaId) ->
+                tx.execute(status -> pure.execute(id, bankName, branch, accountName, accountNo, accountType, note, cityId, partyId, isActive, currencyId, coaId));
     }
 
     @Bean

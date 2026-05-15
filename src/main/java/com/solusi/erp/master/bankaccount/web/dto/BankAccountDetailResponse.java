@@ -24,4 +24,6 @@ public class BankAccountDetailResponse extends BaseAuditResponse {
     private Long partyId;
     private String partyName;
     private Boolean isActive;
+    private Long currencyId;
+    private Long coaId;
 }

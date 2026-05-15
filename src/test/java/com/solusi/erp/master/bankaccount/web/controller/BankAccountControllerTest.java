@@ -10,6 +10,7 @@ import com.solusi.erp.master.bankaccount.web.dto.BankAccountSummaryResponse;
 import com.solusi.erp.master.bankaccount.web.mapper.BankAccountWebMapper;
 import com.solusi.erp.master.geographic.domain.port.GeographicLookupProvider;
 import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
+import com.solusi.erp.master.shared.model.PaymentType;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.MessageSource;
 import org.springframework.ui.ExtendedModelMap;
@@ -43,7 +44,7 @@ public class BankAccountControllerTest {
                 partyLookupProvider, geographicLookupProvider);
 
         BankAccount domainAccount = BankAccount.createNew("BA-001", "Bank BCA", "Sudirman",
-                "John Doe", "1234567890", "BANK", "Note", 1L, 2L, true);
+                "John Doe", "1234567890", PaymentType.BANK_TRANSFER, "Note", 1L, 2L, true, 1L, 10L);
         com.solusi.erp.core.domain.model.Page<BankAccount> domainPage =
                 new com.solusi.erp.core.domain.model.Page<>(List.of(domainAccount), 0, 20, 1L);
         when(findUseCase.execute(any(), any())).thenReturn(domainPage);

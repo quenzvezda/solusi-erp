@@ -11,7 +11,7 @@ Vendor Payment adalah dokumen pembayaran ke supplier yang mengalokasikan dana da
 
 ## Tasks
 
-### Task 1: Bank Account Refactor
+### Task 1: Bank Account Refactor [x]
 Tambah field `currencyId`, `coaId`, refactor `accountType` ke enum `PaymentType` pada domain model, entity, migration, dan seeder.
 
 **Depends on:** (none)
