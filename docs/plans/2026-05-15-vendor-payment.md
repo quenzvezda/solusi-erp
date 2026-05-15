@@ -166,7 +166,7 @@ Steps:
 
 ---
 
-### Task 7: Application Use Cases
+### Task 7: Application Use Cases [x]
 Command use cases (create, update, confirm, cancel, delete) dan query use cases (list, detail, payable bills).
 
 **Depends on:** Task 6
