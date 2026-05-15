@@ -65,7 +65,7 @@ Steps:
 
 ---
 
-### Task 3: JournalVariable & Accounting Schema Seeder
+### Task 3: JournalVariable & Accounting Schema Seeder [x]
 Tambah `VP_FX_LOSS_AMT`, `VP_FX_GAIN_AMT` ke enum dan seed schema lines untuk event VENDOR_PAYMENT.
 
 **Depends on:** Task 2
