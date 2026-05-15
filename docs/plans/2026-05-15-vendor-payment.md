@@ -3,7 +3,8 @@
 > Source: docs/brainstorming/2026-05-15-vendor-payment.md
 > Created: 2026-05-15
 > Sprint: 5 (Accounts Payable)
-> Status: IN_PROGRESS
+> Status: COMPLETED
+> Completed: 2026-05-15
 
 ## Summary
 
@@ -273,7 +274,7 @@ Steps:
 
 ---
 
-### Task 10: VB Status Update & Final Integration
+### Task 10: VB Status Update & Final Integration [x]
 Implement `VendorBillPaymentUpdatePort` logic dan pastikan seluruh flow end-to-end bekerja.
 
 **Depends on:** Task 7, Task 9
