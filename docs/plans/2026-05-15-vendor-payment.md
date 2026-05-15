@@ -108,7 +108,7 @@ Steps:
 
 ---
 
-### Task 5: Domain Model
+### Task 5: Domain Model [x]
 `VendorPayment` aggregate root, `VendorPaymentLine` value object, `VendorPaymentStatus` enum, repository port, dan cross-slice ports.
 
 **Depends on:** Task 4
