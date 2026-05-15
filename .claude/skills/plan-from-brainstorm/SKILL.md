@@ -1,0 +1,289 @@
+---
+name: plan-from-brainstorm
+description: Use when the user has a brainstorming or discussion document and needs to generate a structured implementation plan. Triggers on requests like "buat plan dari brainstorming", "generate implementation plan", "plan from discussion", or when user passes a brainstorming doc path. Project-specific to Solusi ERP (Clean Architecture + DDD + CQRS, Spring Boot 4, Thymeleaf).
+---
+
+# Plan from Brainstorm
+
+## Overview
+
+Transforms a brainstorming/discussion document into a structured, incremental implementation plan. The plan is built task-by-task to avoid context exhaustion, with reference links for context recovery after compaction.
+
+**Core principle:** Skeleton first, then expand each task by reading only the relevant spec/codebase for that task. Never load everything at once.
+
+## When to Use
+
+- User has a completed brainstorming doc (typically in `docs/brainstorming/`)
+- User wants a step-by-step implementation plan before coding
+- User says: "buat plan", "plan dari brainstorming", "generate implementation plan"
+- User passes a brainstorming doc path as argument
+
+**When NOT to use:**
+- User wants to execute an existing plan (use `execute-plan` skill instead)
+- User wants to brainstorm/discuss (use `copilot-brainstorming` skill)
+- Task is trivial (single file change, obvious fix)
+
+## Invocation
+
+```
+/plan-from-brainstorm docs/brainstorming/2026-05-15-vendor-payment.md
+```
+
+The argument is the path to the brainstorming/discussion document.
+
+## Workflow
+
+```dot
+digraph plan_workflow {
+    rankdir=TB;
+    node [shape=box, style=rounded];
+
+    intake [label="Phase 1: INTAKE\nRead brainstorming doc\nExtract scope & implementation order"];
+    skeleton [label="Phase 2: SKELETON\nCreate plan file with all task headers\n+ 1-line summary each"];
+    expand [label="Phase 3: EXPAND (per task)\nRead relevant spec/code for THIS task only\nWrite detailed steps + ref links"];
+    more [label="More tasks\nin skeleton?" shape=diamond];
+    finalize [label="Phase 4: FINALIZE\nCross-check coverage\nAdd dependency notes\nCreate empty report file"];
+
+    intake -> skeleton;
+    skeleton -> expand;
+    expand -> more;
+    more -> expand [label="yes"];
+    more -> finalize [label="no"];
+}
+```
+
+## Phase Details
+
+### Phase 1: INTAKE
+
+1. Read the brainstorming document passed as argument
+2. Identify:
+   - Implementation order (usually a numbered section in the doc)
+   - Domain models and their relationships
+   - Business rules and validation
+   - Cross-slice dependencies
+   - Deferred items (explicitly excluded from plan)
+3. Note the brainstorming filename for output path derivation
+
+### Phase 2: SKELETON
+
+Create the plan file at: `docs/plans/{brainstorm-filename}.md`
+
+Example: brainstorm at `docs/brainstorming/2026-05-15-vendor-payment.md` → plan at `docs/plans/2026-05-15-vendor-payment.md`
+
+Write the skeleton with:
+- Header metadata (source doc, date, sprint)
+- All task headers with 1-line summary
+- Task count derived from brainstorming's implementation order
+- Empty report file created at `docs/reports/{brainstorm-filename}.md`
+
+**Skeleton format:**
+
+```markdown
+# Implementation Plan: {Feature Name}
+
+> Source: docs/brainstorming/{filename}.md
+> Created: {date}
+> Sprint: {N}
+> Status: IN_PROGRESS
+
+## Summary
+
+{2-3 sentence overview of what this plan implements}
+
+## Tasks
+
+### Task 1: {Title}
+{1-line summary of what this task accomplishes}
+
+### Task 2: {Title}
+{1-line summary}
+
+...
+
+### Task N: {Title}
+{1-line summary}
+```
+
+### Phase 3: EXPAND (Incremental, per task)
+
+For each task in the skeleton, IN ORDER:
+
+1. **Identify relevant files** — What specs, existing code patterns, or docs does this task need?
+2. **Read only those files** — Do NOT load the entire codebase. Read the minimum needed.
+3. **Find reference implementations** — Look at existing modules that solved similar problems (see Reference Modules below)
+4. **Write detailed steps** — Each step is a concrete action with a checkbox
+5. **Add reference links** — Every critical step gets a `ref:` link
+
+**Expanded task format:**
+
+```markdown
+### Task 1: {Title}
+{1-line summary}
+
+**Depends on:** (none) | Task N
+**Reference module:** `accountspayable.vendorbill` | `master.tax` | etc.
+
+Steps:
+- [ ] Step 1 description
+      ref: src/main/java/com/solusi/erp/path/File.java:L10-L45 — pattern description
+- [ ] Step 2 description
+      ref: docs/spec/relevant-spec.md — what to look for
+- [ ] Step 3 description
+
+**Validation criteria:**
+- What must be true when this task is complete
+- Compile check / test that should pass
+```
+
+**Step checkbox states:**
+- `[ ]` — pending
+- `[~]` — in progress
+- `[x]` — verified complete
+
+### Phase 4: FINALIZE
+
+1. **Coverage check** — Walk through every section of the brainstorming doc. Is every non-deferred item covered by at least one task?
+2. **Dependency notes** — Add `Depends on: Task N` where ordering matters
+3. **Create report file** — Empty file at `docs/reports/{brainstorm-filename}.md` with header:
+
+```markdown
+# Implementation Report: {Feature Name}
+
+> Plan: docs/plans/{filename}.md
+> Source: docs/brainstorming/{filename}.md
+> Created: {date}
+
+## Findings
+
+(Populated during execution by execute-plan skill)
+```
+
+## Reference Modules (ERP-Specific)
+
+When expanding tasks, use these as code pattern references:
+
+| Pattern Needed | Reference Module | Key Files |
+|---|---|---|
+| Simple CRUD + use case | `master.tax` | domain/model, app/usecase, web/controller |
+| CRUD + lookup provider | `inventory.brand` | domain/port/BrandInUseChecker |
+| Many-to-many relations | `security.role` | domain/model, persistence mapper |
+| Cross-slice query port | `inventory.brand` | domain/port/, infrastructure/adapter/ |
+| Cross-slice command port | `inventory.stock` | domain/port/StockService |
+| Header-Lines document | `accountspayable.vendorbill` | domain/model, web/dto, persistence |
+| Flyway migration | `src/main/resources/db/migration/` | naming convention V{N}__{desc}.sql |
+| Thymeleaf form | `src/main/resources/templates/` | existing form templates |
+| Journal posting | `accounting.journal` | PostJournalForEventUseCase |
+| Sequence generator | `core.infrastructure.sequence` | SequenceGeneratorService |
+
+## Reference Link Format
+
+Every critical step MUST include a reference link:
+
+```
+ref: path/to/file.java:L45-L60 — description of what to look for
+```
+
+Three parts:
+1. **Path** — absolute from project root
+2. **Line range** — approximate, helps locate quickly
+3. **Description hint** — what the agent should look for if lines shifted
+
+Examples:
+```
+ref: src/main/java/com/solusi/erp/accountspayable/vendorbill/domain/model/VendorBill.java:L1-L50 — aggregate root pattern with status enum and lines collection
+ref: docs/spec/numeric-standards.md — AutoNumeric input pattern for currency fields
+ref: src/main/java/com/solusi/erp/accounting/journal/application/usecase/command/PostJournalForEventUseCaseImpl.java:L30-L80 — journal posting command construction
+```
+
+## Task Ordering Strategy
+
+Always order tasks from foundation to surface. **Tests are co-located with each task, NOT a separate final task.**
+
+1. **Database changes** — Flyway migrations, schema alterations (no tests)
+2. **Domain model + domain tests** — Entities, VOs, enums, ports + pure JUnit tests
+3. **Infrastructure + config test** — JPA entities, repos, adapters, config + `@ContextConfiguration` integration test
+4. **Application use cases + use case tests** — Commands/queries + unit tests with in-memory fakes
+5. **Web layer + controller tests** — Controller, DTOs, mappers + Mockito-based controller tests
+6. **Templates + template tests** — Thymeleaf HTML, JS + `TemplateTestUtils` security/binding tests
+7. **Cross-slice integration** — Status updates, event publishing (tested via use case tests)
+8. **Seeder data** — Permissions, menu, accounting schema (no tests)
+
+## Test Requirements per Task
+
+Every non-trivial task MUST include test steps. The planning agent embeds test steps WITHIN the task, not as a separate task at the end.
+
+### Test Classification Matrix
+
+| Task Type | Test Required? | Test Pattern | Reference File |
+|---|---|---|---|
+| Flyway migration / seeder SQL | No | — | — |
+| Domain model (aggregate, VO, enum with logic) | **Yes** | Pure JUnit 5 + AssertJ. Test status transitions, invariants, validation rules. | `VendorBillTest.java` |
+| Domain port (interface only) | No | — | — |
+| Infrastructure adapter | Optional | Unit test if query logic is complex | `BillableGrQueryAdapterTest.java` |
+| Infrastructure config (bean wiring) | **Yes** | `@ExtendWith(SpringExtension)` + `@ContextConfiguration` with MocksConfig | `VendorBillConfigTest.java` |
+| Application use case (command) | **Yes** | `@ExtendWith(MockitoExtension.class)` + `@Mock` for deps. Test happy path + every validation → DomainException. | `CreatePurchaseOrderUseCaseTest.java` |
+| Application use case (query) | **Yes** | `@ExtendWith(MockitoExtension.class)` + `@Mock` for deps | `FindVendorBillsUseCaseTest.java` |
+| Web controller | **Yes** | Mockito mocks for use cases, no Spring context. Test view names, model attrs, `@PreAuthorize` annotations. | `VendorBillControllerTest.java` |
+| Web mapper (complex logic) | **Yes** | Unit test if conditional mapping exists | `VendorBillWebMapperTest.java` |
+| Web mapper (simple field copy) | No | — | — |
+| Thymeleaf template | **Yes** | `TemplateTestUtils.renderWithSecurity` for sec:authorize + raw resource reads for fragment/DTO binding | `VendorBillTemplateTest.java` |
+| JavaScript (form logic) | No | No JS test framework in project | — |
+| Permission / menu seeder | No | — | — |
+
+### Critical Testing Conventions
+
+1. **Use case tests use Mockito (`@ExtendWith(MockitoExtension.class)`):**
+   - `@Mock` for repository and cross-slice ports
+   - `when(...).thenReturn(...)` for stubbing, `verify(...)` for side-effect assertions
+   - Construct use case impl manually in `@BeforeEach` with mocked deps
+   - Test happy path + every validation rule (assertThatThrownBy for DomainException)
+   - Reference: `CreatePurchaseOrderUseCaseTest.java`, `ConfirmVendorBillUseCaseTest.java`
+
+2. **Controller tests also use Mockito** (same pattern as use case tests):
+   - `mock(CreateXxxUseCase.class)` for all injected use cases
+   - Test `@PreAuthorize` annotation values via reflection
+   - No Spring context needed
+   - Reference: `VendorBillControllerTest.java`
+
+3. **Template tests have two sub-patterns:**
+   - **Static check** — `readResource()` + `assertThat(html).contains(...)` for fragment IDs, DTO properties
+   - **Security render** — `TemplateTestUtils.renderWithSecurity(template, vars, auth)` for `sec:authorize` visibility
+
+4. **Config integration test** — Proves bean wiring works. Uses `@ContextConfiguration(classes = {XxxConfig.class, MocksConfig.class})` with mocked external dependencies.
+
+### How to Embed Tests in Plan Tasks
+
+When expanding a task, add test steps AFTER the implementation steps:
+
+```markdown
+### Task 4: Application Use Cases (Command)
+
+Steps:
+- [ ] Create CreateVendorPaymentUseCase interface
+- [ ] Create CreateVendorPaymentUseCaseImpl with validation
+- [ ] Create ConfirmVendorPaymentUseCaseImpl with journal posting
+- [ ] **TEST:** Write CreateVendorPaymentUseCaseTest (@ExtendWith MockitoExtension, @Mock repo + ports)
+- [ ] **TEST:** Write ConfirmVendorPaymentUseCaseTest (verify journal args, FX calc, VB status update)
+      ref: src/test/.../purchaseorder/application/usecase/command/CreatePurchaseOrderUseCaseTest.java:L1-L50 — Mockito use case test pattern
+
+**Validation criteria:**
+- All use case tests pass: `mvn test -Dtest="*VendorPayment*UseCaseTest"`
+- Edge cases covered: amount mismatch, exceeds outstanding, bank currency mismatch
+```
+
+## Output Files
+
+| File | Path | Purpose |
+|---|---|---|
+| Implementation Plan | `docs/plans/{brainstorm-filename}.md` | The structured plan |
+| Report (empty) | `docs/reports/{brainstorm-filename}.md` | Populated during execution |
+
+## Common Mistakes
+
+- **Loading all specs at once** — Only read what's needed for the current task being expanded
+- **Skipping reference links** — Every non-trivial step needs a ref. Context compaction will erase your memory of why you wrote a step.
+- **Vague steps** — "Implement the service" is not a step. "Create CreateVendorPaymentUseCaseImpl with validation rules from brainstorm section 4" is.
+- **Missing validation criteria** — Each task needs a way to verify it's done (compile, test, specific behavior)
+- **Ignoring deferred items** — If the brainstorming doc says "deferred to Sprint 6+", do NOT include it in the plan
+- **Wrong task granularity** — A task should be completable in one focused session (30-90 min of agent work). Split if larger.
