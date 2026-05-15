@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.vp.title})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .vendor-payment-form-content}, ~{:: #page-specific-scripts})}">
+    <div class="vendor-payment-form-content">
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="${paymentRequest.id != null} ? #{label.vp.edit} : #{label.vp.create}">Vendor Payment</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+                <form id="vendor-payment-form"
+                      th:data-action="${paymentRequest.id != null} ? @{/accounts-payable/vendor-payments/{id}(id=${paymentRequest.id})} : @{/accounts-payable/vendor-payments}"
+                      th:data-method="${paymentRequest.id != null} ? 'PUT' : 'POST'"
+                      th:data-redirect="@{/accounts-payable/vendor-payments}">
+
+                    <input type="hidden" name="id" th:value="${paymentRequest.id}">
+                    <input type="hidden" name="version" th:value="${paymentRequest.version}">
+
+                    <div class="card mb-3">
+                        <div class="card-header"><h3 class="card-title" th:text="#{label.vp.header}">Payment Header</h3></div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label required" th:text="#{label.vp.vendor}">Vendor</label>
+                                    <input type="hidden" id="vendorId" name="vendorId" th:value="${paymentRequest.vendorId}">
+                                    <input type="text" id="vendorName" class="form-control" data-autocomplete="vendor" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label required" th:text="#{label.vp.currency}">Currency</label>
+                                    <input type="hidden" id="currencyId" name="currencyId" th:value="${paymentRequest.currencyId}">
+                                    <input type="text" id="currencyName" class="form-control" data-autocomplete="currency" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label required" th:text="#{label.vp.bankAccount}">Bank Account</label>
+                                    <input type="hidden" id="bankAccountId" name="bankAccountId" th:value="${paymentRequest.bankAccountId}">
+                                    <input type="text" id="bankAccountName" class="form-control" data-modal-selector="bank-account" readonly>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label required" th:text="#{label.vp.paymentDate}">Payment Date</label>
+                                    <input type="date" id="paymentDate" name="paymentDate" class="form-control"
+                                           th:value="${paymentRequest.paymentDate}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label required" th:text="#{label.vp.exchangeRate}">Exchange Rate</label>
+                                    <input type="text" id="exchangeRate" name="exchangeRate" class="form-control"
+                                           th:value="${paymentRequest.exchangeRate}" data-autonumeric="rate">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label required" th:text="#{label.vp.paymentAmount}">Payment Amount</label>
+                                    <input type="text" id="paymentAmount" name="paymentAmount" class="form-control"
+                                           th:value="${paymentRequest.paymentAmount}" data-autonumeric="currency">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label" th:text="#{label.vp.reference}">Reference</label>
+                                    <input type="text" id="reference" name="reference" class="form-control"
+                                           th:value="${paymentRequest.reference}">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" th:text="#{label.vp.notes}">Notes</label>
+                                    <textarea id="notes" name="notes" class="form-control" rows="2"
+                                              th:text="${paymentRequest.notes}"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h3 class="card-title" th:text="#{label.vp.allocation}">Bill Allocation</h3>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table card-table table-vcenter" id="allocation-table">
+                                    <thead>
+                                        <tr>
+                                            <th th:text="#{label.vp.billCode}">Bill Code</th>
+                                            <th class="text-end" th:text="#{label.vp.outstandingAmount}">Outstanding</th>
+                                            <th class="text-end" th:text="#{label.vp.paidAmount}">Paid Amount</th>
+                                            <th class="text-center" th:text="#{label.actions}">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="allocation-lines">
+                                        <tr th:each="line, stat : ${paymentRequest.lines}" th:data-index="${stat.index}">
+                                            <td>
+                                                <input type="hidden" th:name="'lines[' + ${stat.index} + '].vendorBillId'" th:value="${line.vendorBillId}">
+                                                <span th:text="${line.billCode}">VB-001</span>
+                                                <input type="hidden" th:name="'lines[' + ${stat.index} + '].billCode'" th:value="${line.billCode}">
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="outstanding-display" th:text="${line.outstandingAmount}">0.00</span>
+                                                <input type="hidden" th:name="'lines[' + ${stat.index} + '].outstandingAmount'" th:value="${line.outstandingAmount}">
+                                            </td>
+                                            <td class="text-end">
+                                                <input type="text" class="form-control form-control-sm text-end paid-amount-input"
+                                                       th:name="'lines[' + ${stat.index} + '].paidAmount'" th:value="${line.paidAmount}"
+                                                       data-autonumeric="currency">
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-sm btn-ghost-danger remove-line-btn">
+                                                    <i class="ti ti-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <label class="form-label" th:text="#{label.vp.recap.paymentAmount}">Payment Amount</label>
+                                    <div id="recap-payment-amount" class="fw-bold">0.00</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label" th:text="#{label.vp.recap.applied}">Applied</label>
+                                    <div id="recap-applied" class="fw-bold">0.00</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label" th:text="#{label.vp.recap.unapplied}">Unapplied</label>
+                                    <div id="recap-unapplied" class="fw-bold text-danger">0.00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a th:href="@{/accounts-payable/vendor-payments}" class="btn btn-secondary" th:text="#{label.cancel}">Cancel</a>
+                        <button type="submit" class="btn btn-primary" th:text="#{label.save}">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-specific-scripts">
+        <script th:src="@{/js/accountspayable/vendor-payments/form.js}"></script>
+    </div>
+</body>
+
+</html>

@@ -237,7 +237,7 @@ Steps:
 
 ---
 
-### Task 9: Thymeleaf Templates & JavaScript
+### Task 9: Thymeleaf Templates & JavaScript [x]
 List view, create/edit form, detail view, bank account modal selector.
 
 **Depends on:** Task 8

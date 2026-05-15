@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.vp.title})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .vendor-payment-list-content}, ~{:: #page-specific-scripts})}">
+    <div class="vendor-payment-list-content">
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title" th:text="#{label.vp.title}">Vendor Payments</h2>
+                        <div class="text-secondary mt-1" th:text="#{label.vp.subtitle}">Manage payments to vendors.</div>
+                    </div>
+                    <div class="col-auto ms-auto" sec:authorize="hasAuthority('VENDOR-PAYMENT_CREATE')">
+                        <a th:href="@{/accounts-payable/vendor-payments/create}" class="btn btn-primary">
+                            <i class="ti ti-plus me-1"></i><span th:text="#{label.vp.create}">Create Vendor Payment</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+                <div th:replace="~{fragments/alerts :: success}"></div>
+                <div th:replace="~{fragments/alerts :: error}"></div>
+
+                <div class="card">
+                    <div class="card-body border-bottom py-3">
+                        <form th:action="@{/accounts-payable/vendor-payments}" method="get" class="row g-2 align-items-center">
+                            <div class="col-md-4">
+                                <div class="input-icon">
+                                    <input type="text" name="keyword" th:value="${keyword}" class="form-control form-control-sm"
+                                           th:placeholder="#{label.search} + '...'">
+                                    <span class="input-icon-addon"><i class="ti ti-search"></i></span>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <select name="status" class="form-select form-select-sm">
+                                    <option value="" th:text="#{label.all}">All</option>
+                                    <option th:each="item : ${statuses}" th:value="${item}" th:text="${item}"
+                                            th:selected="${item == status}">DRAFT</option>
+                                </select>
+                            </div>
+                            <div class="col-auto">
+                                <button type="submit" class="btn btn-sm btn-primary">
+                                    <i class="ti ti-filter me-1"></i><span th:text="#{label.filter}">Filter</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="vendor-payment-table-container" th:fragment="vendor-payment-table-container">
+                        <div class="table-responsive">
+                            <table class="table card-table table-vcenter text-nowrap">
+                                <thead>
+                                    <tr>
+                                        <th th:text="#{label.vp.code}">Code</th>
+                                        <th th:text="#{label.vp.paymentDate}">Payment Date</th>
+                                        <th th:text="#{label.vp.bankAccount}">Bank Account</th>
+                                        <th class="text-end" th:text="#{label.vp.paymentAmount}">Amount</th>
+                                        <th th:text="#{label.vp.status}">Status</th>
+                                        <th class="text-end" th:text="#{label.actions}">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${page.content}" th:id="'row-' + ${item.id}">
+                                        <td><span class="fw-medium" th:text="${item.code}">VP-001</span></td>
+                                        <td th:text="${item.paymentDate != null ? #temporals.format(item.paymentDate, 'dd MMM yyyy') : '-'}">15 May 2026</td>
+                                        <td th:text="${item.bankAccountName != null ? item.bankAccountName : '-'}">Bank BCA</td>
+                                        <td class="text-end" th:text="${item.paymentAmount != null ? #numbers.formatDecimal(item.paymentAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                        <td>
+                                            <span class="badge"
+                                                  th:classappend="${item.status == 'DRAFT'} ? 'bg-warning-lt' : (${item.status == 'CONFIRMED'} ? 'bg-success-lt' : 'bg-secondary-lt')"
+                                                  th:text="${item.status}">DRAFT</span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-list flex-nowrap justify-content-end">
+                                                <a th:href="@{/accounts-payable/vendor-payments/{id}(id=${item.id})}" class="btn btn-white btn-sm"
+                                                   sec:authorize="hasAuthority('VENDOR-PAYMENT_READ')">
+                                                    <i class="ti ti-eye me-1"></i><span th:text="#{label.view}">View</span>
+                                                </a>
+                                                <a th:href="@{/accounts-payable/vendor-payments/edit/{id}(id=${item.id})}" class="btn btn-white btn-sm"
+                                                   th:if="${item.status == 'DRAFT'}"
+                                                   sec:authorize="hasAuthority('VENDOR-PAYMENT_UPDATE')">
+                                                    <i class="ti ti-edit me-1"></i><span th:text="#{label.edit}">Edit</span>
+                                                </a>
+                                                <button type="button" class="btn btn-white btn-sm text-danger"
+                                                        th:if="${item.status == 'DRAFT'}"
+                                                        sec:authorize="hasAuthority('VENDOR-PAYMENT_DELETE')"
+                                                        data-bs-toggle="modal"
+                                                        th:data-bs-target="'#modal-delete-' + ${item.id}">
+                                                    <i class="ti ti-trash me-1"></i><span th:text="#{label.delete}">Delete</span>
+                                                </button>
+                                                <div th:replace="~{fragments/modals :: delete-confirm(
+                                                        id='modal-delete-' + ${item.id},
+                                                        title=#{label.delete.confirm.title},
+                                                        message=#{msg.confirm.vp.delete},
+                                                        actionUrl=@{'/accounts-payable/vendor-payments/' + ${item.id}},
+                                                        targetId='#row-' + ${item.id})}"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${page.empty}">
+                                        <td colspan="6" class="text-center py-4 text-secondary" th:text="#{label.vp.empty}">
+                                            No vendor payments found.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-specific-scripts"></div>
+</body>
+
+</html>
