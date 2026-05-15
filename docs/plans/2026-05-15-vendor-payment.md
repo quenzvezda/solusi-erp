@@ -42,7 +42,7 @@ Steps:
 
 ---
 
-### Task 2: Journal Engine Enhancement (Account Overrides)
+### Task 2: Journal Engine Enhancement (Account Overrides) [x]
 Tambah field `accountOverrides` di `JournalPostingCommand` dan logic override di `PostJournalForEventUseCaseImpl`.
 
 **Depends on:** (none)

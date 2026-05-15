@@ -139,4 +139,55 @@ class PostJournalForEventUseCaseTest {
         assertThat(captor.getValue().getLines().get(0).originalDebitAmount()).isEqualByComparingTo("100");
         assertThat(captor.getValue().getLines().get(1).originalCreditAmount()).isEqualByComparingTo("100");
     }
+
+    @Test
+    void execute_usesAccountOverrideWhenProvided() {
+        when(schemaRepository.findByEventTypeAndIsActiveTrue(SchemaEventType.GOODS_RECEIPT))
+                .thenReturn(Optional.of(schema()));
+        when(journalRepository.existsBySource("GOODS_RECEIPT", 6L)).thenReturn(false);
+
+        JournalPostingCommand command = new JournalPostingCommand(
+                SchemaEventType.GOODS_RECEIPT, "GOODS_RECEIPT", 6L, "GR-0006",
+                LocalDate.now(), "Auto journal",
+                Map.of(
+                        JournalVariable.GR_INVENTORY_AMT, new BigDecimal("100"),
+                        JournalVariable.GR_GRAND_TOTAL, new BigDecimal("100")
+                ),
+                null, null, null,
+                Map.of(JournalVariable.GR_GRAND_TOTAL, 999L)
+        );
+
+        useCase.execute(command);
+
+        ArgumentCaptor<JournalEntry> captor = ArgumentCaptor.forClass(JournalEntry.class);
+        verify(journalRepository).save(captor.capture());
+        assertThat(captor.getValue().getLines()).hasSize(2);
+        assertThat(captor.getValue().getLines().get(0).accountId()).isEqualTo(1L);
+        assertThat(captor.getValue().getLines().get(1).accountId()).isEqualTo(999L);
+    }
+
+    @Test
+    void execute_fallsBackToSchemaAccountWhenNoOverride() {
+        when(schemaRepository.findByEventTypeAndIsActiveTrue(SchemaEventType.GOODS_RECEIPT))
+                .thenReturn(Optional.of(schema()));
+        when(journalRepository.existsBySource("GOODS_RECEIPT", 6L)).thenReturn(false);
+
+        JournalPostingCommand command = new JournalPostingCommand(
+                SchemaEventType.GOODS_RECEIPT, "GOODS_RECEIPT", 6L, "GR-0006",
+                LocalDate.now(), "Auto journal",
+                Map.of(
+                        JournalVariable.GR_INVENTORY_AMT, new BigDecimal("100"),
+                        JournalVariable.GR_GRAND_TOTAL, new BigDecimal("100")
+                ),
+                null, null, null,
+                Map.of()
+        );
+
+        useCase.execute(command);
+
+        ArgumentCaptor<JournalEntry> captor = ArgumentCaptor.forClass(JournalEntry.class);
+        verify(journalRepository).save(captor.capture());
+        assertThat(captor.getValue().getLines().get(0).accountId()).isEqualTo(1L);
+        assertThat(captor.getValue().getLines().get(1).accountId()).isEqualTo(2L);
+    }
 }
