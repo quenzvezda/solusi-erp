@@ -84,7 +84,7 @@ Steps:
 
 ---
 
-### Task 4: Flyway Migration — Vendor Payment Tables
+### Task 4: Flyway Migration — Vendor Payment Tables [x]
 DDL untuk tabel `vendor_payments` dan `vendor_payment_lines`.
 
 **Depends on:** (none)
