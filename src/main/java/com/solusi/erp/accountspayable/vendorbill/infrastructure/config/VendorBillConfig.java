@@ -6,9 +6,11 @@ import com.solusi.erp.accountspayable.vendorbill.application.usecase.command.*;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.query.*;
 import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableApReferenceProvider;
 import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableGrQueryPort;
+import com.solusi.erp.accountspayable.vendorbill.domain.port.VendorBillPaymentSummaryPort;
 import com.solusi.erp.accountspayable.vendorbill.domain.repository.VendorBillRepository;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.adapter.BillableGrQueryAdapter;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.adapter.GoodsReceiptBillableReferenceProvider;
+import com.solusi.erp.accountspayable.vendorbill.infrastructure.adapter.VendorBillPaymentSummaryAdapter;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.adapter.VendorBillRepositoryImpl;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.persistence.VendorBillJpaRepository;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.persistence.VendorBillPersistenceMapper;
@@ -33,6 +35,11 @@ public class VendorBillConfig {
     @Bean
     public BillableGrQueryPort billableGrQueryPort(NamedParameterJdbcTemplate jdbcTemplate) {
         return new BillableGrQueryAdapter(jdbcTemplate);
+    }
+
+    @Bean
+    public VendorBillPaymentSummaryPort vendorBillPaymentSummaryPort(NamedParameterJdbcTemplate jdbcTemplate) {
+        return new VendorBillPaymentSummaryAdapter(jdbcTemplate);
     }
 
     @Bean

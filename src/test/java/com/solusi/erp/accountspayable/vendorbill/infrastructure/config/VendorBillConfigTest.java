@@ -6,6 +6,7 @@ import com.solusi.erp.accountspayable.vendorbill.application.usecase.command.Con
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.command.CreateVendorBillUseCase;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.query.FindVendorBillsUseCase;
 import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableGrQueryPort;
+import com.solusi.erp.accountspayable.vendorbill.domain.port.VendorBillPaymentSummaryPort;
 import com.solusi.erp.accountspayable.vendorbill.domain.repository.VendorBillRepository;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.persistence.VendorBillJpaRepository;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.persistence.VendorBillPersistenceMapper;
@@ -34,6 +35,9 @@ class VendorBillConfigTest {
     private BillableGrQueryPort billableGrQueryPort;
 
     @Autowired
+    private VendorBillPaymentSummaryPort vendorBillPaymentSummaryPort;
+
+    @Autowired
     private CreateVendorBillUseCase createVendorBillUseCase;
 
     @Autowired
@@ -46,6 +50,7 @@ class VendorBillConfigTest {
     void should_register_vendor_bill_beans() {
         assertThat(vendorBillRepository).isNotNull();
         assertThat(billableGrQueryPort).isNotNull();
+        assertThat(vendorBillPaymentSummaryPort).isNotNull();
         assertThat(createVendorBillUseCase).isNotNull();
         assertThat(confirmVendorBillUseCase).isNotNull();
         assertThat(findVendorBillsUseCase).isNotNull();
