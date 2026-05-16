@@ -1,16 +1,21 @@
 -- V62__Vendor_Payment_Accounting_Schema.sql
 -- Seed accounting schema for VENDOR_PAYMENT event
 
-INSERT INTO acc_accounting_schemas (event_type, code, is_active, created_by, created_date, version)
-VALUES ('VENDOR_PAYMENT', 'VP', TRUE, 'SYSTEM', NOW(), 1);
+SET @schema_id = (SELECT id FROM acc_accounting_schemas WHERE event_type = 'VENDOR_PAYMENT' AND is_active = TRUE LIMIT 1);
 
-SET @schema_id = LAST_INSERT_ID();
+INSERT INTO acc_accounting_schemas (event_type, description, is_active, created_by_user_id, created_date, version)
+SELECT 'VENDOR_PAYMENT', 'Vendor payment journal posting schema', TRUE, 1, NOW(), 1
+WHERE @schema_id IS NULL;
+
+SET @schema_id = COALESCE(@schema_id, LAST_INSERT_ID());
+
+DELETE FROM acc_schema_lines WHERE schema_id = @schema_id;
 
 -- VP_AP_AMT → 2110 (Accounts Payable) DEBIT
 INSERT INTO acc_schema_lines (schema_id, variable, account_id, position)
 SELECT @schema_id, 'VP_AP_AMT', id, 'DEBIT' FROM acc_chart_of_accounts WHERE code = '2110';
 
--- VP_BANK_OUT_AMT → 1120 (Bank) CREDIT
+-- VP_BANK_OUT_AMT → 1120 (Bank) CREDIT (default, can be overridden by bank account COA)
 INSERT INTO acc_schema_lines (schema_id, variable, account_id, position)
 SELECT @schema_id, 'VP_BANK_OUT_AMT', id, 'CREDIT' FROM acc_chart_of_accounts WHERE code = '1120';
 

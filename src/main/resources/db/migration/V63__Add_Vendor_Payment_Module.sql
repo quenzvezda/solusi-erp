@@ -44,21 +44,21 @@ CREATE TABLE IF NOT EXISTS ap_vendor_payment_lines (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 3. Sequence Registration
-INSERT INTO system_sequences (mod_code, format_pattern, pad_length, reset_cycle, updated_by_user_id, updated_date)
+INSERT INTO system_sequences (module_code, format_pattern, pad_length, reset_cycle, updated_by_user_id, updated_date)
 VALUES ('VENDOR-PAYMENT', 'VP-{date:yyyyMM}-{seq}', 5, 'MONTHLY', 1, NOW())
-ON DUPLICATE KEY UPDATE mod_code = mod_code;
+ON DUPLICATE KEY UPDATE module_code = module_code;
 
 -- 4. Permission Group (Menu Entry)
-INSERT INTO permission_groups (code, name_id, name_en, breadcrumb_id, breadcrumb_en, url_path, icon_class, desc_id, desc_en, sort_order, created_by_user_id, created_date)
+INSERT INTO permission_groups (code, name_id, name_en, breadcrumb_id, breadcrumb_en, url_path, icon_class, description_id, description_en, sort_order, created_by_user_id, created_date)
 VALUES
 ('AP-02', 'Pembayaran Vendor', 'Vendor Payment',
- 'Hutang Usaha > Pembayaran Vendor', 'Accounts Payable > Vendor Payment',
+ 'Keuangan & Akuntansi > Hutang Usaha > Pembayaran Vendor', 'Finance & Accounting > Account Payable > Vendor Payment',
  '/accounts-payable/vendor-payments', 'ti-cash',
  'Kelola pembayaran ke vendor', 'Manage payments to vendors',
  310, 1, NOW());
 
 -- 5. Permissions
-INSERT INTO permissions (name, `desc`, created_by_user_id, created_date, permission_group_id) VALUES
+INSERT INTO permissions (name, description, created_by_user_id, created_date, permission_group_id) VALUES
 ('VENDOR-PAYMENT_READ',    'Melihat daftar pembayaran vendor',    1, NOW(), (SELECT id FROM permission_groups WHERE code = 'AP-02')),
 ('VENDOR-PAYMENT_CREATE',  'Membuat pembayaran vendor baru',      1, NOW(), (SELECT id FROM permission_groups WHERE code = 'AP-02')),
 ('VENDOR-PAYMENT_UPDATE',  'Mengubah pembayaran vendor',          1, NOW(), (SELECT id FROM permission_groups WHERE code = 'AP-02')),
