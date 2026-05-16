@@ -11,9 +11,13 @@ import com.solusi.erp.accountspayable.vendorpayment.web.mapper.VendorPaymentWebM
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
+import com.solusi.erp.master.bankaccount.domain.port.BankAccountLookupProvider;
 import com.solusi.erp.master.bankaccount.infrastructure.persistence.BankAccount;
 import com.solusi.erp.master.bankaccount.infrastructure.persistence.BankAccountJpaRepository;
+import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
+import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +31,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/accounts-payable/vendor-payments")
@@ -44,6 +50,9 @@ public class VendorPaymentController {
     private final GetVendorPaymentDetailUseCase getVendorPaymentDetailUseCase;
     private final GetPayableVendorBillsUseCase getPayableVendorBillsUseCase;
     private final BankAccountJpaRepository bankAccountJpaRepository;
+    private final PartyLookupProvider partyLookupProvider;
+    private final CurrencyLookupProvider currencyLookupProvider;
+    private final BankAccountLookupProvider bankAccountLookupProvider;
     private final VendorPaymentWebMapper webMapper;
     private final MessageSource messageSource;
 
@@ -74,6 +83,7 @@ public class VendorPaymentController {
     @PreAuthorize("hasAuthority('VENDOR-PAYMENT_CREATE')")
     public String createForm(Model model) {
         model.addAttribute("paymentRequest", new VendorPaymentSaveRequest());
+        model.addAttribute("vpUI", null);
         return "accountspayable/vendor-payments/form";
     }
 
@@ -83,6 +93,7 @@ public class VendorPaymentController {
         VendorPayment payment = getVendorPaymentDetailUseCase.execute(id)
                 .orElseThrow(() -> new RuntimeException("VendorPayment not found"));
         model.addAttribute("paymentRequest", webMapper.toSaveRequest(payment));
+        model.addAttribute("vpUI", buildVpUI(payment));
         return "accountspayable/vendor-payments/form";
     }
 
@@ -195,6 +206,26 @@ public class VendorPaymentController {
                 .map(webMapper::toPayableResponse)
                 .toList();
         return ResponseEntity.ok(ApiResponse.success(null, data));
+    }
+
+    private Map<String, Object> buildVpUI(VendorPayment payment) {
+        Map<String, Object> ui = new HashMap<>();
+        LookupDto vendor = partyLookupProvider.resolve(payment.getVendorId());
+        if (vendor != null) {
+            ui.put("vendorText", vendor.name());
+            ui.put("vendorSubtext", vendor.subText());
+        }
+        LookupDto currency = currencyLookupProvider.resolve(payment.getCurrencyId());
+        if (currency != null) {
+            ui.put("currencyText", currency.name());
+            ui.put("currencySubtext", currency.subText());
+        }
+        LookupDto bankAccount = bankAccountLookupProvider.resolve(payment.getBankAccountId());
+        if (bankAccount != null) {
+            ui.put("bankAccountText", bankAccount.name());
+            ui.put("bankAccountSubtext", bankAccount.subText());
+        }
+        return ui;
     }
 
     private String msg(String messageKey) {

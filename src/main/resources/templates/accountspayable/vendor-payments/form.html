@@ -12,63 +12,81 @@
                     <div class="col">
                         <h2 class="page-title" th:text="${paymentRequest.id != null} ? #{label.vp.edit} : #{label.vp.create}">Vendor Payment</h2>
                     </div>
+                    <div class="col-auto ms-auto">
+                        <a th:href="@{/accounts-payable/vendor-payments}" class="btn btn-secondary">
+                            <i class="ti ti-arrow-left me-1"></i><span th:text="#{label.back}">Back</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="page-body">
             <div class="container-xl">
-                <form id="vendor-payment-form"
-                      th:data-action="${paymentRequest.id != null} ? @{/accounts-payable/vendor-payments/{id}(id=${paymentRequest.id})} : @{/accounts-payable/vendor-payments}"
-                      th:data-method="${paymentRequest.id != null} ? 'PUT' : 'POST'"
-                      th:data-redirect="@{/accounts-payable/vendor-payments}">
+                <form th:action="${paymentRequest.id != null} ? @{/accounts-payable/vendor-payments/{id}(id=${paymentRequest.id})} : @{/accounts-payable/vendor-payments}"
+                      th:object="${paymentRequest}"
+                      method="post"
+                      id="vendor-payment-form"
+                      data-ajax-form="true"
+                      data-redirect-on-success="/accounts-payable/vendor-payments">
 
-                    <input type="hidden" name="id" th:value="${paymentRequest.id}">
-                    <input type="hidden" name="version" th:value="${paymentRequest.version}">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <input type="hidden" name="id" th:value="*{id}">
+                    <input type="hidden" name="version" th:value="*{version}">
 
                     <div class="card mb-3">
                         <div class="card-header"><h3 class="card-title" th:text="#{label.vp.header}">Payment Header</h3></div>
                         <div class="card-body">
+                            <div class="alert-container"></div>
                             <div class="row g-3">
                                 <div class="col-md-4">
-                                    <label class="form-label required" th:text="#{label.vp.vendor}">Vendor</label>
-                                    <input type="hidden" id="vendorId" name="vendorId" th:value="${paymentRequest.vendorId}">
-                                    <input type="text" id="vendorName" class="form-control" data-autocomplete="vendor" readonly>
+                                    <div th:replace="~{fragments/inputs :: autocomplete(field='vendorId', label=#{label.vp.vendor}, path='parties',
+                                        required=true, id='vp-vendor',
+                                        initialValue=*{vendorId}, initialText=${vpUI != null ? vpUI['vendorText'] : ''},
+                                        initialSubtext=${vpUI != null ? vpUI['vendorSubtext'] : ''})}"></div>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label required" th:text="#{label.vp.currency}">Currency</label>
-                                    <input type="hidden" id="currencyId" name="currencyId" th:value="${paymentRequest.currencyId}">
-                                    <input type="text" id="currencyName" class="form-control" data-autocomplete="currency" readonly>
+                                    <div th:replace="~{fragments/inputs :: autocomplete(field='currencyId', label=#{label.vp.currency}, path='master/currencies',
+                                        required=true, id='vp-currency',
+                                        initialValue=*{currencyId}, initialText=${vpUI != null ? vpUI['currencyText'] : ''},
+                                        initialSubtext=${vpUI != null ? vpUI['currencySubtext'] : ''})}"></div>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label required" th:text="#{label.vp.bankAccount}">Bank Account</label>
-                                    <input type="hidden" id="bankAccountId" name="bankAccountId" th:value="${paymentRequest.bankAccountId}">
-                                    <input type="text" id="bankAccountName" class="form-control" data-modal-selector="bank-account" readonly>
+                                    <input type="hidden" id="bankAccountId" name="bankAccountId" th:value="*{bankAccountId}">
+                                    <div class="input-group">
+                                        <input type="text"
+                                               id="bankAccountDisplay"
+                                               class="form-control"
+                                               readonly
+                                               th:value="${vpUI != null ? vpUI['bankAccountText'] : ''}"
+                                               th:placeholder="#{label.vp.bankAccount.select}">
+                                        <button type="button" class="btn btn-icon btn-outline-primary" id="btn-select-bank-account"
+                                                th:attr="title=#{label.vp.bankAccount.select}">
+                                            <i class="ti ti-search"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-icon btn-outline-danger" id="btn-clear-bank-account"
+                                                th:attr="title=#{label.clear}">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label required" th:text="#{label.vp.paymentDate}">Payment Date</label>
-                                    <input type="date" id="paymentDate" name="paymentDate" class="form-control"
-                                           th:value="${paymentRequest.paymentDate}">
+                                    <div th:replace="~{fragments/inputs :: date(field='paymentDate', value=*{paymentDate}, label=#{label.vp.paymentDate}, required=true)}"></div>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label required" th:text="#{label.vp.exchangeRate}">Exchange Rate</label>
-                                    <input type="text" id="exchangeRate" name="exchangeRate" class="form-control"
-                                           th:value="${paymentRequest.exchangeRate}" data-autonumeric="rate">
+                                    <div th:replace="~{fragments/inputs :: decimal(field='exchangeRate', label=#{label.vp.exchangeRate}, required=true)}"></div>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label required" th:text="#{label.vp.paymentAmount}">Payment Amount</label>
-                                    <input type="text" id="paymentAmount" name="paymentAmount" class="form-control"
-                                           th:value="${paymentRequest.paymentAmount}" data-autonumeric="currency">
+                                    <div th:replace="~{fragments/inputs :: decimal(field='paymentAmount', label=#{label.vp.paymentAmount}, required=true)}"></div>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label" th:text="#{label.vp.reference}">Reference</label>
-                                    <input type="text" id="reference" name="reference" class="form-control"
-                                           th:value="${paymentRequest.reference}">
+                                    <input type="text" name="reference" class="form-control" th:value="*{reference}">
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label" th:text="#{label.vp.notes}">Notes</label>
-                                    <textarea id="notes" name="notes" class="form-control" rows="2"
-                                              th:text="${paymentRequest.notes}"></textarea>
+                                    <textarea name="notes" class="form-control" rows="2" th:text="*{notes}"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -90,18 +108,18 @@
                                         </tr>
                                     </thead>
                                     <tbody id="allocation-lines">
-                                        <tr th:each="line, stat : ${paymentRequest.lines}" th:data-index="${stat.index}">
+                                        <tr th:each="line, stat : *{lines}" th:data-index="${stat.index}">
                                             <td>
                                                 <input type="hidden" th:name="'lines[' + ${stat.index} + '].vendorBillId'" th:value="${line.vendorBillId}">
                                                 <span th:text="${line.billCode}">VB-001</span>
                                                 <input type="hidden" th:name="'lines[' + ${stat.index} + '].billCode'" th:value="${line.billCode}">
                                             </td>
                                             <td class="text-end">
-                                                <span class="outstanding-display" th:text="${line.outstandingAmount}">0.00</span>
+                                                <span class="outstanding-display" th:text="${#numbers.formatDecimal(line.outstandingAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span>
                                                 <input type="hidden" th:name="'lines[' + ${stat.index} + '].outstandingAmount'" th:value="${line.outstandingAmount}">
                                             </td>
                                             <td class="text-end">
-                                                <input type="text" class="form-control form-control-sm text-end paid-amount-input"
+                                                <input type="text" class="form-control form-control-sm text-end paid-amount-input erp-num-decimal"
                                                        th:name="'lines[' + ${stat.index} + '].paidAmount'" th:value="${line.paidAmount}"
                                                        data-autonumeric="currency">
                                             </td>
@@ -144,6 +162,8 @@
             </div>
         </div>
     </div>
+
+    <div th:replace="~{fragments/modal-selector :: shell(modalId='bank-account-modal', title=#{label.vp.selectBankAccount}, bodyId='bank-account-selector-body')}"></div>
 
     <div id="page-specific-scripts">
         <script th:src="@{/js/accountspayable/vendor-payments/form.js}"></script>
