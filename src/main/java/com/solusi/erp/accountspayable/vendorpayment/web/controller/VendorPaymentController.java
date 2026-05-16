@@ -121,6 +121,7 @@ public class VendorPaymentController {
         VendorPayment payment = getVendorPaymentDetailUseCase.execute(id)
                 .orElseThrow(() -> new RuntimeException("VendorPayment not found"));
         model.addAttribute("payment", webMapper.toDetailResponse(payment));
+        model.addAttribute("vpUI", buildVpUI(payment));
         return "accountspayable/vendor-payments/detail";
     }
 

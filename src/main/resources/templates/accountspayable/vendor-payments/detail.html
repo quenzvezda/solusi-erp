@@ -27,13 +27,17 @@
                         <button type="button" class="btn btn-success btn-confirm-payment"
                                 th:if="${payment.status == 'DRAFT'}"
                                 sec:authorize="hasAuthority('VENDOR-PAYMENT_CONFIRM')"
-                                th:data-url="@{/accounts-payable/vendor-payments/{id}/confirm(id=${payment.id})}">
+                                th:data-action-url="@{/accounts-payable/vendor-payments/{id}/confirm(id=${payment.id})}"
+                                th:data-redirect-url="@{/accounts-payable/vendor-payments/{id}(id=${payment.id})}"
+                                th:data-confirm-message="#{msg.confirm.vp.confirm}">
                             <i class="ti ti-check me-1"></i><span th:text="#{label.vp.confirm}">Confirm</span>
                         </button>
                         <button type="button" class="btn btn-warning btn-cancel-payment"
                                 th:if="${payment.status == 'DRAFT'}"
                                 sec:authorize="hasAuthority('VENDOR-PAYMENT_CANCEL')"
-                                th:data-url="@{/accounts-payable/vendor-payments/{id}/cancel(id=${payment.id})}">
+                                th:data-action-url="@{/accounts-payable/vendor-payments/{id}/cancel(id=${payment.id})}"
+                                th:data-redirect-url="@{/accounts-payable/vendor-payments/{id}(id=${payment.id})}"
+                                th:data-confirm-message="#{msg.confirm.vp.cancel}">
                             <i class="ti ti-x me-1"></i><span th:text="#{label.vp.cancel}">Cancel</span>
                         </button>
                         <a th:href="@{/accounts-payable/vendor-payments}" class="btn btn-secondary">
@@ -65,6 +69,19 @@
                             <div class="col-md-3">
                                 <label class="form-label text-secondary" th:text="#{label.vp.paymentAmount}">Payment Amount</label>
                                 <div class="fw-bold" th:text="${payment.paymentAmount != null ? #numbers.formatDecimal(payment.paymentAmount, 1, 'COMMA', 2, 'POINT') : '-'}">500.00</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-secondary" th:text="#{label.vp.bankAccount}">Bank Account</label>
+                                <div class="fw-bold" th:text="${vpUI != null ? vpUI['bankAccountText'] : '-'}">Bank Account</div>
+                                <small class="text-secondary" th:text="${vpUI != null ? vpUI['bankAccountSubtext'] : ''}">Bank - Account No</small>
+                            </div>
+                            <div class="col-md-3" th:if="${payment.status == 'CONFIRMED'}">
+                                <label class="form-label text-secondary" th:text="#{label.journal}">Journal Entry</label>
+                                <div>
+                                    <a th:href="@{/accounting/journal-entries(sourceType='VENDOR_PAYMENT', sourceCode=${payment.code})}" class="btn btn-sm btn-outline-primary">
+                                        <i class="ti ti-external-link me-1"></i><span th:text="#{label.view}">View</span>
+                                    </a>
+                                </div>
                             </div>
                             <div class="col-md-6" th:if="${payment.reference}">
                                 <label class="form-label text-secondary" th:text="#{label.vp.reference}">Reference</label>
@@ -112,16 +129,6 @@
                     </div>
                 </div>
 
-                <div class="card mt-3" th:if="${payment.status == 'CONFIRMED' && payment.journalEntryId != null}">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <i class="ti ti-file-text me-2"></i>
-                            <span th:text="#{label.vp.journalEntry}">Journal Entry</span>:
-                            <a th:href="@{/accounting/journal/{id}(id=${payment.journalEntryId})}" class="ms-2 fw-medium"
-                               th:text="${payment.journalEntryCode}">JE-001</a>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -134,19 +141,13 @@
 
                 if (confirmBtn) {
                     confirmBtn.addEventListener('click', function() {
-                        var url = this.getAttribute('data-url');
-                        ErpModal.confirm(/*[[#{msg.confirm.vp.confirm}]]*/ 'Confirm this payment?', function() {
-                            ErpForm.postAction(url, '/accounts-payable/vendor-payments/' + /*[[${payment.id}]]*/ '');
-                        });
+                        ErpForm.postAction(this);
                     });
                 }
 
                 if (cancelBtn) {
                     cancelBtn.addEventListener('click', function() {
-                        var url = this.getAttribute('data-url');
-                        ErpModal.confirm(/*[[#{msg.confirm.vp.cancel}]]*/ 'Cancel this payment?', function() {
-                            ErpForm.postAction(url, '/accounts-payable/vendor-payments/' + /*[[${payment.id}]]*/ '');
-                        });
+                        ErpForm.postAction(this);
                     });
                 }
             });
