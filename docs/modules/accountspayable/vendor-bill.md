@@ -170,7 +170,7 @@ Halaman detail Vendor Bill menampilkan ringkasan pembayaran:
 
 Payment summary bersifat read-side projection; web layer tetap memakai use case/mapper dan tidak membaca repository Vendor Payment secara langsung.
 
-## 8. Accounting Saat Confirm
+## 9. Accounting Saat Confirm
 
 `ConfirmVendorBillUseCase` mem-post journal event `VENDOR_BILL`.
 
@@ -188,7 +188,7 @@ FX variance dihitung atas porsi net/GR-IR, bukan atas tax.
 
 Accounting schema aktif untuk event `VENDOR_BILL` wajib ada saat confirm. Jika schema tidak ada, tidak aktif, atau hasil jurnal tidak balance, confirm rollback.
 
-## 9. Clean Architecture Notes
+## 10. Clean Architecture Notes
 
 Vendor Bill tidak membaca repository slice Goods Receipt secara langsung dari web/application command.
 
@@ -199,7 +199,7 @@ Akses data lintas slice dilakukan melalui port/adapter:
 
 Web layer boleh memakai use case, lookup/query port, dan mapper web; web tidak boleh menginjeksi repository/JPA repository dari slice lain.
 
-## 10. Referensi Terkait
+## 11. Referensi Terkait
 
 - [Goods Receipt](../inventory/goods-receipt.md)
 - [Journal Entry](../accounting/journal-entry.md)
