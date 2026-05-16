@@ -26,4 +26,12 @@
 - **Status:** clean
 - **Summary:** Added payment status, paid amount, and unpaid amount to Vendor Bill detail with localized labels and template coverage.
 
+## Task 6: Documentation and Verification
+- **Status:** findings
+- **Summary:** Updated Vendor Bill docs and completed automated compile/focused regression checks; browser verification remains pending for user-run validation.
+
+## Final Summary
+- **Status:** completed
+- **Summary:** Vendor Bill list/detail now expose payment status, paid amount, and unpaid amount derived from confirmed Vendor Payment lines.
+
 (Populated during execution.)

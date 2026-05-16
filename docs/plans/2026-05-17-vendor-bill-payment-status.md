@@ -3,7 +3,8 @@
 > Source: docs/modules/accountspayable/vendor-bill.md and direct user brief on 2026-05-17
 > Created: 2026-05-17
 > Sprint: 5
-> Status: IN_PROGRESS
+> Status: COMPLETED
+> Completed: 2026-05-17
 
 ## Summary
 
@@ -165,25 +166,25 @@ Steps:
 
 ---
 
-### Task 6: Documentation and Verification [ ]
+### Task 6: Documentation and Verification [x]
 Update the Vendor Bill module documentation and run focused regression checks.
 
 **Depends on:** Task 1, Task 2, Task 3, Task 4, Task 5
 **Reference module:** project documentation and architecture tests
 
 Steps:
-- [ ] Update `docs/modules/accountspayable/vendor-bill.md` lifecycle to include `PARTIAL_PAID` and `PAID` after payment confirmation.
+- [x] Update `docs/modules/accountspayable/vendor-bill.md` lifecycle to include `PARTIAL_PAID` and `PAID` after payment confirmation.
       ref: docs/modules/accountspayable/vendor-bill.md:L1-L120 — current lifecycle text only documents `DRAFT -> CONFIRMED` and `DRAFT -> CANCELLED`.
-- [ ] Document that list/detail payment amounts are derived from confirmed Vendor Payment lines.
+- [x] Document that list/detail payment amounts are derived from confirmed Vendor Payment lines.
       ref: src/main/java/com/solusi/erp/accountspayable/vendorpayment/infrastructure/adapter/PayableVendorBillQueryAdapter.java:L1-L80 — source query pattern for confirmed payment totals.
-- [ ] Run compile check.
+- [x] Run compile check.
       ref: docs/modules/accountspayable/vendor-bill.md:L120-L180 — module docs mention clean architecture and testing expectations.
-- [ ] Run focused Vendor Bill tests.
+- [x] Run focused Vendor Bill tests.
       ref: src/test/java/com/solusi/erp/accountspayable/vendorbill/ — Vendor Bill domain/application/web test area.
-- [ ] Run `WebLayerDependencyGuardTest`.
+- [x] Run `WebLayerDependencyGuardTest`.
       ref: src/test/java/com/solusi/erp/architecture/WebLayerDependencyGuardTest.java:L1-L120 — prevents repository dependency regression in web layer.
-- [ ] Manually verify `/accounts-payable/vendor-bills` shows Unpaid column.
-- [ ] Manually verify `/accounts-payable/vendor-bills/4` shows status/payment summary and remaining amount for `VB-202605-00004`.
+- [ ] Manually verify `/accounts-payable/vendor-bills` shows Unpaid column. (pending user browser check)
+- [ ] Manually verify `/accounts-payable/vendor-bills/4` shows status/payment summary and remaining amount for `VB-202605-00004`. (pending user browser check)
 
 **Validation criteria:**
 - `mvn compile -q -pl .` passes.
