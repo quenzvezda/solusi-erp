@@ -44,16 +44,20 @@ public class BankAccountTemplateTest {
     }
 
     @Test
-    public void templateContainsExpectedPlaceholders() throws Exception {
+    public void bankAccountFormContainsCurrencyAndCoaControls() throws Exception {
         InputStream is = getClass().getClassLoader()
-                .getResourceAsStream("templates/master/bank-accounts/list.html");
+                .getResourceAsStream("templates/master/bank-accounts/form.html");
         String template = new String(is.readAllBytes(), StandardCharsets.UTF_8);
 
-        assertThat(template).contains("${item.code}");
-        assertThat(template).contains("${item.bankName}");
-        assertThat(template).contains("${item.accountName}");
-        assertThat(template).contains("${item.accountNo}");
-        assertThat(template).contains("${item.accountType}");
-        assertThat(template).contains("${item.partyName}");
+        assertThat(template).contains("field='currencyId'");
+        assertThat(template).contains("path='master/currencies'");
+        assertThat(template).contains("bankAccountUI['currencyText']");
+        assertThat(template).contains("bankAccountUI['currencySubtext']");
+        assertThat(template).contains("*{coaId}");
+        assertThat(template).contains("bank-account-coa-id");
+        assertThat(template).contains("bank-account-coa-display");
+        assertThat(template).contains("btn-select-bank-account-coa");
+        assertThat(template).contains("modal-bank-account-coa-selector");
+        assertThat(template).contains("bank-account-coa-selector-modal-body");
     }
 }

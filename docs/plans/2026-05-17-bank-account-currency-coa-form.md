@@ -81,29 +81,29 @@ Steps:
 
 ---
 
-### Task 3: Bank Account Form HTML
+### Task 3: Bank Account Form HTML [x]
 Render Currency autocomplete and COA selector controls in the Bank Account form using project UI standards.
 
 **Depends on:** Task 1, Task 2
 **Reference module:** `master.bankaccount`, `purchasing.purchaseorder`
 
 Steps:
-- [ ] Add Currency field in `templates/master/bank-accounts/form.html` using `fragments/inputs :: autocomplete` with path `master/currencies`.
+- [x] Add Currency field in `templates/master/bank-accounts/form.html` using `fragments/inputs :: autocomplete` with path `master/currencies`.
       ref: src/main/resources/templates/master/bank-accounts/form.html:L41-L52 — current city/party autocomplete fragment usage.
       ref: docs/spec/autocomplete-generic.md:L34-L49 — autocomplete must provide `initialValue`, `initialText`, and `initialSubtext`.
-- [ ] Bind Currency field to `bankAccountRequest.currencyId` and prefill from `bankAccountUI.currencyText` / `bankAccountUI.currencySubtext`.
+- [x] Bind Currency field to `bankAccountRequest.currencyId` and prefill from `bankAccountUI.currencyText` / `bankAccountUI.currencySubtext`.
       ref: src/main/java/com/solusi/erp/master/bankaccount/web/dto/BankAccountSaveRequest.java:L49-L53 — DTO already has `currencyId` and `coaId`.
-- [ ] Add COA hidden input bound to `*{coaId}` plus readonly display input for selected COA.
+- [x] Add COA hidden input bound to `*{coaId}` plus readonly display input for selected COA.
       ref: docs/spec/modal-selector.md:L49-L65 — selection payload must contain only needed data and map to form state.
-- [ ] Add a “Select COA” button that opens the Bank Account COA selector modal.
+- [x] Add a “Select COA” button that opens the Bank Account COA selector modal.
       ref: docs/spec/modal-selector.md:L77-L82 — single-select uses a per-row/button action.
-- [ ] Include shared modal shell fragment with stable body id, e.g. `bank-account-coa-selector-modal-body`.
+- [x] Include shared modal shell fragment with stable body id, e.g. `bank-account-coa-selector-modal-body`.
       ref: docs/spec/modal-selector.md:L30-L38 — modal shell bodyId must equal selector fragment root id.
-- [ ] Ensure form remains AJAX CRUD (`data-ajax-form="true"`, `data-redirect-on-success`) and no HTMX submit is introduced.
+- [x] Ensure form remains AJAX CRUD (`data-ajax-form="true"`, `data-redirect-on-success`) and no HTMX submit is introduced.
       ref: docs/spec/form-submission.md:L7-L28 — CRUD forms with TomSelect/stateful JS use AJAX JSON.
-- [ ] Add/verify i18n keys for Bank Account currency and COA labels/placeholders if missing.
+- [x] Add/verify i18n keys for Bank Account currency and COA labels/placeholders if missing.
       ref: src/main/resources/templates/master/bank-accounts/form.html:L35-L72 — current label key namespace `master.bank-account.*`.
-- [ ] **TEST:** Update `BankAccountTemplateTest` to read form template and assert `currencyId`, `coaId`, modal shell, selector button class/id, and COA display input exist.
+- [x] **TEST:** Update `BankAccountTemplateTest` to read form template and assert `currencyId`, `coaId`, modal shell, selector button class/id, and COA display input exist.
       ref: src/test/java/com/solusi/erp/master/bankaccount/web/template/BankAccountTemplateTest.java:L46-L58 — existing static template assertion style.
 
 **Validation criteria:**

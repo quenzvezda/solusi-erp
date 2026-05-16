@@ -14,3 +14,7 @@
 - **Status:** clean
 - **Summary:** Added Bank Account-scoped COA selector endpoint using `FindCoaSelectorUseCase`, with controller test coverage and dependency guard verification.
 
+## Task 3: Bank Account Form HTML
+- **Status:** clean
+- **Summary:** Added Currency autocomplete and COA selector shell/display controls to Bank Account form with i18n keys and static template coverage.
+
