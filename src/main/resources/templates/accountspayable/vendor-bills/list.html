@@ -67,6 +67,7 @@
                                         <th th:text="#{label.vb.dueDate}">Due Date</th>
                                         <th th:text="#{label.vb.status}">Status</th>
                                         <th class="text-end" th:text="#{label.vb.totalAmount}">Total</th>
+                                        <th class="text-end" th:text="#{label.vb.unpaidAmount}">Unpaid</th>
                                         <th class="text-end" th:text="#{label.actions}">Actions</th>
                                     </tr>
                                 </thead>
@@ -82,6 +83,7 @@
                                                   th:text="${item.status}">DRAFT</span>
                                         </td>
                                         <td class="text-end" th:text="${item.totalAmount != null ? #numbers.formatDecimal(item.totalAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                        <td class="text-end" th:text="${item.outstandingAmount != null ? #numbers.formatDecimal(item.outstandingAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
                                         <td>
                                             <div class="btn-list flex-nowrap justify-content-end">
                                                 <a th:href="@{/accounts-payable/vendor-bills/{id}(id=${item.id})}" class="btn btn-white btn-sm"
@@ -105,7 +107,7 @@
                                         </td>
                                     </tr>
                                     <tr th:if="${page.empty}">
-                                        <td colspan="7" class="text-center py-4 text-secondary" th:text="#{label.vb.empty}">
+                                        <td colspan="8" class="text-center py-4 text-secondary" th:text="#{label.vb.empty}">
                                             No vendor bills found.
                                         </td>
                                     </tr>

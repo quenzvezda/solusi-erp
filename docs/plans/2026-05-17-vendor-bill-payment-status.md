@@ -111,23 +111,23 @@ Steps:
 
 ---
 
-### Task 4: Vendor Bill List Unpaid Column [ ]
+### Task 4: Vendor Bill List Unpaid Column [x]
 Add an unpaid/outstanding amount column to the Vendor Bill list table.
 
 **Depends on:** Task 3
 **Reference module:** `accountspayable.vendorbill`
 
 Steps:
-- [ ] Add a list table header for unpaid/outstanding amount after the Total column.
+- [x] Add a list table header for unpaid/outstanding amount after the Total column.
       ref: src/main/resources/templates/accountspayable/vendor-bills/list.html:L1-L140 — current table has Total then Actions.
-- [ ] Render `item.outstandingAmount` with the same decimal formatting as `item.totalAmount`.
+- [x] Render `item.outstandingAmount` with the same decimal formatting as `item.totalAmount`.
       ref: src/main/resources/templates/accountspayable/vendor-bills/list.html:L80-L120 — existing total amount formatting pattern.
-- [ ] Add i18n labels in English and Indonesian messages files.
+- [x] Add i18n labels in English and Indonesian messages files.
       ref: src/main/resources/messages.properties — existing `label.vb.*` and amount labels.
       ref: src/main/resources/messages_id.properties — Indonesian label counterpart.
-- [ ] Ensure the new column does not break action-column colspan or empty-state row if the list template has one.
+- [x] Ensure the new column does not break action-column colspan or empty-state row if the list template has one.
       ref: src/main/resources/templates/accountspayable/vendor-bills/list.html:L1-L140 — verify table body/empty state structure.
-- [ ] **TEST:** Update Vendor Bill template tests to assert the new unpaid column key and `outstandingAmount` binding exist.
+- [x] **TEST:** Update Vendor Bill template tests to assert the new unpaid column key and `outstandingAmount` binding exist.
       ref: src/test/java/com/solusi/erp/accountspayable/vendorbill/web/template/ — inspect current template test naming and static assertion style.
 
 **Validation criteria:**

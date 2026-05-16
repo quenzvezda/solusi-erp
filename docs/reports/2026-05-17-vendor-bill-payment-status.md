@@ -18,4 +18,8 @@
 - **Status:** clean
 - **Summary:** Added paid/outstanding response fields and mapper coverage while keeping Vendor Bill controller dependency boundaries clean.
 
+## Task 4: Vendor Bill List Unpaid Column
+- **Status:** clean
+- **Summary:** Added Unpaid column to Vendor Bill list, bound it to outstanding amount, updated empty colspan, i18n labels, and template coverage.
+
 (Populated during execution.)

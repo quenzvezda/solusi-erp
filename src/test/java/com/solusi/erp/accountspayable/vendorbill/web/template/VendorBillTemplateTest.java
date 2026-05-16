@@ -47,6 +47,15 @@ class VendorBillTemplateTest {
     }
 
     @Test
+    void list_template_should_show_unpaid_amount_column() throws Exception {
+        String template = readResource("templates/accountspayable/vendor-bills/list.html");
+
+        assertThat(template).contains("label.vb.unpaidAmount");
+        assertThat(template).contains("item.outstandingAmount");
+        assertThat(template).contains("colspan=\"8\"");
+    }
+
+    @Test
     void form_template_should_wire_gr_line_selector_and_line_body() throws Exception {
         String template = readResource("templates/accountspayable/vendor-bills/form.html");
         String modal = readResource("templates/accountspayable/vendor-bills/gr-line-selector-modal.html");
@@ -86,8 +95,10 @@ class VendorBillTemplateTest {
 
         assertThat(english.containsKey("label.vendor")).isTrue();
         assertThat(english.containsKey("label.filter")).isTrue();
+        assertThat(english.containsKey("label.vb.unpaidAmount")).isTrue();
         assertThat(indonesian.containsKey("label.vendor")).isTrue();
         assertThat(indonesian.containsKey("label.filter")).isTrue();
+        assertThat(indonesian.containsKey("label.vb.unpaidAmount")).isTrue();
     }
 
     @Test
