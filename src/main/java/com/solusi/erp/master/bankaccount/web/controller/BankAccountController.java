@@ -5,12 +5,14 @@ import com.solusi.erp.core.domain.model.DeleteResult;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.accounting.coa.domain.port.CoaLookupProvider;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.master.bankaccount.application.usecase.command.*;
 import com.solusi.erp.master.bankaccount.application.usecase.query.*;
 import com.solusi.erp.master.bankaccount.domain.model.BankAccount;
 import com.solusi.erp.master.bankaccount.web.dto.*;
 import com.solusi.erp.master.bankaccount.web.mapper.BankAccountWebMapper;
+import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
 import com.solusi.erp.master.geographic.domain.port.GeographicLookupProvider;
 import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import com.solusi.erp.master.shared.model.PaymentType;
@@ -28,7 +30,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -50,6 +54,8 @@ public class BankAccountController {
     private final MessageSource messageSource;
     private final PartyLookupProvider partyLookupProvider;
     private final GeographicLookupProvider geographicLookupProvider;
+    private final CurrencyLookupProvider currencyLookupProvider;
+    private final CoaLookupProvider coaLookupProvider;
 
     @GetMapping
     @PreAuthorize("hasAuthority('BANK-ACCOUNT_READ')")
@@ -75,6 +81,7 @@ public class BankAccountController {
     public String showCreateForm(Model model) {
         model.addAttribute("bankAccountRequest", new BankAccountSaveRequest());
         model.addAttribute("accountTypes", PaymentType.values());
+        model.addAttribute("bankAccountUI", new HashMap<>());
         return "master/bank-accounts/form";
     }
 
@@ -101,6 +108,7 @@ public class BankAccountController {
         model.addAttribute("bankAccountRequest", webMapper.toSaveRequest(domain));
         model.addAttribute("auditInfo", webMapper.toDetailResponse(domain));
         model.addAttribute("accountTypes", PaymentType.values());
+        model.addAttribute("bankAccountUI", buildBankAccountUI(domain));
 
         LookupDto cityLookup = geographicLookupProvider.resolve(domain.getCityId());
         model.addAttribute("selectedCity", cityLookup != null ? cityLookup.name() : domain.getCityName());
@@ -138,6 +146,21 @@ public class BankAccountController {
         }
         String msg = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
         return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
+    }
+
+    private Map<String, Object> buildBankAccountUI(BankAccount domain) {
+        Map<String, Object> ui = new HashMap<>();
+        LookupDto currency = currencyLookupProvider.resolve(domain.getCurrencyId());
+        if (currency != null) {
+            ui.put("currencyText", currency.name());
+            ui.put("currencySubtext", currency.subText());
+        }
+        LookupDto coa = coaLookupProvider.resolve(domain.getCoaId());
+        if (coa != null) {
+            ui.put("coaText", coa.name());
+            ui.put("coaSubtext", coa.subText());
+        }
+        return ui;
     }
 }
 
