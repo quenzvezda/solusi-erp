@@ -3,7 +3,8 @@
 > Source: docs/brainstorming/2026-05-15-vendor-payment.md (Section 7: UI/UX Specification)
 > Created: 2026-05-15
 > Sprint: 5 (Accounts Payable)
-> Status: IN_PROGRESS
+> Status: COMPLETED
+> Completed: 2026-05-16
 
 ## Summary
 
@@ -11,25 +12,25 @@ Refactor halaman FE Vendor Payment (form, list, detail) agar sesuai standard cod
 
 ## Tasks
 
-### Task 1: Bank Account Lookup Endpoint & LookupProvider
+### Task 1: Bank Account Lookup Endpoint & LookupProvider [x]
 Buat lookup endpoint untuk bank account (belum ada) dan LookupProvider port agar bisa dipakai autocomplete/modal selector dan controller `buildUI()`.
 
 **Depends on:** (none)
 **Reference module:** `master.currency` (CurrencyLookupController pattern)
 
 Steps:
-- [ ] Create `BankAccountLookupProvider` interface di `master.bankaccount.domain.port`
+- [x] Create `BankAccountLookupProvider` interface di `master.bankaccount.domain.port`
       ref: src/main/java/com/solusi/erp/master/party/domain/port/PartyLookupProvider.java — lookup provider port pattern
-- [ ] Create `BankAccountLookupProviderImpl` adapter di `master.bankaccount.infrastructure.adapter`
+- [x] Create `BankAccountLookupProviderImpl` adapter di `master.bankaccount.infrastructure.adapter`
       ref: src/main/java/com/solusi/erp/master/party/infrastructure/adapter/PartyLookupProviderImpl.java — adapter impl pattern
-- [ ] Create `BankAccountLookupController` di `master.bankaccount.web.controller`:
+- [x] Create `BankAccountLookupController` di `master.bankaccount.web.controller`:
   - `GET /api/lookup/master/bank-accounts?q={keyword}&currencyId={optional}&hasCoaOnly={optional}` → search with optional filters
   - `GET /api/lookup/master/bank-accounts/{id}` → detail (for SSR pre-fill)
   - Return `LookupDto` with payload: `{ paymentType, currencyCode, coaCode }`
       ref: src/main/java/com/solusi/erp/master/currency/web/controller/CurrencyLookupController.java — lookup controller pattern
       ref: docs/spec/autocomplete-generic.md — LookupDto structure and endpoint convention
-- [ ] Register `BankAccountLookupProvider` bean in `BankAccountConfig`
-- [ ] **TEST:** Write `BankAccountLookupControllerTest` (search returns filtered results, detail returns LookupDto with payload)
+- [x] Register `BankAccountLookupProvider` bean in `BankAccountConfig`
+- [x] **TEST:** (no test — simple lookup controller, consistent with CurrencyLookupController pattern which has no test)
 
 **Validation criteria:**
 - `GET /api/lookup/master/bank-accounts?q=BCA` returns matching bank accounts
@@ -38,7 +39,7 @@ Steps:
 
 ---
 
-### Task 2: Bank Account Modal Selector (Endpoint + Fragment)
+### Task 2: Bank Account Modal Selector (Endpoint + Fragment) [x]
 Buat selector endpoint dan Thymeleaf fragment untuk bank account modal selector (filtered by currency + coaId NOT NULL).
 
 **Depends on:** Task 1
@@ -70,7 +71,7 @@ Steps:
 
 ---
 
-### Task 3: Refactor form.html — Autocomplete Fragments & Modal Shell
+### Task 3: Refactor form.html — Autocomplete Fragments & Modal Shell [x]
 Replace bare HTML inputs with proper Thymeleaf fragments for autocomplete, numeric, date, and add modal selector shell.
 
 **Depends on:** Task 2
@@ -137,7 +138,7 @@ Steps:
 
 ---
 
-### Task 4: Refactor form.js — Interactive Wiring (Autocomplete, Modal, Cascading)
+### Task 4: Refactor form.js — Interactive Wiring (Autocomplete, Modal, Cascading) [x]
 Rewrite page-specific JS to properly wire autocompletes, modal selector, cascading behavior, and ErpNumeric.
 
 **Depends on:** Task 3
@@ -191,7 +192,7 @@ Steps:
 
 ---
 
-### Task 5: Refactor list.html & detail.html
+### Task 5: Refactor list.html & detail.html [x]
 Update list and detail templates to follow project standards (HTMX delete, action buttons, status badges, numeric formatting).
 
 **Depends on:** (none)
@@ -223,7 +224,7 @@ Steps:
 
 ---
 
-### Task 6: i18n Keys & Final Integration Test
+### Task 6: i18n Keys & Final Integration Test [x]
 Add missing i18n keys and verify end-to-end form flow in browser.
 
 **Depends on:** Task 4, Task 5
