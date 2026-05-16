@@ -59,6 +59,26 @@ public class BankAccountTemplateTest {
         assertThat(template).contains("btn-select-bank-account-coa");
         assertThat(template).contains("modal-bank-account-coa-selector");
         assertThat(template).contains("bank-account-coa-selector-modal-body");
+        assertThat(template).contains("/js/shared/erp-modal-selector.js");
+        assertThat(template).contains("/js/master/bank-accounts/form.js");
+    }
+
+    @Test
+    public void bankAccountFormScriptContainsCoaSelectorHooks() throws Exception {
+        InputStream is = getClass().getClassLoader()
+                .getResourceAsStream("static/js/master/bank-accounts/form.js");
+        String script = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+
+        assertThat(script).contains("btn-select-bank-account-coa");
+        assertThat(script).contains("bank-account-coa-id");
+        assertThat(script).contains("bank-account-coa-display");
+        assertThat(script).contains("js-bank-account-coa-pick");
+        assertThat(script).contains("modal-bank-account-coa-selector");
+        assertThat(script).contains("bank-account-coa-selector-modal-body");
+        assertThat(script).contains("/master/bank-accounts/selectors/coa");
+        assertThat(script).contains("dataset.coaId");
+        assertThat(script).contains("dataset.coaCode");
+        assertThat(script).contains("dataset.coaName");
     }
 
     @Test

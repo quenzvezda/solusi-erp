@@ -116,11 +116,8 @@
 
     <!-- Page Specific Scripts Slot -->
     <div id="page-scripts" th:fragment="pageScripts">
-        <script>
-            // No manual initialization needed! 
-            // fragments/inputs :: autocomplete already uses data-lookup-path
-            // which is automatically handled by the global initLookup in layout/master
-        </script>
+        <script th:src="@{/js/shared/erp-modal-selector.js}" defer></script>
+        <script th:src="@{/js/master/bank-accounts/form.js}" defer></script>
     </div>
 </body>
 </html>

@@ -22,3 +22,7 @@
 - **Status:** clean
 - **Summary:** Added Bank Account COA selector HTMX fragment with search/filter, row payload attributes, empty state, pagination, and static template coverage.
 
+## Task 5: Page-Specific JavaScript Wiring
+- **Status:** clean
+- **Summary:** Added Bank Account page JavaScript to open the COA selector, map picked COA data into hidden/display fields, and close the modal.
+

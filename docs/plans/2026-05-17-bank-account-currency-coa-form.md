@@ -142,26 +142,26 @@ Steps:
 
 ---
 
-### Task 5: Page-Specific JavaScript Wiring
+### Task 5: Page-Specific JavaScript Wiring [x]
 Add Bank Account page JavaScript to open the COA selector and map selected COA into the form.
 
 **Depends on:** Task 3, Task 4
 **Reference module:** `purchasing.purchaseorder`
 
 Steps:
-- [ ] Create `src/main/resources/static/js/master/bank-accounts/form.js` if no page-specific JS exists.
+- [x] Create `src/main/resources/static/js/master/bank-accounts/form.js` if no page-specific JS exists.
       ref: docs/spec/modal-selector.md:L18-L27 — page-specific JS is the modal selector consumer.
-- [ ] Include `erp-modal-selector.js` and the new page script in `#page-scripts` of Bank Account form.
+- [x] Include `erp-modal-selector.js` and the new page script in `#page-scripts` of Bank Account form.
       ref: docs/spec/modal-selector.md:L116-L127 — consumer checklist requires shared helper and page-specific mapping.
-- [ ] Wire COA button click to open modal with URL `/master/bank-accounts/selectors/coa` and body id `bank-account-coa-selector-modal-body`.
+- [x] Wire COA button click to open modal with URL `/master/bank-accounts/selectors/coa` and body id `bank-account-coa-selector-modal-body`.
       ref: docs/spec/modal-selector.md:L20-L27 — shared helper loads initial selector fragment into modal shell.
-- [ ] Add delegated click handler for `.js-bank-account-coa-pick` that sets hidden `coaId` and readonly display input to `code - name`, then closes modal.
+- [x] Add delegated click handler for `.js-bank-account-coa-pick` that sets hidden `coaId` and readonly display input to `code - name`, then closes modal.
       ref: docs/spec/modal-selector.md:L57-L65 — payload mapping stays in page-specific JS.
-- [ ] Add clear behavior only if the form UI includes an explicit clear button; do not silently clear COA on unrelated changes.
+- [x] Add clear behavior only if the form UI includes an explicit clear button; do not silently clear COA on unrelated changes.
       ref: docs/spec/modal-selector.md:L61-L65 — payload only what consumer needs; avoid unnecessary hidden coupling.
-- [ ] Do not manually initialize Currency autocomplete if fragment auto-init is sufficient; avoid duplicate TomSelect initialization.
+- [x] Do not manually initialize Currency autocomplete if fragment auto-init is sufficient; avoid duplicate TomSelect initialization.
       ref: docs/spec/autocomplete-generic.md:L34-L40 and L99-L104 — global auto-init handles fragment `data-lookup-path`.
-- [ ] **TEST:** Extend static template test to assert page script is included and expected JS hook class/id strings are present in template/JS.
+- [x] **TEST:** Extend static template test to assert page script is included and expected JS hook class/id strings are present in template/JS.
       ref: src/test/java/com/solusi/erp/master/bankaccount/web/template/BankAccountTemplateTest.java:L46-L58 — static resource assertions pattern.
 
 **Validation criteria:**
