@@ -76,8 +76,21 @@ if (window.ERP && ERP.CurrencyRateLock) {
 
 - Utility menunggu TomSelect init via event `erp:lookup-initialized`
 - Membaca `ts.options[value].payload.isDefault` dari item data TomSelect
-- Menggunakan `AutoNumeric.getAutoNumericElement(input)` untuk toggle readonly pada AutoNumeric instance
-- Fallback ke native `readonly` attribute jika AutoNumeric belum init
+- Untuk initial rendered option, fallback membaca `data-payload-is-default="true"` dari DOM option
+- Menggunakan `ErpNumeric.set(input, value)` saat lock agar sinkron dengan AutoNumeric
+- Toggle native `readonly` property dan class `bg-body-tertiary` untuk tampilan readonly
+
+## Gotcha: Initial Rendered TomSelect Payload
+
+Payload dari hasil AJAX lookup masuk ke `ts.options[value].payload`, tetapi option yang sudah dirender server-side saat page load bisa tidak membawa payload lengkap di TomSelect. Jika behavior bergantung pada metadata initial option, render juga metadata itu sebagai `data-payload-*` di `<option>` dan pastikan JS punya fallback ke DOM attribute.
+
+Contoh currency default:
+
+```html
+<option value="5" data-payload-is-default="true" selected>Indonesian Rupiah</option>
+```
+
+Tanpa fallback ini, field bisa sudah benar readonly dari Thymeleaf, lalu JS salah membaca `payload.isDefault` sebagai `undefined` dan meng-unlock field saat TomSelect selesai init.
 
 ## Adoption Guide
 

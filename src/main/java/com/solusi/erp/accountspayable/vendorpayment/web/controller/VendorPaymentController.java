@@ -95,6 +95,7 @@ public class VendorPaymentController {
             if (currencyLookup != null) {
                 vpUI.put("currencyText", currencyLookup.name());
                 vpUI.put("currencySubtext", currencyLookup.subText());
+                vpUI.put("currencyIsDefault", Boolean.TRUE.equals(currency.getIsDefault()));
             }
         });
 
@@ -235,6 +236,8 @@ public class VendorPaymentController {
         if (currency != null) {
             ui.put("currencyText", currency.name());
             ui.put("currencySubtext", currency.subText());
+            Object isDefault = currency.payload() != null ? currency.payload().get("isDefault") : null;
+            ui.put("currencyIsDefault", Boolean.TRUE.equals(isDefault));
         }
         LookupDto bankAccount = bankAccountLookupProvider.resolve(payment.getBankAccountId());
         if (bankAccount != null) {

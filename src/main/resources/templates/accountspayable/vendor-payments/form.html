@@ -49,7 +49,8 @@
                                     <div th:replace="~{fragments/inputs :: autocomplete(field='currencyId', label=#{label.vp.currency}, path='master/currencies',
                                         required=true, id='vp-currency',
                                         initialValue=*{currencyId}, initialText=${vpUI != null ? vpUI['currencyText'] : ''},
-                                        initialSubtext=${vpUI != null ? vpUI['currencySubtext'] : ''})}"></div>
+                                        initialSubtext=${vpUI != null ? vpUI['currencySubtext'] : ''},
+                                        initialPayloadIsDefault=${vpUI != null ? vpUI['currencyIsDefault'] : false})}"></div>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label required" th:text="#{label.vp.bankAccount}">Bank Account</label>
@@ -75,7 +76,9 @@
                                     <div th:replace="~{fragments/inputs :: date(field='paymentDate', value=*{paymentDate}, label=#{label.vp.paymentDate}, required=true)}"></div>
                                 </div>
                                 <div class="col-md-3">
-                                    <div th:replace="~{fragments/inputs :: decimal(field='exchangeRate', label=#{label.vp.exchangeRate}, required=true)}"></div>
+                                    <div th:replace="~{fragments/inputs :: decimal(field='exchangeRate', label=#{label.vp.exchangeRate}, required=true,
+                                        isReadonly=${vpUI != null && vpUI['currencyIsDefault'] == true},
+                                        extraClass=${vpUI != null && vpUI['currencyIsDefault'] == true ? 'bg-body-tertiary' : ''})}"></div>
                                 </div>
                                 <div class="col-md-3">
                                     <div th:replace="~{fragments/inputs :: decimal(field='paymentAmount', label=#{label.vp.paymentAmount}, required=true)}"></div>

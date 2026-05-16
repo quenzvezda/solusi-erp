@@ -14,36 +14,35 @@
             if (!selectEl || !rateInput) return;
 
             function lockRate() {
-                rateInput.value = defaultRate;
                 rateInput.setAttribute("readonly", "readonly");
-                if (window.AutoNumeric) {
-                    var anInstance = AutoNumeric.getAutoNumericElement(rateInput);
-                    if (anInstance) {
-                        anInstance.set(parseFloat(defaultRate));
-                        anInstance.options.readOnly(true);
-                    }
+                rateInput.readOnly = true;
+                rateInput.classList.add("bg-body-tertiary");
+                if (window.ErpNumeric) {
+                    ErpNumeric.set(rateInput, defaultRate);
+                } else {
+                    rateInput.value = defaultRate;
                 }
             }
 
             function unlockRate() {
                 rateInput.removeAttribute("readonly");
-                if (window.AutoNumeric) {
-                    var anInstance = AutoNumeric.getAutoNumericElement(rateInput);
-                    if (anInstance) {
-                        anInstance.options.readOnly(false);
-                    }
-                }
+                rateInput.readOnly = false;
+                rateInput.classList.remove("bg-body-tertiary");
             }
 
             function checkCurrency(ts) {
                 var value = ts.getValue();
+                var domSelectedOption = selectEl.querySelector('option[value="' + value + '"]');
+                var item = value ? ts.options[value] : null;
+                var payload = item && item.payload ? item.payload : {};
                 if (!value) {
                     unlockRate();
                     return;
                 }
-                var item = ts.options[value];
-                var payload = item && item.payload ? item.payload : {};
-                if (payload.isDefault === true) {
+                var isDefault = payload.isDefault === true
+                    || payload.isDefault === "true"
+                    || (domSelectedOption && domSelectedOption.getAttribute("data-payload-is-default") === "true");
+                if (isDefault) {
                     lockRate();
                 } else {
                     unlockRate();
