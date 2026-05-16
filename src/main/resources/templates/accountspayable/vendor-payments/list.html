@@ -29,16 +29,28 @@
 
                 <div class="card">
                     <div class="card-body border-bottom py-3">
-                        <form th:action="@{/accounts-payable/vendor-payments}" method="get" class="row g-2 align-items-center">
+                        <form class="row g-2 align-items-center"
+                              hx-get="/accounts-payable/vendor-payments"
+                              hx-target="#vendor-payment-table-container"
+                              hx-trigger="submit"
+                              hx-push-url="true">
                             <div class="col-md-4">
                                 <div class="input-icon">
                                     <input type="text" name="keyword" th:value="${keyword}" class="form-control form-control-sm"
-                                           th:placeholder="#{label.search} + '...'">
+                                           th:placeholder="#{label.search} + '...'"
+                                           hx-get="/accounts-payable/vendor-payments"
+                                           hx-target="#vendor-payment-table-container"
+                                           hx-trigger="keyup changed delay:500ms"
+                                           hx-include="closest form">
                                     <span class="input-icon-addon"><i class="ti ti-search"></i></span>
                                 </div>
                             </div>
                             <div class="col-md-2">
-                                <select name="status" class="form-select form-select-sm">
+                                <select name="status" class="form-select form-select-sm"
+                                        hx-get="/accounts-payable/vendor-payments"
+                                        hx-target="#vendor-payment-table-container"
+                                        hx-trigger="change"
+                                        hx-include="closest form">
                                     <option value="" th:text="#{label.all}">All</option>
                                     <option th:each="item : ${statuses}" th:value="${item}" th:text="${item}"
                                             th:selected="${item == status}">DRAFT</option>
