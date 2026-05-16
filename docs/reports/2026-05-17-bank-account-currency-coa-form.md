@@ -26,3 +26,8 @@
 - **Status:** clean
 - **Summary:** Added Bank Account page JavaScript to open the COA selector, map picked COA data into hidden/display fields, and close the modal.
 
+## Task 6: Final Verification and Regression Guard
+- **Status:** findings
+- **Summary:** Automated verification passed (`mvn compile -q -pl .` and focused Bank Account/controller/template/dependency-guard tests); browser/manual DB checks remain pending for user-run validation.
+
+

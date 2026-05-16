@@ -171,19 +171,19 @@ Steps:
 
 ---
 
-### Task 6: Final Verification and Regression Guard
+### Task 6: Final Verification and Regression Guard [~]
 Run focused tests and manual UI checks for the Bank Account form and VP journal dependency.
 
 **Depends on:** Task 1, Task 2, Task 3, Task 4, Task 5
 **Reference module:** project test standards
 
 Steps:
-- [ ] Run compile check.
+- [x] Run compile check.
       ref: docs/AGENTS.md — project verification expectations if present.
-- [ ] Run Bank Account-focused tests: `BankAccountControllerTest`, `BankAccountTemplateTest`.
+- [x] Run Bank Account-focused tests: `BankAccountControllerTest`, `BankAccountTemplateTest`.
       ref: src/test/java/com/solusi/erp/master/bankaccount/web/controller/BankAccountControllerTest.java:L1-L75 — controller coverage.
       ref: src/test/java/com/solusi/erp/master/bankaccount/web/template/BankAccountTemplateTest.java:L1-L59 — template coverage.
-- [ ] Run dependency guard: `WebLayerDependencyGuardTest`.
+- [x] Run dependency guard: `WebLayerDependencyGuardTest`.
       ref: src/test/java/com/solusi/erp/architecture/WebLayerDependencyGuardTest.java:L1-L120 — web layer must not depend on repositories.
 - [ ] Manually open `/master/bank-accounts/create`: Currency autocomplete works; COA selector opens and fills form.
 - [ ] Manually open `/master/bank-accounts/edit/1`: Currency and COA are prefilled from current DB values.
