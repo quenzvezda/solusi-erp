@@ -12,6 +12,8 @@ import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
+import com.solusi.erp.master.bankaccount.infrastructure.persistence.BankAccount;
+import com.solusi.erp.master.bankaccount.infrastructure.persistence.BankAccountJpaRepository;
 import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +43,7 @@ public class VendorPaymentController {
     private final GetVendorPaymentListUseCase getVendorPaymentListUseCase;
     private final GetVendorPaymentDetailUseCase getVendorPaymentDetailUseCase;
     private final GetPayableVendorBillsUseCase getPayableVendorBillsUseCase;
+    private final BankAccountJpaRepository bankAccountJpaRepository;
     private final VendorPaymentWebMapper webMapper;
     private final MessageSource messageSource;
 
@@ -145,6 +148,40 @@ public class VendorPaymentController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         deleteVendorPaymentUseCase.execute(id);
         return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg("msg.success.delete"));
+    }
+
+
+    @GetMapping("/selectors/bank-accounts")
+    @PreAuthorize("hasAuthority('VENDOR-PAYMENT_CREATE')")
+    public String bankAccountSelector(@RequestParam(required = false) String q,
+                                      @RequestParam Long currencyId,
+                                      org.springframework.data.domain.Pageable pageable,
+                                      Model model) {
+        org.springframework.data.domain.Page<BankAccount> page;
+        if (q != null && !q.isBlank()) {
+            page = bankAccountJpaRepository.search(q, pageable);
+        } else {
+            page = bankAccountJpaRepository.findByIsActiveTrue(pageable);
+        }
+
+        List<BankAccountSelectorRow> rows = page.getContent().stream()
+                .filter(ba -> currencyId.equals(ba.getCurrencyId()))
+                .filter(ba -> ba.getCoaId() != null)
+                .map(ba -> new BankAccountSelectorRow(
+                        ba.getId(),
+                        ba.getAccountName(),
+                        ba.getAccountNo(),
+                        ba.getBankName(),
+                        ba.getAccountType() != null ? ba.getAccountType().name() : "",
+                        "",
+                        ""
+                ))
+                .toList();
+
+        model.addAttribute("page", new PageImpl<>(rows, pageable, rows.size()));
+        model.addAttribute("q", q);
+        model.addAttribute("currencyId", currencyId);
+        return "accountspayable/vendor-payments/fragments/bank-account-selector";
     }
 
     @GetMapping("/payable-bills")
