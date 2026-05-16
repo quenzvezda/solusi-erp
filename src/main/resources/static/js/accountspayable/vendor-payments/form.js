@@ -82,8 +82,8 @@
                     '<input type="hidden" name="lines[' + index + '].outstandingAmount" value="' + bill.outstandingAmount + '">' +
                 '</td>' +
                 '<td class="text-end">' +
-                    '<input type="text" class="form-control form-control-sm text-end paid-amount-input erp-num-decimal"' +
-                    ' name="lines[' + index + '].paidAmount" value="0" data-autonumeric="currency">' +
+                    '<input type="text" class="form-control form-control-sm text-end paid-amount-input erp-number-decimal"' +
+                    ' name="lines[' + index + '].paidAmount" value="0">' +
                 '</td>' +
                 '<td class="text-center">' +
                     '<button type="button" class="btn btn-sm btn-ghost-danger remove-line-btn">' +
@@ -93,7 +93,7 @@
             allocationLines.appendChild(tr);
         });
 
-        if (window.initNumericInputs) initNumericInputs();
+        if (window.initNumericInputs) initNumericInputs(allocationLines);
         updateRecap();
     }
 

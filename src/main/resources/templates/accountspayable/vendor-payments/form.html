@@ -166,6 +166,7 @@
     <div th:replace="~{fragments/modal-selector :: shell(modalId='bank-account-modal', title=#{label.vp.selectBankAccount}, bodyId='bank-account-selector-body')}"></div>
 
     <div id="page-specific-scripts">
+        <script th:src="@{/js/shared/erp-modal-selector.js}"></script>
         <script th:src="@{/js/accountspayable/vendor-payments/form.js}"></script>
     </div>
 </body>
