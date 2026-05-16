@@ -10,3 +10,7 @@
 - **Status:** clean
 - **Summary:** Added Currency/COA lookup-provider UI prefill to Bank Account create/edit and verified controller tests plus web-layer dependency guard.
 
+## Task 2: COA Selector Endpoint for Bank Account
+- **Status:** clean
+- **Summary:** Added Bank Account-scoped COA selector endpoint using `FindCoaSelectorUseCase`, with controller test coverage and dependency guard verification.
+

@@ -54,25 +54,25 @@ Steps:
 
 ---
 
-### Task 2: COA Selector Endpoint for Bank Account
+### Task 2: COA Selector Endpoint for Bank Account [x]
 Expose a Bank Account-scoped selector endpoint that reuses existing COA selector use case and returns a Bank Account fragment.
 
 **Depends on:** Task 1
 **Reference module:** `accounting.coa`, `purchasing.purchaseorder`
 
 Steps:
-- [ ] Inject `FindCoaSelectorUseCase` into `BankAccountController`.
+- [x] Inject `FindCoaSelectorUseCase` into `BankAccountController`.
       ref: src/main/java/com/solusi/erp/accounting/coa/web/controller/CoaController.java:L75-L83 — COA controller uses `FindCoaSelectorUseCase` to build selector page.
       ref: src/main/java/com/solusi/erp/accounting/coa/application/usecase/query/CoaSelectorRow.java:L1-L14 — existing selector row DTO fields.
-- [ ] Add `GET /master/bank-accounts/selectors/coa` endpoint with `@PreAuthorize("hasAnyAuthority('BANK-ACCOUNT_CREATE', 'BANK-ACCOUNT_UPDATE')")`.
+- [x] Add `GET /master/bank-accounts/selectors/coa` endpoint with `@PreAuthorize("hasAnyAuthority('BANK-ACCOUNT_CREATE', 'BANK-ACCOUNT_UPDATE')")`.
       ref: src/main/java/com/solusi/erp/purchasing/purchaseorder/web/controller/PurchaseOrderController.java:L108-L131 — selector endpoints return modal fragments and model attributes.
-- [ ] Accept `keyword`, optional `accountType`, and `Pageable`; call `findCoaSelectorUseCase.execute(keyword, accountType, PageableMapper.toDomain(pageable))` or use the method’s expected pageable type if already Spring-compatible.
+- [x] Accept `keyword`, optional `accountType`, and `Pageable`; call `findCoaSelectorUseCase.execute(keyword, accountType, PageableMapper.toDomain(pageable))` or use the method’s expected pageable type if already Spring-compatible.
       ref: src/main/java/com/solusi/erp/accounting/coa/web/controller/CoaController.java:L75-L83 — exact `FindCoaSelectorUseCase` invocation pattern.
-- [ ] Add model attributes `page`, `keyword`, and `accountType`.
+- [x] Add model attributes `page`, `keyword`, and `accountType`.
       ref: docs/spec/modal-selector.md:L40-L48 — selector fragment needs search form, target root, table, empty state, pagination.
-- [ ] Return `master/bank-accounts/fragments/coa-selector-modal`.
+- [x] Return `master/bank-accounts/fragments/coa-selector-modal`.
       ref: docs/spec/modal-selector.md:L30-L38 — modal shell bodyId must match fragment root id to avoid `htmx:targetError`.
-- [ ] **TEST:** Add controller test for selector endpoint view name and model attributes.
+- [x] **TEST:** Add controller test for selector endpoint view name and model attributes.
       ref: src/test/java/com/solusi/erp/master/bankaccount/web/controller/BankAccountControllerTest.java:L1-L75 — current controller unit test style.
 
 **Validation criteria:**

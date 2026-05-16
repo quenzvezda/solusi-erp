@@ -1,5 +1,7 @@
 package com.solusi.erp.master.bankaccount.web.controller;
 
+import com.solusi.erp.accounting.coa.application.usecase.query.CoaSelectorRow;
+import com.solusi.erp.accounting.coa.application.usecase.query.FindCoaSelectorUseCase;
 import com.solusi.erp.accounting.coa.domain.port.CoaLookupProvider;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.master.bankaccount.application.usecase.command.CreateBankAccountUseCase;
@@ -37,6 +39,7 @@ public class BankAccountControllerTest {
         UpdateBankAccountUseCase updateUseCase = mock(UpdateBankAccountUseCase.class);
         DeleteBankAccountUseCase deleteUseCase = mock(DeleteBankAccountUseCase.class);
         FindBankAccountsUseCase findUseCase = mock(FindBankAccountsUseCase.class);
+        FindCoaSelectorUseCase findCoaSelectorUseCase = mock(FindCoaSelectorUseCase.class);
         GetBankAccountEditViewUseCase getEditViewUseCase = mock(GetBankAccountEditViewUseCase.class);
         BankAccountWebMapper webMapper = mock(BankAccountWebMapper.class);
         MessageSource messageSource = mock(MessageSource.class);
@@ -47,7 +50,7 @@ public class BankAccountControllerTest {
 
         BankAccountController controller = new BankAccountController(
                 createUseCase, updateUseCase, deleteUseCase,
-                findUseCase, getEditViewUseCase, webMapper, messageSource,
+                findUseCase, findCoaSelectorUseCase, getEditViewUseCase, webMapper, messageSource,
                 partyLookupProvider, geographicLookupProvider,
                 currencyLookupProvider, coaLookupProvider);
 
@@ -87,6 +90,7 @@ public class BankAccountControllerTest {
         UpdateBankAccountUseCase updateUseCase = mock(UpdateBankAccountUseCase.class);
         DeleteBankAccountUseCase deleteUseCase = mock(DeleteBankAccountUseCase.class);
         FindBankAccountsUseCase findUseCase = mock(FindBankAccountsUseCase.class);
+        FindCoaSelectorUseCase findCoaSelectorUseCase = mock(FindCoaSelectorUseCase.class);
         GetBankAccountEditViewUseCase getEditViewUseCase = mock(GetBankAccountEditViewUseCase.class);
         BankAccountWebMapper webMapper = mock(BankAccountWebMapper.class);
         MessageSource messageSource = mock(MessageSource.class);
@@ -97,7 +101,7 @@ public class BankAccountControllerTest {
 
         BankAccountController controller = new BankAccountController(
                 createUseCase, updateUseCase, deleteUseCase,
-                findUseCase, getEditViewUseCase, webMapper, messageSource,
+                findUseCase, findCoaSelectorUseCase, getEditViewUseCase, webMapper, messageSource,
                 partyLookupProvider, geographicLookupProvider,
                 currencyLookupProvider, coaLookupProvider);
 
@@ -118,5 +122,41 @@ public class BankAccountControllerTest {
         assertThat(ui).containsEntry("currencySubtext", "Indonesian Rupiah");
         assertThat(ui).containsEntry("coaText", "Main Bank Account");
         assertThat(ui).containsEntry("coaSubtext", "1120");
+    }
+
+    @Test
+    public void coaSelectorShouldReturnFragmentAndModel() {
+        CreateBankAccountUseCase createUseCase = mock(CreateBankAccountUseCase.class);
+        UpdateBankAccountUseCase updateUseCase = mock(UpdateBankAccountUseCase.class);
+        DeleteBankAccountUseCase deleteUseCase = mock(DeleteBankAccountUseCase.class);
+        FindBankAccountsUseCase findUseCase = mock(FindBankAccountsUseCase.class);
+        FindCoaSelectorUseCase findCoaSelectorUseCase = mock(FindCoaSelectorUseCase.class);
+        GetBankAccountEditViewUseCase getEditViewUseCase = mock(GetBankAccountEditViewUseCase.class);
+        BankAccountWebMapper webMapper = mock(BankAccountWebMapper.class);
+        MessageSource messageSource = mock(MessageSource.class);
+        PartyLookupProvider partyLookupProvider = mock(PartyLookupProvider.class);
+        GeographicLookupProvider geographicLookupProvider = mock(GeographicLookupProvider.class);
+        CurrencyLookupProvider currencyLookupProvider = mock(CurrencyLookupProvider.class);
+        CoaLookupProvider coaLookupProvider = mock(CoaLookupProvider.class);
+
+        BankAccountController controller = new BankAccountController(
+                createUseCase, updateUseCase, deleteUseCase,
+                findUseCase, findCoaSelectorUseCase, getEditViewUseCase, webMapper, messageSource,
+                partyLookupProvider, geographicLookupProvider,
+                currencyLookupProvider, coaLookupProvider);
+
+        CoaSelectorRow row = new CoaSelectorRow(19L, "1120", "Main Bank Account", "ASSET", 2, false, null, null, null);
+        when(findCoaSelectorUseCase.execute(any(), any(), any()))
+                .thenReturn(new com.solusi.erp.core.domain.model.Page<>(List.of(row), 0, 20, 1L));
+
+        Model model = new ExtendedModelMap();
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 20);
+        String view = controller.showCoaSelector("bank", "ASSET", pageable, model);
+
+        assertEquals("master/bank-accounts/fragments/coa-selector-modal", view);
+        assertThat(model.getAttribute("page")).isInstanceOf(org.springframework.data.domain.Page.class);
+        assertEquals("bank", model.getAttribute("keyword"));
+        assertEquals("ASSET", model.getAttribute("accountType"));
+        assertThat(model.getAttribute("accountTypes")).isNotNull();
     }
 }

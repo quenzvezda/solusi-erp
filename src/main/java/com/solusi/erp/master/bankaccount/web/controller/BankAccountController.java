@@ -1,11 +1,14 @@
 package com.solusi.erp.master.bankaccount.web.controller;
 
+import com.solusi.erp.accounting.coa.application.usecase.query.CoaSelectorRow;
+import com.solusi.erp.accounting.coa.application.usecase.query.FindCoaSelectorUseCase;
+import com.solusi.erp.accounting.coa.domain.model.AccountType;
+import com.solusi.erp.accounting.coa.domain.port.CoaLookupProvider;
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.DeleteResult;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
 import com.solusi.erp.core.dto.ApiResponse;
-import com.solusi.erp.accounting.coa.domain.port.CoaLookupProvider;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.master.bankaccount.application.usecase.command.*;
 import com.solusi.erp.master.bankaccount.application.usecase.query.*;
@@ -49,6 +52,7 @@ public class BankAccountController {
     private final UpdateBankAccountUseCase updateBankAccountUseCase;
     private final DeleteBankAccountUseCase deleteBankAccountUseCase;
     private final FindBankAccountsUseCase findBankAccountsUseCase;
+    private final FindCoaSelectorUseCase findCoaSelectorUseCase;
     private final GetBankAccountEditViewUseCase getBankAccountEditViewUseCase;
     private final BankAccountWebMapper webMapper;
     private final MessageSource messageSource;
@@ -83,6 +87,27 @@ public class BankAccountController {
         model.addAttribute("accountTypes", PaymentType.values());
         model.addAttribute("bankAccountUI", new HashMap<>());
         return "master/bank-accounts/form";
+    }
+
+    @GetMapping("/selectors/coa")
+    @PreAuthorize("hasAnyAuthority('BANK-ACCOUNT_CREATE', 'BANK-ACCOUNT_UPDATE')")
+    public String showCoaSelector(@RequestParam(required = false) String keyword,
+                                  @RequestParam(required = false) String accountType,
+                                  org.springframework.data.domain.Pageable springPageable,
+                                  Model model) {
+        Pageable domainPageable = PageableMapper.toDomain(springPageable);
+        com.solusi.erp.core.domain.model.Page<CoaSelectorRow> domainPage =
+                findCoaSelectorUseCase.execute(keyword, accountType, domainPageable);
+        Page<CoaSelectorRow> springPage = new PageImpl<>(
+                domainPage.content(),
+                springPageable,
+                domainPage.totalElements()
+        );
+        model.addAttribute("page", springPage);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("accountType", accountType);
+        model.addAttribute("accountTypes", AccountType.values());
+        return "master/bank-accounts/fragments/coa-selector-modal";
     }
 
     @PostMapping("/create")
