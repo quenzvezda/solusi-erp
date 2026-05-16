@@ -89,6 +89,18 @@ class VendorBillTemplateTest {
     }
 
     @Test
+    void detail_template_should_show_payment_summary() throws Exception {
+        String template = readResource("templates/accountspayable/vendor-bills/detail.html");
+
+        assertThat(template).contains("label.vb.paymentStatus");
+        assertThat(template).contains("label.vb.paidAmount");
+        assertThat(template).contains("label.vb.unpaidAmount");
+        assertThat(template).contains("bill.paidAmount");
+        assertThat(template).contains("bill.outstandingAmount");
+        assertThat(template).contains("PARTIAL_PAID");
+    }
+
+    @Test
     void shared_message_bundle_should_include_vendor_bill_filter_keys() {
         ResourceBundle english = ResourceBundle.getBundle("messages", Locale.ENGLISH);
         ResourceBundle indonesian = ResourceBundle.getBundle("messages", Locale.forLanguageTag("id"));
@@ -96,9 +108,13 @@ class VendorBillTemplateTest {
         assertThat(english.containsKey("label.vendor")).isTrue();
         assertThat(english.containsKey("label.filter")).isTrue();
         assertThat(english.containsKey("label.vb.unpaidAmount")).isTrue();
+        assertThat(english.containsKey("label.vb.paymentStatus")).isTrue();
+        assertThat(english.containsKey("label.vb.paidAmount")).isTrue();
         assertThat(indonesian.containsKey("label.vendor")).isTrue();
         assertThat(indonesian.containsKey("label.filter")).isTrue();
         assertThat(indonesian.containsKey("label.vb.unpaidAmount")).isTrue();
+        assertThat(indonesian.containsKey("label.vb.paymentStatus")).isTrue();
+        assertThat(indonesian.containsKey("label.vb.paidAmount")).isTrue();
     }
 
     @Test

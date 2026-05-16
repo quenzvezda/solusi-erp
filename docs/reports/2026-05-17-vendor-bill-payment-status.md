@@ -22,4 +22,8 @@
 - **Status:** clean
 - **Summary:** Added Unpaid column to Vendor Bill list, bound it to outstanding amount, updated empty colspan, i18n labels, and template coverage.
 
+## Task 5: Vendor Bill Detail Payment Summary
+- **Status:** clean
+- **Summary:** Added payment status, paid amount, and unpaid amount to Vendor Bill detail with localized labels and template coverage.
+
 (Populated during execution.)

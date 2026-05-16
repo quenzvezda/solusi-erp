@@ -137,25 +137,25 @@ Steps:
 
 ---
 
-### Task 5: Vendor Bill Detail Payment Summary [ ]
+### Task 5: Vendor Bill Detail Payment Summary [x]
 Add payment visibility to Vendor Bill detail so users can see status, paid amount, and remaining amount.
 
 **Depends on:** Task 3
 **Reference module:** `accountspayable.vendorbill`, `accountspayable.vendorpayment`
 
 Steps:
-- [ ] Add a payment summary area to `vendor-bills/detail.html` near the header/recap section.
+- [x] Add a payment summary area to `vendor-bills/detail.html` near the header/recap section.
       ref: src/main/resources/templates/accountspayable/vendor-bills/detail.html:L1-L180 — current detail shows invoice metadata, lines, and total invoice recap.
-- [ ] Display current bill status prominently; existing `PARTIAL_PAID` / `PAID` status should be visible as payment state.
+- [x] Display current bill status prominently; existing `PARTIAL_PAID` / `PAID` status should be visible as payment state.
       ref: src/main/java/com/solusi/erp/accountspayable/vendorbill/domain/model/VendorBillStatus.java:L1-L10 — status enum already contains payment states.
-- [ ] Display paid amount from `bill.paidAmount` and unpaid/outstanding amount from `bill.outstandingAmount` with standard decimal formatting.
+- [x] Display paid amount from `bill.paidAmount` and unpaid/outstanding amount from `bill.outstandingAmount` with standard decimal formatting.
       ref: src/main/resources/templates/accountspayable/vendor-bills/detail.html:L120-L180 — existing subtotal/tax/total formatting pattern.
-- [ ] Use existing badge color conventions for statuses; ensure `PARTIAL_PAID` and `PAID` have sensible visual distinction.
+- [x] Use existing badge color conventions for statuses; ensure `PARTIAL_PAID` and `PAID` have sensible visual distinction.
       ref: src/main/resources/templates/accountspayable/vendor-payments/detail.html:L13-L18 — status badge class pattern for payment detail.
-- [ ] Add i18n labels for paid amount, unpaid amount, and payment summary/status as needed.
+- [x] Add i18n labels for paid amount, unpaid amount, and payment summary/status as needed.
       ref: src/main/resources/messages.properties — English labels.
       ref: src/main/resources/messages_id.properties — Indonesian labels.
-- [ ] **TEST:** Update Vendor Bill template tests to assert detail binds `paidAmount`, `outstandingAmount`, and payment/status labels.
+- [x] **TEST:** Update Vendor Bill template tests to assert detail binds `paidAmount`, `outstandingAmount`, and payment/status labels.
       ref: src/test/java/com/solusi/erp/accountspayable/vendorbill/web/template/ — static template assertion pattern.
 
 **Validation criteria:**
