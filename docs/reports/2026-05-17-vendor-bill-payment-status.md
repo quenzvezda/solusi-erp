@@ -14,4 +14,8 @@
 - **Status:** clean
 - **Summary:** Added paid/outstanding amounts to Vendor Bill list/detail query views and populated them through the payment summary port with fallback unpaid totals.
 
+## Task 3: Web DTO, Mapper, and Controller Contract
+- **Status:** clean
+- **Summary:** Added paid/outstanding response fields and mapper coverage while keeping Vendor Bill controller dependency boundaries clean.
+
 (Populated during execution.)

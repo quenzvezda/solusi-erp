@@ -84,24 +84,24 @@ Steps:
 
 ---
 
-### Task 3: Web DTO, Mapper, and Controller Contract [ ]
+### Task 3: Web DTO, Mapper, and Controller Contract [x]
 Expose payment summary values through Vendor Bill web responses while keeping controllers repository-free.
 
 **Depends on:** Task 2
 **Reference module:** `accountspayable.vendorbill`
 
 Steps:
-- [ ] Add `paidAmount` and `outstandingAmount` to `VendorBillSummaryResponse`.
+- [x] Add `paidAmount` and `outstandingAmount` to `VendorBillSummaryResponse`.
       ref: src/main/java/com/solusi/erp/accountspayable/vendorbill/web/dto/VendorBillSummaryResponse.java:L1-L40 — current DTO has status and total only.
-- [ ] Add `paidAmount` and `outstandingAmount` to `VendorBillDetailResponse`.
+- [x] Add `paidAmount` and `outstandingAmount` to `VendorBillDetailResponse`.
       ref: src/main/java/com/solusi/erp/accountspayable/vendorbill/web/dto/VendorBillDetailResponse.java:L1-L50 — current DTO has subtotal/tax/total only.
-- [ ] Map the new fields in `VendorBillWebMapper.toSummaryResponse()` and `toDetailResponse()`.
+- [x] Map the new fields in `VendorBillWebMapper.toSummaryResponse()` and `toDetailResponse()`.
       ref: src/main/java/com/solusi/erp/accountspayable/vendorbill/web/mapper/VendorBillWebMapper.java:L1-L120 — mapper currently copies invoice totals but no payment totals.
-- [ ] Keep `VendorBillController` unchanged unless tests reveal model contract needs adjustment; it should continue using use cases and mapper only.
+- [x] Keep `VendorBillController` unchanged unless tests reveal model contract needs adjustment; it should continue using use cases and mapper only.
       ref: src/main/java/com/solusi/erp/accountspayable/vendorbill/web/controller/VendorBillController.java:L1-L120 — list/detail actions already depend on application use cases, not repositories.
-- [ ] **TEST:** Update web mapper tests if present, or controller tests if they assert response fields/model contract.
+- [x] **TEST:** Update web mapper tests if present, or controller tests if they assert response fields/model contract.
       ref: src/test/java/com/solusi/erp/accountspayable/vendorbill/web/ — inspect current Vendor Bill web test patterns.
-- [ ] **TEST:** Run dependency guard to ensure no repository dependency was introduced in web layer.
+- [x] **TEST:** Run dependency guard to ensure no repository dependency was introduced in web layer.
       ref: src/test/java/com/solusi/erp/architecture/WebLayerDependencyGuardTest.java:L1-L120 — web controller/mapper repository dependency guard.
 
 **Validation criteria:**

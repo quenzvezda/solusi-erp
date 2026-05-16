@@ -24,6 +24,8 @@ public class VendorBillDetailResponse extends BaseAuditResponse {
     private BigDecimal subtotal;
     private BigDecimal taxAmount;
     private BigDecimal totalAmount;
+    private BigDecimal paidAmount;
+    private BigDecimal outstandingAmount;
     private String notes;
     private List<Long> grIds;
     private List<VendorBillLineResponse> lines;
