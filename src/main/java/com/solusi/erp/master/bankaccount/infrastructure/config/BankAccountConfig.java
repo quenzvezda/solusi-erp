@@ -4,7 +4,9 @@ import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.master.bankaccount.application.usecase.command.*;
 import com.solusi.erp.master.bankaccount.application.usecase.query.*;
 import com.solusi.erp.master.bankaccount.domain.port.BankAccountInUseChecker;
+import com.solusi.erp.master.bankaccount.domain.port.BankAccountLookupProvider;
 import com.solusi.erp.master.bankaccount.infrastructure.adapter.BankAccountInUseCheckerImpl;
+import com.solusi.erp.master.bankaccount.infrastructure.adapter.BankAccountLookupProviderImpl;
 import com.solusi.erp.master.bankaccount.domain.repository.BankAccountRepository;
 import com.solusi.erp.master.bankaccount.infrastructure.adapter.BankAccountRepositoryImpl;
 import com.solusi.erp.master.bankaccount.infrastructure.persistence.BankAccountPersistenceMapper;
@@ -85,6 +87,12 @@ public class BankAccountConfig {
         TransactionTemplate tx = new TransactionTemplate(txManager);
         tx.setReadOnly(true);
         return (id) -> tx.execute(status -> pure.execute(id));
+    }
+
+    @Bean
+    public BankAccountLookupProvider bankAccountLookupProvider(
+            com.solusi.erp.master.bankaccount.infrastructure.persistence.BankAccountJpaRepository jpaRepository) {
+        return new BankAccountLookupProviderImpl(jpaRepository);
     }
 }
 
