@@ -52,8 +52,7 @@ digraph execute_workflow {
     close [label="10. CLOSE\nMark plan status COMPLETED"];
 
     load -> orient -> mark_start -> implement -> test;
-    test -> report [label="issues found"];
-    test -> commit [label="tests pass"];
+    test -> report [label="always"];
     report -> commit;
     commit -> mark_done -> more;
     more -> load [label="yes"];
@@ -207,9 +206,18 @@ When skipping, annotate the plan: `(no test — {reason})`
 
 **If in doubt, write the test.** A 5-line test that proves wiring works is better than no test.
 
-### 6. REPORT (Conditional)
+### 6. REPORT (After Every Task)
 
-Write to `docs/reports/{plan-filename}.md` when ANY of these occur:
+Write to `docs/reports/{plan-filename}.md` after EVERY task completion. This is NOT optional — even a "clean" task gets a one-line entry confirming no issues found.
+
+**Always write (minimum):**
+```markdown
+## Task {N}: {Title}
+- **Status:** clean | findings
+- **Summary:** {1-line what was done}
+```
+
+**Write detailed entry when ANY of these occur:**
 
 | Trigger | What to Log |
 |---|---|
@@ -218,19 +226,23 @@ Write to `docs/reports/{plan-filename}.md` when ANY of these occur:
 | Possible bug discovered | Pre-existing issue found while implementing |
 | Design decision made | Choice not covered by brainstorming doc |
 | Dependency issue | Missing library, version conflict, etc. |
+| Test adjustment needed | Existing test needed updating due to new dependencies |
+| Deviation from plan | Step was done differently than planned (explain why) |
 
-**Report entry format:**
+**Detailed report entry format:**
 
 ```markdown
 ## Task {N}: {Title}
 
 ### Finding: {short description}
-- **Type:** gap | violation | bug | decision | dependency
+- **Type:** gap | violation | bug | decision | dependency | deviation
 - **Severity:** info | warning | critical
 - **Detail:** {what was found}
 - **Action taken:** {what you did about it}
 - **Ref:** {file path if relevant}
 ```
+
+**Why mandatory:** The report serves as an audit trail for manual testing. When QA finds a bug, they check the report to understand what judgment calls were made and where deviations occurred. An empty report means the implementor didn't reflect on their work — which is a red flag, not a sign of perfection.
 
 ### 7. COMMIT
 
@@ -338,3 +350,147 @@ If multiple agents work on the same plan:
 - **Marking task [x] without running tests** — A task with test steps is NOT complete until `mvn test -Dtest="XxxTest"` passes green.
 - **Using `@SpringBootTest` for use case tests** — Use case tests must be fast (no Spring context). Use `@ExtendWith(MockitoExtension.class)` only.
 - **Not testing `@PreAuthorize` annotations** — Controller tests must verify security annotations via reflection (see `VendorBillControllerTest.cancel_should_require_cancel_authority`).
+
+---
+
+## Sub-Agent Delegation Mode (Optional)
+
+**Trigger:** User explicitly says "gunakan sub agent", "use sub-agent", "delegate to sub-agent", "sub agent driven", or similar phrasing in the invocation prompt.
+
+**Default behavior (no trigger):** The orchestrator agent implements each task directly, one by one, within its own context. This is the standard mode.
+
+### When to Use Sub-Agent Mode
+
+- Plan has 5+ independent tasks
+- Tasks are well-scoped (clear inputs/outputs, no ambiguous judgment calls)
+- User wants faster execution and is willing to trade some nuance for speed
+- Tasks don't require deep cross-task context (each task is self-contained)
+
+### When NOT to Use Sub-Agent Mode
+
+- Tasks require iterative discovery (e.g., "investigate and fix")
+- Tasks have heavy cross-dependencies where Task N's output shapes Task N+1's approach
+- Plan has fewer than 3 tasks (overhead not worth it)
+- Tasks require subjective design decisions that need user input mid-task
+
+### Sub-Agent Workflow
+
+```dot
+digraph subagent_workflow {
+    rankdir=TB;
+    node [shape=box, style=rounded];
+
+    load [label="1. LOAD\nRead plan, find next task"];
+    orient [label="2. ORIENT\nRead ref links for this task\nGather context files"];
+    mark [label="3. MARK [~]"];
+    brief [label="4. BRIEF SUB-AGENT\nCompose prompt with:\n- Task description\n- File contents (ref links)\n- Exact code to write\n- Patterns to follow"];
+    dispatch [label="5. DISPATCH\nAgent tool with model=sonnet\nWait for result"];
+    verify [label="6. VERIFY\nCompile check (mvn compile)\nRun tests if applicable"];
+    report [label="7. REPORT\nWrite findings to report file\n(from sub-agent result + own observations)"];
+    commit [label="8. COMMIT + MARK [x]"];
+    more [label="More tasks?" shape=diamond];
+
+    load -> orient -> mark -> brief -> dispatch -> verify -> report -> commit -> more;
+    more -> load [label="yes"];
+    more -> close [label="no"];
+    close [label="FINAL TEST + CLOSE"];
+}
+```
+
+### Briefing the Sub-Agent (Critical)
+
+The quality of sub-agent output depends entirely on the briefing. The orchestrator MUST:
+
+**1. Provide complete context (not references to read):**
+- Include the ACTUAL file contents the sub-agent needs (not just paths)
+- Include the exact pattern to follow (copy from reference module)
+- Include the exact file paths to create/edit
+
+**2. Be prescriptive, not exploratory:**
+- Tell the sub-agent WHAT to write, not "figure out what to write"
+- Provide code templates/skeletons when possible
+- Specify exact class names, method signatures, package paths
+
+**3. Include validation step:**
+- Always end with "Run `mvn compile -q -pl .` to verify"
+- For test tasks: "Run `mvn test -Dtest=XxxTest` to verify"
+
+**4. Request findings explicitly:**
+- Add to the prompt: "If you encounter anything unexpected (missing files, pattern deviations, possible bugs, decisions not covered by the plan), list them at the end of your response under a FINDINGS section."
+
+### Sub-Agent Prompt Template
+
+```
+You are implementing Task {N} of a plan for the Solusi ERP project.
+The task is to {task description}.
+
+## Project Context
+- Java 21, Spring Boot 4, Clean Architecture + DDD + CQRS
+- Package base: `com.solusi.erp`
+- Working directory: `F:\solusi-program-erp`
+
+## What to Create/Edit
+
+### 1. {File description}
+Path: `{exact path}`
+{Exact code or detailed instructions}
+
+### 2. {File description}
+Path: `{exact path}`
+{Exact code or detailed instructions}
+
+## Reference Patterns
+{Paste actual file contents of reference implementations}
+
+## Important Notes
+{Entity fields, existing methods, constraints}
+
+## Execution
+1. {Step 1}
+2. {Step 2}
+3. Run `mvn compile -q -pl .` to verify
+
+## Findings
+If you encounter anything unexpected (missing files, pattern deviations, 
+possible bugs, decisions not covered by the plan), list them at the end 
+of your response under a FINDINGS section with format:
+- **Type:** gap | bug | decision | deviation
+- **Detail:** what you found
+- **Action:** what you did about it
+```
+
+### Orchestrator Responsibilities (Cannot Delegate)
+
+The orchestrator (main agent) MUST handle these itself — never delegate to sub-agent:
+
+1. **ORIENT phase** — Reading ref links and gathering context
+2. **Plan file updates** — Marking `[~]` and `[x]`
+3. **Report writing** — Writing to `docs/reports/` (sub-agent findings are INPUT, orchestrator writes the report)
+4. **Commit creation** — Staging files and creating commits
+5. **Test failure diagnosis** — If compile/test fails after sub-agent, orchestrator fixes it
+6. **Cross-task decisions** — If Task N's result affects Task N+1's approach
+
+### Handling Sub-Agent Findings
+
+After each sub-agent returns:
+1. Check if the result mentions FINDINGS
+2. If yes: write them to the report file using the standard format
+3. If no explicit findings but orchestrator notices something (e.g., test needed fixing): write that as an orchestrator finding
+4. Always write at minimum the "clean" one-liner to the report
+
+### Model Selection for Sub-Agents
+
+- Default: `model=sonnet` (fast, good for well-specified tasks)
+- Use `model=opus` for tasks requiring:
+  - Complex architectural decisions
+  - Multi-file refactors with subtle interdependencies
+  - Tasks where the orchestrator can't fully prescribe the solution
+
+### Performance Notes (from real usage)
+
+Observed in Vendor Payment FE Refactor (6 tasks):
+- Each sub-agent task: 1-4 minutes (vs 5-15 min for orchestrator doing it directly)
+- Compile success rate: 100% on first try (good briefing = good output)
+- Test failures: 1 out of 6 (constructor mismatch — expected when adding deps)
+- Report gap: Sub-agents didn't surface findings → fixed by adding FINDINGS section to prompt template
+- Quality: Code was correct but minimal — sub-agents don't add polish or handle edge cases they weren't told about
