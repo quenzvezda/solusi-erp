@@ -107,8 +107,9 @@ public class VendorBillConfig {
 
     @Bean
     public FindVendorBillsUseCase findVendorBillsUseCase(VendorBillRepository repository,
+                                                         VendorBillPaymentSummaryPort paymentSummaryPort,
                                                          PlatformTransactionManager txManager) {
-        FindVendorBillsUseCase pure = new FindVendorBillsUseCaseImpl(repository);
+        FindVendorBillsUseCase pure = new FindVendorBillsUseCaseImpl(repository, paymentSummaryPort);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         tx.setReadOnly(true);
         return (keyword, vendorId, status, pageable) ->
@@ -117,8 +118,9 @@ public class VendorBillConfig {
 
     @Bean
     public GetVendorBillDetailUseCase getVendorBillDetailUseCase(VendorBillRepository repository,
+                                                                 VendorBillPaymentSummaryPort paymentSummaryPort,
                                                                  PlatformTransactionManager txManager) {
-        GetVendorBillDetailUseCase pure = new GetVendorBillDetailUseCaseImpl(repository);
+        GetVendorBillDetailUseCase pure = new GetVendorBillDetailUseCaseImpl(repository, paymentSummaryPort);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         tx.setReadOnly(true);
         return id -> tx.execute(status -> pure.execute(id));

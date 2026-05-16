@@ -55,26 +55,26 @@ Steps:
 
 ---
 
-### Task 2: Enrich Vendor Bill Query Use Cases [ ]
+### Task 2: Enrich Vendor Bill Query Use Cases [x]
 Add payment summary amounts to Vendor Bill list/detail application views and populate them through the read port.
 
 **Depends on:** Task 1
 **Reference module:** `accountspayable.vendorbill`
 
 Steps:
-- [ ] Add `paidAmount` and `outstandingAmount` fields to `VendorBillSummaryView`.
+- [x] Add `paidAmount` and `outstandingAmount` fields to `VendorBillSummaryView`.
       ref: src/main/java/com/solusi/erp/accountspayable/vendorbill/application/usecase/query/VendorBillSummaryView.java:L1-L18 — current list projection contains status and total only.
-- [ ] Add `paidAmount` and `outstandingAmount` fields to `VendorBillDetailView`.
+- [x] Add `paidAmount` and `outstandingAmount` fields to `VendorBillDetailView`.
       ref: src/main/java/com/solusi/erp/accountspayable/vendorbill/application/usecase/query/VendorBillDetailView.java:L1-L24 — current detail projection contains invoice totals only.
-- [ ] Inject the payment summary port into `FindVendorBillsUseCaseImpl` and batch-load summaries for the page content ids to avoid per-row queries.
+- [x] Inject the payment summary port into `FindVendorBillsUseCaseImpl` and batch-load summaries for the page content ids to avoid per-row queries.
       ref: src/main/java/com/solusi/erp/accountspayable/vendorbill/application/usecase/query/FindVendorBillsUseCaseImpl.java:L1-L80 — current `toSummary()` maps directly from aggregate only.
-- [ ] Inject the payment summary port into `GetVendorBillDetailUseCaseImpl` and load one summary for the requested bill.
+- [x] Inject the payment summary port into `GetVendorBillDetailUseCaseImpl` and load one summary for the requested bill.
       ref: src/main/java/com/solusi/erp/accountspayable/vendorbill/application/usecase/query/GetVendorBillDetailUseCaseImpl.java:L1-L90 — current `toDetail()` maps directly from aggregate only.
-- [ ] Default missing summary values defensively to paid `0` and outstanding `bill.totalAmount()`.
+- [x] Default missing summary values defensively to paid `0` and outstanding `bill.totalAmount()`.
       ref: src/main/java/com/solusi/erp/accountspayable/vendorpayment/infrastructure/adapter/VendorBillPaymentUpdateAdapter.java:L1-L80 — payment status calculation treats no confirmed payments as unpaid.
-- [ ] **TEST:** Update `FindVendorBillsUseCaseTest` or add equivalent query test to verify summary values are attached to each list row.
+- [x] **TEST:** Update `FindVendorBillsUseCaseTest` or add equivalent query test to verify summary values are attached to each list row.
       ref: src/test/java/com/solusi/erp/accountspayable/vendorbill/application/ — inspect current use case test package before implementation.
-- [ ] **TEST:** Update `GetVendorBillDetailUseCaseTest` or add equivalent query test to verify paid/outstanding values on detail.
+- [x] **TEST:** Update `GetVendorBillDetailUseCaseTest` or add equivalent query test to verify paid/outstanding values on detail.
       ref: src/test/java/com/solusi/erp/accountspayable/vendorbill/application/ — use Mockito query use case test pattern.
 
 **Validation criteria:**

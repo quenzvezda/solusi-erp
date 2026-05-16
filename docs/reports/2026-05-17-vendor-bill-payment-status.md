@@ -10,4 +10,8 @@
 - **Status:** clean
 - **Summary:** Added Vendor Bill payment summary port, JDBC adapter, config wiring, adapter tests, and config wiring coverage for confirmed-payment paid/outstanding totals.
 
+## Task 2: Enrich Vendor Bill Query Use Cases
+- **Status:** clean
+- **Summary:** Added paid/outstanding amounts to Vendor Bill list/detail query views and populated them through the payment summary port with fallback unpaid totals.
+
 (Populated during execution.)

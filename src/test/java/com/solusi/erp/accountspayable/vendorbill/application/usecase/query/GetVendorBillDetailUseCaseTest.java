@@ -4,6 +4,7 @@ import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBill;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillGrRef;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillLine;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.port.VendorBillPaymentSummaryPort;
 import com.solusi.erp.accountspayable.vendorbill.domain.repository.VendorBillRepository;
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.domain.model.Page;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,8 +27,11 @@ class GetVendorBillDetailUseCaseTest {
     void execute_should_map_header_refs_and_lines() {
         InMemoryVendorBillRepository repository = new InMemoryVendorBillRepository();
         repository.existing = bill();
+        InMemoryPaymentSummaryPort paymentSummaryPort = new InMemoryPaymentSummaryPort(Map.of(
+                1L, new VendorBillPaymentSummaryPort.PaymentSummary(1L, new BigDecimal("50.0000"), new BigDecimal("50.0000"))
+        ));
 
-        VendorBillDetailView result = new GetVendorBillDetailUseCaseImpl(repository).execute(1L);
+        VendorBillDetailView result = new GetVendorBillDetailUseCaseImpl(repository, paymentSummaryPort).execute(1L);
 
         assertThat(result.id()).isEqualTo(1L);
         assertThat(result.code()).isEqualTo("VB-202605-00001");
@@ -34,15 +39,33 @@ class GetVendorBillDetailUseCaseTest {
         assertThat(result.lines()).hasSize(1);
         assertThat(result.lines().getFirst().grLineId()).isEqualTo(1001L);
         assertThat(result.lines().getFirst().lineTotal()).isEqualByComparingTo("100.0000");
+        assertThat(result.paidAmount()).isEqualByComparingTo("50.0000");
+        assertThat(result.outstandingAmount()).isEqualByComparingTo("50.0000");
+        assertThat(paymentSummaryPort.requestedId).isEqualTo(1L);
     }
 
     @Test
     void execute_should_fail_when_vendor_bill_not_found() {
         InMemoryVendorBillRepository repository = new InMemoryVendorBillRepository();
 
-        assertThatThrownBy(() -> new GetVendorBillDetailUseCaseImpl(repository).execute(99L))
+        assertThatThrownBy(() -> new GetVendorBillDetailUseCaseImpl(repository, new InMemoryPaymentSummaryPort(Map.of())).execute(99L))
                 .isInstanceOf(DomainException.class)
                 .hasMessage("msg.err.vb.notfound");
+    }
+
+    private record InMemoryPaymentSummaryPort(Map<Long, VendorBillPaymentSummaryPort.PaymentSummary> summaries) implements VendorBillPaymentSummaryPort {
+        private static Long requestedId;
+
+        @Override
+        public PaymentSummary getPaymentSummary(Long vendorBillId) {
+            requestedId = vendorBillId;
+            return summaries.get(vendorBillId);
+        }
+
+        @Override
+        public Map<Long, PaymentSummary> getPaymentSummaries(List<Long> vendorBillIds) {
+            throw new UnsupportedOperationException();
+        }
     }
 
     private static VendorBill bill() {

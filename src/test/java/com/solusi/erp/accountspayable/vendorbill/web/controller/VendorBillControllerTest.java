@@ -89,6 +89,8 @@ class VendorBillControllerTest {
                 LocalDate.of(2026, 5, 10),
                 LocalDate.of(2026, 5, 20),
                 VendorBillStatus.DRAFT,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
                 BigDecimal.ZERO
         );
         when(findUseCase.execute(any(), any(), any(), any()))
@@ -123,6 +125,8 @@ class VendorBillControllerTest {
                 new BigDecimal("100.0000"),
                 BigDecimal.ZERO,
                 new BigDecimal("100.0000"),
+                new BigDecimal("50.0000"),
+                new BigDecimal("50.0000"),
                 "notes",
                 List.of(88L),
                 List.of()
