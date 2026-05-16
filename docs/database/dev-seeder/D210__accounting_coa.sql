@@ -1,8 +1,6 @@
 -- Development seeder accounting chart of accounts.
 
--- Replace the dev COA hierarchy owned by this seeder.
-DELETE FROM acc_chart_of_accounts
-WHERE code REGEXP '^[1-5][0-9]{3}$';
+-- Upsert the dev COA hierarchy owned by this seeder.
 
 -- Level 1: root headers.
 INSERT INTO acc_chart_of_accounts (code, name, account_type, normal_balance, parent_id, level, is_header, note, is_active, version, created_by_user_id, created_date, updated_by_user_id, updated_date)
@@ -11,7 +9,18 @@ VALUES
 ('2000', 'LIABILITIES', 'LIABILITY', 'CREDIT', NULL, 1, 1, 'Root group for liability accounts.',  1, 1, 1, NOW(), 1, NOW()),
 ('3000', 'EQUITY',      'EQUITY',    'CREDIT', NULL, 1, 1, 'Root group for equity accounts.',     1, 1, 1, NOW(), 1, NOW()),
 ('4000', 'REVENUE',     'REVENUE',   'CREDIT', NULL, 1, 1, 'Root group for revenue accounts.',    1, 1, 1, NOW(), 1, NOW()),
-('5000', 'EXPENSES',    'EXPENSE',   'DEBIT',  NULL, 1, 1, 'Root group for expense accounts.',    1, 1, 1, NOW(), 1, NOW());
+('5000', 'EXPENSES',    'EXPENSE',   'DEBIT',  NULL, 1, 1, 'Root group for expense accounts.',    1, 1, 1, NOW(), 1, NOW())
+ON DUPLICATE KEY UPDATE
+    name = VALUES(name),
+    account_type = VALUES(account_type),
+    normal_balance = VALUES(normal_balance),
+    parent_id = VALUES(parent_id),
+    level = VALUES(level),
+    is_header = VALUES(is_header),
+    note = VALUES(note),
+    is_active = VALUES(is_active),
+    updated_by_user_id = VALUES(updated_by_user_id),
+    updated_date = VALUES(updated_date);
 
 SET @coa_assets = (SELECT id FROM acc_chart_of_accounts WHERE code = '1000');
 SET @coa_liabilities = (SELECT id FROM acc_chart_of_accounts WHERE code = '2000');
@@ -33,7 +42,18 @@ VALUES
 ('4100', 'OPERATING REVENUE',                'REVENUE',   'CREDIT', @coa_revenue,     2, 1, 'Product and service revenue accounts.',             1, 1, 1, NOW(), 1, NOW()),
 ('4200', 'SALES CONTRA AND INVENTORY GAINS', 'REVENUE',   'CREDIT', @coa_revenue,     2, 1, 'Contra-sales and stock adjustment gains.',          1, 1, 1, NOW(), 1, NOW()),
 ('5100', 'COST OF SALES AND STOCK LOSSES',   'EXPENSE',   'DEBIT',  @coa_expenses,    2, 1, 'COGS and stock shrinkage accounts.',                1, 1, 1, NOW(), 1, NOW()),
-('5200', 'OPERATING EXPENSES',               'EXPENSE',   'DEBIT',  @coa_expenses,    2, 1, 'General operating expense accounts.',               1, 1, 1, NOW(), 1, NOW());
+('5200', 'OPERATING EXPENSES',               'EXPENSE',   'DEBIT',  @coa_expenses,    2, 1, 'General operating expense accounts.',               1, 1, 1, NOW(), 1, NOW())
+ON DUPLICATE KEY UPDATE
+    name = VALUES(name),
+    account_type = VALUES(account_type),
+    normal_balance = VALUES(normal_balance),
+    parent_id = VALUES(parent_id),
+    level = VALUES(level),
+    is_header = VALUES(is_header),
+    note = VALUES(note),
+    is_active = VALUES(is_active),
+    updated_by_user_id = VALUES(updated_by_user_id),
+    updated_date = VALUES(updated_date);
 
 SET @coa_cash = (SELECT id FROM acc_chart_of_accounts WHERE code = '1100');
 SET @coa_receivables = (SELECT id FROM acc_chart_of_accounts WHERE code = '1200');
@@ -54,6 +74,8 @@ VALUES
 ('1110', 'Cash on Hand',                       'ASSET',     'DEBIT',  @coa_cash,              3, 0, 'Petty cash and manual cash receipts.',                      1, 1, 1, NOW(), 1, NOW()),
 ('1120', 'Main Bank Account',                  'ASSET',     'DEBIT',  @coa_cash,              3, 0, 'Primary operating bank account for disbursement and AR.',  1, 1, 1, NOW(), 1, NOW()),
 ('1130', 'Backup/Savings Bank Account',        'ASSET',     'DEBIT',  @coa_cash,              3, 0, 'Secondary reserve bank account.',                          1, 1, 1, NOW(), 1, NOW()),
+('1140', 'USD Operating Bank Account',         'ASSET',     'DEBIT',  @coa_cash,              3, 0, 'USD operating bank account for foreign currency payments.', 1, 1, 1, NOW(), 1, NOW()),
+('1150', 'SGD Reserve Bank Account',           'ASSET',     'DEBIT',  @coa_cash,              3, 0, 'SGD reserve bank account for regional payments.',          1, 1, 1, NOW(), 1, NOW()),
 ('1210', 'Trade Receivable',                   'ASSET',     'DEBIT',  @coa_receivables,       3, 0, 'Outstanding receivables from customer invoices.',         1, 1, 1, NOW(), 1, NOW()),
 ('1220', 'Employee and Other Receivable',      'ASSET',     'DEBIT',  @coa_receivables,       3, 0, 'Miscellaneous short-term receivables.',                    1, 1, 1, NOW(), 1, NOW()),
 ('1230', 'Tax Receivable (Input VAT)',          'ASSET',     'DEBIT',  @coa_receivables,       3, 0, 'Deductible VAT on supplier invoices (PPN Masukan).',      1, 1, 1, NOW(), 1, NOW()),
@@ -91,4 +113,15 @@ VALUES
 ('5250', 'Rent Expense',                       'EXPENSE',   'DEBIT',  @coa_operating_expense, 3, 0, 'Office and warehouse rent expense.',                     1, 1, 1, NOW(), 1, NOW()),
 ('5260', 'Transportation & Logistics',         'EXPENSE',   'DEBIT',  @coa_operating_expense, 3, 0, 'Freight, courier, and distribution costs.',             1, 1, 1, NOW(), 1, NOW()),
 ('5270', 'Marketing & Advertising',            'EXPENSE',   'DEBIT',  @coa_operating_expense, 3, 0, 'Branding, promotions, and campaign cost.',              1, 1, 1, NOW(), 1, NOW()),
-('5280', 'Tax Expense',                        'EXPENSE',   'DEBIT',  @coa_operating_expense, 3, 0, 'Non-creditable taxes and income tax expense.',          1, 1, 1, NOW(), 1, NOW());
+('5280', 'Tax Expense',                        'EXPENSE',   'DEBIT',  @coa_operating_expense, 3, 0, 'Non-creditable taxes and income tax expense.',          1, 1, 1, NOW(), 1, NOW())
+ON DUPLICATE KEY UPDATE
+    name = VALUES(name),
+    account_type = VALUES(account_type),
+    normal_balance = VALUES(normal_balance),
+    parent_id = VALUES(parent_id),
+    level = VALUES(level),
+    is_header = VALUES(is_header),
+    note = VALUES(note),
+    is_active = VALUES(is_active),
+    updated_by_user_id = VALUES(updated_by_user_id),
+    updated_date = VALUES(updated_date);

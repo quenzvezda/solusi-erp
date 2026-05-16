@@ -161,13 +161,13 @@
                 </form>
             </div>
         </div>
+
+        <div th:replace="~{fragments/modal-selector :: shell('bank-account-modal', #{label.vp.selectBankAccount}, 'bank-account-selector-body', 'modal-xl')}"></div>
     </div>
 
-    <div th:replace="~{fragments/modal-selector :: shell(modalId='bank-account-modal', title=#{label.vp.selectBankAccount}, bodyId='bank-account-selector-body')}"></div>
-
     <div id="page-specific-scripts">
-        <script th:src="@{/js/shared/erp-modal-selector.js}"></script>
-        <script th:src="@{/js/accountspayable/vendor-payments/form.js}"></script>
+        <script th:src="@{/js/shared/erp-modal-selector.js}" defer></script>
+        <script th:src="@{/js/accountspayable/vendor-payments/form.js}" defer></script>
     </div>
 </body>
 
