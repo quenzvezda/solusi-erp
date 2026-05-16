@@ -1,15 +1,14 @@
 package com.solusi.erp.master.bankaccount.web.controller;
 
+import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.dto.LookupDto;
-import com.solusi.erp.master.bankaccount.infrastructure.persistence.BankAccount;
-import com.solusi.erp.master.bankaccount.infrastructure.persistence.BankAccountJpaRepository;
+import com.solusi.erp.master.bankaccount.application.usecase.query.FindBankAccountsUseCase;
+import com.solusi.erp.master.bankaccount.domain.model.BankAccount;
+import com.solusi.erp.master.bankaccount.domain.port.BankAccountLookupProvider;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -17,19 +16,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BankAccountLookupController {
 
-    private final BankAccountJpaRepository bankAccountJpaRepository;
+    private final FindBankAccountsUseCase findBankAccountsUseCase;
+    private final BankAccountLookupProvider bankAccountLookupProvider;
 
     @GetMapping
     public List<LookupDto> search(@RequestParam(value = "q", defaultValue = "") String q,
                                   @RequestParam(value = "limit", defaultValue = "10") int limit,
                                   @RequestParam(value = "currencyId", required = false) Long currencyId,
                                   @RequestParam(value = "hasCoaOnly", required = false) Boolean hasCoaOnly) {
-        List<BankAccount> results;
-        if (q.isEmpty()) {
-            results = bankAccountJpaRepository.findByIsActiveTrue(PageRequest.of(0, limit)).getContent();
-        } else {
-            results = bankAccountJpaRepository.search(q, PageRequest.of(0, limit)).getContent();
-        }
+        List<BankAccount> results = findBankAccountsUseCase.execute(q, new Pageable(0, limit, "id", "ASC")).content();
         return results.stream()
                 .filter(ba -> currencyId == null || currencyId.equals(ba.getCurrencyId()))
                 .filter(ba -> !Boolean.TRUE.equals(hasCoaOnly) || ba.getCoaId() != null)
@@ -39,17 +34,10 @@ public class BankAccountLookupController {
 
     @GetMapping("/{id}")
     public LookupDto detail(@PathVariable Long id) {
-        return bankAccountJpaRepository.findById(id)
-                .map(this::toLookupDto)
-                .orElse(null);
+        return bankAccountLookupProvider.resolve(id);
     }
 
     private LookupDto toLookupDto(BankAccount ba) {
-        String subText = ba.getCode() + " - " + ba.getBankName();
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("paymentType", ba.getAccountType() != null ? ba.getAccountType().name() : null);
-        payload.put("currencyId", ba.getCurrencyId());
-        payload.put("coaId", ba.getCoaId());
-        return new LookupDto(ba.getId(), ba.getAccountName(), subText, payload);
+        return bankAccountLookupProvider.resolve(ba.getId());
     }
 }

@@ -13,11 +13,12 @@ import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
+import com.solusi.erp.master.bankaccount.application.usecase.query.FindBankAccountsUseCase;
+import com.solusi.erp.master.bankaccount.domain.model.BankAccount;
 import com.solusi.erp.master.bankaccount.domain.port.BankAccountLookupProvider;
-import com.solusi.erp.master.bankaccount.infrastructure.persistence.BankAccount;
-import com.solusi.erp.master.bankaccount.infrastructure.persistence.BankAccountJpaRepository;
+import com.solusi.erp.master.currency.application.usecase.query.GetDefaultCurrencyUseCase;
+import com.solusi.erp.master.currency.domain.model.Currency;
 import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
-import com.solusi.erp.master.currency.infrastructure.persistence.CurrencyJpaRepository;
 import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
@@ -50,8 +51,8 @@ public class VendorPaymentController {
     private final GetVendorPaymentListUseCase getVendorPaymentListUseCase;
     private final GetVendorPaymentDetailUseCase getVendorPaymentDetailUseCase;
     private final GetPayableVendorBillsUseCase getPayableVendorBillsUseCase;
-    private final BankAccountJpaRepository bankAccountJpaRepository;
-    private final CurrencyJpaRepository currencyJpaRepository;
+    private final FindBankAccountsUseCase findBankAccountsUseCase;
+    private final GetDefaultCurrencyUseCase getDefaultCurrencyUseCase;
     private final PartyLookupProvider partyLookupProvider;
     private final CurrencyLookupProvider currencyLookupProvider;
     private final BankAccountLookupProvider bankAccountLookupProvider;
@@ -89,7 +90,7 @@ public class VendorPaymentController {
         request.setExchangeRate(java.math.BigDecimal.ONE);
 
         Map<String, Object> vpUI = new HashMap<>();
-        currencyJpaRepository.findByIsDefaultTrue().stream().findFirst().ifPresent(currency -> {
+        getDefaultCurrencyUseCase.execute().ifPresent(currency -> {
             request.setCurrencyId(currency.getId());
             LookupDto currencyLookup = currencyLookupProvider.resolve(currency.getId());
             if (currencyLookup != null) {
@@ -185,14 +186,10 @@ public class VendorPaymentController {
                                       @RequestParam Long currencyId,
                                       org.springframework.data.domain.Pageable pageable,
                                       Model model) {
-        org.springframework.data.domain.Page<BankAccount> page;
-        if (q != null && !q.isBlank()) {
-            page = bankAccountJpaRepository.search(q, pageable);
-        } else {
-            page = bankAccountJpaRepository.findByIsActiveTrue(pageable);
-        }
+        Pageable domainPageable = PageableMapper.toDomain(pageable);
+        com.solusi.erp.core.domain.model.Page<BankAccount> page = findBankAccountsUseCase.execute(q, domainPageable);
 
-        List<BankAccountSelectorRow> rows = page.getContent().stream()
+        List<BankAccountSelectorRow> rows = page.content().stream()
                 .filter(ba -> currencyId.equals(ba.getCurrencyId()))
                 .filter(ba -> ba.getCoaId() != null)
                 .map(ba -> new BankAccountSelectorRow(
@@ -206,7 +203,7 @@ public class VendorPaymentController {
                 ))
                 .toList();
 
-        model.addAttribute("page", new PageImpl<>(rows, pageable, rows.size()));
+        model.addAttribute("page", new PageImpl<>(rows, pageable, page.totalElements()));
         model.addAttribute("q", q);
         model.addAttribute("currencyId", currencyId);
         return "accountspayable/vendor-payments/fragments/bank-account-selector";
