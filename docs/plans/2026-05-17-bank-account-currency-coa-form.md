@@ -113,26 +113,26 @@ Steps:
 
 ---
 
-### Task 4: COA Selector Fragment
+### Task 4: COA Selector Fragment [x]
 Create the HTMX fragment that renders selectable COA rows for Bank Account form.
 
 **Depends on:** Task 2, Task 3
 **Reference module:** `purchasing.purchaseorder`, `accounting.coa`
 
 Steps:
-- [ ] Create `src/main/resources/templates/master/bank-accounts/fragments/coa-selector-modal.html`.
+- [x] Create `src/main/resources/templates/master/bank-accounts/fragments/coa-selector-modal.html`.
       ref: docs/spec/modal-selector.md:L40-L48 — selector fragment minimum structure.
-- [ ] Root element id and fragment name must both be `bank-account-coa-selector-modal-body`.
+- [x] Root element id and fragment name must both be `bank-account-coa-selector-modal-body`.
       ref: docs/spec/modal-selector.md:L30-L38 — id/fragment/bodyId consistency avoids HTMX target errors.
-- [ ] Add HTMX search form with `hx-get="/master/bank-accounts/selectors/coa"`, `hx-target="#bank-account-coa-selector-modal-body"`, and keyword/accountType fields.
+- [x] Add HTMX search form with `hx-get="/master/bank-accounts/selectors/coa"`, `hx-target="#bank-account-coa-selector-modal-body"`, and keyword/accountType fields.
       ref: docs/spec/form-submission.md:L70-L87 — HTMX passive search form structure.
-- [ ] Render a table with COA code, name, account type, level, and header/body marker.
+- [x] Render a table with COA code, name, account type, level, and header/body marker.
       ref: src/main/java/com/solusi/erp/accounting/coa/application/usecase/query/CoaSelectorRow.java:L3-L13 — fields available for selector rows.
-- [ ] Add a pick button per row with class `.js-bank-account-coa-pick` and `data-coa-id`, `data-coa-code`, `data-coa-name`, `data-coa-account-type` attributes.
+- [x] Add a pick button per row with class `.js-bank-account-coa-pick` and `data-coa-id`, `data-coa-code`, `data-coa-name`, `data-coa-account-type` attributes.
       ref: docs/spec/modal-selector.md:L57-L65 — selection payload via `data-*`.
-- [ ] Add empty state and pagination fragment if existing page pagination fragment is available for selector pages.
+- [x] Add empty state and pagination fragment if existing page pagination fragment is available for selector pages.
       ref: docs/spec/modal-selector.md:L40-L48 — selector fragments need empty state and pagination for `Page<T>`.
-- [ ] **TEST:** Update `BankAccountTemplateTest` or add a dedicated static test to assert fragment root id, HTMX target, pick button class, and data attributes.
+- [x] **TEST:** Update `BankAccountTemplateTest` or add a dedicated static test to assert fragment root id, HTMX target, pick button class, and data attributes.
       ref: docs/spec/modal-selector.md:L129-L135 — template contract test for modal selector wiring.
 
 **Validation criteria:**

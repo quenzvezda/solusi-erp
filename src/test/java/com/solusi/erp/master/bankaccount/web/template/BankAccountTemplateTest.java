@@ -60,4 +60,24 @@ public class BankAccountTemplateTest {
         assertThat(template).contains("modal-bank-account-coa-selector");
         assertThat(template).contains("bank-account-coa-selector-modal-body");
     }
+
+    @Test
+    public void bankAccountCoaSelectorFragmentContainsExpectedContract() throws Exception {
+        InputStream is = getClass().getClassLoader()
+                .getResourceAsStream("templates/master/bank-accounts/fragments/coa-selector-modal.html");
+        String template = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+
+        assertThat(template).contains("id=\"bank-account-coa-selector-modal-body\"");
+        assertThat(template).contains("th:fragment=\"bank-account-coa-selector-modal-body\"");
+        assertThat(template).contains("hx-get=\"/master/bank-accounts/selectors/coa\"");
+        assertThat(template).contains("hx-target=\"#bank-account-coa-selector-modal-body\"");
+        assertThat(template).contains("name=\"keyword\"");
+        assertThat(template).contains("name=\"accountType\"");
+        assertThat(template).contains("js-bank-account-coa-pick");
+        assertThat(template).contains("th:data-coa-id=\"${row.id}\"");
+        assertThat(template).contains("th:data-coa-code=\"${row.code}\"");
+        assertThat(template).contains("th:data-coa-name=\"${row.name}\"");
+        assertThat(template).contains("th:data-coa-account-type=\"${row.accountType}\"");
+        assertThat(template).contains("fragments/table :: pagination(${page})");
+    }
 }

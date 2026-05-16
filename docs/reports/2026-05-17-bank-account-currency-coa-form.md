@@ -18,3 +18,7 @@
 - **Status:** clean
 - **Summary:** Added Currency autocomplete and COA selector shell/display controls to Bank Account form with i18n keys and static template coverage.
 
+## Task 4: COA Selector Fragment
+- **Status:** clean
+- **Summary:** Added Bank Account COA selector HTMX fragment with search/filter, row payload attributes, empty state, pagination, and static template coverage.
+
