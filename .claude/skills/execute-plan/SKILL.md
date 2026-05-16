@@ -79,6 +79,12 @@ This phase is critical after context compaction or fresh session start.
 - Read the brainstorming source doc section relevant to this task (linked in plan header)
 - Understand what was already done (check previous tasks marked `[x]`)
 
+**For template/JS tasks (additional ORIENT steps):**
+- Read `docs/spec/index.md` to identify which UI component specs apply to this task
+- Read each relevant spec (`autocomplete-generic.md`, `modal-selector.md`, `numeric-standards.md`, `datetime-standards.md`, `header-lines-form.md`, `form-submission.md`) based on the UI components described in the brainstorming doc's UI/UX section
+- Do NOT rely solely on the reference module's template — it may be a special case (e.g., vendor bill has readonly derived fields, not interactive autocompletes)
+- Cross-reference with an existing **interactive** form (e.g., Purchase Order form) if the feature requires user-selectable autocompletes or modal selectors
+
 ### 3. MARK [~] — In Progress
 
 Update the plan file: change the task's checkbox from `[ ]` to `[~]`
@@ -101,6 +107,15 @@ Execute each step in order:
 - Match patterns from reference modules cited in the task
 - Use lean-ctx tools for reading/searching
 - Never introduce patterns not already in the codebase
+
+**FE implementation rules (for template/JS tasks):**
+- Autocomplete fields MUST use either the `fragments/inputs :: autocomplete(...)` Thymeleaf fragment OR manual `initLookup()` in page-specific JS — a bare `data-autocomplete` attribute alone is non-functional
+- Modal selectors MUST include: (1) modal shell fragment in template, (2) selector controller endpoint returning HTMX fragment, (3) page-specific JS consumer that opens modal and maps `data-*` payload to form fields
+- Numeric inputs with `data-autonumeric` MUST use `ErpNumeric.get(input)` / `ErpNumeric.set(input, value)` in JS — never raw `parseFloat` or `input.value`
+- Date inputs MUST use `data-picker="date"` attribute (Flatpickr auto-initializes via global handler)
+- Dynamic lines MUST use `ErpLineManager` if adding/removing rows, or at minimum rewrite `name` indices on add/remove
+- Form submission MUST follow `docs/spec/form-submission.md` — either `data-ajax-form="true"` with `data-redirect-on-success` or HTMX pattern
+- Cascading behavior (e.g., vendor change → reload bills, currency change → filter bank accounts) MUST be wired in page-specific JS with proper event listeners and AJAX calls to reload dependent data
 
 ### 5. TEST
 

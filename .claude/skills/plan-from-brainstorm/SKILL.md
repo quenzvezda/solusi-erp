@@ -115,6 +115,13 @@ For each task in the skeleton, IN ORDER:
 4. **Write detailed steps** — Each step is a concrete action with a checkbox
 5. **Add reference links** — Every critical step gets a `ref:` link
 
+**MANDATORY for template/JS tasks:** Before expanding any task that produces Thymeleaf HTML or page-specific JavaScript:
+1. Read `docs/spec/index.md` to identify which UI component specs apply
+2. Read each relevant spec (autocomplete, modal-selector, numeric, datetime, form-submission, etc.)
+3. Cross-reference the brainstorming doc's UI/UX section for component requirements
+4. Write steps that explicitly reference the spec patterns (fragment usage, JS initialization, data attributes)
+5. Do NOT just copy a reference module's template — it may be a special case. The specs are the source of truth for FE patterns.
+
 **Expanded task format:**
 
 ```markdown
@@ -172,9 +179,26 @@ When expanding tasks, use these as code pattern references:
 | Cross-slice command port | `inventory.stock` | domain/port/StockService |
 | Header-Lines document | `accountspayable.vendorbill` | domain/model, web/dto, persistence |
 | Flyway migration | `src/main/resources/db/migration/` | naming convention V{N}__{desc}.sql |
-| Thymeleaf form | `src/main/resources/templates/` | existing form templates |
+| Thymeleaf form (static/derived) | `accountspayable.vendorbill` | form.html (readonly vendor/currency from GR) |
+| Thymeleaf form (interactive) | `purchasing.purchaseorder` | form.html (autocomplete, modal selector, dynamic lines) |
 | Journal posting | `accounting.journal` | PostJournalForEventUseCase |
 | Sequence generator | `core.infrastructure.sequence` | SequenceGeneratorService |
+
+### Frontend Component Specs (MANDATORY for template/JS tasks)
+
+When expanding any task that involves Thymeleaf templates or page-specific JavaScript, you MUST read the relevant specs from `docs/spec/`. These specs define the **exact** HTML structure, data attributes, JS initialization, and fragment usage required.
+
+| UI Component | Spec File | Key Patterns |
+|---|---|---|
+| Autocomplete (TomSelect) | `docs/spec/autocomplete-generic.md` | `fragments/inputs :: autocomplete(...)`, `initLookup()`, trinity data (id/name/subtext) |
+| Modal Selector | `docs/spec/modal-selector.md` | modal shell fragment, HTMX selector endpoint, page-specific JS consumer, `data-*` payload |
+| Numeric Input (AutoNumeric) | `docs/spec/numeric-standards.md` | `data-autonumeric="currency"`, `ErpNumeric.get/set`, dynamic line numeric init |
+| Date Input (Flatpickr) | `docs/spec/datetime-standards.md` | `data-picker="date"`, format conventions, pre-fill from DB |
+| Header-Lines Form | `docs/spec/header-lines-form.md` | `ErpLineManager`, dynamic line add/remove, index rewriting |
+| Form Submission | `docs/spec/form-submission.md` | AJAX JSON vs HTMX, `data-ajax-form`, redirect-on-success, beforeunload guard |
+| Action Buttons | `docs/spec/action-buttons.md` | `ErpForm.postAction`, confirm dialog, redirect after action |
+
+**CRITICAL:** Never rely solely on a reference module's template as the FE pattern source. Reference templates may be special cases (e.g., vendor bill form has readonly vendor/currency derived from GR selection — NOT the interactive autocomplete pattern). Always cross-reference with `docs/spec/` to understand the correct component initialization.
 
 ## Reference Link Format
 
@@ -203,11 +227,17 @@ Always order tasks from foundation to surface. **Tests are co-located with each 
 1. **Database changes** — Flyway migrations, schema alterations (no tests)
 2. **Domain model + domain tests** — Entities, VOs, enums, ports + pure JUnit tests
 3. **Infrastructure + config test** — JPA entities, repos, adapters, config + `@ContextConfiguration` integration test
-4. **Application use cases + use case tests** — Commands/queries + unit tests with in-memory fakes
+4. **Application use cases + use case tests** — Commands/queries + unit tests with Mockito mocks
 5. **Web layer + controller tests** — Controller, DTOs, mappers + Mockito-based controller tests
-6. **Templates + template tests** — Thymeleaf HTML, JS + `TemplateTestUtils` security/binding tests
+6. **Templates & JS** — Split into sub-concerns:
+   - **6a. HTML structure** — Thymeleaf templates with correct fragments (`autocomplete`, `modal-selector` shell), layout slots, `sec:authorize`, i18n keys
+   - **6b. JS interactive wiring** — Page-specific JS: `initLookup()` for autocompletes, modal selector consumer, `ErpNumeric` init for dynamic lines, `ErpLineManager` if applicable, cascading behavior (e.g., vendor change → reload bills), recap calculation, form submission handler
+   - **6c. Selector endpoints** — If modal selector is used: controller endpoint returning selector fragment, selector row DTO, HTMX search/pagination
+   - **Template tests** — `TemplateTestUtils` security/binding tests
 7. **Cross-slice integration** — Status updates, event publishing (tested via use case tests)
 8. **Seeder data** — Permissions, menu, accounting schema (no tests)
+
+**Note on step 6:** These sub-concerns can be in ONE task if the form is simple, or split into separate tasks if the form has complex interactive behavior (multiple autocompletes, modal selectors, cascading lookups, dynamic lines with live calculation). Use judgment based on granularity — a task should be completable in 30-90 min.
 
 ## Test Requirements per Task
 
@@ -287,3 +317,5 @@ Steps:
 - **Missing validation criteria** — Each task needs a way to verify it's done (compile, test, specific behavior)
 - **Ignoring deferred items** — If the brainstorming doc says "deferred to Sprint 6+", do NOT include it in the plan
 - **Wrong task granularity** — A task should be completable in one focused session (30-90 min of agent work). Split if larger.
+- **Static FE templates** — Copying a reference module's HTML without reading `docs/spec/` produces dead forms. A form with `data-autocomplete="vendor"` but no `initLookup()` call or fragment usage is non-functional. Always read the relevant FE specs and produce steps for: fragment includes, JS initialization, cascading behavior, and form submission wiring.
+- **Using wrong reference for interactive forms** — Vendor Bill form has readonly vendor/currency (derived from GR). If your feature needs user-selectable autocompletes or modal selectors, reference Purchase Order form or the `docs/spec/` standards instead.
