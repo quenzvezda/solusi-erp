@@ -17,6 +17,7 @@ import com.solusi.erp.master.bankaccount.domain.port.BankAccountLookupProvider;
 import com.solusi.erp.master.bankaccount.infrastructure.persistence.BankAccount;
 import com.solusi.erp.master.bankaccount.infrastructure.persistence.BankAccountJpaRepository;
 import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
+import com.solusi.erp.master.currency.infrastructure.persistence.CurrencyJpaRepository;
 import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
@@ -50,6 +51,7 @@ public class VendorPaymentController {
     private final GetVendorPaymentDetailUseCase getVendorPaymentDetailUseCase;
     private final GetPayableVendorBillsUseCase getPayableVendorBillsUseCase;
     private final BankAccountJpaRepository bankAccountJpaRepository;
+    private final CurrencyJpaRepository currencyJpaRepository;
     private final PartyLookupProvider partyLookupProvider;
     private final CurrencyLookupProvider currencyLookupProvider;
     private final BankAccountLookupProvider bankAccountLookupProvider;
@@ -82,8 +84,22 @@ public class VendorPaymentController {
     @GetMapping("/create")
     @PreAuthorize("hasAuthority('VENDOR-PAYMENT_CREATE')")
     public String createForm(Model model) {
-        model.addAttribute("paymentRequest", new VendorPaymentSaveRequest());
-        model.addAttribute("vpUI", null);
+        VendorPaymentSaveRequest request = new VendorPaymentSaveRequest();
+        request.setPaymentDate(java.time.LocalDate.now());
+        request.setExchangeRate(java.math.BigDecimal.ONE);
+
+        Map<String, Object> vpUI = new HashMap<>();
+        currencyJpaRepository.findByIsDefaultTrue().stream().findFirst().ifPresent(currency -> {
+            request.setCurrencyId(currency.getId());
+            LookupDto currencyLookup = currencyLookupProvider.resolve(currency.getId());
+            if (currencyLookup != null) {
+                vpUI.put("currencyText", currencyLookup.name());
+                vpUI.put("currencySubtext", currencyLookup.subText());
+            }
+        });
+
+        model.addAttribute("paymentRequest", request);
+        model.addAttribute("vpUI", vpUI.isEmpty() ? null : vpUI);
         return "accountspayable/vendor-payments/form";
     }
 

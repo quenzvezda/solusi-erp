@@ -265,4 +265,12 @@
     // --- Initial Recap ---
     updateRecap();
 
+    // --- Currency Rate Lock ---
+    if (window.ERP && ERP.CurrencyRateLock) {
+        ERP.CurrencyRateLock.init({
+            currencySelectId: "vp-currency",
+            rateInputSelector: '[name="exchangeRate"]'
+        });
+    }
+
 })();
