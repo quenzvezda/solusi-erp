@@ -60,6 +60,10 @@ class VendorPaymentControllerTest {
         controller = new VendorPaymentController(
                 createUseCase, updateUseCase, confirmUseCase, cancelUseCase,
                 deleteUseCase, listUseCase, detailUseCase, payableBillsUseCase,
+                mock(com.solusi.erp.master.bankaccount.infrastructure.persistence.BankAccountJpaRepository.class),
+                mock(com.solusi.erp.master.party.domain.port.PartyLookupProvider.class),
+                mock(com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider.class),
+                mock(com.solusi.erp.master.bankaccount.domain.port.BankAccountLookupProvider.class),
                 webMapper, messageSource);
     }
 
