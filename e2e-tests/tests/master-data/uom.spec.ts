@@ -16,6 +16,7 @@ test.describe('Unit of Measure CRUD', () => {
 
     const name = uniqueName('UoM');
     await fillField(page, 'name', name);
+    await page.waitForSelector('select[name="type"]', { state: 'visible', timeout: 5_000 });
     await selectDropdown(page, 'type', 'UNIT');
 
     await submitAndExpectRedirect(page, /\/inventory\/unit-of-measures(\?.*)?$/);
