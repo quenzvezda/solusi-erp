@@ -178,7 +178,7 @@ jobs:
           set +e
           ssh -i "$DEPLOY_KEY" -o StrictHostKeyChecking=no \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "sudo systemctl restart erp && sleep 10" >> "$LOG" 2>&1
+            "sudo systemctl restart erp" >> "$LOG" 2>&1
           RESTART_STATUS=$?
 
           {
@@ -187,7 +187,7 @@ jobs:
           } >> "$LOG"
           ssh -i "$DEPLOY_KEY" -o StrictHostKeyChecking=no \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "curl -fsS http://localhost:8080/health" >> "$LOG" 2>&1
+            "for i in {1..30}; do curl -fsS http://localhost:8080/login >/dev/null && exit 0; sleep 2; done; exit 1" >> "$LOG" 2>&1
           HEALTH_STATUS=$?
 
           {
