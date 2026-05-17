@@ -1,11 +1,11 @@
 import { test as base } from '@playwright/test';
 import { login } from '../helpers/auth';
 
-export const test = base.extend<{ authenticatedPage: void }>({
-  authenticatedPage: [async ({ page }, use) => {
+export const test = base.extend({
+  page: async ({ page }, use) => {
     await login(page);
-    await use();
-  }, { auto: true }],
+    await use(page);
+  },
 });
 
 export { expect } from '@playwright/test';

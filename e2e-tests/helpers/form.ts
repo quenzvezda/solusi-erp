@@ -11,8 +11,8 @@ export async function selectDropdown(page: Page, name: string, value: string): P
 }
 
 export async function submitAjaxForm(page: Page): Promise<void> {
-  // Click the submit/save button
-  const submitBtn = page.locator('button[type="submit"], button.btn-primary:has-text("Save"), button.btn-primary:has-text("Simpan")');
+  const submitBtn = page.locator('[data-ajax-form] button[type="submit"]').first();
+  await submitBtn.waitFor({ state: 'visible', timeout: 5_000 });
   await submitBtn.click();
 
   // Wait for AJAX response to complete
@@ -23,7 +23,8 @@ export async function submitAjaxForm(page: Page): Promise<void> {
 }
 
 export async function submitAndExpectRedirect(page: Page, urlPattern: string | RegExp): Promise<void> {
-  const submitBtn = page.locator('button[type="submit"], button.btn-primary:has-text("Save"), button.btn-primary:has-text("Simpan")');
+  const submitBtn = page.locator('[data-ajax-form] button[type="submit"]').first();
+  await submitBtn.waitFor({ state: 'visible', timeout: 5_000 });
   await submitBtn.click();
 
   // AJAX form submission triggers a JS redirect on success
