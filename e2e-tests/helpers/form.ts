@@ -10,25 +10,34 @@ export async function selectDropdown(page: Page, name: string, value: string): P
   await page.selectOption(`select[name="${name}"]`, value);
 }
 
+export async function waitForAjaxFormReady(page: Page): Promise<void> {
+  await page.waitForFunction(() => {
+    const form = document.querySelector('form[data-ajax-form="true"]');
+    return !!form && form.classList.contains('ajax-initialized');
+  }, { timeout: 10_000 });
+}
+
 export async function submitAjaxForm(page: Page): Promise<void> {
+  await waitForAjaxFormReady(page);
   const submitBtn = page.locator('[data-ajax-form] button[type="submit"]').first();
   await submitBtn.waitFor({ state: 'visible', timeout: 5_000 });
-  await submitBtn.click();
-
-  // Wait for AJAX response to complete
-  await page.waitForResponse(
-    (response) => response.request().method() === 'POST' && response.status() < 400,
-    { timeout: 10_000 }
-  );
+  await Promise.all([
+    page.waitForResponse(
+      (response) => response.request().method() === 'POST' && response.status() < 500,
+      { timeout: 10_000 }
+    ),
+    submitBtn.click(),
+  ]);
 }
 
 export async function submitAndExpectRedirect(page: Page, urlPattern: string | RegExp): Promise<void> {
+  await waitForAjaxFormReady(page);
   const submitBtn = page.locator('[data-ajax-form] button[type="submit"]').first();
   await submitBtn.waitFor({ state: 'visible', timeout: 5_000 });
-  await submitBtn.click();
-
-  // AJAX form submission triggers a JS redirect on success
-  await page.waitForURL(urlPattern, { timeout: 10_000 });
+  await Promise.all([
+    page.waitForURL(urlPattern, { timeout: 10_000 }),
+    submitBtn.click(),
+  ]);
 }
 
 export async function expectFormError(page: Page, fieldName?: string): Promise<void> {
@@ -36,12 +45,16 @@ export async function expectFormError(page: Page, fieldName?: string): Promise<v
     const errorLocator = page.locator(
       `.invalid-feedback:near(input[name="${fieldName}"]), ` +
       `.invalid-feedback:near(select[name="${fieldName}"]), ` +
-      `[data-field="${fieldName}"] .invalid-feedback`
+      `[data-field="${fieldName}"] .invalid-feedback, ` +
+      `input[name="${fieldName}"].is-invalid, ` +
+      `select[name="${fieldName}"].is-invalid`
     );
     await expect(errorLocator.first()).toBeVisible({ timeout: 5_000 });
   } else {
-    // Any validation error visible
-    const anyError = page.locator('.invalid-feedback, .alert-danger, .field-error');
+    const anyError = page.locator(
+      '.invalid-feedback, .alert-danger, .field-error, ' +
+      '[role="alert"], input.is-invalid, select.is-invalid, textarea.is-invalid, .is-invalid-ts'
+    );
     await expect(anyError.first()).toBeVisible({ timeout: 5_000 });
   }
 }

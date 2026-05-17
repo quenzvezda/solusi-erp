@@ -12,7 +12,7 @@ if ($LASTEXITCODE -ne 0) { Write-Error "Build failed"; exit 1 }
 $jar = (Get-ChildItem "$ProjectRoot\target\solusi-program-erp-*.jar")[0].FullName
 Write-Host "=== Starting server: $jar ===" -ForegroundColor Cyan
 
-$proc = Start-Process -FilePath "java" -ArgumentList "-jar",$jar,"--spring.profiles.active=e2e" -PassThru -RedirectStandardOutput "$ProjectRoot\target\e2e-server.log" -RedirectStandardError "$ProjectRoot\target\e2e-server-err.log"
+$proc = Start-Process -FilePath "java" -ArgumentList "-jar",$jar,"--spring.profiles.active=e2e" -PassThru -WindowStyle Hidden -RedirectStandardOutput "$ProjectRoot\target\e2e-server.log" -RedirectStandardError "$ProjectRoot\target\e2e-server-err.log"
 
 try {
     Write-Host "=== Waiting for server (max 60s) ===" -ForegroundColor Cyan
