@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div id="bank-account-selector-body" th:fragment="bank-account-selector-body">
+    <div class="card-header border-0 pb-0">
+        <form class="row g-2"
+              hx-get="/accounts-payable/vendor-payments/selectors/bank-accounts"
+              hx-target="#bank-account-selector-body"
+              hx-swap="outerHTML">
+            <input type="hidden" name="currencyId" th:value="${currencyId}">
+            <div class="col">
+                <input type="search"
+                       class="form-control"
+                       name="q"
+                       th:value="${q}"
+                       placeholder="Search bank account...">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-search"></i>
+                    <span class="ms-1" th:text="#{label.search}">Search</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+            <tr>
+                <th th:text="#{label.vp.bankAccount.name}">Account Name</th>
+                <th th:text="#{label.vp.bankAccount.number}">Account Number</th>
+                <th th:text="#{label.vp.bankAccount.bank}">Bank</th>
+                <th th:text="#{label.vp.bankAccount.type}">Payment Type</th>
+                <th class="w-1"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${page.isEmpty()}">
+                <td colspan="5" class="text-center text-secondary py-4">No eligible bank accounts found.</td>
+            </tr>
+            <tr th:each="row : ${page.content}">
+                <td th:text="${row.accountName}">BCA Operasional</td>
+                <td th:text="${row.accountNumber}">1234567890</td>
+                <td th:text="${row.bankName}">Bank Central Asia</td>
+                <td><span class="badge" th:text="${row.paymentType}">BANK_TRANSFER</span></td>
+                <td>
+                    <button type="button"
+                            class="btn btn-primary btn-sm js-bank-account-select"
+                            th:attr="data-id=${row.id},
+                                     data-name=${row.accountName},
+                                     data-account-number=${row.accountNumber},
+                                     data-bank-name=${row.bankName},
+                                     data-payment-type=${row.paymentType}"
+                            th:text="#{label.choose}">Choose</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

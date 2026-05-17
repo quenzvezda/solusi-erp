@@ -8,8 +8,11 @@ import com.solusi.erp.accounting.schema.domain.model.AccountingSchema;
 import com.solusi.erp.accounting.schema.domain.repository.SchemaRepository;
 import com.solusi.erp.core.exception.DomainException;
 
+import com.solusi.erp.accounting.journal.domain.model.JournalVariable;
+
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class PostJournalForEventUseCaseImpl implements PostJournalForEventUseCase {
@@ -37,17 +40,18 @@ public class PostJournalForEventUseCaseImpl implements PostJournalForEventUseCas
                     if (value == null || value.compareTo(BigDecimal.ZERO) == 0) {
                         return null;
                     }
+                    Long accountId = resolveAccountId(command, schemaLine.getVar(), schemaLine.getAccountId());
                     if (command.originalCurrencyId() != null && command.originalValues() != null) {
                         BigDecimal originalValue = command.originalValues().getOrDefault(schemaLine.getVar(), value);
                         return schemaLine.getPosition() == JournalPosition.DEBIT
-                                ? JournalLine.debitWithOriginal(schemaLine.getAccountId(), value,
+                                ? JournalLine.debitWithOriginal(accountId, value,
                                 command.originalCurrencyId(), command.exchangeRate(), originalValue)
-                                : JournalLine.creditWithOriginal(schemaLine.getAccountId(), value,
+                                : JournalLine.creditWithOriginal(accountId, value,
                                 command.originalCurrencyId(), command.exchangeRate(), originalValue);
                     }
                     return schemaLine.getPosition() == JournalPosition.DEBIT
-                            ? JournalLine.debit(schemaLine.getAccountId(), value)
-                            : JournalLine.credit(schemaLine.getAccountId(), value);
+                            ? JournalLine.debit(accountId, value)
+                            : JournalLine.credit(accountId, value);
                 })
                 .filter(Objects::nonNull)
                 .toList();
@@ -63,5 +67,13 @@ public class PostJournalForEventUseCaseImpl implements PostJournalForEventUseCas
         );
         entry.validateBalanced();
         journalEntryRepository.save(entry);
+    }
+
+    private Long resolveAccountId(JournalPostingCommand command, JournalVariable variable, Long schemaAccountId) {
+        Map<JournalVariable, Long> overrides = command.accountOverrides();
+        if (overrides != null && overrides.containsKey(variable)) {
+            return overrides.get(variable);
+        }
+        return schemaAccountId;
     }
 }

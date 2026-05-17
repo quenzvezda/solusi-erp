@@ -19,6 +19,8 @@ public record VendorBillDetailView(
         BigDecimal subtotal,
         BigDecimal taxAmount,
         BigDecimal totalAmount,
+        BigDecimal paidAmount,
+        BigDecimal outstandingAmount,
         String notes,
         List<Long> grIds,
         List<VendorBillLineView> lines

@@ -13,6 +13,8 @@ public record VendorBillSummaryView(
         LocalDate billDate,
         LocalDate dueDate,
         VendorBillStatus status,
-        BigDecimal totalAmount
+        BigDecimal totalAmount,
+        BigDecimal paidAmount,
+        BigDecimal outstandingAmount
 ) {
 }

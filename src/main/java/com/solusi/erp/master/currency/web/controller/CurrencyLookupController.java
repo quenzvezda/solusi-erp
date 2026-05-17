@@ -7,7 +7,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/lookup/master/currencies")
@@ -31,6 +33,10 @@ public class CurrencyLookupController {
     }
 
     private LookupDto toLookupDto(Currency c) {
-        return new LookupDto(c.getId(), c.getName(), c.getSymbol() + " - " + c.getAlias());
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("symbol", c.getSymbol());
+        payload.put("alias", c.getAlias());
+        payload.put("isDefault", Boolean.TRUE.equals(c.getIsDefault()));
+        return new LookupDto(c.getId(), c.getName(), c.getSymbol() + " - " + c.getAlias(), payload);
     }
 }

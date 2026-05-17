@@ -42,6 +42,11 @@
                                         initialValue=${bankAccountRequest.cityId}, 
                                         initialText=${selectedCity}, 
                                         initialSubtext='')}"></div>
+
+                                    <div th:replace="~{fragments/inputs :: autocomplete(field='currencyId', label=#{master.bank-account.currency}, path='master/currencies', required=true,
+                                        initialValue=${bankAccountRequest.currencyId},
+                                        initialText=${bankAccountUI != null ? bankAccountUI['currencyText'] : ''},
+                                        initialSubtext=${bankAccountUI != null ? bankAccountUI['currencySubtext'] : ''})}"></div>
                                 </div>
 
                                 <!-- Right Column -->
@@ -62,6 +67,20 @@
                                             <option th:each="type : ${accountTypes}" th:value="${type}" th:text="${type}"></option>
                                         </select>
                                         <div class="invalid-feedback" th:if="${#fields.hasErrors('accountType')}" th:errors="*{accountType}"></div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label" th:text="#{master.bank-account.coa}">COA</label>
+                                        <div class="input-group">
+                                            <input type="hidden" th:field="*{coaId}" id="bank-account-coa-id"/>
+                                            <input type="text" id="bank-account-coa-display" class="form-control"
+                                                   th:value="${bankAccountUI != null && bankAccountUI['coaText'] != null ? bankAccountUI['coaSubtext'] + ' - ' + bankAccountUI['coaText'] : ''}"
+                                                   th:placeholder="#{master.bank-account.coa.placeholder}" readonly/>
+                                            <button type="button" id="btn-select-bank-account-coa" class="btn btn-icon btn-outline-primary"
+                                                    th:attr="title=#{master.bank-account.coa.placeholder}">
+                                                <i class="ti ti-search"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -91,17 +110,15 @@
                         </div>
                     </div>
                 </form>
+                <div th:replace="~{fragments/modal-selector :: shell('modal-bank-account-coa-selector', #{master.bank-account.coa.selector.title}, 'bank-account-coa-selector-modal-body', 'modal-xl')}"></div>
             </div>
         </div>
     </div>
 
     <!-- Page Specific Scripts Slot -->
     <div id="page-scripts" th:fragment="pageScripts">
-        <script>
-            // No manual initialization needed! 
-            // fragments/inputs :: autocomplete already uses data-lookup-path
-            // which is automatically handled by the global initLookup in layout/master
-        </script>
+        <script th:src="@{/js/shared/erp-modal-selector.js}" defer></script>
+        <script th:src="@{/js/master/bank-accounts/form.js}" defer></script>
     </div>
 </body>
 </html>

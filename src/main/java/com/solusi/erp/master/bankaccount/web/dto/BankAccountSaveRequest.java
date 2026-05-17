@@ -47,4 +47,8 @@ public class BankAccountSaveRequest extends BaseAuditResponse {
     private Long partyId;
 
     private Boolean isActive = true;
+
+    private Long currencyId;
+
+    private Long coaId;
 }

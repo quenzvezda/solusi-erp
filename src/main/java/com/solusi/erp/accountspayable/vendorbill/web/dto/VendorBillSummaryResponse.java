@@ -19,4 +19,6 @@ public class VendorBillSummaryResponse extends BaseAuditResponse {
     private LocalDate dueDate;
     private String status;
     private BigDecimal totalAmount;
+    private BigDecimal paidAmount;
+    private BigDecimal outstandingAmount;
 }

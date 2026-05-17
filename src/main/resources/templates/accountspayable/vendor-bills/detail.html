@@ -13,7 +13,7 @@
                         <h2 class="page-title">
                             <span th:text="${bill.code}">VB-001</span>
                             <span class="badge ms-2"
-                                  th:classappend="${bill.status == 'DRAFT'} ? 'bg-warning-lt' : (${bill.status == 'CONFIRMED'} ? 'bg-success-lt' : 'bg-secondary-lt')"
+                                  th:classappend="${bill.status == 'DRAFT'} ? 'bg-warning-lt' : (${bill.status == 'PAID'} ? 'bg-success-lt' : (${bill.status == 'PARTIAL_PAID'} ? 'bg-info-lt' : (${bill.status == 'CONFIRMED'} ? 'bg-primary-lt' : 'bg-secondary-lt')))"
                                   th:text="${bill.status}">DRAFT</span>
                         </h2>
                     </div>
@@ -47,7 +47,24 @@
                                 <label class="form-label text-secondary" th:text="#{label.vb.dueDate}">Due Date</label>
                                 <div class="form-control-plaintext" th:text="${bill.dueDate != null ? #temporals.format(bill.dueDate, 'dd MMM yyyy') : '-'}">20 May 2026</div>
                             </div>
-                            <div class="col-md-3" th:if="${bill.status == 'CONFIRMED'}">
+
+                            <div class="col-md-3">
+                                <label class="form-label text-secondary" th:text="#{label.vb.paymentStatus}">Payment Status</label>
+                                <div class="form-control-plaintext">
+                                    <span class="badge"
+                                          th:classappend="${bill.status == 'DRAFT'} ? 'bg-warning-lt' : (${bill.status == 'PAID'} ? 'bg-success-lt' : (${bill.status == 'PARTIAL_PAID'} ? 'bg-info-lt' : (${bill.status == 'CONFIRMED'} ? 'bg-primary-lt' : 'bg-secondary-lt')))"
+                                          th:text="${bill.status}">DRAFT</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-secondary" th:text="#{label.vb.paidAmount}">Paid</label>
+                                <div class="form-control-plaintext fw-semibold" th:text="${bill.paidAmount != null ? #numbers.formatDecimal(bill.paidAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-secondary" th:text="#{label.vb.unpaidAmount}">Unpaid</label>
+                                <div class="form-control-plaintext fw-bold" th:text="${bill.outstandingAmount != null ? #numbers.formatDecimal(bill.outstandingAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</div>
+                            </div>
+                            <div class="col-md-3" th:if="${bill.status == 'CONFIRMED' || bill.status == 'PARTIAL_PAID' || bill.status == 'PAID'}">
                                 <label class="form-label text-secondary" th:text="#{label.journal}">Journal Entry</label>
                                 <div class="form-control-plaintext">
                                     <a th:href="@{/accounting/journal-entries(sourceType='VENDOR_BILL', sourceCode=${bill.code})}" class="btn btn-sm btn-outline-primary">

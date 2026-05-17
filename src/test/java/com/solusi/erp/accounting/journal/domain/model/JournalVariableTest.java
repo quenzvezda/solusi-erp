@@ -28,7 +28,9 @@ class JournalVariableTest {
 
         assertThat(JournalVariable.getVariablesForEvent(SchemaEventType.VENDOR_PAYMENT)).containsExactlyInAnyOrder(
                 JournalVariable.VP_AP_AMT,
-                JournalVariable.VP_BANK_OUT_AMT
+                JournalVariable.VP_BANK_OUT_AMT,
+                JournalVariable.VP_FX_LOSS_AMT,
+                JournalVariable.VP_FX_GAIN_AMT
         );
 
         assertThat(JournalVariable.getVariablesForEvent(SchemaEventType.CUSTOMER_INVOICE)).containsExactlyInAnyOrder(

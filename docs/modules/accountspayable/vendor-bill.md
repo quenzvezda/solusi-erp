@@ -19,13 +19,17 @@ Lifecycle:
 
 ```text
 DRAFT -> CONFIRMED
+CONFIRMED -> PARTIAL_PAID
+PARTIAL_PAID -> PAID
+CONFIRMED -> PAID
 DRAFT -> CANCELLED
 ```
 
 Catatan:
-- `CONFIRMED` tidak bisa diedit, dihapus, atau di-cancel.
+- `CONFIRMED`, `PARTIAL_PAID`, dan `PAID` tidak bisa diedit, dihapus, atau di-cancel.
 - Delete hanya tersedia dari halaman list untuk status `DRAFT`.
 - Cancel hanya tersedia dari halaman detail untuk status `DRAFT`.
+- Status pembayaran dan amount unpaid pada list/detail dihitung dari Vendor Payment berstatus `CONFIRMED`.
 
 ## 2. Kontrak Fitur yang Aktif
 
@@ -64,10 +68,12 @@ Jika selected GR memiliki exchange rate berbeda, create form menampilkan hint da
 | `dueDate` | Tanggal jatuh tempo |
 | `currencyId` | Currency invoice |
 | `exchangeRate` | Kurs invoice ke base currency |
-| `status` | `DRAFT`, `CONFIRMED`, atau `CANCELLED` |
+| `status` | `DRAFT`, `CONFIRMED`, `PARTIAL_PAID`, `PAID`, atau `CANCELLED` |
 | `subtotal` | Total DPP/net invoice |
 | `taxAmount` | Total pajak invoice |
 | `totalAmount` | Total gross invoice = subtotal + taxAmount |
+| `paidAmount` | Total pembayaran dari Vendor Payment `CONFIRMED` |
+| `outstandingAmount` | Sisa unpaid = totalAmount - paidAmount |
 | `notes` | Catatan |
 
 ### B. Line Vendor Bill
@@ -152,7 +158,19 @@ Qty line mengikuti numeric standard:
 - class `erp-number-decimal`
 - display 2 angka desimal
 
-## 8. Accounting Saat Confirm
+
+## 8. Payment Visibility
+
+Halaman list Vendor Bill menampilkan kolom `Unpaid` dari `outstandingAmount`.
+
+Halaman detail Vendor Bill menampilkan ringkasan pembayaran:
+- payment status dari field `status`
+- paid amount dari total line Vendor Payment berstatus `CONFIRMED`
+- unpaid amount dari `totalAmount - paidAmount`
+
+Payment summary bersifat read-side projection; web layer tetap memakai use case/mapper dan tidak membaca repository Vendor Payment secara langsung.
+
+## 9. Accounting Saat Confirm
 
 `ConfirmVendorBillUseCase` mem-post journal event `VENDOR_BILL`.
 
@@ -170,7 +188,7 @@ FX variance dihitung atas porsi net/GR-IR, bukan atas tax.
 
 Accounting schema aktif untuk event `VENDOR_BILL` wajib ada saat confirm. Jika schema tidak ada, tidak aktif, atau hasil jurnal tidak balance, confirm rollback.
 
-## 9. Clean Architecture Notes
+## 10. Clean Architecture Notes
 
 Vendor Bill tidak membaca repository slice Goods Receipt secara langsung dari web/application command.
 
@@ -181,7 +199,7 @@ Akses data lintas slice dilakukan melalui port/adapter:
 
 Web layer boleh memakai use case, lookup/query port, dan mapper web; web tidak boleh menginjeksi repository/JPA repository dari slice lain.
 
-## 10. Referensi Terkait
+## 11. Referensi Terkait
 
 - [Goods Receipt](../inventory/goods-receipt.md)
 - [Journal Entry](../accounting/journal-entry.md)

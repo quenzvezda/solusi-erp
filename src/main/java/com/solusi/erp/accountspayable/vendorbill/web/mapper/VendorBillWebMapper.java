@@ -43,6 +43,8 @@ public class VendorBillWebMapper {
         response.setDueDate(view.dueDate());
         response.setStatus(view.status() != null ? view.status().name() : null);
         response.setTotalAmount(view.totalAmount());
+        response.setPaidAmount(view.paidAmount());
+        response.setOutstandingAmount(view.outstandingAmount());
         return response;
     }
 
@@ -60,6 +62,8 @@ public class VendorBillWebMapper {
         response.setSubtotal(view.subtotal());
         response.setTaxAmount(view.taxAmount());
         response.setTotalAmount(view.totalAmount());
+        response.setPaidAmount(view.paidAmount());
+        response.setOutstandingAmount(view.outstandingAmount());
         response.setNotes(view.notes());
         response.setGrIds(view.grIds());
         response.setLines(toLineResponses(view.lines()));

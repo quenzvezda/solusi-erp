@@ -48,4 +48,8 @@ build/
 .playwright-mcp/
 .lean-ctx/
 
+# Claude Code — personal settings (not shared)
+.claude/settings.local.json
+.claude/*.bak
+
 *.png

@@ -17,7 +17,8 @@ public record JournalPostingCommand(
         Map<JournalVariable, BigDecimal> values,
         Long originalCurrencyId,
         BigDecimal exchangeRate,
-        Map<JournalVariable, BigDecimal> originalValues
+        Map<JournalVariable, BigDecimal> originalValues,
+        Map<JournalVariable, Long> accountOverrides
 ) {
     public JournalPostingCommand(SchemaEventType eventType,
                                  String sourceType,
@@ -26,6 +27,20 @@ public record JournalPostingCommand(
                                  LocalDate postingDate,
                                  String description,
                                  Map<JournalVariable, BigDecimal> values) {
-        this(eventType, sourceType, sourceId, sourceCode, postingDate, description, values, null, null, null);
+        this(eventType, sourceType, sourceId, sourceCode, postingDate, description, values, null, null, null, null);
+    }
+
+    public JournalPostingCommand(SchemaEventType eventType,
+                                 String sourceType,
+                                 Long sourceId,
+                                 String sourceCode,
+                                 LocalDate postingDate,
+                                 String description,
+                                 Map<JournalVariable, BigDecimal> values,
+                                 Long originalCurrencyId,
+                                 BigDecimal exchangeRate,
+                                 Map<JournalVariable, BigDecimal> originalValues) {
+        this(eventType, sourceType, sourceId, sourceCode, postingDate, description, values,
+                originalCurrencyId, exchangeRate, originalValues, null);
     }
 }

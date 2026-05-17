@@ -4,6 +4,7 @@ import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.master.bankaccount.domain.model.BankAccount;
 import com.solusi.erp.master.bankaccount.domain.repository.BankAccountRepository;
+import com.solusi.erp.master.shared.model.PaymentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,10 +40,12 @@ class CreateBankAccountUseCaseTest {
         when(repository.save(any(BankAccount.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         BankAccount result = useCase.execute("Bank BCA", "Sudirman", "John Doe", "1234567890",
-                "BANK", "Note", 1L, 2L, true);
+                PaymentType.BANK_TRANSFER, "Note", 1L, 2L, true, 1L, 10L);
 
         assertThat(result.getCode()).isEqualTo("BA-001");
         assertThat(result.getBankName()).isEqualTo("Bank BCA");
+        assertThat(result.getCurrencyId()).isEqualTo(1L);
+        assertThat(result.getCoaId()).isEqualTo(10L);
     }
 
     @Test
@@ -50,13 +53,14 @@ class CreateBankAccountUseCaseTest {
     void execute_returnsResultFromRepository() {
         AuditMetadata metadata = new AuditMetadata(10L, 1L, null, null, null, null);
         BankAccount persisted = new BankAccount(metadata, "BA-001", "Bank BCA", "Sudirman",
-                "John Doe", "1234567890", "BANK", "Note", 1L, "Jakarta", 2L, "PT ABC", true);
+                "John Doe", "1234567890", PaymentType.BANK_TRANSFER, "Note",
+                1L, "Jakarta", 2L, "PT ABC", true, 1L, 10L);
 
         when(sequenceGeneratorService.generate("BANK_ACCOUNT")).thenReturn("BA-001");
         when(repository.save(any(BankAccount.class))).thenReturn(persisted);
 
         BankAccount result = useCase.execute("Bank BCA", "Sudirman", "John Doe", "1234567890",
-                "BANK", "Note", 1L, 2L, true);
+                PaymentType.BANK_TRANSFER, "Note", 1L, 2L, true, 1L, 10L);
 
         assertThat(result.getId()).isEqualTo(10L);
     }
