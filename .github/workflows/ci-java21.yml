@@ -2,9 +2,17 @@ name: CI - Java 21
 
 on:
   push:
-    branches: [ main, master, 'feature/**', 'fix/**' ]
+    branches: [ main, master ]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '.github/**/*.md'
   pull_request:
     branches: [ main, master ]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '.github/**/*.md'
   schedule:
     # Nightly full run — setiap hari pukul 02:00 UTC (09:00 WIB)
     - cron: '0 2 * * *'
@@ -16,9 +24,9 @@ on:
         default: 'false'
         type: boolean
 
-# Prevents multiple redundant jobs from running on the same branch simultaneously
+# Prevents multiple redundant jobs from running on the same branch/PR simultaneously
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -30,7 +38,7 @@ env:
 
 jobs:
   # ──────────────────────────────────────────────────────────────────────────
-  # Job 1: Fast — executed on every push / PR
+  # Job 1: Fast — executed on PRs or manual non-full dispatch
   # Includes: unit tests, static template checks, domain/application usecases
   # Excludes: @Tag("integration-template") (Thymeleaf sec:authorize tests)
   # Target time: < 60 seconds
@@ -39,7 +47,9 @@ jobs:
     name: Fast Tests (unit + static)
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: github.event_name != 'schedule'
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_full == false)
 
     steps:
       - name: Checkout
@@ -105,26 +115,30 @@ jobs:
           path: target/surefire-reports/
 
   # ──────────────────────────────────────────────────────────────────────────
-  # Job 3: Deploy — executed ONLY AFTER both test jobs pass on main branch
-  # Depends on: fast-tests, full-tests
-  # Skips paths: docs, conductor, markdown files, config files
+  # Job 3: Deploy — executed ONLY AFTER full test job passes on main branch
+  # Uses the same Maven Wrapper as tests and verifies the Ubuntu VPS service
   # ──────────────────────────────────────────────────────────────────────────
   deploy:
     name: Deploy to VPS
-    needs: [fast-tests, full-tests]
+    needs: [full-tests]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Make Maven Wrapper Executable
+        run: chmod +x mvnw
 
       - name: Build JAR
-        run: mvn clean package -DskipTests
+        run: ./mvnw -B -e clean package -DskipTests
 
       - name: Rename JAR
         run: mv target/solusi-program-erp-*.jar target/app.jar
@@ -141,44 +155,68 @@ jobs:
           overwrite: true
 
       - name: Restart service & capture log
-        if: always()
         run: |
           mkdir -p logs
           LOG=logs/deploy-${{ github.run_number }}.txt
+          DEPLOY_KEY=/tmp/deploy_key_${{ github.run_id }}
+          trap 'rm -f "$DEPLOY_KEY"' EXIT
 
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/deploy_key
-          chmod 600 /tmp/deploy_key
+          printf '%s' "${{ secrets.SSH_PRIVATE_KEY }}" > "$DEPLOY_KEY"
+          chmod 600 "$DEPLOY_KEY"
 
-          ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no \
+          {
+            echo "====== DEPLOY INFO ======"
+            echo "Run Number : ${{ github.run_number }}"
+            echo "Commit     : ${{ github.sha }}"
+            echo "Triggered  : ${{ github.actor }}"
+            echo "Branch     : ${{ github.ref_name }}"
+            echo "Timestamp  : $(date)"
+            echo ""
+            echo "====== SERVICE RESTART ======"
+          } > "$LOG"
+
+          set +e
+          ssh -i "$DEPLOY_KEY" -o StrictHostKeyChecking=no \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "sudo systemctl restart erp && sleep 10"
+            "sudo systemctl restart erp && sleep 10" >> "$LOG" 2>&1
+          RESTART_STATUS=$?
 
-          echo "====== DEPLOY INFO ======" > $LOG
-          echo "Run Number : ${{ github.run_number }}" >> $LOG
-          echo "Commit     : ${{ github.sha }}" >> $LOG
-          echo "Triggered  : ${{ github.actor }}" >> $LOG
-          echo "Branch     : ${{ github.ref_name }}" >> $LOG
-          echo "Timestamp  : $(date)" >> $LOG
-
-          echo "" >> $LOG
-          echo "====== SYSTEMCTL STATUS ======" >> $LOG
-          ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no \
+          {
+            echo ""
+            echo "====== HEALTH CHECK ======"
+          } >> "$LOG"
+          ssh -i "$DEPLOY_KEY" -o StrictHostKeyChecking=no \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "sudo systemctl status erp" >> $LOG
+            "curl -fsS http://localhost:8080/health" >> "$LOG" 2>&1
+          HEALTH_STATUS=$?
 
-          echo "" >> $LOG
-          echo "====== APP LOG (last 50 lines) ======" >> $LOG
-          ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no \
+          {
+            echo ""
+            echo "====== SYSTEMCTL STATUS ======"
+          } >> "$LOG"
+          ssh -i "$DEPLOY_KEY" -o StrictHostKeyChecking=no \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "sudo journalctl -u erp -n 50 --no-pager" >> $LOG
+            "sudo systemctl status erp --no-pager" >> "$LOG" 2>&1
 
-          echo "" >> $LOG
-          echo "====== JAR INFO ======" >> $LOG
-          ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no \
+          {
+            echo ""
+            echo "====== APP LOG (last 50 lines) ======"
+          } >> "$LOG"
+          ssh -i "$DEPLOY_KEY" -o StrictHostKeyChecking=no \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "ls -lh /home/ubuntu/app/app.jar" >> $LOG
+            "sudo journalctl -u erp -n 50 --no-pager" >> "$LOG" 2>&1
 
-          rm /tmp/deploy_key
+          {
+            echo ""
+            echo "====== JAR INFO ======"
+          } >> "$LOG"
+          ssh -i "$DEPLOY_KEY" -o StrictHostKeyChecking=no \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "ls -lh /home/ubuntu/app/app.jar" >> "$LOG" 2>&1
+
+          if [ "$RESTART_STATUS" -ne 0 ] || [ "$HEALTH_STATUS" -ne 0 ]; then
+            exit 1
+          fi
 
       - name: Upload log sebagai artifact
         if: always()
