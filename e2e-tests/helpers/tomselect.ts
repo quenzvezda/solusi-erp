@@ -56,7 +56,8 @@ export async function selectTomSelect(
 export async function setTomSelectValue(
   page: Page,
   selector: string,
-  valueId: string | number
+  valueId: string | number,
+  label?: string
 ): Promise<void> {
   await page.waitForFunction(
     (sel) => {
@@ -67,17 +68,18 @@ export async function setTomSelectValue(
     { timeout: 10_000 }
   );
 
-  await page.evaluate(({ sel, val }) => {
-    return new Promise<void>((resolve) => {
-      const el = document.querySelector(sel) as any;
-      const ts = el.tomselect;
-      ts.load('', (options: any[]) => {
-        options.forEach((opt: any) => ts.addOption(opt));
-        ts.setValue(String(val));
-        resolve();
-      });
-    });
-  }, { sel: selector, val: String(valueId) });
+  await page.evaluate(({ sel, val, text }) => {
+    const el = document.querySelector(sel) as any;
+    const ts = el.tomselect;
+    const value = String(val);
+    if (!ts.options[value]) {
+      const option = el.querySelector(`option[value="${CSS.escape(value)}"]`) as HTMLOptionElement | null;
+      ts.addOption({ id: value, name: text || option?.textContent?.trim() || value, text: text || option?.textContent?.trim() || value });
+    }
+    ts.setValue(value);
+    el.value = value;
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  }, { sel: selector, val: String(valueId), text: label });
 }
 
 /**

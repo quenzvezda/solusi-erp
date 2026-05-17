@@ -1,6 +1,6 @@
 import { test, expect } from '../../fixtures/base';
 import { fillField, selectDropdown, submitAndExpectRedirect, expectFormError } from '../../helpers/form';
-import { uniqueName } from '../../helpers/data-factory';
+import { uniqueId, uniqueName } from '../../helpers/data-factory';
 import { navigateToModule } from '../../helpers/navigation';
 
 test.describe('Unit of Measure CRUD', () => {
@@ -15,13 +15,13 @@ test.describe('Unit of Measure CRUD', () => {
     await navigateToModule(page, '/inventory/unit-of-measures/create');
 
     const name = uniqueName('UoM');
+    await fillField(page, 'code', uniqueId('UOM').toUpperCase().replace(/-/g, '').slice(0, 20));
     await fillField(page, 'name', name);
     await page.waitForSelector('select[name="type"]', { state: 'visible', timeout: 5_000 });
     await selectDropdown(page, 'type', 'UNIT');
 
     await submitAndExpectRedirect(page, /\/inventory\/unit-of-measures(\?.*)?$/);
 
-    // Redirect success is sufficient validation - item may be on later page
     await expect(page.locator('table')).toBeVisible();
   });
 
@@ -33,7 +33,6 @@ test.describe('Unit of Measure CRUD', () => {
 
     await submitAndExpectRedirect(page, /\/inventory\/unit-of-measures(\?.*)?$/);
 
-    // Redirect success is sufficient validation
     await expect(page.locator('table')).toBeVisible();
   });
 
@@ -43,11 +42,9 @@ test.describe('Unit of Measure CRUD', () => {
     await fillField(page, 'name', '');
     await selectDropdown(page, 'type', 'UNIT');
 
-    // Try to submit
     const submitBtn = page.locator('[data-ajax-form] button[type="submit"]').first();
     await submitBtn.click();
 
-    // Should show error (stay on page, show validation message)
     await expectFormError(page);
   });
 
