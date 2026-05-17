@@ -226,3 +226,92 @@ jobs:
           path: logs/
           retention-days: 30
 
+  # ──────────────────────────────────────────────────────────────────────────
+  # Job 4: E2E — Playwright end-to-end tests against H2 in-memory
+  # Runs after full-tests pass. Uses Spring Boot with e2e profile (H2).
+  # ──────────────────────────────────────────────────────────────────────────
+  e2e-tests:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [full-tests]
+    if: |
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_full == true) ||
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
+
+    concurrency:
+      group: e2e-${{ github.ref }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: e2e-tests/package-lock.json
+
+      - name: Make Maven Wrapper Executable
+        run: chmod +x mvnw
+
+      - name: Build Spring Boot JAR
+        run: ./mvnw -B package -DskipTests -Pe2e -q
+
+      - name: Start Spring Boot (E2E profile)
+        run: |
+          java -jar target/solusi-program-erp-*.jar --spring.profiles.active=e2e &
+          echo $! > spring-boot.pid
+
+      - name: Wait for server to be ready
+        run: |
+          for i in $(seq 1 60); do
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost:18080/login | grep -q "200"; then
+              echo "Server ready after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Server failed to start within 60s"
+          cat target/e2e-server.log || true
+          exit 1
+
+      - name: Install Playwright dependencies
+        working-directory: e2e-tests
+        run: |
+          npm ci
+          npx playwright install chromium --with-deps
+
+      - name: Run Playwright tests
+        working-directory: e2e-tests
+        run: npx playwright test
+        env:
+          E2E_BASE_URL: http://localhost:18080
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            e2e-tests/playwright-report/
+            e2e-tests/test-results/
+          retention-days: 7
+
+      - name: Stop Spring Boot
+        if: always()
+        run: |
+          if [ -f spring-boot.pid ]; then
+            kill $(cat spring-boot.pid) || true
+          fi
+
