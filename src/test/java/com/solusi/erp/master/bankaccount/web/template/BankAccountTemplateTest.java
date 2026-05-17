@@ -44,16 +44,60 @@ public class BankAccountTemplateTest {
     }
 
     @Test
-    public void templateContainsExpectedPlaceholders() throws Exception {
+    public void bankAccountFormContainsCurrencyAndCoaControls() throws Exception {
         InputStream is = getClass().getClassLoader()
-                .getResourceAsStream("templates/master/bank-accounts/list.html");
+                .getResourceAsStream("templates/master/bank-accounts/form.html");
         String template = new String(is.readAllBytes(), StandardCharsets.UTF_8);
 
-        assertThat(template).contains("${item.code}");
-        assertThat(template).contains("${item.bankName}");
-        assertThat(template).contains("${item.accountName}");
-        assertThat(template).contains("${item.accountNo}");
-        assertThat(template).contains("${item.accountType}");
-        assertThat(template).contains("${item.partyName}");
+        assertThat(template).contains("field='currencyId'");
+        assertThat(template).contains("path='master/currencies'");
+        assertThat(template).contains("bankAccountUI['currencyText']");
+        assertThat(template).contains("bankAccountUI['currencySubtext']");
+        assertThat(template).contains("*{coaId}");
+        assertThat(template).contains("bank-account-coa-id");
+        assertThat(template).contains("bank-account-coa-display");
+        assertThat(template).contains("btn-select-bank-account-coa");
+        assertThat(template).contains("modal-bank-account-coa-selector");
+        assertThat(template).contains("bank-account-coa-selector-modal-body");
+        assertThat(template).contains("/js/shared/erp-modal-selector.js");
+        assertThat(template).contains("/js/master/bank-accounts/form.js");
+    }
+
+    @Test
+    public void bankAccountFormScriptContainsCoaSelectorHooks() throws Exception {
+        InputStream is = getClass().getClassLoader()
+                .getResourceAsStream("static/js/master/bank-accounts/form.js");
+        String script = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+
+        assertThat(script).contains("btn-select-bank-account-coa");
+        assertThat(script).contains("bank-account-coa-id");
+        assertThat(script).contains("bank-account-coa-display");
+        assertThat(script).contains("js-bank-account-coa-pick");
+        assertThat(script).contains("modal-bank-account-coa-selector");
+        assertThat(script).contains("bank-account-coa-selector-modal-body");
+        assertThat(script).contains("/master/bank-accounts/selectors/coa");
+        assertThat(script).contains("dataset.coaId");
+        assertThat(script).contains("dataset.coaCode");
+        assertThat(script).contains("dataset.coaName");
+    }
+
+    @Test
+    public void bankAccountCoaSelectorFragmentContainsExpectedContract() throws Exception {
+        InputStream is = getClass().getClassLoader()
+                .getResourceAsStream("templates/master/bank-accounts/fragments/coa-selector-modal.html");
+        String template = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+
+        assertThat(template).contains("id=\"bank-account-coa-selector-modal-body\"");
+        assertThat(template).contains("th:fragment=\"bank-account-coa-selector-modal-body\"");
+        assertThat(template).contains("hx-get=\"/master/bank-accounts/selectors/coa\"");
+        assertThat(template).contains("hx-target=\"#bank-account-coa-selector-modal-body\"");
+        assertThat(template).contains("name=\"keyword\"");
+        assertThat(template).contains("name=\"accountType\"");
+        assertThat(template).contains("js-bank-account-coa-pick");
+        assertThat(template).contains("th:data-coa-id=\"${row.id}\"");
+        assertThat(template).contains("th:data-coa-code=\"${row.code}\"");
+        assertThat(template).contains("th:data-coa-name=\"${row.name}\"");
+        assertThat(template).contains("th:data-coa-account-type=\"${row.accountType}\"");
+        assertThat(template).contains("fragments/table :: pagination(${page})");
     }
 }

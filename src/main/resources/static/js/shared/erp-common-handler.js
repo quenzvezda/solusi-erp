@@ -85,6 +85,101 @@ const ErpAction = {
 };
 
 /**
+ * ERP Form Helper for Direct Button Actions
+ */
+const ErpForm = {
+    /**
+     * Perform a POST action via AJAX from a button element.
+     * Button should have a data-*-url attribute (e.g., data-send-url, data-complete-url, data-action-url).
+     * Optional: data-confirm-message for confirmation before action.
+     */
+    postAction: function(buttonEl) {
+        if (!buttonEl) return;
+        
+        // Extract URL from any data-*-url attribute
+        let url = null;
+        for (let attr of buttonEl.attributes) {
+            if (attr.name.match(/^data-.*-url$/) && attr.value) {
+                url = attr.value;
+                break;
+            }
+        }
+        
+        if (!url) {
+            console.warn('[ErpForm] Button action missing data-*-url attribute (e.g., data-send-url, data-complete-url)');
+            return;
+        }
+
+        // Check for confirmation message
+        const confirmMessage = buttonEl.getAttribute('data-confirm-message');
+        const redirectUrl = buttonEl.getAttribute('data-redirect-url');
+        
+        const performAction = () => {
+            // Disable button to prevent double-click
+            const wasDisabled = buttonEl.disabled;
+            buttonEl.disabled = true;
+
+            // Suppress beforeunload warnings for intentional navigation after action success
+            const ajaxForms = document.querySelectorAll('form[data-ajax-form="true"]');
+            window.__erpSuppressBeforeUnload = true;
+            ajaxForms.forEach(form => { form.dataset.isSubmitting = 'true'; });
+            
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
+            
+            // Perform fetch with CSRF in header
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    [csrfHeader]: csrfToken || ''
+                }
+            })
+            .then(response => {
+                return response.json().catch(() => ({
+                    success: false,
+                    message: 'Server error: Invalid response format'
+                })).then(data => {
+                    // Check if response indicates failure (HTTP error or API error)
+                    if (!response.ok || data.success === false) {
+                        throw new Error(data.message || 'Action failed');
+                    }
+                    return data;
+                });
+            })
+            .then(data => {
+                const message = data.message || 'Action completed successfully';
+                if (redirectUrl) {
+                    sessionStorage.setItem('erp_pending_success', message);
+                    setTimeout(() => { window.location.href = redirectUrl; }, 100);
+                    return;
+                }
+
+                // Success - show toast and reload
+                ErpModal.showSuccess(message);
+                
+                // Reload page after success
+                setTimeout(() => { window.location.reload(); }, 1500);
+            })
+            .catch(error => {
+                console.error('[ErpForm] Action failed:', error);
+                window.__erpSuppressBeforeUnload = false;
+                ajaxForms.forEach(form => { delete form.dataset.isSubmitting; });
+                ErpModal.showError(error.message || 'Action failed. Please try again.');
+                buttonEl.disabled = wasDisabled;
+            });
+        };
+        
+        // If confirmation is required, show it; otherwise perform action immediately
+        if (confirmMessage) {
+            ErpModal.confirm(confirmMessage, performAction);
+        } else {
+            performAction();
+        }
+    }
+};
+
+/**
  * ERP Side Drawer Helper
  */
 const ErpDrawer = (function() {
@@ -188,6 +283,7 @@ class ErpLineManager {
 window.ErpModal = ErpModal;
 window.ErpDrawer = ErpDrawer;
 window.ErpAction = ErpAction;
+window.ErpForm = ErpForm;
 window.ErpNumeric = ErpNumeric;
 
 /**

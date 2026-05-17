@@ -163,4 +163,36 @@ class BuildMenuTreeUseCaseImplTest {
         assertThat(level3.getNameId()).isEqualTo("Stock Adjustment");
         assertThat(level3.getUrlPath()).isEqualTo("/inv/adj/list");
     }
+
+    @Test
+    @DisplayName("places vendor bill under finance accounting account payable")
+    void execute_placesVendorBill_underFinanceAccountingAccountPayable() {
+        MenuQueryPort.MenuItem item = new MenuQueryPort.MenuItem(
+                "/accounts-payable/vendor-bills",
+                "Vendor Bill",
+                "Keuangan & Akuntansi > Hutang Usaha > Tagihan Vendor",
+                "ti-file-invoice",
+                "Finance & Accounting > Account Payable > Vendor Bill",
+                "Finance & Accounting > Account Payable > Vendor Bill"
+        );
+        when(menuQueryPort.findAllByAuthorities(List.of("ROLE_ADMIN"))).thenReturn(List.of(item));
+
+        List<MenuNodeResponse> result = useCase.execute(List.of("ROLE_ADMIN"));
+
+        assertThat(result).hasSize(1);
+        MenuNodeResponse finance = result.get(0);
+        assertThat(finance.getNameEn()).isEqualTo("Finance & Accounting");
+        assertThat(finance.getIconClass()).isEqualTo("ti-calculator");
+        assertThat(finance.getChildren()).hasSize(1);
+
+        MenuNodeResponse accountPayable = finance.getChildren().get(0);
+        assertThat(accountPayable.getNameEn()).isEqualTo("Account Payable");
+        assertThat(accountPayable.getIconClass()).isEqualTo("ti-receipt");
+        assertThat(accountPayable.getChildren()).hasSize(1);
+
+        MenuNodeResponse vendorBill = accountPayable.getChildren().get(0);
+        assertThat(vendorBill.getNameEn()).isEqualTo("Vendor Bill");
+        assertThat(vendorBill.getUrlPath()).isEqualTo("/accounts-payable/vendor-bills");
+        assertThat(vendorBill.getIconClass()).isEqualTo("ti-file-invoice");
+    }
 }

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.gr.detail})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .gr-view-content}, ~{:: #page-specific-scripts})}">
+    <div class="gr-view-content">
+
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title">
+                            <span th:text="${gr.code}">GR-001</span>
+                            <span class="badge ms-2"
+                                  th:classappend="${gr.status == 'DRAFT'} ? 'bg-warning-lt' : 'bg-success-lt'"
+                                  th:text="${gr.status}">DRAFT</span>
+                        </h2>
+                    </div>
+                    <div class="col-auto ms-auto d-print-none">
+                        <div class="btn-list">
+                            <a th:href="@{/inventory/goods-receipts}" class="btn btn-secondary">
+                                <i class="ti ti-arrow-left me-1"></i> <span th:text="#{label.back}">Back to List</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+
+                <div class="row row-cards">
+                    <!-- Main Content -->
+                    <div class="col-12">
+
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.gr.code}">Code</label>
+                                        <div class="form-control-plaintext fw-bold" th:text="${gr.code}">GR-001</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.gr.receiptDate}">Receipt Date</label>
+                                        <div class="form-control-plaintext" th:text="${#temporals.format(gr.receiptDate, 'dd MMM yyyy')}">01 Jul 2026</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.gr.status}">Status</label>
+                                        <div class="form-control-plaintext">
+                                            <span class="badge"
+                                                  th:classappend="${gr.status == 'DRAFT'} ? 'bg-warning-lt' : 'bg-success-lt'"
+                                                  th:text="${gr.status}">DRAFT</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4" th:if="${gr.status == 'COMPLETED'}">
+                                        <label class="form-label text-secondary" th:text="#{label.journal}">Journal Entry</label>
+                                        <div class="form-control-plaintext">
+                                            <a th:href="@{/accounting/journal-entries(sourceType='GOODS_RECEIPT', sourceCode=${gr.code})}" class="btn btn-sm btn-outline-primary">
+                                                <i class="ti ti-external-link me-1"></i> <span th:text="#{label.view}">View</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.gr.referenceType}">Reference Type</label>
+                                        <div class="form-control-plaintext" th:text="${gr.referenceType ?: '-'}">PURCHASE_ORDER</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.gr.referenceCode}">Reference Code</label>
+                                        <div class="form-control-plaintext" th:text="${gr.referenceCode ?: '-'}">PO-001</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.gr.supplier}">Supplier</label>
+                                        <div class="form-control-plaintext" th:text="${gr.supplierName ?: '-'}">-</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.gr.facility}">Facility</label>
+                                        <div class="form-control-plaintext" th:text="${gr.facilityName ?: '-'}">-</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.gr.currency}">Currency</label>
+                                        <div class="form-control-plaintext" th:text="${gr.currencyCode ?: '-'}">USD</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.gr.exchangeRate}">Exchange Rate</label>
+                                        <div class="form-control-plaintext" th:text="${gr.exchangeRate != null ? #numbers.formatDecimal(gr.exchangeRate, 1, 'COMMA', 4, 'POINT') : '-'}">1.0000</div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label text-secondary" th:text="#{label.gr.notes}">Notes</label>
+                                        <div class="form-control-plaintext" th:text="${gr.notes ?: '-'}">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title" th:text="#{label.gr.line.title}">Receipt Lines</h3>
+                            </div>
+                            <div class="table-responsive" style="min-height: 200px;">
+                                <table class="table table-vcenter card-table" id="table-lines">
+                                    <thead>
+                                        <tr>
+                                            <th th:text="#{label.product}">Product</th>
+                                            <th class="text-end" th:text="#{label.qty.received}">Qty Received</th>
+                                            <th class="text-end" th:text="#{label.base.qty}">Base Qty</th>
+                                            <th th:text="#{label.uom}">UoM</th>
+                                            <th th:text="#{label.container}">Container</th>
+                                            <th th:text="#{goodsreceipt.billing.status}">Billing</th>
+                                            <th th:text="#{label.serial}">Serial</th>
+                                            <th class="text-end" th:text="#{label.unit.price}">Unit Price</th>
+                                            <th class="text-end" th:text="#{label.inventory.amount}">Inventory Amt</th>
+                                            <th class="text-end" th:text="#{label.tax.amount}">Tax Amt</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="line : ${gr.lines}">
+                                            <td th:text="${line.productName ?: '-'}">Product A</td>
+                                            <td class="text-end" th:text="${line.quantityReceived != null ? #numbers.formatDecimal(line.quantityReceived, 1, 'COMMA', 4, 'POINT') : '-'}">100.0000</td>
+                                            <td class="text-end" th:text="${line.baseQuantity != null ? #numbers.formatDecimal(line.baseQuantity, 1, 'COMMA', 4, 'POINT') : '-'}">100.0000</td>
+                                            <td th:text="${line.uomCode ?: '-'}">KG</td>
+                                            <td th:text="${line.containerCode ?: '-'}">-</td>
+                                            <td>
+                                                <span class="badge bg-green-lt" th:if="${line.billingStatus == 'FULLY_BILLED'}" th:text="#{goodsreceipt.billing.fully}">Fully billed</span>
+                                                <span class="badge bg-yellow-lt" th:if="${line.billingStatus == 'PARTIAL_BILLED'}" th:text="#{goodsreceipt.billing.partial}">Partial</span>
+                                                <span class="badge bg-secondary-lt" th:if="${line.billingStatus == 'UNBILLED'}" th:text="#{goodsreceipt.billing.unbilled}">Unbilled</span>
+                                            </td>
+                                            <td th:text="${line.serialDisplay ?: '-'}">-</td>
+                                            <td class="text-end" th:text="${line.unitPrice != null ? #numbers.formatDecimal(line.unitPrice, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                            <td class="text-end" th:text="${line.inventoryAmount != null ? #numbers.formatDecimal(line.inventoryAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                            <td class="text-end" th:text="${line.taxAmount != null ? #numbers.formatDecimal(line.taxAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                        </tr>
+                                        <tr th:if="${#lists.isEmpty(gr.lines)}">
+                                            <td colspan="10" class="text-center py-4 text-secondary" th:text="#{label.gr.line.empty}">
+                                                No lines added.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="btn-list justify-content-between">
+                                    <div th:if="${gr.status == 'DRAFT'}" class="btn-group">
+                                        <a th:href="@{/inventory/goods-receipts/edit/{id}(id=${gr.id})}"
+                                           class="btn btn-primary" sec:authorize="hasAuthority('GOODS-RECEIPT_UPDATE')">
+                                            <i class="ti ti-edit me-1"></i>
+                                            <span th:text="#{label.edit}">Edit</span>
+                                        </a>
+                                        <button type="button" 
+                                                class="btn btn-success"
+                                                sec:authorize="hasAuthority('GOODS-RECEIPT_COMPLETE')"
+                                                th:data-complete-url="@{'/inventory/goods-receipts/' + ${gr.id} + '/complete'}"
+                                                th:data-redirect-url="@{'/inventory/goods-receipts/' + ${gr.id}}"
+                                                onclick="ErpForm.postAction(this)">
+                                            <i class="ti ti-check me-1"></i>
+                                            <span th:text="#{label.gr.complete}">Complete</span>
+                                        </button>
+                                        <button type="button" class="btn btn-danger"
+                                                sec:authorize="hasAuthority('GOODS-RECEIPT_DELETE')"
+                                                data-bs-toggle="modal"
+                                                th:data-bs-target="'#modal-delete-gr'">
+                                            <i class="ti ti-trash me-1"></i>
+                                            <span th:text="#{label.delete}">Delete</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Audit Info -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div th:if="${gr.id != null}" th:replace="~{fragments/audit-info :: audit-info(${gr})}"></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div th:if="${gr.status == 'DRAFT'}"
+         th:replace="~{fragments/modals :: delete-confirm(
+            id='modal-delete-gr',
+            title=#{label.delete.confirm.title},
+            message=#{msg.delete.confirm(${gr.code})},
+            actionUrl='/inventory/goods-receipts/' + ${gr.id},
+            targetId=''
+        )}"></div>
+
+    <div id="page-specific-scripts"></div>
+</body>
+
+</html>

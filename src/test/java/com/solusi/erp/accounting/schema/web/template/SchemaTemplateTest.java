@@ -24,12 +24,10 @@ public class SchemaTemplateTest {
     @DisplayName("list.html — contains expected fragment ID and item properties")
     void listTemplate_containsExpectedFragmentAndProperties() throws Exception {
         String template = readTemplate("accounting/schema/list.html");
-
         assertThat(template).contains("schema-table-container");
         assertThat(template).contains("item.eventType");
         assertThat(template).contains("${item.description}");
-        assertThat(template).contains("${item.debitAccountName}");
-        assertThat(template).contains("${item.creditAccountName}");
+        assertThat(template).contains("item.lines");
         assertThat(template).contains("${item.isActive}");
     }
 
@@ -37,7 +35,6 @@ public class SchemaTemplateTest {
     @DisplayName("list.html — all ${item.xxx} properties have getters on SchemaSummaryResponse")
     void listTemplate_referencesValidDtoProperties() throws Exception {
         String template = readTemplate("accounting/schema/list.html");
-
         Pattern p = Pattern.compile("\\$\\{item\\.([a-zA-Z0-9_]+)\\}");
         Matcher m = p.matcher(template);
         while (m.find()) {
@@ -67,12 +64,10 @@ public class SchemaTemplateTest {
     @DisplayName("form.html — uses correct model attribute and form fields")
     void formTemplate_usesCorrectModelAttribute() throws Exception {
         String template = readTemplate("accounting/schema/form.html");
-
         assertThat(template).contains("schemaRequest");
         assertThat(template).contains("*{eventType}");
         assertThat(template).contains("*{description}");
-        assertThat(template).contains("*{debitAccountId}");
-        assertThat(template).contains("*{creditAccountId}");
+        assertThat(template).contains("lines");
         assertThat(template).contains("*{isActive}");
     }
 
@@ -80,7 +75,6 @@ public class SchemaTemplateTest {
     @DisplayName("list.html — has HTMX search trigger attributes")
     void listTemplate_hasHtmxSearchTrigger() throws Exception {
         String template = readTemplate("accounting/schema/list.html");
-
         assertThat(template).contains("hx-get=\"/accounting/schemas\"");
         assertThat(template).contains("hx-target=\"#schema-table-container\"");
     }
@@ -89,7 +83,6 @@ public class SchemaTemplateTest {
     @DisplayName("list.html — has sec:authorize expressions for CRUD authorities")
     void listTemplate_hasSecAuthorizeExpressions() throws Exception {
         String template = readTemplate("accounting/schema/list.html");
-
         assertThat(template).contains("hasAuthority('ACCOUNTING-SCHEMA_CREATE')");
         assertThat(template).contains("hasAuthority('ACCOUNTING-SCHEMA_UPDATE')");
         assertThat(template).contains("hasAuthority('ACCOUNTING-SCHEMA_DELETE')");

@@ -33,6 +33,10 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CreatePurchaseOrderUseCase Tests")
 class CreatePurchaseOrderUseCaseTest {
+    private static final Long TAX_ID = 10L;
+    private static final String TAX_CODE = "NON-TAX";
+    private static final String TAX_NAME = "Non Tax";
+    private static final BigDecimal TAX_RATE = BigDecimal.ZERO;
 
     @Mock
     private PurchaseOrderRepository repository;
@@ -93,7 +97,9 @@ class CreatePurchaseOrderUseCaseTest {
 
         PurchaseOrder result = useCase.execute(
                 LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 15),
-                1L, 2L, 3L, BigDecimal.ONE, 30, null, PurchaseOrderType.DIRECT, "Test note", lines
+                1L, 2L, 3L, BigDecimal.ONE, 30, null, PurchaseOrderType.DIRECT,
+                TAX_ID, TAX_CODE, TAX_NAME, TAX_RATE, TaxCalculationMode.EXCLUSIVE,
+                "Test note", lines
         );
 
         assertThat(result.getCode()).isEqualTo("PO-2607-00001");
@@ -110,7 +116,9 @@ class CreatePurchaseOrderUseCaseTest {
     void execute_rejectsSaveWhenLinesAreEmpty() {
         assertThatThrownBy(() -> useCase.execute(
                 LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 15),
-                1L, 2L, 3L, BigDecimal.ONE, 30, null, PurchaseOrderType.DIRECT, "note", List.of()
+                1L, 2L, 3L, BigDecimal.ONE, 30, null, PurchaseOrderType.DIRECT,
+                TAX_ID, TAX_CODE, TAX_NAME, TAX_RATE, TaxCalculationMode.EXCLUSIVE,
+                "note", List.of()
         )).isInstanceOf(com.solusi.erp.core.exception.DomainException.class)
                 .hasMessage("msg.error.po.save.no.lines");
     }
@@ -130,7 +138,9 @@ class CreatePurchaseOrderUseCaseTest {
 
         PurchaseOrder result = useCase.execute(
                 LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 15),
-                1L, 2L, 3L, BigDecimal.ONE, 30, 5L, PurchaseOrderType.DIRECT, null, lines
+                1L, 2L, 3L, BigDecimal.ONE, 30, 5L, PurchaseOrderType.DIRECT,
+                TAX_ID, TAX_CODE, TAX_NAME, TAX_RATE, TaxCalculationMode.EXCLUSIVE,
+                null, lines
         );
 
         assertThat(result.getLines()).hasSize(2);
@@ -180,7 +190,9 @@ class CreatePurchaseOrderUseCaseTest {
         PurchaseOrder result = useCase.execute(
                 LocalDate.of(2026, 7, 1), null,
                 1L, 2L, 3L, BigDecimal.ONE, 30,
-                99L, PurchaseOrderType.DIRECT, "note", lines
+                99L, PurchaseOrderType.DIRECT,
+                TAX_ID, TAX_CODE, TAX_NAME, TAX_RATE, TaxCalculationMode.EXCLUSIVE,
+                "note", lines
         );
 
         assertThat(result.getPoType()).isEqualTo(PurchaseOrderType.DIRECT);
@@ -199,7 +211,9 @@ class CreatePurchaseOrderUseCaseTest {
         assertThatThrownBy(() -> useCase.execute(
                 LocalDate.of(2026, 7, 1), null,
                 1L, 2L, 3L, BigDecimal.ONE, 30,
-                null, PurchaseOrderType.STANDARD, "note", lines
+                null, PurchaseOrderType.STANDARD,
+                TAX_ID, TAX_CODE, TAX_NAME, TAX_RATE, TaxCalculationMode.EXCLUSIVE,
+                "note", lines
         )).isInstanceOf(com.solusi.erp.core.exception.DomainException.class)
                 .hasMessage("msg.error.po.standard.pr.required");
     }
@@ -212,7 +226,9 @@ class CreatePurchaseOrderUseCaseTest {
         assertThatThrownBy(() -> useCase.execute(
             LocalDate.of(2026, 7, 1), null,
             100L, 200L, 300L, BigDecimal.ONE, 30,
-            10L, PurchaseOrderType.STANDARD, "note",
+            10L, PurchaseOrderType.STANDARD,
+            TAX_ID, TAX_CODE, TAX_NAME, TAX_RATE, TaxCalculationMode.EXCLUSIVE,
+            "note",
             List.of(new PoLineInput(20L, new BigDecimal("1.0000"), 30L,
                 new BigDecimal("750.00"), BigDecimal.ZERO, null, null))
         )).isInstanceOf(com.solusi.erp.core.exception.DomainException.class)
@@ -227,7 +243,9 @@ class CreatePurchaseOrderUseCaseTest {
         assertThatThrownBy(() -> useCase.execute(
             LocalDate.of(2026, 7, 1), null,
             999L, 200L, 300L, BigDecimal.ONE, 30,
-            10L, PurchaseOrderType.STANDARD, "note",
+            10L, PurchaseOrderType.STANDARD,
+            TAX_ID, TAX_CODE, TAX_NAME, TAX_RATE, TaxCalculationMode.EXCLUSIVE,
+            "note",
             List.of(new PoLineInput(20L, new BigDecimal("1.0000"), 30L,
                 new BigDecimal("750.00"), BigDecimal.ZERO, 100L, null))
         )).isInstanceOf(com.solusi.erp.core.exception.DomainException.class)
@@ -242,7 +260,9 @@ class CreatePurchaseOrderUseCaseTest {
         assertThatThrownBy(() -> useCase.execute(
             LocalDate.of(2026, 7, 1), null,
             100L, 200L, 300L, BigDecimal.ONE, 30,
-            10L, PurchaseOrderType.STANDARD, "note",
+            10L, PurchaseOrderType.STANDARD,
+            TAX_ID, TAX_CODE, TAX_NAME, TAX_RATE, TaxCalculationMode.EXCLUSIVE,
+            "note",
             List.of(
                 new PoLineInput(20L, new BigDecimal("1.0000"), 30L,
                     new BigDecimal("750.00"), BigDecimal.ZERO, 100L, null),
@@ -263,7 +283,9 @@ class CreatePurchaseOrderUseCaseTest {
         assertThatThrownBy(() -> useCase.execute(
             LocalDate.of(2026, 7, 1), null,
             100L, 200L, 300L, BigDecimal.ONE, 30,
-            10L, PurchaseOrderType.STANDARD, "note",
+            10L, PurchaseOrderType.STANDARD,
+            TAX_ID, TAX_CODE, TAX_NAME, TAX_RATE, TaxCalculationMode.EXCLUSIVE,
+            "note",
             List.of(new PoLineInput(20L, new BigDecimal("2.0000"), 30L,
                 new BigDecimal("750.00"), BigDecimal.ZERO, 100L, null))
         )).isInstanceOf(com.solusi.erp.core.exception.DomainException.class)

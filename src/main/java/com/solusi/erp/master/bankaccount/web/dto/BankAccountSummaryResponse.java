@@ -18,4 +18,6 @@ public class BankAccountSummaryResponse extends BaseAuditResponse {
     private String accountNo;
     private String accountType;
     private String partyName;
+    private Long currencyId;
+    private Long coaId;
 }

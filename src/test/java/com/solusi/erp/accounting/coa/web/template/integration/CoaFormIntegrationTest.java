@@ -105,7 +105,44 @@ class CoaFormIntegrationTest {
         assertThat(raw).contains("field='name'");
     }
 
+    @Test
+    @DisplayName("Parent selector wiring uses shared modal selector helper and page scripts slot")
+    void parentSelectorWiring_usesSharedModalSelectorHelperAndPageScriptsSlot() throws Exception {
+        String template = readResource("templates/" + TEMPLATE + ".html");
+        String script = readResource("static/js/coa-form.js");
+
+        assertThat(template).contains("layout(~{:: .coa-form-content}, ~{:: #page-specific-scripts})");
+        assertThat(template).contains("id=\"page-specific-scripts\"");
+        assertThat(template).contains("th:src=\"@{/js/shared/erp-modal-selector.js}\"");
+        assertThat(template).contains("th:src=\"@{/js/coa-form.js}\"");
+
+        assertThat(script).contains("window.ERP.ModalSelector.open");
+        assertThat(script).contains("window.ERP.ModalSelector.close");
+    }
+
+    @Test
+    @DisplayName("Parent selector fragment uses paged table layout like PO selector")
+    void parentSelectorFragment_usesPagedTableLayoutLikePoSelector() throws Exception {
+        String template = readResource("templates/accounting/coa/fragments/coa-selector-modal.html");
+
+        assertThat(template).contains("hx-target=\"#coa-parent-selector-results\"");
+        assertThat(template).contains("name=\"accountType\"");
+        assertThat(template).contains("${page.isEmpty()}");
+        assertThat(template).contains("th:each=\"row : ${page.content}\"");
+        assertThat(template).contains("fragments/table :: pagination(${page})");
+        assertThat(template).contains("table table-vcenter card-table");
+    }
+
     // ── utility ─────────────────────────────────────────────────────────────
+
+    private String readResource(String path) throws Exception {
+        InputStream is = getClass().getClassLoader().getResourceAsStream(path);
+        assertThat(is).as("Resource not found: %s", path).isNotNull();
+
+        try (InputStream in = is) {
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
+    }
 
     private boolean hasReadableProperty(Class<?> clazz, String prop) {
         String getter = "get" + prop.substring(0, 1).toUpperCase() + prop.substring(1);

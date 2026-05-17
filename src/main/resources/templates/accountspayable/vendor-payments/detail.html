@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.vp.title})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .vendor-payment-detail-content}, ~{:: #page-specific-scripts})}">
+    <div class="vendor-payment-detail-content">
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title">
+                            <span th:text="#{label.vp.detail}">Vendor Payment Detail</span>
+                            <span class="badge ms-2"
+                                  th:classappend="${payment.status == 'DRAFT'} ? 'bg-warning-lt' : (${payment.status == 'CONFIRMED'} ? 'bg-success-lt' : 'bg-secondary-lt')"
+                                  th:text="${payment.status}">DRAFT</span>
+                        </h2>
+                    </div>
+                    <div class="col-auto ms-auto d-flex gap-2">
+                        <a th:href="@{/accounts-payable/vendor-payments/edit/{id}(id=${payment.id})}"
+                           class="btn btn-primary"
+                           th:if="${payment.status == 'DRAFT'}"
+                           sec:authorize="hasAuthority('VENDOR-PAYMENT_UPDATE')">
+                            <i class="ti ti-edit me-1"></i><span th:text="#{label.edit}">Edit</span>
+                        </a>
+                        <button type="button" class="btn btn-success btn-confirm-payment"
+                                th:if="${payment.status == 'DRAFT'}"
+                                sec:authorize="hasAuthority('VENDOR-PAYMENT_CONFIRM')"
+                                th:data-action-url="@{/accounts-payable/vendor-payments/{id}/confirm(id=${payment.id})}"
+                                th:data-redirect-url="@{/accounts-payable/vendor-payments/{id}(id=${payment.id})}"
+                                th:data-confirm-message="#{msg.confirm.vp.confirm}">
+                            <i class="ti ti-check me-1"></i><span th:text="#{label.vp.confirm}">Confirm</span>
+                        </button>
+                        <button type="button" class="btn btn-warning btn-cancel-payment"
+                                th:if="${payment.status == 'DRAFT'}"
+                                sec:authorize="hasAuthority('VENDOR-PAYMENT_CANCEL')"
+                                th:data-action-url="@{/accounts-payable/vendor-payments/{id}/cancel(id=${payment.id})}"
+                                th:data-redirect-url="@{/accounts-payable/vendor-payments/{id}(id=${payment.id})}"
+                                th:data-confirm-message="#{msg.confirm.vp.cancel}">
+                            <i class="ti ti-x me-1"></i><span th:text="#{label.vp.cancel}">Cancel</span>
+                        </button>
+                        <a th:href="@{/accounts-payable/vendor-payments}" class="btn btn-secondary">
+                            <i class="ti ti-arrow-left me-1"></i><span th:text="#{label.back}">Back</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+                <div class="card mb-3">
+                    <div class="card-header"><h3 class="card-title" th:text="#{label.vp.header}">Payment Header</h3></div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label text-secondary" th:text="#{label.vp.code}">Code</label>
+                                <div class="fw-bold" th:text="${payment.code}">VP-001</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-secondary" th:text="#{label.vp.paymentDate}">Payment Date</label>
+                                <div th:text="${payment.paymentDate != null ? #temporals.format(payment.paymentDate, 'dd MMM yyyy') : '-'}">15 May 2026</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-secondary" th:text="#{label.vp.exchangeRate}">Exchange Rate</label>
+                                <div th:text="${payment.exchangeRate}">1.000000</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-secondary" th:text="#{label.vp.paymentAmount}">Payment Amount</label>
+                                <div class="fw-bold" th:text="${payment.paymentAmount != null ? #numbers.formatDecimal(payment.paymentAmount, 1, 'COMMA', 2, 'POINT') : '-'}">500.00</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-secondary" th:text="#{label.vp.bankAccount}">Bank Account</label>
+                                <div class="fw-bold" th:text="${vpUI != null ? vpUI['bankAccountText'] : '-'}">Bank Account</div>
+                                <small class="text-secondary" th:text="${vpUI != null ? vpUI['bankAccountSubtext'] : ''}">Bank - Account No</small>
+                            </div>
+                            <div class="col-md-3" th:if="${payment.status == 'CONFIRMED'}">
+                                <label class="form-label text-secondary" th:text="#{label.journal}">Journal Entry</label>
+                                <div>
+                                    <a th:href="@{/accounting/journal-entries(sourceType='VENDOR_PAYMENT', sourceCode=${payment.code})}" class="btn btn-sm btn-outline-primary">
+                                        <i class="ti ti-external-link me-1"></i><span th:text="#{label.view}">View</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-md-6" th:if="${payment.reference}">
+                                <label class="form-label text-secondary" th:text="#{label.vp.reference}">Reference</label>
+                                <div th:text="${payment.reference}">REF-001</div>
+                            </div>
+                            <div class="col-md-6" th:if="${payment.notes}">
+                                <label class="form-label text-secondary" th:text="#{label.vp.notes}">Notes</label>
+                                <div th:text="${payment.notes}">Notes</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><h3 class="card-title" th:text="#{label.vp.allocation}">Bill Allocation</h3></div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table card-table table-vcenter">
+                                <thead>
+                                    <tr>
+                                        <th th:text="#{label.vp.billCode}">Bill Code</th>
+                                        <th class="text-end" th:text="#{label.vp.outstandingAmount}">Outstanding</th>
+                                        <th class="text-end" th:text="#{label.vp.paidAmount}">Paid Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="line : ${payment.lines}">
+                                        <td>
+                                            <a th:href="@{/accounts-payable/vendor-bills/{id}(id=${line.vendorBillId})}"
+                                               class="fw-medium" th:text="${line.billCode}">VB-001</a>
+                                        </td>
+                                        <td class="text-end" th:text="${line.outstandingAmount != null ? #numbers.formatDecimal(line.outstandingAmount, 1, 'COMMA', 2, 'POINT') : '-'}">500.00</td>
+                                        <td class="text-end" th:text="${line.paidAmount != null ? #numbers.formatDecimal(line.paidAmount, 1, 'COMMA', 2, 'POINT') : '-'}">500.00</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr class="fw-bold">
+                                        <td th:text="#{label.total}">Total</td>
+                                        <td class="text-end"></td>
+                                        <td class="text-end" th:text="${payment.paymentAmount != null ? #numbers.formatDecimal(payment.paymentAmount, 1, 'COMMA', 2, 'POINT') : '-'}">500.00</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="page-specific-scripts">
+        <script th:inline="javascript">
+            document.addEventListener('DOMContentLoaded', function() {
+                var confirmBtn = document.querySelector('.btn-confirm-payment');
+                var cancelBtn = document.querySelector('.btn-cancel-payment');
+
+                if (confirmBtn) {
+                    confirmBtn.addEventListener('click', function() {
+                        ErpForm.postAction(this);
+                    });
+                }
+
+                if (cancelBtn) {
+                    cancelBtn.addEventListener('click', function() {
+                        ErpForm.postAction(this);
+                    });
+                }
+            });
+        </script>
+    </div>
+</body>
+
+</html>

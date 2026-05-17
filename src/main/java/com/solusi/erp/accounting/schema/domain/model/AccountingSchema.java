@@ -1,45 +1,76 @@
 package com.solusi.erp.accounting.schema.domain.model;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
+import com.solusi.erp.core.exception.DomainException;
 
-/**
- * Aggregate Root: Accounting Schema.
- * Maps an operational event to a debit/credit COA pair for auto-journaling.
- * 100% Pure Java Domain Model.
- */
+import java.util.List;
+
 public class AccountingSchema {
     private final AuditMetadata metadata;
     private SchemaEventType eventType;
     private String description;
-    private Long debitAccountId;
-    private Long creditAccountId;
     private Boolean isActive;
+    private List<AccountingSchemaLine> lines;
 
-    public AccountingSchema(AuditMetadata metadata, SchemaEventType eventType,
-                            String description, Long debitAccountId,
-                            Long creditAccountId, Boolean isActive) {
+    private AccountingSchema(AuditMetadata metadata,
+                             SchemaEventType eventType,
+                             String description,
+                             Boolean isActive,
+                             List<AccountingSchemaLine> lines,
+                             boolean validateLines) {
         this.metadata = metadata;
         this.eventType = eventType;
         this.description = description;
-        this.debitAccountId = debitAccountId;
-        this.creditAccountId = creditAccountId;
         this.isActive = isActive;
+        this.lines = validateLines ? validateLines(eventType, lines) : copyLines(lines);
     }
 
-    public static AccountingSchema createNew(SchemaEventType eventType, String description,
-                                              Long debitAccountId, Long creditAccountId,
-                                              Boolean isActive) {
-        return new AccountingSchema(AuditMetadata.empty(), eventType, description,
-                debitAccountId, creditAccountId,
-                isActive != null ? isActive : true);
+    public AccountingSchema(AuditMetadata metadata,
+                            SchemaEventType eventType,
+                            String description,
+                            Boolean isActive,
+                            List<AccountingSchemaLine> lines) {
+        this(metadata, eventType, description, isActive, lines, true);
     }
 
-    public void update(String description, Long debitAccountId,
-                       Long creditAccountId, Boolean isActive) {
+    public static AccountingSchema createNew(SchemaEventType eventType,
+                                             String description,
+                                             Boolean isActive,
+                                             List<AccountingSchemaLine> lines) {
+        return new AccountingSchema(AuditMetadata.empty(), eventType, description, isActive != null ? isActive : true, lines, true);
+    }
+
+    public static AccountingSchema reconstitute(AuditMetadata metadata,
+                                                SchemaEventType eventType,
+                                                String description,
+                                                Boolean isActive,
+                                                List<AccountingSchemaLine> lines) {
+        return new AccountingSchema(metadata, eventType, description, isActive, lines, false);
+    }
+
+    public void update(String description, Boolean isActive, List<AccountingSchemaLine> lines) {
         this.description = description;
-        this.debitAccountId = debitAccountId;
-        this.creditAccountId = creditAccountId;
         this.isActive = isActive != null ? isActive : true;
+        this.lines = validateLines(this.eventType, lines);
+    }
+
+    private List<AccountingSchemaLine> validateLines(SchemaEventType type, List<AccountingSchemaLine> newLines) {
+        if (newLines == null || newLines.isEmpty()) {
+            throw new DomainException("msg.err.schema.lines.empty");
+        }
+        for (AccountingSchemaLine line : newLines) {
+            if (line.getVar().getSupportedEvent() != type) {
+                throw new DomainException("msg.err.schema.var.unsupported");
+            }
+        }
+        return List.copyOf(newLines);
+    }
+
+    private List<AccountingSchemaLine> copyLines(List<AccountingSchemaLine> sourceLines) {
+        if (sourceLines == null || sourceLines.isEmpty()) {
+            return List.of();
+        }
+        return List.copyOf(sourceLines);
     }
 
     public void softDelete() {
@@ -50,7 +81,6 @@ public class AccountingSchema {
     public AuditMetadata getMetadata() { return metadata; }
     public SchemaEventType getEventType() { return eventType; }
     public String getDescription() { return description; }
-    public Long getDebitAccountId() { return debitAccountId; }
-    public Long getCreditAccountId() { return creditAccountId; }
     public Boolean getIsActive() { return isActive; }
+    public List<AccountingSchemaLine> getLines() { return lines; }
 }

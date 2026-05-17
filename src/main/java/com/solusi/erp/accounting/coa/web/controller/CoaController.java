@@ -8,6 +8,8 @@ import com.solusi.erp.core.domain.model.DeleteResult;
 import com.solusi.erp.accounting.coa.application.usecase.command.CreateCoaUseCase;
 import com.solusi.erp.accounting.coa.application.usecase.command.DeleteCoaUseCase;
 import com.solusi.erp.accounting.coa.application.usecase.command.UpdateCoaUseCase;
+import com.solusi.erp.accounting.coa.application.usecase.query.FindCoaSelectorUseCase;
+import com.solusi.erp.accounting.coa.application.usecase.query.CoaSelectorRow;
 import com.solusi.erp.accounting.coa.application.usecase.query.FindCoaUseCase;
 import com.solusi.erp.accounting.coa.application.usecase.query.GetCoaEditViewUseCase;
 import com.solusi.erp.accounting.coa.domain.model.AccountType;
@@ -43,6 +45,7 @@ public class CoaController {
     private final UpdateCoaUseCase updateCoaUseCase;
     private final DeleteCoaUseCase deleteCoaUseCase;
     private final FindCoaUseCase findCoaUseCase;
+    private final FindCoaSelectorUseCase findCoaSelectorUseCase;
     private final GetCoaEditViewUseCase getCoaEditViewUseCase;
     private final CoaWebMapper webMapper;
     private final MessageSource messageSource;
@@ -64,6 +67,27 @@ public class CoaController {
         model.addAttribute("keyword", keyword);
         model.addAttribute("accountTypes", AccountType.values());
         return "accounting/coa/list";
+    }
+
+    @GetMapping("/selectors/parent")
+    @PreAuthorize("hasAuthority('ACCOUNTING-COA_READ')")
+    public String showParentSelector(@RequestParam(required = false) String keyword,
+                                     @RequestParam(required = false) String accountType,
+                                     org.springframework.data.domain.Pageable springPageable,
+                                     Model model) {
+        Pageable domainPageable = PageableMapper.toDomain(springPageable);
+        com.solusi.erp.core.domain.model.Page<CoaSelectorRow> domainPage =
+                findCoaSelectorUseCase.execute(keyword, accountType, domainPageable);
+        Page<CoaSelectorRow> springPage = new PageImpl<>(
+                domainPage.content(),
+                springPageable,
+                domainPage.totalElements()
+        );
+        model.addAttribute("page", springPage);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("accountType", accountType);
+        model.addAttribute("accountTypes", AccountType.values());
+        return "accounting/coa/fragments/coa-selector-modal";
     }
 
     @GetMapping("/create")
@@ -103,7 +127,18 @@ public class CoaController {
     public String showEditForm(@PathVariable Long id, Model model) {
         ChartOfAccount domain = getCoaEditViewUseCase.execute(id)
                 .orElseThrow(() -> new RuntimeException("Account not found"));
-        model.addAttribute("coaRequest", webMapper.toSaveRequest(domain));
+        CoaSaveRequest saveRequest = webMapper.toSaveRequest(domain);
+
+        // Populate parent display fields if parent exists
+        if (domain.getParentId() != null) {
+            getCoaEditViewUseCase.execute(domain.getParentId())
+                    .ifPresent(parent -> {
+                        saveRequest.setParentName(parent.getName());
+                        saveRequest.setParentCode(parent.getCode());
+                    });
+        }
+
+        model.addAttribute("coaRequest", saveRequest);
         model.addAttribute("auditInfo", webMapper.toDetailResponse(domain));
         model.addAttribute("accountTypes", AccountType.values());
         return "accounting/coa/form";

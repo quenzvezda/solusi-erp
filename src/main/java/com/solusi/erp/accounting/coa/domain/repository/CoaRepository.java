@@ -11,7 +11,9 @@ public interface CoaRepository {
     ChartOfAccount save(ChartOfAccount coa);
     Optional<ChartOfAccount> findById(Long id);
     Page<ChartOfAccount> findAll(String keyword, Pageable pageable);
+    Page<ChartOfAccount> findAllActiveForSelector(String keyword, String accountType, Pageable pageable);
     void delete(Long id);
     boolean existsByCode(String code);
     List<ChartOfAccount> search(String keyword, int limit);
+    List<ChartOfAccount> findAllActive();
 }

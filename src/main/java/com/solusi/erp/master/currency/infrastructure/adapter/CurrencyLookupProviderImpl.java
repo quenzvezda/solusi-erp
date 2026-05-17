@@ -34,6 +34,7 @@ public class CurrencyLookupProviderImpl implements CurrencyLookupProvider {
         Map<String, Object> payload = new HashMap<>();
         payload.put("symbol", c.getSymbol());
         payload.put("alias", c.getAlias());
+        payload.put("isDefault", Boolean.TRUE.equals(c.getIsDefault()));
         return new LookupDto(
                 c.getId(),
                 c.getName(),

@@ -3,7 +3,7 @@
 
 <head th:replace="~{layout/master :: head(${coaRequest.id == null ? #messages.msg('label.coa.add') : #messages.msg('label.coa.edit')})}"></head>
 
-<body th:replace="~{layout/master :: layout(~{:: .coa-form-content}, ~{})}">
+<body th:replace="~{layout/master :: layout(~{:: .coa-form-content}, ~{:: #page-specific-scripts})}">
     <div class="coa-form-content">
         <div class="page-header d-print-none">
             <div class="container-xl">
@@ -25,6 +25,8 @@
                       data-redirect-on-success="/accounting/coa">
 
                     <input type="hidden" th:field="*{version}" />
+                    <input type="hidden" th:field="*{parentName}" id="input-parent-name"/>
+                    <input type="hidden" th:field="*{parentCode}" id="input-parent-code"/>
 
                     <div class="card-body">
                         <div class="alert-container"></div>
@@ -34,6 +36,11 @@
                                 <h3 class="card-title" th:text="#{label.product.section.basic}">Basic Info</h3>
 
                                 <div th:replace="~{fragments/inputs :: text(field='code', label=#{label.coa.code}, required=true, isReadonly=${coaRequest.id != null}, extraClass=${coaRequest.id != null ? 'bg-body-tertiary' : ''}, placeholder=#{placeholder.coa.code})}"></div>
+
+                                <div class="form-text text-muted" id="code-prefix-hint" style="display: none;">
+                                    <i class="ti ti-info-circle"></i>
+                                    <span id="code-prefix-text"></span>
+                                </div>
 
                                 <div th:replace="~{fragments/inputs :: text(field='name', label=#{label.coa.name}, required=true, placeholder=#{placeholder.coa.name})}"></div>
 
@@ -49,18 +56,31 @@
 
                                 <div class="mb-3">
                                     <label class="form-label" th:text="#{label.coa.parent}">Parent Account</label>
-                                    <select th:field="*{parentId}" class="form-select erp-input"
-                                            data-lookup-url="/api/lookup/accounting/coa"
-                                            data-lookup-permission="LOOKUP_COA">
-                                        <option value="" th:text="#{label.select.placeholder}">-- Select --</option>
-                                    </select>
+                                    <div class="input-group">
+                                        <input type="hidden" th:field="*{parentId}" id="input-parent-id"/>
+                                        <input type="text" class="form-control erp-input" id="input-parent-display"
+                                               th:value="${coaRequest.parentId != null ? coaRequest.parentCode + ' - ' + coaRequest.parentName : ''}"
+                                               readonly th:placeholder="#{label.coa.parent.placeholder}"/>
+                                        <button type="button" class="btn btn-outline-primary" id="btn-select-parent">
+                                            <i class="ti ti-search"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger" id="btn-clear-parent"
+                                                th:unless="${coaRequest.parentId == null}">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="col-md-6 border-start-md">
                                 <h3 class="card-title" th:text="#{label.general.settings}">Settings</h3>
 
-                                <div th:replace="~{fragments/inputs :: integer(field='level', label=#{label.coa.level}, required=false)}"></div>
+                                <div class="mb-3">
+                                    <label class="form-label" th:text="#{label.coa.level}">Level</label>
+                                    <input type="number" th:field="*{level}" class="form-control erp-input bg-body-tertiary"
+                                           readonly id="input-level"/>
+                                    <small class="text-secondary" th:text="#{label.coa.level.hint}">Auto-derived from parent account</small>
+                                </div>
 
                                 <div class="mb-3">
                                     <label class="form-label" th:text="#{label.coa.note}">Note</label>
@@ -98,8 +118,15 @@
                         </div>
                     </div>
                 </form>
+                <!-- Parent Account Selector Modal moved outside form -->
+                <div th:replace="~{fragments/modal-selector :: shell('modal-coa-parent-selector', #{label.coa.parent.selector.title}, 'coa-parent-selector-results', 'modal-xl')}"></div>
             </div>
         </div>
+    </div>
+
+    <div id="page-specific-scripts" th:fragment="pageScripts">
+        <script th:src="@{/js/shared/erp-modal-selector.js}" defer></script>
+        <script th:src="@{/js/coa-form.js}" defer></script>
     </div>
 </body>
 

@@ -1,5 +1,8 @@
 package com.solusi.erp.accounting.schema.web.controller;
 
+import com.solusi.erp.accounting.coa.application.usecase.query.CoaSelectorRow;
+import com.solusi.erp.accounting.coa.application.usecase.query.FindCoaSelectorUseCase;
+import com.solusi.erp.accounting.coa.domain.model.AccountType;
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.DeleteResult;
 import com.solusi.erp.core.domain.model.Pageable;
@@ -10,10 +13,14 @@ import com.solusi.erp.accounting.schema.application.usecase.command.DeleteSchema
 import com.solusi.erp.accounting.schema.application.usecase.command.UpdateSchemaUseCase;
 import com.solusi.erp.accounting.schema.application.usecase.query.FindSchemasUseCase;
 import com.solusi.erp.accounting.schema.application.usecase.query.GetSchemaEditViewUseCase;
+import com.solusi.erp.accounting.schema.application.usecase.query.SimulateSchemaUseCase;
 import com.solusi.erp.accounting.schema.domain.model.AccountingSchema;
+import com.solusi.erp.accounting.schema.domain.model.AccountingSchemaLine;
 import com.solusi.erp.accounting.schema.domain.model.SchemaEventType;
 import com.solusi.erp.accounting.schema.web.dto.SchemaDetailResponse;
 import com.solusi.erp.accounting.schema.web.dto.SchemaSaveRequest;
+import com.solusi.erp.accounting.schema.web.dto.SchemaSimulationRequest;
+import com.solusi.erp.accounting.schema.web.dto.SchemaSimulationResponse;
 import com.solusi.erp.accounting.schema.web.dto.SchemaSummaryResponse;
 import com.solusi.erp.accounting.schema.web.mapper.SchemaWebMapper;
 import com.solusi.erp.util.HtmxResponseUtility;
@@ -33,6 +40,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.solusi.erp.accounting.journal.domain.model.JournalPosition;
+import com.solusi.erp.accounting.journal.domain.model.JournalVariable;
+
 @Controller
 @RequestMapping("/accounting/schemas")
 @RequiredArgsConstructor
@@ -44,6 +54,8 @@ public class SchemaController {
     private final DeleteSchemaUseCase deleteSchemaUseCase;
     private final FindSchemasUseCase findSchemasUseCase;
     private final GetSchemaEditViewUseCase getSchemaEditViewUseCase;
+    private final FindCoaSelectorUseCase findCoaSelectorUseCase;
+    private final SimulateSchemaUseCase simulateSchemaUseCase;
     private final SchemaWebMapper webMapper;
     private final MessageSource messageSource;
 
@@ -73,7 +85,30 @@ public class SchemaController {
         request.setIsActive(true);
         model.addAttribute("schemaRequest", request);
         model.addAttribute("eventTypes", SchemaEventType.values());
+        model.addAttribute("journalVariables", JournalVariable.values());
+        model.addAttribute("journalPositions", JournalPosition.values());
         return "accounting/schema/form";
+    }
+
+    @GetMapping("/selectors/accounts")
+    @PreAuthorize("hasAnyAuthority('ACCOUNTING-SCHEMA_CREATE', 'ACCOUNTING-SCHEMA_UPDATE')")
+    public String showAccountSelector(@RequestParam(required = false) String keyword,
+                                      @RequestParam(required = false) String accountType,
+                                      org.springframework.data.domain.Pageable springPageable,
+                                      Model model) {
+        Pageable domainPageable = PageableMapper.toDomain(springPageable);
+        com.solusi.erp.core.domain.model.Page<CoaSelectorRow> domainPage =
+                findCoaSelectorUseCase.execute(keyword, accountType, domainPageable);
+        Page<CoaSelectorRow> springPage = new PageImpl<>(
+                domainPage.content(),
+                springPageable,
+                domainPage.totalElements()
+        );
+        model.addAttribute("page", springPage);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("accountType", accountType);
+        model.addAttribute("accountTypes", AccountType.values());
+        return "accounting/schema/fragments/account-selector-modal";
     }
 
     @PostMapping("/create")
@@ -89,8 +124,8 @@ public class SchemaController {
         AccountingSchema domain = createSchemaUseCase.execute(
                 eventType,
                 request.getDescription(),
-                request.getDebitAccountId(), request.getCreditAccountId(),
-                request.getIsActive());
+                request.getIsActive(),
+                request.getLines().stream().map(webMapper::toDomainLine).collect(Collectors.toList()));
         SchemaDetailResponse data = webMapper.toDetailResponse(domain);
         String msg = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(msg, data));
@@ -104,6 +139,8 @@ public class SchemaController {
         model.addAttribute("schemaRequest", webMapper.toSaveRequest(domain));
         model.addAttribute("auditInfo", webMapper.toDetailResponse(domain));
         model.addAttribute("eventTypes", SchemaEventType.values());
+        model.addAttribute("journalVariables", JournalVariable.values());
+        model.addAttribute("journalPositions", JournalPosition.values());
         return "accounting/schema/form";
     }
 
@@ -115,8 +152,8 @@ public class SchemaController {
             @Valid @RequestBody SchemaSaveRequest request) {
         AccountingSchema domain = updateSchemaUseCase.execute(
                 id, request.getDescription(),
-                request.getDebitAccountId(), request.getCreditAccountId(),
-                request.getIsActive());
+                request.getIsActive(),
+                request.getLines().stream().map(webMapper::toDomainLine).collect(Collectors.toList()));
         SchemaDetailResponse data = webMapper.toDetailResponse(domain);
         String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
         return ResponseEntity.ok(ApiResponse.success(msg, data));
@@ -133,5 +170,15 @@ public class SchemaController {
         }
         String msg = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
         return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
+    }
+
+    @PostMapping("/simulate")
+    @ResponseBody
+    @PreAuthorize("hasAnyAuthority('ACCOUNTING-SCHEMA_CREATE', 'ACCOUNTING-SCHEMA_UPDATE')")
+    public ResponseEntity<SchemaSimulationResponse> simulate(@RequestBody SchemaSimulationRequest request) {
+        List<AccountingSchemaLine> lines = request.getLines().stream()
+            .map(webMapper::toDomainLine)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(simulateSchemaUseCase.execute(lines, request.getMockValues()));
     }
 }

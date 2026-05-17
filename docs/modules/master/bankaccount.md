@@ -26,15 +26,19 @@ Tabel Utama: `bank_accounts`
 | `account_name`| `VARCHAR` | Nama pemilik rekening sesuai yang terdaftar di bank. |
 | `account_no` | `VARCHAR` | Nomor rekening bank atau nomor identifikasi akun kas. |
 | `account_type`| `VARCHAR` | Tipe akun: `CASH` atau `BANK`. |
+| `currency_id` | `BIGINT` | FK ke currency akun bank/kas. |
+| `coa_id` | `BIGINT` | FK ke Chart of Account kas/bank yang dipakai jurnal. |
 | `note` | `TEXT` | Catatan tambahan atau informasi pendukung (Opsional). |
 | `is_active` | `BOOLEAN` | Status aktif akun (1 = Aktif, 0 = Nonaktif). |
 
 ## 4. Aturan Bisnis (Business Rules)
-1.  **Mandatory Fields**: Semua field (Bank Name, Branch, City, Holder, Account Name, Account No, Type) wajib diisi, kecuali `note` dan `code` (yang diisi otomatis oleh sistem).
+1.  **Mandatory Fields**: Semua field (Bank Name, Branch, City, Holder, Account Name, Account No, Type, Currency, COA) wajib diisi, kecuali `note` dan `code` (yang diisi otomatis oleh sistem).
 2.  **Unique Code**: Kode akun bersifat unik dan tidak boleh ada duplikasi di seluruh sistem.
 3.  **Relasi Entitas**:
     *   **City**: Harus merujuk pada entitas `Geographic` yang sudah ada dan aktif.
     *   **Holder**: Harus merujuk pada entitas `Party` yang sudah ada dan aktif.
+    *   **Currency**: Harus merujuk pada currency yang tersedia melalui lookup currency.
+    *   **COA**: Harus merujuk pada Chart of Account yang dipilih melalui selector COA. COA ini menjadi akun kas/bank untuk journal line transaksi pembayaran, termasuk bank credit line Vendor Payment.
 4.  **Soft Delete**: DILARANG menggunakan *Hard Delete*. Record yang dihapus hanya akan diubah statusnya menjadi `isActive = false`.
 5.  **Read-Only Code**: Field `code` pada form UI wajib diset sebagai `readonly` dengan gaya visual `bg-light`.
 
@@ -43,6 +47,14 @@ Tabel Utama: `bank_accounts`
 Karena modul ini bergantung pada data `Geographic` (Kota) dan `Party` (Holder) yang bisa berjumlah ribuan, implementasi form menggunakan library **TomSelect** untuk pencarian asinkron:
 *   **City Lookup**: Memanggil endpoint `/api/lookup/geographics/cities`.
 *   **Party Lookup**: Memanggil endpoint `/api/lookup/parties` (melalui `PartyLookupController`).
+*   **Currency Lookup**: Field Currency menggunakan autocomplete standar dengan path `master/currencies`.
+
+### COA Selector
+Field COA menggunakan modal selector scoped Bank Account:
+*   Tombol icon search membuka selector COA.
+*   Selector mengambil data dari endpoint `/master/bank-accounts/selectors/coa`.
+*   Pilihan COA mengisi hidden `coaId` dan display readonly `code - name`.
+*   Controller menggunakan use case/lookup provider, bukan repository langsung, agar tetap sesuai boundary web layer.
 
 ### Internationalization (i18n)
 Semua label, judul halaman, dan pesan validasi dikelola melalui `messages.properties` dan `messages_id.properties` di bawah namespace `master.bank-account.*`.

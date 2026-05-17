@@ -5,12 +5,14 @@ Folder ini berisi standar teknis horizontal yang berlaku di seluruh aplikasi ERP
 ## UI & Component Standards
 - **[ui-standards.md](ui-standards.md)**: Standar visual, tinggi input (32px/28px), dan class CSS ERP.
 - **[autocomplete-generic.md](autocomplete-generic.md)**: Cara kerja TomSelect asinkron dan pola cascading lookup.
-- **[numeric-standards.md](numeric-standards.md)**: Standar input angka dengan pemisah ribuan (AutoNumeric), helper `ErpNumeric`, dan Spring Formatter.
+- **[numeric-standards.md](numeric-standards.md)**: Standar input angka dengan pemisah ribuan (AutoNumeric), helper `ErpNumeric`, Spring Formatter, dan konsistensi precision (termasuk line dinamis/modal selector).
 - **[datetime-standards.md](datetime-standards.md)**: Standar input tanggal & waktu (Flatpickr), format display vs backend (ISO 8601), `@DateTimeFormat` annotation, dan pre-fill dari database.
-- **[header-lines-form.md](header-lines-form.md)**: Standar pola form Header-Lines (PO, SO, Inventory).
-- **[form-submission.md](form-submission.md)**: Pola pengiriman form (Hybrid Approach: HTMX vs AJAX).
+- **[header-lines-form.md](header-lines-form.md)**: Standar pola form Header-Lines (PO, SO, Inventory), termasuk mode line turunan dokumen vs line manual.
+- **[form-submission.md](form-submission.md)**: Pola pengiriman form (Hybrid Approach: HTMX vs AJAX), urutan validasi client-side, redirect sukses, dan guard beforeunload.
+- **[action-buttons.md](action-buttons.md)**: Standar tombol aksi dokumen (confirm yes/no, `ErpForm.postAction`, redirect, error handling, UX consistency).
 - **[layout-standard.md](layout-standard.md)**: Standar layout utama dengan slot untuk JavaScript per-halaman.
-- **[modal-selector.md](modal-selector.md)**: Pola reusable selector berbasis Bootstrap modal + HTMX untuk single-select dan multi-select.
+- **[modal-selector.md](modal-selector.md)**: Pola reusable selector berbasis Bootstrap modal + HTMX untuk single-select/multi-select, termasuk exclusion query-level dan kontrak payload apply.
+- **[currency-exchange-rate.md](currency-exchange-rate.md)**: Pola auto-lock exchange rate ke 1 saat default currency dipilih, termasuk backend payload dan reusable JS utility.
 - **[page-specific-scripts.md](page-specific-scripts.md)**: Panduan memilih antara script inline di template dan file JavaScript khusus per halaman/fitur.
 
 ## Developer Guides (Implementation)

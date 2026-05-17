@@ -34,6 +34,10 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UpdatePurchaseOrderUseCase Tests")
 class UpdatePurchaseOrderUseCaseTest {
+    private static final Long TAX_ID = 10L;
+    private static final String TAX_CODE = "NON-TAX";
+    private static final String TAX_NAME = "Non Tax";
+    private static final BigDecimal TAX_RATE = BigDecimal.ZERO;
 
     @Mock
     private PurchaseOrderRepository repository;
@@ -55,7 +59,9 @@ class UpdatePurchaseOrderUseCaseTest {
                 null, null
         );
         return PurchaseOrder.createNew("PO-TEST-001", LocalDate.now(), null,
-                1L, 1L, 1L, BigDecimal.ONE, 30, null, PurchaseOrderType.DIRECT, "test", List.of(line));
+                1L, 1L, 1L, BigDecimal.ONE, 30, null, PurchaseOrderType.DIRECT,
+                TAX_ID, TAX_CODE, TAX_NAME, TAX_RATE, TaxCalculationMode.EXCLUSIVE,
+                "test", List.of(line));
     }
 
     private PurchaseOrder createDraftStandardPo() {
@@ -65,7 +71,9 @@ class UpdatePurchaseOrderUseCaseTest {
             100L, "Derived line"
         );
         return PurchaseOrder.createNew("PO-TEST-STD-001", LocalDate.now(), null,
-            100L, 200L, 300L, BigDecimal.ONE, 30, 10L, PurchaseOrderType.STANDARD, "test", List.of(line));
+            100L, 200L, 300L, BigDecimal.ONE, 30, 10L, PurchaseOrderType.STANDARD,
+            TAX_ID, TAX_CODE, TAX_NAME, TAX_RATE, TaxCalculationMode.EXCLUSIVE,
+            "test", List.of(line));
     }
 
     private PurchaseRequisition approvedPrWithSingleLine() {
@@ -111,7 +119,9 @@ class UpdatePurchaseOrderUseCaseTest {
 
         PurchaseOrder result = useCase.execute(1L,
                 LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 15),
-                5L, 6L, new BigDecimal("2"), 45, "Updated note", newLines
+                5L, 6L, new BigDecimal("2"), 45,
+                TAX_ID, TAX_CODE, TAX_NAME, TAX_RATE, TaxCalculationMode.EXCLUSIVE,
+                "Updated note", newLines
         );
 
         assertThat(result.getNote()).isEqualTo("Updated note");
@@ -127,7 +137,9 @@ class UpdatePurchaseOrderUseCaseTest {
         when(repository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> useCase.execute(99L,
-                LocalDate.now(), null, 1L, 1L, BigDecimal.ONE, 30, null, List.of()))
+                LocalDate.now(), null, 1L, 1L, BigDecimal.ONE, 30,
+                TAX_ID, TAX_CODE, TAX_NAME, TAX_RATE, TaxCalculationMode.EXCLUSIVE,
+                null, List.of()))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("msg.error.po.notfound");
     }
@@ -145,7 +157,9 @@ class UpdatePurchaseOrderUseCaseTest {
         );
 
         assertThatThrownBy(() -> useCase.execute(1L,
-                LocalDate.now(), null, 1L, 1L, BigDecimal.ONE, 30, null, lines))
+                LocalDate.now(), null, 1L, 1L, BigDecimal.ONE, 30,
+                TAX_ID, TAX_CODE, TAX_NAME, TAX_RATE, TaxCalculationMode.EXCLUSIVE,
+                null, lines))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("msg.error.po.update.not.draft");
     }
@@ -158,7 +172,9 @@ class UpdatePurchaseOrderUseCaseTest {
 
         assertThatThrownBy(() -> useCase.execute(
                 1L,
-                LocalDate.now(), null, 1L, 1L, BigDecimal.ONE, 30, null, List.of()
+                LocalDate.now(), null, 1L, 1L, BigDecimal.ONE, 30,
+                TAX_ID, TAX_CODE, TAX_NAME, TAX_RATE, TaxCalculationMode.EXCLUSIVE,
+                null, List.of()
         )).isInstanceOf(DomainException.class)
                 .hasMessage("msg.error.po.save.no.lines");
     }
@@ -173,7 +189,9 @@ class UpdatePurchaseOrderUseCaseTest {
         assertThatThrownBy(() -> useCase.execute(
             1L,
             LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 15),
-            999L, 300L, BigDecimal.ONE, 45, "Updated note",
+            999L, 300L, BigDecimal.ONE, 45,
+            TAX_ID, TAX_CODE, TAX_NAME, TAX_RATE, TaxCalculationMode.EXCLUSIVE,
+            "Updated note",
             List.of(new PoLineInput(20L, new BigDecimal("2.0000"), 30L,
                 new BigDecimal("750.00"), BigDecimal.ZERO, 100L, "Updated line"))
         )).isInstanceOf(DomainException.class)

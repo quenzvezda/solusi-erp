@@ -4,6 +4,7 @@ import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.master.bankaccount.domain.model.BankAccount;
 import com.solusi.erp.master.bankaccount.domain.repository.BankAccountRepository;
+import com.solusi.erp.master.shared.model.PaymentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,7 +36,7 @@ class FindBankAccountsUseCaseTest {
     void execute_delegatesKeywordAndPageableToRepository() {
         Pageable pageable = Pageable.of(0, 20);
         BankAccount account = BankAccount.createNew("BA-001", "Bank BCA", "Sudirman",
-                "John Doe", "1234567890", "BANK", "Note", 1L, 2L, true);
+                "John Doe", "1234567890", PaymentType.BANK_TRANSFER, "Note", 1L, 2L, true, 1L, 10L);
         Page<BankAccount> expectedPage = new Page<>(List.of(account), 0, 20, 1L);
 
         when(repository.findAll("bca", pageable)).thenReturn(expectedPage);

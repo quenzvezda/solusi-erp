@@ -13,6 +13,6 @@ public class CoaInUseCheckerImpl implements CoaInUseChecker {
 
     @Override
     public boolean isInUse(Long coaId) {
-        return schemaJpaRepository.existsByDebitAccountIdOrCreditAccountId(coaId, coaId);
+        return schemaJpaRepository.existsByLines_AccountId(coaId);
     }
 }

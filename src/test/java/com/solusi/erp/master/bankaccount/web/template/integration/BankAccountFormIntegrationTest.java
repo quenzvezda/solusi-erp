@@ -1,7 +1,7 @@
 package com.solusi.erp.master.bankaccount.web.template.integration;
 
 import com.solusi.erp.master.bankaccount.web.dto.BankAccountSaveRequest;
-import com.solusi.erp.master.shared.model.AccountType;
+import com.solusi.erp.master.shared.model.PaymentType;
 import com.solusi.erp.testutils.TemplateTestUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -52,7 +52,7 @@ class BankAccountFormIntegrationTest {
         String html = TemplateTestUtils.renderFragment(
                 TEMPLATE, "bank-account-form-content",
                 new org.thymeleaf.context.Context(java.util.Locale.getDefault(),
-                        Map.of("bankAccountRequest", createRequest(), "accountTypes", AccountType.values(), "selectedCity", "", "selectedParty", "")));
+                        Map.of("bankAccountRequest", createRequest(), "accountTypes", PaymentType.values(), "selectedCity", "", "selectedParty", "")));
         assertThat(html).isNotBlank();
         assertThat(html).contains("/master/bank-accounts/create");
     }
@@ -63,7 +63,7 @@ class BankAccountFormIntegrationTest {
         String html = TemplateTestUtils.renderFragment(
                 TEMPLATE, "bank-account-form-content",
                 new org.thymeleaf.context.Context(java.util.Locale.getDefault(),
-                        Map.of("bankAccountRequest", editRequest(), "accountTypes", AccountType.values(), "selectedCity", "", "selectedParty", "")));
+                        Map.of("bankAccountRequest", editRequest(), "accountTypes", PaymentType.values(), "selectedCity", "", "selectedParty", "")));
         assertThat(html).isNotBlank();
         assertThat(html).contains("/master/bank-accounts/edit/");
     }

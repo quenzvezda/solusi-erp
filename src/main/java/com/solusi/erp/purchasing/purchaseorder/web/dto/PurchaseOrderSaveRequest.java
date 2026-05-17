@@ -33,6 +33,7 @@ public class PurchaseOrderSaveRequest extends BaseAuditResponse {
     private int paymentTermDays = 30;
     private Long prId;
     private PurchaseOrderType poType = PurchaseOrderType.DIRECT;
+    @NotNull(message = "{label.po.tax} {validation.notnull.suffix}")
     private Long taxId;
     private String taxCode;
     private String taxName;

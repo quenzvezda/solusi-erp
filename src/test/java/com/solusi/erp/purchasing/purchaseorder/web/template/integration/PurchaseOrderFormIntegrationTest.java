@@ -77,6 +77,27 @@ class PurchaseOrderFormIntegrationTest {
     }
 
     @Test
+    @DisplayName("PR selector action buttons are icon-only and clear uses danger outline")
+    void prSelectorButtons_areIconOnlyAndClearUsesDangerOutline() throws Exception {
+        String template = readResource("templates/purchasing/purchase-orders/form.html");
+        String selectPrButton = findTagById(template, "button", "btn-select-pr");
+        String clearPrButton = findTagById(template, "button", "btn-clear-pr");
+
+        assertThat(selectPrButton).contains("btn-icon");
+        assertThat(selectPrButton).contains("btn-outline-primary");
+        assertThat(selectPrButton).contains("aria-label");
+        assertThat(selectPrButton).contains("title");
+
+        assertThat(clearPrButton).contains("btn-icon");
+        assertThat(clearPrButton).contains("btn-outline-danger");
+        assertThat(clearPrButton).contains("aria-label");
+        assertThat(clearPrButton).contains("title");
+
+        assertThat(template).doesNotContain("<span th:text=\"#{label.po.prReference.selectButton}\">");
+        assertThat(template).doesNotContain("<span th:text=\"#{label.clear}\">");
+    }
+
+    @Test
     @DisplayName("preedit standard flow locks derived header lookups on initialization")
     void preeditStandardFlow_locksDerivedHeaderLookupsOnInitialization() throws Exception {
         String script = readResource("static/js/purchasing/purchase-order-form.js");
@@ -184,5 +205,19 @@ class PurchaseOrderFormIntegrationTest {
         try (InputStream in = is) {
             return new String(in.readAllBytes(), StandardCharsets.UTF_8);
         }
+    }
+
+    private String findTagById(String html, String tag, String id) {
+        String marker = "id=\"" + id + "\"";
+        int markerIndex = html.indexOf(marker);
+        assertThat(markerIndex).as("Tag with id '%s' not found", id).isGreaterThanOrEqualTo(0);
+
+        int start = html.lastIndexOf("<" + tag, markerIndex);
+        assertThat(start).as("Start tag <%s> for id '%s' not found", tag, id).isGreaterThanOrEqualTo(0);
+
+        int end = html.indexOf(">", markerIndex);
+        assertThat(end).as("Tag end for id '%s' not found", id).isGreaterThan(markerIndex);
+
+        return html.substring(start, end + 1);
     }
 }

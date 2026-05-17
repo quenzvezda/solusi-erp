@@ -122,6 +122,16 @@ Sistem ini menggunakan mekanisme internasionalisasi dinamis untuk mendukung mult
 * **Custom Error Views:** Arahkan *error* tersebut ke halaman khusus Thymeleaf (misal: `error/404.html`, `error/403.html`) yang sudah di-styling menggunakan UI Tabler agar menyatu dengan tema ERP. Jangan gunakan *Whitelabel Error Page* bawaan Spring Boot.
 
 ## 9. Agent Instructions (How to Assist)
+
+<!-- lean-ctx -->
+## lean-ctx
+
+Prefer lean-ctx MCP tools over native equivalents for token savings.
+Full rules: @LEAN-CTX.md
+<!-- /lean-ctx -->
+
+Catatan Penegakan Batas Lapisan Web: Agent WAJIB memastikan bahwa komponen di paket web (web.controller dan web.mapper) hanya meng-inject Use Case (interface application/usecase), read-only lookup/query ports, dan helper yang berada di paket web itu sendiri (mis. web mappers). Agent DILARANG menginjeksi repository (JpaRepository) atau entity slice lain langsung ke lapisan web untuk kebutuhan cross-slice data access. Untuk resolusi label ringan gunakan LookupProvider; enrichment yang membutuhkan logika bisnis harus ditempatkan di query/read port atau application read model.
+
 Saat menghasilkan kode:
 1.  **Fokus pada Backend & Integrasi Thymeleaf:** Tulis kode Java yang bersih dan berikan contoh HTML Thymeleaf yang mengimplementasikan class Bootstrap/Tabler secara langsung.
 2.  **Berikan Kode Lengkap:** Jika membuat sebuah DTO atau Controller, sertakan seluruh import, anotasi, dan field yang diperlukan secara utuh.

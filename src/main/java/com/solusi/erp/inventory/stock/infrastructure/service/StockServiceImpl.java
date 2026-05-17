@@ -10,15 +10,12 @@ import com.solusi.erp.inventory.stock.domain.repository.StockBalanceRepository;
 import com.solusi.erp.inventory.stock.domain.service.FifoValuationService;
 import com.solusi.erp.inventory.stock.infrastructure.persistence.InventoryMovementEntity;
 import com.solusi.erp.inventory.stock.infrastructure.persistence.InventoryMovementJpaRepository;
-import com.solusi.erp.inventory.product.infrastructure.persistence.ProductEntity;
-import com.solusi.erp.inventory.product.infrastructure.persistence.JpaProductRepository;
 import com.solusi.erp.inventory.uomconversion.domain.port.UomConversionService;
-import com.solusi.erp.inventory.shared.util.SerialNumberGenerator;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 /**
  * Implementation of StockService delegating business logic to domain models.
@@ -27,20 +24,17 @@ public class StockServiceImpl implements StockService {
 
     private final StockBalanceRepository stockBalanceRepository;
     private final InventoryMovementJpaRepository inventoryMovementRepository;
-    private final JpaProductRepository productRepository;
     private final UomConversionService uomConversionService;
     private final FifoValuationService fifoValuationService;
     private final MessageSource messageSource;
 
     public StockServiceImpl(StockBalanceRepository stockBalanceRepository,
                             InventoryMovementJpaRepository inventoryMovementRepository,
-                            JpaProductRepository productRepository,
                             UomConversionService uomConversionService,
                             FifoValuationService fifoValuationService,
                             MessageSource messageSource) {
         this.stockBalanceRepository = stockBalanceRepository;
         this.inventoryMovementRepository = inventoryMovementRepository;
-        this.productRepository = productRepository;
         this.uomConversionService = uomConversionService;
         this.fifoValuationService = fifoValuationService;
         this.messageSource = messageSource;
@@ -55,10 +49,8 @@ public class StockServiceImpl implements StockService {
                     payload.getProductId(), payload.getUomId(), payload.getQuantity());
         }
 
-        ProductEntity product = productRepository.getReferenceById(payload.getProductId());
-
         // 2. Resolve Serial Number
-        final String serialNumber = resolveSerialNumber(product, payload);
+        final String serialNumber = payload.getSerialNumber();
 
         // 3. Load or create domain StockBalance, apply movement, validate
         StockBalance balance = stockBalanceRepository
@@ -86,7 +78,7 @@ public class StockServiceImpl implements StockService {
     private CostAmount handleValuation(StockMovementPayload payload, BigDecimal baseQuantity, String serialNumber) {
         BigDecimal absQuantity = baseQuantity.abs();
         if (isPositiveAdjustment(payload)) {
-            CostAmount cost = resolveCostAmount(payload);
+            CostAmount cost = resolveCostAmount(payload, baseQuantity);
             fifoValuationService.addLayer(payload.getProductId(), payload.getContainerId(), serialNumber, absQuantity, cost);
             return cost;
         } else if (isNegativeAdjustment(payload)) {
@@ -95,10 +87,23 @@ public class StockServiceImpl implements StockService {
         return null;
     }
 
-    private CostAmount resolveCostAmount(StockMovementPayload payload) {
+    private CostAmount resolveCostAmount(StockMovementPayload payload, BigDecimal baseQuantity) {
         BigDecimal exchangeRate = payload.getExchangeRate() != null ? payload.getExchangeRate() : BigDecimal.ONE;
-        BigDecimal originalAmount = payload.getNetPrice() != null ? payload.getNetPrice() : BigDecimal.ZERO;
-        return CostAmount.of(payload.getCurrencyId(), exchangeRate, originalAmount);
+        BigDecimal originalUnitPrice = payload.getNetPrice() != null ? payload.getNetPrice() : BigDecimal.ZERO;
+        BigDecimal transactionQuantity = payload.getQuantity() != null ? payload.getQuantity() : BigDecimal.ONE;
+        if (baseQuantity == null
+                || baseQuantity.compareTo(BigDecimal.ZERO) == 0
+                || transactionQuantity.compareTo(BigDecimal.ZERO) == 0) {
+            return CostAmount.of(payload.getCurrencyId(), exchangeRate, originalUnitPrice);
+        }
+
+        BigDecimal conversionFactor = baseQuantity.divide(transactionQuantity, 6, RoundingMode.HALF_UP);
+        if (conversionFactor.compareTo(BigDecimal.ZERO) == 0) {
+            return CostAmount.of(payload.getCurrencyId(), exchangeRate, originalUnitPrice);
+        }
+
+        BigDecimal normalizedOriginal = originalUnitPrice.divide(conversionFactor, 6, RoundingMode.HALF_UP);
+        return CostAmount.of(payload.getCurrencyId(), exchangeRate, normalizedOriginal);
     }
 
     private CurrencyAmount toCurrencyAmount(CostAmount cost) {
@@ -128,14 +133,6 @@ public class StockServiceImpl implements StockService {
             case ISSUE, ISSUE_RESERVED, TRANSFER_OUT -> true;
             default -> false;
         };
-    }
-
-    private String resolveSerialNumber(ProductEntity product, StockMovementPayload payload) {
-        String sn = payload.getSerialNumber();
-        if (Boolean.TRUE.equals(product.getIsSerialized()) && !StringUtils.hasText(sn) && isPositiveAdjustment(payload)) {
-            return SerialNumberGenerator.generate();
-        }
-        return sn;
     }
 
     private void logMovement(StockMovementPayload payload, BigDecimal baseQuantity, String serialNumber, CurrencyAmount unitCost) {

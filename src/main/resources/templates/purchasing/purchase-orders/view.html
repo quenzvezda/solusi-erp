@@ -32,6 +32,32 @@
                     </div>
                     <div class="col-auto ms-auto d-print-none">
                         <div class="btn-list">
+                            <a th:if="${canCreateGoodsReceipt}"
+                               class="btn btn-outline-primary"
+                               sec:authorize="hasAuthority('GOODS-RECEIPT_CREATE')"
+                               th:href="@{/inventory/goods-receipts/create(referenceType='PURCHASE_ORDER',referenceId=${po.id})}">
+                                <i class="ti ti-package-import me-1"></i>
+                                <span th:text="#{label.gr.action.create}">Create Goods Receipt</span>
+                            </a>
+                            <a th:if="${canCreateGoodsReceipt}"
+                               class="btn btn-outline-secondary"
+                               sec:authorize="hasAuthority('GOODS-RECEIPT_READ')"
+                               th:href="@{/inventory/goods-receipts(referenceType='PURCHASE_ORDER',referenceId=${po.id})}">
+                                <i class="ti ti-list-details me-1"></i>
+                                <span th:text="#{label.gr.list.title}">Goods Receipts</span>
+                                <span class="badge badge-warning ms-1" th:if="${goodsReceiptCount > 0}" th:text="${goodsReceiptCount}">3</span>
+                                <span class="badge badge-secondary ms-1" th:if="${goodsReceiptCount == 0}">0</span>
+                            </a>
+                            <button th:if="${canSendPurchaseOrder}"
+                                    type="button"
+                                    class="btn btn-primary"
+                                    sec:authorize="hasAuthority('PO_SEND')"
+                                    th:data-send-url="@{'/purchasing/purchase-orders/' + ${po.id} + '/send'}"
+                                    th:data-confirm-message="#{msg.confirm.po.send}"
+                                    onclick="ErpForm.postAction(this)">
+                                <i class="ti ti-truck me-1"></i>
+                                <span th:text="#{label.po.action.send}">Send to Supplier</span>
+                            </button>
                             <button th:if="${approvalRequestId != null}"
                                     type="button"
                                     class="btn btn-white"
@@ -185,6 +211,8 @@
                                 <div th:replace="~{fragments/audit-info :: audit-info(${po})}"></div>
                             </div>
                         </div>
+
+
 
                     </div>
 

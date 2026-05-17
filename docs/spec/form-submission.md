@@ -45,9 +45,25 @@ Sistem menggunakan `shared/erp-form-handler.js` (global) yang secara otomatis:
     *   **Empty to Null**: Mengonversi string kosong (`""`) menjadi `null` agar kompatibel dengan Jackson (Enum/Long).
     *   **Numeric Unformat**: Otomatis mengambil nilai murni dari field AutoNumeric menggunakan `.getNumber()`.
 3.  Mengirim data sebagai JSON (otomatis menangani CSRF via header `X-CSRF-TOKEN`).
-4.  **Sukses**: Melakukan redirect setelah jeda 300ms (untuk keperluan debug network). Pesan sukses disimpan di `sessionStorage` dan ditampilkan otomatis di halaman tujuan.
+4.  **Sukses**: Redirect ke `data-redirect-on-success` dan menyimpan pesan sukses di `sessionStorage` (`erp_pending_success`) agar toast muncul di halaman tujuan.
 5.  **Validasi Gagal (400)**: Menampilkan pesan error di bawah field masing-masing tanpa merusak state TomSelect.
 6.  **Server Error (500)**: Menampilkan modal error global menggunakan **`ErpModal.showError()`**.
+
+### C. Urutan Validasi (Penting)
+
+Agar validasi custom per halaman tidak tertabrak handler global:
+1. Pasang listener `submit` di fase **capture** (`addEventListener('submit', handler, true)`) untuk validasi line-level yang kompleks.
+2. Jika invalid, panggil `event.preventDefault()` + `event.stopImmediatePropagation()` agar request AJAX tidak terkirim.
+3. Validasi backend tetap wajib (jangan bergantung pada JavaScript saja).
+
+### D. Navigasi Intentional & Beforeunload
+
+Untuk aksi tombol yang men-trigger redirect melalui AJAX action (`ErpForm.postAction` di `shared/erp-common-handler.js`):
+- set flag suppress beforeunload sebelum request,
+- reset flag jika request gagal,
+- simpan pesan sukses sebelum redirect.
+
+Pola ini mencegah prompt "leave page" palsu pada browser saat user menekan aksi valid seperti **Complete**.
 
 ---
 

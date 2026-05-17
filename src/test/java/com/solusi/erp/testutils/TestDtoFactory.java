@@ -4,7 +4,6 @@ import com.solusi.erp.inventory.brand.web.dto.BrandSummaryResponse;
 import com.solusi.erp.inventory.product.web.dto.ProductSummaryResponse;
 import com.solusi.erp.master.geographic.web.dto.GeographicSummaryResponse;
 import com.solusi.erp.master.shared.model.GeographicType;
-
 import com.solusi.erp.accounting.coa.web.dto.CoaSummaryResponse;
 import com.solusi.erp.accounting.coa.web.dto.CoaSaveRequest;
 import com.solusi.erp.accounting.coa.web.dto.CoaDetailResponse;
@@ -54,8 +53,6 @@ public class TestDtoFactory {
         return dto;
     }
 
-    // --- Accounting DTO Factories ---
-    // COA Factories
     public static CoaSummaryResponse sampleCoaSummaryResponse() {
         CoaSummaryResponse dto = new CoaSummaryResponse();
         dto.setId(1L);
@@ -108,16 +105,12 @@ public class TestDtoFactory {
         return dto;
     }
 
-    // Schema Factories
     public static SchemaSummaryResponse sampleSchemaSummaryResponse() {
         SchemaSummaryResponse dto = new SchemaSummaryResponse();
         dto.setId(1L);
         dto.setEventType("GOODS_RECEIPT");
         dto.setDescription("Goods receipt schema");
-        dto.setDebitAccountId(1L);
-        dto.setDebitAccountName("1000 - Cash");
-        dto.setCreditAccountId(2L);
-        dto.setCreditAccountName("2000 - Accounts Payable");
+        dto.setLines(new java.util.ArrayList<>());
         dto.setIsActive(true);
         return dto;
     }
@@ -126,8 +119,7 @@ public class TestDtoFactory {
         SchemaSaveRequest req = new SchemaSaveRequest();
         req.setEventType("GOODS_RECEIPT");
         req.setDescription("Goods receipt schema");
-        req.setDebitAccountId(1L);
-        req.setCreditAccountId(2L);
+        req.setLines(new java.util.ArrayList<>());
         req.setIsActive(true);
         return req;
     }
@@ -137,15 +129,11 @@ public class TestDtoFactory {
         dto.setId(1L);
         dto.setEventType("GOODS_RECEIPT");
         dto.setDescription("Goods receipt schema");
-        dto.setDebitAccountId(1L);
-        dto.setDebitAccountName("1000 - Cash");
-        dto.setCreditAccountId(2L);
-        dto.setCreditAccountName("2000 - Accounts Payable");
+        dto.setLines(new java.util.ArrayList<>());
         dto.setIsActive(true);
         return dto;
     }
 
-    // FiscalYear/Period Factories
     public static FiscalYearSummaryResponse sampleFiscalYearSummaryResponse() {
         FiscalYearSummaryResponse dto = new FiscalYearSummaryResponse();
         dto.setId(1L);
@@ -191,5 +179,3 @@ public class TestDtoFactory {
         return dto;
     }
 }
-
-

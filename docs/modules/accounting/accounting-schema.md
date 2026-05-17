@@ -18,22 +18,24 @@
 7. [Standard Schema Mappings](#7-standard-schema-mappings)
 8. [Use Cases](#8-use-cases)
 9. [RBAC Permissions](#9-rbac-permissions)
-10. [Integration with AutoJournalService](#10-integration-with-autojournalservice)
+10. [Integration with Journal Posting](#10-integration-with-journal-posting)
 
 ---
 
 ## 1. Module Overview
 
-The **Accounting Schema** module is the auto-journaling configuration hub of Solusi ERP. It maintains a table of mappings that associates each operational business event (e.g. Goods Receipt, Vendor Payment) with a specific **debit account** and **credit account** from the Chart of Accounts (COA).
+The **Accounting Schema** module is the auto-journaling configuration hub of Solusi ERP. Each business event (e.g. Goods Receipt, Vendor Payment) is mapped to a set of **schema lines** — each line binds a `JournalVariable` (a named amount slot) to a specific COA account and journal position (DEBIT or CREDIT).
 
-Whenever a business event fires in any other module, the `AutoJournalService` performs a lookup against this table to determine which accounts to post to — without any hardcoded account logic in application code.
+Whenever a business event fires, `PostJournalForEventUseCaseImpl` looks up the active schema for that event, iterates the schema lines, reads the amount for each variable from the caller-supplied map, and builds the journal entry generically — no event-specific posting logic lives in the journal module.
 
 Key characteristics:
 
-- **One active record per event type** — uniqueness is enforced at the database level.
+- **One active schema per event type** — uniqueness is enforced at the database level.
+- **Multiple schema lines per schema** — each line maps a `JournalVariable` to a COA account and a position (DEBIT or CREDIT).
 - **Configurable by business users** — account assignments can change without a code deployment.
 - **Soft-delete by deactivation** — historical mappings are preserved for audit purposes.
-- **Postable accounts only** — both debit and credit accounts must be leaf (non-header) COA entries.
+- **Postable accounts only** — each line's account must be a leaf (non-header) COA entry.
+- **Variables must match the event type** — each `JournalVariable` declares which event it belongs to; mismatched lines are rejected at save time.
 
 ---
 
@@ -109,9 +111,8 @@ public class AccountingSchema {
     private final AuditMetadata metadata; // createdBy, createdDate, updatedBy, updatedDate, version
     private SchemaEventType eventType;    // Immutable after creation
     private String description;
-    private Long debitAccountId;          // FK → acc_chart_of_accounts.id
-    private Long creditAccountId;         // FK → acc_chart_of_accounts.id
     private Boolean isActive;
+    private List<AccountingSchemaLine> lines; // at least one required
 }
 ```
 
@@ -120,29 +121,67 @@ public class AccountingSchema {
 | `id` | `Long` | System-generated surrogate key |
 | `eventType` | `SchemaEventType` | Immutable; identifies the business event |
 | `description` | `String` | Optional human-readable label |
-| `debitAccountId` | `Long` | Must reference a postable (non-header) COA account |
-| `creditAccountId` | `Long` | Must reference a postable (non-header) COA account |
 | `isActive` | `Boolean` | `true` = in use; `false` = soft-deleted |
+| `lines` | `List<AccountingSchemaLine>` | Ordered list of variable-to-account mappings; must not be empty |
 | `metadata` | `AuditMetadata` | `createdBy`, `createdDate`, `updatedBy`, `updatedDate`, `version` |
 
 **Factory method:**
 
 ```java
-AccountingSchema.createNew(eventType, description, debitAccountId, creditAccountId, isActive)
+AccountingSchema.createNew(eventType, description, isActive, lines)
 ```
 
 **Mutation methods:**
 
 ```java
-schema.update(description, debitAccountId, creditAccountId, isActive);
+schema.update(description, isActive, lines);
 schema.softDelete(); // sets isActive = false
 ```
+
+**Validation (enforced in constructor and `update`):**
+- `lines` must not be empty → `msg.error.schema.lines.empty`
+- Every `line.variable().getSupportedEvent()` must equal `eventType` → `msg.error.schema.variable.unsupported`
 
 > `eventType` is **immutable**. To reassign accounts for a different event, create a new schema record.
 
 ---
 
-### 4.2 Enum: `SchemaEventType`
+### 4.2 Value Object: `AccountingSchemaLine`
+
+```java
+public record AccountingSchemaLine(
+    Long id,                  // null for new lines; assigned by DB on persist
+    JournalVariable variable, // which amount slot this line covers
+    Long accountId,           // FK → acc_chart_of_accounts.id (must be postable)
+    JournalPosition position  // DEBIT or CREDIT
+) {}
+```
+
+Each line represents one row in `acc_schema_lines`. When the schema is persisted, all lines are written; when the schema is updated, all existing lines are replaced.
+
+---
+
+### 4.3 Enum: `JournalVariable`
+
+`JournalVariable` is the bridge between the journal posting layer and the schema configuration. Each value names an amount slot and declares which event type it belongs to.
+
+```java
+public enum JournalVariable {
+    GR_INVENTORY_AMT(SchemaEventType.GOODS_RECEIPT), // inventory value (qty × unit cost)
+    GR_TAX_AMT(SchemaEventType.GOODS_RECEIPT),       // input VAT on the purchase
+    GR_GRAND_TOTAL(SchemaEventType.GOODS_RECEIPT);   // sum of inventory + tax
+
+    // Additional variables are added here as new event types gain journal support.
+}
+```
+
+The Schema UI reads `JournalVariable.getVariablesForEvent(eventType)` to populate the variable dropdown for a given schema. Callers (e.g. `CompleteGoodsReceiptUseCaseImpl`) build a `Map<JournalVariable, BigDecimal>` and pass it to `PostJournalForEventUseCaseImpl`, which resolves accounts generically via the schema lines.
+
+---
+
+---
+
+### 4.4 Enum: `SchemaEventType`
 
 ```java
 public enum SchemaEventType {
@@ -163,16 +202,16 @@ Each enum value corresponds to exactly one active `AccountingSchema` row at any 
 
 ## 5. Database Schema
 
-**Table:** `acc_accounting_schemas`
-**Migration:** `V43__Add_Accounting_Foundation.sql`
+**Tables:** `acc_accounting_schemas`, `acc_schema_lines`
+**Original migration:** `V43__Add_Accounting_Foundation.sql`
+**Refactor migration:** `V56__Refactor_Schema_To_Dynamic_Lines.sql`
 
 ```sql
+-- Schema header: one row per event type.
 CREATE TABLE acc_accounting_schemas (
     id                  BIGINT       NOT NULL AUTO_INCREMENT,
-    event_type          VARCHAR(50)  NOT NULL COMMENT 'e.g. GOODS_RECEIPT, VENDOR_BILL',
+    event_type          VARCHAR(50)  NOT NULL COMMENT 'Matches SchemaEventType enum name',
     description         VARCHAR(255) NULL,
-    debit_account_id    BIGINT       NOT NULL,
-    credit_account_id   BIGINT       NOT NULL,
     is_active           BOOLEAN      NOT NULL DEFAULT TRUE,
     version             INT          NOT NULL DEFAULT 0,
     created_by_user_id  BIGINT       NULL,
@@ -181,32 +220,46 @@ CREATE TABLE acc_accounting_schemas (
     updated_date        DATETIME     NULL,
 
     PRIMARY KEY (id),
+    UNIQUE KEY uk_schema_event_active (event_type, is_active)
+);
 
-    -- Ensures only ONE active mapping per event type
-    UNIQUE KEY uk_schema_event_active (event_type, is_active),
+-- Schema lines: one row per variable-to-account mapping.
+CREATE TABLE acc_schema_lines (
+    id          BIGINT      NOT NULL AUTO_INCREMENT,
+    schema_id   BIGINT      NOT NULL,
+    variable    VARCHAR(50) NOT NULL COMMENT 'Matches JournalVariable enum name',
+    account_id  BIGINT      NOT NULL,
+    position    VARCHAR(10) NOT NULL COMMENT 'DEBIT or CREDIT',
 
-    CONSTRAINT fk_schema_debit
-        FOREIGN KEY (debit_account_id)  REFERENCES acc_chart_of_accounts(id),
-    CONSTRAINT fk_schema_credit
-        FOREIGN KEY (credit_account_id) REFERENCES acc_chart_of_accounts(id)
+    PRIMARY KEY (id),
+    CONSTRAINT fk_schema_line_schema  FOREIGN KEY (schema_id)  REFERENCES acc_accounting_schemas(id) ON DELETE CASCADE,
+    CONSTRAINT fk_schema_line_account FOREIGN KEY (account_id) REFERENCES acc_chart_of_accounts(id)
 );
 ```
 
-### Column Reference
+### `acc_accounting_schemas` Column Reference
 
 | Column | Type | Nullable | Notes |
 |---|---|---|---|
 | `id` | `BIGINT` | No | Auto-increment primary key |
 | `event_type` | `VARCHAR(50)` | No | Matches `SchemaEventType` enum name |
 | `description` | `VARCHAR(255)` | Yes | Free-text label |
-| `debit_account_id` | `BIGINT` | No | FK to `acc_chart_of_accounts` |
-| `credit_account_id` | `BIGINT` | No | FK to `acc_chart_of_accounts` |
 | `is_active` | `BOOLEAN` | No | `true` = active; `false` = deactivated |
 | `version` | `INT` | No | Optimistic locking counter |
 | `created_by_user_id` | `BIGINT` | Yes | Audit: creator user ID |
 | `created_date` | `DATETIME` | Yes | Audit: creation timestamp |
 | `updated_by_user_id` | `BIGINT` | Yes | Audit: last modifier user ID |
 | `updated_date` | `DATETIME` | Yes | Audit: last modification timestamp |
+
+### `acc_schema_lines` Column Reference
+
+| Column | Type | Nullable | Notes |
+|---|---|---|---|
+| `id` | `BIGINT` | No | Auto-increment primary key |
+| `schema_id` | `BIGINT` | No | FK to `acc_accounting_schemas`; cascades on delete |
+| `variable` | `VARCHAR(50)` | No | Matches `JournalVariable` enum name |
+| `account_id` | `BIGINT` | No | FK to `acc_chart_of_accounts` (must be postable) |
+| `position` | `VARCHAR(10)` | No | `DEBIT` or `CREDIT` |
 
 ### Key Constraint
 
@@ -224,9 +277,9 @@ This constraint enforces that **at most one active record exists per event type*
 
 Only **one active schema** is allowed per `event_type` at any time. This is enforced by the database unique key `uk_schema_event_active (event_type, is_active)`. Attempting to create a second active schema for the same event type will raise a constraint violation.
 
-### Rule 2 — Both accounts must be postable
+### Rule 2 — Each line's account must be postable
 
-The `debit_account_id` and `credit_account_id` must each reference a COA account where `is_header = false`. Header accounts exist only for structural grouping and cannot receive journal postings. This check is enforced at the application layer before persistence.
+Every `AccountingSchemaLine.accountId` must reference a COA account where `is_header = false`. Header accounts exist only for structural grouping and cannot receive journal postings. This check is enforced at the application layer before persistence.
 
 ### Rule 3 — Soft delete, never hard delete
 
@@ -234,11 +287,19 @@ Deactivating a schema (`is_active = false`) is the only deletion mechanism. The 
 
 ### Rule 4 — Auto-journal lookup at runtime
 
-When a business event fires, `AutoJournalService` queries `findActiveByEventType(eventType)`. If no active schema is found, the operation is halted with a domain exception. This design makes the absence of a schema configuration a hard, explicit failure rather than a silent posting error.
+When a business event fires, `PostJournalForEventUseCaseImpl` queries `findByEventTypeAndIsActiveTrue(eventType)`. If no active schema is found, the operation is halted with a domain exception. This design makes the absence of a schema configuration a hard, explicit failure rather than a silent posting error.
 
 ### Rule 5 — Immutable event type
 
 The `event_type` of an existing schema record cannot be modified. If the event type needs to be changed, the old schema must be deactivated and a new one created. This preserves referential integrity between historical journal entries and the schema that generated them.
+
+### Rule 6 — Schema lines must not be empty
+
+A schema must have at least one `AccountingSchemaLine`. Saving a schema with an empty `lines` list is rejected with `msg.error.schema.lines.empty`.
+
+### Rule 7 — Variable must match event type
+
+Each `AccountingSchemaLine.variable` must belong to the same `SchemaEventType` as the parent schema (`variable.getSupportedEvent() == schema.getEventType()`). Mismatched lines are rejected with `msg.error.schema.variable.unsupported`.
 
 ---
 
@@ -246,16 +307,15 @@ The `event_type` of an existing schema record cannot be modified. If the event t
 
 The following mappings are the baseline configuration seeded with each Solusi ERP installation. Account codes reference the standard Chart of Accounts.
 
-| Event Type | Debit Account | Credit Account | Sprint |
+| Event Type | Variable | Account | Position |
 |---|---|---|---|
-| `GOODS_RECEIPT` | 1131 — Merchandise Inventory | 2150 — GR/IR Clearing | Sprint 4 |
-| `VENDOR_BILL` | 2150 — GR/IR Clearing | 2100 — Accounts Payable | Sprint 5 |
-| `VENDOR_PAYMENT` | 2100 — Accounts Payable | 1112 — Bank Account | Sprint 5 |
-| `PURCHASE_RETURN` | 2150 — GR/IR Clearing | 1131 — Merchandise Inventory | Sprint 5 |
-| `STOCK_ADJUSTMENT_IN` | 1131 — Merchandise Inventory | 4140 — Inventory Adjustment Gain | Sprint 6 |
-| `STOCK_ADJUSTMENT_OUT` | 5140 — Inventory Adjustment Loss | 1131 — Merchandise Inventory | Sprint 6 |
+| `GOODS_RECEIPT` | `GR_INVENTORY_AMT` | 1310 — Merchandise Inventory | DEBIT |
+| `GOODS_RECEIPT` | `GR_TAX_AMT` | 1230 — Tax Receivable (Input VAT) | DEBIT |
+| `GOODS_RECEIPT` | `GR_GRAND_TOTAL` | 2120 — GR/IR Clearing | CREDIT |
 
-> O2C events (`CUSTOMER_INVOICE`, `GOODS_ISSUE`, `CUSTOMER_RECEIPT`) are reserved for the Order-to-Cash sprint and require manual configuration once the corresponding COA accounts are established.
+`GR_TAX_AMT` lines with a zero value (no tax on the purchase order) are automatically skipped by `PostJournalForEventUseCaseImpl` — the journal entry remains balanced as DR Inventory = CR GR/IR Clearing.
+
+> All other event types (`VENDOR_BILL`, `VENDOR_PAYMENT`, `CUSTOMER_INVOICE`, `GOODS_ISSUE`, `CUSTOMER_RECEIPT`, `STOCK_ADJUSTMENT_IN`, `STOCK_ADJUSTMENT_OUT`) are registered as schema headers without lines. Their `JournalVariable` entries and schema lines will be added in future sprints as those event types gain journal posting support.
 
 ---
 
@@ -265,9 +325,9 @@ The following mappings are the baseline configuration seeded with each Solusi ER
 
 | Use Case | Description | Input | Outcome |
 |---|---|---|---|
-| `CreateAccountingSchemaUseCase` | Creates a new active schema mapping | `eventType`, `description`, `debitAccountId`, `creditAccountId`, `isActive` | New `AccountingSchema` persisted |
-| `UpdateAccountingSchemaUseCase` | Updates description and/or account assignments | Schema `id`, `description`, `debitAccountId`, `creditAccountId`, `isActive` | Schema updated in place |
-| `DeleteAccountingSchemaUseCase` | Soft-deletes a schema by setting `isActive = false` | Schema `id` | Schema deactivated; record retained |
+| `CreateAccountingSchemaUseCase` | Creates a new active schema mapping | `eventType`, `description`, `isActive`, `lines` (List of variable + accountId + position) | New `AccountingSchema` persisted with its lines |
+| `UpdateAccountingSchemaUseCase` | Updates description and/or schema lines | Schema `id`, `description`, `isActive`, `lines` | Schema and all its lines updated in place |
+| `DeleteAccountingSchemaUseCase` | Soft-deletes a schema by setting `isActive = false` | Schema `id` | Schema deactivated; record and lines retained |
 
 ### 8.2 Query Use Cases
 
@@ -291,52 +351,86 @@ Permissions are assigned to roles in the standard Solusi ERP RBAC configuration.
 
 ---
 
-## 10. Integration with AutoJournalService
+## 10. Integration with Journal Posting
 
-The `AutoJournalService` (scheduled for implementation in **Sprint 6**) is the primary consumer of Accounting Schema data. It uses the schema table as a runtime lookup to resolve accounts for each automated journal entry.
+`PostJournalForEventUseCaseImpl` is the primary consumer of Accounting Schema data. It uses the schema lines as a runtime lookup to resolve accounts for each automated journal entry. No event-specific policy classes exist — the generic loop handles all event types uniformly.
 
 ### Lookup Contract
 
 ```java
-// AutoJournalService — pseudocode
+// PostJournalForEventUseCaseImpl — simplified
 AccountingSchema schema = schemaRepository
-    .findActiveByEventType(eventType)
-    .orElseThrow(() -> new DomainException(
-        "No active accounting schema configured for event: " + eventType));
+    .findByEventTypeAndIsActiveTrue(command.eventType())
+    .orElseThrow(() -> new DomainException("msg.error.journal.schema.notfound"));
 
-// Use resolved accounts to build the journal entry:
-// DR: schema.getDebitAccountId()   → amount
-// CR: schema.getCreditAccountId()  → amount
+// Build journal lines by iterating schema lines:
+List<JournalLine> lines = schema.getLines().stream()
+    .map(schemaLine -> {
+        BigDecimal value = command.values()
+            .getOrDefault(schemaLine.variable(), BigDecimal.ZERO);
+        if (value.compareTo(BigDecimal.ZERO) == 0) return null; // skip zero-value lines
+        return schemaLine.position() == JournalPosition.DEBIT
+            ? JournalLine.debit(schemaLine.accountId(), value)
+            : JournalLine.credit(schemaLine.accountId(), value);
+    })
+    .filter(Objects::nonNull)
+    .toList();
+
+JournalEntry entry = JournalEntry.createPosted(..., lines);
+entry.validateBalanced(); // throws if DR total ≠ CR total
+journalEntryRepository.save(entry);
 ```
 
 ### Integration Flow
 
 ```
-Business Event Fires (e.g. Goods Receipt posted)
+Business Event Fires (e.g. Goods Receipt completed)
         │
         ▼
-AutoJournalService.process(eventType, amount, reference)
+CompleteGoodsReceiptUseCaseImpl builds:
+  Map<JournalVariable, BigDecimal> values = Map.of(
+      GR_INVENTORY_AMT → inventoryTotal,
+      GR_TAX_AMT       → taxTotal,
+      GR_GRAND_TOTAL   → inventoryTotal + taxTotal
+  )
         │
         ▼
-AccountingSchemaRepository.findActiveByEventType(GOODS_RECEIPT)
+PostJournalForEventUseCaseImpl.execute(JournalPostingCommand)
         │
-        ├─ Found   → Build JournalEntry(DR: debitAccountId, CR: creditAccountId, amount)
-        │                    │
-        │                    └─ Persist via JournalEntryRepository
+        ▼
+AccountingSchemaRepository.findByEventTypeAndIsActiveTrue(GOODS_RECEIPT)
+        │
+        ├─ Found   → iterate schema.getLines()
+        │             for each line: look up value from command.values()
+        │             skip zero-value variables (e.g. GR_TAX_AMT when no tax)
+        │             build JournalLine(debit or credit, accountId, value)
+        │             validateBalanced() → persist via JournalEntryRepository
         │
         └─ Not Found → throw DomainException (blocks the originating operation)
 ```
+
+### Adding a New Variable
+
+To add a new journalable amount to an existing event type (e.g. freight cost on Goods Receipt):
+
+1. Add a new `JournalVariable` enum value pointing to `SchemaEventType.GOODS_RECEIPT`
+2. In `CompleteGoodsReceiptUseCaseImpl`, add the new variable to the `Map.of(...)` call
+3. In the Accounting Schema UI, add a new line for that variable pointing to the correct COA account
+4. Run D220 seeder or migrate the production schema accordingly
+
+No changes are required in `PostJournalForEventUseCaseImpl` — the generic loop handles new variables automatically.
 
 ### Design Benefits
 
 | Benefit | Description |
 |---|---|
-| **Zero hardcoded accounts** | `AutoJournalService` contains no account codes; all routing is data-driven |
-| **Runtime reconfiguration** | Business users can update mappings without a code deployment |
+| **Zero hardcoded accounts** | `PostJournalForEventUseCaseImpl` contains no account codes; all routing is data-driven |
+| **Runtime reconfiguration** | Business users can update account mappings without a code deployment |
+| **Extensible** | New event types require only a new `JournalVariable` entry and schema configuration — no new policy classes |
 | **Auditability** | Every journal entry can be traced back to the schema record that was active at the time of posting |
 | **Fail-fast** | Missing schema configuration surfaces immediately as a hard error, preventing silent mis-postings |
 
 ---
 
-*Last updated: Sprint 3 — Accounting Foundation*
+*Last updated: Refactor — Dynamic Schema Lines (V56) + Generic Journal Posting*
 *Owner: Accounting Module Team*

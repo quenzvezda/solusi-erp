@@ -21,5 +21,5 @@ public interface SchemaJpaRepository extends JpaRepository<AccountingSchema, Lon
 
     Optional<AccountingSchema> findByEventTypeAndIsActiveTrue(String eventType);
 
-    boolean existsByDebitAccountIdOrCreditAccountId(Long debitId, Long creditId);
+    boolean existsByLines_AccountId(Long accountId);
 }

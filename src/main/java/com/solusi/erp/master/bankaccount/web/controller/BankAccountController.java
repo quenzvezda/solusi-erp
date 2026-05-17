@@ -1,5 +1,9 @@
 package com.solusi.erp.master.bankaccount.web.controller;
 
+import com.solusi.erp.accounting.coa.application.usecase.query.CoaSelectorRow;
+import com.solusi.erp.accounting.coa.application.usecase.query.FindCoaSelectorUseCase;
+import com.solusi.erp.accounting.coa.domain.model.AccountType;
+import com.solusi.erp.accounting.coa.domain.port.CoaLookupProvider;
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.DeleteResult;
 import com.solusi.erp.core.domain.model.Pageable;
@@ -11,9 +15,10 @@ import com.solusi.erp.master.bankaccount.application.usecase.query.*;
 import com.solusi.erp.master.bankaccount.domain.model.BankAccount;
 import com.solusi.erp.master.bankaccount.web.dto.*;
 import com.solusi.erp.master.bankaccount.web.mapper.BankAccountWebMapper;
+import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
 import com.solusi.erp.master.geographic.domain.port.GeographicLookupProvider;
 import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
-import com.solusi.erp.master.shared.model.AccountType;
+import com.solusi.erp.master.shared.model.PaymentType;
 import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +33,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -45,11 +52,14 @@ public class BankAccountController {
     private final UpdateBankAccountUseCase updateBankAccountUseCase;
     private final DeleteBankAccountUseCase deleteBankAccountUseCase;
     private final FindBankAccountsUseCase findBankAccountsUseCase;
+    private final FindCoaSelectorUseCase findCoaSelectorUseCase;
     private final GetBankAccountEditViewUseCase getBankAccountEditViewUseCase;
     private final BankAccountWebMapper webMapper;
     private final MessageSource messageSource;
     private final PartyLookupProvider partyLookupProvider;
     private final GeographicLookupProvider geographicLookupProvider;
+    private final CurrencyLookupProvider currencyLookupProvider;
+    private final CoaLookupProvider coaLookupProvider;
 
     @GetMapping
     @PreAuthorize("hasAuthority('BANK-ACCOUNT_READ')")
@@ -74,8 +84,30 @@ public class BankAccountController {
     @PreAuthorize("hasAuthority('BANK-ACCOUNT_CREATE')")
     public String showCreateForm(Model model) {
         model.addAttribute("bankAccountRequest", new BankAccountSaveRequest());
-        model.addAttribute("accountTypes", AccountType.values());
+        model.addAttribute("accountTypes", PaymentType.values());
+        model.addAttribute("bankAccountUI", new HashMap<>());
         return "master/bank-accounts/form";
+    }
+
+    @GetMapping("/selectors/coa")
+    @PreAuthorize("hasAnyAuthority('BANK-ACCOUNT_CREATE', 'BANK-ACCOUNT_UPDATE')")
+    public String showCoaSelector(@RequestParam(required = false) String keyword,
+                                  @RequestParam(required = false) String accountType,
+                                  org.springframework.data.domain.Pageable springPageable,
+                                  Model model) {
+        Pageable domainPageable = PageableMapper.toDomain(springPageable);
+        com.solusi.erp.core.domain.model.Page<CoaSelectorRow> domainPage =
+                findCoaSelectorUseCase.execute(keyword, accountType, domainPageable);
+        Page<CoaSelectorRow> springPage = new PageImpl<>(
+                domainPage.content(),
+                springPageable,
+                domainPage.totalElements()
+        );
+        model.addAttribute("page", springPage);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("accountType", accountType);
+        model.addAttribute("accountTypes", AccountType.values());
+        return "master/bank-accounts/fragments/coa-selector-modal";
     }
 
     @PostMapping("/create")
@@ -85,8 +117,9 @@ public class BankAccountController {
             @Valid @RequestBody BankAccountSaveRequest request) {
         BankAccount domain = createBankAccountUseCase.execute(
                 request.getBankName(), request.getBranch(), request.getAccountName(),
-                request.getAccountNo(), request.getAccountType(), request.getNote(),
-                request.getCityId(), request.getPartyId(), request.getIsActive());
+                request.getAccountNo(), PaymentType.valueOf(request.getAccountType()),
+                request.getNote(), request.getCityId(), request.getPartyId(),
+                request.getIsActive(), request.getCurrencyId(), request.getCoaId());
         BankAccountDetailResponse data = webMapper.toDetailResponse(domain);
         String msg = messageSource.getMessage("msg.success.create", null, LocaleContextHolder.getLocale());
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(msg, data));
@@ -99,7 +132,8 @@ public class BankAccountController {
                 .orElseThrow(() -> new RuntimeException("BankAccount not found"));
         model.addAttribute("bankAccountRequest", webMapper.toSaveRequest(domain));
         model.addAttribute("auditInfo", webMapper.toDetailResponse(domain));
-        model.addAttribute("accountTypes", AccountType.values());
+        model.addAttribute("accountTypes", PaymentType.values());
+        model.addAttribute("bankAccountUI", buildBankAccountUI(domain));
 
         LookupDto cityLookup = geographicLookupProvider.resolve(domain.getCityId());
         model.addAttribute("selectedCity", cityLookup != null ? cityLookup.name() : domain.getCityName());
@@ -118,8 +152,9 @@ public class BankAccountController {
             @Valid @RequestBody BankAccountSaveRequest request) {
         BankAccount domain = updateBankAccountUseCase.execute(
                 id, request.getBankName(), request.getBranch(), request.getAccountName(),
-                request.getAccountNo(), request.getAccountType(), request.getNote(),
-                request.getCityId(), request.getPartyId(), request.getIsActive());
+                request.getAccountNo(), PaymentType.valueOf(request.getAccountType()),
+                request.getNote(), request.getCityId(), request.getPartyId(),
+                request.getIsActive(), request.getCurrencyId(), request.getCoaId());
         BankAccountDetailResponse data = webMapper.toDetailResponse(domain);
         String msg = messageSource.getMessage("msg.success.update", null, LocaleContextHolder.getLocale());
         return ResponseEntity.ok(ApiResponse.success(msg, data));
@@ -136,6 +171,21 @@ public class BankAccountController {
         }
         String msg = messageSource.getMessage("msg.success.delete", null, LocaleContextHolder.getLocale());
         return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
+    }
+
+    private Map<String, Object> buildBankAccountUI(BankAccount domain) {
+        Map<String, Object> ui = new HashMap<>();
+        LookupDto currency = currencyLookupProvider.resolve(domain.getCurrencyId());
+        if (currency != null) {
+            ui.put("currencyText", currency.name());
+            ui.put("currencySubtext", currency.subText());
+        }
+        LookupDto coa = coaLookupProvider.resolve(domain.getCoaId());
+        if (coa != null) {
+            ui.put("coaText", coa.name());
+            ui.put("coaSubtext", coa.subText());
+        }
+        return ui;
     }
 }
 

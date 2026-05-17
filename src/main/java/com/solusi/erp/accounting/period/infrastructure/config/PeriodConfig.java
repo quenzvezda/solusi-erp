@@ -3,9 +3,11 @@ package com.solusi.erp.accounting.period.infrastructure.config;
 import com.solusi.erp.accounting.period.application.usecase.command.*;
 import com.solusi.erp.accounting.period.application.usecase.query.*;
 import com.solusi.erp.accounting.period.domain.port.FiscalYearInUseChecker;
+import com.solusi.erp.accounting.period.domain.port.OpenAccountingPeriodLookup;
 import com.solusi.erp.accounting.period.domain.repository.FiscalYearRepository;
 import com.solusi.erp.accounting.period.infrastructure.adapter.FiscalYearInUseCheckerImpl;
 import com.solusi.erp.accounting.period.infrastructure.adapter.FiscalYearRepositoryImpl;
+import com.solusi.erp.accounting.period.infrastructure.adapter.OpenAccountingPeriodLookupImpl;
 import com.solusi.erp.accounting.period.infrastructure.persistence.*;
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import org.springframework.context.annotation.Bean;
@@ -28,6 +30,23 @@ public class PeriodConfig {
     @Bean
     public FiscalYearInUseChecker fiscalYearInUseChecker() {
         return new FiscalYearInUseCheckerImpl();
+    }
+
+    @Bean
+    public OpenAccountingPeriodLookup openAccountingPeriodLookup(
+            AccountingPeriodJpaRepository periodJpaRepo,
+            PeriodPersistenceMapper periodMapper) {
+        return new OpenAccountingPeriodLookupImpl(periodJpaRepo, periodMapper);
+    }
+
+    @Bean
+    public EnsureOpenPeriodForDateUseCase ensureOpenPeriodForDateUseCase(
+            OpenAccountingPeriodLookup openAccountingPeriodLookup,
+            PlatformTransactionManager txManager) {
+        EnsureOpenPeriodForDateUseCase pure = new EnsureOpenPeriodForDateUseCaseImpl(openAccountingPeriodLookup);
+        TransactionTemplate tx = new TransactionTemplate(txManager);
+        tx.setReadOnly(true);
+        return date -> tx.executeWithoutResult(status -> pure.execute(date));
     }
 
     @Bean
