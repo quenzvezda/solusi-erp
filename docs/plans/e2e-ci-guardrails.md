@@ -76,19 +76,19 @@ Steps:
 - CI event matrix is documented in comments or guide: PR = cheap checks; push main = full Maven plus smoke E2E; manual full = full Maven plus full E2E; twice-weekly schedule = full audit.
 - Workflow still runs the desired jobs for PR, push main, schedule, and workflow_dispatch conditions.
 
-### Task 3: Capture E2E server logs in Linux/macOS runner and CI
+### Task 3: Improve E2E server log capture in Linux/macOS runner and CI
 
-Make backend logs available when local or CI E2E startup/browser tests fail.
+Make backend logs available when local or CI E2E startup/browser tests fail, without duplicating the log redirection already added to the Linux/macOS runner.
 
 **Depends on:** none
-**Reference module:** Windows runner and existing E2E CI job
+**Reference module:** Windows runner, updated Linux/macOS runner, and existing E2E CI job
 
 Steps:
-- [ ] Redirect Linux/macOS runner Java stdout to `target/e2e-server.log` and stderr to `target/e2e-server-err.log`.
-      ref: e2e-tests/scripts/run-poc.sh:L10-L14 — current Java start has no log redirection
+- [ ] Keep the existing Linux/macOS runner Java stdout/stderr redirection to `target/e2e-server.log` and `target/e2e-server-err.log`; do not rework it unless validation shows it is broken.
+      ref: e2e-tests/scripts/run-poc.sh:L5-L17 — current runner defines log paths and redirects Java stdout/stderr
       ref: e2e-tests/scripts/run-poc.ps1:L12-L15 — Windows runner already redirects logs and hides Java window
-- [ ] On Linux/macOS runner startup timeout, print the tail of both server logs before exiting.
-      ref: e2e-tests/scripts/run-poc.sh:L16-L25 — current readiness failure only prints a generic message
+- [ ] On Linux/macOS runner startup timeout, print the tail of both server logs before exiting instead of only printing their paths.
+      ref: e2e-tests/scripts/run-poc.sh:L26-L30 — current readiness failure prints log paths but not log contents
 - [ ] Redirect CI E2E Java process stdout/stderr to the same log files.
       ref: .github/workflows/ci-java21.yml:L271-L274 — current CI Java start has no redirect
 - [ ] Update CI startup failure logging to print both `target/e2e-server.log` and `target/e2e-server-err.log`.
@@ -97,9 +97,9 @@ Steps:
       ref: .github/workflows/ci-java21.yml:L301-L309 — current artifact upload only includes Playwright report/results
 
 **Validation criteria:**
-- Running `e2e-tests/scripts/run-poc.sh` creates `target/e2e-server.log` and `target/e2e-server-err.log`.
+- Running `e2e-tests/scripts/run-poc.sh` keeps creating `target/e2e-server.log` and `target/e2e-server-err.log`.
 - CI artifact path includes Playwright report/results and both server logs.
-- If server startup fails, log tail is visible in job output.
+- If local Linux/macOS runner or CI server startup fails, log tail is visible in job output.
 
 ### Task 4: Make E2E admin authentication deterministic
 
