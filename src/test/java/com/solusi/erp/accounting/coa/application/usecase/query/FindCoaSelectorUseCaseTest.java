@@ -33,6 +33,46 @@ class FindCoaSelectorUseCaseTest {
     }
 
     @Test
+    @DisplayName("execute normalizes blank filters and returns root account without parent metadata")
+    void execute_normalizesBlankFiltersAndReturnsRootWithoutParentMetadata() {
+        ChartOfAccount root = new ChartOfAccount(
+                new AuditMetadata(10L, 1L, null, null, null, null),
+                "1000", "Assets", null, AccountType.ASSET.getDefaultNormalBalance(),
+                null, 1, true, null, true
+        );
+
+        Pageable pageable = new Pageable(0, 10);
+        when(repository.findAllActiveForSelector(null, null, pageable))
+                .thenReturn(new com.solusi.erp.core.domain.model.Page<>(List.of(root), 0, 10, 1L));
+        when(repository.findAllActive()).thenReturn(List.of(root));
+
+        com.solusi.erp.core.domain.model.Page<CoaSelectorRow> result = useCase.execute("   ", "   ", pageable);
+
+        assertThat(result.content()).singleElement().satisfies(row -> {
+            assertThat(row.id()).isEqualTo(10L);
+            assertThat(row.accountType()).isNull();
+            assertThat(row.parentId()).isNull();
+            assertThat(row.parentCode()).isNull();
+            assertThat(row.parentName()).isNull();
+        });
+        verify(repository).findAllActiveForSelector(null, null, pageable);
+    }
+
+    @Test
+    @DisplayName("execute trims keyword and uppercases account type")
+    void execute_trimsKeywordAndUppercasesAccountType() {
+        Pageable pageable = new Pageable(0, 10);
+        when(repository.findAllActiveForSelector("cash", "ASSET", pageable))
+                .thenReturn(new com.solusi.erp.core.domain.model.Page<>(List.of(), 0, 10, 0L));
+        when(repository.findAllActive()).thenReturn(List.of());
+
+        com.solusi.erp.core.domain.model.Page<CoaSelectorRow> result = useCase.execute("  cash  ", " asset ", pageable);
+
+        assertThat(result.content()).isEmpty();
+        verify(repository).findAllActiveForSelector("cash", "ASSET", pageable);
+    }
+
+    @Test
     @DisplayName("execute returns paged selector rows and keeps parent metadata")
     void execute_returnsPagedSelectorRowsAndKeepsParentMetadata() {
         ChartOfAccount parent = new ChartOfAccount(

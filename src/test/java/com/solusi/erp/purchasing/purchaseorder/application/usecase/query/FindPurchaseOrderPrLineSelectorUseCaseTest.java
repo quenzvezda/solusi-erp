@@ -25,6 +25,9 @@ import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anySet;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -56,6 +59,20 @@ class FindPurchaseOrderPrLineSelectorUseCaseTest {
     }
 
     @Test
+    @DisplayName("execute skips lines without ids and does not query consumption when all ids are missing")
+    void execute_skipsLinesWithoutIdsAndConsumptionQuery() {
+        PurchaseRequisitionLineEntity lineWithoutId = line(null, 10L, 1L, "10.0000", "100.00");
+
+        when(purchaseRequisitionJpaRepository.findApprovedLinesForPoSelector(10L, null))
+                .thenReturn(List.of(lineWithoutId));
+
+        Page<PurchaseOrderPrLineSelectorRow> result = useCase.execute(10L, null, null, PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).isEmpty();
+        verify(purchaseOrderJpaRepository, never()).sumConsumedByPrLineIds(anySet(), anySet());
+    }
+
+    @Test
     @DisplayName("execute excludes already selected PR line ids")
     void execute_excludesAlreadySelectedPrLines() {
         PurchaseRequisitionLineEntity line100 = line(100L, 10L, 1L, "10.0000", "100.00");
@@ -72,6 +89,78 @@ class FindPurchaseOrderPrLineSelectorUseCaseTest {
 
         assertThat(result.getContent()).extracting(PurchaseOrderPrLineSelectorRow::prLineId)
                 .containsExactly(101L);
+    }
+
+    @Test
+    @DisplayName("execute skips fully consumed lines")
+    void execute_skipsFullyConsumedLines() {
+        PurchaseRequisitionLineEntity line100 = line(100L, 10L, 1L, "10.0000", "100.00");
+
+        when(purchaseRequisitionJpaRepository.findApprovedLinesForPoSelector(10L, null))
+                .thenReturn(List.of(line100));
+        when(purchaseOrderJpaRepository.sumConsumedByPrLineIds(Set.of(100L), FindPurchaseOrderPrLineSelectorUseCaseImpl.CONSUMING_STATUSES))
+                .thenReturn(List.of(new PrLineConsumptionRow(100L, new BigDecimal("10.0000"))));
+
+        Page<PurchaseOrderPrLineSelectorRow> result = useCase.execute(10L, null, List.of(), PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("execute keeps rows when lookup providers return null")
+    void execute_keepsRowsWhenLookupProvidersReturnNull() {
+        PurchaseRequisitionLineEntity line100 = line(100L, 10L, 1L, "10.0000", "100.00");
+
+        when(purchaseRequisitionJpaRepository.findApprovedLinesForPoSelector(10L, null))
+                .thenReturn(List.of(line100));
+        when(purchaseOrderJpaRepository.sumConsumedByPrLineIds(Set.of(100L), FindPurchaseOrderPrLineSelectorUseCaseImpl.CONSUMING_STATUSES))
+                .thenReturn(List.of());
+        when(productLookupProvider.resolve(10L)).thenReturn(null);
+        when(uomLookupProvider.resolve(1L)).thenReturn(null);
+
+        Page<PurchaseOrderPrLineSelectorRow> result = useCase.execute(10L, null, List.of(), PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).singleElement().satisfies(row -> {
+            assertThat(row.productName()).isNull();
+            assertThat(row.productSubtext()).isNull();
+            assertThat(row.uomName()).isNull();
+            assertThat(row.uomSubtext()).isNull();
+        });
+    }
+
+    @Test
+    @DisplayName("execute filters rows that do not match normalized keyword after lookup resolution")
+    void execute_filtersRowsThatDoNotMatchKeyword() {
+        PurchaseRequisitionLineEntity line100 = line(100L, 10L, 1L, "10.0000", "100.00");
+
+        when(purchaseRequisitionJpaRepository.findApprovedLinesForPoSelector(10L, "missing"))
+                .thenReturn(List.of(line100));
+        when(purchaseOrderJpaRepository.sumConsumedByPrLineIds(Set.of(100L), FindPurchaseOrderPrLineSelectorUseCaseImpl.CONSUMING_STATUSES))
+                .thenReturn(List.of());
+        when(productLookupProvider.resolve(10L)).thenReturn(new LookupDto(10L, "Bearing 6204", "BRG-6204"));
+        when(uomLookupProvider.resolve(1L)).thenReturn(new LookupDto(1L, "PCS", "PCS"));
+
+        Page<PurchaseOrderPrLineSelectorRow> result = useCase.execute(10L, "  missing  ", List.of(), PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("execute returns empty page when requested offset is beyond available rows")
+    void execute_returnsEmptyPageWhenOffsetBeyondRows() {
+        PurchaseRequisitionLineEntity line100 = line(100L, 10L, 1L, "10.0000", "100.00");
+
+        when(purchaseRequisitionJpaRepository.findApprovedLinesForPoSelector(10L, null))
+                .thenReturn(List.of(line100));
+        when(purchaseOrderJpaRepository.sumConsumedByPrLineIds(Set.of(100L), FindPurchaseOrderPrLineSelectorUseCaseImpl.CONSUMING_STATUSES))
+                .thenReturn(List.of());
+        when(productLookupProvider.resolve(10L)).thenReturn(new LookupDto(10L, "Bearing 6204", "BRG-6204"));
+        when(uomLookupProvider.resolve(1L)).thenReturn(new LookupDto(1L, "PCS", "PCS"));
+
+        Page<PurchaseOrderPrLineSelectorRow> result = useCase.execute(10L, null, List.of(), PageRequest.of(1, 10));
+
+        assertThat(result.getContent()).isEmpty();
+        assertThat(result.getTotalElements()).isEqualTo(1L);
     }
 
     @Test

@@ -15,9 +15,9 @@ Dokumentasi dikelompokkan ke dalam folder berikut berdasarkan konteksnya:
     - [JaCoCo Coverage Guide](architecture/jacoco-coverage.md) — Standar code coverage: versi, exclude strategy, threshold, cara baca laporan
     - [Accounting Foundation Architecture](architecture/accounting-foundation.md) — Sprint 1: COA, Accounting Schema, Fiscal Year/Period — dependency diagram, patterns, auto-journal flow
 - **[/database](database/)**: Berisi ERD dan script dummy data.
-- **[/tests](tests/)**: Panduan dan utilitas pengujian level web (Controller + Thymeleaf).
+- **[/tests](tests/)**: Panduan dan utilitas pengujian level web, integrasi, dan end-to-end.
     - [Web-layer Testing Guidelines](tests/web-layer-testing.md)
-    - [Playwright Smoke Test Guide](tests/playwright-smoke-test-guide.md) — Panduan lengkap smoke test E2E: cara start server, kamus interaksi TomSelect/Flatpickr/AutoNumeric/Line Items/Serial Drawer, fallback Node.js
+    - [Playwright E2E Guide](tests/playwright-e2e-guide.md) — Panduan operasional E2E: profile `e2e`, H2 migration mirror, runner Windows/Linux/macOS, helper Playwright, pola CRUD, dan troubleshooting
 - **[/modules](modules/)**: Penjelasan fungsional dan aturan bisnis untuk setiap fitur spesifik (Inventory, Master Data, dll).
     - **[/modules/accounting](modules/accounting/)**: Sprint 1 — Accounting Foundation
         - [Chart of Accounts (COA)](modules/accounting/coa.md) — Hierarki akun, business rules, RBAC
