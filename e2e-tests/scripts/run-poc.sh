@@ -2,6 +2,8 @@
 set -e
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+SERVER_LOG="$PROJECT_ROOT/target/e2e-server.log"
+SERVER_ERR_LOG="$PROJECT_ROOT/target/e2e-server-err.log"
 
 echo "=== Building JAR with e2e profile ==="
 cd "$PROJECT_ROOT"
@@ -9,9 +11,11 @@ cd "$PROJECT_ROOT"
 
 JAR=$(ls target/solusi-program-erp-*.jar | head -1)
 echo "=== Starting server: $JAR ==="
-java -jar "$JAR" --spring.profiles.active=e2e &
+echo "Spring Boot logs: $SERVER_LOG"
+echo "Spring Boot errors: $SERVER_ERR_LOG"
+java -jar "$JAR" --spring.profiles.active=e2e > "$SERVER_LOG" 2> "$SERVER_ERR_LOG" &
 SERVER_PID=$!
-trap "kill $SERVER_PID 2>/dev/null || true" EXIT
+trap "echo '=== Stopping server (PID: '$SERVER_PID') ==='; kill $SERVER_PID 2>/dev/null || true" EXIT
 
 echo "=== Waiting for server (max 60s) ==="
 for i in $(seq 1 60); do
@@ -21,6 +25,8 @@ for i in $(seq 1 60); do
     fi
     if [ "$i" -eq 60 ]; then
         echo "Server failed to start within 60s"
+        echo "Check Spring Boot logs: $SERVER_LOG"
+        echo "Check Spring Boot errors: $SERVER_ERR_LOG"
         exit 1
     fi
     sleep 1
@@ -29,7 +35,11 @@ done
 echo "=== Installing Playwright dependencies ==="
 cd "$PROJECT_ROOT/e2e-tests"
 npm ci --silent
-npx playwright install chromium --with-deps
+if [ "${INSTALL_PLAYWRIGHT_DEPS:-0}" = "1" ]; then
+    npx playwright install chromium --with-deps
+else
+    npx playwright install chromium
+fi
 
 echo "=== Running Playwright tests ==="
 npx playwright test

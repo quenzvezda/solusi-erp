@@ -139,7 +139,30 @@ Dari root project:
 ./e2e-tests/scripts/run-poc.sh
 ```
 
-Script melakukan build, start JAR, wait login page, install Playwright Chromium dengan `--with-deps`, lalu menjalankan test.
+Jika file belum executable:
+
+```bash
+chmod +x e2e-tests/scripts/run-poc.sh
+```
+
+Script melakukan:
+
+1. `./mvnw -B package -DskipTests -Pe2e -q`
+2. Start JAR dengan `--spring.profiles.active=e2e`
+3. Redirect output server ke `target/e2e-server.log` dan `target/e2e-server-err.log`
+4. Wait `http://localhost:18080/login` sampai HTTP 200
+5. `npm ci --silent`
+6. `npx playwright install chromium`
+7. `npx playwright test`
+8. Stop process Java di akhir
+
+Untuk Linux fresh machine yang belum punya dependency OS Chromium, jalankan sekali dengan:
+
+```bash
+INSTALL_PLAYWRIGHT_DEPS=1 ./e2e-tests/scripts/run-poc.sh
+```
+
+Mode ini menjalankan `npx playwright install chromium --with-deps` dan dapat meminta password `sudo` karena Playwright perlu menginstall package sistem. Untuk daily run atau IntelliJ runner, gunakan mode default tanpa `INSTALL_PLAYWRIGHT_DEPS` agar fokus output tetap pada Playwright.
 
 ### 3.4 Menjalankan Playwright saja
 
