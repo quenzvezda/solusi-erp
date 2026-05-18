@@ -46,11 +46,31 @@ class VendorPaymentTest {
     }
 
     @Test
+    @DisplayName("createNew fails when amount is null")
+    void createNew_failsWhenAmountNull() {
+        assertThatThrownBy(() -> VendorPayment.createNew(
+                "VP-001", 1L, 1L, 1L, LocalDate.now(), BigDecimal.ONE,
+                null, null, null, List.of(line("VB-001", "100.00", "100.00"))))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.err.vp.amount.positive");
+    }
+
+    @Test
     @DisplayName("createNew fails when lines are empty")
     void createNew_failsWhenNoLines() {
         assertThatThrownBy(() -> VendorPayment.createNew(
                 "VP-001", 1L, 1L, 1L, LocalDate.now(), BigDecimal.ONE,
                 new BigDecimal("100.00"), null, null, List.of()))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.err.vp.lines.required");
+    }
+
+    @Test
+    @DisplayName("createNew fails when lines are null")
+    void createNew_failsWhenLinesNull() {
+        assertThatThrownBy(() -> VendorPayment.createNew(
+                "VP-001", 1L, 1L, 1L, LocalDate.now(), BigDecimal.ONE,
+                new BigDecimal("100.00"), null, null, null))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("msg.err.vp.lines.required");
     }
@@ -90,6 +110,29 @@ class VendorPaymentTest {
     }
 
     @Test
+    @DisplayName("confirm fails when lines are null on rehydrated draft")
+    void confirm_failsWhenLinesNull() {
+        VendorPayment payment = new VendorPayment(
+                com.solusi.erp.core.domain.model.AuditMetadata.empty(),
+                "VP-001",
+                1L,
+                1L,
+                1L,
+                LocalDate.of(2026, 5, 15),
+                BigDecimal.ONE,
+                new BigDecimal("500.00"),
+                VendorPaymentStatus.DRAFT,
+                null,
+                null,
+                null
+        );
+
+        assertThatThrownBy(payment::confirm)
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.err.vp.lines.required");
+    }
+
+    @Test
     @DisplayName("cancel sets status to CANCELLED from DRAFT")
     void cancel_setsStatusCancelled() {
         VendorPayment payment = draftPayment("500.00",
@@ -124,6 +167,56 @@ class VendorPaymentTest {
                 List.of(line("VB-001", "500.00", "500.00"))))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("msg.err.vp.edit.only.draft");
+    }
+
+    @Test
+    @DisplayName("update fails when amount is null")
+    void update_failsWhenAmountNull() {
+        VendorPayment payment = draftPayment("500.00",
+                List.of(line("VB-001", "500.00", "500.00")));
+
+        assertThatThrownBy(() -> payment.update(1L, 1L, 1L, LocalDate.now(),
+                BigDecimal.ONE, null, null, null,
+                List.of(line("VB-001", "500.00", "500.00"))))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.err.vp.amount.positive");
+    }
+
+    @Test
+    @DisplayName("update fails when amount is zero")
+    void update_failsWhenAmountZero() {
+        VendorPayment payment = draftPayment("500.00",
+                List.of(line("VB-001", "500.00", "500.00")));
+
+        assertThatThrownBy(() -> payment.update(1L, 1L, 1L, LocalDate.now(),
+                BigDecimal.ONE, BigDecimal.ZERO, null, null,
+                List.of(line("VB-001", "500.00", "500.00"))))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.err.vp.amount.positive");
+    }
+
+    @Test
+    @DisplayName("update fails when lines are null")
+    void update_failsWhenLinesNull() {
+        VendorPayment payment = draftPayment("500.00",
+                List.of(line("VB-001", "500.00", "500.00")));
+
+        assertThatThrownBy(() -> payment.update(1L, 1L, 1L, LocalDate.now(),
+                BigDecimal.ONE, new BigDecimal("500.00"), null, null, null))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.err.vp.lines.required");
+    }
+
+    @Test
+    @DisplayName("update fails when lines are empty")
+    void update_failsWhenLinesEmpty() {
+        VendorPayment payment = draftPayment("500.00",
+                List.of(line("VB-001", "500.00", "500.00")));
+
+        assertThatThrownBy(() -> payment.update(1L, 1L, 1L, LocalDate.now(),
+                BigDecimal.ONE, new BigDecimal("500.00"), null, null, List.of()))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.err.vp.lines.required");
     }
 
     @Test

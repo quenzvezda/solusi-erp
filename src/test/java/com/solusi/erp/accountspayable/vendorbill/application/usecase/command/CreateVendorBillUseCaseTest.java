@@ -34,6 +34,38 @@ class CreateVendorBillUseCaseTest {
     }
 
     @Test
+    void create_should_reject_null_lines() {
+        assertThatThrownBy(() -> useCase.execute(
+                10L,
+                "INV-001",
+                LocalDate.of(2026, 5, 10),
+                LocalDate.of(2026, 5, 20),
+                1L,
+                BigDecimal.ONE,
+                "notes",
+                List.of(99L),
+                null
+        )).isInstanceOf(DomainException.class)
+                .hasMessage("msg.err.vb.lines.required");
+    }
+
+    @Test
+    void create_should_reject_empty_lines() {
+        assertThatThrownBy(() -> useCase.execute(
+                10L,
+                "INV-001",
+                LocalDate.of(2026, 5, 10),
+                LocalDate.of(2026, 5, 20),
+                1L,
+                BigDecimal.ONE,
+                "notes",
+                List.of(99L),
+                List.of()
+        )).isInstanceOf(DomainException.class)
+                .hasMessage("msg.err.vb.lines.required");
+    }
+
+    @Test
     void create_should_reject_due_date_before_bill_date() {
         assertThatThrownBy(() -> useCase.execute(
                 10L,
@@ -47,6 +79,38 @@ class CreateVendorBillUseCaseTest {
                 List.of()
         )).isInstanceOf(DomainException.class)
                 .hasMessage("msg.error.vb.due.before.bill");
+    }
+
+    @Test
+    void create_should_default_null_gr_refs_and_null_inventory_amount() {
+        VendorBill result = useCase.execute(
+                10L,
+                "INV-001",
+                LocalDate.of(2026, 5, 10),
+                null,
+                1L,
+                null,
+                "notes",
+                null,
+                List.of(new VendorBillLineCommand(
+                        null,
+                        1001L,
+                        2001L,
+                        "Product A",
+                        "Line A",
+                        new BigDecimal("2.0000"),
+                        1L,
+                        "PCS",
+                        new BigDecimal("10.0000"),
+                        null,
+                        BigDecimal.ZERO
+                ))
+        );
+
+        assertThat(result.getGrRefs()).isEmpty();
+        assertThat(result.getExchangeRate()).isEqualByComparingTo("1");
+        assertThat(result.getSubtotal()).isZero();
+        assertThat(result.getTotalAmount()).isZero();
     }
 
     @Test
