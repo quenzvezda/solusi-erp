@@ -4,15 +4,32 @@
 
 ---
 
-## 1. Executive Summary (150 kata)
+## Status Implementasi (per 2026-05-19)
+
+Legenda: `[x]` sudah ada di repo · `[~]` ada sebagian / berbeda dari proposal · `[ ]` belum ada.
+
+Ringkasan eksekutif:
+- **Fondasi infra E2E sudah berdiri**: profile `e2e`, H2 in-memory, Flyway H2, V9000 seed, runner Windows/Linux, CI job dengan smoke split, helper utama (TomSelect, AutoNumeric, auth, waits, form, navigation), 5 spec aktif (auth + 4 master-data).
+- **Penyimpangan dari proposal yang disengaja**:
+  - Flyway tidak pakai dual-location override — folder `db/migration-h2` adalah **mirror penuh** (62 versi mirror) yang dibaca eksklusif untuk profile `e2e`.
+  - Seed user E2E tidak pakai 6 personas; saat ini hanya `admin/admin123` dengan `passwordChangeRequired=false`.
+  - V9000 hanya menyeed master data tingkat 0–2 (UoM, Category, Brand) — Product, Facility, dan dependency lanjutan belum di-seed.
+- **Yang masih kosong**: helper Flatpickr, Page Object pattern, RBAC spec, modul Facility/Stock Adjustment/Purchase Request/SPL/Sales Order, `uniqueCode()` factory, `data-testid` strategy, multi-storage state per role.
+- **Tambahan di luar proposal (guardrails follow-up, lihat `docs/plans/e2e-ci-guardrails.md`)**: migration parity check job, server log capture di runner & CI, SystemInitializer order fix, smoke split (`@smoke` tag + `test:smoke`), schedule twice-weekly.
+
+---
+
+## 1. Executive Summary (150 kata) [x]
 
 Proposal ini mengimplementasikan Playwright E2E test suite untuk ERP Spring Boot 4.0.3 + Thymeleaf, menggunakan H2 in-memory database dengan MODE=MySQL sebagai pengganti MariaDB. **Pendekatan utama**: dual Flyway migration location (`db/migration` + `db/migration-h2`) untuk menangani 12 incompatibility pattern MariaDB→H2 yang sudah dikatalogkan [Dari P-03], dikombinasikan dengan production-ready helper library untuk TomSelect, Flatpickr, AutoNumeric, dan HTMX [Dari P-04]. Security testing menggunakan 6 user personas dengan role berbeda [Dari P-05]. Anti-flakiness diterapkan melalui smart-wait patterns dan `uniqueId()` data factory [Dari P-08]. Arsitektur test menggunakan Page Object base class untuk extensibility 20+ modul [Dari P-10]. MVP dimulai dengan 9 core test specs [Dari P-01], dan CI pipeline terintegrasi dalam workflow existing dengan conditional triggers dan `needs: [fast-tests]` gating [Dari P-02 + P-09]. Target: confidence bahwa setiap modul CRUD berfungsi end-to-end setelah setiap code change.
 
 ---
 
-## 2. Arsitektur Solusi
+## 2. Arsitektur Solusi [x]
 
-### 2.1 Overview Arsitektur [Dari P-03 + P-10]
+### 2.1 Overview Arsitektur [Dari P-03 + P-10] [~]
+
+> Penyimpangan: Flyway hanya membaca `db/migration-h2` (mirror penuh), tidak dual-location seperti diagram.
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
@@ -44,13 +61,13 @@ Proposal ini mengimplementasikan Playwright E2E test suite untuk ERP Spring Boot
 
 ### 2.2 Komponen Utama
 
-1. **Spring Boot E2E Profile** — `--spring.profiles.active=e2e` memuat `application-e2e.yaml` yang menggunakan H2 in-memory, Flyway dual-location, dan mematikan secure cookie [Dari P-05]
-2. **Flyway Dual-Location Migrations** — Original `db/migration/` untuk MariaDB + `db/migration-h2/` untuk H2 override patches [Dari P-03]
-3. **V9000 Seed Data** — Single Flyway migration `V9000__e2e_seed_data.sql` yang berjalan terakhir [Dari P-10]
-4. **Playwright Test Suite** — Subfolder `e2e-tests/` dengan @playwright/test, TypeScript, helper library [Dari P-04]
-5. **CI Integration** — Job dalam existing `ci-java21.yml` dengan gating [Dari P-02 + P-09]
+1. **Spring Boot E2E Profile** [x] — `--spring.profiles.active=e2e` memuat `application-e2e.yaml` yang menggunakan H2 in-memory, Flyway H2, dan mematikan secure cookie [Dari P-05]
+2. **Flyway Mirror Migrations** [~] — Implementasi sekarang adalah **full mirror** di `db/migration-h2/` (semua 62 versi), bukan override-only seperti rancangan awal di P-03 [Dari P-03]
+3. **V9000 Seed Data** [~] — `V9000__e2e_seed_data.sql` ada, tapi hanya seed UoM/Category/Brand + reset admin password (belum 6 personas users, belum Product/Facility) [Dari P-10]
+4. **Playwright Test Suite** [x] — Subfolder `e2e-tests/` dengan @playwright/test, TypeScript, helper library [Dari P-04]
+5. **CI Integration** [x] — Job dalam existing `ci-java21.yml` dengan gating + smoke split [Dari P-02 + P-09]
 
-### 2.3 Alur Eksekusi
+### 2.3 Alur Eksekusi [x]
 
 ```
 1. Maven build:  ./mvnw -B package -DskipTests -Pe2e
@@ -60,7 +77,9 @@ Proposal ini mengimplementasikan Playwright E2E test suite untuk ERP Spring Boot
 5. Cleanup:      kill server process
 ```
 
-### 2.4 Fallback Strategy: ddl-auto=create [Dari P-07]
+### 2.4 Fallback Strategy: ddl-auto=create [Dari P-07] [ ]
+
+Tidak diterapkan — tidak diperlukan karena mirror Flyway H2 berhasil tanpa fallback.
 
 Jika Flyway migration patching terlalu costly (>40% migration gagal di H2), gunakan:
 ```yaml
@@ -71,9 +90,9 @@ Trade-off: Schema dari @Entity ≠ schema dari Flyway migration (index names, CH
 
 ---
 
-## 3. Spring Boot E2E Profile Design
+## 3. Spring Boot E2E Profile Design [x]
 
-### 3.1 Maven Profile untuk H2 Scope [Dari P-03]
+### 3.1 Maven Profile untuk H2 Scope [Dari P-03] [x]
 
 ```xml
 <!-- pom.xml -->
@@ -93,7 +112,9 @@ Trade-off: Schema dari @Entity ≠ schema dari Flyway migration (index names, CH
 
 > **Kritis**: `<scope>test</scope>` TIDAK cukup untuk `spring-boot:run -Pe2e` atau `java -jar`. Maven profile elevates scope ke `runtime` [Dari P-03].
 
-### 3.2 application-e2e.yaml [Dari P-03 + P-05 + P-04]
+### 3.2 application-e2e.yaml [Dari P-03 + P-05 + P-04] [x]
+
+> Implementasi aktual: lihat `src/main/resources/application-e2e.yaml`. `flyway.locations` hanya `classpath:db/migration-h2` (single location).
 
 ```yaml
 # src/main/resources/application-e2e.yaml
@@ -155,7 +176,7 @@ logging:
     org.flywaydb: INFO
 ```
 
-### 3.3 H2/MariaDB Incompatibility Catalog [Dari P-03]
+### 3.3 H2/MariaDB Incompatibility Catalog [Dari P-03] [x]
 
 Berdasarkan analisis 45 Flyway migrations (V1–V45), berikut 12 incompatibility patterns yang harus di-patch:
 
@@ -174,7 +195,9 @@ Berdasarkan analisis 45 Flyway migrations (V1–V45), berikut 12 incompatibility
 | 11 | `TINYINT(1)` as boolean | H2 MODE=MySQL handles this | Test; gunakan `BOOLEAN` jika gagal |
 | 12 | `ADD COLUMN IF NOT EXISTS` | H2 supports `IF NOT EXISTS` | Usually compatible, test per migration |
 
-### 3.4 Strategi Override Migration [Dari P-03]
+### 3.4 Strategi Override Migration [Dari P-03] [~]
+
+> **Penyimpangan**: Implementasi memilih **full mirror** (semua 62 migration di-mirror manual ke `db/migration-h2`) dengan `flyway.locations` single-location. Strategi dual-location override yang dirancang di sini tidak dipakai karena lebih sulit dipelihara dan rawan kebingungan urutan resolve. Migration parity di-enforce via CI job `migration-parity` (`scripts/check-migration-parity.sh`).
 
 Folder `db/migration-h2/` berisi HANYA migration yang perlu di-override:
 
@@ -206,9 +229,11 @@ flyway:
 
 ---
 
-## 4. Data Seeding Strategy
+## 4. Data Seeding Strategy [~]
 
-### 4.1 Arsitektur 3-Layer Seeding [Dari P-06 + P-10 + P-05]
+> Status: Layer 1 (mirror migrations) [x] dan Layer 2 (V9000) [~] berjalan, Layer 3 (E2eDataSeeder) [~] aktif tapi minimal. Konten seed masih jauh dari rancangan: belum ada 6 personas user, belum ada Product/Facility/inventory level seed.
+
+### 4.1 Arsitektur 3-Layer Seeding [Dari P-06 + P-10 + P-05] [~]
 
 ```
 Layer 1: Flyway Migrations (V1–V45)
@@ -223,7 +248,17 @@ Layer 3: E2eDataSeeder (Java CommandLineRunner)  [Dari P-05 + P-01]
   └─ @Profile("e2e") @Order(200) — setelah SystemInitializer @Order(100)
 ```
 
-### 4.2 V9000 Seed SQL [Dari P-10 + P-05]
+### 4.2 V9000 Seed SQL [Dari P-10 + P-05] [~]
+
+> **Aktual saat ini** (`src/main/resources/db/migration-h2/V9000__e2e_seed_data.sql`):
+> - [x] Reset `password_change_required=false` untuk admin
+> - [x] UoM seed (id 9001-9003)
+> - [x] Product Categories seed (id 9001-9002)
+> - [x] Brands seed (id 9001-9002)
+> - [ ] 6 personas user (e2e_admin..e2e_auditor) — belum dibuat, login tetap `admin/admin123`
+> - [ ] User-Role assignments untuk 6 personas
+> - [ ] Products seed
+> - [ ] Facilities seed
 
 ```sql
 -- V9000__e2e_seed_data.sql
@@ -286,7 +321,9 @@ VALUES
   (9001, 'E2E Warehouse Main', 'E2E-WH01', 'WAREHOUSE', true, 'system', 'system');
 ```
 
-### 4.3 Dependency Order [Dari P-03 + P-06]
+### 4.3 Dependency Order [Dari P-03 + P-06] [~]
+
+> Saat ini hanya level 0–2 yang ter-seed. Level 3+ (Products, Facilities, Inventory, Transactions) belum ada.
 
 ```
 Level 0: roles, permissions (dari SystemInitializer)
@@ -298,14 +335,21 @@ Level 5: inventory/stock_adjustments (depends: product, facility)
 Level 6: purchase_requests, sales_orders (depends: product, facility, user)
 ```
 
-### 4.4 Idempotency Strategy [Dari P-08 + P-03]
+### 4.4 Idempotency Strategy [Dari P-08 + P-03] [x]
+
+> ID range 9000+ dan H2 in-memory reset per-run sudah dipraktikkan. `uniqueId()` dipakai di spec aktif. `uniqueCode()` belum ada.
 
 - ID range 9000+ reserved untuk E2E data — tidak akan conflict dengan production auto-increment
 - Seed SQL menggunakan `INSERT` tanpa conflict handling — karena V9000 berjalan SEKALI setelah schema creation pada fresh H2 database
 - Jika perlu re-run: H2 in-memory database di-reset setiap server restart (clean slate)
 - `uniqueId()` pattern di Playwright untuk per-test data: `const id = 'e2e-' + Date.now()` [Dari P-08]
 
-### 4.5 E2eDataSeeder (Java) [Dari P-05 + P-01]
+### 4.5 E2eDataSeeder (Java) [Dari P-05 + P-01] [~]
+
+> **Aktual** (`src/main/java/com/solusi/erp/security/user/security/E2eDataSeeder.java`):
+> - [x] Component dengan `@Profile("e2e")` `@Order(200)`
+> - [x] Memastikan admin `passwordChangeRequired=false`
+> - [ ] Seeding programmatic untuk 6 personas dengan BCrypt (belum, karena seed user via SQL pun belum)
 
 ```java
 @Component
@@ -327,9 +371,21 @@ public class E2eDataSeeder implements CommandLineRunner {
 
 ---
 
-## 5. Playwright Test Architecture
+## 5. Playwright Test Architecture [~]
 
-### 5.1 Struktur Folder [Dari P-04 + P-10]
+### 5.1 Struktur Folder [Dari P-04 + P-10] [~]
+
+> **Aktual vs rencana**:
+> - [x] `e2e-tests/` terpisah dari root project
+> - [x] `helpers/` (auth, autonumeric, data-factory, form, navigation, tomselect, waits)
+> - [x] `fixtures/base.ts` (auto-login fixture)
+> - [x] `tests/` dengan subfolder `auth/` dan `master-data/`
+> - [x] `scripts/run-poc.ps1` dan `scripts/run-poc.sh`
+> - [ ] `helpers/flatpickr.ts` — belum dibuat (akan dibutuhkan untuk modul transaksional)
+> - [ ] `helpers/htmx.ts` sebagai file terpisah — fungsinya ada di `waits.ts`
+> - [ ] `page-objects/` — Page Object pattern belum diadopsi
+> - [ ] `tests/inventory/`, `tests/procurement/`, `tests/sales/` — belum ada
+> - [ ] `scripts/start-server.sh` standalone — runner saat ini one-shot (`run-poc.*`)
 
 ```
 e2e-tests/                     # Terpisah dari root — DILARANG install di root [constraint]
@@ -377,7 +433,16 @@ e2e-tests/                     # Terpisah dari root — DILARANG install di root
     └── run-e2e.sh             # Full pipeline script
 ```
 
-### 5.2 playwright.config.ts [Dari P-01 + P-08]
+### 5.2 playwright.config.ts [Dari P-01 + P-08] [~]
+
+> **Aktual** (`e2e-tests/playwright.config.ts`):
+> - [x] `testDir: './tests'`, `timeout: 30_000`, `expect.timeout: 10_000`
+> - [x] `fullyParallel: false`, `workers: 1`
+> - [x] `retries: process.env.CI ? 1 : 0`
+> - [x] `trace: 'on-first-retry'`, `screenshot: 'only-on-failure'`, `video: 'retain-on-failure'`
+> - [x] Single chromium project
+> - [~] Reporter berbeda dari proposal (CI: github+html, local: list+html — JSON reporter belum)
+> - [ ] `setup` project untuk global storage state belum ada
 
 ```typescript
 import { defineConfig, devices } from '@playwright/test';
@@ -418,7 +483,9 @@ export default defineConfig({
 });
 ```
 
-### 5.3 Helper: TomSelect [Dari P-04 + P-08]
+### 5.3 Helper: TomSelect [Dari P-04 + P-08] [x]
+
+> Implementasi aktual: `e2e-tests/helpers/tomselect.ts` (105 baris, ekspor `selectTomSelect`, `setTomSelectValue`, `getTomSelectValue`, `clearTomSelect`).
 
 ```typescript
 // helpers/tomselect.ts
@@ -475,7 +542,9 @@ export async function selectTomSelect(
 }
 ```
 
-### 5.4 Helper: Flatpickr [Dari P-04 + P-08]
+### 5.4 Helper: Flatpickr [Dari P-04 + P-08] [ ]
+
+> **Belum dibuat**. Akan diperlukan saat masuk modul transaksional (Stock Adjustment, PR, SPL) yang menggunakan date picker.
 
 ```typescript
 // helpers/flatpickr.ts
@@ -507,7 +576,9 @@ export async function setFlatpickrDate(
 }
 ```
 
-### 5.5 Helper: AutoNumeric [Dari P-04 + P-08]
+### 5.5 Helper: AutoNumeric [Dari P-04 + P-08] [x]
+
+> Implementasi aktual: `e2e-tests/helpers/autonumeric.ts` (ekspor `setAutoNumeric`, `getAutoNumericValue`, `clearAutoNumeric`).
 
 ```typescript
 // helpers/autonumeric.ts
@@ -542,7 +613,14 @@ export async function setAutoNumeric(
 }
 ```
 
-### 5.6 Helper: Auth & Session [Dari P-05 + P-09]
+### 5.6 Helper: Auth & Session [Dari P-05 + P-09] [~]
+
+> **Aktual** (`e2e-tests/helpers/auth.ts`):
+> - [x] `login(page)` dengan POST form dan fallback password-change
+> - [x] `TEST_USERS.admin` constant
+> - [ ] `TEST_USERS` lengkap untuk 6 personas (manager, operator, viewer, warehouse, auditor)
+> - [ ] `loginAndSaveState()` untuk multi-storage state
+> - [ ] Folder `.auth/` untuk persisted storage state per role
 
 ```typescript
 // helpers/auth.ts
@@ -588,7 +666,9 @@ export async function loginAndSaveState(
 }
 ```
 
-### 5.7 Helper: Data Factory [Dari P-08]
+### 5.7 Helper: Data Factory [Dari P-08] [~]
+
+> **Aktual** (`e2e-tests/helpers/data-factory.ts`): hanya ekspor `uniqueId()` dan `uniqueName()`. `uniqueCode()` belum ada.
 
 ```typescript
 // helpers/data-factory.ts
@@ -609,7 +689,9 @@ export function uniqueCode(prefix: string): string {
 }
 ```
 
-### 5.8 Helper: Smart Waits [Dari P-08]
+### 5.8 Helper: Smart Waits [Dari P-08] [x]
+
+> Implementasi aktual: `e2e-tests/helpers/waits.ts` (ekspor `waitForHtmx`, `waitForNetworkIdle`, `waitForToast`, `waitForPageLoad`).
 
 ```typescript
 // helpers/waits.ts
@@ -637,7 +719,9 @@ export async function waitForToast(page: Page, text?: string): Promise<void> {
 }
 ```
 
-### 5.9 Selector Strategy [Dari P-04]
+### 5.9 Selector Strategy [Dari P-04] [x]
+
+> Sudah didokumentasikan secara eksplisit di `docs/tests/playwright-e2e-guide.md` Section 9 ("Selector Convention for Interactive Forms"). `data-testid` belum dipakai sebagai standar — strategi saat ini mengandalkan `id` eksplisit + `name`.
 
 Hierarchical selector priority (paling stabil ke paling fragile):
 
@@ -651,9 +735,20 @@ Hierarchical selector priority (paling stabil ke paling fragile):
 
 ---
 
-## 6. CI/CD Integration
+## 6. CI/CD Integration [x]
 
-### 6.1 GitHub Actions Job [Dari P-02 + P-09]
+### 6.1 GitHub Actions Job [Dari P-02 + P-09] [~]
+
+> **Aktual** (`.github/workflows/ci-java21.yml`):
+> - [x] `e2e-tests` job dengan `needs: [full-tests]` (proposal: `fast-tests` — di-upgrade ke `full-tests`)
+> - [x] `concurrency` + `cancel-in-progress`
+> - [x] `timeout-minutes: 20`
+> - [x] Build JAR `-Pe2e`, start Spring Boot, wait 60s health check
+> - [x] `npx playwright install chromium --with-deps`
+> - [x] Artifact upload `always()` (Playwright report + test-results + server logs)
+> - [x] Smoke split: push-to-main → `--grep @smoke`, schedule/dispatch full → full suite
+> - [x] Schedule `30 19 * * 0,3` (Sunday/Wednesday 19:30 UTC = Mon/Thu 02:30 WIB)
+> - [+] **Tambahan di luar proposal**: job `migration-parity` (script `scripts/check-migration-parity.sh`)
 
 ```yaml
 # Ditambahkan ke .github/workflows/ci-java21.yml (existing workflow)
@@ -747,7 +842,7 @@ Hierarchical selector priority (paling stabil ke paling fragile):
           fi
 ```
 
-### 6.2 CI Design Decisions
+### 6.2 CI Design Decisions [x]
 
 | Keputusan | Penjelasan | Sumber |
 |-----------|-----------|--------|
@@ -759,7 +854,13 @@ Hierarchical selector priority (paling stabil ke paling fragile):
 | `retries: 1` di CI | Satu kali retry untuk menangani transient failures | P-08 |
 | Artifact upload `always()` | Report/trace tersedia bahkan saat test gagal | P-02 |
 
-### 6.3 Local Development Pipeline [Dari P-09]
+### 6.3 Local Development Pipeline [Dari P-09] [~]
+
+> **Aktual**:
+> - [x] `e2e-tests/scripts/run-poc.ps1` (Windows) dan `run-poc.sh` (Linux/macOS) — one-shot runner
+> - [x] npm scripts: `test`, `test:smoke`, `test:headed`, `test:debug`, `test:ui`, `report`
+> - [ ] `test:module` script tidak ada (gunakan `--grep` langsung)
+> - [ ] Script bash dengan nama `run-e2e.sh` — yang ada `run-poc.sh`
 
 ```json
 // e2e-tests/package.json — scripts
@@ -804,9 +905,24 @@ npx playwright test "$@"
 
 ---
 
-## 7. Cakupan Test Minimum per Modul
+## 7. Cakupan Test Minimum per Modul [~]
 
-### 7.1 Definisi "Done" per Modul [Dari P-01 + P-05]
+### 7.1 Definisi "Done" per Modul [Dari P-01 + P-05] [~]
+
+> **Status spec aktual** (per 2026-05-18, full suite 18/18 passing):
+>
+> | # | Modul | Status | Catatan |
+> |---|-------|--------|---------|
+> | 1 | Auth | [x] | login.spec.ts (success/fail/redirect) — RBAC unauthorized: belum |
+> | 2 | Brand | [x] | brand.spec.ts (list/create/edit/validation) |
+> | 3 | Category | [x] | product-category.spec.ts |
+> | 4 | UoM | [x] | uom.spec.ts |
+> | 5 | Product | [x] | product.spec.ts (TomSelect + AutoNumeric) |
+> | 6 | Facility | [ ] | belum |
+> | 7 | Stock Adjustment | [ ] | belum |
+> | 8 | Purchase Request | [ ] | belum |
+> | 9 | SPL | [ ] | belum |
+> | 10 | Sales Order | [ ] | belum |
 
 | # | Modul | Test Cases (Minimum) | UI Components Tested |
 |---|-------|---------------------|---------------------|
@@ -821,7 +937,9 @@ npx playwright test "$@"
 | 9 | **SPL** | Create, edit, approve | TomSelect, Flatpickr, line items, AJAX |
 | 10 | **Sales Order** | Create, edit | TomSelect, AutoNumeric, line items |
 
-### 7.2 MVP Scope (Phase 1) [Dari P-01]
+### 7.2 MVP Scope (Phase 1) [Dari P-01] [~]
+
+> 5 spec aktif di area master-data + auth. Spec transaksional (`stock-adjustment`, `spl`) belum dibuat — itulah gap MVP yang tersisa.
 
 Phase 1 fokus pada 9 test specs yang mencakup SEMUA jenis UI component interaction:
 
@@ -834,7 +952,9 @@ tests/
 ├── procurement/spl.spec.ts         # AJAX form + line items + approval
 ```
 
-### 7.3 Module Tagging [Dari P-09]
+### 7.3 Module Tagging [Dari P-09] [~]
+
+> `@smoke` tag sudah dipakai untuk subset push-to-main (login + brand create + product create). Tag per-modul (`@inventory`, `@procurement`, dll) belum diterapkan.
 
 ```typescript
 // Brand test with tags
@@ -854,9 +974,19 @@ npx playwright test --grep @tomselect
 
 ---
 
-## 8. Risiko & Mitigasi
+## 8. Risiko & Mitigasi [~]
 
-### 8.1 Risiko Teridentifikasi [Dari P-08 + P-03 + P-05]
+### 8.1 Risiko Teridentifikasi [Dari P-08 + P-03 + P-05] [~]
+
+> Catatan status mitigasi:
+> - Risiko #1 (H2 incompatibility): [x] mitigasi via mirror penuh + parity check CI
+> - Risiko #2 (flaky tests): [x] smart waits diadopsi, no `waitForTimeout()` di helper
+> - Risiko #3 (migration drift): [x] CI job `migration-parity`
+> - Risiko #4 (seed staleness): [~] minim risk karena seed sangat sedikit; akan naik saat seed diperluas
+> - Risiko #5 (security bypass): [~] login via real form sudah; RBAC test belum
+> - Risiko #6 (CI timeout): [x] timeout 20m + smoke split
+> - Risiko #7 (password change): [x] solved via E2eDataSeeder + login fallback
+> - Risiko #8 (Thymeleaf fragment error): [x] CRUD spec mengunjungi list/create/edit setiap modul
 
 | # | Risiko | Severity | Likelihood | Mitigasi |
 |---|--------|----------|-----------|----------|
@@ -881,7 +1011,7 @@ npx playwright test --grep @tomselect
 
 ---
 
-## 9. Effort Estimate
+## 9. Effort Estimate [x] (historical)
 
 ### 9.1 Breakdown per Komponen [Dari P-01 + P-09]
 
@@ -910,7 +1040,7 @@ npx playwright test --grep @tomselect
 
 ---
 
-## 10. Trade-offs
+## 10. Trade-offs [x] (historical reference)
 
 ### 10.1 Keputusan Utama dan Konsekuensinya
 
