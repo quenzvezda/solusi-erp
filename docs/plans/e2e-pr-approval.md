@@ -192,7 +192,7 @@ Steps:
 - Full suite still green (admin path unchanged).
 - A trivial sanity test with `test.use({ storageState: '.auth/approver1.json' })` lands on `/dashboard` without going through `/login`.
 
-### Task 8: Add `tests/procurement/purchase-requisition.spec.ts` skeleton
+### Task 8: Add `tests/procurement/purchase-requisition.spec.ts` skeleton [x]
 
 Wires the file with role-specific fixtures and TODO stubs for each scenario. Implementation arrives in Tasks 9-14.
 

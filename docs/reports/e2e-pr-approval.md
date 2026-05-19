@@ -106,3 +106,8 @@
 - **Detail:** `tests/auth/login.spec.ts` continues to import from `@playwright/test` rather than the base fixture, because those tests verify the login flow itself — applying admin storage state would skip the login redirect.
 - **Action taken:** Left login.spec.ts unchanged. The chromium project loads no project-level storageState (per the fix above), so login.spec.ts gets a clean unauthenticated context — matching its needs.
 
+## Task 8: Purchase Requisition spec skeleton
+
+- **Status:** clean
+- **Summary:** Created `tests/procurement/purchase-requisition.spec.ts` with 6 `test.skip()` scenario stubs (A-F) plus a sanity test that verifies employee1 storage state authenticates and lands on `/purchasing/purchase-requisitions`. Sanity test passed in 6.5s on first run; the 6 stubs correctly show as skipped.
+
