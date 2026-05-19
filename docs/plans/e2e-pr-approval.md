@@ -33,7 +33,7 @@ Expand the Playwright E2E suite from master-data CRUD into the first transaction
 
 ## Tasks
 
-### Task 1: Add D011 dev-seeder for role permissions (PR/SPL/PO + lookups)
+### Task 1: Add D011 dev-seeder for role permissions (PR/SPL/PO + lookups) [x]
 
 Adds the missing `role_permissions` seeding so ROLE_APPROVER can review/approve procurement docs and ROLE_EMPLOYEE can create PR. Closes the manual-QA workaround where you currently log in as admin and tick permissions by hand.
 
@@ -41,19 +41,19 @@ Adds the missing `role_permissions` seeding so ROLE_APPROVER can review/approve 
 **Reference module:** dev seeder folder (mirrors are SQL only — no Java)
 
 Steps:
-- [ ] Create `docs/database/dev-seeder/D011__role_permissions.sql` between D010 (roles) and D030 (users).
+- [x] Create `docs/database/dev-seeder/D011__role_permissions.sql` between D010 (roles) and D030 (users).
       ref: docs/database/dev-seeder/D010__security_roles.sql:L17-L24 — current ROLE_APPROVER permissions (gap)
       ref: src/main/resources/db/migration/V46__Add_Purchasing_Module.sql:L207-L228 — canonical permission names PR_*, SPL_*, PO_*, LOOKUP_*
-- [ ] Grant `ROLE_APPROVER`: `PR_READ`, `PR_UPDATE` (used for cancel), `PR_SUBMIT` is NOT granted (approver does not submit), `PO_READ`, `PO_UPDATE`, `SPL_READ`, `LOOKUP_INVENTORY`, `LOOKUP_PURCHASING`, `LOOKUP_SUPPLIER-PRICE-LIST`, `LOOKUP_FACILITY`, `LOOKUP_BRAND`, `LOOKUP_PRODUCT-CATEGORY`, `LOOKUP_UOM-CONVERSION`, `LOOKUP_PR`, `LOOKUP_PO`, `LOOKUP_PARTY-ROLE-TYPE` (modal pickers).
+- [x] Grant `ROLE_APPROVER`: PR_READ, PR_UPDATE, LOOKUP_PR, PO_READ, PO_UPDATE, LOOKUP_PO, SPL_READ, LOOKUP_SUPPLIER-PRICE-LIST, LOOKUP_INVENTORY, LOOKUP_BRAND, LOOKUP_PRODUCT-CATEGORY, LOOKUP_FACILITY, LOOKUP_UOM-CONVERSION. (LOOKUP_PARTY already in D010.) See report — `LOOKUP_PURCHASING` and `LOOKUP_PARTY-ROLE-TYPE` do not exist as permissions; the by-role-type endpoint reuses LOOKUP_PARTY.
       ref: docs/modules/procurement/purchase-requisition.md:L111-L123 — declared security matrix for PR
-- [ ] Grant `ROLE_EMPLOYEE`: `PR_READ`, `PR_CREATE`, `PR_UPDATE`, `PR_DELETE`, `PR_SUBMIT`, `LOOKUP_INVENTORY`, `LOOKUP_PURCHASING`, `LOOKUP_SUPPLIER-PRICE-LIST`, `LOOKUP_FACILITY`, `LOOKUP_BRAND`, `LOOKUP_PRODUCT-CATEGORY`, `LOOKUP_UOM-CONVERSION`, `LOOKUP_PARTY-ROLE-TYPE`. Employee can request and submit but not approve.
-- [ ] Use `INSERT INTO role_permissions (role_id, permission_id) SELECT @role_x_id, id FROM permissions WHERE name IN (...)` mirroring the D010 style. Do not duplicate rows already inserted by D010.
-- [ ] Verify SQL syntax compatible with both MariaDB (dev) and H2 MODE=MySQL (E2E mirror in Task 2).
+- [x] Grant `ROLE_EMPLOYEE`: PR_READ, PR_CREATE, PR_UPDATE, PR_DELETE, PR_SUBMIT, LOOKUP_PR, SPL_READ, LOOKUP_SUPPLIER-PRICE-LIST, LOOKUP_INVENTORY, LOOKUP_BRAND, LOOKUP_PRODUCT-CATEGORY, LOOKUP_FACILITY, LOOKUP_UOM-CONVERSION, LOOKUP_PARTY.
+- [x] Use `INSERT INTO role_permissions (role_id, permission_id) SELECT @role_x_id, id FROM permissions WHERE name IN (...)` mirroring the D010 style. Do not duplicate rows already inserted by D010.
+- [x] Verify SQL syntax compatible with both MariaDB (dev) and H2 MODE=MySQL (E2E mirror in Task 2). Same INSERT...SELECT pattern works identically in both.
 
 **Validation criteria:**
-- Fresh local DB run with dev seeder: log in as `approver1/admin123` → can open `/purchasing/purchase-requisitions` list without 403.
-- Log in as `employee1/admin123` → can open `/purchasing/purchase-requisitions/create` without 403, and can save+submit a PR.
-- No `Cannot insert duplicate` error when running D011 after D010.
+- Fresh local DB run with dev seeder: log in as `approver1/admin123` → can open `/purchasing/purchase-requisitions` list without 403. (Will verify after Task 2 mirrors to V9000.)
+- Log in as `employee1/admin123` → can open `/purchasing/purchase-requisitions/create` without 403, and can save+submit a PR. (Will verify in Task 9.)
+- No `Cannot insert duplicate` error when running D011 after D010. (D011 adds permissions not in D010, so no conflict.)
 
 ### Task 2: Mirror D011 + dev users + transactional master data into V9000
 
