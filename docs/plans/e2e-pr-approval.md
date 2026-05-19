@@ -259,7 +259,7 @@ Steps:
 - Server log shows `ApprovalRequest` created on submit and decision recorded on approve.
 - Tag this scenario `@smoke` so push-to-main CI runs it.
 
-### Task 10: Implement Scenario B — submit then reject
+### Task 10: Implement Scenario B — submit then reject [x]
 
 Same setup as A through submit. Diverges at approver action.
 
@@ -281,7 +281,7 @@ Steps:
 - Status badge REJECTED visible in form view header.
 - No action banner is displayed for either employee or approver after reject.
 
-### Task 11: Implement Scenario C — DRAFT edit then cancel
+### Task 11: Implement Scenario C — DRAFT edit then cancel [x]
 
 Verifies the DRAFT update path and the cancel-from-DRAFT transition.
 
@@ -303,7 +303,7 @@ Steps:
 - Edits persist across reload.
 - CANCELLED state is final.
 
-### Task 12: Implement Scenario D — APPROVED cancel
+### Task 12: Implement Scenario D — APPROVED cancel [x]
 
 Tests the "Approved → Cancelled" transition explicitly mentioned in the doc lifecycle.
 
@@ -322,7 +322,7 @@ Steps:
 - Approved PR can transition to CANCELLED.
 - If the app blocks this transition (i.e. doc is wrong), mark `test.fixme` and surface to user — do not silently weaken the test.
 
-### Task 13: Implement Scenario E — header-change-resets-lines guard
+### Task 13: Implement Scenario E — header-change-resets-lines guard [x]
 
 Verifies the UX rule: changing requester/facility/supplier/currency on header clears existing lines.
 
@@ -341,7 +341,7 @@ Steps:
 - Line count goes from 1 to 0 after supplier change.
 - `#empty-msg` becomes visible again.
 
-### Task 14: Optional Scenario F — SPL price autofill
+### Task 14: Optional Scenario F — SPL price autofill [x]
 
 Verifies that when an active SPL row matches the header supplier+currency+product, the line `estimatedUnitPrice` auto-populates.
 
