@@ -55,7 +55,7 @@ Steps:
 - Log in as `employee1/admin123` → can open `/purchasing/purchase-requisitions/create` without 403, and can save+submit a PR. (Will verify in Task 9.)
 - No `Cannot insert duplicate` error when running D011 after D010. (D011 adds permissions not in D010, so no conflict.)
 
-### Task 2: Mirror D011 + dev users + transactional master data into V9000
+### Task 2: Mirror D011 + dev users + transactional master data into V9000 [x]
 
 Brings the H2 E2E database to dev parity (so tests can log in as approver/employee just like manual QA) and adds Products/Facilities/Parties/SPL needed for the PR flow. Uses ID range 9100+ for new transactional data to avoid colliding with existing 9001-9002 master-data seed.
 
@@ -63,24 +63,24 @@ Brings the H2 E2E database to dev parity (so tests can log in as approver/employ
 **Reference module:** existing V9000 + dev seeder D020 (parties), D030 (users), D040+ (transactional data)
 
 Steps:
-- [ ] Read current V9000 to confirm existing seed (UoM, Categories, Brands at id 9001-9003 / 9001-9002).
+- [x] Read current V9000 to confirm existing seed (UoM, Categories, Brands at id 9001-9003 / 9001-9002).
       ref: src/main/resources/db/migration-h2/V9000__e2e_seed_data.sql — current content
-- [ ] Append a "ROLE PERMISSIONS (mirror D011)" section to V9000 with the same `INSERT INTO role_permissions ... SELECT ...` blocks from D011.
-- [ ] Append a "USERS (mirror D030)" section: insert admin (already created by SystemInitializer, skip), approver1, approver2, warehouse1, employee1 with same BCrypt hash as D030.
+- [x] Append a "ROLE PERMISSIONS (mirror D011)" section to V9000 with the same `INSERT INTO role_permissions ... SELECT ...` blocks from D011. Also mirrored D010 since production migrations only seed ROLE_ADMIN — without D010 mirror the new roles would not exist.
+- [x] Append a "USERS (mirror D030)" section: insert approver1, approver2, warehouse1, employee1 with same BCrypt hash as D030.
       ref: docs/database/dev-seeder/D030__users.sql:L1-L19 — BCrypt hash for `admin123`, party FK pattern
-- [ ] Append a "PARTIES (mirror D020)" section seeding minimal parties needed: BP-DEV-APR01, BP-DEV-APR02, BP-DEV-WH01, BP-DEV-EMP01 (referenced by D030 user FKs), plus one supplier party for PR (e.g. BP-DEV-SUP01).
-      ref: docs/database/dev-seeder/D020__parties.sql — party + party_role_types pattern (read this when expanding)
-- [ ] Seed party role types so `parties/by-role-type?roleTypeCode=APPROVER` returns approver1/approver2 (used by submit-for-approval modal).
-- [ ] Seed transactional master in id range 9100+: `facilities` (9101 Main warehouse), `products` (9101 Laptop sample, 9102 Office chair), tied to existing brand 9001 / category 9001 / uom 9001.
-- [ ] Seed one default `currencies` row alias `IDR` if not provided by production migration; check `flyway` mirror for currencies before adding.
-- [ ] Optional (Task 14 dependency): seed one active `supplier_price_lists` row connecting BP-DEV-SUP01 + product 9101 + uom 9001 + currency IDR + price 8500000 with valid date covering today.
-- [ ] Verify the migration runs cleanly: `mvnw -B package -DskipTests -Pe2e` then start app with `--spring.profiles.active=e2e` and confirm no Flyway error.
+- [x] Append a "PARTIES (mirror D020)" section seeding minimal parties: BP-DEV-APR01, BP-DEV-APR02, BP-DEV-WH01, BP-DEV-EMP01 (referenced by D030 user FKs), plus one supplier party BP-DEV-SUP01. Skipped party_addresses, party_identifications, party_contacts to keep V9000 lean — not required by PR flow.
+      ref: docs/database/dev-seeder/D020__parties.sql — party + party_role_types pattern
+- [x] Seed party_role_types APPROVER + assign role types to each party so `parties/by-role-type?roleTypeCode=APPROVER` returns approver1/approver2.
+- [x] Seed transactional master in id range 9100+: `inv_facilities` (9101 E2E Main Warehouse owned by SUP01), `products` (E2E-PRD-LAPTOP, E2E-PRD-CHAIR via auto-id since unique constraint on `code` is enough). Tied to existing brand 9001/9002, category 9001, uom 9001.
+- [x] master_currencies already seeded by V11 (IDR has is_default=TRUE). Resolve via `SELECT id FROM master_currencies WHERE alias='IDR'`.
+- [x] Seed one active `pur_supplier_price_lists` row (supplier=SUP01, product=Laptop, currency=IDR, price 8500000, effective_from 2026-01-01) for Scenario F.
+- [x] Verify the migration runs cleanly: `mvnw -B package -DskipTests -Pe2e` then start app with `--spring.profiles.active=e2e` and confirm no Flyway error.
 
 **Validation criteria:**
-- App starts with E2E profile, no migration error in `target/e2e-server.log`.
-- `migration-parity` script still passes (V9000 is allowlisted).
-- H2 console (`/h2-console`) shows users approver1, approver2, warehouse1, employee1 with `password_change_required=0`.
-- HTTP POST `/login` with `approver1`/`admin123` returns 302 redirect (not 401, not password-change page).
+- [x] App starts with E2E profile, no migration error in `target/e2e-server.log`. Started in 11.51s.
+- [x] `migration-parity` script still passes (62 MariaDB versions, 63 H2 versions, V9000 allowlisted).
+- [x] HTTP POST `/login` with `approver1`/`admin123` returns 302 → /dashboard (verified).
+- [x] HTTP POST `/login` with `employee1`/`admin123` returns 302 → /dashboard, GET /purchasing/purchase-requisitions returns 200 (verified).
 
 ### Task 3: Validate seed change does not break existing E2E specs
 
