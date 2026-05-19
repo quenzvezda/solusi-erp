@@ -4,6 +4,27 @@
 > Source: Conversation on 2026-05-19 about expanding Playwright E2E to transactional modules
 > Created: 2026-05-19
 
+## Findings
+
+## Task 1: D011 dev-seeder for role permissions
+
+- **Status:** findings
+- **Summary:** Created `docs/database/dev-seeder/D011__role_permissions.sql` granting ROLE_APPROVER and ROLE_EMPLOYEE the procurement permissions they need on fresh databases.
+
+### Finding: by-role-type endpoint reuses LOOKUP_PARTY
+- **Type:** decision
+- **Severity:** info
+- **Detail:** Plan listed `LOOKUP_PARTY-ROLE-TYPE` as a separate permission for the submit-for-approval modal's approver picker. Verified at `PartyLookupController.searchByRoleType()`: the `/api/lookup/parties/by-role-type` endpoint is gated by the class-level `@PreAuthorize("hasAuthority('LOOKUP_PARTY')")`, not a dedicated permission. Plan was inaccurate.
+- **Action taken:** Granted `LOOKUP_PARTY` to ROLE_EMPLOYEE (already in ROLE_APPROVER from D010). No new permission needed.
+- **Ref:** src/main/java/com/solusi/erp/master/party/web/controller/PartyLookupController.java:L24, L39-L48
+
+### Finding: LOOKUP_PURCHASING permission does not exist
+- **Type:** gap
+- **Severity:** info
+- **Detail:** Plan called for `LOOKUP_PURCHASING` permission. Searched all migrations — no such permission is defined. Purchase-related lookups use `LOOKUP_PR`, `LOOKUP_PO`, `LOOKUP_SUPPLIER-PRICE-LIST` instead.
+- **Action taken:** Replaced `LOOKUP_PURCHASING` with `LOOKUP_PR` and `LOOKUP_PO` in the seeder (and dropped `LOOKUP_PARTY-ROLE-TYPE`).
+- **Ref:** src/main/resources/db/migration/V46__Add_Purchasing_Module.sql:L207-L228 — canonical purchasing permissions
+
 ## Task 2: Mirror D011 + dev users + transactional master data into V9000
 
 - **Status:** findings
@@ -35,23 +56,7 @@
 - **Action taken:** Used BP-DEV-SUP01 as the facility owner. Not realistic but works for E2E. Can be revisited if a "company internal" party is added later.
 - **Ref:** src/main/resources/db/migration/V21__Inventory_Warehouse_Hierarchy.sql:L24
 
+## Task 3: Validate seed change does not break existing E2E specs
 
-## Task 1: D011 dev-seeder for role permissions
-
-- **Status:** findings
-- **Summary:** Created `docs/database/dev-seeder/D011__role_permissions.sql` granting ROLE_APPROVER and ROLE_EMPLOYEE the procurement permissions they need on fresh databases.
-
-### Finding: by-role-type endpoint reuses LOOKUP_PARTY
-- **Type:** decision
-- **Severity:** info
-- **Detail:** Plan listed `LOOKUP_PARTY-ROLE-TYPE` as a separate permission for the submit-for-approval modal's approver picker. Verified at `PartyLookupController.searchByRoleType()`: the `/api/lookup/parties/by-role-type` endpoint is gated by the class-level `@PreAuthorize("hasAuthority('LOOKUP_PARTY')")`, not a dedicated permission. Plan was inaccurate.
-- **Action taken:** Granted `LOOKUP_PARTY` to ROLE_EMPLOYEE (already in ROLE_APPROVER from D010). No new permission needed.
-- **Ref:** src/main/java/com/solusi/erp/master/party/web/controller/PartyLookupController.java:L24, L39-L48
-
-### Finding: LOOKUP_PURCHASING permission does not exist
-- **Type:** gap
-- **Severity:** info
-- **Detail:** Plan called for `LOOKUP_PURCHASING` permission. Searched all migrations — no such permission is defined. Purchase-related lookups use `LOOKUP_PR`, `LOOKUP_PO`, `LOOKUP_SUPPLIER-PRICE-LIST` instead.
-- **Action taken:** Replaced `LOOKUP_PURCHASING` with `LOOKUP_PR` and `LOOKUP_PO` in the seeder (and dropped `LOOKUP_PARTY-ROLE-TYPE`).
-- **Ref:** src/main/resources/db/migration/V46__Add_Purchasing_Module.sql:L207-L228 — canonical purchasing permissions
-
+- **Status:** clean
+- **Summary:** Full Playwright suite ran green: 18/18 passed in 2m43s on first attempt with 0 retries used. No regression from V9000 expansion. Existing specs use `uniqueName()` for create flows and stable seed ids 9001-9002 for TomSelect autofill, both unaffected by the new seed.

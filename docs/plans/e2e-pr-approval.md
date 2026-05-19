@@ -82,7 +82,7 @@ Steps:
 - [x] HTTP POST `/login` with `approver1`/`admin123` returns 302 → /dashboard (verified).
 - [x] HTTP POST `/login` with `employee1`/`admin123` returns 302 → /dashboard, GET /purchasing/purchase-requisitions returns 200 (verified).
 
-### Task 3: Validate seed change does not break existing E2E specs
+### Task 3: Validate seed change does not break existing E2E specs [x]
 
 Run the full Playwright suite against the new V9000 to catch any spec that implicitly depended on the previous (smaller) seed state.
 
@@ -90,18 +90,15 @@ Run the full Playwright suite against the new V9000 to catch any spec that impli
 **Reference module:** existing E2E specs
 
 Steps:
-- [ ] Run `e2e-tests/scripts/run-poc.ps1` (Windows) or `run-poc.sh` (Linux/macOS).
+- [x] Run `e2e-tests/scripts/run-poc.ps1` (Windows) or `run-poc.sh` (Linux/macOS). (Used direct `npx playwright test` instead since JAR was already built and server already running from Task 2 verification.)
       ref: e2e-tests/scripts/run-poc.ps1, e2e-tests/scripts/run-poc.sh — runner builds JAR, starts e2e profile, runs full suite
-- [ ] If any spec fails, diagnose:
-  - Brand/Category/UoM list assertion clashing with new seeded labels → tighten selector to `.first()` or scope to specific seeded id.
-  - Product create form: confirm `setTomSelectValue('#category-select', '9001')` still resolves (id 9001 untouched).
-      ref: e2e-tests/tests/master-data/product.spec.ts:L14-L31 — current Product create flow uses ids 9001
-- [ ] If a regression is genuine (not flake), patch the affected spec rather than the seed (the seed must remain dev-parity).
-- [ ] Re-run until 18/18 (current baseline) green again, then move on.
+- [x] If any spec fails, diagnose. (No failures.)
+- [x] If a regression is genuine, patch the affected spec rather than the seed. (No patches needed.)
+- [x] Re-run until 18/18 (current baseline) green again, then move on. (18/18 passed on first run.)
 
 **Validation criteria:**
-- `npm run test` in `e2e-tests/` is green (or matches the previous passing count if any test moved to/from `@smoke`).
-- No transient flakes — re-run twice if first run shows >0 retries used.
+- [x] `npm run test` in `e2e-tests/` is green: 18 passed (2.7m).
+- [x] No transient flakes — all tests passed first run with 0 retries used.
 
 ### Task 4: Add `helpers/flatpickr.ts` for date picker interaction
 
