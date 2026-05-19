@@ -567,20 +567,114 @@ Spec yang ada:
 
 | Spec | Coverage | Catatan |
 |---|---|---|
-| `tests/auth/login.spec.ts` | Login valid, login invalid, unauthenticated redirect | Tidak memakai auto-login fixture |
-| `tests/master-data/uom.spec.ts` | List, create, edit, validation | Create pernah timeout saat form submit; cek known issues |
+| `tests/auth/login.spec.ts` | Login valid, login invalid, unauthenticated redirect | Tidak memakai auto-login fixture; bare `@playwright/test` |
+| `tests/master-data/uom.spec.ts` | List, create, edit, validation | Simple CRUD |
 | `tests/master-data/product-category.spec.ts` | List, create, edit, validation | Simple CRUD dengan native select |
 | `tests/master-data/brand.spec.ts` | List, create, edit, validation | Simple CRUD |
 | `tests/master-data/product.spec.ts` | List, create required fields, validation | Mid-level CRUD; memakai TomSelect untuk category/brand |
+| `tests/procurement/purchase-requisition.spec.ts` | 6 scenario CRUD + approval flow + signature + sanity | Scenario A `@smoke` (happy path); B reject; C DRAFT cancel; D APPROVED cancel; E header reset; F SPL autofill |
 
-Status terakhir (2026-05-18): Full suite 18/18 passing.
+Status terakhir (2026-05-20): Full suite 29/29 passing (cold run ~1.8m), smoke subset 10/10 (~42s).
 
-- UoM create timeout dan Product TomSelect timeout sudah di-fix.
+- Modul transaksional pertama (PR + approval) sudah hijau end-to-end termasuk signature pad.
 - Jika suite mulai gagal lagi, jalankan spec tunggal dengan `--headed --debug` dan cek troubleshooting di bawah.
 
-## 11. Troubleshooting Berdasarkan Gejala
+## 11. Helper Tambahan untuk Modul Transaksional
 
-### 11.1 Server tidak ready dalam 60 detik
+Helper di luar Section 8 yang khusus dibutuhkan modul transaksional dengan approval flow:
+
+### 11.1 Flatpickr (`helpers/flatpickr.ts`)
+
+- Pakai untuk input dengan `data-picker="date"` atau plain `<input type="date">`.
+- Helper menggunakan `el._flatpickr.setDate(date, true)` agar `onChange` handler Flatpickr ter-trigger (penting untuk cascading seperti SPL price autofill).
+- Fallback otomatis ke `page.fill()` kalau input bukan Flatpickr-managed.
+
+### 11.2 Inline line editor (`helpers/line-editor.ts`)
+
+Header-lines form di Solusi ERP mengikuti pola:
+- `<button id="btn-add-line">` clone dari `#row-template-source` ke `#line-container`
+- Per-row remove via `.btn-remove-line`
+- Field name `lines[N].fieldName`
+
+```ts
+import { addLine, removeLineAt, getLineCount, lineFieldSelector } from '../../helpers/line-editor';
+
+await addLine(page);                                            // klik default #btn-add-line, tunggu count naik
+await setTomSelectValue(page, `[name="lines[0].productId"]`, '9101');
+await setAutoNumeric(page, lineFieldSelector(0, 'quantity'), 5);
+await removeLineAt(page, 0);                                    // klik .btn-remove-line di row index 0
+expect(await getLineCount(page)).toBe(0);
+```
+
+### 11.3 Signature pad (`helpers/signature-pad.ts`)
+
+Approval modal pakai `signature_pad@4` di canvas (`#sig-canvas-approve-finish`, `#sig-canvas-approve-forward`).
+
+```ts
+import { drawSignature, assertSignatureNotEmpty } from '../../helpers/signature-pad';
+
+await drawSignature(page, '#sig-canvas-approve-finish');
+await assertSignatureNotEmpty(page, '#sig-canvas-approve-finish');
+```
+
+Strategi yang dipakai (Layer 1 + 2 hybrid, _bukan_ backend bypass):
+
+1. Dispatch synthetic `pointerdown/move/up` di canvas — best-effort untuk library yang listen pointer events di canvas.
+2. Paint pixels langsung lewat `getContext('2d').stroke()` — ini yang menjamin `canvas.toDataURL()` non-empty PNG.
+
+**Penting**: `signature_pad@4` di Bootstrap modal sering tidak menerima synthetic pointer events, jadi `pad.isEmpty()` (JS-side validation) bisa tetap return `true`. Kalau spec perlu mem-bypass JS-side empty-check sambil tetap mengirim signature beneran ke backend, panggil endpoint approval langsung dari `page.evaluate` dengan `canvas.toDataURL('image/png')` sebagai `signatureBase64`. Lihat `tests/procurement/purchase-requisition.spec.ts` `processApproval` helper untuk pola lengkap.
+
+### 11.4 Multi-role storage state
+
+Login satu kali per role di `setup` project, lalu spec pakai storage state file yang dihasilkan.
+
+`fixtures/base.ts` default ke admin storage state. Override per `describe`:
+
+```ts
+import { test, expect, storageStatePath } from '../../fixtures/base';
+
+test.describe('My approval scenario', () => {
+  test.use({ storageState: storageStatePath('employee1') });
+
+  test('flow', async ({ page, browser }) => {
+    // employee1 page
+    // ... bikin PR, submit ...
+
+    // switch ke approver1 lewat second context
+    const approverContext = await browser.newContext({ storageState: storageStatePath('approver1') });
+    const approverPage = await approverContext.newPage();
+    // ... approve ...
+    await approverContext.close();
+  });
+});
+```
+
+Kenapa storage state level fixture (bukan project-level): Playwright resolve project options saat worker boot, sebelum `setup` project menulis `.auth/{role}.json`. Project-level path bakal stale di cold run. Fixture-level path di-resolve saat test mulai eksekusi, setelah dependency `setup` selesai.
+
+### 11.5 Endpoint langsung untuk gap UI
+
+Beberapa transition tidak punya UI button (mis. PR Cancel) tapi controller-nya tetap ada. Pola yang dipakai di `purchase-requisition.spec.ts`:
+
+```ts
+async function cancelPr(page, prId) {
+  const csrfHeaderName = await page.evaluate(() => 
+    (document.querySelector('meta[name="_csrf_header"]') as HTMLMetaElement)?.content);
+  const csrfToken = await page.evaluate(() => 
+    (document.querySelector('meta[name="_csrf"]') as HTMLMetaElement)?.content);
+  return await page.evaluate(async ({ id, headerName, token }) => {
+    const r = await fetch(`/purchasing/purchase-requisitions/${id}/cancel`, {
+      method: 'POST', headers: { Accept: 'application/json', [headerName]: token },
+    });
+    return { status: r.status };
+  }, { id: prId, headerName: csrfHeaderName, token: csrfToken });
+}
+```
+
+Ini sah dipakai sebagai E2E sepanjang endpoint adalah kontrak yang sebenarnya — kita exercise auth + status transition tanpa nunggu UI button. Catat di report saat dipakai (lihat `docs/reports/e2e-pr-approval.md` Task 10-14).
+
+## 12. Troubleshooting Berdasarkan Gejala
+
+### 12.1 Server tidak ready dalam 60 detik
 
 Cek:
 
@@ -604,7 +698,7 @@ Di Windows:
 java -jar target\solusi-program-erp-*.jar --spring.profiles.active=e2e
 ```
 
-### 11.2 Flyway duplicate version
+### 12.2 Flyway duplicate version
 
 Gejala:
 
@@ -623,7 +717,7 @@ spring.flyway.locations:
   - classpath:db/migration-h2
 ```
 
-### 11.3 H2 migration syntax error
+### 12.3 H2 migration syntax error
 
 Gejala:
 
@@ -643,7 +737,7 @@ Fix terbaik:
 - Jangan mengubah migration MariaDB untuk menyesuaikan H2.
 - Patch file mirror di `db/migration-h2` dengan versi Flyway yang sama.
 
-### 11.4 Login diarahkan ke password change
+### 12.4 Login diarahkan ke password change
 
 Ini normal dan sudah ditangani oleh `helpers/auth.ts` untuk CRUD specs.
 
@@ -652,7 +746,7 @@ Jika test auth manual gagal:
 - Pastikan test auth memang mengantisipasi redirect keluar dari `/login`.
 - Jika perlu assert dashboard spesifik, handle password change flow juga.
 
-### 11.5 Strict mode violation pada button submit
+### 12.5 Strict mode violation pada button submit
 
 Gejala:
 
@@ -670,7 +764,7 @@ Jangan pakai selector generic:
 page.locator('button[type="submit"]')
 ```
 
-### 11.6 Redirect regex langsung match URL create/edit
+### 12.6 Redirect regex langsung match URL create/edit
 
 Gejala:
 
@@ -690,7 +784,7 @@ Fix:
 /\/inventory\/brands(\?.*)?$/
 ```
 
-### 11.7 Item created tidak terlihat di list
+### 12.7 Item created tidak terlihat di list
 
 Kemungkinan:
 
@@ -704,7 +798,7 @@ Fix opsi:
 - Jika perlu assert item, gunakan search/filter dulu.
 - Scope assertion ke table dan `.first()`.
 
-### 11.8 Submit AJAX timeout
+### 12.8 Submit AJAX timeout
 
 Gejala:
 
@@ -728,7 +822,7 @@ npx playwright test tests/master-data/uom.spec.ts --headed --debug
 
 Lihat juga trace/video dari failed run.
 
-### 11.9 TomSelect timeout
+### 12.9 TomSelect timeout
 
 Gejala:
 
@@ -753,7 +847,7 @@ document.querySelector('select[name="categoryId"]')?.tomselect
 
 Jika selector by name gagal, inspect template dan coba id selector.
 
-### 11.10 AutoNumeric tidak terset
+### 12.10 AutoNumeric tidak terset
 
 Gejala:
 
@@ -766,7 +860,7 @@ Fix:
 - Pastikan selector input asli.
 - Pastikan AutoNumeric sudah initialized sebelum set.
 
-## 12. Checklist Menambah Spec Baru
+## 13. Checklist Menambah Spec Baru
 
 Sebelum menulis test:
 
@@ -795,7 +889,7 @@ Setelah menulis test:
 - [ ] Cek trace/video/screenshot jika gagal.
 - [ ] Jangan menaikkan timeout sebagai fix utama sebelum memahami root cause.
 
-## 13. Checklist Agent Handoff
+## 14. Checklist Agent Handoff
 
 Agent baru yang melanjutkan E2E harus membaca minimal:
 
@@ -814,7 +908,7 @@ Jika melanjutkan failure terakhir:
 - Untuk Product create, fokus pada selector/initialization TomSelect category dan brand.
 - Jalankan spec tunggal dengan headed/debug sebelum full suite.
 
-## 14. Kapan Memperbarui Dokumen Ini
+## 15. Kapan Memperbarui Dokumen Ini
 
 Update dokumen ini saat:
 

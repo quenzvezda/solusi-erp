@@ -3,7 +3,7 @@
 > Source: Conversation on 2026-05-19 about expanding Playwright E2E to transactional modules
 > Created: 2026-05-19
 > Sprint: E2E Phase 2 — First Transactional Module
-> Status: IN_PROGRESS
+> Status: COMPLETED (2026-05-20)
 
 ## Summary
 
@@ -360,7 +360,7 @@ Steps:
 - Auto-filled price matches seeded SPL value.
 - Test is robust to small UI delay (use waitForNetworkIdle, not fixed timeout).
 
-### Task 15: Wire smoke tag and CI behavior for PR spec
+### Task 15: Wire smoke tag and CI behavior for PR spec [x]
 
 Decides which PR scenarios run on push-to-main vs. only on schedule/full dispatch.
 
@@ -379,7 +379,7 @@ Steps:
 **Validation criteria:**
 - Smoke run includes exactly login + 1 brand create + 1 product create + PR Scenario A (4 tests, give or take based on existing smoke set).
 
-### Task 16: Update Playwright E2E guide with new helpers and PR spec status
+### Task 16: Update Playwright E2E guide [x]
 
 Document what changed so future agents and humans can pick up without re-discovering the patterns.
 
