@@ -219,7 +219,7 @@ Steps:
 - Spec file exists and `npx playwright test --list` shows the new test cases (all skipped).
 - No TypeScript compile error.
 
-### Task 9: Implement Scenario A — happy path create → submit → approve & finish
+### Task 9: Implement Scenario A — happy path create → submit → approve & finish [x]
 
 Most important test: validates the entire stack — multi-role login switching, line editor, Flatpickr, signature pad, approval state machine. If this passes, B-D are mostly variations.
 

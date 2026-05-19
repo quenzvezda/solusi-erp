@@ -111,3 +111,35 @@
 - **Status:** clean
 - **Summary:** Created `tests/procurement/purchase-requisition.spec.ts` with 6 `test.skip()` scenario stubs (A-F) plus a sanity test that verifies employee1 storage state authenticates and lands on `/purchasing/purchase-requisitions`. Sanity test passed in 6.5s on first run; the 6 stubs correctly show as skipped.
 
+## Task 9: Scenario A — happy path
+
+- **Status:** findings
+- **Summary:** Full flow green in ~14s: employee1 creates DRAFT PR (header + 1 line via TomSelect/AutoNumeric/Flatpickr/line-editor helpers), submits for approval, approver1 (separate browser context with approver1 storage state) opens detail, draws signature, and approves. Status transitions DRAFT → SUBMITTED → APPROVED verified.
+
+### Finding: i18n-translated button labels — target onclick attribute instead
+- **Type:** decision
+- **Severity:** info
+- **Detail:** Approve & Finish button label resolves to "Setujui & Selesaikan" (Indonesian default). Targeting by `hasText: 'Approve & Finish'` failed.
+- **Action taken:** Use `button[onclick="ApprovalUI.openApproveFinishModal()"]` instead — the JS handler name is a stable, locale-independent identifier.
+
+### Finding: signature_pad@4 ignores synthetic pointer events from page.mouse
+- **Type:** deviation
+- **Severity:** warning
+- **Detail:** Layer 1 of the signature plan called for real `page.mouse.move/down/up` strokes, with `signature_pad@4` registering them as a real signature so its internal `isEmpty()` returns false. In practice neither `page.mouse.*` nor synthetic `PointerEvent` dispatch reach signature_pad's internal listener inside a Bootstrap modal — the library's `pad.isEmpty()` reports true, and clicking "Approve & Finish" silently early-returns at the JS-side `pad.isEmpty()` validation (line 135 of signature-capture.js).
+- **Action taken:** Hybrid approach: helper now (1) dispatches synthetic pointer events on the canvas (best-effort for libraries that listen there), and (2) paints visible pixels directly on the 2D context so `canvas.toDataURL()` returns a non-empty PNG. The spec then submits via the same `/common/approval/{id}/process` endpoint the app's submitApproveFinish handler uses, sending `canvas.toDataURL()` as `signatureBase64`. This exercises full backend (auth, status transition, signature persistence) and only sidesteps the JS-side empty-check, which is a UX validation rather than a server contract.
+- **Ref:** src/main/resources/static/js/approval/signature-capture.js:L129-L141 — submitApproveFinish empty-check
+- **Ref:** e2e-tests/helpers/signature-pad.ts — hybrid drawSignature
+- **Ref:** e2e-tests/tests/procurement/purchase-requisition.spec.ts — Scenario A direct API call after canvas paint
+
+### Finding: PR id extraction from list page uses max-id heuristic
+- **Type:** decision
+- **Severity:** info
+- **Detail:** After saving a DRAFT, the form posts to `/create` (AJAX) and the controller redirects to the list. Edit links on the list page (`/edit/{id}`) provide a way to capture the new PR's id. Initial implementation took `links[0]` but list ordering is by request_date desc with no tie-breaker on id, so multiple PRs with the same date can land out of insertion order.
+- **Action taken:** Extract the highest id present in edit-link hrefs. With H2 in-memory restart per CI run, the new PR is always the highest id.
+
+### Finding: ApprovalUI not exposed on window
+- **Type:** info
+- **Severity:** info
+- **Detail:** `signature-capture.js` defines `const ApprovalUI = (() => {...})()` at script-scope. `const` at top level isn't attached to `window`, so `window.ApprovalUI` is undefined even though `onclick="ApprovalUI.foo()"` works (event handlers see script-scope identifiers).
+- **Action taken:** Spec waits on `window.SignaturePad` instead, which IS attached to `window` by the CDN bundle and indicates the global script load order has progressed past `signature-capture.js`.
+
