@@ -11,7 +11,7 @@ test.describe('Product CRUD', () => {
     await expect(page.locator('table')).toBeVisible();
   });
 
-  test('should create new product with required fields', async ({ page }) => {
+  test('@smoke should create new product with required fields', async ({ page }) => {
     await navigateToModule(page, '/inventory/products/create');
 
     const name = uniqueName('Product');

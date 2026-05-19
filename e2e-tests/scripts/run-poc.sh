@@ -25,8 +25,12 @@ for i in $(seq 1 60); do
     fi
     if [ "$i" -eq 60 ]; then
         echo "Server failed to start within 60s"
-        echo "Check Spring Boot logs: $SERVER_LOG"
-        echo "Check Spring Boot errors: $SERVER_ERR_LOG"
+        echo ""
+        echo "=== Last 50 lines of $SERVER_LOG ==="
+        tail -50 "$SERVER_LOG" 2>/dev/null || echo "(file not found)"
+        echo ""
+        echo "=== Last 50 lines of $SERVER_ERR_LOG ==="
+        tail -50 "$SERVER_ERR_LOG" 2>/dev/null || echo "(file not found)"
         exit 1
     fi
     sleep 1

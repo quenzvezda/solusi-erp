@@ -502,7 +502,66 @@ Jika gagal:
 
 Gunakan ini saat test berinteraksi dengan search/filter/pagination HTMX.
 
-## 9. Status Coverage Saat Dokumen Ini Dibuat
+## 9. Selector Convention for Interactive Forms
+
+Stable selectors are critical for E2E resilience. This section defines the naming convention for HTML templates so Playwright tests can target elements reliably.
+
+### 9.1 Selector preference order
+
+From most stable to most fragile:
+
+| Priority | Selector Type | Use For | Example |
+|---|---|---|---|
+| 1 | Explicit `id` attribute | TomSelect/autocomplete, modal-selector triggers, AutoNumeric inputs, date pickers, dynamic line containers | `#category-select`, `#brand-select`, `#line-container` |
+| 2 | `name` attribute | Plain input, textarea, native select | `input[name="name"]`, `select[name="status"]` |
+| 3 | `[data-ajax-form]` scoped | Submit buttons (avoid strict mode violations) | `[data-ajax-form] button[type="submit"]` |
+| 4 | Table-scoped text | List page assertions | `page.locator('table').locator('text=E2E Brand')` |
+| 5 | Role-based | Buttons with visible label | `page.getByRole('button', { name: 'Save' })` |
+
+**DILARANG:**
+- XPath selectors
+- CSS class selectors tied to styling (`.btn-primary`, `.ts-wrapper`)
+- `nth-child` or positional selectors
+- TomSelect wrapper classes (`.ts-control`, `.ts-dropdown`) — always target the original `<select>`
+
+### 9.2 Widget ID convention in templates
+
+When creating or editing Thymeleaf templates with interactive widgets, assign explicit IDs:
+
+| Widget Type | ID Pattern | Example |
+|---|---|---|
+| TomSelect / Autocomplete | `{field}-select` | `id='category-select'`, `id='brand-select'` |
+| Modal selector trigger | `{field}-modal-btn` | `id='vendor-modal-btn'` |
+| AutoNumeric input | `{field}-input` | `id='amount-input'`, `id='price-input'` |
+| Flatpickr date picker | `{field}-date` | `id='transaction-date'` |
+| Dynamic line container | `{entity}-lines` | `id='payment-lines'`, `id='order-lines'` |
+| Dynamic line add button | `{entity}-add-line` | `id='payment-add-line'` |
+
+### 9.3 Why explicit IDs matter
+
+- TomSelect wraps the original `<select>` in generated markup. The Playwright helper (`helpers/tomselect.ts`) targets the **original** `<select>` element, not the wrapper. Without an explicit ID, the selector must rely on `name` which can conflict with wrapper-generated elements.
+- AutoNumeric manages display vs raw value. The helper needs the exact input element.
+- Modal selectors have trigger buttons that open popups — a stable ID prevents matching unrelated buttons.
+
+### 9.4 Reference implementation
+
+Product form (`templates/inventory/products/form.html`) demonstrates the pattern:
+- `id='category-select'` for TomSelect autocomplete
+- `id='brand-select'` for TomSelect autocomplete  
+- `id='uom-select'` for native select with TomSelect potential
+
+Product spec (`e2e-tests/tests/master-data/product.spec.ts`) uses these IDs directly.
+
+### 9.5 Existing specs and related documentation
+
+For detailed component interaction patterns, refer to:
+- `docs/spec/autocomplete-generic.md` — TomSelect/autocomplete fragment standards
+- `docs/spec/modal-selector.md` — Modal selector standards
+- `docs/spec/numeric-standards.md` — AutoNumeric input standards
+- `docs/spec/datetime-standards.md` — Flatpickr date picker standards
+- `docs/spec/header-lines-form.md` — Dynamic line row standards
+
+## 10. Status Coverage
 
 Spec yang ada:
 
@@ -514,18 +573,14 @@ Spec yang ada:
 | `tests/master-data/brand.spec.ts` | List, create, edit, validation | Simple CRUD |
 | `tests/master-data/product.spec.ts` | List, create required fields, validation | Mid-level CRUD; memakai TomSelect untuk category/brand |
 
-Known status terakhir dari sesi implementasi expansion:
+Status terakhir (2026-05-18): Full suite 18/18 passing.
 
-- Mayoritas suite sudah passing.
-- Dua failure terakhir yang pernah terlihat:
-  1. UoM create: timeout di `waitForURL` setelah submit.
-  2. Product create: timeout saat memilih TomSelect category atau saat create flow.
+- UoM create timeout dan Product TomSelect timeout sudah di-fix.
+- Jika suite mulai gagal lagi, jalankan spec tunggal dengan `--headed --debug` dan cek troubleshooting di bawah.
 
-Jangan anggap dua issue ini sudah fixed hanya dari dokumen ini. Verifikasi dengan run Playwright aktual sebelum menutup task.
+## 11. Troubleshooting Berdasarkan Gejala
 
-## 10. Troubleshooting Berdasarkan Gejala
-
-### 10.1 Server tidak ready dalam 60 detik
+### 11.1 Server tidak ready dalam 60 detik
 
 Cek:
 
@@ -549,7 +604,7 @@ Di Windows:
 java -jar target\solusi-program-erp-*.jar --spring.profiles.active=e2e
 ```
 
-### 10.2 Flyway duplicate version
+### 11.2 Flyway duplicate version
 
 Gejala:
 
@@ -568,7 +623,7 @@ spring.flyway.locations:
   - classpath:db/migration-h2
 ```
 
-### 10.3 H2 migration syntax error
+### 11.3 H2 migration syntax error
 
 Gejala:
 
@@ -588,7 +643,7 @@ Fix terbaik:
 - Jangan mengubah migration MariaDB untuk menyesuaikan H2.
 - Patch file mirror di `db/migration-h2` dengan versi Flyway yang sama.
 
-### 10.4 Login diarahkan ke password change
+### 11.4 Login diarahkan ke password change
 
 Ini normal dan sudah ditangani oleh `helpers/auth.ts` untuk CRUD specs.
 
@@ -597,7 +652,7 @@ Jika test auth manual gagal:
 - Pastikan test auth memang mengantisipasi redirect keluar dari `/login`.
 - Jika perlu assert dashboard spesifik, handle password change flow juga.
 
-### 10.5 Strict mode violation pada button submit
+### 11.5 Strict mode violation pada button submit
 
 Gejala:
 
@@ -615,7 +670,7 @@ Jangan pakai selector generic:
 page.locator('button[type="submit"]')
 ```
 
-### 10.6 Redirect regex langsung match URL create/edit
+### 11.6 Redirect regex langsung match URL create/edit
 
 Gejala:
 
@@ -635,7 +690,7 @@ Fix:
 /\/inventory\/brands(\?.*)?$/
 ```
 
-### 10.7 Item created tidak terlihat di list
+### 11.7 Item created tidak terlihat di list
 
 Kemungkinan:
 
@@ -649,7 +704,7 @@ Fix opsi:
 - Jika perlu assert item, gunakan search/filter dulu.
 - Scope assertion ke table dan `.first()`.
 
-### 10.8 Submit AJAX timeout
+### 11.8 Submit AJAX timeout
 
 Gejala:
 
@@ -673,7 +728,7 @@ npx playwright test tests/master-data/uom.spec.ts --headed --debug
 
 Lihat juga trace/video dari failed run.
 
-### 10.9 TomSelect timeout
+### 11.9 TomSelect timeout
 
 Gejala:
 
@@ -698,7 +753,7 @@ document.querySelector('select[name="categoryId"]')?.tomselect
 
 Jika selector by name gagal, inspect template dan coba id selector.
 
-### 10.10 AutoNumeric tidak terset
+### 11.10 AutoNumeric tidak terset
 
 Gejala:
 
@@ -711,7 +766,7 @@ Fix:
 - Pastikan selector input asli.
 - Pastikan AutoNumeric sudah initialized sebelum set.
 
-## 11. Checklist Menambah Spec Baru
+## 12. Checklist Menambah Spec Baru
 
 Sebelum menulis test:
 
@@ -740,7 +795,7 @@ Setelah menulis test:
 - [ ] Cek trace/video/screenshot jika gagal.
 - [ ] Jangan menaikkan timeout sebagai fix utama sebelum memahami root cause.
 
-## 12. Checklist Agent Handoff
+## 13. Checklist Agent Handoff
 
 Agent baru yang melanjutkan E2E harus membaca minimal:
 
@@ -759,7 +814,7 @@ Jika melanjutkan failure terakhir:
 - Untuk Product create, fokus pada selector/initialization TomSelect category dan brand.
 - Jalankan spec tunggal dengan headed/debug sebelum full suite.
 
-## 13. Kapan Memperbarui Dokumen Ini
+## 14. Kapan Memperbarui Dokumen Ini
 
 Update dokumen ini saat:
 

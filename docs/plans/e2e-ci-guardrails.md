@@ -3,7 +3,7 @@
 > Source: Conversation on 2026-05-18 about Playwright E2E follow-up guardrails
 > Created: 2026-05-18
 > Sprint: E2E Prototype Follow-up
-> Status: IN_PROGRESS
+> Status: COMPLETED (2026-05-19)
 
 ## Summary
 
@@ -34,16 +34,16 @@ Add a cheap CI guardrail that fails PRs and push-to-main when a MariaDB Flyway m
 **Reference module:** CI workflow + Flyway migration folders
 
 Steps:
-- [ ] Create a script that compares migration versions in `src/main/resources/db/migration` and `src/main/resources/db/migration-h2`.
+- [x] Create a script that compares migration versions in `src/main/resources/db/migration` and `src/main/resources/db/migration-h2`.
       ref: src/main/resources/db/migration/ — MariaDB Flyway migrations to mirror by version
       ref: src/main/resources/db/migration-h2/ — H2-compatible mirror plus H2-only `V9000__e2e_seed_data.sql`
-- [ ] Allow H2-only `V9000__e2e_seed_data.sql` explicitly so the parity check does not fail on E2E seed data.
+- [x] Allow H2-only `V9000__e2e_seed_data.sql` explicitly so the parity check does not fail on E2E seed data.
       ref: src/main/resources/db/migration-h2/V9000__e2e_seed_data.sql — H2-only seed migration that should be allowlisted
-- [ ] Add a dedicated `migration-parity` CI job that runs on PR and push to `main`/`master`, separate from `fast-tests` for clearer failure reporting.
+- [x] Add a dedicated `migration-parity` CI job that runs on PR and push to `main`/`master`, separate from `fast-tests` for clearer failure reporting.
       ref: .github/workflows/ci-java21.yml:L39-L78 — current PR fast test job structure
       ref: .github/workflows/ci-java21.yml:L84-L115 — current push-main full test job structure
-- [ ] Keep the check version-based only; do not diff SQL contents or attempt semantic SQL validation in this task.
-- [ ] Make failure output list missing H2 versions and unexpected H2-only versions, with the allowlist shown in the message.
+- [x] Keep the check version-based only; do not diff SQL contents or attempt semantic SQL validation in this task.
+- [x] Make failure output list missing H2 versions and unexpected H2-only versions, with the allowlist shown in the message.
 
 **Validation criteria:**
 - Running the script locally exits 0 with the current migration folders.
@@ -58,18 +58,18 @@ Adjust CI so full E2E is not run every night by default, while preserving cheap 
 **Reference module:** GitHub Actions workflow
 
 Steps:
-- [ ] Change the current daily schedule to twice weekly at 02:30 WIB: Sunday and Wednesday 19:30 UTC in GitHub Actions cron (`30 19 * * 0,3`), yielding Monday and Thursday 02:30 WIB.
+- [x] Change the current daily schedule to twice weekly at 02:30 WIB: Sunday and Wednesday 19:30 UTC in GitHub Actions cron (`30 19 * * 0,3`), yielding Monday and Thursday 02:30 WIB.
       ref: .github/workflows/ci-java21.yml:L16-L18 — current daily `0 2 * * *` schedule
-- [ ] Keep migration parity on PR and push to `main`/`master` because it is cheap and deterministic.
+- [x] Keep migration parity on PR and push to `main`/`master` because it is cheap and deterministic.
       ref: .github/workflows/ci-java21.yml:L3-L15 — workflow events for push and pull_request
-- [ ] Keep full Maven tests on push to `main`/`master`, manual full dispatch, and twice-weekly schedule.
+- [x] Keep full Maven tests on push to `main`/`master`, manual full dispatch, and twice-weekly schedule.
       ref: .github/workflows/ci-java21.yml:L84-L115 — current `full-tests` job
-- [ ] Configure push-to-main E2E to use the smoke subset created in Task 6; keep full E2E for manual full dispatch and twice-weekly schedule.
+- [x] Configure push-to-main E2E to use the smoke subset created in Task 6; keep full E2E for manual full dispatch and twice-weekly schedule.
       ref: e2e-tests/playwright.config.ts:L3-L29 — current Playwright config has no smoke project/tag split
       ref: e2e-tests/package.json:L6-L11 — current npm scripts only expose full Playwright commands
-- [ ] Preserve scheduled CI order: `full-tests` must complete successfully before scheduled full `e2e-tests` starts.
+- [x] Preserve scheduled CI order: `full-tests` must complete successfully before scheduled full `e2e-tests` starts.
       ref: .github/workflows/ci-java21.yml:L235-L246 — current E2E job depends on `full-tests`
-- [ ] If a smoke subset is chosen, add explicit `test:smoke` script and tag/folder convention in Playwright tests.
+- [x] If a smoke subset is chosen, add explicit `test:smoke` script and tag/folder convention in Playwright tests.
       ref: e2e-tests/tests/ — current specs are not tagged with `@smoke`
 
 **Validation criteria:**
@@ -84,16 +84,16 @@ Make backend logs available when local or CI E2E startup/browser tests fail, wit
 **Reference module:** Windows runner, updated Linux/macOS runner, and existing E2E CI job
 
 Steps:
-- [ ] Keep the existing Linux/macOS runner Java stdout/stderr redirection to `target/e2e-server.log` and `target/e2e-server-err.log`; do not rework it unless validation shows it is broken.
+- [x] Keep the existing Linux/macOS runner Java stdout/stderr redirection to `target/e2e-server.log` and `target/e2e-server-err.log`; do not rework it unless validation shows it is broken.
       ref: e2e-tests/scripts/run-poc.sh:L5-L17 — current runner defines log paths and redirects Java stdout/stderr
       ref: e2e-tests/scripts/run-poc.ps1:L12-L15 — Windows runner already redirects logs and hides Java window
-- [ ] On Linux/macOS runner startup timeout, print the tail of both server logs before exiting instead of only printing their paths.
+- [x] On Linux/macOS runner startup timeout, print the tail of both server logs before exiting instead of only printing their paths.
       ref: e2e-tests/scripts/run-poc.sh:L26-L30 — current readiness failure prints log paths but not log contents
-- [ ] Redirect CI E2E Java process stdout/stderr to the same log files.
+- [x] Redirect CI E2E Java process stdout/stderr to the same log files.
       ref: .github/workflows/ci-java21.yml:L271-L274 — current CI Java start has no redirect
-- [ ] Update CI startup failure logging to print both `target/e2e-server.log` and `target/e2e-server-err.log`.
+- [x] Update CI startup failure logging to print both `target/e2e-server.log` and `target/e2e-server-err.log`.
       ref: .github/workflows/ci-java21.yml:L276-L287 — current wait step only cats `target/e2e-server.log`
-- [ ] Add both server logs to the E2E artifact upload.
+- [x] Add both server logs to the E2E artifact upload.
       ref: .github/workflows/ci-java21.yml:L301-L309 — current artifact upload only includes Playwright report/results
 
 **Validation criteria:**
@@ -109,15 +109,15 @@ Remove the current reliance on login-helper fallback by ensuring the E2E profile
 **Reference module:** security startup initializers
 
 Steps:
-- [ ] Decide the least-invasive fix: either order `E2eDataSeeder` after `SystemInitializer`, or make `SystemInitializer` skip forcing password change under `e2e` profile.
+- [x] Decide the least-invasive fix: either order `E2eDataSeeder` after `SystemInitializer`, or make `SystemInitializer` skip forcing password change under `e2e` profile.
       ref: src/main/java/com/solusi/erp/security/user/security/SystemInitializer.java:L10-L38 — global initializer can set `passwordChangeRequired(true)` during admin sync
       ref: src/main/java/com/solusi/erp/security/user/security/E2eDataSeeder.java:L11-L31 — E2E seeder currently runs with `@Order(200)` and sets admin password change to false
-- [ ] Prefer an ordering fix if it preserves production behavior unchanged: give `SystemInitializer` an explicit earlier order and `E2eDataSeeder` a later order.
+- [x] Prefer an ordering fix if it preserves production behavior unchanged: give `SystemInitializer` an explicit earlier order and `E2eDataSeeder` a later order.
       ref: src/main/java/com/solusi/erp/security/user/security/SystemInitializer.java:L10-L11 — currently no `@Order`
       ref: src/main/java/com/solusi/erp/security/user/security/E2eDataSeeder.java:L11-L14 — currently `@Order(200)`
-- [ ] Add or update a focused test if practical to verify startup runner ordering or e2e post-condition; otherwise validate via E2E server log and login behavior.
+- [x] Add or update a focused test if practical to verify startup runner ordering or e2e post-condition; otherwise validate via E2E server log and login behavior.
       ref: e2e-tests/helpers/auth.ts — login helper currently contains fallback handling for password-change redirects
-- [ ] Keep login helper fallback for resilience unless a later cleanup task explicitly removes it after repeated validation.
+- [x] Keep login helper fallback for resilience unless a later cleanup task explicitly removes it after repeated validation.
 
 **Validation criteria:**
 - Starting the app with `--spring.profiles.active=e2e` logs `SystemInitializer` before `E2eDataSeeder`, or otherwise guarantees admin ends with `passwordChangeRequired=false`.
@@ -132,19 +132,19 @@ Turn the lessons from Product/TomSelect into a clear convention so future module
 **Reference module:** E2E guide, frontend specs, Product form
 
 Steps:
-- [ ] Add a dedicated selector convention section to `docs/tests/playwright-e2e-guide.md`.
+- [x] Add a dedicated selector convention section to `docs/tests/playwright-e2e-guide.md`.
       ref: docs/tests/playwright-e2e-guide.md:L691-L718 — current checklist mentions reading templates and special components
-- [ ] Specify that interactive fields should have stable explicit IDs, especially TomSelect/autocomplete, modal-selector triggers, AutoNumeric inputs, date pickers, and dynamic line rows.
+- [x] Specify that interactive fields should have stable explicit IDs, especially TomSelect/autocomplete, modal-selector triggers, AutoNumeric inputs, date pickers, and dynamic line rows.
       ref: src/main/resources/templates/inventory/products/form.html:L65-L83 — Product uses explicit `#category-select` and `#brand-select`
       ref: docs/spec/autocomplete-generic.md — autocomplete standards for TomSelect fields
       ref: docs/spec/modal-selector.md — modal selector standards
       ref: docs/spec/numeric-standards.md — AutoNumeric standards
       ref: docs/spec/datetime-standards.md — date picker standards
       ref: docs/spec/header-lines-form.md — dynamic line standards
-- [ ] Document Playwright selector preference order: explicit ID for widgets, `name` for plain input/select/textarea, table-scoped text for list assertions, and avoid wrapper-generated CSS classes where possible.
+- [x] Document Playwright selector preference order: explicit ID for widgets, `name` for plain input/select/textarea, table-scoped text for list assertions, and avoid wrapper-generated CSS classes where possible.
       ref: e2e-tests/tests/master-data/product.spec.ts — Product spec now relies on explicit widget IDs
       ref: e2e-tests/helpers/tomselect.ts — TomSelect helper expects the original `<select>` element, not the wrapper
-- [ ] Update stale E2E guide status that still says Product/UoM failures may be unresolved.
+- [x] Update stale E2E guide status that still says Product/UoM failures may be unresolved.
       ref: docs/tests/playwright-e2e-guide.md:L482-L501 — current status section predates latest 18/18 passing run
 
 **Validation criteria:**
@@ -160,16 +160,16 @@ Introduce a smoke subset separate from full E2E so push-to-main has useful confi
 **Reference module:** Playwright config and current specs
 
 Steps:
-- [ ] Use Playwright `@smoke` tags as the smoke selection mechanism.
+- [x] Use Playwright `@smoke` tags as the smoke selection mechanism.
       ref: e2e-tests/playwright.config.ts:L3-L29 — current single Chromium project with no grep/project split
       ref: e2e-tests/package.json:L6-L11 — scripts can add `test:smoke`
-- [ ] Mark existing representative tests with `@smoke`: successful login, Brand create, and Product create with TomSelect.
+- [x] Mark existing representative tests with `@smoke`: successful login, Brand create, and Product create with TomSelect.
       ref: e2e-tests/tests/auth/login.spec.ts — auth coverage
       ref: e2e-tests/tests/master-data/brand.spec.ts — simple CRUD baseline
       ref: e2e-tests/tests/master-data/product.spec.ts — TomSelect/autocomplete coverage
-- [ ] Add npm script `test:smoke` and use it in push-to-main E2E if selected.
+- [x] Add npm script `test:smoke` and use it in push-to-main E2E if selected.
       ref: e2e-tests/package.json:L6-L11 — script section
-- [ ] Keep full E2E available via manual dispatch and reduced-frequency schedule.
+- [x] Keep full E2E available via manual dispatch and reduced-frequency schedule.
       ref: .github/workflows/ci-java21.yml:L16-L25 — schedule/workflow_dispatch controls
 
 **Validation criteria:**

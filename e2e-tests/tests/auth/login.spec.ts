@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Authentication', () => {
+test.describe('@smoke Authentication', () => {
 
   test('should login successfully with valid credentials', async ({ page }) => {
     await page.goto('/login');

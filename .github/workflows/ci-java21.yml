@@ -14,8 +14,8 @@ on:
       - 'docs/**'
       - '.github/**/*.md'
   schedule:
-    # Nightly full run — setiap hari pukul 02:00 UTC (09:00 WIB)
-    - cron: '0 2 * * *'
+    # Twice weekly full run — Sunday & Wednesday 19:30 UTC (Monday & Thursday 02:30 WIB)
+    - cron: '30 19 * * 0,3'
   workflow_dispatch:
     inputs:
       run_full:
@@ -37,6 +37,26 @@ env:
   JAVA_DISTRIBUTION: 'temurin'
 
 jobs:
+  # ──────────────────────────────────────────────────────────────────────────
+  # Job 0: Migration Parity — ensures H2 mirrors all MariaDB Flyway versions
+  # Target time: < 5 seconds
+  # ──────────────────────────────────────────────────────────────────────────
+  migration-parity:
+    name: Migration Parity Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    if: |
+      github.event_name == 'pull_request' ||
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_full == false)
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check MariaDB ↔ H2 migration parity
+        run: bash scripts/check-migration-parity.sh
+
   # ──────────────────────────────────────────────────────────────────────────
   # Job 1: Fast — executed on PRs or manual non-full dispatch
   # Includes: unit tests, static template checks, domain/application usecases
@@ -229,6 +249,10 @@ jobs:
   # ──────────────────────────────────────────────────────────────────────────
   # Job 4: E2E — Playwright end-to-end tests against H2 in-memory
   # Runs after full-tests pass. Uses Spring Boot with e2e profile (H2).
+  # Strategy:
+  #   - push to main/master → smoke subset (@smoke tagged tests only)
+  #   - schedule (twice weekly) → full E2E suite
+  #   - manual dispatch (run_full=true) → full E2E suite
   # ──────────────────────────────────────────────────────────────────────────
   e2e-tests:
     name: E2E Tests (Playwright)
@@ -270,7 +294,8 @@ jobs:
 
       - name: Start Spring Boot (E2E profile)
         run: |
-          java -jar target/solusi-program-erp-*.jar --spring.profiles.active=e2e &
+          java -jar target/solusi-program-erp-*.jar --spring.profiles.active=e2e \
+            > target/e2e-server.log 2> target/e2e-server-err.log &
           echo $! > spring-boot.pid
 
       - name: Wait for server to be ready
@@ -283,7 +308,11 @@ jobs:
             sleep 1
           done
           echo "Server failed to start within 60s"
-          cat target/e2e-server.log || true
+          echo "=== Last 50 lines of target/e2e-server.log ==="
+          tail -50 target/e2e-server.log 2>/dev/null || echo "(file not found)"
+          echo ""
+          echo "=== Last 50 lines of target/e2e-server-err.log ==="
+          tail -50 target/e2e-server-err.log 2>/dev/null || echo "(file not found)"
           exit 1
 
       - name: Install Playwright dependencies
@@ -294,7 +323,14 @@ jobs:
 
       - name: Run Playwright tests
         working-directory: e2e-tests
-        run: npx playwright test
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "Running smoke E2E subset (push-to-main)..."
+            npx playwright test --grep @smoke
+          else
+            echo "Running full E2E suite (schedule/dispatch)..."
+            npx playwright test
+          fi
         env:
           E2E_BASE_URL: http://localhost:18080
 
@@ -306,6 +342,8 @@ jobs:
           path: |
             e2e-tests/playwright-report/
             e2e-tests/test-results/
+            target/e2e-server.log
+            target/e2e-server-err.log
           retention-days: 7
 
       - name: Stop Spring Boot

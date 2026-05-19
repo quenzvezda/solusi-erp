@@ -11,7 +11,7 @@ test.describe('Brand CRUD', () => {
     await expect(page.locator('table').locator('text=E2E Brand Beta').first()).toBeVisible();
   });
 
-  test('should create new brand', async ({ page }) => {
+  test('@smoke should create new brand', async ({ page }) => {
     await navigateToModule(page, '/inventory/brands/create');
 
     const name = uniqueName('Brand');
