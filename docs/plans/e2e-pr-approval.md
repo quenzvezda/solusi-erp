@@ -100,7 +100,7 @@ Steps:
 - [x] `npm run test` in `e2e-tests/` is green: 18 passed (2.7m).
 - [x] No transient flakes — all tests passed first run with 0 retries used.
 
-### Task 4: Add `helpers/flatpickr.ts` for date picker interaction
+### Task 4: Add `helpers/flatpickr.ts` for date picker interaction [x]
 
 Creates a stable helper to set Flatpickr-managed date inputs (`data-picker="date"`). PR header `requestDate` and per-line `requiredDate` use this widget.
 
@@ -120,7 +120,7 @@ Steps:
 - Helper passes TypeScript compile (`tsc --noEmit` if running locally or via `npx playwright test --list`).
 - When used in a spec, `getFlatpickrDate` returns the same value that was set.
 
-### Task 5: Add `helpers/line-editor.ts` for inline line CRUD
+### Task 5: Add `helpers/line-editor.ts` for inline line CRUD [x]
 
 Generic helper for header-lines forms following the `#row-template-source` + `#line-container` pattern (PR, SO, PO, etc.). Encapsulates add-line, remove-line-at-index, and per-cell field setters that resolve the right `lines[N].field` selector.
 
@@ -142,7 +142,7 @@ Steps:
 **Validation criteria:**
 - Used by Task 9 spec without flake; add-line increments count, remove-line decrements, per-field setters resolve correctly.
 
-### Task 6: Add `helpers/signature-pad.ts` for canvas signature
+### Task 6: Add `helpers/signature-pad.ts` for canvas signature [x]
 
 Layer 1+2 strategy: real pointer drawing on the canvas, then assert `signaturePad.isEmpty() === false`. No backend bypass.
 

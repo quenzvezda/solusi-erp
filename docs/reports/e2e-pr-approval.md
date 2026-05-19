@@ -60,3 +60,25 @@
 
 - **Status:** clean
 - **Summary:** Full Playwright suite ran green: 18/18 passed in 2m43s on first attempt with 0 retries used. No regression from V9000 expansion. Existing specs use `uniqueName()` for create flows and stable seed ids 9001-9002 for TomSelect autofill, both unaffected by the new seed.
+
+## Task 4: helpers/flatpickr.ts
+
+- **Status:** clean
+- **Summary:** Added `setFlatpickrDate` / `getFlatpickrDate`. Uses `el._flatpickr.setDate(date, true)` (the `true` triggers onChange so cascading SPL price autofill fires later). Falls back to `page.fill()` if no `_flatpickr` after 3s — works for both Flatpickr and plain native date inputs.
+
+## Task 5: helpers/line-editor.ts
+
+- **Status:** clean
+- **Summary:** Added `addLine`, `removeLineAt`, `getLineCount`, `lineFieldSelector`, `waitForRowSettled` for the standard `#btn-add-line` + `#line-container` + `tr.line-row` + `lines[N].field` pattern. Reusable by PR, SPL, PO, etc.
+
+## Task 6: helpers/signature-pad.ts
+
+- **Status:** findings
+- **Summary:** Added `drawSignature` (real Playwright `mouse.move`/`down`/`up` strokes at relative bounding-box positions), `assertSignatureNotEmpty`, `isSignatureNotEmpty`. No backend bypass.
+
+### Finding: SignaturePad instance not globally exposed
+- **Type:** decision
+- **Severity:** info
+- **Detail:** Plan considered exposing the SignaturePad instance as `window.__erpSignaturePads` so the helper could call `pad.isEmpty()` directly. After reviewing `templates/fragments/approval.html` and the canvas wrapper, decided against modifying app code — instead, the helper compares `canvas.toDataURL()` against the empty-PNG suffix `AAAAAElFTkSuQmCC`. This works for any canvas regardless of which library drives it.
+- **Action taken:** Helper is fully self-contained, no app code change needed.
+
