@@ -163,7 +163,7 @@ Steps:
 - After draw, the approval modal's submit succeeds (i.e. server accepts the signature blob).
 - `assertSignatureNotEmpty` returns true after draw, false before draw.
 
-### Task 7: Refactor auth helper for multi-role storage state
+### Task 7: Refactor auth helper for multi-role storage state [x]
 
 Move from "login per test" to "login once, replay storage state per test". Adds approver1 and employee1 to `TEST_USERS`, introduces a `setup` Playwright project that produces `.auth/{role}.json`, and lets specs declare `test.use({ storageState })`.
 

@@ -1,7 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-  testDir: './tests',
+  testDir: './',
+  testMatch: ['tests/**/*.spec.ts', 'global.setup.ts'],
   timeout: 30_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,
@@ -22,8 +23,14 @@ export default defineConfig({
 
   projects: [
     {
+      name: 'setup',
+      testMatch: /global\.setup\.ts/,
+    },
+    {
       name: 'chromium',
+      testMatch: /tests\/.*\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
+      dependencies: ['setup'],
     },
   ],
 });

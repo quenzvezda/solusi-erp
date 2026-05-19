@@ -82,3 +82,27 @@
 - **Detail:** Plan considered exposing the SignaturePad instance as `window.__erpSignaturePads` so the helper could call `pad.isEmpty()` directly. After reviewing `templates/fragments/approval.html` and the canvas wrapper, decided against modifying app code — instead, the helper compares `canvas.toDataURL()` against the empty-PNG suffix `AAAAAElFTkSuQmCC`. This works for any canvas regardless of which library drives it.
 - **Action taken:** Helper is fully self-contained, no app code change needed.
 
+## Task 7: Refactor auth helper for multi-role storage state
+
+- **Status:** findings
+- **Summary:** Added `TEST_USERS.{admin,approver1,employee1,warehouse1}`, `loginAndSaveState()`, `storageStatePath()`, `e2e-tests/global.setup.ts` setup project, and refactored `fixtures/base.ts` to load the admin storage state at fixture level. Full suite 22/22 green (4 setup + 3 auth + 15 master-data).
+
+### Finding: project-level storageState fails on cold runs
+- **Type:** deviation
+- **Severity:** warning
+- **Detail:** First implementation set `storageState` at project config level. Playwright resolves project options at worker boot — before the `setup` project has had a chance to write `.auth/admin.json`. Result: chromium worker booted with a missing storageState file, every test loaded an empty session and saw the login page.
+- **Action taken:** Removed `storageState` from project config. Instead, default fixture (`fixtures/base.ts`) extends `base.extend<{ storageState: string }>({ storageState: storageStatePath('admin') })` — Playwright resolves the path lazily after `dependencies: ['setup']` completes. For role-specific scenarios, callers use `test.use({ storageState: storageStatePath('approver1') })` at the describe level. Full suite reproducibly green from cold `.auth/`.
+- **Ref:** e2e-tests/fixtures/base.ts, e2e-tests/global.setup.ts
+
+### Finding: waitForURL needed explicit waitUntil=domcontentloaded
+- **Type:** deviation
+- **Severity:** info
+- **Detail:** Login redirected to `/dashboard` but `page.waitForURL` (default `waitUntil: 'load'`) timed out at 30s waiting for the dashboard's slow-loading widgets to finish.
+- **Action taken:** Added `waitUntil: 'domcontentloaded'` to both waitForURL calls in `helpers/auth.ts`.
+
+### Finding: login.spec.ts uses bare @playwright/test (intentional)
+- **Type:** decision
+- **Severity:** info
+- **Detail:** `tests/auth/login.spec.ts` continues to import from `@playwright/test` rather than the base fixture, because those tests verify the login flow itself — applying admin storage state would skip the login redirect.
+- **Action taken:** Left login.spec.ts unchanged. The chromium project loads no project-level storageState (per the fix above), so login.spec.ts gets a clean unauthenticated context — matching its needs.
+

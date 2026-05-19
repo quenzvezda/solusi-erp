@@ -1,11 +1,28 @@
-import { test as base } from '@playwright/test';
-import { login } from '../helpers/auth';
+import { test as base, expect } from '@playwright/test';
+import { storageStatePath } from '../helpers/auth';
 
-export const test = base.extend({
-  page: async ({ page }, use) => {
-    await login(page);
-    await use(page);
-  },
+/**
+ * Default `test` is pre-authenticated as `admin` via storage state loaded at
+ * the fixture level (lazily, after the setup project has produced the file).
+ *
+ * Project-level `storageState` was avoided because Playwright resolves project
+ * options at worker boot — before `setup` writes the storage file on a cold
+ * `.auth/`. Loading at fixture level reads the file on demand, after setup
+ * dependencies have completed.
+ *
+ * For role-specific scenarios, override at the describe level:
+ *
+ *   import { test, expect } from '../../fixtures/base';
+ *   import { storageStatePath } from '../../helpers/auth';
+ *
+ *   test.describe('Approval — approver path', () => {
+ *     test.use({ storageState: storageStatePath('approver1') });
+ *     test('...', async ({ page }) => { ... });
+ *   });
+ */
+export const test = base.extend<{ storageState: string }>({
+  storageState: storageStatePath('admin'),
 });
 
-export { expect } from '@playwright/test';
+export { expect };
+export { storageStatePath };
