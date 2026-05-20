@@ -453,7 +453,7 @@ Steps:
 - Row SA terhapus dari list.
 - Server log clean (no orphan FK error).
 
-### Task 14: RBAC sample matrix spec `tests/auth/rbac.spec.ts` [ ]
+### Task 14: RBAC sample matrix spec `tests/auth/rbac.spec.ts` [x]
 
 Sampel 4 role × 4 resource = 16 case URL guard + UI element visibility. Resource: PR (procurement), SA (inventory), Brand (master), PermissionGroup (admin).
 
