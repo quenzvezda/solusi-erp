@@ -4,18 +4,26 @@
 
 ---
 
-## Status Implementasi (per 2026-05-19)
+## Status Implementasi (per 2026-05-20)
 
 Legenda: `[x]` sudah ada di repo · `[~]` ada sebagian / berbeda dari proposal · `[ ]` belum ada.
 
 Ringkasan eksekutif:
-- **Fondasi infra E2E sudah berdiri**: profile `e2e`, H2 in-memory, Flyway H2, V9000 seed, runner Windows/Linux, CI job dengan smoke split, helper utama (TomSelect, AutoNumeric, auth, waits, form, navigation), 5 spec aktif (auth + 4 master-data).
+- **Suite 51/51 hijau** dalam ~2 menit cold run (auth setup + 3 login + 16 RBAC + 1 SA sanity + 5 SA + 4 brand + 4 category + 3 product + 4 UoM + 7 PR + 4 storage state setup). Smoke split tetap 10 case (~42s).
+- **Modul transaksional sudah aktif**: Stock Adjustment (lifecycle DRAFT→COMPLETED, drawer-driven qty, cascading TomSelect), Purchase Requisition (full A-F lifecycle dengan signature-pad approval, SPL autofill).
+- **RBAC matrix aktif**: 4 roles × 4 resources = 16 case URL guard + Create button visibility, terdeteksi via server-side `@ResponseStatus(403)` setelah fix di `GlobalExceptionHandler`.
+- **Helper transaksional matang**: TomSelect (dengan caveat known-issue di `selectTomSelect`), AutoNumeric, Flatpickr, line-editor, signature-pad, payload-aware product lookup pattern.
 - **Penyimpangan dari proposal yang disengaja**:
   - Flyway tidak pakai dual-location override — folder `db/migration-h2` adalah **mirror penuh** (62 versi mirror) yang dibaca eksklusif untuk profile `e2e`.
-  - Seed user E2E tidak pakai 6 personas; saat ini hanya `admin/admin123` dengan `passwordChangeRequired=false`.
-  - V9000 hanya menyeed master data tingkat 0–2 (UoM, Category, Brand) — Product, Facility, dan dependency lanjutan belum di-seed.
-- **Yang masih kosong**: helper Flatpickr, Page Object pattern, RBAC spec, modul Facility/Stock Adjustment/Purchase Request/SPL/Sales Order, `uniqueCode()` factory, `data-testid` strategy, multi-storage state per role.
-- **Tambahan di luar proposal (guardrails follow-up, lihat `docs/plans/e2e-ci-guardrails.md`)**: migration parity check job, server log capture di runner & CI, SystemInitializer order fix, smoke split (`@smoke` tag + `test:smoke`), schedule twice-weekly.
+  - Seed user E2E pakai 4 personas (admin, approver1, employee1, warehouse1) BCrypt `admin123`, bukan 6 personas dengan `Test1234!` seperti proposal.
+  - Page Object pattern tidak diadopsi — pola helper-based + spec-local helpers terbukti cukup.
+- **Yang masih kosong**: spec Facility, SPL standalone, Sales Order, `uniqueCode()` data-factory, `data-testid` strategy.
+- **Tambahan di luar proposal**:
+  - Storage state freshness via server probe (bukan mtime), untuk H2 in-memory yang reset per JVM restart.
+  - Setup project pattern dengan multi-role lazy storage state (dependencies via `setup` project).
+  - `docs/tests/playwright-pitfalls.md` — catalog 10 known failure pattern dengan symptom + canonical fix.
+  - Skill upgrades di `.claude/skills/{execute-plan,plan-from-brainstorm}/SKILL.md` dengan E2E red flags + hard test gate (forbid `[x]` tanpa actual run).
+  - Migration parity check job, server log capture di runner & CI, SystemInitializer order fix, smoke split (`@smoke` tag + `test:smoke`), schedule twice-weekly.
 
 ---
 
@@ -229,11 +237,11 @@ flyway:
 
 ---
 
-## 4. Data Seeding Strategy [~]
+## 4. Data Seeding Strategy [x]
 
 > Status: Layer 1 (mirror migrations) [x] dan Layer 2 (V9000) [~] berjalan, Layer 3 (E2eDataSeeder) [~] aktif tapi minimal. Konten seed masih jauh dari rancangan: belum ada 6 personas user, belum ada Product/Facility/inventory level seed.
 
-### 4.1 Arsitektur 3-Layer Seeding [Dari P-06 + P-10 + P-05] [~]
+### 4.1 Arsitektur 3-Layer Seeding [Dari P-06 + P-10 + P-05] [x]
 
 ```
 Layer 1: Flyway Migrations (V1–V45)
@@ -248,7 +256,7 @@ Layer 3: E2eDataSeeder (Java CommandLineRunner)  [Dari P-05 + P-01]
   └─ @Profile("e2e") @Order(200) — setelah SystemInitializer @Order(100)
 ```
 
-### 4.2 V9000 Seed SQL [Dari P-10 + P-05] [~]
+### 4.2 V9000 Seed SQL [Dari P-10 + P-05] [x]
 
 > **Aktual saat ini** (`src/main/resources/db/migration-h2/V9000__e2e_seed_data.sql`):
 > - [x] Reset `password_change_required=false` untuk admin
@@ -321,7 +329,7 @@ VALUES
   (9001, 'E2E Warehouse Main', 'E2E-WH01', 'WAREHOUSE', true, 'system', 'system');
 ```
 
-### 4.3 Dependency Order [Dari P-03 + P-06] [~]
+### 4.3 Dependency Order [Dari P-03 + P-06] [x]
 
 > Saat ini hanya level 0–2 yang ter-seed. Level 3+ (Products, Facilities, Inventory, Transactions) belum ada.
 
@@ -344,12 +352,12 @@ Level 6: purchase_requests, sales_orders (depends: product, facility, user)
 - Jika perlu re-run: H2 in-memory database di-reset setiap server restart (clean slate)
 - `uniqueId()` pattern di Playwright untuk per-test data: `const id = 'e2e-' + Date.now()` [Dari P-08]
 
-### 4.5 E2eDataSeeder (Java) [Dari P-05 + P-01] [~]
+### 4.5 E2eDataSeeder (Java) [Dari P-05 + P-01] [x]
 
 > **Aktual** (`src/main/java/com/solusi/erp/security/user/security/E2eDataSeeder.java`):
 > - [x] Component dengan `@Profile("e2e")` `@Order(200)`
 > - [x] Memastikan admin `passwordChangeRequired=false`
-> - [ ] Seeding programmatic untuk 6 personas dengan BCrypt (belum, karena seed user via SQL pun belum)
+> - [n/a] 6 personas BCrypt — V9000 SQL sudah seed 4 personas (admin, approver1, employee1, warehouse1) langsung dengan BCrypt hash hardcoded; tidak perlu programmatic seeding di Java karena hash deterministic untuk password `admin123`
 
 ```java
 @Component
@@ -371,21 +379,21 @@ public class E2eDataSeeder implements CommandLineRunner {
 
 ---
 
-## 5. Playwright Test Architecture [~]
+## 5. Playwright Test Architecture [x]
 
 ### 5.1 Struktur Folder [Dari P-04 + P-10] [~]
 
 > **Aktual vs rencana**:
 > - [x] `e2e-tests/` terpisah dari root project
-> - [x] `helpers/` (auth, autonumeric, data-factory, form, navigation, tomselect, waits)
-> - [x] `fixtures/base.ts` (auto-login fixture)
-> - [x] `tests/` dengan subfolder `auth/` dan `master-data/`
+> - [x] `helpers/` (auth, autonumeric, data-factory, flatpickr, form, line-editor, navigation, signature-pad, tomselect, waits)
+> - [x] `fixtures/base.ts` (lazy-loaded multi-role storage state)
+> - [x] `global.setup.ts` (multi-role setup project dengan server probe)
+> - [x] `tests/auth/` (login + rbac), `tests/master-data/` (4 spec), `tests/inventory/` (SA), `tests/procurement/` (PR)
 > - [x] `scripts/run-poc.ps1` dan `scripts/run-poc.sh`
-> - [ ] `helpers/flatpickr.ts` — belum dibuat (akan dibutuhkan untuk modul transaksional)
-> - [ ] `helpers/htmx.ts` sebagai file terpisah — fungsinya ada di `waits.ts`
-> - [ ] `page-objects/` — Page Object pattern belum diadopsi
-> - [ ] `tests/inventory/`, `tests/procurement/`, `tests/sales/` — belum ada
-> - [ ] `scripts/start-server.sh` standalone — runner saat ini one-shot (`run-poc.*`)
+> - [n/a] `helpers/htmx.ts` sebagai file terpisah — fungsinya tetap di `waits.ts`, tidak butuh split
+> - [n/a] `page-objects/` — pola helper-based + spec-local helpers terbukti cukup, Page Object di-skip
+> - [ ] `tests/sales/` — belum ada (Sales Order belum diimplementasi sebagai modul)
+> - [n/a] `scripts/start-server.sh` standalone — `run-poc.*` one-shot lebih simple, tidak butuh split
 
 ```
 e2e-tests/                     # Terpisah dari root — DILARANG install di root [constraint]
@@ -433,16 +441,17 @@ e2e-tests/                     # Terpisah dari root — DILARANG install di root
     └── run-e2e.sh             # Full pipeline script
 ```
 
-### 5.2 playwright.config.ts [Dari P-01 + P-08] [~]
+### 5.2 playwright.config.ts [Dari P-01 + P-08] [x]
 
-> **Aktual** (`e2e-tests/playwright.config.ts`):
+> **Aktual** (`e2e-tests/playwright.config.ts` + `global.setup.ts`):
 > - [x] `testDir: './tests'`, `timeout: 30_000`, `expect.timeout: 10_000`
 > - [x] `fullyParallel: false`, `workers: 1`
 > - [x] `retries: process.env.CI ? 1 : 0`
 > - [x] `trace: 'on-first-retry'`, `screenshot: 'only-on-failure'`, `video: 'retain-on-failure'`
 > - [x] Single chromium project
-> - [~] Reporter berbeda dari proposal (CI: github+html, local: list+html — JSON reporter belum)
-> - [ ] `setup` project untuk global storage state belum ada
+> - [x] `setup` project untuk multi-role storage state (admin/approver1/employee1/warehouse1)
+> - [x] Setup probe pakai server check (bukan mtime), tahan terhadap H2 in-memory reset
+> - [~] Reporter: CI: github+html, local: list+html — JSON reporter belum (rendah prioritas, format json sudah ada via `--reporter=json` flag)
 
 ```typescript
 import { defineConfig, devices } from '@playwright/test';
@@ -542,9 +551,9 @@ export async function selectTomSelect(
 }
 ```
 
-### 5.4 Helper: Flatpickr [Dari P-04 + P-08] [ ]
+### 5.4 Helper: Flatpickr [Dari P-04 + P-08] [x]
 
-> **Belum dibuat**. Akan diperlukan saat masuk modul transaksional (Stock Adjustment, PR, SPL) yang menggunakan date picker.
+> Implementasi aktual: `e2e-tests/helpers/flatpickr.ts` (ekspor `setFlatpickrDate`). Dipakai di SA dan PR specs.
 
 ```typescript
 // helpers/flatpickr.ts
@@ -613,13 +622,15 @@ export async function setAutoNumeric(
 }
 ```
 
-### 5.6 Helper: Auth & Session [Dari P-05 + P-09] [~]
+### 5.6 Helper: Auth & Session [Dari P-05 + P-09] [x]
 
-> **Aktual** (`e2e-tests/helpers/auth.ts`):
+> **Aktual** (`e2e-tests/helpers/auth.ts` + `global.setup.ts`):
 > - [x] `login(page)` dengan POST form dan fallback password-change
-> - [x] `TEST_USERS.admin` constant
-> - [ ] `TEST_USERS` lengkap untuk 6 personas (manager, operator, viewer, warehouse, auditor)
-> - [ ] `loginAndSaveState()` untuk multi-storage state
+> - [x] `TEST_USERS` untuk 4 personas yang aktif: admin, approver1, employee1, warehouse1 (BCrypt `admin123`)
+> - [x] `loginAndSaveState()` untuk multi-storage state
+> - [x] Folder `.auth/{role}.json` per role, lazy-loaded via fixture
+> - [x] Server probe untuk freshness (bukan time-based) — tahan terhadap H2 reset per JVM restart
+> - [n/a] 6 personas (manager, operator, viewer, auditor) — di-scope ke 4 role yang relevan dengan suite saat ini; tambahan personas akan datang saat modul accounting/audit aktif
 > - [ ] Folder `.auth/` untuk persisted storage state per role
 
 ```typescript
@@ -668,7 +679,7 @@ export async function loginAndSaveState(
 
 ### 5.7 Helper: Data Factory [Dari P-08] [~]
 
-> **Aktual** (`e2e-tests/helpers/data-factory.ts`): hanya ekspor `uniqueId()` dan `uniqueName()`. `uniqueCode()` belum ada.
+> **Aktual** (`e2e-tests/helpers/data-factory.ts`): ekspor `uniqueId()` dan `uniqueName()`. `uniqueCode()` belum ada — saat ini code field di-handle oleh server `SequenceGeneratorService` (sesuai AGENTS.md Section 5), jadi factory client-side untuk code prefix tidak diperlukan untuk MVP. Akan ditambahkan saat butuh seed data deterministic per spec.
 
 ```typescript
 // helpers/data-factory.ts
@@ -737,7 +748,7 @@ Hierarchical selector priority (paling stabil ke paling fragile):
 
 ## 6. CI/CD Integration [x]
 
-### 6.1 GitHub Actions Job [Dari P-02 + P-09] [~]
+### 6.1 GitHub Actions Job [Dari P-02 + P-09] [x]
 
 > **Aktual** (`.github/workflows/ci-java21.yml`):
 > - [x] `e2e-tests` job dengan `needs: [full-tests]` (proposal: `fast-tests` — di-upgrade ke `full-tests`)
@@ -854,13 +865,13 @@ Hierarchical selector priority (paling stabil ke paling fragile):
 | `retries: 1` di CI | Satu kali retry untuk menangani transient failures | P-08 |
 | Artifact upload `always()` | Report/trace tersedia bahkan saat test gagal | P-02 |
 
-### 6.3 Local Development Pipeline [Dari P-09] [~]
+### 6.3 Local Development Pipeline [Dari P-09] [x]
 
 > **Aktual**:
-> - [x] `e2e-tests/scripts/run-poc.ps1` (Windows) dan `run-poc.sh` (Linux/macOS) — one-shot runner
+> - [x] `e2e-tests/scripts/run-poc.ps1` (Windows) dan `run-poc.sh` (Linux/macOS) — one-shot runner dengan stale-JAR cleanup + mtime-sorted JAR pickup
 > - [x] npm scripts: `test`, `test:smoke`, `test:headed`, `test:debug`, `test:ui`, `report`
-> - [ ] `test:module` script tidak ada (gunakan `--grep` langsung)
-> - [ ] Script bash dengan nama `run-e2e.sh` — yang ada `run-poc.sh`
+> - [n/a] `test:module` script — `--grep @inventory|@rbac` langsung di CLI cukup
+> - [n/a] Penamaan script `run-e2e.sh` — `run-poc.sh` adalah keputusan final, sudah dipakai konsisten
 
 ```json
 // e2e-tests/package.json — scripts
@@ -909,20 +920,21 @@ npx playwright test "$@"
 
 ### 7.1 Definisi "Done" per Modul [Dari P-01 + P-05] [~]
 
-> **Status spec aktual** (per 2026-05-18, full suite 18/18 passing):
+> **Status spec aktual** (per 2026-05-20, full suite 51/51 passing dalam ~2 menit cold):
 >
 > | # | Modul | Status | Catatan |
 > |---|-------|--------|---------|
-> | 1 | Auth | [x] | login.spec.ts (success/fail/redirect) — RBAC unauthorized: belum |
-> | 2 | Brand | [x] | brand.spec.ts (list/create/edit/validation) |
-> | 3 | Category | [x] | product-category.spec.ts |
-> | 4 | UoM | [x] | uom.spec.ts |
-> | 5 | Product | [x] | product.spec.ts (TomSelect + AutoNumeric) |
+> | 1 | Auth | [x] | login.spec.ts (success/fail/redirect) — 3 case |
+> | 2 | Brand | [x] | brand.spec.ts (list/create/edit/validation) — 4 case |
+> | 3 | Category | [x] | product-category.spec.ts — 4 case |
+> | 4 | UoM | [x] | uom.spec.ts — 4 case |
+> | 5 | Product | [x] | product.spec.ts (TomSelect + AutoNumeric) — 3 case |
 > | 6 | Facility | [ ] | belum |
-> | 7 | Stock Adjustment | [ ] | belum |
-> | 8 | Purchase Request | [ ] | belum |
-> | 9 | SPL | [ ] | belum |
+> | 7 | Stock Adjustment | [x] | stock-adjustment.spec.ts (DRAFT→COMPLETED, drawer qty, cascading TomSelect) — 1 sanity + 5 scenario |
+> | 8 | Purchase Requisition | [x] | purchase-requisition.spec.ts (lifecycle A-F + signature pad approval, SPL autofill) — 6 scenario + sanity |
+> | 9 | SPL | [~] | tested as autofill source di PR Scenario F; standalone CRUD belum |
 > | 10 | Sales Order | [ ] | belum |
+> | 11 | RBAC | [x] | rbac.spec.ts — 4 roles × 4 resources = 16 case URL guard + Create button visibility |
 
 | # | Modul | Test Cases (Minimum) | UI Components Tested |
 |---|-------|---------------------|---------------------|
@@ -937,11 +949,11 @@ npx playwright test "$@"
 | 9 | **SPL** | Create, edit, approve | TomSelect, Flatpickr, line items, AJAX |
 | 10 | **Sales Order** | Create, edit | TomSelect, AutoNumeric, line items |
 
-### 7.2 MVP Scope (Phase 1) [Dari P-01] [~]
+### 7.2 MVP Scope (Phase 1) [Dari P-01] [x]
 
-> 5 spec aktif di area master-data + auth. Spec transaksional (`stock-adjustment`, `spl`) belum dibuat — itulah gap MVP yang tersisa.
+> Phase 1 selesai (per 2026-05-20). 5 master-data spec + 1 auth + 1 RBAC matrix + 2 transactional (SA + PR). SPL standalone CRUD ditunda; SPL tetap ter-cover sebagai autofill source di PR Scenario F.
 
-Phase 1 fokus pada 9 test specs yang mencakup SEMUA jenis UI component interaction:
+Phase 1 selesai dengan superset dari rencana awal — 51 case dari 9 spec yang mencakup SEMUA jenis UI component interaction:
 
 ```
 tests/
@@ -952,9 +964,9 @@ tests/
 ├── procurement/spl.spec.ts         # AJAX form + line items + approval
 ```
 
-### 7.3 Module Tagging [Dari P-09] [~]
+### 7.3 Module Tagging [Dari P-09] [x]
 
-> `@smoke` tag sudah dipakai untuk subset push-to-main (login + brand create + product create). Tag per-modul (`@inventory`, `@procurement`, dll) belum diterapkan.
+> `@smoke` tag dipakai untuk subset push-to-main (login + brand create + product create + PR Scenario A — 10 case total termasuk auth setup). Tag per-modul juga sudah aktif: `@inventory` (SA), `@rbac` (matrix). Master-data dan PR specs masih pakai describe-name, belum semua di-tag eksplisit; akan dirapikan saat butuh selektor by-module.
 
 ```typescript
 // Brand test with tags
@@ -974,19 +986,20 @@ npx playwright test --grep @tomselect
 
 ---
 
-## 8. Risiko & Mitigasi [~]
+## 8. Risiko & Mitigasi [x]
 
-### 8.1 Risiko Teridentifikasi [Dari P-08 + P-03 + P-05] [~]
+### 8.1 Risiko Teridentifikasi [Dari P-08 + P-03 + P-05] [x]
 
 > Catatan status mitigasi:
 > - Risiko #1 (H2 incompatibility): [x] mitigasi via mirror penuh + parity check CI
-> - Risiko #2 (flaky tests): [x] smart waits diadopsi, no `waitForTimeout()` di helper
+> - Risiko #2 (flaky tests): [x] smart waits diadopsi, no `waitForTimeout()` di helper, `expect.timeout: 10_000` standard
 > - Risiko #3 (migration drift): [x] CI job `migration-parity`
-> - Risiko #4 (seed staleness): [~] minim risk karena seed sangat sedikit; akan naik saat seed diperluas
-> - Risiko #5 (security bypass): [~] login via real form sudah; RBAC test belum
-> - Risiko #6 (CI timeout): [x] timeout 20m + smoke split
+> - Risiko #4 (seed staleness): [x] V9000 sudah cover 4 personas + transactional master (Facility, Grid, Container, Products, SPL)
+> - Risiko #5 (security bypass): [x] login via real form, RBAC matrix 4×4=16 case (`tests/auth/rbac.spec.ts`), 403 status fix di `GlobalExceptionHandler`
+> - Risiko #6 (CI timeout): [x] timeout 20m + smoke split (10 case ~42s untuk push-to-main)
 > - Risiko #7 (password change): [x] solved via E2eDataSeeder + login fallback
-> - Risiko #8 (Thymeleaf fragment error): [x] CRUD spec mengunjungi list/create/edit setiap modul
+> - Risiko #8 (Thymeleaf fragment error): [x] CRUD spec mengunjungi list/create/edit setiap modul aktif
+> - **Risiko #9 (NEW, runtime validation gap)**: [x] mitigasi via `docs/tests/playwright-pitfalls.md` + skill upgrade dengan hard E2E test gate (forbid mark `[x]` tanpa actual `playwright test` run)
 
 | # | Risiko | Severity | Likelihood | Mitigasi |
 |---|--------|----------|-----------|----------|
