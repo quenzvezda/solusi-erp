@@ -1,7 +1,7 @@
 import { test, expect, storageStatePath } from '../../fixtures/base';
 import { navigateToModule } from '../../helpers/navigation';
 import { setFlatpickrDate } from '../../helpers/flatpickr';
-import { setTomSelectValue, selectTomSelect } from '../../helpers/tomselect';
+import { setTomSelectValue } from '../../helpers/tomselect';
 import { setAutoNumeric } from '../../helpers/autonumeric';
 import { addLine, waitForRowSettled, lineFieldSelector } from '../../helpers/line-editor';
 import { waitForNetworkIdle } from '../../helpers/waits';
@@ -12,17 +12,45 @@ const FACILITY_ID = '9101';
 const GRID_ID = '9101';
 const CONTAINER_ID = '9101';
 
-async function resolveProductLaptopId(page: Page): Promise<string> {
-  const id = await page.evaluate(async () => {
-    const res = await fetch('/api/lookup/inventory/products?q=E2E-PRD-LAPTOP', {
-      credentials: 'same-origin',
-    });
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json?.[0]?.id ?? null;
-  });
-  if (!id) throw new Error('E2E-PRD-LAPTOP not found via lookup');
-  return String(id);
+/**
+ * Pick a product into a line's `select-product` TomSelect by issuing the lookup
+ * search ourselves and injecting the full LookupDto (including `payload`) before
+ * `setValue`. The page-JS change handler at stock-adjustment-form.js:204 reads
+ * `tsProd.options[val].payload.uomId` to fill `.input-uom-id`. The generic
+ * `setTomSelectValue` helper only injects `{id, name, text}` so the payload is
+ * missing; the broken `selectTomSelect` helper never resolves because it asks
+ * TomSelect's `load()` for a callback that the API does not deliver. Doing the
+ * fetch in the test code routes around both.
+ */
+async function selectProductOnLine(
+  page: Page,
+  lineSelector: string,
+  productCode: string = 'E2E-PRD-LAPTOP'
+): Promise<void> {
+  const res = await page.request.get(
+    `/api/lookup/inventory/products?q=${encodeURIComponent(productCode)}`
+  );
+  if (!res.ok()) {
+    throw new Error(`product lookup '${productCode}' failed: HTTP ${res.status()}`);
+  }
+  const list = (await res.json()) as Array<{
+    id: string | number;
+    name: string;
+    subText?: string;
+    payload?: Record<string, unknown>;
+  }>;
+  const opt = list?.[0];
+  if (!opt?.id) throw new Error(`product lookup '${productCode}' returned no results`);
+
+  await page.evaluate(
+    ({ sel, option }) => {
+      const el = document.querySelector(sel) as HTMLSelectElement & { tomselect?: any };
+      if (!el?.tomselect) throw new Error('TomSelect not initialized: ' + sel);
+      el.tomselect.addOption(option);
+      el.tomselect.setValue(String(option.id));
+    },
+    { sel: lineSelector, option: opt }
+  );
 }
 
 async function pickIdrCurrency(page: Page): Promise<void> {
@@ -66,7 +94,6 @@ async function setQuantityViaDrawer(page: Page, rowIndex: number, qty: number): 
  * Shared across Scenarios B-E so each scenario starts from a known DRAFT.
  */
 async function createSampleDraftSa(page: Page): Promise<number> {
-  const productId = await resolveProductLaptopId(page);
   await navigateToModule(page, '/inventory/adjustments/create');
   await expect(page.locator('#adjustment-form')).toBeVisible();
 
@@ -76,7 +103,11 @@ async function createSampleDraftSa(page: Page): Promise<number> {
 
   const rowIndex = await addLine(page);
   await waitForRowSettled(page, rowIndex);
-  await setTomSelectValue(page, lineFieldSelector(rowIndex, 'productId'), productId);
+  // See note in Scenario A: setTomSelectValue cannot inject the product
+  // payload (uomId, etc.) so the page change handler leaves .input-uom-id
+  // empty. selectTomSelect from the shared helper has a broken signature
+  // (load()'s callback never fires) so we use the local payload-aware helper.
+  await selectProductOnLine(page, lineFieldSelector(rowIndex, 'productId'));
   await page.waitForFunction(
     ({ idx }) => {
       const el = document.querySelector(
@@ -135,8 +166,6 @@ test.describe('@inventory Stock Adjustment flow', () => {
   });
 
   test('Scenario A — create DRAFT with 1 line', async ({ page }) => {
-    const productId = await resolveProductLaptopId(page);
-
     await navigateToModule(page, '/inventory/adjustments/create');
     await expect(page.locator('#adjustment-form')).toBeVisible();
 
@@ -150,7 +179,13 @@ test.describe('@inventory Stock Adjustment flow', () => {
     await waitForRowSettled(page, rowIndex);
 
     // Pick product (line 0). Page JS auto-fills uomId/uomAlias/serialized/lastCost.
-    await setTomSelectValue(page, lineFieldSelector(rowIndex, 'productId'), productId);
+    // Use selectTomSelect (loads via the lookup AJAX endpoint) instead of
+    // setTomSelectValue. The product change handler in stock-adjustment-form.js
+    // reads `tsProd.options[val].payload.uomId` to fill `.input-uom-id`. The
+    // bulk setTomSelectValue helper only injects {id, name, text} — no payload —
+    // so the handler's `p.uomId` stays undefined and `.input-uom-id` never
+    // populates, causing the next waitForFunction to time out.
+    await selectProductOnLine(page, lineFieldSelector(rowIndex, 'productId'));
     // Wait for uom hidden field to be populated by the change handler.
     await page.waitForFunction(
       ({ idx }) => {
@@ -198,10 +233,12 @@ test.describe('@inventory Stock Adjustment flow', () => {
     });
     expect(newId, 'expected a new adjustment row in the list').toBeGreaterThan(0);
 
-    // Reopen edit and assert status DRAFT (page-title badge mirrors PR pattern).
-    await navigateToModule(page, `/inventory/adjustments/edit/${newId}`);
+    // Open the view page and assert status badge DRAFT. The form/edit page
+    // has no status badge — the badge lives in `.page-header` of view.html
+    // as a sibling of `.page-title`, NOT inside it.
+    await navigateToModule(page, `/inventory/adjustments/view/${newId}`);
     await expect(
-      page.locator('.page-title .badge, .page-title .status', { hasText: 'DRAFT' })
+      page.locator('.page-header .badge', { hasText: 'DRAFT' })
     ).toBeVisible({ timeout: 10_000 });
   });
 
@@ -238,17 +275,20 @@ test.describe('@inventory Stock Adjustment flow', () => {
     await navigateToModule(page, `/inventory/adjustments/edit/${id}`);
     await expect(page.locator('#btn-process-inventory')).toBeVisible({ timeout: 10_000 });
 
-    // ErpAction.confirmAndSubmit posts a hidden form to data-process-url with
-    // the page CSRF token. Page navigates to /view/{id} on success.
-    page.on('dialog', (d) => d.accept());
-    await Promise.all([
-      page.waitForURL(new RegExp(`/inventory/adjustments/view/${id}`), { timeout: 15_000, waitUntil: 'domcontentloaded' }),
-      page.locator('#btn-process-inventory').click(),
-    ]);
+    // ErpAction.confirmAndSubmit opens a Bootstrap modal (#modal-global-confirm)
+    // — NOT a native window.confirm. Click the modal's confirm button so the
+    // hidden form submits and the page navigates to /view/{id}.
+    await page.locator('#btn-process-inventory').click();
+    await page.locator('#confirm-modal-btn-yes').click();
+    await page.waitForURL(new RegExp(`/inventory/adjustments/view/${id}`), {
+      timeout: 15_000,
+      waitUntil: 'domcontentloaded',
+    });
 
-    // View page should show COMPLETED status.
+    // View page should show COMPLETED status (badge in .page-header, sibling
+    // of .page-title, not inside it).
     await expect(
-      page.locator('.page-title .badge, .page-title .status', { hasText: 'COMPLETED' })
+      page.locator('.page-header .badge', { hasText: 'COMPLETED' })
     ).toBeVisible({ timeout: 10_000 });
 
     // Edit URL must redirect to view for COMPLETED.
@@ -262,27 +302,20 @@ test.describe('@inventory Stock Adjustment flow', () => {
     await navigateToModule(page, `/inventory/adjustments/edit/${id}`);
     await expect(page.locator('#line-container tr.line-row')).toHaveCount(1, { timeout: 10_000 });
 
-    // ErpModal.confirm renders a Bootstrap modal — accept by clicking the
-    // primary button. Fall back to native dialog handler in case the build
-    // uses window.confirm.
-    page.on('dialog', (d) => d.accept());
-
-    // Trigger facility change. Only one E2E facility is seeded (9101), so
-    // re-selecting the same value won't fire the change handler. Clear the
-    // TomSelect first so the next set is observed as a change.
+    // Trigger facility change handler. ErpModal.confirm at
+    // stock-adjustment-form.js:301 fires when the TomSelect change event
+    // emits — `clear()` alone is enough; we don't need to set a new value.
+    // Only one E2E facility is seeded (9101), so we cannot pick a *different*
+    // facility to trigger the change. Clearing yields '' which differs from
+    // the current '9101' and fires `change`.
     await page.evaluate(() => {
       const el = document.querySelector('#header-facility') as any;
       el?.tomselect?.clear();
     });
-    // Set back to 9101; the page-JS facility change handler fires confirm
-    // and (on accept) wipes #line-container.
-    await setTomSelectValue(page, '#header-facility', FACILITY_ID);
 
-    // Some builds open ErpModal — accept it if present.
-    const modalConfirm = page.locator('.modal.show .btn-primary, .modal.show .btn-confirm').first();
-    if (await modalConfirm.count()) {
-      await modalConfirm.click().catch(() => undefined);
-    }
+    // Accept the Bootstrap confirm modal (#modal-global-confirm) by clicking
+    // its yes button — the modal callback wipes #line-container.
+    await page.locator('#confirm-modal-btn-yes').click();
 
     await expect(page.locator('#line-container tr.line-row')).toHaveCount(0, { timeout: 5_000 });
     await expect(page.locator('#empty-msg')).toBeVisible();

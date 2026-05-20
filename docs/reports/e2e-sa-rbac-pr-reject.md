@@ -187,6 +187,135 @@
   6. Section 16 — tambah bullet baru cross-link ke `docs/plans/e2e-sa-rbac-pr-reject.md` agar agen berikutnya tahu sumber Stream A+B.
 - **Note:** Update endpoint langsung Section 11.5 — sebut SA Delete sebagai contoh kedua (di samping PR Cancel) dan link ke report Task 13.
 
-## Final Validation
+## Post-execution fixes (2026-05-20)
 
-(Populated after all stream finalized.)
+After Stream A+B implementation merged, full E2E run revealed 11 failures across SA + RBAC specs. Three independent root causes identified — none cascading. All fixed in this session before any further commits to the stream.
+
+### Finding: SA Scenario A-E `resolveProductLaptopId` called from `about:blank`
+
+- **Type:** bug
+- **Severity:** warning
+- **Detail:** `resolveProductLaptopId(page)` was invoked at the first line of Scenario A's body and inside `createSampleDraftSa()` BEFORE any `navigateToModule()` call. At that point the page is still on `about:blank`, so `fetch('/api/lookup/inventory/products?q=...', { credentials: 'same-origin' })` issued via `page.evaluate` cannot resolve the relative URL — it has no origin to anchor against. Result: response is null, helper throws `'E2E-PRD-LAPTOP not found via lookup'`. Sanity test #24 passed because it navigates first; tests 25-29 failed in 150-250ms (too fast to be a real UI flow). Plan Task 9 step 3 actually showed the correct sequence (`navigateToModule` → `resolveProductLaptopId`) but the implementation reordered them.
+- **Action taken:** Replaced `page.evaluate(() => fetch(...))` with `page.request.get(...)` in `resolveProductLaptopId`. Playwright's `APIRequestContext` carries the storage-state cookies and resolves relative URLs against `baseURL`, so the helper works regardless of page navigation state. This is also more robust against future spec ordering changes.
+- **Ref:** e2e-tests/tests/inventory/stock-adjustment.spec.ts:L17-L31 — pre-fix
+- **Ref:** e2e-tests/tests/inventory/stock-adjustment.spec.ts — post-fix uses `page.request.get`
+
+### Finding: RBAC deny cases mis-classified — `error/403` view rendered with HTTP 200
+
+- **Type:** bug
+- **Severity:** critical
+- **Detail:** `GlobalExceptionHandler.handleAccessDeniedException` returned the view name `"error/403"` without a `@ResponseStatus` annotation. Spring rendered the 403 page with the default 200 OK status, and the URL stayed on the requested resource path (no redirect). The spec's `classify()` helper used `status >= 400` and "URL still on resource" as deny signals — neither fired, so deny cases were tagged `'allow'` and failed the matrix expectation. Compare with `handleNoResourceFoundException` (line 192) which correctly carries `@ResponseStatus(HttpStatus.NOT_FOUND)`. Plan Task 14 had flagged this as a runtime-discovery item ("verify behavior at runtime — 403 vs redirect vs error page") but discovery was deferred along with the E2E run.
+- **Action taken:** Added `@ResponseStatus(HttpStatus.FORBIDDEN)` to `handleAccessDeniedException`, mirroring the 404 handler. The HTML view still renders normally; only the response status flips to 403. AJAX/API branch already returned `ResponseEntity.status(FORBIDDEN)` so it is unaffected. This restores correct HTTP semantics — 403 pages bring 403 status — and unblocks RBAC test classification.
+- **Ref:** src/main/java/com/solusi/erp/core/exception/GlobalExceptionHandler.java:L159-L171 — pre-fix
+- **Ref:** src/main/java/com/solusi/erp/core/exception/GlobalExceptionHandler.java — post-fix mirrors handleNoResourceFoundException pattern
+
+### Finding: RBAC `admin :: PermissionGroup list -> allow` pointed to API-only URL
+
+- **Type:** bug
+- **Severity:** warning
+- **Detail:** Spec resource `permGroup` declared `listUrl: '/security/permission-groups'` — but that path is exclusively the API endpoint (`PermissionGroupApiController` at `/api/security/permission-groups` plus a no-op alias at `/security/permission-groups`). The Thymeleaf controller (`PermissionGroupController`) is mounted at `/security/menu-groups` because the module was rebranded as "Menu Groups" in the UI (per docs/modules/security/permission-groups.md and migration V19 which seeds `MENU-GROUP_*` permissions). Spring threw `NoResourceFoundException`, handler returned `error/404` view with status 404, classify returned `deny` — failing the admin/allow expectation. Implementation took the URL from the entity name in the plan rather than from `@RequestMapping`.
+- **Action taken:** Updated `RESOURCES.permGroup.listUrl` to `/security/menu-groups` with a comment explaining the API/view split. ROLE_ADMIN already has `MENU-GROUP_READ` via V19 wildcard grant (`WHERE p.name LIKE 'MENU-GROUP\_%'`), so admin row will pass; other three roles have no MENU-GROUP grants in V9000, so deny rows remain valid.
+- **Ref:** e2e-tests/tests/auth/rbac.spec.ts:L64-L70 — RESOURCES.permGroup
+- **Ref:** src/main/java/com/solusi/erp/security/permissiongroup/web/PermissionGroupController.java:L35 — `@RequestMapping("/security/menu-groups")`
+- **Ref:** src/main/resources/db/migration/V19__Add_Localized_Permission_Groups.sql:L46-L56 — admin auto-grant
+
+### Pattern note: runtime-validation gap
+
+All three bugs share one cause: end-to-end runtime validation was deferred per the report's "E2E run deferred" notes on Tasks 4, 9-14, and 15. Plan had explicit GOTCHAs for two of them (Task 14 deny-behavior, Task 9 navigation order). Smoke split (`@smoke` covers PR Scenario A only) means push-to-main stays green and these only surface during the cold full-suite run. Mitigation for next stream: at minimum sanity-run each new spec once before marking the task complete, even if the full suite is left for finalize.
+
+### Version bump
+
+`pom.xml` 1.7.0 → 1.7.1 (PATCH, bug fix per AGENTS.md Section 9.A).
+
+## Post-execution fixes — Round 2 (2026-05-20)
+
+After Round 1 fixes were applied, the next `run-poc.ps1` run regressed across 30+ tests including specs that were previously green (master-data CRUD, PR scenarios A-F, login redirect). Diagnosis revealed two infrastructure hygiene bugs unrelated to the original SA/RBAC stream — but they masked whether Round 1 fixes worked because the running server was the wrong build.
+
+### Finding: `run-poc.ps1` boots stale JAR after version bump
+
+- **Type:** bug
+- **Severity:** warning
+- **Detail:** Round 1 bumped `pom.xml` 1.7.0 → 1.7.1. After `mvnw package`, both `target/solusi-program-erp-1.7.0.jar` (left over from the previous build) AND the new `1.7.1.jar` lived side by side. Script picked JAR via `(Get-ChildItem "target\solusi-program-erp-*.jar")[0]` which is alphabetical order — so `1.7.0.jar` (the OLD build) was started. Run output proved this: header line read `=== Starting server: F:\solusi-program-erp\target\solusi-program-erp-1.7.0.jar ===`. None of the Round 1 fixes (handler `@ResponseStatus(FORBIDDEN)`, etc.) were active.
+- **Action taken:** `e2e-tests/scripts/run-poc.ps1` now (1) deletes any pre-existing `solusi-program-erp-*.jar` in `target/` before invoking `mvnw package`, and (2) selects the JAR by `LastWriteTime -Descending | Select-Object -First 1` instead of alphabetical first. Defensive: even if a developer drops a stray JAR mid-run, the newest is picked.
+- **Ref:** e2e-tests/scripts/run-poc.ps1:L7-L20 — pre/post fix
+
+### Finding: `global.setup.ts` reuses dead storage state when server restarts
+
+- **Type:** bug
+- **Severity:** critical
+- **Detail:** Setup tests use a 30-minute time-based freshness check on `.auth/<role>.json`:
+  ```ts
+  function isStateFresh(file: string): boolean {
+    const stat = fs.statSync(file);
+    return Date.now() - stat.mtimeMs < FRESH_TTL_MS;
+  }
+  ```
+  This is fundamentally wrong for an H2 in-memory backend. Every server restart wipes session storage instantly, so saved cookies become invalid the moment the JVM dies — but the file mtime stays "fresh" for 30 min. Run #2 happened within 30 min of run #1, so all four setup tests skipped login and reused dead cookies. Every authenticated test then ran un-authenticated → got redirected to `/login` → `expect(...).toBeVisible()` waited the full `expect.timeout: 10_000` ms before failing. That is the exact `~11.5s` signature seen in 11 master-data + sanity tests.
+- **Action taken:** Replaced `isStateFresh` with `isStateValid(file, baseURL)` — opens an `APIRequestContext` with the saved storage state, GETs `/dashboard` with `maxRedirects: 0`, accepts only 2xx as "still authenticated". Any 3xx (especially redirect to `/login`) or error → fall through to `loginAndSaveState`. The probe costs ~50ms per role (4 roles, ~200ms total) and replaces the file-age heuristic with a ground-truth signal.
+- **Ref:** e2e-tests/global.setup.ts — full file rewrite of the freshness check
+
+### Pattern note: H2 in-memory + persisted on-disk state
+
+H2 in-memory wipes on every JVM restart, but Playwright `.auth/` state lives on disk across runs. Any persistence mechanism that reads disk state without revalidating against the live server will desync after the first server restart. The original time-based check assumed sessions outlive 30 min — true for production cookies, false for E2E ephemeral DB. Future helpers that cache anything backed by H2 (e.g., user IDs, generated codes) should follow the same probe-don't-trust-mtime pattern.
+
+### Version bump (Round 2)
+
+No additional `pom.xml` bump — Round 2 fixes are infrastructure (test harness + script) outside the Maven build artifact. The 1.7.1 bump from Round 1 still covers the underlying handler change. If a single combined commit bundles Round 1 + Round 2, 1.7.1 is correct.
+
+## Post-execution fixes — Round 3 (2026-05-20)
+
+After Round 1 + 2 applied, full run regressed only the five SA scenarios (sanity passed; RBAC + master-data + PR all green). Failure timing: ~6.5s = 5s `waitForFunction` timeout in spec + ~1.5s overhead. Diagnosis below.
+
+### Finding: `setTomSelectValue` injects options without `payload`, breaking SA product change handler
+
+- **Type:** bug
+- **Severity:** critical
+- **Detail:** Page JS `stock-adjustment-form.js:204-212` binds `tsProd.on('change', ...)` and reads `tsProd.options[val].payload.uomId` to populate `.input-uom-id`. The lookup API (`ProductLookupController` + `LookupDto`) returns each option as `{id, name, subText, payload: { uomId, uomName, isSerialized, lastCost }}` — payload is the carrier of all secondary product metadata. The spec's `setTomSelectValue` helper (`tomselect.ts:71-83`) only injects `{id, name, text}` when adding a missing option — no payload. So `tsProd.options[val].payload` is `undefined`, `p.uomId` is `undefined`, `.input-uom-id.value` stays empty, and the spec's next `waitForFunction(el.value !== '', { timeout: 5_000 })` times out. All five scenarios share `createSampleDraftSa()` which fails at the same step, hence the uniform 6.5s signature.
+- **Action taken:** In Scenario A and `createSampleDraftSa`, swapped `setTomSelectValue` for `selectTomSelect(page, ..., 'E2E-PRD-LAPTOP')` on the product field only. `selectTomSelect` calls TomSelect's actual `load()` function, which routes through the lookup AJAX endpoint and returns the full payload — so the product change handler can fill `.input-uom-id` correctly. Other TomSelect interactions (facility, grid, container) keep `setTomSelectValue` because their page handlers do not depend on payload.
+- **Cleanup:** Removed two now-unused `const productId = await resolveProductLaptopId(page)` calls. The helper `resolveProductLaptopId` itself stays — kept for future scenarios that need the id outside of the form interaction.
+- **Ref:** src/main/resources/static/js/inventory/adjustment/stock-adjustment-form.js:L204-L212 — product change handler reads payload
+- **Ref:** e2e-tests/helpers/tomselect.ts:L71-L83 — setTomSelectValue addOption shape (no payload)
+- **Ref:** e2e-tests/tests/inventory/stock-adjustment.spec.ts — fixed call sites in createSampleDraftSa + Scenario A
+
+### Pattern note: helper choice depends on page-handler payload dependency
+
+`setTomSelectValue` is fine when the page only cares about the selected `value` (e.g., a hidden form field that is read on submit). It breaks when the page registers a `change` listener that reads `options[val].payload`. Future helpers should either (a) accept an optional `payload` arg and merge it into `addOption`, or (b) document the shape limitation. For now, the rule is: if the page wires a derived field (UoM, last price, serialized flag) off the selected option, route through `selectTomSelect` so the option arrives via the real lookup load.
+
+## Post-execution fixes — Round 4 (2026-05-20)
+
+Round 3 dropped failure count from 5 to 3. Final round addressed three distinct UI-shape mismatches in SA scenarios A, C, D. Final result: **51/51 green** in ~2.0 minutes (validated via `run-poc.ps1`).
+
+### Finding: `selectTomSelect` helper has broken signature
+
+- **Type:** bug
+- **Severity:** warning
+- **Detail:** Round 3 swapped `setTomSelectValue` for `selectTomSelect` on the product field. Post-fix, all 5 SA scenarios timed out at 30s (test-level timeout). Inspection of `e2e-tests/helpers/tomselect.ts:37` showed `ts.load(query, callback)` — but TomSelect's `load(query)` API does not accept a second-arg callback; the helper's Promise never resolves. The helper was effectively unused before Round 3 (all other specs use `setTomSelectValue`), so the bug had no detection signal.
+- **Action taken:** Stopped using `selectTomSelect` in this spec. Added a local helper `selectProductOnLine(page, lineSelector, code)` that issues `page.request.get('/api/lookup/inventory/products?q=...')` (returns `LookupDto[]` with full payload), then injects the option via `tomselect.addOption(opt)` + `setValue(id)`. Bypasses both broken helpers and missing payloads in one round-trip. Removed unused `selectTomSelect` import.
+- **Note:** `e2e-tests/helpers/tomselect.ts` `selectTomSelect` should be either fixed or removed in a follow-up — out of scope for this fix bundle. Filing as known issue.
+- **Ref:** e2e-tests/helpers/tomselect.ts:L29-L48 — broken `ts.load(query, callback)` shape
+- **Ref:** e2e-tests/tests/inventory/stock-adjustment.spec.ts — local `selectProductOnLine` helper
+
+### Finding: Scenario A asserts badge on form/edit page that has no badge
+
+- **Type:** bug
+- **Severity:** warning
+- **Detail:** Spec called `navigateToModule(page, '/inventory/adjustments/edit/{newId}')` then asserted `.page-title .badge` with text `DRAFT`. Reading `templates/inventory/adjustments/form.html` showed `.page-title` contains only `<span>` elements for label/code — no badge. The status badge lives in `templates/inventory/adjustments/view.html:L13-L17` as a `<div class="mt-1"><span class="badge">` sibling of `.page-title`. Spec mirrored the PR pattern blindly; PR's edit page has a badge, SA's does not.
+- **Action taken:** Switched assertion to `/view/{newId}` page and selector `.page-header .badge`. Cross-cuts the same fix needed for Scenario C (badge for COMPLETED).
+- **Ref:** src/main/resources/templates/inventory/adjustments/view.html:L13-L17 — badge location
+
+### Finding: Scenario C/D handle `confirmAndSubmit` as native dialog instead of Bootstrap modal
+
+- **Type:** bug
+- **Severity:** warning
+- **Detail:** Spec installed `page.on('dialog', d => d.accept())` for both scenarios. `ErpAction.confirmAndSubmit` (and `ErpModal.confirm` directly in the facility change handler) does NOT call `window.confirm` — it shows a Bootstrap modal `#modal-global-confirm` and binds the action to `#confirm-modal-btn-yes`. The native dialog handler matches nothing; modal stays open; no submit; test times out.
+- **Action taken:** Replaced dialog handler with explicit click on `#confirm-modal-btn-yes` after triggering the action. For Scenario D specifically, `clear()` on the facility TomSelect is enough to fire the change event (no need to re-set a value or seed a second facility), and the Bootstrap modal callback wipes `#line-container`.
+- **Ref:** src/main/resources/static/js/shared/erp-common-handler.js:L32-L56 — `ErpModal.confirm` modal mechanism
+- **Ref:** src/main/resources/static/js/inventory/adjustment/stock-adjustment-form.js:L301-L304 — facility change wires `ErpModal.confirm`
+
+### Final result
+
+51/51 green in 2.0 minutes (cold run, fresh `.auth/`):
+- 4 setup auth + 3 login + 16 RBAC + 1 SA sanity + 5 SA scenarios + 4 brand + 4 category + 3 product + 4 UoM + 7 PR scenarios = 51
+- Smoke subset still 10/10 (3 login + 1 brand + 1 product + 1 PR Scenario A + 4 setup auth)
+
+

@@ -64,7 +64,10 @@ const RESOURCES: Record<ResourceKey, Resource> = {
   permGroup: {
     key: 'permGroup',
     label: 'PermissionGroup',
-    listUrl: '/security/permission-groups',
+    // The Thymeleaf controller is mounted at /security/menu-groups (rebranded
+    // as "Menu Groups" in the UI per docs/modules/security/permission-groups.md).
+    // /security/permission-groups is API-only (PermissionGroupApiController).
+    listUrl: '/security/menu-groups',
     createUrl: null,
     createBtnSelector: '',
   },
