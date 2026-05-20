@@ -36,7 +36,7 @@ INSERT INTO role_permissions (role_id, permission_id)
 SELECT @role_warehouse_id, id FROM permissions WHERE name IN (
     'DASHBOARD_READ',
     'FACILITY_READ', 'GRID_READ', 'CONTAINER_READ',
-    'STOCK-ADJUSTMENT_READ', 'STOCK-ADJUSTMENT_CREATE', 'STOCK-ADJUSTMENT_UPDATE', 'STOCK-ADJUSTMENT_PROCESS',
+    'STOCK-ADJUSTMENT_READ', 'STOCK-ADJUSTMENT_CREATE', 'STOCK-ADJUSTMENT_UPDATE', 'STOCK-ADJUSTMENT_DELETE', 'STOCK-ADJUSTMENT_PROCESS',
     'STOCK-CARD_READ', 'ON-HAND_READ',
     'PRODUCT_READ', 'BRAND_READ', 'PRODUCT-CATEGORY_READ', 'UNIT-OF-MEASURE_READ',
     'LOOKUP_BRAND', 'LOOKUP_PRODUCT-CATEGORY', 'LOOKUP_FACILITY', 'LOOKUP_GRID', 'LOOKUP_CONTAINER',
@@ -167,3 +167,12 @@ INSERT INTO pur_supplier_price_lists
     (code, supplier_id, product_id, uom_id, currency_id, unit_price, min_quantity, effective_from, effective_to, is_active, version, created_by_user_id, created_date)
 VALUES
     ('E2E-SPL-001', @p_sup1, @prd_laptop, 9001, @cur_idr, 8500000.0000, 1, '2026-01-01', NULL, TRUE, 1, 1, NOW());
+
+-- ====== INVENTORY HIERARCHY (Stock Adjustment scenarios) ======
+-- Grid 9101 + Container 9101 in facility 9101 — required by SA line.container_id
+-- (Stock Adjustment positive flow creates balance + valuation layer; no pre-seed needed.)
+INSERT INTO inv_grids (id, facility_id, code, name, is_active, version, created_by_user_id, created_date) VALUES
+(9101, 9101, 'E2E-GRD-A', 'E2E Grid A', 1, 1, 1, NOW());
+
+INSERT INTO inv_containers (id, grid_id, code, name, is_active, version, created_by_user_id, created_date) VALUES
+(9101, 9101, 'E2E-CTN-A1', 'E2E Container A1', 1, 1, 1, NOW());

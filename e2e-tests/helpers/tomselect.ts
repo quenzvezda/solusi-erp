@@ -103,3 +103,77 @@ export async function clearTomSelect(page: Page, selector: string): Promise<void
     }
   }, selector);
 }
+
+/**
+ * Wait until a TomSelect's options match a predicate (e.g., loaded count > 0
+ * or contains a specific id). Useful after a parent change triggers AJAX
+ * reload of a child select.
+ */
+export async function waitForTomSelectOptions(
+  page: Page,
+  selector: string,
+  predicateFn: (optionsJson: string) => boolean,
+  timeout: number = 10_000
+): Promise<void> {
+  await page.waitForFunction(
+    ({ sel, predFnSrc }) => {
+      const el = document.querySelector(sel) as any;
+      if (!el?.tomselect) return false;
+      const opts = Object.values(el.tomselect.options);
+      // eslint-disable-next-line no-new-func
+      const pred = new Function('optionsJson', `return (${predFnSrc})(optionsJson);`);
+      return pred(JSON.stringify(opts));
+    },
+    { sel: selector, predFnSrc: predicateFn.toString() },
+    { timeout }
+  );
+}
+
+/**
+ * Set parent TomSelect, wait for child TomSelect to reload its options
+ * (cascading lookup such as Facility -> Grid -> Container), then set child.
+ *
+ * @param page - Playwright page
+ * @param parentSelector - CSS selector of parent <select>
+ * @param parentValue - id to set on parent
+ * @param childSelector - CSS selector of child <select>
+ * @param childValue - id to set on child after reload
+ * @param childOptionLoadHint - optional search query passed to child's load(); empty = load all
+ */
+export async function setCascadingTomSelect(
+  page: Page,
+  parentSelector: string,
+  parentValue: string | number,
+  childSelector: string,
+  childValue: string | number,
+  childOptionLoadHint: string = ''
+): Promise<void> {
+  await setTomSelectValue(page, parentSelector, parentValue);
+
+  // Trigger child reload by calling its load() — the page-specific JS may
+  // already do this on parent change, but calling explicitly is idempotent
+  // and removes timing dependency.
+  await page.evaluate(
+    ({ sel, hint }) => {
+      const el = document.querySelector(sel) as any;
+      if (!el?.tomselect) return;
+      el.tomselect.clearOptions();
+      el.tomselect.load(hint);
+    },
+    { sel: childSelector, hint: childOptionLoadHint }
+  );
+
+  // Wait until the desired option id is present in child options
+  const targetIdStr = String(childValue);
+  await waitForTomSelectOptions(
+    page,
+    childSelector,
+    new Function('optionsJson', `
+      const opts = JSON.parse(optionsJson);
+      return opts.some((o) => String(o.id) === '${targetIdStr}');
+    `) as any,
+    10_000
+  );
+
+  await setTomSelectValue(page, childSelector, childValue);
+}
