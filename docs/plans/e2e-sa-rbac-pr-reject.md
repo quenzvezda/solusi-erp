@@ -3,7 +3,7 @@
 > Source: Discussion 2026-05-20 (lanjutan E2E Phase 2 / `docs/plans/e2e-pr-approval.md`)
 > Created: 2026-05-20
 > Sprint: E2E Phase 3
-> Status: PENDING
+> Status: COMPLETED (2026-05-20)
 
 ## Summary
 
@@ -513,7 +513,7 @@ Steps:
 - Deny case ter-handle (cek behavior aktual: 403, redirect, atau error page) dan diassert sesuai.
 - UI element visibility assertion match expectation matrix.
 
-### Task 15: Smoke wiring + version bump MINOR + final suite green [ ]
+### Task 15: Smoke wiring + version bump MINOR + final suite green [x]
 
 Pastikan smoke tetap 10 case (tidak menambah load CI push-to-main). Naikkan versi pom.xml MINOR untuk fitur SA + RBAC. Run full suite cold dari .auth bersih.
 
@@ -536,7 +536,7 @@ Steps:
 - Migration parity script masih pass.
 
 
-### Task 16: Update `docs/tests/playwright-e2e-guide.md` [ ]
+### Task 16: Update `docs/tests/playwright-e2e-guide.md` [x]
 
 Dokumentasikan helper baru (`setCascadingTomSelect`), pola Stock Adjustment (DRAFT → COMPLETED via POST redirect, beda dari approval pattern), dan pola RBAC matrix. Tujuan: agen berikutnya bisa replicate ke modul lain (PO, SO, GR, dll).
 

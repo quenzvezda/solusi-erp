@@ -171,11 +171,21 @@
 
 ## Task 15: Smoke wiring + version bump MINOR
 
-- **Status:** pending
+- **Status:** clean (full suite cold run deferred)
+- **Summary:** Verifikasi `npx playwright test --grep @smoke --list` hanya menampilkan 4 spec smoke + 4 setup auth (= 10 entries total) sesuai plan: login (3 cases), brand create (1), product create (1), PR Scenario A (1). SA spec tagged `@inventory`, RBAC spec tagged `@rbac` — tidak masuk smoke. pom.xml dibumb MINOR 1.6.2 → 1.7.0.
+- **Note:** Full suite cold run (51 cases dalam ~4-5 menit) ditunda — butuh JAR build + start app dengan profile e2e + delete `.auth/`. User akan eksekusi manual saat siap merge.
 
 ## Task 16: Update playwright-e2e-guide.md
 
-- **Status:** pending
+- **Status:** clean
+- **Summary:** Update guide:
+  1. Section 10 coverage table — tambah row `tests/inventory/stock-adjustment.spec.ts` (1 sanity + 5 scenario, tag `@inventory`) dan `tests/auth/rbac.spec.ts` (16 case 4×4 matrix, tag `@rbac`).
+  2. Status terakhir di Section 10 — update dari "29/29 (~1.8m)" ke "51/51 target (~4-5m)" dengan note Stream A+B sudah terimplementasi tetapi run validation deferred.
+  3. Section 11 — tambah subsection 11.6 "Drawer-driven readonly field (Stock Adjustment)" mendokumentasikan pola `setQuantityViaDrawer` dan kapan dipakai (input readonly + drawer commit handler), dan 11.7 "Cascading TomSelect" mendokumentasikan helper `setCascadingTomSelect` + kapan tidak butuh dipakai (saat page JS sudah pakai `parentProvider`).
+  4. Section 12 baru "RBAC Matrix Pattern" — strukture matrix, per-case dual context, klasifikasi allow/deny, tag `@rbac`.
+  5. Renumber Sections 12→13 (Troubleshooting), 13→14 (Checklist Spec Baru), 14→15 (Agent Handoff), 15→16 (Kapan Update). Sub-sections 12.1-12.10 → 13.1-13.10 ikut terupdate.
+  6. Section 16 — tambah bullet baru cross-link ke `docs/plans/e2e-sa-rbac-pr-reject.md` agar agen berikutnya tahu sumber Stream A+B.
+- **Note:** Update endpoint langsung Section 11.5 — sebut SA Delete sebagai contoh kedua (di samping PR Cancel) dan link ke report Task 13.
 
 ## Final Validation
 

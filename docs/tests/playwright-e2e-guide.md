@@ -573,8 +573,10 @@ Spec yang ada:
 | `tests/master-data/brand.spec.ts` | List, create, edit, validation | Simple CRUD |
 | `tests/master-data/product.spec.ts` | List, create required fields, validation | Mid-level CRUD; memakai TomSelect untuk category/brand |
 | `tests/procurement/purchase-requisition.spec.ts` | 6 scenario CRUD + approval flow + signature + sanity | Scenario A `@smoke` (happy path); B reject; C DRAFT cancel; D APPROVED cancel; E header reset; F SPL autofill |
+| `tests/inventory/stock-adjustment.spec.ts` | 1 sanity + 5 scenario lifecycle | Tag `@inventory`. A create DRAFT; B edit; C process to inventory (DRAFT→COMPLETED); D facility-change clears lines; E delete via API |
+| `tests/auth/rbac.spec.ts` | 16 case (4 role × 4 resource) | Tag `@rbac`. URL guard allow/deny + Create button visibility |
 
-Status terakhir (2026-05-20): Full suite 29/29 passing (cold run ~1.8m), smoke subset 10/10 (~42s).
+Status terakhir (2026-05-20): Full suite 51/51 passing target (cold run ~4-5m), smoke subset 10/10 (~42s). Stream A (SA) + Stream B (RBAC) sudah terimplementasi tetapi run validation deferred ke runner cold next.
 
 - Modul transaksional pertama (PR + approval) sudah hijau end-to-end termasuk signature pad.
 - Jika suite mulai gagal lagi, jalankan spec tunggal dengan `--headed --debug` dan cek troubleshooting di bawah.
@@ -653,7 +655,7 @@ Kenapa storage state level fixture (bukan project-level): Playwright resolve pro
 
 ### 11.5 Endpoint langsung untuk gap UI
 
-Beberapa transition tidak punya UI button (mis. PR Cancel) tapi controller-nya tetap ada. Pola yang dipakai di `purchase-requisition.spec.ts`:
+Beberapa transition tidak punya UI button (mis. PR Cancel, SA Delete) tapi controller-nya tetap ada. Pola yang dipakai di `purchase-requisition.spec.ts` dan `stock-adjustment.spec.ts`:
 
 ```ts
 async function cancelPr(page, prId) {
@@ -670,11 +672,99 @@ async function cancelPr(page, prId) {
 }
 ```
 
-Ini sah dipakai sebagai E2E sepanjang endpoint adalah kontrak yang sebenarnya — kita exercise auth + status transition tanpa nunggu UI button. Catat di report saat dipakai (lihat `docs/reports/e2e-pr-approval.md` Task 10-14).
+Ini sah dipakai sebagai E2E sepanjang endpoint adalah kontrak yang sebenarnya — kita exercise auth + status transition tanpa nunggu UI button. Catat di report saat dipakai (lihat `docs/reports/e2e-pr-approval.md` Task 10-14, `docs/reports/e2e-sa-rbac-pr-reject.md` Task 13).
 
-## 12. Troubleshooting Berdasarkan Gejala
+### 11.6 Drawer-driven readonly field (Stock Adjustment)
 
-### 12.1 Server tidak ready dalam 60 detik
+Beberapa modul mengunci field readonly dan hanya menerima commit dari drawer. Contoh: `lines[N].quantity` di SA form readonly, drawer `#drawer-non-serial` menyimpan lewat `.btn-save-drawer`.
+
+Pattern di `stock-adjustment.spec.ts`:
+
+```ts
+async function setQuantityViaDrawer(page, rowIndex, qty) {
+  await page.locator(`#line-container tr.line-row >> nth=${rowIndex} >> .btn-edit-detail`).click();
+  const drawer = page.locator('#drawer-non-serial');
+  await expect(drawer).toBeVisible();
+  // UoM dropdown populates async dari /api/lookup/inventory/uom-conversions
+  await page.waitForFunction(() => {
+    const sel = document.querySelector('#drawer-non-serial .select-uom-target');
+    return sel && sel.options.length > 0;
+  });
+  await setAutoNumeric(page, '#drawer-non-serial .input-qty-target', qty);
+  await drawer.locator('.btn-save-drawer').click();
+  await expect(drawer).toBeHidden();
+}
+```
+
+Kapan dipakai: kalau template menandai input `readonly` dan page JS hanya mengupdate via drawer save handler. Helper biasanya spec-local — promote ke `helpers/` kalau pattern muncul di >1 modul.
+
+### 11.7 Cascading TomSelect (Facility → Grid → Container)
+
+`helpers/tomselect.ts` menyediakan `setCascadingTomSelect(page, parentSel, parentValue, childSel, childValue, hint?)`:
+
+- Set parent.
+- `clearOptions()` + `load(hint)` di child untuk trigger AJAX reload dengan parent context.
+- `waitForTomSelectOptions` sampai child option target tersedia.
+- Set child value.
+
+Banyak modul tidak butuh helper ini secara eksplisit karena page JS sudah pakai `parentProvider` callback (mis. SA grid TomSelect membaca `headerFacility.value` setiap load) dan `setTomSelectValue` sendiri call `addOption` saat value tidak ada di dropdown. Pakai `setCascadingTomSelect` saat: (1) butuh memverifikasi option benar-benar dimuat dari server, atau (2) child harus terlihat di dropdown sebelum dipilih (mis. assertion list option).
+
+## 12. RBAC Matrix Pattern
+
+`tests/auth/rbac.spec.ts` mendemonstrasikan parametric matrix yang reusable untuk modul lain.
+
+### 12.1 Strukture matrix
+
+```ts
+type Role = 'admin' | 'approver1' | 'employee1' | 'warehouse1';
+type ResourceKey = 'pr' | 'sa' | 'brand' | 'permGroup';
+
+const RESOURCES: Record<ResourceKey, Resource> = {
+  pr: { listUrl: '/purchasing/purchase-requisitions', createBtnSelector: 'a[href="/purchasing/purchase-requisitions/create"]' },
+  // ...
+};
+
+const MATRIX: Expectation[] = [
+  { role: 'admin', resource: 'pr', list: 'allow', createVisible: true },
+  { role: 'warehouse1', resource: 'pr', list: 'deny', createVisible: null },
+  // ...
+];
+```
+
+### 12.2 Per-case dual context
+
+```ts
+for (const exp of MATRIX) {
+  test(`${exp.role} :: ${RESOURCES[exp.resource].label} -> ${exp.list}`, async ({ browser }) => {
+    const ctx = await browser.newContext({ storageState: storageStatePath(exp.role) });
+    const page = await ctx.newPage();
+    try {
+      const outcome = await classify(page, RESOURCES[exp.resource].listUrl);
+      expect(outcome).toBe(exp.list);
+      // optional: createVisible assertion
+    } finally {
+      await ctx.close();
+    }
+  });
+}
+```
+
+### 12.3 Klasifikasi allow vs deny
+
+`classify(page, listUrl)` membandingkan final URL path + status:
+
+- **Allow** = final path masih di resource path AND status < 400.
+- **Deny** = final path bukan resource path (mis. `/error/403`, `/dashboard`, `/login`) OR status >= 400.
+
+Klasifikasi ini permissive by design — Spring Security dapat respond dengan beberapa cara (403 page, redirect, error template). Treat any non-resource final path sebagai deny.
+
+### 12.4 Tag dan smoke
+
+Tag describe `@rbac` (bukan `@smoke`). 16 case akan menambah ~30-60 detik ke full suite tetapi tidak masuk smoke push-to-main.
+
+## 13. Troubleshooting Berdasarkan Gejala
+
+### 13.1 Server tidak ready dalam 60 detik
 
 Cek:
 
@@ -698,7 +788,7 @@ Di Windows:
 java -jar target\solusi-program-erp-*.jar --spring.profiles.active=e2e
 ```
 
-### 12.2 Flyway duplicate version
+### 13.2 Flyway duplicate version
 
 Gejala:
 
@@ -717,7 +807,7 @@ spring.flyway.locations:
   - classpath:db/migration-h2
 ```
 
-### 12.3 H2 migration syntax error
+### 13.3 H2 migration syntax error
 
 Gejala:
 
@@ -737,7 +827,7 @@ Fix terbaik:
 - Jangan mengubah migration MariaDB untuk menyesuaikan H2.
 - Patch file mirror di `db/migration-h2` dengan versi Flyway yang sama.
 
-### 12.4 Login diarahkan ke password change
+### 13.4 Login diarahkan ke password change
 
 Ini normal dan sudah ditangani oleh `helpers/auth.ts` untuk CRUD specs.
 
@@ -746,7 +836,7 @@ Jika test auth manual gagal:
 - Pastikan test auth memang mengantisipasi redirect keluar dari `/login`.
 - Jika perlu assert dashboard spesifik, handle password change flow juga.
 
-### 12.5 Strict mode violation pada button submit
+### 13.5 Strict mode violation pada button submit
 
 Gejala:
 
@@ -764,7 +854,7 @@ Jangan pakai selector generic:
 page.locator('button[type="submit"]')
 ```
 
-### 12.6 Redirect regex langsung match URL create/edit
+### 13.6 Redirect regex langsung match URL create/edit
 
 Gejala:
 
@@ -784,7 +874,7 @@ Fix:
 /\/inventory\/brands(\?.*)?$/
 ```
 
-### 12.7 Item created tidak terlihat di list
+### 13.7 Item created tidak terlihat di list
 
 Kemungkinan:
 
@@ -798,7 +888,7 @@ Fix opsi:
 - Jika perlu assert item, gunakan search/filter dulu.
 - Scope assertion ke table dan `.first()`.
 
-### 12.8 Submit AJAX timeout
+### 13.8 Submit AJAX timeout
 
 Gejala:
 
@@ -822,7 +912,7 @@ npx playwright test tests/master-data/uom.spec.ts --headed --debug
 
 Lihat juga trace/video dari failed run.
 
-### 12.9 TomSelect timeout
+### 13.9 TomSelect timeout
 
 Gejala:
 
@@ -847,7 +937,7 @@ document.querySelector('select[name="categoryId"]')?.tomselect
 
 Jika selector by name gagal, inspect template dan coba id selector.
 
-### 12.10 AutoNumeric tidak terset
+### 13.10 AutoNumeric tidak terset
 
 Gejala:
 
@@ -860,7 +950,7 @@ Fix:
 - Pastikan selector input asli.
 - Pastikan AutoNumeric sudah initialized sebelum set.
 
-## 13. Checklist Menambah Spec Baru
+## 14. Checklist Menambah Spec Baru
 
 Sebelum menulis test:
 
@@ -889,7 +979,7 @@ Setelah menulis test:
 - [ ] Cek trace/video/screenshot jika gagal.
 - [ ] Jangan menaikkan timeout sebagai fix utama sebelum memahami root cause.
 
-## 14. Checklist Agent Handoff
+## 15. Checklist Agent Handoff
 
 Agent baru yang melanjutkan E2E harus membaca minimal:
 
@@ -908,7 +998,7 @@ Jika melanjutkan failure terakhir:
 - Untuk Product create, fokus pada selector/initialization TomSelect category dan brand.
 - Jalankan spec tunggal dengan headed/debug sebelum full suite.
 
-## 15. Kapan Memperbarui Dokumen Ini
+## 16. Kapan Memperbarui Dokumen Ini
 
 Update dokumen ini saat:
 
@@ -918,5 +1008,6 @@ Update dokumen ini saat:
 - Ada migration compatibility rule H2 baru.
 - Ada perubahan strategi data seed atau ID stabil.
 - Product CRUD/TomSelect issue terakhir sudah fixed dan status coverage berubah.
+- Ada plan E2E baru selesai (referensikan plan + report dari `docs/plans/` dan `docs/reports/`, mis. `docs/plans/e2e-pr-approval.md`, `docs/plans/e2e-sa-rbac-pr-reject.md`).
 
 Jangan isi dokumen ini dengan progress harian atau log eksekusi. Progress task tetap di `docs/plans/` dan laporan eksekusi tetap di `docs/reports/` bila berasal dari plan.
