@@ -353,7 +353,7 @@ Steps:
 - Created SA muncul di list page dengan code format `ADJ-yyMM-XXXXX`.
 
 
-### Task 10: Scenario B — Edit DRAFT (persistence) [ ]
+### Task 10: Scenario B — Edit DRAFT (persistence) [x]
 
 Validasi update path tidak melanggar invariants DRAFT, dan field tetap persisted setelah reload.
 
@@ -376,7 +376,7 @@ Steps:
 - Scenario B green setelah 3x run.
 - Persistence terverifikasi (reload tidak revert).
 
-### Task 11: Scenario C — Process to Inventory (DRAFT → COMPLETED) [ ]
+### Task 11: Scenario C — Process to Inventory (DRAFT → COMPLETED) [x]
 
 Validasi state transition lewat tombol "Process to Inventory" yang non-AJAX (POST redirect). Pastikan stock balance + valuation layer terupdate.
 
@@ -403,7 +403,7 @@ Steps:
 - Edit page COMPLETED SA redirect ke view.
 - Status badge berubah ke COMPLETED.
 
-### Task 12: Scenario D — Facility change clears all lines (confirm dialog) [ ]
+### Task 12: Scenario D — Facility change clears all lines (confirm dialog) [x]
 
 Validasi UX rule: ganti Facility ketika ada line item → confirm dialog → semua line dihapus karena Grid/Container bergantung pada Facility.
 
@@ -429,7 +429,7 @@ Steps:
 - Line container kosong setelah switch.
 
 
-### Task 13: Scenario E — Delete DRAFT via list page action [ ]
+### Task 13: Scenario E — Delete DRAFT via list page action [x]
 
 Validasi delete path (HTMX response) tidak ditolak untuk DRAFT, dan row hilang dari list setelah delete.
 

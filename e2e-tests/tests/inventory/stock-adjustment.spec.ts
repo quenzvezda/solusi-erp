@@ -205,24 +205,119 @@ test.describe('@inventory Stock Adjustment flow', () => {
     ).toBeVisible({ timeout: 10_000 });
   });
 
-  test.skip('Scenario B — edit DRAFT persists changes', async () => {
-    // create DRAFT via helper -> open edit -> change quantity -> save
-    // -> reopen, assert quantity persisted
+  test('Scenario B — edit DRAFT persists changes', async ({ page }) => {
+    const id = await createSampleDraftSa(page);
+
+    await navigateToModule(page, `/inventory/adjustments/edit/${id}`);
+    await expect(page.locator('#adjustment-form')).toBeVisible();
+    await expect(page.locator('#line-container tr.line-row')).toHaveCount(1, { timeout: 10_000 });
+
+    // Quantity 5 -> 7 via drawer (the only commit path).
+    await setQuantityViaDrawer(page, 0, 7);
+
+    // Save (AJAX) -> redirect list.
+    await Promise.all([
+      page.waitForURL(/\/inventory\/adjustments(\?.*)?$/, { timeout: 15_000, waitUntil: 'domcontentloaded' }),
+      page.locator('#adjustment-form button[type="submit"]').first().click(),
+    ]);
+
+    // Reopen and assert persisted quantity.
+    await navigateToModule(page, `/inventory/adjustments/edit/${id}`);
+    await expect(page.locator('#line-container tr.line-row')).toHaveCount(1, { timeout: 10_000 });
+    const persisted = await page.evaluate(() => {
+      const el = document.querySelector('[name="lines[0].quantity"]') as HTMLInputElement | null;
+      return el?.value ?? '';
+    });
+    // AutoNumeric formats with 2 decimals — accept "7" or "7.00".
+    expect(persisted.replace(/[^\d.]/g, '')).toMatch(/^7(\.0+)?$/);
   });
 
-  test.skip('Scenario C — Process to Inventory transitions DRAFT to COMPLETED', async () => {
-    // create DRAFT -> click Process to Inventory (POST redirect, not AJAX)
-    // -> assert status badge COMPLETED
-    // -> navigate /edit/{id} -> assert redirect to /view/{id}
+  test('Scenario C — Process to Inventory transitions DRAFT to COMPLETED', async ({ page }) => {
+    const id = await createSampleDraftSa(page);
+
+    await navigateToModule(page, `/inventory/adjustments/edit/${id}`);
+    await expect(page.locator('#btn-process-inventory')).toBeVisible({ timeout: 10_000 });
+
+    // ErpAction.confirmAndSubmit posts a hidden form to data-process-url with
+    // the page CSRF token. Page navigates to /view/{id} on success.
+    page.on('dialog', (d) => d.accept());
+    await Promise.all([
+      page.waitForURL(new RegExp(`/inventory/adjustments/view/${id}`), { timeout: 15_000, waitUntil: 'domcontentloaded' }),
+      page.locator('#btn-process-inventory').click(),
+    ]);
+
+    // View page should show COMPLETED status.
+    await expect(
+      page.locator('.page-title .badge, .page-title .status', { hasText: 'COMPLETED' })
+    ).toBeVisible({ timeout: 10_000 });
+
+    // Edit URL must redirect to view for COMPLETED.
+    await page.goto(`/inventory/adjustments/edit/${id}`, { waitUntil: 'domcontentloaded' });
+    await expect(page).toHaveURL(new RegExp(`/inventory/adjustments/view/${id}`));
   });
 
-  test.skip('Scenario D — facility change clears all lines (confirm dialog)', async () => {
-    // create DRAFT 1 line -> open edit -> install dialog accept handler
-    // -> change facility (or trigger reset action) -> assert lines container empty
+  test('Scenario D — facility change clears all lines (confirm dialog)', async ({ page }) => {
+    const id = await createSampleDraftSa(page);
+
+    await navigateToModule(page, `/inventory/adjustments/edit/${id}`);
+    await expect(page.locator('#line-container tr.line-row')).toHaveCount(1, { timeout: 10_000 });
+
+    // ErpModal.confirm renders a Bootstrap modal — accept by clicking the
+    // primary button. Fall back to native dialog handler in case the build
+    // uses window.confirm.
+    page.on('dialog', (d) => d.accept());
+
+    // Trigger facility change. Only one E2E facility is seeded (9101), so
+    // re-selecting the same value won't fire the change handler. Clear the
+    // TomSelect first so the next set is observed as a change.
+    await page.evaluate(() => {
+      const el = document.querySelector('#header-facility') as any;
+      el?.tomselect?.clear();
+    });
+    // Set back to 9101; the page-JS facility change handler fires confirm
+    // and (on accept) wipes #line-container.
+    await setTomSelectValue(page, '#header-facility', FACILITY_ID);
+
+    // Some builds open ErpModal — accept it if present.
+    const modalConfirm = page.locator('.modal.show .btn-primary, .modal.show .btn-confirm').first();
+    if (await modalConfirm.count()) {
+      await modalConfirm.click().catch(() => undefined);
+    }
+
+    await expect(page.locator('#line-container tr.line-row')).toHaveCount(0, { timeout: 5_000 });
+    await expect(page.locator('#empty-msg')).toBeVisible();
   });
 
-  test.skip('Scenario E — delete DRAFT from list page', async () => {
-    // create DRAFT -> navigate list -> click row delete (HTMX) -> dialog accept
-    // -> waitForHtmx -> assert row absent
+  test('Scenario E — delete DRAFT via API endpoint', async ({ page }) => {
+    // The list template does not expose a per-row delete control (verified
+    // src/main/resources/templates/inventory/adjustments/list.html). The
+    // DELETE /inventory/adjustments/{id} endpoint exists and is gated by
+    // STOCK-ADJUSTMENT_DELETE — exercise it directly to validate the
+    // server-side permission + use case wiring.
+    const id = await createSampleDraftSa(page);
+
+    // Make sure list page CSRF meta is available before issuing DELETE.
+    await navigateToModule(page, '/inventory/adjustments');
+
+    const status = await page.evaluate(async (saId) => {
+      const headerName = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') ?? 'X-XSRF-TOKEN';
+      const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') ?? '';
+      const headers: Record<string, string> = { Accept: 'application/json' };
+      if (token) headers[headerName] = token;
+      const res = await fetch(`/inventory/adjustments/${saId}`, {
+        method: 'DELETE',
+        credentials: 'same-origin',
+        headers,
+      });
+      return res.status;
+    }, id);
+    expect(status, 'DELETE endpoint should return 2xx').toBeLessThan(300);
+
+    // Reload list and confirm the deleted SA's edit link is gone.
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    const stillThere = await page.evaluate((saId) => {
+      return Array.from(document.querySelectorAll(`a[href="/inventory/adjustments/edit/${saId}"]`)).length > 0;
+    }, id);
+    expect(stillThere).toBe(false);
   });
 });

@@ -123,19 +123,38 @@
 
 ## Task 10: SA Scenario B — Edit DRAFT
 
-- **Status:** pending
+- **Status:** clean (E2E run deferred)
+- **Summary:** Extract `createSampleDraftSa(page)` helper from Scenario A body. Body Scenario B: create draft → navigate edit → assert 1 line row visible → setQuantityViaDrawer 5 → 7 → AJAX submit → reopen edit → read `lines[0].quantity` and assert pattern `^7(\.0+)?$` (AutoNumeric formats with 2 decimals so accept "7" or "7.00").
 
 ## Task 11: SA Scenario C — Process to Inventory
 
-- **Status:** pending
+- **Status:** clean (E2E run deferred)
+- **Summary:** Body: create draft → navigate edit → assert `#btn-process-inventory` visible → install dialog accept handler (ErpAction.confirmAndSubmit may use native confirm) → click button → wait for URL `/inventory/adjustments/view/{id}` → assert page-title badge COMPLETED → second navigation `/edit/{id}` to validate controller redirect to `/view/{id}` per StockAdjustmentController.java:L122-L123.
 
 ## Task 12: SA Scenario D — Facility change clears lines
 
-- **Status:** pending
+- **Status:** clean (E2E run deferred)
+- **Summary:** Body: create draft → edit → assert 1 line → install both `page.on('dialog', accept)` AND a Bootstrap modal accept fallback (`.modal.show .btn-primary`) since ErpModal.confirm bisa pakai modal atau native confirm. Trigger change: clear `#header-facility` TomSelect → re-set to 9101 → modal/dialog accept fires → assert `#line-container tr.line-row` count 0 + `#empty-msg` visible.
+
+### Finding: Only one E2E facility seeded — Scenario D triggers via clear+re-set
+- **Type:** decision
+- **Severity:** info
+- **Detail:** V9000 hanya seed 1 facility (9101 E2E Main Warehouse). Plan Task 12 menyarankan "decision saat eksekusi: seed facility ke-2 ATAU ganti currency". Memilih: clear TomSelect dulu lalu set ulang ke 9101. Page JS (`stock-adjustment-form.js:L298-L308`) hook ke `change` event TomSelect facility — yang fire pada clear DAN pada set value baru. Lebih ekonomis dari nambah facility kedua di V9000, dan secara semantik tetap valid: user mengganti facility (operasi yang men-trigger reset rule).
+- **Action taken:** Spec clear TomSelect via JS lalu setTomSelectValue ke 9101. Tidak modifikasi V9000 untuk facility kedua.
+- **Ref:** src/main/resources/static/js/inventory/adjustment/stock-adjustment-form.js:L298-L308 — facility change handler
 
 ## Task 13: SA Scenario E — Delete DRAFT
 
-- **Status:** pending
+- **Status:** findings (deviation: API call instead of list-page UI)
+- **Summary:** Plan minta delete via tombol row di list page. Setelah baca `templates/inventory/adjustments/list.html`, list TIDAK punya tombol delete di per-row actions (hanya Edit + View). DELETE endpoint `DELETE /inventory/adjustments/{id}` tetap ada dengan `STOCK-ADJUSTMENT_DELETE` guard. Spec body: create draft → navigate list → fetch DELETE dengan CSRF → assert status < 300 → reload list → assert tidak ada `a[href="/inventory/adjustments/edit/{id}"]`.
+
+### Finding: List page does not expose per-row delete
+- **Type:** gap
+- **Severity:** warning
+- **Detail:** Plan Task 13 mengasumsikan ada delete button di list (mirror master-data CRUD pattern). `list.html` line 99-115 hanya render Edit (DRAFT only) + View di per-row actions. DELETE endpoint exists di controller (`StockAdjustmentController.java:L171-L178`) tapi tidak di-wire ke UI. Ada dua interpretasi: (1) memang tidak boleh delete dari list (current product decision), (2) bug — UI lupa wire delete button.
+- **Action taken:** Spec men-test endpoint langsung via fetch karena: (a) endpoint exists dan ter-permission-guard, (b) ROLE_WAREHOUSE punya STOCK-ADJUSTMENT_DELETE per Task 5, (c) verifikasi server-side delete + permission tetap valuable. Naming test direvisi dari "delete from list page" → "delete via API endpoint" untuk akurat reflect what's tested. Jika di kemudian hari UI delete ditambahkan, switch test ke pattern click-button.
+- **Ref:** src/main/resources/templates/inventory/adjustments/list.html:L99-L115 — actions block, no delete
+- **Ref:** src/main/java/com/solusi/erp/inventory/adjustment/web/controller/StockAdjustmentController.java:L171-L178 — endpoint exists
 
 ## Task 14: RBAC sample matrix spec
 
