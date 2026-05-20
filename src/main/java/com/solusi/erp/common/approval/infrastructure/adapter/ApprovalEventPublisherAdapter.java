@@ -2,6 +2,7 @@ package com.solusi.erp.common.approval.infrastructure.adapter;
 
 import com.solusi.erp.common.approval.application.port.ApprovalEventPublisher;
 import com.solusi.erp.core.event.ApprovalCompletedEvent;
+import com.solusi.erp.core.event.ApprovalRejectedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -17,13 +18,11 @@ public class ApprovalEventPublisherAdapter implements ApprovalEventPublisher {
 
     @Override
     public void publishCompleted(String referenceType, Long referenceId) {
-        // Here we use the common event defined in core
         eventPublisher.publishEvent(new ApprovalCompletedEvent(referenceType, referenceId));
     }
 
     @Override
     public void publishRejected(String referenceType, Long referenceId) {
-        // We could create a specific Rejected event in core if needed
-        // For now, let's keep it simple
+        eventPublisher.publishEvent(new ApprovalRejectedEvent(referenceType, referenceId));
     }
 }

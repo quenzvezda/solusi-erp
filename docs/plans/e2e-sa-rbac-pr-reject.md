@@ -88,81 +88,63 @@ Stream C dulu (3-4 task), kemudian Stream A (8-9 task), kemudian Stream B (1 tas
 
 ## Tasks
 
-### Task 1: Refactor `ApprovalCompletedEvent` → `ApprovalDecidedEvent` + decision field [ ]
+### Task 1: Tambahkan `ApprovalRejectedEvent` (deviation dari rename) [x]
 
-Rename event class dan tambahkan field `ApprovalDecision decision` (enum APPROVED|REJECTED). Foundation untuk listener PR memetakan ke method domain yang benar.
+**Deviation note:** Setelah eksplorasi, port `ApprovalEventPublisher` ternyata SUDAH punya method `publishCompleted` + `publishRejected` (lokasi: `common.approval.application.port`, bukan `core.approval`), dan `ProcessApprovalUseCaseImpl.reject()` sudah call `publishRejected`. Adapter `ApprovalEventPublisherAdapter.publishRejected()` saat ini no-op. Juga: ada **3 listener** subscribe ke `ApprovalCompletedEvent` (PR, PO, News), bukan 2.
+
+Strategi diubah dari "rename + decision field" ke "tambah `ApprovalRejectedEvent` class baru". Lebih kecil blast radius, tidak break PO/News listener, sesuai port design.
 
 **Depends on:** none
-**Reference module:** `core.event` (existing 2 event classes)
 **Stream:** C
 
 Steps:
-- [ ] Buat enum baru `com.solusi.erp.core.approval.domain.model.ApprovalDecision` dengan dua value: `APPROVED`, `REJECTED`. Letakkan di domain model approval, bukan di `core.event`, agar bisa direuse oleh service.
-      ref: src/main/java/com/solusi/erp/core/event/ApprovalCompletedEvent.java:L1-L17 — current event shape
-      ref: src/main/java/com/solusi/erp/core/approval/ — verifikasi struktur folder approval (lokasi domain model)
-- [ ] Buat class baru `com.solusi.erp.core.event.ApprovalDecidedEvent` dengan field: `String referenceType`, `Long referenceId`, `ApprovalDecision decision`. Constructor mengisi ketiganya. Pakai `@Getter` Lombok seperti existing pattern.
-- [ ] Hapus file `ApprovalCompletedEvent.java`. (Hindari deprecated alias karena hanya 2 call site, total clean rename lebih sehat.)
-- [ ] Compile check: `./mvnw -q compile` — akan gagal di 2 file (publisher + listener). Itu yang diharapkan.
+- [x] Baca port `ApprovalEventPublisher`, adapter, dan use case `ProcessApprovalUseCaseImpl` untuk konfirmasi separation existing.
+      ref: src/main/java/com/solusi/erp/common/approval/application/port/ApprovalEventPublisher.java:L1-L9
+      ref: src/main/java/com/solusi/erp/common/approval/infrastructure/adapter/ApprovalEventPublisherAdapter.java:L18-L28
+- [x] Buat class baru `com.solusi.erp.core.event.ApprovalRejectedEvent` mirroring shape `ApprovalCompletedEvent` (dua field: `referenceType`, `referenceId`, `@Getter` Lombok).
+- [x] Compile check: `./mvnw -q compile`. Tidak akan ada error karena class baru tidak dipakai siapapun (yet).
 
 **Validation criteria:**
-- File `ApprovalDecidedEvent.java` ada dengan field `decision`.
-- File `ApprovalCompletedEvent.java` terhapus.
-- Compile error hanya muncul di `ApprovalEventPublisherAdapter` dan `OnPurchaseRequisitionApprovedListener`.
+- File `ApprovalRejectedEvent.java` ada di `core.event/`.
+- Tidak rename/hapus `ApprovalCompletedEvent` (masih dipakai 3 listener existing).
+- Compile clean.
 
-### Task 2: Update publisher untuk emit kedua decision [ ]
+### Task 2: Implement adapter `publishRejected` to emit `ApprovalRejectedEvent` [x]
 
-`ApprovalEventPublisherAdapter` saat ini hanya emit di approve path. Tambahkan emit untuk reject path. Pastikan port `ApprovalEventPublisher` di domain juga punya signature reject jika belum ada.
+Adapter `publishRejected()` saat ini no-op. Wire-kan agar publish `ApprovalRejectedEvent` (created in Task 1). Port + use case caller sudah benar — tidak perlu diubah.
 
 **Depends on:** Task 1
-**Reference module:** `core.approval.infrastructure.adapter`
 **Stream:** C
 
 Steps:
-- [ ] Baca port `ApprovalEventPublisher` (interface domain) untuk lihat method existing. Identifikasi apakah ada `publishApproved(referenceType, referenceId)` atau API yang lebih generik.
-      ref: src/main/java/com/solusi/erp/core/approval/infrastructure/adapter/ApprovalEventPublisherAdapter.java:L14-L23 — adapter saat ini
-- [ ] Refactor method publisher menjadi `publishDecided(String referenceType, Long referenceId, ApprovalDecision decision)`. Update interface port + adapter sekaligus.
-- [ ] Cari semua caller publisher di approval core (kemungkinan di approval use case `ProcessApprovalUseCaseImpl` atau yang sejenis). Update call site agar:
-  - Pada APPROVED branch → `publishDecided(refType, refId, ApprovalDecision.APPROVED)`.
-  - Pada REJECTED branch → `publishDecided(refType, refId, ApprovalDecision.REJECTED)`.
-      ref: src/main/java/com/solusi/erp/core/approval/application/ — cari `publishApproved\|publish.*Approval` (baca file relevan)
-- [ ] Update implementasi adapter untuk publish `new ApprovalDecidedEvent(referenceType, referenceId, decision)`.
-- [ ] Compile check: `./mvnw -q compile` di `core/approval` slice harus hijau. Listener PR tetap merah (di-fix di Task 3).
-- [ ] **TEST:** Update existing test `ApprovalEventPublisherAdapterTest` (jika ada) atau buat baru. Pakai `mock(ApplicationEventPublisher.class)`, panggil `publishDecided(...)`, `verify` argumen `ApprovalDecidedEvent` dengan ArgumentCaptor.
+- [x] Update `ApprovalEventPublisherAdapter` import: tambahkan `ApprovalRejectedEvent`.
+- [x] Implement body `publishRejected()`: `eventPublisher.publishEvent(new ApprovalRejectedEvent(referenceType, referenceId))`.
+- [x] Compile check: `./mvnw -q compile`. Hijau.
+- [ ] **TEST (deferred to end of Stream C):** Existing project tidak punya `ApprovalEventPublisherAdapterTest`. Pertimbangkan tambah unit test minimal di Task 4 area atau tunda — adapter sederhana, value test rendah vs cost.
 
 **Validation criteria:**
-- Approve flow → publisher emit event dengan `decision == APPROVED`.
-- Reject flow → publisher emit event dengan `decision == REJECTED`.
-- Test publisher hijau.
+- Adapter `publishRejected` benar-benar emit event (bukan no-op).
+- Compile clean.
 
-### Task 3: Update PR listener untuk dual-decision + add `markAsRejected()` jika perlu [ ]
+### Task 3: Add `OnPurchaseRequisitionRejectedListener` (deviation: separate component) [x]
 
-Listener PR memetakan event APPROVED → `markAsApproved()` dan REJECTED → `markAsRejected()` di aggregate. Verifikasi domain method `markAsRejected()` sudah ada; kalau belum, tambahkan dengan invariants serupa `markAsApproved()`.
+Buat listener baru terpisah yang subscribe ke `ApprovalRejectedEvent`. Tidak modifikasi listener APPROVED existing. Domain method `reject()` sudah ada di aggregate, jadi tidak butuh ditambahkan.
 
 **Depends on:** Task 2
-**Reference module:** `purchasing.purchaserequisition.domain.model.PurchaseRequisition`
 **Stream:** C
 
 Steps:
-- [ ] Baca `PurchaseRequisition` aggregate. Cek apakah ada method `markAsRejected()`.
-      ref: src/main/java/com/solusi/erp/purchasing/purchaserequisition/domain/model/PurchaseRequisition.java — cari `markAsApproved\|markAsRejected\|status`
-- [ ] Jika `markAsRejected()` belum ada, tambahkan dengan invariants:
-  - Hanya boleh dipanggil ketika `status == SUBMITTED`. Lain throw `DomainException` dengan i18n key `msg.error.pr.invalid-status-transition`.
-  - Set `status = REJECTED`.
-- [ ] Update `OnPurchaseRequisitionApprovedListener`:
-  - Rename file → `OnPurchaseRequisitionDecidedListener.java`.
-  - Update event listener signature: `@EventListener(condition = "#event.referenceType == 'PURCHASE_REQUISITION'") public void handle(ApprovalDecidedEvent event)`.
-  - Switch berdasarkan `event.getDecision()`:
-    - `APPROVED` → `pr.markAsApproved()`.
-    - `REJECTED` → `pr.markAsRejected()`.
-  - `purchaseRequisitionRepository.save(pr)` setelah switch.
-- [ ] **TEST:** `PurchaseRequisitionTest` — tambah test untuk `markAsRejected` happy path + invalid transition. Pure JUnit + AssertJ.
-      ref: `docs/plans/e2e-pr-approval.md` style — cari domain test PR yang sudah ada untuk pattern referensi.
-- [ ] **TEST:** Jika project punya `OnPurchaseRequisitionApprovedListenerTest` (kemungkinan tidak), update jadi `OnPurchaseRequisitionDecidedListenerTest`. Pakai mock repository, fire event APPROVED dan REJECTED, verify method aggregate yang dipanggil. Optional kalau tidak ada test existing — listener thin.
+- [x] Cek `PurchaseRequisition` aggregate — confirmed methods `approve()`/`reject()` sudah ada (line 95-101). Note: naming pendek (bukan `markAsXxx`).
+      ref: src/main/java/com/solusi/erp/purchasing/purchaserequisition/domain/model/PurchaseRequisition.java:L95-L101
+- [x] Buat file baru `OnPurchaseRequisitionRejectedListener.java` mirroring listener APPROVED pattern. Subscribe ke `ApprovalRejectedEvent` dengan SpEL condition `referenceType == 'PURCHASE_REQUISITION'`. Body: load PR, call `pr.reject()`, save.
+      ref: src/main/java/com/solusi/erp/purchasing/purchaserequisition/infrastructure/listener/OnPurchaseRequisitionApprovedListener.java — pattern referensi
+- [x] Compile check: `./mvnw -q compile` clean.
+- [ ] **TEST (skipped):** Listener thin (no business logic, no validation). Project tidak punya unit test untuk listener APPROVED existing — konsisten skip untuk REJECTED. Verifikasi via E2E di Task 4.
 
 **Validation criteria:**
-- `./mvnw -q compile` hijau di seluruh project.
-- `./mvnw -q test -Dtest="PurchaseRequisition*Test"` hijau.
-- Manual smoke test (lokal dev DB): submit PR → reject via UI → status PR di list page = REJECTED (bukan SUBMITTED).
+- File `OnPurchaseRequisitionRejectedListener.java` ada.
+- Listener APPROVED tidak diubah.
+- Compile clean.
 
 ### Task 4: Update PR Scenario B assertion + version bump PATCH [ ]
 
