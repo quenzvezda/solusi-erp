@@ -200,6 +200,42 @@ When expanding any task that involves Thymeleaf templates or page-specific JavaS
 
 **CRITICAL:** Never rely solely on a reference module's template as the FE pattern source. Reference templates may be special cases (e.g., vendor bill form has readonly vendor/currency derived from GR selection — NOT the interactive autocomplete pattern). Always cross-reference with `docs/spec/` to understand the correct component initialization.
 
+### E2E (Playwright) Task Expansion (MANDATORY for `e2e-tests/` tasks)
+
+When a task produces or modifies a Playwright spec, the standard expansion is insufficient. E2E tasks have a higher rate of "looks correct, fails at runtime" bugs because the spec asserts against UI shape, page JS event flow, and storage state — none of which are visible from the brainstorming doc alone.
+
+**Before writing the task body:**
+
+1. **Read `docs/tests/playwright-pitfalls.md`** — the catalog of known failure patterns. Every item in the pitfalls doc represents a real bug from prior sessions.
+2. **Read the target page's view template AND form template** — Status badges and action buttons live on the view page, NOT on the form/edit page in most modules. Check `templates/{module}/view.html` for badge selectors before writing assertions.
+3. **Read the target page's JS** — Find the `change` handler on TomSelect fields. If the handler reads `tsProd.options[val].payload.xxx`, the spec MUST inject the option with full payload (not via `setTomSelectValue`). If the handler triggers `ErpModal.confirm` or `ErpAction.confirmAndSubmit`, the spec MUST click `#confirm-modal-btn-yes` (not `page.on('dialog')`).
+4. **Read `@RequestMapping`, never assume URL from entity name** — Many controllers are rebranded (e.g., PermissionGroup → `/security/menu-groups`, not `/security/permission-groups`).
+5. **Read existing Playwright helpers (`e2e-tests/helpers/`)** — Note the known issues. `selectTomSelect` is currently broken (`load(query, callback)` signature mismatch — promise never resolves). Until fixed, only use `setTomSelectValue` (when payload not needed) or write a local payload-aware helper that bypasses both.
+
+**Steps in the expanded E2E task MUST include:**
+
+- A step that runs `npx playwright test {file} -g "{scenario name}"` — listed explicitly, not implied. Compile-only and `--list` are NOT substitutes.
+- A step that captures screenshot/video on first failure for diagnosis.
+- For storage-state-dependent specs: a step verifying setup probe works (the setup test must actually re-login on a fresh server, not reuse stale cookies).
+
+**Steps the expanded E2E task MUST NOT include:**
+
+- "E2E run deferred — will validate at finalize" with task marked `[x]`. If the run cannot be executed in the same task, the task stays `[~]` with a report finding. Marking complete without running the spec is the single biggest source of E2E bugs.
+- `page.evaluate(fetch(...))` calls before any `page.goto` — `about:blank` has no origin. Use `page.request.get(...)` instead.
+- Time-based freshness logic anywhere (`mtimeMs < TTL`). H2 in-memory wipes sessions on JVM restart; trust the server, not file timestamps.
+
+**Reference validation criteria for any E2E task:**
+
+```markdown
+**Validation criteria:**
+- `cd e2e-tests && npx tsc --noEmit` clean
+- `npx playwright test {file} --list` shows expected scenarios
+- `npx playwright test {file}` green at least once (not just compile)
+- For transactional specs (SA/PR/PO): `rm -rf .auth/ && npx playwright test {file}` also green (cold-cache run catches storage state assumptions)
+- No new known-issues entry needed in `docs/tests/playwright-pitfalls.md`
+```
+
+
 ## Reference Link Format
 
 Every critical step MUST include a reference link:
