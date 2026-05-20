@@ -313,12 +313,10 @@ test.describe('Purchase Requisition flow', () => {
     await waitForNetworkIdle(approverPage);
 
     // The view page exposes both the PR's own status (page title badge) and the
-    // approval-request status (separate field). The approval flips to REJECTED;
-    // the PR's domain status, however, only flips to APPROVED on the success
-    // path — there is no listener for REJECTED at the time of writing
-    // (OnPurchaseRequisitionApprovedListener handles the APPROVED branch only).
-    // The detail-page "Status" field for the approval shows REJECTED.
-    await expect(approverPage.getByText('REJECTED').first()).toBeVisible({ timeout: 15_000 });
+    // approval-request status (separate field). After Stream C of the SA/RBAC
+    // plan, OnPurchaseRequisitionRejectedListener flips the PR's domain status
+    // to REJECTED, so we assert the main page-title badge here.
+    await expect(approverPage.locator('.page-title .badge', { hasText: 'REJECTED' })).toBeVisible({ timeout: 15_000 });
 
     // Re-opening the modal trigger button should be hidden by isCurrentApprover
     // becoming false once the approval is processed.

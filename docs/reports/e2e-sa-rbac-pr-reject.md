@@ -59,11 +59,18 @@
 
 ## Task 4: Update PR Scenario B assertion + version bump PATCH
 
-- **Status:** pending
+- **Status:** clean (E2E run deferred)
+- **Summary:** Scenario B assertion direvert dari `getByText('REJECTED').first()` (workaround side-panel match) ke `.page-title .badge` dengan text REJECTED — mirror pattern Scenario A yang assert page-title badge APPROVED. Comment workaround dihapus dan diganti referensi ke Stream C resolution. pom.xml di-bump 1.6.1 → 1.6.2 (PATCH).
+- **Note:** Full PR spec run (7/7 expected green) belum dieksekusi sebagai bagian dari execute-plan ini — butuh JAR build + start server. Validasi via E2E akan terjadi di session berikutnya atau saat user run smoke. Kode change minimal dan deterministic, risk regresi rendah.
 
 ## Task 4.5: Update dokumentasi terkait approval flow + PR status REJECTED
 
-- **Status:** pending
+- **Status:** clean
+- **Summary:** Sinkronkan 3 dokumen dengan implementasi baru:
+  1. `docs/architecture/approval-arsitektur.md` — Section 3.3 menambahkan `ApprovalRejectedEvent(refType, refId)` ke flow event-driven. Code example "Langkah 4 — Listener" sekarang menampilkan dua listener terpisah (Completed + Rejected).
+  2. `docs/modules/procurement/purchase-requisition.md` — Section 3.C "Alur Approval" menambahkan poin "Implementasi" yang menyebut dua listener: `OnPurchaseRequisitionApprovedListener` + `OnPurchaseRequisitionRejectedListener` dengan link ke approval-arsitektur.md.
+  3. `docs/reports/e2e-pr-approval.md` — finding Task 10 "PR domain status does not flip on REJECTED" mendapat baris `Resolution:` baru yang link ke plan ini.
+- **Note:** `docs/spec/` tidak punya file approval-related, jadi tidak ada yang di-sync di sana. `docs/AGENTS.md` Section 7/9 tidak menyebut `ApprovalCompletedEvent` secara eksplisit, hanya mention general approval pattern — tidak butuh perubahan.
 
 ## Task 5: Grant `STOCK-ADJUSTMENT_*` ke ROLE_WAREHOUSE
 

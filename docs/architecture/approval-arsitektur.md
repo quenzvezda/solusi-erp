@@ -58,8 +58,8 @@ Integrasi antar modul dilakukan sepenuhnya secara **Asinkron/Decoupled** menggun
 
 1.  **Pemicu (Modul Bisnis):** Menerbitkan `ApprovalRequestedEvent(refType, refId, requester, approverId)`.
 2.  **Penerima (Modul Approval):** Mendengarkan event tersebut dan membuat data di `appr_requests` dengan `currentApproverId = approverId`.
-3.  **Penyelesaian (Modul Approval):** Setelah `APPROVE_AND_FINISH`, menerbitkan `ApprovalCompletedEvent(refType, refId)`.
-4.  **Reaksi (Modul Bisnis):** Mendengarkan event penyelesaian (filter berdasarkan `refType`) dan mengeksekusi logika finalisasi (misal: Publish berita atau Update stok).
+3.  **Penyelesaian (Modul Approval):** Setelah `APPROVE_AND_FINISH`, menerbitkan `ApprovalCompletedEvent(refType, refId)`. Setelah `REJECT`, menerbitkan `ApprovalRejectedEvent(refType, refId)`.
+4.  **Reaksi (Modul Bisnis):** Mendengarkan event penyelesaian/penolakan (filter berdasarkan `refType`) dan mengeksekusi logika finalisasi/rollback (misal: Publish berita / Update stok pada `Completed`, atau revert status pada `Rejected`).
 
 ### Flow Bisnis (Multi-Step Approval)
 
@@ -179,9 +179,16 @@ approvalRequest.ifPresent(req -> {
 
 **Langkah 4 — Listener di modul reaksi:**
 ```java
+// Listener untuk approve path
 @EventListener(condition = "#event.referenceType == 'STOCK_ADJUSTMENT'")
 void onApprovalCompleted(ApprovalCompletedEvent event) {
     // finalkan stok...
+}
+
+// Listener untuk reject path (terpisah, satu listener per decision)
+@EventListener(condition = "#event.referenceType == 'STOCK_ADJUSTMENT'")
+void onApprovalRejected(ApprovalRejectedEvent event) {
+    // revert status / clean-up...
 }
 ```
 

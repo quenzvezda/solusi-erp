@@ -153,6 +153,7 @@
 - **Severity:** warning
 - **Detail:** `OnPurchaseRequisitionApprovedListener` only handles the APPROVED branch. When approval-request is REJECTED, the approval entity flips to REJECTED but the PR's own `status` column stays SUBMITTED. The detail view shows the conflict cleanly (page-title badge "SUBMITTED" + side-panel "Approval Status: REJECTED"). Documentation says "status PR berubah ke REJECTED secara otomatis" — this is aspirational, not implemented.
 - **Action taken:** Scenario B asserts `getByText('REJECTED')` (matches the side-panel) instead of the page-title badge. Surfacing this as a bug for follow-up — listener should be extended to the REJECTED branch, or doc updated to acknowledge runtime behavior.
+- **Resolution:** Fixed in `docs/plans/e2e-sa-rbac-pr-reject.md` Stream C (Tasks 1-4). Adapter `publishRejected` now emits `ApprovalRejectedEvent`, and a new `OnPurchaseRequisitionRejectedListener` calls `pr.reject()`. Scenario B assertion reverted to page-title badge `REJECTED`.
 - **Ref:** src/main/java/com/solusi/erp/purchasing/purchaserequisition/infrastructure/listener/OnPurchaseRequisitionApprovedListener.java
 - **Ref:** docs/modules/procurement/purchase-requisition.md:L73 — claims auto status flip
 
@@ -199,6 +200,7 @@
 - **Severity:** warning
 - **Detail:** `OnPurchaseRequisitionApprovedListener` only handles the APPROVED branch. When approval-request is REJECTED, the approval entity flips to REJECTED but the PR's own `status` column stays SUBMITTED. The detail view shows the conflict cleanly (page-title badge "SUBMITTED" + side-panel "Approval Status: REJECTED"). Documentation says "status PR berubah ke REJECTED secara otomatis" — this is aspirational, not implemented.
 - **Action taken:** Scenario B asserts `getByText('REJECTED')` (matches the side-panel) instead of the page-title badge. Surfacing this as a bug for follow-up — listener should be extended to the REJECTED branch, or doc updated to acknowledge runtime behavior.
+- **Resolution:** Fixed in `docs/plans/e2e-sa-rbac-pr-reject.md` Stream C (Tasks 1-4). Adapter `publishRejected` now emits `ApprovalRejectedEvent`, and a new `OnPurchaseRequisitionRejectedListener` calls `pr.reject()`. Scenario B assertion reverted to page-title badge `REJECTED`.
 - **Ref:** src/main/java/com/solusi/erp/purchasing/purchaserequisition/infrastructure/listener/OnPurchaseRequisitionApprovedListener.java
 - **Ref:** docs/modules/procurement/purchase-requisition.md:L73 — claims auto status flip
 
