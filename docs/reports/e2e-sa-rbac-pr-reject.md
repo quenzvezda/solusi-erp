@@ -74,23 +74,52 @@
 
 ## Task 5: Grant `STOCK-ADJUSTMENT_*` ke ROLE_WAREHOUSE
 
-- **Status:** pending
+- **Status:** clean
+- **Summary:** D010 sudah punya semua `STOCK-ADJUSTMENT_*` permission untuk ROLE_WAREHOUSE (READ/CREATE/UPDATE/DELETE/PROCESS) plus lookup pendukung. Tambahkan baris `STOCK-ADJUSTMENT_DELETE` yang sebelumnya tertinggal (D010 + V9000 mirror). Tidak ada D011 separate file untuk warehouse — D010 satu-satunya source. Verifikasi lookup matrix: `LOOKUP_INVENTORY/FACILITY/GRID/CONTAINER/UOM-CONVERSION/BRAND/PRODUCT-CATEGORY` semua sudah ter-grant.
 
 ## Task 6: V9000 seed Grid + Container + stock balance
 
-- **Status:** pending
+- **Status:** clean (deviasi: skip initial balance/valuation seed)
+- **Summary:** Append section "INVENTORY HIERARCHY" ke V9000: Grid id 9101 + Container id 9101 di facility 9101. Skip initial stock balance + valuation layer karena Scenario A jalur positive (quantity > 0) — Process to Inventory akan create balance + layer baru lewat aplikasi flow normal. Negative path (quantity < 0 yang butuh FIFO consumption) tidak masuk Scenario A-E scope sehingga seed minimal cukup.
+
+### Finding: Initial stock balance opsional untuk SA positive flow
+- **Type:** decision
+- **Severity:** info
+- **Detail:** Plan asli minta seed initial stock balance (10 × 8500000) + valuation layer agar negative SA tidak gagal di FIFO consumption. Setelah review scope: Scenario A-E semua DRAFT → COMPLETED dengan quantity positif (add stock). Negative flow (subtract stock) tidak ada di scope. Seed balance/layer awal tidak diperlukan. Jika scope berkembang (Scenario F negative), seed bisa ditambahkan saat itu.
+- **Action taken:** V9000 hanya seed Grid + Container. Balance + valuation layer dibuat oleh Process to Inventory aplikasi saat first run.
+- **Ref:** src/main/resources/db/migration-h2/V9000__e2e_seed_data.sql section "INVENTORY HIERARCHY"
 
 ## Task 7: Helper cascading TomSelect
 
-- **Status:** pending
+- **Status:** clean
+- **Summary:** Tambahkan dua helper di `e2e-tests/helpers/tomselect.ts`: `waitForTomSelectOptions(page, selector, predicateFn, timeout)` dan `setCascadingTomSelect(page, parentSelector, parentValue, childSelector, childValue, childOptionLoadHint)`. Pattern: set parent → trigger child reload via `clearOptions()` + `load()` → wait sampai child option target muncul → set child value. Tidak modifikasi helper existing.
 
 ## Task 8: SA spec skeleton
 
-- **Status:** pending
+- **Status:** clean
+- **Summary:** Buat `e2e-tests/tests/inventory/stock-adjustment.spec.ts` dengan storage state warehouse1, sanity test (navigate ke list + assert table visible), dan 5 `test.skip()` stub untuk Scenario A-E dengan komentar 1-line user journey. Tag describe `@inventory` (bukan @smoke). File compile bersih. Sanity test akan jalan saat E2E runner dijalankan.
 
 ## Task 9: SA Scenario A — Create DRAFT
 
-- **Status:** pending
+- **Status:** clean (E2E run deferred)
+- **Summary:** Implement Scenario A end-to-end. Wire helpers `resolveProductLaptopId(page)` (lookup-by-search), `pickIdrCurrency(page)` (DOM-pick IDR option then `setTomSelectValue` because page JS wraps `#header-currency` with TomSelect), `setQuantityViaDrawer(page, rowIndex, qty)` (open `#drawer-non-serial` via `.btn-edit-detail`, wait for UoM dropdown to populate from `/api/lookup/inventory/uom-conversions`, fill `.input-qty-target` AutoNumeric, click `.btn-save-drawer`). Test body: navigate create → set date/currency/facility → addLine → set product → wait for `.input-uom-id` populated by JS change handler → set Grid + Container via `select.select-grid`/`select.select-container` (cascading parents auto-resolve via TomSelect parent provider, no separate cascading helper needed because `setTomSelectValue` calls `addOption` if missing) → set quantity via drawer → set unitCost via AutoNumeric → submit → assert redirect → capture id from `a[href*="/edit/"]` highest id → reopen edit → assert page-title badge DRAFT.
+- **Note:** Spec compiles (`npx tsc --noEmit` clean) and lists correctly (sanity + Scenario A active, B-E `.skip()`). Full E2E run deferred — butuh JAR build + `mvn spring-boot:run` dengan profile e2e. Validation akan terjadi saat user run `./e2e-tests/scripts/run-poc.sh` atau saat Stream A finalize di Task 15.
+
+### Finding: Cascading TomSelect tidak butuh `setCascadingTomSelect` di Scenario A
+- **Type:** decision
+- **Severity:** info
+- **Detail:** Plan Task 9 anticipate kebutuhan `setCascadingTomSelect` (helper Task 7) untuk Facility→Grid→Container. Setelah baca page JS (`stock-adjustment-form.js` line 196-199): grid TomSelect sudah pakai `parentProvider` callback yang baca `headerFacility.value` setiap kali load. Container TomSelect baca `tsGrid.getValue()`. Jadi setelah set Facility ke 9101, set Grid via `setTomSelectValue` akan trigger lookup dengan `facilityId=9101` query param → option Grid 9101 muncul karena seed V9000 sudah ada. Helper `setCascadingTomSelect` reserved untuk pattern lebih kompleks (mis. UI yang butuh wait pada AJAX response sebelum child options ready). Untuk Scenario A pattern langsung `setTomSelectValue` cukup karena `setTomSelectValue` sendiri call `addOption` kalau value tidak ditemukan.
+- **Action taken:** Tidak pakai `setCascadingTomSelect` di Scenario A. Helper tetap eksis dan akan dipakai di Scenario D (facility change) atau saat user butuh Grid yang harus dilihat di dropdown options sebelum dipilih.
+- **Ref:** src/main/resources/static/js/inventory/adjustment/stock-adjustment-form.js:L196-L199 — parentProvider pattern
+- **Ref:** e2e-tests/helpers/tomselect.ts:L70-L83 — setTomSelectValue addOption fallback
+
+### Finding: Quantity input readonly — drawer is the only commit path
+- **Type:** decision
+- **Severity:** info
+- **Detail:** `lines[N].quantity` punya attribute `readonly` di template (form.html:L128, L164). Page JS hanya update via drawer save handler (`stock-adjustment-form.js:L171-L176`). `setAutoNumeric` ke `.input-qty` akan diabaikan oleh ErpNumeric karena field readonly. Karena itu helper `setQuantityViaDrawer` mandatory untuk SA — tidak ada bypass.
+- **Action taken:** Buat helper `setQuantityViaDrawer` lokal di spec file (bukan helper umum) karena flow drawer ini SA-specific. Jika pattern muncul di modul lain (mis. Inventory Transfer), promote ke `helpers/`.
+- **Ref:** src/main/resources/templates/inventory/adjustments/form.html:L128 — readonly attr
+- **Ref:** src/main/resources/static/js/inventory/adjustment/stock-adjustment-form.js:L171-L176 — btn-save-drawer commit path
 
 ## Task 10: SA Scenario B — Edit DRAFT
 

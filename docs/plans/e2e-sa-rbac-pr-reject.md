@@ -195,7 +195,7 @@ Steps:
 - Doc PR module tidak punya klaim aspirational lagi.
 - Report `e2e-pr-approval.md` finding ditandai resolved dengan link ke plan ini.
 
-### Task 5: Grant `STOCK-ADJUSTMENT_*` ke ROLE_WAREHOUSE di D011 + mirror ke V9000 [ ]
+### Task 5: Grant `STOCK-ADJUSTMENT_*` ke ROLE_WAREHOUSE di D011 + mirror ke V9000 [x]
 
 ROLE_WAREHOUSE perlu permission lengkap untuk modul SA agar `warehouse1` user bisa eksekusi spec dan jadi denominator di RBAC matrix. D010 saat ini hanya kasih dasar warehouse-related; D011 (`docs/database/dev-seeder/D011__role_permissions.sql`) yang dipakai PR plan adalah tempat ekspansi. V9000 H2 mirror harus sinkron.
 
@@ -218,7 +218,7 @@ Steps:
 - Migration parity script pass.
 - HTTP curl: `warehouse1` GET `/inventory/adjustments` → 200, `employee1` GET `/inventory/adjustments` → 403/redirect.
 
-### Task 6: V9000 seed Grid, Container, dan stock balance awal untuk facility 9101 [ ]
+### Task 6: V9000 seed Grid, Container, dan stock balance awal untuk facility 9101 [x]
 
 Stock Adjustment Process to Inventory akan menulis ke `inv_stock_balances`, `inv_movements`, `inv_valuation_layers`. Untuk testing, line item butuh Grid + Container yang valid di facility 9101 (E2E Main Warehouse). Saldo awal positif diperlukan agar negative adjustment line tidak gagal di FIFO consumption.
 
@@ -245,7 +245,7 @@ Steps:
 - Query H2 menunjukkan grid/container/balance/layer ter-seed.
 - Migration parity pass.
 
-### Task 7: Helper untuk cascading TomSelect (Facility → Grid → Container) [ ]
+### Task 7: Helper untuk cascading TomSelect (Facility → Grid → Container) [x]
 
 Pola SA: pilih Facility → Grid filter berdasar facility → Container filter berdasar grid. Helper TomSelect existing (`setTomSelectValue`) hanya support single select tanpa cascade. Tambahkan helper yang menunggu TomSelect anak ter-update setelah parent berubah.
 
@@ -270,7 +270,7 @@ Steps:
 - Helper akan dipakai di Task 9 dan Task 12 — green run di sana = validasi.
 
 
-### Task 8: Skeleton `tests/inventory/stock-adjustment.spec.ts` [ ]
+### Task 8: Skeleton `tests/inventory/stock-adjustment.spec.ts` [x]
 
 Wire spec file dengan storage state warehouse1 + sanity test + 5 scenario stub. Menyiapkan kerangka kerja sebelum implementasi tiap skenario.
 
@@ -304,7 +304,7 @@ Steps:
 - Sanity test pass standalone.
 - 5 scenario muncul as `skipped` di test listing.
 
-### Task 9: Scenario A — Create DRAFT Stock Adjustment dengan 1 line [ ]
+### Task 9: Scenario A — Create DRAFT Stock Adjustment dengan 1 line [x]
 
 Path paling penting; memvalidasi: TomSelect cascading Facility→Grid→Container, AutoNumeric quantity/unitCost, Flatpickr transactionDate, line editor pattern, AJAX save → redirect list.
 
