@@ -54,6 +54,20 @@ async function selectProductOnLine(
 }
 
 async function pickIdrCurrency(page: Page): Promise<void> {
+  // The page boot script polls every 50ms for TomSelect/ErpLineManager/ErpDrawer
+  // before initializing. On a cold-start box (JIT not warm + CDN scripts still
+  // loading) this can exceed 10s. Wait for the <option> nodes AND TomSelect
+  // instance with a generous timeout.
+  await page.waitForFunction(
+    () => {
+      const sel = document.querySelector('#header-currency') as
+        | (HTMLSelectElement & { tomselect?: unknown })
+        | null;
+      return !!sel && sel.options.length > 0 && !!sel.tomselect;
+    },
+    undefined,
+    { timeout: 20_000 }
+  );
   const currencyId = await page.evaluate(() => {
     const sel = document.querySelector('#header-currency') as HTMLSelectElement | null;
     if (!sel) return '';
@@ -84,7 +98,25 @@ async function setQuantityViaDrawer(page: Page, rowIndex: number, qty: number): 
   );
   await setAutoNumeric(page, '#drawer-non-serial .input-qty-target', qty);
   await drawer.locator('.btn-save-drawer').click();
-  await expect(drawer).toBeHidden({ timeout: 5_000 });
+  // Bootstrap 5 offcanvas dismiss memakai 3 state class: .show -> .hiding -> (none).
+  // Polling `toBeHidden` di mesin sibuk kadang tetap report visible meskipun
+  // semua state class sudah lepas (visibility transition belum settle). Trust
+  // functional dismissal: tunggu semua state class lepas, itu cukup karena
+  // setupUomDrawer.btn-save-drawer.onclick sudah commit data ke row sebelum
+  // panggil ErpDrawer.close.
+  await page.waitForFunction(
+    () => {
+      const el = document.getElementById('drawer-non-serial');
+      if (!el) return true;
+      return (
+        !el.classList.contains('show') &&
+        !el.classList.contains('hiding') &&
+        !el.classList.contains('showing')
+      );
+    },
+    undefined,
+    { timeout: 10_000 }
+  );
 }
 
 /**

@@ -11,6 +11,14 @@ server:
         secure: false
         http-only: true
         same-site: lax
+  tomcat:
+    accesslog:
+      enabled: true
+      directory: ${java.io.tmpdir}
+      prefix: solusi-erp-e2e-access
+      suffix: .log
+      pattern: '%t %s %D %r'
+      rotate: false
 
 spring:
   datasource:
@@ -21,6 +29,7 @@ spring:
 
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: false
     hibernate:
       ddl-auto: none
     properties:
@@ -42,7 +51,7 @@ spring:
         web-allow-others: false
 
   thymeleaf:
-    cache: false
+    cache: true
 
 logging:
   level:

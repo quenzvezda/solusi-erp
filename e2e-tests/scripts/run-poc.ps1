@@ -34,6 +34,56 @@ try {
     }
     if (-not $ready) { Write-Error "Server failed to start within 60s"; exit 1 }
 
+    Write-Host "=== Pre-warming JVM (login + key endpoints) ===" -ForegroundColor Cyan
+    # Spring Boot lazy-initialises beans on first request per controller path.
+    # Without warmup, the first hit by Playwright on each /create or /list
+    # endpoint can take 10-25s, racing past page.goto's 15s timeout.
+    # Hit the same endpoints the test suite uses so JIT + bean graphs are warm
+    # before Playwright starts.
+    try {
+        $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+        # Get CSRF token from login page
+        $loginPage = Invoke-WebRequest -Uri "http://localhost:18080/login" -WebSession $session -UseBasicParsing -TimeoutSec 30
+        $csrfMatch = [regex]::Match($loginPage.Content, 'name="_csrf"\s+value="([^"]+)"')
+        if (-not $csrfMatch.Success) {
+            $csrfMatch = [regex]::Match($loginPage.Content, 'value="([^"]+)"\s+name="_csrf"')
+        }
+        if ($csrfMatch.Success) {
+            $csrfToken = $csrfMatch.Groups[1].Value
+            $body = @{ username = 'admin'; password = 'admin123'; '_csrf' = $csrfToken }
+            Invoke-WebRequest -Uri "http://localhost:18080/login" -WebSession $session -Method Post -Body $body -UseBasicParsing -TimeoutSec 30 -MaximumRedirection 5 | Out-Null
+        } else {
+            Invoke-WebRequest -Uri "http://localhost:18080/login" -WebSession $session -Method Post -Body @{ username = 'admin'; password = 'admin123' } -UseBasicParsing -TimeoutSec 30 -MaximumRedirection 5 | Out-Null
+        }
+
+        $warmupUrls = @(
+            '/dashboard',
+            '/inventory/adjustments',
+            '/inventory/adjustments/create',
+            '/inventory/brands',
+            '/inventory/brands/create',
+            '/inventory/product-categories',
+            '/inventory/product-categories/create',
+            '/inventory/products',
+            '/inventory/products/create',
+            '/inventory/uoms',
+            '/inventory/uoms/create',
+            '/purchasing/purchase-requisitions',
+            '/purchasing/purchase-requisitions/create',
+            '/purchasing/supplier-price-lists'
+        )
+        foreach ($u in $warmupUrls) {
+            try {
+                Invoke-WebRequest -Uri "http://localhost:18080$u" -WebSession $session -UseBasicParsing -TimeoutSec 30 -MaximumRedirection 5 | Out-Null
+            } catch {
+                Write-Host ("warmup miss " + $u + ": " + $_.Exception.Message) -ForegroundColor DarkYellow
+            }
+        }
+        Write-Host "=== Warmup complete ===" -ForegroundColor Cyan
+    } catch {
+        Write-Host ("Warmup failed: " + $_.Exception.Message) -ForegroundColor Yellow
+    }
+
     Write-Host "=== Installing Playwright dependencies ===" -ForegroundColor Cyan
     Set-Location "$ProjectRoot\e2e-tests"
     npm ci --silent

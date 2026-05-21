@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('@smoke Authentication', () => {
 
   test('should login successfully with valid credentials', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto('/login', { waitUntil: 'domcontentloaded' });
     await page.fill('input[name="username"]', 'admin');
     await page.fill('input[name="password"]', 'admin123');
     await page.click('button[type="submit"]');
@@ -17,7 +17,7 @@ test.describe('@smoke Authentication', () => {
   });
 
   test('should show error with invalid credentials', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto('/login', { waitUntil: 'domcontentloaded' });
     await page.fill('input[name="username"]', 'wrong_user');
     await page.fill('input[name="password"]', 'wrong_pass');
     await page.click('button[type="submit"]');
@@ -32,7 +32,7 @@ test.describe('@smoke Authentication', () => {
 
   test('should redirect unauthenticated user to login', async ({ page }) => {
     // Try to access a protected page directly
-    await page.goto('/dashboard');
+    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
 
     // Should be redirected to login
     await page.waitForURL('**/login**', { timeout: 5_000 });
