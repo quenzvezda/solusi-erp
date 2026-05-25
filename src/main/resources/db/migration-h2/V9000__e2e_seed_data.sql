@@ -176,3 +176,43 @@ INSERT INTO inv_grids (id, facility_id, code, name, is_active, version, created_
 
 INSERT INTO inv_containers (id, grid_id, code, name, is_active, version, created_by_user_id, created_date) VALUES
 (9101, 9101, 'E2E-CTN-A1', 'E2E Container A1', 1, 1, 1, NOW());
+
+-- ====== E2E PURCHASE ORDER SEED (Sprint: PO E2E) ======
+-- Tax (id 9001) — PPN 0% / Non Tax. Required by PO header which mandates a
+-- tax selection even for non-taxable transactions.
+INSERT INTO taxes (id, code, name, rate, calculation_mode, is_subtract, is_active, created_by_user_id, created_date, version) VALUES
+(9001, 'E2E-TAX-0', 'E2E PPN 0% Non Tax', 0.0000, 'EXCLUSIVE', FALSE, TRUE, 1, NOW(), 1);
+
+-- Grant ROLE_WAREHOUSE the PO + supporting lookup permissions needed to
+-- exercise the PO STANDARD lifecycle E2E (create from PR, submit, send,
+-- cancel, delete).
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT @role_warehouse_id, id FROM permissions WHERE name IN (
+    'PR_READ',
+    'PO_READ', 'PO_CREATE', 'PO_UPDATE', 'PO_DELETE', 'PO_SUBMIT', 'PO_SEND',
+    'LOOKUP_PR', 'LOOKUP_PO',
+    'LOOKUP_TAX',
+    'LOOKUP_PARTY'
+);
+
+-- Approved PR (id 9301) used as the source for STANDARD PO E2E.
+-- requester_id points to employee1's user (deterministic within test scope).
+SET @u_emp1 = (SELECT id FROM users WHERE username = 'employee1');
+
+INSERT INTO pur_purchase_requisitions
+    (id, code, request_date, requester_id, facility_id, department, priority, status,
+     suggested_supplier_id, currency_id, note, is_active, version,
+     created_by_user_id, created_date)
+VALUES
+    (9301, 'E2E-PR-9301', '2026-05-19', @u_emp1, 9101, 'IT', 'HIGH', 'APPROVED',
+     @p_sup1, @cur_idr, 'E2E seed for PO STANDARD flow', TRUE, 1,
+     1, NOW());
+
+-- PR lines (ids 9301, 9302). converted_po_line_id is NULL so the PR-line
+-- selector still treats remaining qty as fully open.
+INSERT INTO pur_purchase_requisition_lines
+    (id, header_id, product_id, quantity, uom_id, required_date, estimated_unit_price,
+     converted_po_line_id, note, version, created_by_user_id, created_date)
+VALUES
+    (9301, 9301, @prd_laptop, 5.0000, 9001, '2026-05-30', 8500000.0000, NULL, 'E2E line laptop', 1, 1, NOW()),
+    (9302, 9301, @prd_chair,  4.0000, 9001, '2026-05-30', 1500000.0000, NULL, 'E2E line chair',  1, 1, NOW());

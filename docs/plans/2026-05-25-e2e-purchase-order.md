@@ -61,7 +61,7 @@ These apply directly:
 
 ## Tasks
 
-### Task 1: Seed APPROVED PR + tax + grant warehouse PO permissions
+### Task 1: Seed APPROVED PR + tax + grant warehouse PO permissions [x]
 Extend `V9000__e2e_seed_data.sql` to insert one APPROVED PR (fixed id 9301 with
 2 lines), insert a fixed tax row if not seeded (PPN 0% — id 9001), and grant the
 warehouse role the 6 PO permissions plus `LOOKUP_PURCHASING`.
