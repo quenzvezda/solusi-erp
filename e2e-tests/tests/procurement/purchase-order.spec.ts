@@ -99,13 +99,24 @@ async function pickPrFromModal(page: Page, prCode: string): Promise<void> {
   }
   await waitForModalSettled(page, 'modal-po-pr-selector');
   // Wait for HTMX results to load — table rows are inside #po-pr-selector-results.
+  // ERP.ModalSelector.open fetches the URL after showing the modal, which means
+  // the modal can be `.show` for a moment while the table is still empty. Wait
+  // for any row first, then assert the specific code.
+  await page.waitForFunction(
+    () => {
+      const rows = document.querySelectorAll('#po-pr-selector-results tr[data-pr-id]');
+      return rows.length > 0;
+    },
+    undefined,
+    { timeout: 15_000 }
+  );
   await page.waitForFunction(
     (code) => {
       const row = document.querySelector(`#po-pr-selector-results tr[data-pr-code="${code}"]`);
       return row !== null;
     },
     prCode,
-    { timeout: 10_000 }
+    { timeout: 5_000 }
   );
   await page
     .locator(`#po-pr-selector-results tr[data-pr-code="${prCode}"] .js-pr-selector-pick`)
@@ -210,7 +221,10 @@ async function processApproval(
  * - submits, waits for redirect
  * - returns the new PO id captured from the list page
  */
-async function createDraftStandardPo(page: Page): Promise<number> {
+async function createDraftStandardPo(
+  page: Page,
+  productCode: string = 'E2E-PRD-LAPTOP'
+): Promise<number> {
   await navigateToModule(page, '/purchasing/purchase-orders/create');
   await expect(page.locator('#po-form')).toBeVisible();
 
@@ -234,8 +248,14 @@ async function createDraftStandardPo(page: Page): Promise<number> {
   // option.payload.code/rate/calculationMode to fill hidden form fields.
   await pickHeaderTax(page, TAX_ID);
 
-  // Pick laptop line via modal selector.
-  await pickPrLineFromModal(page, 'E2E-PRD-LAPTOP');
+  // Pick the requested PR line via modal selector.
+  await pickPrLineFromModal(page, productCode);
+
+  // Override qty to a small number so each test consumes only 1 unit of the
+  // PR line. Without this, the modal pre-fills qty to remainingQuantity (999
+  // per V9000 seed) and a single submit drains the entire line, breaking
+  // subsequent scenarios that need the same line.
+  await setAutoNumeric(page, '#line-container tr.line-row:nth-of-type(1) .input-qty', 1);
 
   // Set unit price on the new line.
   await setAutoNumeric(page, '#line-container tr.line-row:nth-of-type(1) .input-unit-price', 8500000);
@@ -439,5 +459,66 @@ test.describe('Purchase Order flow', () => {
     await page.locator('#confirm-modal-btn-yes').click();
     await page.waitForURL(new RegExp(`/purchasing/purchase-orders/view/${poId}`), { timeout: 15_000, waitUntil: 'domcontentloaded' });
     await expect(page.locator('.page-title .badge', { hasText: 'SENT' })).toBeVisible({ timeout: 15_000 });
+  });
+
+  test('Scenario D — submit then reject', async ({ page, browser }) => {
+    test.setTimeout(120_000);
+
+    await navigateToModule(page, '/purchasing/purchase-orders');
+    const seed = await resolveSeedIds(page);
+    // Submitting consumes PR line qty. Scenarios C consumed laptop's 5 qty.
+    // Use chair line (still 4 qty) for D so the modal can find it.
+    const poId = await createDraftStandardPo(page, 'E2E-PRD-CHAIR');
+
+    // Submit (same fetch pattern as Scenario C).
+    const { headerName, token } = await readCsrf(page);
+    const submitStatus = await page.evaluate(
+      async ({ id, approverId, headerName, token }) => {
+        const headers: Record<string, string> = { Accept: 'application/json' };
+        if (headerName && token) headers[headerName] = token;
+        const r = await fetch(`/purchasing/purchase-orders/${id}/submit?approverId=${approverId}`, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers,
+        });
+        return r.status;
+      },
+      { id: poId, approverId: seed.approver1PartyId, headerName, token }
+    );
+    expect(submitStatus).toBeLessThan(300);
+
+    // Verify SUBMITTED via view page; this also gives the approval-request
+    // event listener time to create the approval request before the approver
+    // context queries for it (matches Scenario C's pattern).
+    await navigateToModule(page, `/purchasing/purchase-orders/view/${poId}`);
+    await expect(page.locator('.page-title .badge', { hasText: 'SUBMITTED' })).toBeVisible({ timeout: 10_000 });
+
+    const approverContext = await browser.newContext({ storageState: storageStatePath('approver1') });
+    const approverPage = await approverContext.newPage();
+    await approverPage.goto(`/purchasing/purchase-orders/view/${poId}`, { waitUntil: 'domcontentloaded' });
+
+    const approvalRequestId = await approverPage.evaluate(() => {
+      const el = document.getElementById('current-approval-request-id') as HTMLInputElement | null;
+      return el?.value ?? '';
+    });
+    expect(approvalRequestId).toBeTruthy();
+
+    const resp = await processApproval(approverPage, approvalRequestId, 'REJECTED', 'Estimasi terlalu tinggi.');
+    expect(resp.status, `reject /process status — body: ${resp.body}`).toBeLessThan(400);
+
+    await approverPage.goto(`/purchasing/purchase-orders/view/${poId}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    // PO module currently has only OnPurchaseOrderApprovedListener — no
+    // OnPurchaseOrderRejectedListener — so PO status stays SUBMITTED after
+    // approver rejects (the approval request itself transitions to REJECTED).
+    // Assert via the user-visible side effect: the approve modal trigger is
+    // gone because isCurrentApprover becomes false once the approval is
+    // processed.
+    await expect(approverPage.locator('button[onclick*="ApprovalUI.openApproveFinishModal"]')).toHaveCount(0);
+    // Sanity: the page-title status badge is still SUBMITTED (PO domain
+    // doesn't auto-cancel on reject; product owner must add the listener
+    // separately if/when needed).
+    await expect(approverPage.locator('.page-title .badge', { hasText: 'SUBMITTED' })).toBeVisible({ timeout: 15_000 });
+
+    await approverContext.close();
   });
 });

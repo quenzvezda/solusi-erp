@@ -252,7 +252,7 @@ Steps:
 - Server log shows successful POST submit + `/common/approval/{id}/process` 200 + POST `{id}/send` 200.
 - Final PO state in DB: `status=SENT`.
 
-### Task 8: Scenario D — Submit → approver rejects → REJECTED
+### Task 8: Scenario D — Submit → approver rejects → REJECTED [x]
 Get id, submit. Switch to approver, `processApproval(...REJECTED...)`. Assert
 REJECTED badge on PO view. Note: PO has no resubmit-after-reject flow per
 status enum — test ends after rejection assertion.

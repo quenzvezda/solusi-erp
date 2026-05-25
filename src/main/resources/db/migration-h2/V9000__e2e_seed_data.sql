@@ -214,5 +214,5 @@ INSERT INTO pur_purchase_requisition_lines
     (id, header_id, product_id, quantity, uom_id, required_date, estimated_unit_price,
      converted_po_line_id, note, version, created_by_user_id, created_date)
 VALUES
-    (9301, 9301, @prd_laptop, 5.0000, 9001, '2026-05-30', 8500000.0000, NULL, 'E2E line laptop', 1, 1, NOW()),
-    (9302, 9301, @prd_chair,  4.0000, 9001, '2026-05-30', 1500000.0000, NULL, 'E2E line chair',  1, 1, NOW());
+    (9301, 9301, @prd_laptop, 999.0000, 9001, '2026-05-30', 8500000.0000, NULL, 'E2E line laptop', 1, 1, NOW()),
+    (9302, 9301, @prd_chair,  999.0000, 9001, '2026-05-30', 1500000.0000, NULL, 'E2E line chair',  1, 1, NOW());
