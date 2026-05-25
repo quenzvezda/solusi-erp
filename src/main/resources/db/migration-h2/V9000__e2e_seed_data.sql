@@ -188,7 +188,6 @@ INSERT INTO taxes (id, code, name, rate, calculation_mode, is_subtract, is_activ
 -- cancel, delete).
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT @role_warehouse_id, id FROM permissions WHERE name IN (
-    'PR_READ',
     'PO_READ', 'PO_CREATE', 'PO_UPDATE', 'PO_DELETE', 'PO_SUBMIT', 'PO_SEND',
     'LOOKUP_PR', 'LOOKUP_PO',
     'LOOKUP_TAX',

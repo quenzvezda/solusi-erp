@@ -256,6 +256,18 @@ All 9 prior pitfalls in this doc were caught only when an actual run happened. S
 
 ---
 
+## 11. Cold route first-hit can exceed the default test timeout
+
+**Symptom:** Full-suite run fails on the first visit to a rarely used SSR route, then retry passes. The failing action is usually `page.goto(..., { waitUntil: 'domcontentloaded' })` with Playwright's default 30s test timeout.
+
+**Root cause:** Spring/JIT/template initialization plus CDN-dependent assets can make the first request to a cold controller path exceed the per-test default. The retry is warm and passes, so the suite exits 0 with a flaky marker.
+
+**Fix:** Add the route to `e2e-tests/scripts/run-e2e.ps1` warmup when it is part of the full suite, and give matrix-style navigation tests an explicit timeout budget (for example `test.setTimeout(60_000)`).
+
+**Reference:** RBAC `PermissionGroup` first-hit flake on `/security/menu-groups` during PO E2E finalize.
+
+---
+
 ## Helper Limitations (Known Issues, Not Yet Fixed)
 
 | Helper | Issue | Workaround |

@@ -70,7 +70,8 @@ try {
             '/inventory/uoms/create',
             '/purchasing/purchase-requisitions',
             '/purchasing/purchase-requisitions/create',
-            '/purchasing/supplier-price-lists'
+            '/purchasing/supplier-price-lists',
+            '/security/menu-groups'
         )
         foreach ($u in $warmupUrls) {
             try {

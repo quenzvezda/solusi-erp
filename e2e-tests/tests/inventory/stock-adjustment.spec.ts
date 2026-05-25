@@ -54,6 +54,15 @@ async function selectProductOnLine(
 }
 
 async function pickIdrCurrency(page: Page): Promise<void> {
+  const selectedNativeCurrency = await page.evaluate(() => {
+    const sel = document.querySelector('#header-currency') as HTMLSelectElement | null;
+    if (!sel) return '';
+    return sel.options[sel.selectedIndex]?.text.trim() ?? '';
+  });
+  if (selectedNativeCurrency === 'IDR') {
+    return;
+  }
+
   // The page boot script polls every 50ms for TomSelect/ErpLineManager/ErpDrawer
   // before initializing. On a cold-start box (JIT not warm + CDN scripts still
   // loading) this can exceed 10s. Wait for the <option> nodes AND TomSelect

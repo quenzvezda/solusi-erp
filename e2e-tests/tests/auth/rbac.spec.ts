@@ -135,6 +135,8 @@ test.describe('@rbac RBAC matrix (4 roles x 4 resources)', () => {
     const title = `${exp.role} :: ${resource.label} list -> ${exp.list}`;
 
     test(title, async ({ browser }) => {
+      test.setTimeout(60_000);
+
       const ctx = await browser.newContext({ storageState: storageStatePath(exp.role) });
       const page = await ctx.newPage();
       try {

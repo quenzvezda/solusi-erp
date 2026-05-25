@@ -573,6 +573,7 @@ Spec yang ada:
 | `tests/master-data/brand.spec.ts` | List, create, edit, validation | Simple CRUD |
 | `tests/master-data/product.spec.ts` | List, create required fields, validation | Mid-level CRUD; memakai TomSelect untuk category/brand |
 | `tests/procurement/purchase-requisition.spec.ts` | 6 scenario CRUD + approval flow + signature + sanity | Scenario A `@smoke` (happy path); B reject; C DRAFT cancel; D APPROVED cancel; E header reset; F SPL autofill |
+| `tests/procurement/purchase-order.spec.ts` | 1 sanity + 6 STANDARD PO lifecycle scenarios | Scenario A `@smoke`; B edit DRAFT; C submit→approve→send; D submit→reject approval request; E cancel DRAFT; F delete DRAFT via API |
 | `tests/inventory/stock-adjustment.spec.ts` | 1 sanity + 5 scenario lifecycle | Tag `@inventory`. A create DRAFT; B edit; C process to inventory (DRAFT→COMPLETED); D facility-change clears lines; E delete via API |
 | `tests/auth/rbac.spec.ts` | 16 case (4 role × 4 resource) | Tag `@rbac`. URL guard allow/deny + Create button visibility |
 

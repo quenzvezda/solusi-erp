@@ -3,7 +3,8 @@
 > Source: (no brainstorming doc — derived from autonomous exploration of `purchasing.purchaseorder` slice + `docs/modules/procurement/purchase-order.md`)
 > Created: 2026-05-25
 > Sprint: stabilization continuation; sibling of `2026-05-25-e2e-goods-receipt.md`
-> Status: IN_PROGRESS
+> Status: COMPLETED
+> Completed: 2026-05-25
 
 ## Summary
 
@@ -306,7 +307,7 @@ Steps:
 **Validation criteria:**
 - Scenario F green.
 
-### Task 11: Tag @smoke + finalize + first green run
+### Task 11: Tag @smoke + finalize + first green run [x]
 Confirm only Scenario A carries `@smoke`. Run full suite, target 62/62 (51 + 5
 GR if GR plan ran first + 6 PO; if GR not yet implemented, 57/57). Update
 coverage doc. Bump pom.xml. Commit.
@@ -314,13 +315,13 @@ coverage doc. Bump pom.xml. Commit.
 **Depends on:** Tasks 5-10
 
 Steps:
-- [ ] Confirm only Scenario A has `@smoke`. Sanity, B, C, D, E, F do NOT — Scenario A as create-happy-path matches the project convention (PR Scenario A is also the only `@smoke` in PR spec).
+- [x] Confirm only Scenario A has `@smoke`. Sanity, B, C, D, E, F do NOT — Scenario A as create-happy-path matches the project convention (PR Scenario A is also the only `@smoke` in PR spec).
       ref: .github/workflows/ci-java21.yml:L327-L329 — `--grep @smoke` selection on push to main
-- [ ] Run full e2e suite once via `.\e2e-tests\scripts\run-e2e.ps1` (or `.sh`). Expected: 51 baseline + however many GR scenarios are in tree + 7 PO scenarios (6 numbered + sanity). Confirm all green; if any flaky, capture error-context.md and update `docs/tests/playwright-pitfalls.md` BEFORE marking task done.
-- [ ] Update `docs/tests/playwright-e2e-guide.md` coverage table: add `tests/procurement/purchase-order.spec.ts` row.
-- [ ] Bump `pom.xml` version per AGENTS.md section 9.A. PATCH if no other behavior changes since last bump (1.7.2 or 1.7.3 depending on order with GR plan).
+- [x] Run full e2e suite once via `.\e2e-tests\scripts\run-e2e.ps1` (or `.sh`). Expected: 51 baseline + however many GR scenarios are in tree + 7 PO scenarios (6 numbered + sanity). Confirm all green; if any flaky, capture error-context.md and update `docs/tests/playwright-pitfalls.md` BEFORE marking task done.
+- [x] Update `docs/tests/playwright-e2e-guide.md` coverage table: add `tests/procurement/purchase-order.spec.ts` row.
+- [x] Bump `pom.xml` version per AGENTS.md section 9.A. PATCH if no other behavior changes since last bump (1.7.2 or 1.7.3 depending on order with GR plan).
       ref: pom.xml:L13 — version line
-- [ ] Commit with conventional message `test(e2e): add purchase-order STANDARD smoke flow (7 scenarios)`.
+- [x] Commit with conventional message `test(e2e): add purchase-order STANDARD smoke flow (7 scenarios)`.
 
 **Validation criteria:**
 - `.\e2e-tests\scripts\run-e2e.ps1` green (full suite passing or only retry-recovered flakes).

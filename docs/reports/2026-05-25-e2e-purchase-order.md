@@ -85,3 +85,21 @@
 - **Detail:** `DeletePurchaseOrderUseCaseImpl` soft-deletes DRAFT PO by setting `active=false`, but `PurchaseOrderJpaRepository.search` and `findAllWithLines` did not filter `p.active = true`, so deleted DRAFT POs still rendered on the list.
 - **Action:** Added `p.active = true` predicates to PO list/search JPQL value and count queries.
 - **Ref:** `src/main/java/com/solusi/erp/purchasing/purchaseorder/infrastructure/persistence/PurchaseOrderJpaRepository.java`
+
+## Task 11: Tag @smoke + finalize + first green run
+- **Status:** findings
+- **Summary:** Finalized PO E2E coverage docs, bumped `pom.xml` 1.7.2 -> 1.7.3, closed the plan, and ran the Windows full-suite gate. Final validation passed on the 1.7.3 JAR: `.\\e2e-tests\\scripts\\run-e2e.ps1` reported `58 passed (5.8m)` with no flaky tests; `npx playwright test --grep @smoke --list` includes `Purchase Order flow › @smoke Scenario A — create STANDARD DRAFT from PR`.
+
+### Finding 14: Warehouse seed accidentally changed PR RBAC
+- **Type:** bug
+- **Severity:** warning
+- **Detail:** The PO seed block granted `PR_READ` to `ROLE_WAREHOUSE`, causing the RBAC matrix to allow `/purchasing/purchase-requisitions` for warehouse1. PO STANDARD selectors are protected by `PO_CREATE`/`PO_UPDATE`, so PR list access is not required.
+- **Action:** Removed `PR_READ` from the warehouse PO seed grant and reran the full `.ps1` gate.
+- **Ref:** `src/main/resources/db/migration-h2/V9000__e2e_seed_data.sql`
+
+### Finding 15: Full-suite flakies exposed cold-route and TomSelect waits
+- **Type:** environment
+- **Severity:** info
+- **Detail:** First full-suite reruns produced retry-recovered flakies: Stock Adjustment currency helper waited for TomSelect even though native IDR was already selected, and RBAC first-hit `/security/menu-groups` exceeded default timeout before retry passed.
+- **Action:** Hardened `pickIdrCurrency` to return when native select already has IDR, added `/security/menu-groups` to the Windows runner warmup, added a 60s timeout budget to RBAC matrix cases, and documented the cold-route pitfall.
+- **Ref:** `e2e-tests/tests/inventory/stock-adjustment.spec.ts`, `e2e-tests/scripts/run-e2e.ps1`, `e2e-tests/tests/auth/rbac.spec.ts`, `docs/tests/playwright-pitfalls.md`
