@@ -80,7 +80,23 @@ async function waitForModalSettled(page: Page, modalId: string, opts?: { hidden?
  * while DIRECT is active.
  */
 async function pickPrFromModal(page: Page, prCode: string): Promise<void> {
-  await page.locator('#btn-select-pr').click();
+  // The page auto-opens this modal when STANDARD is selected on a fresh form
+  // (purchase-order-form.js:584). Race-safe: wait briefly for the modal to
+  // already be showing; if not, click #btn-select-pr to open it manually.
+  const opened = await page
+    .waitForFunction(
+      () => {
+        const el = document.getElementById('modal-po-pr-selector');
+        return !!el && el.classList.contains('show');
+      },
+      undefined,
+      { timeout: 2_000 }
+    )
+    .then(() => true)
+    .catch(() => false);
+  if (!opened) {
+    await page.locator('#btn-select-pr').click();
+  }
   await waitForModalSettled(page, 'modal-po-pr-selector');
   // Wait for HTMX results to load — table rows are inside #po-pr-selector-results.
   await page.waitForFunction(
@@ -214,17 +230,15 @@ async function createDraftStandardPo(page: Page): Promise<number> {
     { timeout: 5_000 }
   );
 
-  // Pick tax. The header tax select is initialized via setTomSelectValue —
-  // page JS reads the option's data-rate / data-mode attrs but the
-  // controller's create endpoint validates server-side via taxId only,
-  // populating taxName/taxRate/taxCalculationMode from the looked-up tax.
-  await setTomSelectValue(page, '#header-tax', TAX_ID);
+  // Pick tax. Use payload-aware helper because the page JS reads
+  // option.payload.code/rate/calculationMode to fill hidden form fields.
+  await pickHeaderTax(page, TAX_ID);
 
   // Pick laptop line via modal selector.
   await pickPrLineFromModal(page, 'E2E-PRD-LAPTOP');
 
   // Set unit price on the new line.
-  await setAutoNumeric(page, '#line-container tr.line-row >> nth=0 >> .input-unit-price', 8500000);
+  await setAutoNumeric(page, '#line-container tr.line-row:nth-of-type(1) .input-unit-price', 8500000);
 
   // Submit (data-ajax-form -> redirect on success).
   await Promise.all([
@@ -232,12 +246,16 @@ async function createDraftStandardPo(page: Page): Promise<number> {
     page.locator('#po-form button[type="submit"]').first().click(),
   ]);
 
-  // Capture the new PO id from the highest /view/{id} link on the list.
+  // Wait for list rows to render before extracting id. DRAFT POs render an
+  // Edit link (not View) per list.html condition.
+  await page.locator('a[href*="/purchasing/purchase-orders/edit/"]').first().waitFor({ timeout: 10_000 });
+
+  // Capture the new PO id from the highest /edit/{id} link on the list.
   const newId = await page.evaluate(() => {
-    const links = Array.from(document.querySelectorAll('a[href*="/purchasing/purchase-orders/view/"]'));
+    const links = Array.from(document.querySelectorAll('a[href*="/purchasing/purchase-orders/edit/"]'));
     let max = 0;
     for (const link of links) {
-      const m = (link as HTMLAnchorElement).href.match(/\/view\/(\d+)/);
+      const m = (link as HTMLAnchorElement).href.match(/\/edit\/(\d+)/);
       if (m) {
         const n = Number(m[1]);
         if (n > max) max = n;
@@ -249,6 +267,40 @@ async function createDraftStandardPo(page: Page): Promise<number> {
   return newId;
 }
 
+/**
+ * Pick a tax via TomSelect with full payload. The page JS reads
+ * `option.payload.code/rate/calculationMode` to populate the hidden taxCode/
+ * taxRate/taxCalculationMode form fields (purchase-order-form.js:syncHeaderTaxSelection).
+ * setTomSelectValue alone leaves payload undefined, causing the
+ * `msg.error.po.tax.required` validation on submit.
+ */
+async function pickHeaderTax(page: Page, taxId: string): Promise<void> {
+  await page.waitForFunction(
+    () => {
+      const el = document.querySelector('#header-tax') as (HTMLSelectElement & { tomselect?: unknown }) | null;
+      return !!el && !!el.tomselect;
+    },
+    undefined,
+    { timeout: 10_000 }
+  );
+  const opt = await page.evaluate(async (id) => {
+    // Tax lookup is keyword-based (name/code). Query empty to get all taxes,
+    // then match by id locally. The seed has only a handful of taxes so this
+    // is fine.
+    const res = await fetch(`/api/lookup/master/taxes?q=`, { credentials: 'same-origin' });
+    if (!res.ok) return null;
+    const list = await res.json();
+    return Array.isArray(list) ? list.find((o: { id: string | number }) => String(o.id) === id) ?? null : null;
+  }, taxId);
+  if (!opt) throw new Error(`pickHeaderTax: tax id ${taxId} not found via lookup`);
+  await page.evaluate(({ option }) => {
+    const el = document.querySelector('#header-tax') as HTMLSelectElement & { tomselect?: any };
+    if (!el?.tomselect) throw new Error('TomSelect not initialized: #header-tax');
+    el.tomselect.addOption(option);
+    el.tomselect.setValue(String(option.id));
+  }, { option: opt });
+}
+
 test.describe('Purchase Order flow', () => {
   test.use({ storageState: storageStatePath('warehouse1') });
 
@@ -256,5 +308,33 @@ test.describe('Purchase Order flow', () => {
     await navigateToModule(page, '/purchasing/purchase-orders');
     await expect(page).toHaveURL(/\/purchasing\/purchase-orders(\?.*)?$/);
     await expect(page.locator('table')).toBeVisible();
+  });
+
+  test('@smoke Scenario A — create STANDARD DRAFT from PR', async ({ page }) => {
+    test.setTimeout(120_000);
+
+    // Land on the list first so subsequent fetch() calls have a same-origin
+    // base URL (resolveSeedIds does GET /api/lookup/...).
+    await navigateToModule(page, '/purchasing/purchase-orders');
+    const seed = await resolveSeedIds(page);
+    expect(seed.supplierPartyId, 'supplier seed').toBeTruthy();
+    expect(seed.productLaptopId, 'product seed').toBeTruthy();
+
+    const poId = await createDraftStandardPo(page);
+    expect(poId, 'expected new PO id').toBeGreaterThan(0);
+
+    // View page: badges live in .page-title (status + type).
+    await navigateToModule(page, `/purchasing/purchase-orders/view/${poId}`);
+    await expect(page.locator('.page-title .badge', { hasText: 'DRAFT' })).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('.page-title .badge', { hasText: /Standar/i })).toBeVisible();
+
+    // Reopen the edit page to assert prLineId persisted on the line. The
+    // hidden input lives at name="lines[0].prLineId" with class .input-pr-line-id.
+    await navigateToModule(page, `/purchasing/purchase-orders/edit/${poId}`);
+    const persistedPrLineId = await page.evaluate(() => {
+      const el = document.querySelector('input[name="lines[0].prLineId"]') as HTMLInputElement | null;
+      return el?.value ?? '';
+    });
+    expect(persistedPrLineId).toBe(PR_LINE_LAPTOP_ID);
   });
 });

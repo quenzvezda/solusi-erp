@@ -174,7 +174,7 @@ Steps:
 - Helper compiles, returns a numeric id > 0.
 - Manual trace via `test.only`: server log shows `POST /purchasing/purchase-orders/create` returned 201; the new PO has `prId=9301`, `poType=STANDARD`, status DRAFT.
 
-### Task 5: Scenario A — `@smoke` create STANDARD DRAFT from PR
+### Task 5: Scenario A — `@smoke` create STANDARD DRAFT from PR [x]
 Happy-path create: STANDARD type → PR modal → line modal → save → verify
 DRAFT badge + supplier locked + prLineId persisted (assert via API GET).
 

@@ -12,18 +12,37 @@
 - **Status:** clean (one finding noted below)
 - **Summary:** Extended V9000 with tax id 9001, PR id 9301 + 2 lines (9301 laptop, 9302 chair), and 8 permission grants on ROLE_WAREHOUSE.
 
-## Task 4: Helper — createDraftStandardPo
-- **Status:** clean (one finding noted)
-- **Summary:** Added `createDraftStandardPo(page)` that opens the create form, switches to STANDARD via `label[for="po-type-standard"]` (clicking the visible label drives the hidden radio), picks PR via modal, picks tax via TomSelect, picks laptop line via modal (multi-select pattern), sets unit price, submits, returns new PO id from list page.
+## Task 5: Scenario A — `@smoke` create STANDARD DRAFT from PR
+- **Status:** findings (5 fixes needed during runtime, all resolved)
+- **Summary:** Scenario A green on 7.4s after 5 iteration cycles. Each cycle uncovered a real-world divergence between plan assumptions and runtime behavior — all logged below.
 
-### Finding: Multi-select PR-line modal — checkbox + apply, not per-row pick
+### Finding 1: PR selector modal auto-opens on STANDARD radio click
 - **Type:** gap
-- **Severity:** info
-- **Detail:** Plan assumed pickPrLineFromModal would click a per-row "Choose" button (mirroring `js-pr-selector-pick` in PR header modal). Actual fragment uses `js-pr-line-selector-item` checkboxes per row + a single `js-pr-line-selector-apply` button at the modal footer (multi-select semantics per spec). Helper updated.
-- **Action taken:** Helper now ticks the matching row's checkbox then clicks `.js-pr-line-selector-apply`.
-- **Ref:** src/main/resources/templates/purchasing/purchase-orders/fragments/pr-line-selector-modal.html:L62-L88
+- **Detail:** Plan's `pickPrFromModal` clicks `#btn-select-pr` to open modal. But page JS (`purchase-order-form.js:584-586`) auto-opens the modal when STANDARD type is selected on a fresh form. Click hits the backdrop because modal is already in transition.
+- **Action:** Helper now uses `waitForFunction(modal.classList.contains('show'))` with 2s grace, falling back to button click only if modal isn't already opening. Race-safe.
 
-### Finding: Runtime trace deferred to Scenario A
+### Finding 2: Playwright selector syntax (`>> nth=0 >>`) invalid in `waitForFunction`
+- **Type:** bug
+- **Detail:** `setAutoNumeric` uses `page.waitForFunction` internally; the selector `#line-container tr.line-row >> nth=0 >> .input-unit-price` is Playwright DSL, not CSS — fails inside `document.querySelector`.
+- **Action:** Switched to CSS-native `tr.line-row:nth-of-type(1) .input-unit-price`.
+
+### Finding 3: Tax field needs payload-aware injection (pitfall #2)
+- **Type:** pitfall hit
+- **Severity:** info
+- **Detail:** `setTomSelectValue('#header-tax', TAX_ID)` passed but submit failed with `msg.error.po.tax.required`. Page JS `syncHeaderTaxSelection` reads `option.payload.code/rate/calculationMode` — without payload, hidden form fields stay empty and server validates fail.
+- **Action:** Added `pickHeaderTax(page, taxId)` helper that fetches `/api/lookup/master/taxes?q=` empty (lookup is keyword-on-name, not by id) then matches by id locally and `addOption(opt)` with full payload. Same pattern as PR/SA `selectProductOnLine`.
+
+### Finding 4: Tax lookup is keyword-only on name/code, not id
 - **Type:** decision
-- **Detail:** `createDraftStandardPo` is fully exercised by Scenario A (Task 5) which is the first consumer. Avoiding standalone `test.only` trace to keep iteration tight; if Scenario A fails on the helper steps, fix lives in Task 5 PR.
-- **Action:** tsc --noEmit clean; helper committed for Task 5 to consume.
+- **Detail:** `q=9001` returns nothing because the lookup matches name/code only. Empty `q=` returns the full list (small in seed scope), then filter locally.
+- **Action:** documented in helper comment.
+
+### Finding 5: List page shows /edit/ link for DRAFT, /view/ for non-DRAFT
+- **Type:** gap
+- **Detail:** Plan's id-extraction regex looked for `/view/{id}`. List template (`list.html:105-112`) renders Edit link for DRAFT status and View link for everything else. Newly-created DRAFT PO has no /view/ link on the list.
+- **Action:** Switched extraction to `/edit/{id}` pattern. Other scenarios (B-F) targeting non-DRAFT POs may need /view/ fallback later.
+
+### Finding 6: Type badge label is i18n-translated ("Standar", not "Standard")
+- **Type:** gap
+- **Detail:** Plan asserted badge text matches `/Standard/i`. Indonesian locale renders `label.po.type.STANDARD = Standar` (no trailing 'd').
+- **Action:** Switched assertion to `/Standar/i` (matches both Indonesian and English).
