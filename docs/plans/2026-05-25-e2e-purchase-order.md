@@ -92,7 +92,7 @@ Steps:
 - After server start, an authenticated curl as warehouse1 to `/purchasing/purchase-orders/selectors/purchase-requisitions` returns the seeded PR row.
 - Curl to `/purchasing/purchase-orders/selectors/purchase-requisition-lines?prId=9301` returns 2 lines.
 
-### Task 2: Spec scaffold + warehouse1 sanity scenario
+### Task 2: Spec scaffold + warehouse1 sanity scenario [x]
 Create `e2e-tests/tests/procurement/purchase-order.spec.ts`. File-level
 describe, storage state for warehouse1, fixed seed-id constants, sanity scenario
 that opens the list page.
