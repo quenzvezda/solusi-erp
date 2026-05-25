@@ -22,12 +22,11 @@ test.describe('@smoke Authentication', () => {
     await page.fill('input[name="password"]', 'wrong_pass');
     await page.click('button[type="submit"]');
 
-    // Should stay on login page
-    await page.waitForURL('**/login**', { timeout: 5_000 });
+    // Should stay on login page and render the server-side auth error.
+    await expect(page).toHaveURL(/\/login(\?.*)?$/, { timeout: 10_000 });
 
-    // Should show error message
-    const errorVisible = await page.locator('.alert-danger, .alert-error, .invalid-feedback, [role="alert"]').isVisible();
-    expect(errorVisible).toBe(true);
+    await expect(page.locator('.alert-danger, .alert-error, .invalid-feedback, [role="alert"]').first())
+      .toBeVisible({ timeout: 10_000 });
   });
 
   test('should redirect unauthenticated user to login', async ({ page }) => {

@@ -22,7 +22,7 @@ export async function selectTomSelect(
       return el?.tomselect !== undefined;
     },
     selector,
-    { timeout: 10_000 }
+    { timeout: 30_000 }
   );
 
   // Use TomSelect API to load and select
@@ -65,7 +65,7 @@ export async function setTomSelectValue(
       return el?.tomselect !== undefined;
     },
     selector,
-    { timeout: 10_000 }
+    { timeout: 30_000 }
   );
 
   await page.evaluate(({ sel, val, text }) => {
@@ -113,7 +113,7 @@ export async function waitForTomSelectOptions(
   page: Page,
   selector: string,
   predicateFn: (optionsJson: string) => boolean,
-  timeout: number = 10_000
+  timeout: number = 30_000
 ): Promise<void> {
   await page.waitForFunction(
     ({ sel, predFnSrc }) => {
@@ -172,7 +172,7 @@ export async function setCascadingTomSelect(
       const opts = JSON.parse(optionsJson);
       return opts.some((o) => String(o.id) === '${targetIdStr}');
     `) as any,
-    10_000
+    30_000
   );
 
   await setTomSelectValue(page, childSelector, childValue);

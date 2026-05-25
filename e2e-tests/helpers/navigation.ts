@@ -5,7 +5,7 @@ export async function navigateToModule(page: Page, url: string): Promise<void> {
   // dan rsms.me). Saat CDN slow, load event tidak fire meskipun halaman sudah
   // fully rendered & interaktif. domcontentloaded cukup karena setiap test
   // mengassert readiness elemennya sendiri (mis. expect(form).toBeVisible).
-  await page.goto(url, { waitUntil: 'domcontentloaded' });
+  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60_000 });
   // networkidle adalah best-effort: kalau CDN tetap busy, jangan gagalkan
   // navigasi — test akan retry di assertion berikutnya.
   await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => {});

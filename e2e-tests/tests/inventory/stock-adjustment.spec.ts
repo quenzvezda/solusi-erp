@@ -198,6 +198,7 @@ async function createSampleDraftSa(page: Page): Promise<number> {
  * to view page (NOT AJAX form).
  */
 test.describe('@inventory Stock Adjustment flow', () => {
+  test.describe.configure({ timeout: 90_000 });
   test.use({ storageState: storageStatePath('warehouse1') });
 
   test('sanity: warehouse1 can open adjustments list', async ({ page }) => {

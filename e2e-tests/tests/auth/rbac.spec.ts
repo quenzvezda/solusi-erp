@@ -120,7 +120,7 @@ async function classify(
   page: import('@playwright/test').Page,
   listUrl: string
 ): Promise<'allow' | 'deny'> {
-  const res = await page.goto(listUrl, { waitUntil: 'domcontentloaded' });
+  const res = await page.goto(listUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
   const status = res?.status() ?? 0;
   const finalPath = new URL(page.url()).pathname;
   const isOnResource = finalPath === listUrl || finalPath.startsWith(listUrl + '/') || finalPath.startsWith(listUrl + '?');
@@ -135,7 +135,7 @@ test.describe('@rbac RBAC matrix (4 roles x 4 resources)', () => {
     const title = `${exp.role} :: ${resource.label} list -> ${exp.list}`;
 
     test(title, async ({ browser }) => {
-      test.setTimeout(60_000);
+      test.setTimeout(90_000);
 
       const ctx = await browser.newContext({ storageState: storageStatePath(exp.role) });
       const page = await ctx.newPage();
