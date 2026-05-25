@@ -42,7 +42,16 @@
 - **Detail:** Plan's id-extraction regex looked for `/view/{id}`. List template (`list.html:105-112`) renders Edit link for DRAFT status and View link for everything else. Newly-created DRAFT PO has no /view/ link on the list.
 - **Action:** Switched extraction to `/edit/{id}` pattern. Other scenarios (B-F) targeting non-DRAFT POs may need /view/ fallback later.
 
-### Finding 6: Type badge label is i18n-translated ("Standar", not "Standard")
+## Task 6: Scenario B — Edit DRAFT persists changes (header + line note)
+- **Status:** findings (2 fixes, all resolved)
+- **Summary:** Scenario B green on 5.7s after 2 iterations.
+
+### Finding 7: lines[0].note is a hidden input
 - **Type:** gap
-- **Detail:** Plan asserted badge text matches `/Standard/i`. Indonesian locale renders `label.po.type.STANDARD = Standar` (no trailing 'd').
-- **Action:** Switched assertion to `/Standar/i` (matches both Indonesian and English).
+- **Detail:** Plan assumed `page.fill` works; the input is `<input type="hidden">` populated by the modal selector flow. page.fill rejects hidden inputs as not-editable.
+- **Action:** Set via `page.evaluate` setting `el.value` directly.
+
+### Finding 8: paymentTermDays uses AutoNumeric integer
+- **Type:** gap
+- **Detail:** `fragments/inputs :: integer` includes class `erp-number-integer` which auto-binds AutoNumeric. `page.fill('45')` fills the visible input but AutoNumeric reads from its internal model — submitted value reverts to 30.
+- **Action:** Switched to `setAutoNumeric` helper. Pattern matches PO unit-price handling.

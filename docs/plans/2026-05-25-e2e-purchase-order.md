@@ -199,7 +199,7 @@ Steps:
 - Server log shows `POST /purchasing/purchase-orders/create` 201; payload includes `poType=STANDARD`, `prId=9301`, lines with `prLineId=9301`.
 - DB query (manual via H2 console if needed) shows `pur_purchase_order_lines.pr_line_id = 9301` for the laptop line.
 
-### Task 6: Scenario B — Edit DRAFT persists changes (header + line note)
+### Task 6: Scenario B — Edit DRAFT persists changes (header + line note) [x]
 Get id from `createDraftStandardPo`, navigate to edit page, change `paymentTermDays`
 30 → 45 and a line note, save, reopen, assert persisted.
 

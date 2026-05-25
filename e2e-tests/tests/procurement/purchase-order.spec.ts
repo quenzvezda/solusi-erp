@@ -337,4 +337,48 @@ test.describe('Purchase Order flow', () => {
     });
     expect(persistedPrLineId).toBe(PR_LINE_LAPTOP_ID);
   });
+
+  test('Scenario B — edit DRAFT persists changes', async ({ page }) => {
+    test.setTimeout(60_000);
+
+    await navigateToModule(page, '/purchasing/purchase-orders');
+    await resolveSeedIds(page);
+    const poId = await createDraftStandardPo(page);
+
+    await navigateToModule(page, `/purchasing/purchase-orders/edit/${poId}`);
+    await expect(page.locator('#po-form')).toBeVisible();
+
+    // Per "Edit Header Parity" spec rule: STANDARD radio remains checked but
+    // disabled (locked). Verify lock state — DOM shape sanity.
+    await expect(page.locator('#po-type-standard')).toBeChecked();
+    await expect(page.locator('#po-type-standard')).toBeDisabled();
+
+    // Change paymentTermDays 30 -> 45 and add a line note. paymentTermDays
+    // is AutoNumeric (integer); line note is hidden input populated by modal
+    // selector flow — set both via the appropriate channel.
+    await setAutoNumeric(page, 'input[name="paymentTermDays"]', 45);
+    await page.evaluate(() => {
+      const el = document.querySelector('input[name="lines[0].note"]') as HTMLInputElement | null;
+      if (el) el.value = 'Edited via E2E';
+    });
+
+    // Submit (data-ajax-form -> redirect on success).
+    await Promise.all([
+      page.waitForURL(/\/purchasing\/purchase-orders(\?.*)?$/, { timeout: 15_000, waitUntil: 'domcontentloaded' }),
+      page.locator('#po-form button[type="submit"]').first().click(),
+    ]);
+
+    // Reopen edit page and assert persistence.
+    await navigateToModule(page, `/purchasing/purchase-orders/edit/${poId}`);
+    const persistedTerm = await page.evaluate(() => {
+      const el = document.querySelector('input[name="paymentTermDays"]') as HTMLInputElement | null;
+      return el?.value ?? '';
+    });
+    const persistedNote = await page.evaluate(() => {
+      const el = document.querySelector('input[name="lines[0].note"]') as HTMLInputElement | null;
+      return el?.value ?? '';
+    });
+    expect(persistedTerm).toBe('45');
+    expect(persistedNote).toBe('Edited via E2E');
+  });
 });
