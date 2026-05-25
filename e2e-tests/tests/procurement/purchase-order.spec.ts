@@ -381,4 +381,63 @@ test.describe('Purchase Order flow', () => {
     expect(persistedTerm).toBe('45');
     expect(persistedNote).toBe('Edited via E2E');
   });
+
+  test('Scenario C — submit then approve then send', async ({ page, browser }) => {
+    test.setTimeout(120_000);
+
+    await navigateToModule(page, '/purchasing/purchase-orders');
+    const seed = await resolveSeedIds(page);
+    expect(seed.approver1PartyId, 'approver1 seed').toBeTruthy();
+    const poId = await createDraftStandardPo(page);
+
+    // Submit via API endpoint (POST /{id}/submit?approverId=...).
+    const { headerName, token } = await readCsrf(page);
+    const submitStatus = await page.evaluate(
+      async ({ id, approverId, headerName, token }) => {
+        const headers: Record<string, string> = { Accept: 'application/json' };
+        if (headerName && token) headers[headerName] = token;
+        const r = await fetch(`/purchasing/purchase-orders/${id}/submit?approverId=${approverId}`, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers,
+        });
+        return r.status;
+      },
+      { id: poId, approverId: seed.approver1PartyId, headerName, token }
+    );
+    expect(submitStatus, 'submit endpoint should return 2xx').toBeLessThan(300);
+
+    // Verify SUBMITTED via view page.
+    await navigateToModule(page, `/purchasing/purchase-orders/view/${poId}`);
+    await expect(page.locator('.page-title .badge', { hasText: 'SUBMITTED' })).toBeVisible({ timeout: 10_000 });
+
+    // Switch context to approver1.
+    const approverContext = await browser.newContext({ storageState: storageStatePath('approver1') });
+    const approverPage = await approverContext.newPage();
+    await approverPage.goto(`/purchasing/purchase-orders/view/${poId}`, { waitUntil: 'domcontentloaded' });
+
+    const approvalRequestId = await approverPage.evaluate(() => {
+      const el = document.getElementById('current-approval-request-id') as HTMLInputElement | null;
+      return el?.value ?? '';
+    });
+    expect(approvalRequestId, 'approvalRequestId hidden field present').toBeTruthy();
+
+    const resp = await processApproval(approverPage, approvalRequestId, 'APPROVE_AND_FINISH', 'E2E approve');
+    expect(resp.status, `approval /process status — body: ${resp.body}`).toBeLessThan(400);
+
+    // Reload approver page, assert APPROVED.
+    await approverPage.goto(`/purchasing/purchase-orders/view/${poId}`, { waitUntil: 'domcontentloaded' });
+    await expect(approverPage.locator('.page-title .badge', { hasText: 'APPROVED' })).toBeVisible({ timeout: 15_000 });
+    await approverContext.close();
+
+    // Switch back to warehouse1 — send to supplier.
+    await navigateToModule(page, `/purchasing/purchase-orders/view/${poId}`);
+    await expect(page.locator('.page-title .badge', { hasText: 'APPROVED' })).toBeVisible({ timeout: 10_000 });
+
+    // Click "Send to Supplier" -> ErpForm.postAction opens confirm modal.
+    await page.locator('#btn-send-po, button[onclick*="ErpForm.postAction"]').filter({ hasText: /Send|Kirim/i }).first().click();
+    await page.locator('#confirm-modal-btn-yes').click();
+    await page.waitForURL(new RegExp(`/purchasing/purchase-orders/view/${poId}`), { timeout: 15_000, waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.page-title .badge', { hasText: 'SENT' })).toBeVisible({ timeout: 15_000 });
+  });
 });

@@ -221,7 +221,7 @@ Steps:
 - Scenario B green.
 - DB row in `pur_purchase_orders` shows `payment_term_days=45` for the test PO id; line note column = 'Edited via E2E'.
 
-### Task 7: Scenario C — Submit → approver approves → SENT
+### Task 7: Scenario C — Submit → approver approves → SENT [x]
 Get id, submit via `POST /{id}/submit?approverId={approver1PartyId}`. Switch
 context to approver1, call `processApproval(...APPROVE_AND_FINISH...)`. Reopen
 PO view, assert APPROVED badge. Switch back to warehouse1, click "Kirim ke

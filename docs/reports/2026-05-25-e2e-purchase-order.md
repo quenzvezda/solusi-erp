@@ -51,7 +51,11 @@
 - **Detail:** Plan assumed `page.fill` works; the input is `<input type="hidden">` populated by the modal selector flow. page.fill rejects hidden inputs as not-editable.
 - **Action:** Set via `page.evaluate` setting `el.value` directly.
 
-### Finding 8: paymentTermDays uses AutoNumeric integer
-- **Type:** gap
-- **Detail:** `fragments/inputs :: integer` includes class `erp-number-integer` which auto-binds AutoNumeric. `page.fill('45')` fills the visible input but AutoNumeric reads from its internal model — submitted value reverts to 30.
-- **Action:** Switched to `setAutoNumeric` helper. Pattern matches PO unit-price handling.
+## Task 7: Scenario C — Submit → approver approves → SENT
+- **Status:** clean (one finding logged)
+- **Summary:** Scenario C green on 9.8s. Full lifecycle DRAFT → SUBMITTED → APPROVED → SENT exercised end-to-end with role switch.
+
+### Finding 9: approval-req hidden field is `current-approval-request-id`
+- **Type:** decision
+- **Detail:** Plan referenced `cur-approval-req-id` (PR spec terminology). Actual id is `current-approval-request-id` (per `fragments/approval.html`).
+- **Action:** Used the correct id; PR spec's existing `current-approval-request-id` already matches.
