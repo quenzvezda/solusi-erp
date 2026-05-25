@@ -29,7 +29,7 @@ File utama:
 | Test root | `e2e-tests/tests/` | Spec Playwright |
 | Fixtures | `e2e-tests/fixtures/base.ts` | Auto-login untuk test yang memakai fixture ini |
 | Helpers | `e2e-tests/helpers/` | Helper form, auth, navigation, TomSelect, AutoNumeric, wait |
-| Local runner | `e2e-tests/scripts/run-poc.ps1` / `.sh` | Build app, start server, install Playwright, run tests |
+| Local runner | `e2e-tests/scripts/run-e2e.ps1` / `.sh` | Build app, start server, install Playwright, run tests |
 | IntelliJ runner | `.run/E2E Tests (Windows).run.xml` | One-click local E2E runner di JetBrains IDE |
 | CI | `.github/workflows/ci-java21.yml` job `e2e-tests` | E2E di GitHub Actions setelah `full-tests` |
 
@@ -108,7 +108,7 @@ Windows direkomendasikan memakai PowerShell 7 (`pwsh`) bila tersedia.
 Dari root project:
 
 ```powershell
-.\e2e-tests\scripts\run-poc.ps1
+.\e2e-tests\scripts\run-e2e.ps1
 ```
 
 Script melakukan:
@@ -136,13 +136,13 @@ Catatan Windows UX:
 Dari root project:
 
 ```bash
-./e2e-tests/scripts/run-poc.sh
+./e2e-tests/scripts/run-e2e.sh
 ```
 
 Jika file belum executable:
 
 ```bash
-chmod +x e2e-tests/scripts/run-poc.sh
+chmod +x e2e-tests/scripts/run-e2e.sh
 ```
 
 Script melakukan:
@@ -159,7 +159,7 @@ Script melakukan:
 Untuk Linux fresh machine yang belum punya dependency OS Chromium, jalankan sekali dengan:
 
 ```bash
-INSTALL_PLAYWRIGHT_DEPS=1 ./e2e-tests/scripts/run-poc.sh
+INSTALL_PLAYWRIGHT_DEPS=1 ./e2e-tests/scripts/run-e2e.sh
 ```
 
 Mode ini menjalankan `npx playwright install chromium --with-deps` dan dapat meminta password `sudo` karena Playwright perlu menginstall package sistem. Untuk daily run atau IntelliJ runner, gunakan mode default tanpa `INSTALL_PLAYWRIGHT_DEPS` agar fokus output tetap pada Playwright.
