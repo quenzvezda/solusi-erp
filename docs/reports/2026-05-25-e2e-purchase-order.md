@@ -74,3 +74,14 @@
 ## Task 9: Scenario E — Cancel DRAFT
 - **Status:** clean
 - **Summary:** Added Scenario E to create a STANDARD DRAFT PO, cancel it via CSRF-protected `POST /purchasing/purchase-orders/{id}/cancel`, and verify the view badge shows `CANCELLED`. Validation passed: `npx tsc --noEmit`, Playwright `--list`, and `npx playwright test tests/procurement/purchase-order.spec.ts -g "Scenario E"` (5 passed including setup).
+
+## Task 10: Scenario F — Delete DRAFT via API
+- **Status:** findings
+- **Summary:** Added Scenario F to create a STANDARD DRAFT PO, delete it via CSRF-protected `DELETE /purchasing/purchase-orders/{id}`, and verify the list no longer exposes edit/view links for that PO. Validation passed after backend list-query fix: `.\\mvnw -B package -DskipTests -Pe2e -q` and `npx playwright test tests/procurement/purchase-order.spec.ts -g "Scenario F"` (5 passed including setup).
+
+### Finding 13: PO list query included soft-deleted rows
+- **Type:** bug
+- **Severity:** warning
+- **Detail:** `DeletePurchaseOrderUseCaseImpl` soft-deletes DRAFT PO by setting `active=false`, but `PurchaseOrderJpaRepository.search` and `findAllWithLines` did not filter `p.active = true`, so deleted DRAFT POs still rendered on the list.
+- **Action:** Added `p.active = true` predicates to PO list/search JPQL value and count queries.
+- **Ref:** `src/main/java/com/solusi/erp/purchasing/purchaseorder/infrastructure/persistence/PurchaseOrderJpaRepository.java`

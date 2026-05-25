@@ -18,15 +18,17 @@ public interface PurchaseOrderJpaRepository extends JpaRepository<PurchaseOrderE
     Optional<PurchaseOrderEntity> findByIdWithLines(@Param("id") Long id);
 
     @Query(value = "SELECT DISTINCT p FROM PurchaseOrderEntity p LEFT JOIN FETCH p.lines WHERE " +
+           "p.active = true AND (" +
            "LOWER(p.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "LOWER(p.note) LIKE LOWER(CONCAT('%', :keyword, '%'))",
+           "LOWER(p.note) LIKE LOWER(CONCAT('%', :keyword, '%')))",
            countQuery = "SELECT COUNT(p) FROM PurchaseOrderEntity p WHERE " +
+           "p.active = true AND (" +
            "LOWER(p.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "LOWER(p.note) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+           "LOWER(p.note) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<PurchaseOrderEntity> search(@Param("keyword") String keyword, Pageable pageable);
 
-    @Query(value = "SELECT DISTINCT p FROM PurchaseOrderEntity p LEFT JOIN FETCH p.lines",
-           countQuery = "SELECT COUNT(p) FROM PurchaseOrderEntity p")
+    @Query(value = "SELECT DISTINCT p FROM PurchaseOrderEntity p LEFT JOIN FETCH p.lines WHERE p.active = true",
+           countQuery = "SELECT COUNT(p) FROM PurchaseOrderEntity p WHERE p.active = true")
     Page<PurchaseOrderEntity> findAllWithLines(Pageable pageable);
 
     @Query("""

@@ -548,4 +548,34 @@ test.describe('Purchase Order flow', () => {
     await navigateToModule(page, `/purchasing/purchase-orders/view/${poId}`);
     await expect(page.locator('.page-title .badge', { hasText: 'CANCELLED' })).toBeVisible({ timeout: 10_000 });
   });
+
+  test('Scenario F — delete DRAFT via API endpoint', async ({ page }) => {
+    test.setTimeout(60_000);
+
+    await navigateToModule(page, '/purchasing/purchase-orders');
+    await resolveSeedIds(page);
+    const poId = await createDraftStandardPo(page, 'E2E-PRD-LAPTOP');
+
+    // Make sure list page CSRF meta is available before issuing DELETE.
+    await navigateToModule(page, '/purchasing/purchase-orders');
+    const { headerName, token } = await readCsrf(page);
+    const deleteResp = await page.evaluate(
+      async ({ id, headerName, token }) => {
+        const headers: Record<string, string> = { Accept: 'application/json' };
+        if (headerName && token) headers[headerName] = token;
+        const r = await fetch(`/purchasing/purchase-orders/${id}`, {
+          method: 'DELETE',
+          credentials: 'same-origin',
+          headers,
+        });
+        return { status: r.status, body: await r.text() };
+      },
+      { id: poId, headerName, token }
+    );
+    expect(deleteResp.status, `DELETE endpoint body: ${deleteResp.body}`).toBeLessThan(300);
+
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await expect(page.locator(`a[href="/purchasing/purchase-orders/edit/${poId}"]`)).toHaveCount(0);
+    await expect(page.locator(`a[href="/purchasing/purchase-orders/view/${poId}"]`)).toHaveCount(0);
+  });
 });

@@ -290,18 +290,18 @@ Steps:
 **Validation criteria:**
 - Scenario E green.
 
-### Task 10: Scenario F — Delete DRAFT via API
+### Task 10: Scenario F — Delete DRAFT via API [x]
 CSRF + DELETE pattern, mirror SA Scenario E and GR Scenario D.
 
 **Depends on:** Task 5
 
 Steps:
-- [ ] Add `test('Scenario F — delete DRAFT via API endpoint', ...)`.
-- [ ] Setup: createDraftStandardPo. Navigate `/purchasing/purchase-orders` for CSRF carrier.
-- [ ] In `page.evaluate`, fetch `DELETE /purchasing/purchase-orders/{id}` with CSRF headers. Assert status < 300.
+- [x] Add `test('Scenario F — delete DRAFT via API endpoint', ...)`.
+- [x] Setup: createDraftStandardPo. Navigate `/purchasing/purchase-orders` for CSRF carrier.
+- [x] In `page.evaluate`, fetch `DELETE /purchasing/purchase-orders/{id}` with CSRF headers. Assert status < 300.
       ref: e2e-tests/tests/inventory/stock-adjustment.spec.ts — Scenario E DELETE pattern (verbatim adapt URL)
-- [ ] Reload list, assert `a[href="/purchasing/purchase-orders/view/{id}"]` count is 0.
-- [ ] Run `npx playwright test tests/procurement/purchase-order.spec.ts -g "Scenario F"` green.
+- [x] Reload list, assert `a[href="/purchasing/purchase-orders/view/{id}"]` count is 0.
+- [x] Run `npx playwright test tests/procurement/purchase-order.spec.ts -g "Scenario F"` green.
 
 **Validation criteria:**
 - Scenario F green.
