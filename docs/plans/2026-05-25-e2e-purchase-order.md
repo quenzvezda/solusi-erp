@@ -144,7 +144,7 @@ Steps:
 - `npx tsc --noEmit` clean after helpers added.
 - Drop a temporary `test.only(...)` exercising pickPrFromModal in isolation; confirm it adds the expected supplier text + locks the supplier autocomplete. Remove `test.only` before commit.
 
-### Task 4: Helper — createDraftStandardPo
+### Task 4: Helper — createDraftStandardPo [x]
 Factor a `createDraftStandardPo(page, seed)` that: opens create form, picks
 STANDARD type, picks PR via modal, picks one PR line via modal, sets unit price
 (AutoNumeric), picks tax via autocomplete, saves, captures new PO id from list.

@@ -1,5 +1,7 @@
 import { test, expect, storageStatePath } from '../../fixtures/base';
 import { navigateToModule } from '../../helpers/navigation';
+import { setTomSelectValue } from '../../helpers/tomselect';
+import { setAutoNumeric } from '../../helpers/autonumeric';
 import { Page } from '@playwright/test';
 
 /**
@@ -114,20 +116,20 @@ async function pickPrLineFromModal(page: Page, productCode: string): Promise<voi
     productCode,
     { timeout: 10_000 }
   );
-  // Find the matching row by product code (dataset.productSubtext holds the
-  // product code per the modal's data attributes), click its pick button.
-  const rowSelector = await page.evaluate((code) => {
+  // Modal uses multi-select: tick the checkbox in the matching row, then click
+  // the global "Apply" button at the modal footer.
+  const prLineId = await page.evaluate((code) => {
     const rows = Array.from(
       document.querySelectorAll('#po-pr-line-selector-results tr[data-pr-line-id]')
     ) as HTMLElement[];
     const target = rows.find((r) => (r.dataset.productSubtext ?? '').includes(code));
     return target ? target.dataset.prLineId : null;
   }, productCode);
-  if (!rowSelector) throw new Error(`pickPrLineFromModal: no row matched ${productCode}`);
+  if (!prLineId) throw new Error(`pickPrLineFromModal: no row matched ${productCode}`);
   await page
-    .locator(`#po-pr-line-selector-results tr[data-pr-line-id="${rowSelector}"] button.js-pr-line-selector-pick, #po-pr-line-selector-results tr[data-pr-line-id="${rowSelector}"] button.btn-primary`)
-    .first()
-    .click();
+    .locator(`#po-pr-line-selector-results tr[data-pr-line-id="${prLineId}"] .js-pr-line-selector-item`)
+    .check();
+  await page.locator('#po-pr-line-selector-results .js-pr-line-selector-apply').click();
   await waitForModalSettled(page, 'modal-po-pr-line-selector', { hidden: true });
   await expect(page.locator('#line-container tr.line-row')).toHaveCount(prevCount + 1, { timeout: 5_000 });
 }
@@ -179,6 +181,72 @@ async function processApproval(
     },
     { id: approvalRequestId, headerName, token, action, notes }
   );
+}
+
+/**
+ * Create a DRAFT STANDARD PO from the seeded APPROVED PR (id 9301):
+ * - opens create form
+ * - selects STANDARD radio
+ * - picks PR via modal -> auto-fills supplier/facility/currency (locked)
+ * - picks tax via TomSelect
+ * - picks the laptop PR line via modal -> appends row, qty defaults to remaining
+ * - sets unit price via AutoNumeric
+ * - submits, waits for redirect
+ * - returns the new PO id captured from the list page
+ */
+async function createDraftStandardPo(page: Page): Promise<number> {
+  await navigateToModule(page, '/purchasing/purchase-orders/create');
+  await expect(page.locator('#po-form')).toBeVisible();
+
+  // Switch to STANDARD type. The label triggers the hidden radio input.
+  await page.locator('label[for="po-type-standard"]').click();
+  await expect(page.locator('#btn-select-pr')).toBeEnabled({ timeout: 5_000 });
+
+  // Pick PR -> page JS auto-fills supplier/facility/currency and locks them.
+  await pickPrFromModal(page, 'E2E-PR-9301');
+  // Wait for currency lock effect (proves cascade ran).
+  await page.waitForFunction(
+    () => {
+      const el = document.querySelector('#input-pr-id') as HTMLInputElement | null;
+      return !!el && el.value !== '';
+    },
+    undefined,
+    { timeout: 5_000 }
+  );
+
+  // Pick tax. The header tax select is initialized via setTomSelectValue —
+  // page JS reads the option's data-rate / data-mode attrs but the
+  // controller's create endpoint validates server-side via taxId only,
+  // populating taxName/taxRate/taxCalculationMode from the looked-up tax.
+  await setTomSelectValue(page, '#header-tax', TAX_ID);
+
+  // Pick laptop line via modal selector.
+  await pickPrLineFromModal(page, 'E2E-PRD-LAPTOP');
+
+  // Set unit price on the new line.
+  await setAutoNumeric(page, '#line-container tr.line-row >> nth=0 >> .input-unit-price', 8500000);
+
+  // Submit (data-ajax-form -> redirect on success).
+  await Promise.all([
+    page.waitForURL(/\/purchasing\/purchase-orders(\?.*)?$/, { timeout: 15_000, waitUntil: 'domcontentloaded' }),
+    page.locator('#po-form button[type="submit"]').first().click(),
+  ]);
+
+  // Capture the new PO id from the highest /view/{id} link on the list.
+  const newId = await page.evaluate(() => {
+    const links = Array.from(document.querySelectorAll('a[href*="/purchasing/purchase-orders/view/"]'));
+    let max = 0;
+    for (const link of links) {
+      const m = (link as HTMLAnchorElement).href.match(/\/view\/(\d+)/);
+      if (m) {
+        const n = Number(m[1]);
+        if (n > max) max = n;
+      }
+    }
+    return max;
+  });
+  if (!newId) throw new Error('createDraftStandardPo: could not determine new PO id from list');
+  return newId;
 }
 
 test.describe('Purchase Order flow', () => {
