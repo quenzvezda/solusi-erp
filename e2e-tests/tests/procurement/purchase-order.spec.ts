@@ -49,6 +49,138 @@ async function resolveSeedIds(page: Page): Promise<{
   };
 }
 
+/**
+ * Wait for a Bootstrap modal/offcanvas to fully transition (no .show, no
+ * .hiding, no .showing classes). Replaces toBeHidden polling which is flaky
+ * across the suite for Bootstrap 5 transitions.
+ */
+async function waitForModalSettled(page: Page, modalId: string, opts?: { hidden?: boolean }): Promise<void> {
+  await page.waitForFunction(
+    ({ id, expectHidden }) => {
+      const el = document.getElementById(id);
+      if (!el) return expectHidden === true;
+      const classes = el.classList;
+      const intermediate = classes.contains('hiding') || classes.contains('showing');
+      if (intermediate) return false;
+      if (expectHidden) return !classes.contains('show');
+      return classes.contains('show');
+    },
+    { id: modalId, expectHidden: opts?.hidden ?? false },
+    { timeout: 10_000 }
+  );
+}
+
+/**
+ * Open the PR selector modal, pick the row matching `prCode`, and click its
+ * "Choose" button. Waits for the modal to close before returning.
+ *
+ * Note: STANDARD radio must already be selected — `#btn-select-pr` is disabled
+ * while DIRECT is active.
+ */
+async function pickPrFromModal(page: Page, prCode: string): Promise<void> {
+  await page.locator('#btn-select-pr').click();
+  await waitForModalSettled(page, 'modal-po-pr-selector');
+  // Wait for HTMX results to load — table rows are inside #po-pr-selector-results.
+  await page.waitForFunction(
+    (code) => {
+      const row = document.querySelector(`#po-pr-selector-results tr[data-pr-code="${code}"]`);
+      return row !== null;
+    },
+    prCode,
+    { timeout: 10_000 }
+  );
+  await page
+    .locator(`#po-pr-selector-results tr[data-pr-code="${prCode}"] .js-pr-selector-pick`)
+    .click();
+  await waitForModalSettled(page, 'modal-po-pr-selector', { hidden: true });
+}
+
+/**
+ * Open the PR-line selector modal (via "Add Line" button in STANDARD mode),
+ * pick the row matching `productCode`, and click its choose button. Waits for
+ * modal to close + new row to be appended to #line-container.
+ */
+async function pickPrLineFromModal(page: Page, productCode: string): Promise<void> {
+  const prevCount = await page.locator('#line-container tr.line-row').count();
+  await page.locator('#btn-add-line').click();
+  await waitForModalSettled(page, 'modal-po-pr-line-selector');
+  await page.waitForFunction(
+    (code) => {
+      const rows = Array.from(
+        document.querySelectorAll('#po-pr-line-selector-results tr[data-pr-line-id]')
+      ) as HTMLElement[];
+      return rows.some((r) => (r.dataset.productSubtext ?? '').includes(code));
+    },
+    productCode,
+    { timeout: 10_000 }
+  );
+  // Find the matching row by product code (dataset.productSubtext holds the
+  // product code per the modal's data attributes), click its pick button.
+  const rowSelector = await page.evaluate((code) => {
+    const rows = Array.from(
+      document.querySelectorAll('#po-pr-line-selector-results tr[data-pr-line-id]')
+    ) as HTMLElement[];
+    const target = rows.find((r) => (r.dataset.productSubtext ?? '').includes(code));
+    return target ? target.dataset.prLineId : null;
+  }, productCode);
+  if (!rowSelector) throw new Error(`pickPrLineFromModal: no row matched ${productCode}`);
+  await page
+    .locator(`#po-pr-line-selector-results tr[data-pr-line-id="${rowSelector}"] button.js-pr-line-selector-pick, #po-pr-line-selector-results tr[data-pr-line-id="${rowSelector}"] button.btn-primary`)
+    .first()
+    .click();
+  await waitForModalSettled(page, 'modal-po-pr-line-selector', { hidden: true });
+  await expect(page.locator('#line-container tr.line-row')).toHaveCount(prevCount + 1, { timeout: 5_000 });
+}
+
+/**
+ * Fetch CSRF header name + token from page meta tags. Test must have navigated
+ * to a logged-in page first.
+ */
+async function readCsrf(page: Page): Promise<{ headerName: string; token: string }> {
+  return await page.evaluate(() => {
+    const headerMeta = document.querySelector('meta[name="_csrf_header"]') as HTMLMetaElement | null;
+    const tokenMeta = document.querySelector('meta[name="_csrf"]') as HTMLMetaElement | null;
+    return {
+      headerName: headerMeta?.content ?? 'X-XSRF-TOKEN',
+      token: tokenMeta?.content ?? '',
+    };
+  });
+}
+
+/**
+ * Process an approval decision via /common/approval/{id}/process. Verbatim
+ * port of PR spec's helper — endpoint is generic across reference types.
+ */
+async function processApproval(
+  approverPage: Page,
+  approvalRequestId: string,
+  action: 'APPROVE_AND_FINISH' | 'REJECTED',
+  notes: string
+): Promise<{ status: number; body: string }> {
+  const { headerName, token } = await readCsrf(approverPage);
+  return await approverPage.evaluate(
+    async ({ id, headerName, token, action, notes }) => {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
+      if (headerName && token) headers[headerName] = token;
+      const body: Record<string, unknown> = { action, notes };
+      if (action === 'APPROVE_AND_FINISH') {
+        const canvas = document.getElementById('sig-canvas-approve-finish') as HTMLCanvasElement | null;
+        if (canvas) body.signatureBase64 = canvas.toDataURL('image/png');
+      }
+      const r = await fetch(`/common/approval/${id}/process`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
+      return { status: r.status, body: await r.text() };
+    },
+    { id: approvalRequestId, headerName, token, action, notes }
+  );
+}
+
 test.describe('Purchase Order flow', () => {
   test.use({ storageState: storageStatePath('warehouse1') });
 

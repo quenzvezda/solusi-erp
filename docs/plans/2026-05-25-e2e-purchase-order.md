@@ -117,7 +117,7 @@ Steps:
 - `npx playwright test tests/procurement/purchase-order.spec.ts --list` shows 1 scenario.
 - Sanity scenario runs green.
 
-### Task 3: Helpers — pickPrFromModal + pickPrLineFromModal + processApproval reuse
+### Task 3: Helpers — pickPrFromModal + pickPrLineFromModal + processApproval reuse [x]
 Three local helpers: (a) open PR selector modal, pick PR by code; (b) open PR
 line selector modal, pick line by product code; (c) factor `processApproval`
 identical to PR spec's helper. Place all in spec file (private). Reuse class-based
