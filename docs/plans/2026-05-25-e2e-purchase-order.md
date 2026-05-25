@@ -273,19 +273,19 @@ Steps:
 - Scenario D green.
 - DB row: `status=REJECTED`. Approval request state: REJECTED.
 
-### Task 9: Scenario E — Cancel DRAFT
+### Task 9: Scenario E — Cancel DRAFT [x]
 Get id, click cancel button on edit form (or POST `/{id}/cancel`), assert
 CANCELLED badge on view.
 
 **Depends on:** Task 5
 
 Steps:
-- [ ] Add `test('Scenario E — cancel DRAFT', ...)`. `test.setTimeout(60_000)`.
-- [ ] Setup: same-origin landing, resolveSeed, createDraftStandardPo.
-- [ ] Cancel via fetch with CSRF: `POST /purchasing/purchase-orders/{id}/cancel`. Assert status < 400. (Form button could also be clicked, but API path is more deterministic and `PO_UPDATE` permission already granted.)
+- [x] Add `test('Scenario E — cancel DRAFT', ...)`. `test.setTimeout(60_000)`.
+- [x] Setup: same-origin landing, resolveSeed, createDraftStandardPo.
+- [x] Cancel via fetch with CSRF: `POST /purchasing/purchase-orders/{id}/cancel`. Assert status < 400. (Form button could also be clicked, but API path is more deterministic and `PO_UPDATE` permission already granted.)
       ref: src/main/java/com/solusi/erp/purchasing/purchaseorder/web/controller/PurchaseOrderController.java:L222-L230 — cancel endpoint
-- [ ] Navigate to `/view/{poId}`. Assert badge "CANCELLED".
-- [ ] Run `npx playwright test tests/procurement/purchase-order.spec.ts -g "Scenario E"` green.
+- [x] Navigate to `/view/{poId}`. Assert badge "CANCELLED".
+- [x] Run `npx playwright test tests/procurement/purchase-order.spec.ts -g "Scenario E"` green.
 
 **Validation criteria:**
 - Scenario E green.

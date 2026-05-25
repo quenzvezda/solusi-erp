@@ -70,3 +70,7 @@
 - **Type:** environment
 - **Detail:** First Scenario D run with `waitUntil: 'domcontentloaded'` succeeded; subsequent retries occasionally stalled at 30s. Likely CDN load (cdn.jsdelivr.net, rsms.me) on cold approver context.
 - **Action:** Made `waitUntil: 'domcontentloaded'` explicit + bumped timeout to 30s (was using default 15s navigationTimeout). May still flake under heavy CDN load — to monitor in finalize run.
+
+## Task 9: Scenario E — Cancel DRAFT
+- **Status:** clean
+- **Summary:** Added Scenario E to create a STANDARD DRAFT PO, cancel it via CSRF-protected `POST /purchasing/purchase-orders/{id}/cancel`, and verify the view badge shows `CANCELLED`. Validation passed: `npx tsc --noEmit`, Playwright `--list`, and `npx playwright test tests/procurement/purchase-order.spec.ts -g "Scenario E"` (5 passed including setup).

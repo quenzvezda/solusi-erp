@@ -521,4 +521,31 @@ test.describe('Purchase Order flow', () => {
 
     await approverContext.close();
   });
+
+  test('Scenario E — cancel DRAFT', async ({ page }) => {
+    test.setTimeout(60_000);
+
+    await navigateToModule(page, '/purchasing/purchase-orders');
+    await resolveSeedIds(page);
+    const poId = await createDraftStandardPo(page, 'E2E-PRD-LAPTOP');
+
+    const { headerName, token } = await readCsrf(page);
+    const cancelResp = await page.evaluate(
+      async ({ id, headerName, token }) => {
+        const headers: Record<string, string> = { Accept: 'application/json' };
+        if (headerName && token) headers[headerName] = token;
+        const r = await fetch(`/purchasing/purchase-orders/${id}/cancel`, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers,
+        });
+        return { status: r.status, body: await r.text() };
+      },
+      { id: poId, headerName, token }
+    );
+    expect(cancelResp.status, `cancel endpoint body: ${cancelResp.body}`).toBeLessThan(300);
+
+    await navigateToModule(page, `/purchasing/purchase-orders/view/${poId}`);
+    await expect(page.locator('.page-title .badge', { hasText: 'CANCELLED' })).toBeVisible({ timeout: 10_000 });
+  });
 });
