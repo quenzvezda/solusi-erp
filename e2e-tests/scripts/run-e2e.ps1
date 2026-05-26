@@ -70,6 +70,8 @@ try {
             '/inventory/uoms/create',
             '/purchasing/purchase-requisitions',
             '/purchasing/purchase-requisitions/create',
+            '/purchasing/purchase-orders',
+            '/purchasing/purchase-orders/create',
             '/purchasing/supplier-price-lists',
             '/security/menu-groups'
         )

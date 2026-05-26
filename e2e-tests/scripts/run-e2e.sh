@@ -7,9 +7,12 @@ SERVER_ERR_LOG="$PROJECT_ROOT/target/e2e-server-err.log"
 
 echo "=== Building JAR with e2e profile ==="
 cd "$PROJECT_ROOT"
+# Remove stale versioned JARs before building. Bash globs are sorted
+# lexicographically, so `head -1` can otherwise boot an older artifact.
+rm -f target/solusi-program-erp-*.jar
 ./mvnw -B package -DskipTests -Pe2e -q
 
-JAR=$(ls target/solusi-program-erp-*.jar | head -1)
+JAR=$(ls -t target/solusi-program-erp-*.jar | head -1)
 echo "=== Starting server: $JAR ==="
 echo "Spring Boot logs: $SERVER_LOG"
 echo "Spring Boot errors: $SERVER_ERR_LOG"
@@ -70,6 +73,8 @@ WARMUP_URLS=(
     "/inventory/uoms/create"
     "/purchasing/purchase-requisitions"
     "/purchasing/purchase-requisitions/create"
+    "/purchasing/purchase-orders"
+    "/purchasing/purchase-orders/create"
     "/purchasing/supplier-price-lists"
 )
 for u in "${WARMUP_URLS[@]}"; do
