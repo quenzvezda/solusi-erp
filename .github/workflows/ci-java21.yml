@@ -297,6 +297,27 @@ jobs:
       - name: Make scripts executable
         run: chmod +x mvnw e2e-tests/scripts/run-e2e.sh
 
+      - name: Start MinIO for E2E
+        run: |
+          docker run -d --name minio-e2e \
+            -p 9000:9000 \
+            -p 9001:9001 \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin \
+            minio/minio:latest server /data --console-address ":9001"
+
+          for i in {1..30}; do
+            if curl -fsS http://localhost:9000/minio/health/live >/dev/null; then
+              echo "MinIO ready after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+
+          echo "MinIO failed to start"
+          docker logs minio-e2e
+          exit 1
+
       - name: Run Playwright E2E via shared runner
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
