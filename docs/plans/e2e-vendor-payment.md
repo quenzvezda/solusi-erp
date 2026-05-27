@@ -2,7 +2,7 @@
 
 > Source: (direct request — no brainstorming doc)
 > Created: 2026-05-27
-> Status: PENDING
+> Status: IN_PROGRESS
 
 ## Summary
 
@@ -37,23 +37,23 @@ Add COA accounts, bank account, VENDOR_BILL accounting schema, and ensure VENDOR
 - VENDOR_PAYMENT accounting schema = exists in V62 but schema lines may be empty if COA codes don't exist
 
 Steps:
-- [ ] Add COA accounts to V9000 seed:
+- [x] Add COA accounts to V9000 seed:
   - `9403` code `1120` 'E2E Bank' (ASSET/DEBIT) — for VP bank out
   - `9404` code `2120` 'E2E Accounts Payable' (LIABILITY/CREDIT) — for VB AP posting
   - `9405` code `1140` 'E2E Tax Receivable' (ASSET/DEBIT) — for VB Input VAT
       ref: src/main/resources/db/migration-h2/V9000__e2e_seed_data.sql:L233-L238 — existing COA seed pattern
-- [ ] Add VENDOR_BILL accounting schema (id 9402) with schema lines:
+- [x] Add VENDOR_BILL accounting schema (id 9402) with schema lines:
   - `VB_GRIR_CLEARING_AMT` → 9402 (GR/IR Clearing, code 2110) DEBIT
   - `VB_TAX_AMT` → 9405 (Tax Receivable) DEBIT
   - `VB_AP_TOTAL` → 9404 (Accounts Payable) CREDIT
       ref: docs/modules/accountspayable/vendor-bill.md:L176-L189 — VENDOR_BILL journal variables
-- [ ] Add VENDOR_PAYMENT accounting schema (id 9403) with schema lines:
+- [x] Add VENDOR_PAYMENT accounting schema (id 9403) with schema lines:
   - `VP_AP_AMT` → 9404 (Accounts Payable) DEBIT
   - `VP_BANK_OUT_AMT` → 9403 (Bank) CREDIT
   - `VP_FX_LOSS_AMT` → 9403 (Bank) DEBIT (placeholder, won't fire in happy path with rate=1)
   - `VP_FX_GAIN_AMT` → 9403 (Bank) CREDIT (placeholder, won't fire in happy path with rate=1)
       ref: src/main/resources/db/migration-h2/V62__Vendor_Payment_Accounting_Schema.sql — production VP schema
-- [ ] Add bank account seed (id 9501):
+- [x] Add bank account seed (id 9501):
   - `code`: 'E2E-BA-001'
   - `bank_name`: 'E2E Bank'
   - `account_name`: 'E2E Operational'
@@ -65,7 +65,7 @@ Steps:
   - `city_id`: use existing E2E geographic
       ref: src/main/resources/db/migration-h2/V16__Master_Bank_Account.sql — bank_accounts table structure
       ref: src/main/resources/db/migration-h2/V61__Bank_Account_Refactor_For_Payment.sql — currency_id + coa_id columns
-- [ ] Add warmup URLs to `e2e-tests/scripts/warmup-urls.txt`:
+- [x] Add warmup URLs to `e2e-tests/scripts/warmup-urls.txt`:
   - `/accounts-payable/vendor-bills`
   - `/accounts-payable/vendor-bills/select-references`
   - `/accounts-payable/vendor-payments`

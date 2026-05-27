@@ -18,6 +18,8 @@
 
 /accounts-payable/vendor-bills
 /accounts-payable/vendor-bills/select-references
+/accounts-payable/vendor-payments
+/accounts-payable/vendor-payments/create
 
 /purchasing/purchase-requisitions
 /purchasing/purchase-requisitions/create

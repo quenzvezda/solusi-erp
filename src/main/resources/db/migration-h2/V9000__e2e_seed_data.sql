@@ -237,7 +237,10 @@ VALUES
     (9401, '1130', 'E2E Inventory', 'ASSET', 'DEBIT', NULL, 1, FALSE, 'E2E inventory account', TRUE, 1, 1, NOW()),
     (9402, '2110', 'E2E Goods Receipt Accrual', 'LIABILITY', 'CREDIT', NULL, 1, FALSE, 'E2E GR accrual account', TRUE, 1, 1, NOW()),
     (9403, '2120', 'E2E Accounts Payable', 'LIABILITY', 'CREDIT', NULL, 1, FALSE, 'E2E AP account', TRUE, 1, 1, NOW()),
-    (9404, '1140', 'E2E Input VAT', 'ASSET', 'DEBIT', NULL, 1, FALSE, 'E2E input VAT account', TRUE, 1, 1, NOW());
+    (9404, '1140', 'E2E Input VAT', 'ASSET', 'DEBIT', NULL, 1, FALSE, 'E2E input VAT account', TRUE, 1, 1, NOW()),
+    (9405, '1120', 'E2E Bank', 'ASSET', 'DEBIT', NULL, 1, FALSE, 'E2E bank account', TRUE, 1, 1, NOW()),
+    (9406, '5140', 'E2E FX Loss', 'EXPENSE', 'DEBIT', NULL, 1, FALSE, 'E2E FX loss account', TRUE, 1, 1, NOW()),
+    (9407, '4240', 'E2E FX Gain', 'REVENUE', 'CREDIT', NULL, 1, FALSE, 'E2E FX gain account', TRUE, 1, 1, NOW());
 
 INSERT INTO acc_accounting_schemas
     (id, event_type, description, is_active, version, created_by_user_id, created_date)
@@ -252,6 +255,35 @@ VALUES
     (9402, 'VB_GRIR_CLEARING_AMT', 9402, 'DEBIT'),
     (9402, 'VB_TAX_AMT', 9404, 'DEBIT'),
     (9402, 'VB_AP_TOTAL', 9403, 'CREDIT');
+
+-- V62 runs before E2E-only COA rows exist, so refresh VENDOR_PAYMENT schema lines here.
+SET @vp_schema_id = (SELECT id FROM acc_accounting_schemas WHERE event_type = 'VENDOR_PAYMENT' AND is_active = TRUE LIMIT 1);
+
+INSERT INTO acc_accounting_schemas
+    (event_type, description, is_active, version, created_by_user_id, created_date)
+SELECT 'VENDOR_PAYMENT', 'E2E vendor payment posting schema', TRUE, 1, 1, NOW()
+WHERE @vp_schema_id IS NULL;
+
+SET @vp_schema_id = COALESCE(@vp_schema_id, LAST_INSERT_ID());
+
+DELETE FROM acc_schema_lines WHERE schema_id = @vp_schema_id;
+
+INSERT INTO acc_schema_lines (schema_id, variable, account_id, position)
+VALUES
+    (@vp_schema_id, 'VP_AP_AMT', 9403, 'DEBIT'),
+    (@vp_schema_id, 'VP_BANK_OUT_AMT', 9405, 'CREDIT'),
+    (@vp_schema_id, 'VP_FX_LOSS_AMT', 9406, 'DEBIT'),
+    (@vp_schema_id, 'VP_FX_GAIN_AMT', 9407, 'CREDIT');
+
+SET @city_e2e = (SELECT id FROM geographics WHERE type = 'CITY_MUNICIPALITY' ORDER BY id LIMIT 1);
+
+INSERT INTO bank_accounts
+    (id, code, bank_name, branch, city_id, party_id, account_name, account_no, account_type,
+     note, is_active, created_by_user_id, created_date, updated_by_user_id, updated_date, version, currency_id, coa_id)
+VALUES
+    (9501, 'E2E-BA-001', 'E2E Bank', 'E2E Main Branch', @city_e2e, @p_sup1,
+     'E2E Operational', '1234567890', 'BANK_TRANSFER', 'E2E bank account for vendor payment flow',
+     TRUE, 1, NOW(), 1, NOW(), 1, @cur_idr, 9405);
 
 -- ====== E2E GOODS RECEIPT SEED ======
 -- Sent PO (id 9201) used as the source for Goods Receipt E2E.
