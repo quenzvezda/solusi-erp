@@ -34,3 +34,10 @@ Validation:
 - `cd e2e-tests && npx playwright test tests/accountspayable/vendor-payment.spec.ts --list` listed 9 tests.
 - Focused run with e2e server passed: `9 passed`.
 - Cold auth run after removing `e2e-tests/.auth` passed: `9 passed`.
+
+## Final Validation
+
+Status: Complete
+
+Validation:
+- `.\e2e-tests\scripts\run-e2e.ps1` passed: `73 passed`.

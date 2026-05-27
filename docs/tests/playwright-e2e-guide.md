@@ -577,9 +577,10 @@ Spec yang ada:
 | `tests/inventory/stock-adjustment.spec.ts` | 1 sanity + 5 scenario lifecycle | Tag `@inventory`. A create DRAFT; B edit; C process to inventory (DRAFT→COMPLETED); D facility-change clears lines; E delete via API |
 | `tests/inventory/goods-receipt.spec.ts` | 1 sanity + 4 PO-sourced GR lifecycle scenarios | Scenario A `@smoke`; B edit DRAFT qty; C complete DRAFT→COMPLETED; D delete DRAFT via API |
 | `tests/accountspayable/vendor-bill.spec.ts` | 1 sanity + 4 PO/GR-sourced Vendor Bill lifecycle scenarios | Scenario A `@smoke`; B confirm DRAFT→CONFIRMED; C cancel DRAFT→CANCELLED; D delete DRAFT via API |
+| `tests/accountspayable/vendor-payment.spec.ts` | 1 sanity + 4 PO/GR/VB-sourced Vendor Payment lifecycle scenarios | Scenario A `@smoke`; B confirm DRAFT→CONFIRMED; C cancel DRAFT→CANCELLED; D delete DRAFT via API |
 | `tests/auth/rbac.spec.ts` | 16 case (4 role × 4 resource) | Tag `@rbac`. URL guard allow/deny + Create button visibility |
 
-Status terakhir (2026-05-27): Full suite 68/68 passing via `e2e-tests/scripts/run-e2e.ps1` (cold run 2.8m). Smoke listing includes Goods Receipt Scenario A, Vendor Bill Scenario A, plus existing smoke specs.
+Status terakhir (2026-05-27): Full suite 73/73 passing via `e2e-tests/scripts/run-e2e.ps1` (cold run 7.0m). Smoke listing includes Goods Receipt Scenario A, Vendor Bill Scenario A, Vendor Payment Scenario A, plus existing smoke specs.
 
 - Modul transaksional pertama (PR + approval) sudah hijau end-to-end termasuk signature pad.
 - Jika suite mulai gagal lagi, jalankan spec tunggal dengan `--headed --debug` dan cek troubleshooting di bawah.
