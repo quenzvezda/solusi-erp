@@ -12,3 +12,17 @@ Changes:
 Validation:
 - `scripts/check-migration-parity.sh` passed.
 - `.\mvnw.cmd -B -Pe2e -DskipTests package` passed.
+
+## Task 2: Write vendor-bill.spec.ts (happy path)
+
+Status: Complete
+
+Changes:
+- Added `e2e-tests/tests/accountspayable/vendor-bill.spec.ts` with sanity, create draft, confirm, cancel, and delete scenarios.
+- Reused the Goods Receipt PO helper pattern locally so each Vendor Bill scenario creates its own completed GR source.
+- Added stable `#btn-confirm-vendor-bill` and `#btn-cancel-vendor-bill` IDs to the Vendor Bill detail page.
+
+Validation:
+- `cd e2e-tests && npx tsc --noEmit` passed.
+- `cd e2e-tests && npx playwright test tests/accountspayable/vendor-bill.spec.ts --list` listed 9 tests.
+- Focused run with e2e server passed: `9 passed`.

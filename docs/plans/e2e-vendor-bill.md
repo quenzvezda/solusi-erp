@@ -50,13 +50,13 @@ Create the E2E spec with scenarios covering the full DRAFT lifecycle plus confir
 | D | — | Delete DRAFT via API endpoint | Create draft → DELETE endpoint → verify removed from list |
 
 Steps:
-- [ ] Create `e2e-tests/tests/accountspayable/vendor-bill.spec.ts`
-- [ ] Import fixtures: `test, expect, storageStatePath` from `../../fixtures/base`
-- [ ] Import helpers: `navigateToModule`, `setFlatpickrDate`, `waitForNetworkIdle`
-- [ ] Write helper `createCompletedGr(page)` — reuse pattern from goods-receipt.spec.ts (`createSampleDraftGr` + complete via `#btn-complete` + `#confirm-modal-btn-yes`)
+- [x] Create `e2e-tests/tests/accountspayable/vendor-bill.spec.ts`
+- [x] Import fixtures: `test, expect, storageStatePath` from `../../fixtures/base`
+- [x] Import helpers: `navigateToModule`, `setFlatpickrDate`, `waitForNetworkIdle`
+- [x] Write helper `createCompletedGr(page)` — reuse pattern from goods-receipt.spec.ts (`createSampleDraftGr` + complete via `#btn-complete` + `#confirm-modal-btn-yes`)
       ref: e2e-tests/tests/inventory/goods-receipt.spec.ts:L123-L156 — createSampleDraftGr
       ref: e2e-tests/tests/inventory/goods-receipt.spec.ts:L199-L213 — complete flow (Scenario C)
-- [ ] Write helper `createDraftVendorBill(page)`:
+- [x] Write helper `createDraftVendorBill(page)`:
   1. Call `createCompletedGr(page)` to get a billable GR
   2. Navigate to `/accounts-payable/vendor-bills/select-references`
   3. Check the first `.js-reference-checkbox` checkbox
@@ -69,19 +69,19 @@ Steps:
   10. Extract new bill ID from list page links
       ref: src/main/resources/templates/accountspayable/vendor-bills/select-references.html — checkbox class `.js-reference-checkbox`, button `#btn-continue-references`
       ref: src/main/resources/templates/accountspayable/vendor-bills/form.html — form id `#vendor-bill-form`, field names
-- [ ] Write **sanity test**: navigate to list, assert table visible
-- [ ] Write **Scenario A** (`@smoke`): call `createDraftVendorBill`, navigate to detail `/{id}`, assert `.badge` with text `DRAFT`
+- [x] Write **sanity test**: navigate to list, assert table visible
+- [x] Write **Scenario A** (`@smoke`): call `createDraftVendorBill`, navigate to detail `/{id}`, assert `.badge` with text `DRAFT`
       ref: src/main/resources/templates/accountspayable/vendor-bills/detail.html:L14-L18 — badge in `.page-title`
-- [ ] Write **Scenario B**: create draft → navigate detail → click confirm button (uses `ErpForm.postAction`) → handle confirm modal (`#confirm-modal-btn-yes`) → assert badge `CONFIRMED`
+- [x] Write **Scenario B**: create draft → navigate detail → click confirm button (uses `ErpForm.postAction`) → handle confirm modal (`#confirm-modal-btn-yes`) → assert badge `CONFIRMED`
       ref: src/main/resources/templates/accountspayable/vendor-bills/detail.html:L139-L145 — confirm button with `onclick="ErpForm.postAction(this)"`
       ref: docs/tests/playwright-pitfalls.md §4 — Bootstrap modal confirm, NOT native dialog
-- [ ] Write **Scenario C**: create draft → navigate detail → click cancel button → handle confirm modal → assert redirect to list
+- [x] Write **Scenario C**: create draft → navigate detail → click cancel button → handle confirm modal → assert redirect to list
       ref: src/main/resources/templates/accountspayable/vendor-bills/detail.html:L131-L138 — cancel button with `data-redirect-url`
-- [ ] Write **Scenario D**: create draft → extract CSRF → `DELETE /accounts-payable/vendor-bills/{id}` via `page.evaluate(fetch)` → reload list → assert row gone
+- [x] Write **Scenario D**: create draft → extract CSRF → `DELETE /accounts-payable/vendor-bills/{id}` via `page.evaluate(fetch)` → reload list → assert row gone
       ref: e2e-tests/tests/inventory/goods-receipt.spec.ts:L215-L239 — delete via API pattern
       ref: docs/tests/playwright-pitfalls.md §1 — use page.evaluate AFTER page.goto (not from about:blank)
-- [ ] Set `test.describe.configure({ timeout: 120_000 })` — vendor bill flow is multi-step (create GR + complete + create VB)
-- [ ] Use `test.use({ storageState: storageStatePath('admin') })` — admin has all VENDOR-BILL_* permissions
+- [x] Set `test.describe.configure({ timeout: 120_000 })` — vendor bill flow is multi-step (create GR + complete + create VB)
+- [x] Use `test.use({ storageState: storageStatePath('admin') })` — admin has all VENDOR-BILL_* permissions
 
 **Key pitfall mitigations:**
 - Confirm/cancel uses `ErpForm.postAction` → click `#confirm-modal-btn-yes` (pitfall §4)

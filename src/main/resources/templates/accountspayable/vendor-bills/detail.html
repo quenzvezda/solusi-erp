@@ -128,7 +128,7 @@
                         </table>
                     </div>
                     <div class="card-footer text-end" th:if="${bill.status == 'DRAFT'}">
-                        <button type="button" class="btn btn-outline-warning"
+                        <button type="button" class="btn btn-outline-warning" id="btn-cancel-vendor-bill"
                                 sec:authorize="hasAuthority('VENDOR-BILL_CANCEL')"
                                 th:data-post-url="@{'/accounts-payable/vendor-bills/' + ${bill.id} + '/cancel'}"
                                 th:data-redirect-url="@{/accounts-payable/vendor-bills}"
@@ -136,7 +136,7 @@
                                 onclick="ErpForm.postAction(this)">
                             <i class="ti ti-ban me-1"></i><span th:text="#{label.cancel}">Cancel</span>
                         </button>
-                        <button type="button" class="btn btn-success"
+                        <button type="button" class="btn btn-success" id="btn-confirm-vendor-bill"
                                 sec:authorize="hasAuthority('VENDOR-BILL_CONFIRM')"
                                 th:data-post-url="@{'/accounts-payable/vendor-bills/' + ${bill.id} + '/confirm'}"
                                 th:data-confirm-message="#{msg.confirm.vb.confirm}"
