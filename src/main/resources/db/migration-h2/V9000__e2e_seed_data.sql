@@ -263,7 +263,7 @@ INSERT INTO pur_purchase_orders
      tax_id, tax_code, tax_name, tax_rate, tax_calculation_mode)
 VALUES
     (9201, 'E2E-PO-9201', '2026-05-19', '2026-05-30', @p_sup1, 9101, @cur_idr, 1.000000,
-     48500000.0000, 0.0000, 48500000.0000, 'SENT', 30, NULL, 'DIRECT',
+     176000000.0000, 0.0000, 176000000.0000, 'SENT', 30, NULL, 'DIRECT',
      'E2E seed for Goods Receipt flow', TRUE, 1, 1, NOW(),
      9001, 'E2E-TAX-0', 'E2E PPN 0% Non Tax', 0.0000, 'EXCLUSIVE');
 
@@ -273,8 +273,8 @@ INSERT INTO pur_purchase_order_lines
      tax_rate, line_subtotal, line_tax, line_total, pr_line_id, note,
      version, created_by_user_id, created_date)
 VALUES
-    (9201, 9201, @prd_laptop, 5.0000, 0.0000, 9001, 8500000.0000,
-     0.0000, 42500000.0000, 0.0000, 42500000.0000, NULL, 'E2E GR line laptop',
+    (9201, 9201, @prd_laptop, 20.0000, 0.0000, 9001, 8500000.0000,
+     0.0000, 170000000.0000, 0.0000, 170000000.0000, NULL, 'E2E GR line laptop',
      1, 1, NOW()),
     (9202, 9201, @prd_chair, 4.0000, 0.0000, 9001, 1500000.0000,
      0.0000, 6000000.0000, 0.0000, 6000000.0000, NULL, 'E2E GR line chair',

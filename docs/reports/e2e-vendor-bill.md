@@ -8,6 +8,7 @@ Changes:
 - Added E2E Accounts Payable and Input VAT chart-of-account rows to `V9000__e2e_seed_data.sql`.
 - Added active `VENDOR_BILL` accounting schema with GRIR clearing, tax, and AP total lines.
 - Added Vendor Bill list and reference-selection URLs to shared warmup configuration.
+- Increased the shared E2E GR PO laptop quantity so Vendor Bill and Goods Receipt suites can both consume the PO in one full run.
 
 Validation:
 - `scripts/check-migration-parity.sh` passed.
@@ -26,3 +27,11 @@ Validation:
 - `cd e2e-tests && npx tsc --noEmit` passed.
 - `cd e2e-tests && npx playwright test tests/accountspayable/vendor-bill.spec.ts --list` listed 9 tests.
 - Focused run with e2e server passed: `9 passed`.
+
+## Final Validation
+
+Status: Complete
+
+Validation:
+- `.\e2e-tests\scripts\run-e2e.ps1` passed: `68 passed`.
+- First full-suite run exposed shared PO quantity exhaustion between Vendor Bill and Goods Receipt; increasing the seeded PO laptop quantity resolved it.

@@ -576,9 +576,10 @@ Spec yang ada:
 | `tests/procurement/purchase-order.spec.ts` | 1 sanity + 6 STANDARD PO lifecycle scenarios | Scenario A `@smoke`; B edit DRAFT; C submit→approve→send; D submit→reject approval request; E cancel DRAFT; F delete DRAFT via API |
 | `tests/inventory/stock-adjustment.spec.ts` | 1 sanity + 5 scenario lifecycle | Tag `@inventory`. A create DRAFT; B edit; C process to inventory (DRAFT→COMPLETED); D facility-change clears lines; E delete via API |
 | `tests/inventory/goods-receipt.spec.ts` | 1 sanity + 4 PO-sourced GR lifecycle scenarios | Scenario A `@smoke`; B edit DRAFT qty; C complete DRAFT→COMPLETED; D delete DRAFT via API |
+| `tests/accountspayable/vendor-bill.spec.ts` | 1 sanity + 4 PO/GR-sourced Vendor Bill lifecycle scenarios | Scenario A `@smoke`; B confirm DRAFT→CONFIRMED; C cancel DRAFT→CANCELLED; D delete DRAFT via API |
 | `tests/auth/rbac.spec.ts` | 16 case (4 role × 4 resource) | Tag `@rbac`. URL guard allow/deny + Create button visibility |
 
-Status terakhir (2026-05-27): Full suite 63/63 passing via `e2e-tests/scripts/run-e2e.ps1` (cold run 2.3m). Smoke listing includes Goods Receipt Scenario A plus existing smoke specs.
+Status terakhir (2026-05-27): Full suite 68/68 passing via `e2e-tests/scripts/run-e2e.ps1` (cold run 2.8m). Smoke listing includes Goods Receipt Scenario A, Vendor Bill Scenario A, plus existing smoke specs.
 
 - Modul transaksional pertama (PR + approval) sudah hijau end-to-end termasuk signature pad.
 - Jika suite mulai gagal lagi, jalankan spec tunggal dengan `--headed --debug` dan cek troubleshooting di bawah.
