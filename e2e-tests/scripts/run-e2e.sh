@@ -81,4 +81,9 @@ else
 fi
 
 echo "=== Running Playwright tests ==="
-npx playwright test
+if [ -n "${PLAYWRIGHT_ARGS:-}" ]; then
+    # shellcheck disable=SC2086
+    npx playwright test $PLAYWRIGHT_ARGS
+else
+    npx playwright test
+fi

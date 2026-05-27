@@ -286,50 +286,25 @@ jobs:
           cache: npm
           cache-dependency-path: e2e-tests/package-lock.json
 
-      - name: Make Maven Wrapper Executable
-        run: chmod +x mvnw
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('e2e-tests/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
 
-      - name: Build Spring Boot JAR
-        run: ./mvnw -B package -DskipTests -Pe2e -q
+      - name: Make scripts executable
+        run: chmod +x mvnw e2e-tests/scripts/run-e2e.sh
 
-      - name: Start Spring Boot (E2E profile)
-        run: |
-          java -jar target/solusi-program-erp-*.jar --spring.profiles.active=e2e \
-            > target/e2e-server.log 2> target/e2e-server-err.log &
-          echo $! > spring-boot.pid
-
-      - name: Wait for server to be ready
-        run: |
-          for i in $(seq 1 60); do
-            if curl -s -o /dev/null -w "%{http_code}" http://localhost:18080/login | grep -q "200"; then
-              echo "Server ready after ${i}s"
-              exit 0
-            fi
-            sleep 1
-          done
-          echo "Server failed to start within 60s"
-          echo "=== Last 50 lines of target/e2e-server.log ==="
-          tail -50 target/e2e-server.log 2>/dev/null || echo "(file not found)"
-          echo ""
-          echo "=== Last 50 lines of target/e2e-server-err.log ==="
-          tail -50 target/e2e-server-err.log 2>/dev/null || echo "(file not found)"
-          exit 1
-
-      - name: Install Playwright dependencies
-        working-directory: e2e-tests
-        run: |
-          npm ci
-          npx playwright install chromium --with-deps
-
-      - name: Run Playwright tests
-        working-directory: e2e-tests
+      - name: Run Playwright E2E via shared runner
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
             echo "Running smoke E2E subset (push-to-main)..."
-            npx playwright test --grep @smoke
+            PLAYWRIGHT_ARGS="--grep @smoke" INSTALL_PLAYWRIGHT_DEPS=1 ./e2e-tests/scripts/run-e2e.sh
           else
             echo "Running full E2E suite (schedule/dispatch)..."
-            npx playwright test
+            INSTALL_PLAYWRIGHT_DEPS=1 ./e2e-tests/scripts/run-e2e.sh
           fi
         env:
           E2E_BASE_URL: http://localhost:18080
@@ -345,11 +320,4 @@ jobs:
             target/e2e-server.log
             target/e2e-server-err.log
           retention-days: 7
-
-      - name: Stop Spring Boot
-        if: always()
-        run: |
-          if [ -f spring-boot.pid ]; then
-            kill $(cat spring-boot.pid) || true
-          fi
 
