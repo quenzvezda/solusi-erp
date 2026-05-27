@@ -167,11 +167,11 @@ Untuk menjaga konsistensi versioning, setiap agent **WAJIB** mengikuti protokol 
 - Jangan melakukan `git push` atau membuat PR kecuali diminta secara eksplisit.
 - Jangan memakai destructive git commands seperti `reset --hard`, `checkout --`, atau `force push`.
 
-## 10. Playwright Smoke Test & Frontend Debugging
+## 10. Playwright E2E & Frontend Debugging
 
-Untuk smoke test end-to-end atau debugging frontend, gunakan MCP Playwright. AI **WAJIB** menjalankan Spring Boot server secara mandiri — **DILARANG** meminta user untuk menjalankan server.
+Untuk pengujian end-to-end atau debugging frontend, gunakan Playwright E2E dengan profile `e2e`. AI **WAJIB** menjalankan Spring Boot server secara mandiri — **DILARANG** meminta user untuk menjalankan server.
 
-> **Panduan lengkap:** Baca **[docs/tests/playwright-smoke-test-guide.md](tests/playwright-smoke-test-guide.md)** untuk cara start server (termasuk Windows PowerShell), kredensial dev, kamus interaksi komponen (TomSelect, Flatpickr, AutoNumeric, Line Items, Serial Number Drawer), dan troubleshooting.
+> **Panduan lengkap:** Baca **[docs/tests/playwright-e2e-guide.md](tests/playwright-e2e-guide.md)** untuk cara start server, runner Windows/Linux/macOS, kredensial E2E, helper interaksi komponen (TomSelect, AutoNumeric, HTMX), pola test CRUD, dan troubleshooting.
 
 ## 11. Cold Start Strategy (Initial Setup)
 Untuk menjamin keamanan dan sinkronisasi enkripsi:

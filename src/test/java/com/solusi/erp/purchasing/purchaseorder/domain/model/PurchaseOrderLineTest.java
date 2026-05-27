@@ -20,6 +20,60 @@ class PurchaseOrderLineTest {
     class ValidConstruction {
 
         @Test
+        @DisplayName("rehydrate defaults nullable monetary fields to zero")
+        void rehydrate_defaultsNullableAmountsToZero() {
+            PurchaseOrderLine line = PurchaseOrderLine.rehydrate(
+                    AuditMetadata.empty(), null, 1L,
+                    new BigDecimal("5"), null, 1L,
+                    new BigDecimal("200"), null,
+                    null, null, null,
+                    null, null
+            );
+
+            assertThat(line.getReceivedQuantity()).isZero();
+            assertThat(line.getTaxRate()).isZero();
+            assertThat(line.getLineSubtotal()).isZero();
+            assertThat(line.getLineTax()).isZero();
+            assertThat(line.getLineTotal()).isZero();
+            assertThat(line.getOutstandingQuantity()).isEqualByComparingTo("5");
+        }
+
+        @Test
+        @DisplayName("recalculate defaults null tax rate and mode to zero exclusive")
+        void recalculate_defaultsNullTaxRateAndMode() {
+            PurchaseOrderLine line = new PurchaseOrderLine(
+                    AuditMetadata.empty(), null,
+                    1L, new BigDecimal("2"), BigDecimal.ZERO, 1L,
+                    new BigDecimal("100.00"), BigDecimal.ZERO,
+                    null, null
+            );
+
+            PurchaseOrderLine recalculated = line.recalculate(null, null);
+
+            assertThat(recalculated.getTaxRate()).isZero();
+            assertThat(recalculated.getLineSubtotal()).isEqualByComparingTo("200.0000");
+            assertThat(recalculated.getLineTax()).isEqualByComparingTo("0.0000");
+            assertThat(recalculated.getLineTotal()).isEqualByComparingTo("200.0000");
+        }
+
+        @Test
+        @DisplayName("recalculate inclusive with zero tax rate uses gross as base")
+        void recalculate_inclusiveWithZeroRate_usesGrossAsBase() {
+            PurchaseOrderLine line = new PurchaseOrderLine(
+                    AuditMetadata.empty(), null,
+                    1L, new BigDecimal("2"), BigDecimal.ZERO, 1L,
+                    new BigDecimal("100.00"), BigDecimal.ZERO,
+                    null, null
+            );
+
+            PurchaseOrderLine recalculated = line.recalculate(BigDecimal.ZERO, TaxCalculationMode.INCLUSIVE);
+
+            assertThat(recalculated.getLineSubtotal()).isEqualByComparingTo("200.0000");
+            assertThat(recalculated.getLineTax()).isEqualByComparingTo("0.0000");
+            assertThat(recalculated.getLineTotal()).isEqualByComparingTo("200.0000");
+        }
+
+        @Test
         @DisplayName("creates line with proper calculation")
         void validLine_calculatesCorrectly() {
             PurchaseOrderLine line = new PurchaseOrderLine(
@@ -307,6 +361,18 @@ class PurchaseOrderLineTest {
                     new BigDecimal(orderedQty).multiply(new BigDecimal("100.00")),
                     null, null
             );
+        }
+
+        @Test
+        @DisplayName("rejects null receipt quantity")
+        void receive_nullQuantity_throwsDomainException() {
+            PurchaseOrderLine line = createReceivableLine("10.0000", "0.0000");
+
+            assertThatThrownBy(() -> line.receive(null))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("msg.error.gr.line.quantity.positive");
+
+            assertThat(line.getReceivedQuantity()).isEqualByComparingTo("0.0000");
         }
 
         @Test

@@ -77,6 +77,41 @@ class PurchaseOrderTest {
     class CreateNew {
 
         @Test
+        @DisplayName("full constructor defaults nullable tax and type fields")
+        void constructor_defaultsNullableTaxAndTypeFields() {
+            PurchaseOrder po = new PurchaseOrder(
+                    AuditMetadata.empty(),
+                    "PO-001",
+                    LocalDate.of(2026, 7, 14),
+                    null,
+                    1L,
+                    null,
+                    1L,
+                    BigDecimal.ONE,
+                    BigDecimal.ZERO,
+                    BigDecimal.ZERO,
+                    BigDecimal.ZERO,
+                    PurchaseOrderStatus.DRAFT,
+                    30,
+                    null,
+                    null,
+                    10L,
+                    "NON-TAX",
+                    "Non Tax",
+                    null,
+                    null,
+                    null,
+                    true,
+                    null
+            );
+
+            assertThat(po.getPoType()).isEqualTo(PurchaseOrderType.DIRECT);
+            assertThat(po.getTaxRate()).isZero();
+            assertThat(po.getTaxCalculationMode()).isEqualTo(TaxCalculationMode.EXCLUSIVE);
+            assertThat(po.getLines()).isEmpty();
+        }
+
+        @Test
         @DisplayName("creates draft PO with valid data")
         void createNew_withValidParams_createsDraftPO() {
             List<PurchaseOrderLine> lines = new ArrayList<>(List.of(createDefaultLine()));
@@ -225,6 +260,158 @@ class PurchaseOrderTest {
         }
 
         @Test
+        @DisplayName("legacy createNew overload requires tax selection")
+        void legacyCreateNew_withoutTaxSelection_throwsDomainException() {
+            assertThatThrownBy(() -> PurchaseOrder.createNew(
+                    "PO-LEGACY",
+                    LocalDate.of(2026, 7, 14),
+                    null,
+                    1L,
+                    null,
+                    1L,
+                    BigDecimal.ONE,
+                    30,
+                    null,
+                    PurchaseOrderType.DIRECT,
+                    null,
+                    List.of(createDefaultLine())
+            ))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("msg.error.po.tax.required");
+        }
+
+        @Test
+        @DisplayName("standard PO requires PR id")
+        void createNew_standardWithoutPrId_throwsDomainException() {
+            assertThatThrownBy(() -> PurchaseOrder.createNew(
+                    "PO-STD",
+                    LocalDate.of(2026, 7, 14),
+                    null,
+                    1L,
+                    null,
+                    1L,
+                    BigDecimal.ONE,
+                    30,
+                    null,
+                    PurchaseOrderType.STANDARD,
+                    10L,
+                    "NON-TAX",
+                    "Non Tax",
+                    BigDecimal.ZERO,
+                    TaxCalculationMode.EXCLUSIVE,
+                    null,
+                    List.of(createDefaultLine())
+            ))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("msg.error.po.standard.pr.required");
+        }
+
+        @Test
+        @DisplayName("standard PO accepts PR id")
+        void createNew_standardWithPrId_succeeds() {
+            PurchaseOrder po = PurchaseOrder.createNew(
+                    "PO-STD",
+                    LocalDate.of(2026, 7, 14),
+                    null,
+                    1L,
+                    null,
+                    1L,
+                    BigDecimal.ONE,
+                    30,
+                    99L,
+                    PurchaseOrderType.STANDARD,
+                    10L,
+                    "NON-TAX",
+                    "Non Tax",
+                    BigDecimal.ZERO,
+                    TaxCalculationMode.EXCLUSIVE,
+                    null,
+                    List.of(createDefaultLine())
+            );
+
+            assertThat(po.getPoType()).isEqualTo(PurchaseOrderType.STANDARD);
+            assertThat(po.getPrId()).isEqualTo(99L);
+        }
+
+        @Test
+        @DisplayName("requires non blank tax code")
+        void createNew_blankTaxCode_throwsDomainException() {
+            assertThatThrownBy(() -> PurchaseOrder.createNew(
+                    "PO-TAX",
+                    LocalDate.of(2026, 7, 14),
+                    null,
+                    1L,
+                    null,
+                    1L,
+                    BigDecimal.ONE,
+                    30,
+                    null,
+                    PurchaseOrderType.DIRECT,
+                    10L,
+                    " ",
+                    "Non Tax",
+                    BigDecimal.ZERO,
+                    TaxCalculationMode.EXCLUSIVE,
+                    null,
+                    List.of(createDefaultLine())
+            ))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("msg.error.po.tax.required");
+        }
+
+        @Test
+        @DisplayName("requires tax name")
+        void createNew_nullTaxName_throwsDomainException() {
+            assertThatThrownBy(() -> PurchaseOrder.createNew(
+                    "PO-TAX",
+                    LocalDate.of(2026, 7, 14),
+                    null,
+                    1L,
+                    null,
+                    1L,
+                    BigDecimal.ONE,
+                    30,
+                    null,
+                    PurchaseOrderType.DIRECT,
+                    10L,
+                    "NON-TAX",
+                    null,
+                    BigDecimal.ZERO,
+                    TaxCalculationMode.EXCLUSIVE,
+                    null,
+                    List.of(createDefaultLine())
+            ))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("msg.error.po.tax.required");
+        }
+
+        @Test
+        @DisplayName("requires non blank tax name")
+        void createNew_blankTaxName_throwsDomainException() {
+            assertThatThrownBy(() -> PurchaseOrder.createNew(
+                    "PO-TAX",
+                    LocalDate.of(2026, 7, 14),
+                    null,
+                    1L,
+                    null,
+                    1L,
+                    BigDecimal.ONE,
+                    30,
+                    null,
+                    PurchaseOrderType.DIRECT,
+                    10L,
+                    "NON-TAX",
+                    " ",
+                    BigDecimal.ZERO,
+                    TaxCalculationMode.EXCLUSIVE,
+                    null,
+                    List.of(createDefaultLine())
+            ))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("msg.error.po.tax.required");
+        }
+
+        @Test
         @DisplayName("validates exchangeRate not negative")
         void createNew_negativeExchangeRate_throwsDomainException() {
             assertThatThrownBy(() -> PurchaseOrder.createNew(
@@ -281,6 +468,31 @@ class PurchaseOrderTest {
     @Nested
     @DisplayName("update method")
     class Update {
+
+        @Test
+        @DisplayName("update defaults nullable tax rate and mode")
+        void update_defaultsNullableTaxRateAndMode() {
+            PurchaseOrder po = createDraftPO(new ArrayList<>(List.of(createDefaultLine())));
+
+            po.update(
+                    LocalDate.of(2026, 7, 14),
+                    null,
+                    2L,
+                    1L,
+                    BigDecimal.ONE,
+                    30,
+                    10L,
+                    "NON-TAX",
+                    "Non Tax",
+                    null,
+                    null,
+                    null,
+                    List.of(createDefaultLine())
+            );
+
+            assertThat(po.getTaxRate()).isZero();
+            assertThat(po.getTaxCalculationMode()).isEqualTo(TaxCalculationMode.EXCLUSIVE);
+        }
 
         @Test
         @DisplayName("updates mutable fields when status is DRAFT")
@@ -494,6 +706,47 @@ class PurchaseOrderTest {
     @Nested
     @DisplayName("recordReceipt method")
     class RecordReceipt {
+
+        @Test
+        @DisplayName("recordReceipt rejects null receipt map")
+        void recordReceipt_nullReceiptMap_throwsDomainException() {
+            PurchaseOrderLine line = createReceiptLine(20L, "10.0000", "0.0000");
+            PurchaseOrder po = createPOWithStatus(PurchaseOrderStatus.SENT, new ArrayList<>(List.of(line)));
+
+            assertThatThrownBy(() -> po.recordReceipt(null))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("msg.error.gr.po.receipt.lines.required");
+
+            assertThat(po.getStatus()).isEqualTo(PurchaseOrderStatus.SENT);
+        }
+
+        @Test
+        @DisplayName("recordReceipt ignores lines without ids and rejects unmatched batch")
+        void recordReceipt_lineWithoutId_throwsDomainException() {
+            PurchaseOrderLine line = createReceiptLine(21L, "10.0000", "0.0000");
+            PurchaseOrder lineWithoutIdPo = createPOWithStatus(
+                    PurchaseOrderStatus.SENT,
+                    new ArrayList<>(List.of(PurchaseOrderLine.rehydrate(
+                            AuditMetadata.empty(),
+                            1L,
+                            line.getProductId(),
+                            line.getQuantity(),
+                            line.getReceivedQuantity(),
+                            line.getUomId(),
+                            line.getUnitPrice(),
+                            line.getTaxRate(),
+                            line.getLineSubtotal(),
+                            line.getLineTax(),
+                            line.getLineTotal(),
+                            line.getPrLineId(),
+                            line.getNote()
+                    )))
+            );
+
+            assertThatThrownBy(() -> lineWithoutIdPo.recordReceipt(Map.of(21L, new BigDecimal("1.0000"))))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("msg.error.gr.po.receipt.lines.required");
+        }
 
         @Test
         @DisplayName("recordReceipt partial updates received quantity and status")

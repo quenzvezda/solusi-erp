@@ -14,8 +14,8 @@ on:
       - 'docs/**'
       - '.github/**/*.md'
   schedule:
-    # Nightly full run — setiap hari pukul 02:00 UTC (09:00 WIB)
-    - cron: '0 2 * * *'
+    # Twice weekly full run — Sunday & Wednesday 19:30 UTC (Monday & Thursday 02:30 WIB)
+    - cron: '30 19 * * 0,3'
   workflow_dispatch:
     inputs:
       run_full:
@@ -37,6 +37,26 @@ env:
   JAVA_DISTRIBUTION: 'temurin'
 
 jobs:
+  # ──────────────────────────────────────────────────────────────────────────
+  # Job 0: Migration Parity — ensures H2 mirrors all MariaDB Flyway versions
+  # Target time: < 5 seconds
+  # ──────────────────────────────────────────────────────────────────────────
+  migration-parity:
+    name: Migration Parity Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    if: |
+      github.event_name == 'pull_request' ||
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_full == false)
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check MariaDB ↔ H2 migration parity
+        run: bash scripts/check-migration-parity.sh
+
   # ──────────────────────────────────────────────────────────────────────────
   # Job 1: Fast — executed on PRs or manual non-full dispatch
   # Includes: unit tests, static template checks, domain/application usecases
@@ -225,4 +245,100 @@ jobs:
           name: deploy-log-${{ github.run_number }}
           path: logs/
           retention-days: 30
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Job 4: E2E — Playwright end-to-end tests against H2 in-memory
+  # Runs after full-tests pass. Uses Spring Boot with e2e profile (H2).
+  # Strategy:
+  #   - push to main/master → smoke subset (@smoke tagged tests only)
+  #   - schedule (twice weekly) → full E2E suite
+  #   - manual dispatch (run_full=true) → full E2E suite
+  # ──────────────────────────────────────────────────────────────────────────
+  e2e-tests:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [full-tests]
+    if: |
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_full == true) ||
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
+
+    concurrency:
+      group: e2e-${{ github.ref }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: e2e-tests/package-lock.json
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('e2e-tests/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Make scripts executable
+        run: chmod +x mvnw e2e-tests/scripts/run-e2e.sh
+
+      - name: Start MinIO for E2E
+        run: |
+          docker run -d --name minio-e2e \
+            -p 9000:9000 \
+            -p 9001:9001 \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin \
+            minio/minio:latest server /data --console-address ":9001"
+
+          for i in {1..30}; do
+            if curl -fsS http://localhost:9000/minio/health/live >/dev/null; then
+              echo "MinIO ready after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+
+          echo "MinIO failed to start"
+          docker logs minio-e2e
+          exit 1
+
+      - name: Run Playwright E2E via shared runner
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "Running smoke E2E subset (push-to-main)..."
+            PLAYWRIGHT_ARGS="--grep @smoke" INSTALL_PLAYWRIGHT_DEPS=1 ./e2e-tests/scripts/run-e2e.sh
+          else
+            echo "Running full E2E suite (schedule/dispatch)..."
+            INSTALL_PLAYWRIGHT_DEPS=1 ./e2e-tests/scripts/run-e2e.sh
+          fi
+        env:
+          E2E_BASE_URL: http://localhost:18080
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            e2e-tests/playwright-report/
+            e2e-tests/test-results/
+            target/e2e-server.log
+            target/e2e-server-err.log
+          retention-days: 7
 

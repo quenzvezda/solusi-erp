@@ -351,6 +351,32 @@ If multiple agents work on the same plan:
 - **Using `@SpringBootTest` for use case tests** — Use case tests must be fast (no Spring context). Use `@ExtendWith(MockitoExtension.class)` only.
 - **Not testing `@PreAuthorize` annotations** — Controller tests must verify security annotations via reflection (see `VendorBillControllerTest.cancel_should_require_cancel_authority`).
 
+## E2E (Playwright) Red Flags — STOP and Fix
+
+These rules apply to any task that creates or modifies a Playwright spec. Violations are not theoretical — every item here represents a bug from prior sessions. Reference: `docs/tests/playwright-pitfalls.md`.
+
+- **Marking E2E task [x] without running the spec at least once** — Unit tests pass != spec works. Compile (`tsc --noEmit`) and listing (`playwright test --list`) are not substitutes. Run minimum: `npx playwright test {file} -g "{scenario name}"` for the new/changed scenario. The ENTIRE class of bugs in 4 rounds of fixes (selectTomSelect signature, badge selector, Bootstrap modal vs native dialog, page-still-on-about:blank) would have been caught by ONE actual run.
+- **Calling `page.evaluate(fetch)` before `page.goto`** — `about:blank` has no origin; relative URLs do not resolve. Use `page.request.get(url)` instead — APIRequestContext carries storage-state cookies and resolves against `baseURL` regardless of navigation state.
+- **Using `setTomSelectValue` for fields where page JS reads `options[val].payload`** — The helper injects `{id, name, text}` only — no payload. Page change handlers reading `payload.uomId`/`payload.lastCost`/etc. silently fail. For payload-dependent fields, fetch the LookupDto explicitly and inject via `addOption(opt)` + `setValue(id)`. ALL dependent-field forms (SA product → uomId, PR product → lastCost, anywhere with `data-payload-driven`) need this pattern.
+- **Using `selectTomSelect` helper from `helpers/tomselect.ts`** — Known broken: `ts.load(query, callback)` does not match TomSelect API; promise never resolves. Until helper is fixed, use payload-aware local helper or `setTomSelectValue` (when payload not needed).
+- **Using `page.on('dialog', d => d.accept())` for Solusi ERP confirm flows** — Project uses Bootstrap modal `#modal-global-confirm` via `ErpModal.confirm` and `ErpAction.confirmAndSubmit`, NOT native `window.confirm`. Click `#confirm-modal-btn-yes` instead. Dialog handler matches nothing and times out.
+- **Time-based freshness checks on `.auth/*.json` storage state** — H2 in-memory wipes sessions on JVM restart but mtime stays "fresh". Use server probe (`page.context().request.get('/dashboard', {maxRedirects:0})` and accept only 2xx) instead of `Date.now() - mtimeMs < TTL`.
+- **Picking JAR via alphabetical order in run scripts** — After version bump, both old and new JARs co-exist in `target/`. Sort by `LastWriteTime -Descending` (PowerShell) or `ls -t` (bash) and clean stale artifacts before build.
+- **Asserting status badge on the form/edit page** — Many ERP modules render the badge ONLY on the view page, not on the form. Check `templates/{module}/view.html` vs `templates/{module}/form.html` before writing the assertion. PR-style "edit page has badge" is the exception, not the norm.
+- **URL from entity name instead of `@RequestMapping`** — Many controllers are mounted on rebranded URLs (e.g., `/security/menu-groups` for "PermissionGroup" entity). Always grep `@RequestMapping` for the actual Thymeleaf route. The `/api/...` URL is the JSON API; the view URL is usually different.
+- **Returning view name from `@ExceptionHandler` without `@ResponseStatus`** — Spring renders the error view but with HTTP 200. Test classifiers checking `status >= 400` will mis-classify. Always pair view-returning error handlers with `@ResponseStatus(HttpStatus.XXX)` matching the semantic status.
+
+### E2E Task Test Gate
+
+For tasks producing Playwright specs, the test gate is stricter than unit-test tasks:
+
+1. **Compile the TS:** `cd e2e-tests && npx tsc --noEmit` — must be clean
+2. **List the spec:** `npx playwright test {file} --list` — confirms structure parses
+3. **Run the spec at least once:** `npx playwright test {file}` — green required, not just compile
+4. **For SA/PR-class transactional specs:** run the cold path too (`rm -rf .auth/ && npx playwright test {file}`) — catches storage state assumptions
+
+If the test gate cannot run (no JAR built, server unavailable), DO NOT mark task `[x]`. Instead leave it `[~]` and write a report finding noting "E2E run deferred — gate not executed". The next session must execute the gate before considering the task complete. Deferring without a finding is the bug pattern that caused 10 distinct E2E failures in one stream.
+
 ---
 
 ## Sub-Agent Delegation Mode (Optional)

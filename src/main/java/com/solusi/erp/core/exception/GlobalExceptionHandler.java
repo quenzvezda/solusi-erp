@@ -157,15 +157,16 @@ public class GlobalExceptionHandler {
      * Handle Access Denied (403) errors.
      */
     @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
     public Object handleAccessDeniedException(AccessDeniedException ex, HttpServletRequest request) {
         log.warn("Access denied: {}", ex.getMessage());
-        
+
         if (isAjaxRequest(request)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(ApiResponse.error("Access Denied"));
         }
-        
+
         return "error/403";
     }
 

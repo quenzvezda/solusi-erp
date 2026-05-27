@@ -71,6 +71,10 @@ DRAFT/SUBMITTED/APPROVED ──► CANCELLED
 - Approver dapat melihat banner persetujuan dan riwayat keputusan di halaman **detail PR**.
 - Approver yang sedang berjalan (approver aktif) dapat melakukan **Approve** atau **Reject** langsung dari halaman detail.
 - Setelah keputusan diambil, status PR berubah ke **APPROVED** atau **REJECTED** secara otomatis.
+- **Implementasi:** transisi status PR dipicu oleh dua listener terpisah di `purchasing.purchaserequisition.infrastructure.listener`:
+  - `OnPurchaseRequisitionApprovedListener` → subscribe ke `ApprovalCompletedEvent`, memanggil `pr.approve()`.
+  - `OnPurchaseRequisitionRejectedListener` → subscribe ke `ApprovalRejectedEvent`, memanggil `pr.reject()`.
+  Detail event-driven approval lihat [docs/architecture/approval-arsitektur.md](../../architecture/approval-arsitektur.md).
 
 ### D. Aturan Update & Hapus
 - PR hanya dapat **diubah** saat berstatus **DRAFT**.

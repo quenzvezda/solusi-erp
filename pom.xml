@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.solusi</groupId>
     <artifactId>solusi-program-erp</artifactId>
-    <version>1.6.1</version>
+    <version>1.7.7</version>
     <name>solusi-program-erp</name>
     <description>Enterprise Resource Planning System for Learning</description>
 
@@ -300,7 +300,7 @@
                                         <limit>
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.70</minimum>
+                                            <minimum>0.80</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
@@ -342,4 +342,17 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>e2e</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.h2database</groupId>
+                    <artifactId>h2</artifactId>
+                    <scope>runtime</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 </project>
