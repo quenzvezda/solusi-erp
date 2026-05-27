@@ -235,17 +235,23 @@ INSERT INTO acc_chart_of_accounts
      is_active, version, created_by_user_id, created_date)
 VALUES
     (9401, '1130', 'E2E Inventory', 'ASSET', 'DEBIT', NULL, 1, FALSE, 'E2E inventory account', TRUE, 1, 1, NOW()),
-    (9402, '2110', 'E2E Goods Receipt Accrual', 'LIABILITY', 'CREDIT', NULL, 1, FALSE, 'E2E GR accrual account', TRUE, 1, 1, NOW());
+    (9402, '2110', 'E2E Goods Receipt Accrual', 'LIABILITY', 'CREDIT', NULL, 1, FALSE, 'E2E GR accrual account', TRUE, 1, 1, NOW()),
+    (9403, '2120', 'E2E Accounts Payable', 'LIABILITY', 'CREDIT', NULL, 1, FALSE, 'E2E AP account', TRUE, 1, 1, NOW()),
+    (9404, '1140', 'E2E Input VAT', 'ASSET', 'DEBIT', NULL, 1, FALSE, 'E2E input VAT account', TRUE, 1, 1, NOW());
 
 INSERT INTO acc_accounting_schemas
     (id, event_type, description, is_active, version, created_by_user_id, created_date)
 VALUES
-    (9401, 'GOODS_RECEIPT', 'E2E goods receipt posting schema', TRUE, 1, 1, NOW());
+    (9401, 'GOODS_RECEIPT', 'E2E goods receipt posting schema', TRUE, 1, 1, NOW()),
+    (9402, 'VENDOR_BILL', 'E2E vendor bill posting schema', TRUE, 1, 1, NOW());
 
 INSERT INTO acc_schema_lines (schema_id, variable, account_id, position)
 VALUES
     (9401, 'GR_INVENTORY_AMT', 9401, 'DEBIT'),
-    (9401, 'GR_GRAND_TOTAL', 9402, 'CREDIT');
+    (9401, 'GR_GRAND_TOTAL', 9402, 'CREDIT'),
+    (9402, 'VB_GRIR_CLEARING_AMT', 9402, 'DEBIT'),
+    (9402, 'VB_TAX_AMT', 9404, 'DEBIT'),
+    (9402, 'VB_AP_TOTAL', 9403, 'CREDIT');
 
 -- ====== E2E GOODS RECEIPT SEED ======
 -- Sent PO (id 9201) used as the source for Goods Receipt E2E.

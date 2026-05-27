@@ -16,6 +16,9 @@
 /inventory/unit-of-measures
 /inventory/unit-of-measures/create
 
+/accounts-payable/vendor-bills
+/accounts-payable/vendor-bills/select-references
+
 /purchasing/purchase-requisitions
 /purchasing/purchase-requisitions/create
 /purchasing/purchase-orders

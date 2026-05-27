@@ -2,7 +2,7 @@
 
 > Source: (direct request — no brainstorming doc)
 > Created: 2026-05-27
-> Status: PENDING
+> Status: IN_PROGRESS
 
 ## Summary
 
@@ -18,12 +18,12 @@ Add accounting schema, COA accounts, and warmup URLs so the Vendor Bill confirm 
 **Reference:** `src/main/resources/db/migration-h2/V9000__e2e_seed_data.sql` (existing GR seed pattern)
 
 Steps:
-- [ ] Add COA accounts to V9000 seed: `Accounts Payable` (LIABILITY/CREDIT), `Tax Receivable / Input VAT` (ASSET/DEBIT) — use IDs 9403, 9404
+- [x] Add COA accounts to V9000 seed: `Accounts Payable` (LIABILITY/CREDIT), `Tax Receivable / Input VAT` (ASSET/DEBIT) — use IDs 9403, 9404
       ref: src/main/resources/db/migration-h2/V9000__e2e_seed_data.sql:L233-L238 — existing COA seed pattern (9401 Inventory, 9402 GR Accrual)
-- [ ] Add accounting schema for event `VENDOR_BILL` with schema lines: `VB_GRIR_CLEARING_AMT` → 9402 DEBIT, `VB_TAX_AMT` → 9404 DEBIT, `VB_AP_TOTAL` → 9403 CREDIT
+- [x] Add accounting schema for event `VENDOR_BILL` with schema lines: `VB_GRIR_CLEARING_AMT` → 9402 DEBIT, `VB_TAX_AMT` → 9404 DEBIT, `VB_AP_TOTAL` → 9403 CREDIT
       ref: src/main/resources/db/migration-h2/V9000__e2e_seed_data.sql:L240-L248 — existing GOODS_RECEIPT schema pattern
       ref: docs/modules/accountspayable/vendor-bill.md:L176-L189 — VENDOR_BILL journal variables
-- [ ] Add warmup URLs to `e2e-tests/scripts/warmup-urls.txt`: `/accounts-payable/vendor-bills`, `/accounts-payable/vendor-bills/select-references`
+- [x] Add warmup URLs to `e2e-tests/scripts/warmup-urls.txt`: `/accounts-payable/vendor-bills`, `/accounts-payable/vendor-bills/select-references`
       ref: e2e-tests/scripts/warmup-urls.txt — existing warmup list
 
 **Validation criteria:**
