@@ -58,7 +58,7 @@ jobs:
         run: bash scripts/check-migration-parity.sh
 
   # ──────────────────────────────────────────────────────────────────────────
-  # Job 1: Fast — executed on PRs or manual non-full dispatch
+  # Job 1: Fast — executed on PRs, push-to-main, or manual non-full dispatch
   # Includes: unit tests, static template checks, domain/application usecases
   # Excludes: @Tag("integration-template") (Thymeleaf sec:authorize tests)
   # Target time: < 60 seconds
@@ -69,6 +69,7 @@ jobs:
     timeout-minutes: 10
     if: |
       github.event_name == 'pull_request' ||
+      github.event_name == 'push' ||
       (github.event_name == 'workflow_dispatch' && inputs.run_full == false)
 
     steps:
@@ -135,12 +136,14 @@ jobs:
           path: target/surefire-reports/
 
   # ──────────────────────────────────────────────────────────────────────────
-  # Job 3: Deploy — executed ONLY AFTER full test job passes on main branch
+  # Job 3: Deploy — final gate for push-to-main only
+  # Deployment must wait for every CI signal that runs on main:
+  # migration parity, fast tests, full tests, and Playwright E2E smoke.
   # Uses the same Maven Wrapper as tests and verifies the Ubuntu VPS service
   # ──────────────────────────────────────────────────────────────────────────
   deploy:
     name: Deploy to VPS
-    needs: [full-tests]
+    needs: [migration-parity, fast-tests, full-tests, e2e-tests]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment: production
