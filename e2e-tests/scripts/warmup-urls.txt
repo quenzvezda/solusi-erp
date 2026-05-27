@@ -1,0 +1,25 @@
+# Shared JVM warmup URLs for run-e2e.ps1 and run-e2e.sh.
+# One relative URL per line. Blank lines and # comments are ignored.
+/dashboard
+
+/inventory/adjustments
+/inventory/adjustments/create
+/inventory/goods-receipts
+/inventory/goods-receipts/create?referenceType=PURCHASE_ORDER&referenceId=9201
+/inventory/goods-receipts/selectors/purchase-order-lines?referenceType=PURCHASE_ORDER&referenceId=9201
+/inventory/brands
+/inventory/brands/create
+/inventory/product-categories
+/inventory/product-categories/create
+/inventory/products
+/inventory/products/create
+/inventory/unit-of-measures
+/inventory/unit-of-measures/create
+
+/purchasing/purchase-requisitions
+/purchasing/purchase-requisitions/create
+/purchasing/purchase-orders
+/purchasing/purchase-orders/create
+/purchasing/supplier-price-lists
+
+/security/menu-groups

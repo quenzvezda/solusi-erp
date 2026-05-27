@@ -59,28 +59,16 @@ else
         http://localhost:18080/login || true
 fi
 
-WARMUP_URLS=(
-    "/dashboard"
-    "/inventory/adjustments"
-    "/inventory/adjustments/create"
-    "/inventory/brands"
-    "/inventory/brands/create"
-    "/inventory/product-categories"
-    "/inventory/product-categories/create"
-    "/inventory/products"
-    "/inventory/products/create"
-    "/inventory/uoms"
-    "/inventory/uoms/create"
-    "/purchasing/purchase-requisitions"
-    "/purchasing/purchase-requisitions/create"
-    "/purchasing/purchase-orders"
-    "/purchasing/purchase-orders/create"
-    "/purchasing/supplier-price-lists"
-)
-for u in "${WARMUP_URLS[@]}"; do
+WARMUP_URL_FILE="$PROJECT_ROOT/e2e-tests/scripts/warmup-urls.txt"
+while IFS= read -r u || [ -n "$u" ]; do
+    u="${u#"${u%%[![:space:]]*}"}"
+    u="${u%"${u##*[![:space:]]}"}"
+    if [ -z "$u" ] || [ "${u#\#}" != "$u" ]; then
+        continue
+    fi
     curl -s -o /dev/null -b "$COOKIE_JAR" --max-time 30 -L "http://localhost:18080$u" \
         || echo "warmup miss $u"
-done
+done < "$WARMUP_URL_FILE"
 echo "=== Warmup complete ==="
 
 echo "=== Installing Playwright dependencies ==="

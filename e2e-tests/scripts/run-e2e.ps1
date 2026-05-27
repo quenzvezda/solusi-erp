@@ -56,28 +56,10 @@ try {
             Invoke-WebRequest -Uri "http://localhost:18080/login" -WebSession $session -Method Post -Body @{ username = 'admin'; password = 'admin123' } -UseBasicParsing -TimeoutSec 30 -MaximumRedirection 5 | Out-Null
         }
 
-        $warmupUrls = @(
-            '/dashboard',
-            '/inventory/adjustments',
-            '/inventory/adjustments/create',
-            '/inventory/goods-receipts',
-            '/inventory/goods-receipts/create?referenceType=PURCHASE_ORDER&referenceId=9201',
-            '/inventory/goods-receipts/selectors/purchase-order-lines?referenceType=PURCHASE_ORDER&referenceId=9201',
-            '/inventory/brands',
-            '/inventory/brands/create',
-            '/inventory/product-categories',
-            '/inventory/product-categories/create',
-            '/inventory/products',
-            '/inventory/products/create',
-            '/inventory/uoms',
-            '/inventory/uoms/create',
-            '/purchasing/purchase-requisitions',
-            '/purchasing/purchase-requisitions/create',
-            '/purchasing/purchase-orders',
-            '/purchasing/purchase-orders/create',
-            '/purchasing/supplier-price-lists',
-            '/security/menu-groups'
-        )
+        $warmupUrlFile = Join-Path $PSScriptRoot "warmup-urls.txt"
+        $warmupUrls = Get-Content $warmupUrlFile |
+            ForEach-Object { $_.Trim() } |
+            Where-Object { $_ -and -not $_.StartsWith("#") }
         foreach ($u in $warmupUrls) {
             try {
                 Invoke-WebRequest -Uri "http://localhost:18080$u" -WebSession $session -UseBasicParsing -TimeoutSec 30 -MaximumRedirection 5 | Out-Null
