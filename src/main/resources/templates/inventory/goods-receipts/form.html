@@ -18,6 +18,7 @@
                     </div>
                     <div class="col-auto ms-auto" th:if="${grRequest.id != null and grRequest.status == 'DRAFT'}">
                         <button type="button"
+                                id="btn-complete"
                                 class="btn btn-outline-success"
                                 sec:authorize="hasAuthority('GOODS-RECEIPT_COMPLETE')"
                                 th:data-complete-url="@{'/inventory/goods-receipts/' + ${grRequest.id} + '/complete'}"

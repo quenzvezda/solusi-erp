@@ -215,3 +215,68 @@ INSERT INTO pur_purchase_requisition_lines
 VALUES
     (9301, 9301, @prd_laptop, 999.0000, 9001, '2026-05-30', 8500000.0000, NULL, 'E2E line laptop', 1, 1, NOW()),
     (9302, 9301, @prd_chair,  999.0000, 9001, '2026-05-30', 1500000.0000, NULL, 'E2E line chair',  1, 1, NOW());
+
+-- ====== E2E ACCOUNTING FOUNDATION FOR INVENTORY POSTING ======
+-- Goods Receipt completion enforces an open accounting period and posts a balanced journal.
+INSERT INTO acc_fiscal_years
+    (id, code, name, start_date, end_date, is_active, version, created_by_user_id, created_date)
+VALUES
+    (9401, 'E2E-FY-2026', 'E2E Fiscal Year 2026', '2026-01-01', '2026-12-31', TRUE, 1, 1, NOW());
+
+INSERT INTO acc_accounting_periods
+    (id, code, name, fiscal_year_id, period_number, start_date, end_date, status,
+     version, created_by_user_id, created_date)
+VALUES
+    (9401, 'E2E-2026-05', 'E2E May 2026', 9401, 5, '2026-05-01', '2026-05-31', 'OPEN',
+     1, 1, NOW());
+
+INSERT INTO acc_chart_of_accounts
+    (id, code, name, account_type, normal_balance, parent_id, level, is_header, note,
+     is_active, version, created_by_user_id, created_date)
+VALUES
+    (9401, '1130', 'E2E Inventory', 'ASSET', 'DEBIT', NULL, 1, FALSE, 'E2E inventory account', TRUE, 1, 1, NOW()),
+    (9402, '2110', 'E2E Goods Receipt Accrual', 'LIABILITY', 'CREDIT', NULL, 1, FALSE, 'E2E GR accrual account', TRUE, 1, 1, NOW());
+
+INSERT INTO acc_accounting_schemas
+    (id, event_type, description, is_active, version, created_by_user_id, created_date)
+VALUES
+    (9401, 'GOODS_RECEIPT', 'E2E goods receipt posting schema', TRUE, 1, 1, NOW());
+
+INSERT INTO acc_schema_lines (schema_id, variable, account_id, position)
+VALUES
+    (9401, 'GR_INVENTORY_AMT', 9401, 'DEBIT'),
+    (9401, 'GR_GRAND_TOTAL', 9402, 'CREDIT');
+
+-- ====== E2E GOODS RECEIPT SEED ======
+-- Sent PO (id 9201) used as the source for Goods Receipt E2E.
+-- GR source resolution requires a PO status that canReceive(): SENT or PARTIALLY_RECEIVED.
+INSERT INTO pur_purchase_orders
+    (id, code, order_date, expected_date, supplier_id, facility_id, currency_id, exchange_rate,
+     subtotal, tax_amount, total_amount, status, payment_term_days, pr_id, po_type, note,
+     is_active, version, created_by_user_id, created_date,
+     tax_id, tax_code, tax_name, tax_rate, tax_calculation_mode)
+VALUES
+    (9201, 'E2E-PO-9201', '2026-05-19', '2026-05-30', @p_sup1, 9101, @cur_idr, 1.000000,
+     48500000.0000, 0.0000, 48500000.0000, 'SENT', 30, NULL, 'DIRECT',
+     'E2E seed for Goods Receipt flow', TRUE, 1, 1, NOW(),
+     9001, 'E2E-TAX-0', 'E2E PPN 0% Non Tax', 0.0000, 'EXCLUSIVE');
+
+-- PO lines (ids 9201, 9202). received_quantity is zero so all qty remains open.
+INSERT INTO pur_purchase_order_lines
+    (id, header_id, product_id, quantity, received_quantity, uom_id, unit_price,
+     tax_rate, line_subtotal, line_tax, line_total, pr_line_id, note,
+     version, created_by_user_id, created_date)
+VALUES
+    (9201, 9201, @prd_laptop, 5.0000, 0.0000, 9001, 8500000.0000,
+     0.0000, 42500000.0000, 0.0000, 42500000.0000, NULL, 'E2E GR line laptop',
+     1, 1, NOW()),
+    (9202, 9201, @prd_chair, 4.0000, 0.0000, 9001, 1500000.0000,
+     0.0000, 6000000.0000, 0.0000, 6000000.0000, NULL, 'E2E GR line chair',
+     1, 1, NOW());
+
+-- Grant ROLE_WAREHOUSE the Goods Receipt lifecycle permissions used by the GR E2E spec.
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT @role_warehouse_id, id FROM permissions WHERE name IN (
+    'GOODS-RECEIPT_READ', 'GOODS-RECEIPT_CREATE', 'GOODS-RECEIPT_UPDATE',
+    'GOODS-RECEIPT_DELETE', 'GOODS-RECEIPT_COMPLETE'
+);
