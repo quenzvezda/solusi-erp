@@ -97,12 +97,12 @@ Create the E2E spec with scenarios covering the full DRAFT lifecycle plus confir
 | D | — | Delete DRAFT via API endpoint | Create draft → DELETE endpoint → verify removed from list |
 
 Steps:
-- [ ] Create `e2e-tests/tests/accountspayable/vendor-payment.spec.ts`
-- [ ] Import fixtures: `test, expect, storageStatePath` from `../../fixtures/base`
-- [ ] Import helpers: `navigateToModule`, `setFlatpickrDate`, `setAutoNumeric`, `waitForNetworkIdle`, `setTomSelectValue`
-- [ ] Write helper `createCompletedGr(page)` — create GR from PO 9201, complete it, return GR id
+- [x] Create `e2e-tests/tests/accountspayable/vendor-payment.spec.ts`
+- [x] Import fixtures: `test, expect, storageStatePath` from `../../fixtures/base`
+- [x] Import helpers: `navigateToModule`, `setFlatpickrDate`, `setAutoNumeric`, `waitForNetworkIdle`, `setTomSelectValue`
+- [x] Write helper `createCompletedGr(page)` — create GR from PO 9201, complete it, return GR id
       ref: e2e-tests/tests/inventory/goods-receipt.spec.ts:L123-L213 — createSampleDraftGr + complete pattern
-- [ ] Write helper `createConfirmedVendorBill(page)` — uses completed GR:
+- [x] Write helper `createConfirmedVendorBill(page)` — uses completed GR:
   1. Navigate to `/accounts-payable/vendor-bills/select-references`
   2. Check first `.js-reference-checkbox`
   3. Click `#btn-continue-references`
@@ -118,7 +118,7 @@ Steps:
       ref: src/main/resources/templates/accountspayable/vendor-bills/select-references.html — checkbox `.js-reference-checkbox`, button `#btn-continue-references`
       ref: src/main/resources/templates/accountspayable/vendor-bills/detail.html:L139-L145 — confirm button uses `ErpForm.postAction`
       ref: docs/tests/playwright-pitfalls.md §4 — use `#confirm-modal-btn-yes`, NOT `page.on('dialog')`
-- [ ] Write helper `createDraftVendorPayment(page)`:
+- [x] Write helper `createDraftVendorPayment(page)`:
   1. Call `createCompletedGr(page)` + `createConfirmedVendorBill(page)`
   2. Navigate to `/accounts-payable/vendor-payments/create`
   3. Set vendor via TomSelect `#vp-vendor` (use `setTomSelectValue` with supplier id from seed)
@@ -134,19 +134,19 @@ Steps:
       ref: src/main/resources/templates/accountspayable/vendor-payments/form.html — form id `#vendor-payment-form`, TomSelect ids, bank account modal
       ref: src/main/resources/static/js/accountspayable/vendor-payments/form.js:L106-L128 — loadPayableBills triggered by vendor+currency change
       ref: src/main/resources/templates/accountspayable/vendor-payments/fragments/bank-account-selector.html:L49 — `.js-bank-account-select` button
-- [ ] Write **sanity test**: navigate to list, assert table visible
-- [ ] Write **Scenario A** (`@smoke`): call `createDraftVendorPayment`, navigate to detail `/{id}`, assert `.badge` with text `DRAFT`
+- [x] Write **sanity test**: navigate to list, assert table visible
+- [x] Write **Scenario A** (`@smoke`): call `createDraftVendorPayment`, navigate to detail `/{id}`, assert `.badge` with text `DRAFT`
       ref: src/main/resources/templates/accountspayable/vendor-payments/detail.html:L14-L18 — badge in `.page-title`
-- [ ] Write **Scenario B**: create draft → navigate detail → click `.btn-confirm-payment` → `#confirm-modal-btn-yes` → wait for page reload → assert badge `CONFIRMED`
+- [x] Write **Scenario B**: create draft → navigate detail → click `.btn-confirm-payment` → `#confirm-modal-btn-yes` → wait for page reload → assert badge `CONFIRMED`
       ref: src/main/resources/templates/accountspayable/vendor-payments/detail.html:L27-L33 — confirm button with `data-action-url` and `data-redirect-url`
       ref: docs/tests/playwright-pitfalls.md §4 — ErpForm.postAction uses Bootstrap modal, not native dialog
-- [ ] Write **Scenario C**: create draft → navigate detail → click `.btn-cancel-payment` → `#confirm-modal-btn-yes` → assert badge `CANCELLED`
+- [x] Write **Scenario C**: create draft → navigate detail → click `.btn-cancel-payment` → `#confirm-modal-btn-yes` → assert badge `CANCELLED`
       ref: src/main/resources/templates/accountspayable/vendor-payments/detail.html:L35-L42 — cancel button
-- [ ] Write **Scenario D**: create draft → navigate to list → `page.evaluate(fetch DELETE)` → reload → assert row gone
+- [x] Write **Scenario D**: create draft → navigate to list → `page.evaluate(fetch DELETE)` → reload → assert row gone
       ref: e2e-tests/tests/inventory/goods-receipt.spec.ts:L215-L239 — delete via API pattern
       ref: docs/tests/playwright-pitfalls.md §1 — use page.evaluate AFTER page.goto (not from about:blank)
-- [ ] Set `test.describe.configure({ timeout: 180_000 })` — VP flow is multi-step (GR + complete + VB + confirm + VP)
-- [ ] Use `test.use({ storageState: storageStatePath('admin') })` — admin has all permissions
+- [x] Set `test.describe.configure({ timeout: 180_000 })` — VP flow is multi-step (GR + complete + VB + confirm + VP)
+- [x] Use `test.use({ storageState: storageStatePath('admin') })` — admin has all permissions
 
 **Key pitfall mitigations:**
 - Confirm/cancel uses `ErpForm.postAction` → click `#confirm-modal-btn-yes` (pitfall §4)

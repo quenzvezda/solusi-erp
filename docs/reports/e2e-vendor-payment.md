@@ -19,3 +19,18 @@ Validation:
 - `scripts/check-migration-parity.sh` passed.
 - `.\mvnw.cmd -B -Pe2e -DskipTests package` passed.
 - E2E jar started with `--spring.profiles.active=e2e`; authenticated admin requests to `/accounts-payable/vendor-payments` and `/accounts-payable/vendor-payments/create` returned 200.
+
+## Task 2: Write vendor-payment.spec.ts (happy path)
+
+Status: Complete
+
+Changes:
+- Added `e2e-tests/tests/accountspayable/vendor-payment.spec.ts` covering list, create DRAFT, confirm, cancel, and delete.
+- Built the full prerequisite chain in helpers: PO-sourced GR completion, confirmed Vendor Bill, then Vendor Payment allocation.
+- Allocation helper keeps only the freshly confirmed Vendor Bill row to avoid cross-scenario payable bill pollution.
+
+Validation:
+- `cd e2e-tests && npx tsc --noEmit` passed.
+- `cd e2e-tests && npx playwright test tests/accountspayable/vendor-payment.spec.ts --list` listed 9 tests.
+- Focused run with e2e server passed: `9 passed`.
+- Cold auth run after removing `e2e-tests/.auth` passed: `9 passed`.
