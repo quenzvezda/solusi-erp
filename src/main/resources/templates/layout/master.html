@@ -13,8 +13,8 @@
 </head>
 
 
-<body th:fragment="layout(content, pageScripts)" 
-      th:attr="data-bs-theme=${userProfile != null ? userProfile.theme : 'light'}, hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<body th:fragment="layout(content, pageScripts)"
+      th:attr="data-bs-theme=${userProfile != null ? userProfile.theme : 'light'}, hx-headers=${_csrf != null ? '{&quot;' + _csrf.headerName + '&quot;: &quot;' + _csrf.token + '&quot;}' : null}">
     
     <!-- Global Modals -->
     <div th:replace="~{fragments/modals :: standard-modals}"></div>

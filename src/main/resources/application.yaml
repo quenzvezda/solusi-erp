@@ -11,11 +11,19 @@ server:
       cookie:
         secure: true
         http-only: true
+        same-site: lax
 
 spring:
   config:
     import: "optional:file:${ENV_FILE:.env}[.properties]"
   web:
+    error:
+      whitelabel:
+        enabled: false
+      include-message: never
+      include-binding-errors: never
+      include-stacktrace: never
+      path: /error
     resources:
       chain:
         enabled: true
@@ -23,12 +31,6 @@ spring:
           content:
             enabled: true
             paths: /**
-    error:
-      whitelabel:
-        enabled: false # Mematikan halaman putih bawaan Spring Boot
-      include-message: always # Pastikan pesan error dikirim ke template
-      include-binding-errors: always
-      path: /error
   devtools:
     restart:
       exclude: static/**,public/**,templates/**,**/templates/**

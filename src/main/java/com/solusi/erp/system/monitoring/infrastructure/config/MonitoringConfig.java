@@ -6,7 +6,7 @@ import com.solusi.erp.system.monitoring.domain.port.LogReaderPort;
 import com.solusi.erp.system.monitoring.infrastructure.adapter.HealthCheckAdapter;
 import com.solusi.erp.system.monitoring.infrastructure.adapter.LogReaderAdapter;
 import io.minio.MinioClient;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,6 +17,7 @@ import javax.sql.DataSource;
  * Wires all beans following Clean Architecture conventions.
  */
 @Configuration
+@EnableConfigurationProperties(MonitoringProperties.class)
 public class MonitoringConfig {
 
     @Bean
@@ -25,8 +26,8 @@ public class MonitoringConfig {
     }
 
     @Bean
-    public LogReaderPort logReaderPort(@Value("${monitoring.log.directory:logs}") String logDirectory) {
-        return new LogReaderAdapter(logDirectory);
+    public LogReaderPort logReaderPort(MonitoringProperties properties) {
+        return new LogReaderAdapter(properties.getLog().getDirectory());
     }
 
     @Bean
