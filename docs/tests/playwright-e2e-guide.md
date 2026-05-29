@@ -113,7 +113,7 @@ Dari root project:
 
 Script melakukan:
 
-1. `mvnw.cmd -B package -DskipTests -Pe2e -q`
+1. `mvnw.cmd -B clean package -DskipTests -Pe2e -q`
 2. Start JAR dengan `--spring.profiles.active=e2e`
 3. Wait `http://localhost:18080/login` sampai HTTP 200
 4. `npm ci --silent`
@@ -147,7 +147,7 @@ chmod +x e2e-tests/scripts/run-e2e.sh
 
 Script melakukan:
 
-1. `./mvnw -B package -DskipTests -Pe2e -q`
+1. `./mvnw -B clean package -DskipTests -Pe2e -q`
 2. Start JAR dengan `--spring.profiles.active=e2e`
 3. Redirect output server ke `target/e2e-server.log` dan `target/e2e-server-err.log`
 4. Wait `http://localhost:18080/login` sampai HTTP 200
@@ -206,7 +206,7 @@ Job `e2e-tests` di `.github/workflows/ci-java21.yml`:
 - Berjalan untuk schedule, manual dispatch full, atau push ke `main`/`master`.
 - Tidak berjalan untuk PR biasa.
 - Menggunakan Java 21 dan Node.js 20.
-- Build: `./mvnw -B package -DskipTests -Pe2e -q`.
+- Build: `./mvnw -B clean package -DskipTests -Pe2e -q`.
 - Start app dengan profile `e2e`.
 - Menjalankan `npx playwright test` di folder `e2e-tests`.
 - Upload artifact:
@@ -781,14 +781,14 @@ Cek:
 Command lokal:
 
 ```bash
-./mvnw -B package -DskipTests -Pe2e -q
+./mvnw -B clean package -DskipTests -Pe2e -q
 java -jar target/solusi-program-erp-*.jar --spring.profiles.active=e2e
 ```
 
 Di Windows:
 
 ```powershell
-.\mvnw.cmd -B package -DskipTests -Pe2e -q
+.\mvnw.cmd -B clean package -DskipTests -Pe2e -q
 java -jar target\solusi-program-erp-*.jar --spring.profiles.active=e2e
 ```
 

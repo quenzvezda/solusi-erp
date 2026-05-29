@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.solusi</groupId>
     <artifactId>solusi-program-erp</artifactId>
-    <version>1.7.8</version>
+    <version>1.7.9</version>
     <name>solusi-program-erp</name>
     <description>Enterprise Resource Planning System for Learning</description>
 
@@ -157,7 +157,7 @@
                 <version>3.10.1</version>
                 <configuration>
                     <release>${java.version}</release>
-                    <!-- Force Maven and IDE to recognize the generated sources location -->
+                    <!-- Keep annotation processor output under Maven's generated-sources path. -->
                     <generatedSourcesDirectory>${project.build.directory}/generated-sources/annotations</generatedSourcesDirectory>
                     <fork>true</fork>
                     <annotationProcessorPaths>
@@ -211,26 +211,6 @@
                         </exclude>
                     </excludes>
                 </configuration>
-            </plugin>
-            <!-- Attach generated sources back to the module space so Vscode/Antigravity picks them up immediately -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.5.0</version>
-                <executions>
-                    <execution>
-                        <id>add-source</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>add-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>${project.build.directory}/generated-sources/annotations</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
             <!-- JaCoCo Code Coverage -->
             <plugin>

@@ -12,7 +12,7 @@ Set-Location $ProjectRoot
 # obsolete build.
 Get-ChildItem "$ProjectRoot\target\solusi-program-erp-*.jar" -ErrorAction SilentlyContinue |
     Remove-Item -Force -ErrorAction SilentlyContinue
-.\mvnw.cmd -B package -DskipTests -Pe2e -q
+.\mvnw.cmd -B clean package -DskipTests -Pe2e -q
 if ($LASTEXITCODE -ne 0) { Write-Error "Build failed"; exit 1 }
 
 # Pick the newest JAR by modification time (defensive even after the cleanup
