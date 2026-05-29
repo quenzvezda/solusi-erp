@@ -404,6 +404,30 @@ class GoodsReceiptFormIntegrationTest {
     }
 
     @Test
+    @DisplayName("form template shows readonly outstanding quantity for preadd lines")
+    void formTemplate_showsReadonlyOutstandingQuantityForPreaddLines() throws Exception {
+        String template = readResource(CREATE_TEMPLATE);
+
+        assertThat(template).contains("label.gr.line.outstandingQty");
+        assertThat(template).contains("].remainingQuantity'");
+        assertThat(template).contains("name=\"lines[INDEX].remainingQuantity\"");
+        assertThat(template).contains("input-remaining-qty");
+        assertThat(template).contains("readonly");
+    }
+
+    @Test
+    @DisplayName("selector modal passes remaining quantity into dynamic GR rows")
+    void selectorModal_passesRemainingQuantityIntoDynamicRows() throws Exception {
+        String selectorTemplate = readResource(PO_LINE_SELECTOR_TEMPLATE);
+        String script = readResource(FORM_SCRIPT);
+
+        assertThat(selectorTemplate).contains("data-remaining-quantity=${row.remainingQuantity}");
+        assertThat(script).contains("remainingQuantity: row.dataset.remainingQuantity || ''");
+        assertThat(script).contains("var remainingQtyInput = newRow.querySelector('.input-remaining-qty');");
+        assertThat(script).contains("setNumericValue(remainingQtyInput, payload.remainingQuantity || 0);");
+    }
+
+    @Test
     @DisplayName("form script provides fallback modal shell when selector modal is missing")
     void formScript_providesFallbackModalShellWhenSelectorModalIsMissing() throws Exception {
         String script = readResource(FORM_SCRIPT);

@@ -201,6 +201,42 @@ public class GoodsReceiptControllerTest {
     }
 
     @Test
+    @DisplayName("createForm enriches preadd lines with outstanding PO quantity")
+    void createFormShouldEnrichPreaddLinesWithOutstandingPoQuantity() {
+        GoodsReceipt gr = buildDraftGr();
+        when(createViewUc.execute(GoodsReceiptReferenceType.PURCHASE_ORDER, 7L)).thenReturn(gr);
+
+        GoodsReceiptSaveLineRequest line = new GoodsReceiptSaveLineRequest();
+        line.setReferenceLineId(10L);
+        GoodsReceiptSaveRequest request = new GoodsReceiptSaveRequest();
+        request.setReceiptDate(LocalDate.of(2026, 7, 1));
+        request.setReferenceType(GoodsReceiptReferenceType.PURCHASE_ORDER);
+        request.setReferenceId(7L);
+        request.setLines(List.of(line));
+        when(webMapper.toSaveRequest(any(GoodsReceipt.class))).thenReturn(request);
+        when(referenceLookupProvider.resolveReferenceLineSnapshots(GoodsReceiptReferenceType.PURCHASE_ORDER, 7L))
+            .thenReturn(java.util.Map.of(
+                10L,
+                new GoodsReceiptReferenceLookupProvider.ReferenceLineSnapshot(
+                    new BigDecimal("8.00"),
+                    new BigDecimal("3.00"),
+                    new BigDecimal("5.00"),
+                    new BigDecimal("125000.00")
+                )
+            ));
+
+        Model model = new ExtendedModelMap();
+        String view = controller.createForm(GoodsReceiptReferenceType.PURCHASE_ORDER, 7L, null, model);
+
+        assertEquals("inventory/goods-receipts/form", view);
+        GoodsReceiptSaveRequest modelRequest = (GoodsReceiptSaveRequest) model.getAttribute("grRequest");
+        assertThat(modelRequest.getLines().getFirst().getRemainingQuantity()).isEqualByComparingTo("5.00");
+        assertThat(modelRequest.getLines().getFirst().getOrderedQuantity()).isEqualByComparingTo("8.00");
+        assertThat(modelRequest.getLines().getFirst().getReceivedToDateQuantity()).isEqualByComparingTo("3.00");
+        assertThat(modelRequest.getLines().getFirst().getUnitPrice()).isEqualByComparingTo("125000.00");
+    }
+
+    @Test
     @DisplayName("createForm accepts legacy poId query parameter when generic params are absent")
     void createFormShouldAcceptLegacyPoIdQueryParameter() throws Exception {
         GoodsReceipt gr = buildDraftGr();

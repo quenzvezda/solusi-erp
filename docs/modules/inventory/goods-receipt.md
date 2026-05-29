@@ -103,6 +103,7 @@ Rujukan aturan: web may use lookup/query ports; web may not use repositories. Lo
 
 - Header referensi (`referenceType`, `referenceCode`, supplier, facility, currency) tampil **read-only**.
 - `referenceType` dan `referenceId` tetap disimpan sebagai hidden field untuk submit.
+- Line PO pada pre-add menampilkan **Outstanding Qty / Sisa Qty** read-only agar user langsung melihat batas qty yang masih boleh dibuat GR.
 - Detail qty/UoM/serial diatur lewat **drawer**:
   - non-serialized: drawer qty + target UoM
   - serialized: drawer qty + target UoM + grid serial per unit base

@@ -91,11 +91,12 @@
                             <table class="table table-vcenter card-table" id="table-lines">
                                 <thead>
                                     <tr>
-                                        <th class="required" th:text="#{label.product}" style="width: 25%;">Product</th>
+                                        <th class="required" th:text="#{label.product}" style="width: 24%;">Product</th>
+                                        <th class="text-end" th:text="#{label.gr.line.outstandingQty}" style="width: 12%;">Outstanding Qty</th>
                                         <th class="text-end required" th:text="#{label.qty.received}" style="width: 12%;">Qty Received</th>
-                                        <th class="required" th:text="#{label.uom}" style="width: 12%;">UoM</th>
-                                        <th class="required" th:text="#{label.container}" style="width: 15%;">Container</th>
-                                        <th style="width: 18%;">Detail</th>
+                                        <th class="required" th:text="#{label.uom}" style="width: 10%;">UoM</th>
+                                        <th class="required" th:text="#{label.container}" style="width: 14%;">Container</th>
+                                        <th style="width: 16%;">Detail</th>
                                         <th class="w-1" style="width: 110px;"></th>
                                     </tr>
                                 </thead>
@@ -111,6 +112,7 @@
                                                 initialValue=${line.productId}, initialText=${line.productName},
                                                 initialSubtext=${line.productCode})}"></div>
                                         </td>
+                                        <td><input type="text" th:name="'lines[' + ${stat.index} + '].remainingQuantity'" th:value="${line.remainingQuantity}" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-remaining-qty bg-body-tertiary" readonly></td>
                                         <td><input type="text" th:name="'lines[' + ${stat.index} + '].quantityReceived'" th:value="${line.quantityReceived}" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-qty" readonly required></td>
                                         <td>
                                             <input type="text" class="form-control form-control-sm erp-input-sm input-uom-display" th:value="${line.uomName}" readonly>
@@ -170,6 +172,7 @@
                         <input type="hidden" class="input-uom-alias">
                         <div th:replace="~{fragments/inputs :: table-autocomplete(name='lines[INDEX].productId', id='', isReadonly=false, extraClass='select-product', path='inventory/products')}"></div>
                     </td>
+                    <td><input type="text" name="lines[INDEX].remainingQuantity" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-remaining-qty bg-body-tertiary" readonly></td>
                     <td><input type="text" name="lines[INDEX].quantityReceived" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end input-qty" value="0.0000" readonly required></td>
                     <td><input type="text" class="form-control form-control-sm erp-input-sm input-uom-display" readonly></td>
                     <td>

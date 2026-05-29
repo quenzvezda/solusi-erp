@@ -222,6 +222,7 @@ document.addEventListener('DOMContentLoaded', function () {
             uomId: row.dataset.uomId || '',
             uomName: row.dataset.uomName || '',
             uomSubtext: row.dataset.uomSubtext || '',
+            remainingQuantity: row.dataset.remainingQuantity || '',
             serialized: row.dataset.serialized === 'true'
         };
     }
@@ -237,6 +238,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var uomDisplayInput = newRow.querySelector('.input-uom-display');
         var serializedInput = newRow.querySelector('.input-serialized');
         var qtyInput = newRow.querySelector('.input-qty');
+        var remainingQtyInput = newRow.querySelector('.input-remaining-qty');
 
         if (referenceLineInput) referenceLineInput.value = payload.referenceLineId;
         if (uomIdInput) uomIdInput.value = payload.uomId;
@@ -244,6 +246,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (uomDisplayInput) uomDisplayInput.value = payload.uomName;
         if (serializedInput) serializedInput.value = payload.serialized ? 'true' : 'false';
         if (qtyInput) setNumericValue(qtyInput, 0);
+        if (remainingQtyInput) setNumericValue(remainingQtyInput, payload.remainingQuantity || 0);
 
         setLookupValue(productSelect, payload.productId, payload.productName, payload.productSubtext);
         lockLookup(productSelect);
