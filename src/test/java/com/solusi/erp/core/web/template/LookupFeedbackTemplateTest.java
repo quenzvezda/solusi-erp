@@ -57,6 +57,45 @@ class LookupFeedbackTemplateTest {
                 .contains("errorShownForThisOpen = false;");
     }
 
+    @Test
+    void stockAdjustmentPrivateLookupReportsFailures() throws Exception {
+        String handler = readResource("static/js/inventory/adjustment/stock-adjustment-form.js");
+
+        assertThat(handler)
+                .contains("let loadError = null;")
+                .contains("headers: { 'Accept': 'application/json' }")
+                .contains("if (!r.ok)")
+                .contains("showLookupErrorOnce(loadError);")
+                .contains("no_results: (data, escape) => loadError");
+    }
+
+    @Test
+    void menuSearchReportsFailures() throws Exception {
+        String layout = readResource("templates/layout/master.html");
+
+        assertThat(layout)
+                .contains("let menuSearchLoadError = null;")
+                .contains("headers: { 'Accept': 'application/json' }")
+                .contains("if (!r.ok)")
+                .contains("menuSearchLoadError = lookupFailed;")
+                .contains("no_results: function(data, escape)");
+    }
+
+    @Test
+    void partyGeographicLookupsPreserveSubmittedCityAndReportFailures() throws Exception {
+        String template = readResource("templates/master/parties/form.html");
+
+        assertThat(template)
+                .contains("th:field=\"*{addresses[__${stat.index}__].cityId}\"")
+                .contains("name=\"addresses[INDEX].cityId\" class=\"city-id-value\" value=\"\"")
+                .doesNotContain("th:name=\"'addresses[' + ${stat.index} + '].cityId'\"")
+                .contains("function createGeoLoader(urlBuilder)")
+                .contains("fetch(url, { headers: { 'Accept': 'application/json' } })")
+                .contains("function loadGeoHierarchy(id)")
+                .contains("cityIdValue.value = val || '';")
+            .contains("warnGeoHierarchyOnce(lookupMessageForStatus(error.status));");
+    }
+
     private Properties loadProperties(String resource) throws Exception {
         Properties props = new Properties();
         try (InputStream in = getResource(resource);

@@ -114,23 +114,23 @@ Steps:
 
 ---
 
-### Task 3: Selaraskan loader manual (stock-adjustment + menu search + Party geographic)
+### Task 3: Selaraskan loader manual (stock-adjustment + menu search + Party geographic) [x]
 Beberapa autocomplete tidak memakai shared `initLookup` melainkan punya `TomSelect`/`load` sendiri. Terapkan perbaikan yang sama agar feedback benar-benar global.
 
 **Depends on:** Task 2
 **Reference module:** stock-adjustment-form.js (local initLookup copy), master.html (menu search inline), master/parties/form.html (geographic TomSelect inline)
 
 Steps:
-- [ ] **Stock Adjustment** — file ini punya SALINAN PRIVAT fungsi `initLookup` sendiri (bukan yang shared), jadi fix Task 2 tidak otomatis berlaku. Terapkan pola sama (Accept header + cek r.ok + `loadError` + render.no_results, plus fallback popup bila dipilih di Task 2) pada salinan lokal tsb.
+- [x] **Stock Adjustment** — file ini punya SALINAN PRIVAT fungsi `initLookup` sendiri (bukan yang shared), jadi fix Task 2 tidak otomatis berlaku. Terapkan pola sama (Accept header + cek r.ok + `loadError` + render.no_results, plus fallback popup bila dipilih di Task 2) pada salinan lokal tsb.
       ref: src/main/resources/static/js/inventory/adjustment/stock-adjustment-form.js:L28-L70 — salinan privat initLookup (load di L46)
-- [ ] **Menu search global (navbar)** — `TomSelect` inline di master.html dengan `load` sendiri. Terapkan `Accept: application/json`, cek `r.ok`, `loadError`, dan `render.no_results` generic error agar kegagalan tidak kembali menjadi dropdown kosong senyap.
+- [x] **Menu search global (navbar)** — `TomSelect` inline di master.html dengan `load` sendiri. Terapkan `Accept: application/json`, cek `r.ok`, `loadError`, dan `render.no_results` generic error agar kegagalan tidak kembali menjadi dropdown kosong senyap.
       - CATATAN: controllernya `@PreAuthorize("isAuthenticated()")` (BUKAN permission granular), jadi untuk user login kasus **403 praktis tidak terpicu**. Feedback yang realistis di sini = **error backend (500)** atau sesi habis. Tetap diberi perlakuan sama demi konsistensi, tapi jangan harapkan skenario "forbidden" muncul di sini.
       ref: src/main/resources/templates/layout/master.html:L101-L106 — menu search load handler
       ref: src/main/java/com/solusi/erp/security/menusearch/web/controller/MenuSearchController.java:L28-L29 — @PreAuthorize isAuthenticated()
-- [ ] **Party geographic autocomplete** — form Party punya tiga `TomSelect` inline untuk `countries`, `provinces`, dan `cities`; ketiganya tidak memakai shared `initLookup`. Terapkan `Accept: application/json`, cek `r.ok`, `loadError`, dan `render.no_results` pada masing-masing loader. Gunakan helper lokal kecil agar pemetaan 403 → `lookupForbidden`, error lain → `lookupError`, dan markup no-results tidak diduplikasi tiga kali.
+- [x] **Party geographic autocomplete** — form Party punya tiga `TomSelect` inline untuk `countries`, `provinces`, dan `cities`; ketiganya tidak memakai shared `initLookup`. Terapkan `Accept: application/json`, cek `r.ok`, `loadError`, dan `render.no_results` pada masing-masing loader. Gunakan helper lokal kecil agar pemetaan 403 → `lookupForbidden`, error lain → `lookupError`, dan markup no-results tidak diduplikasi tiga kali.
       ref: src/main/resources/templates/master/parties/form.html:L494-L650 — `GEO_API`, city/province/country TomSelect manual
       ref: src/main/java/com/solusi/erp/master/geographic/web/controller/GeographicLookupController.java:L17-L21 — seluruh endpoint lookup geografis dilindungi `LOOKUP_GEOGRAPHIC`
-- [ ] **Party edit cityId preservation** — ubah field kota Party agar hidden input menjadi canonical submitted value:
+- [x] **Party edit cityId preservation** — ubah field kota Party agar hidden input menjadi canonical submitted value:
       - existing row: tambah `<input type="hidden" th:field="*{addresses[__${stat.index}__].cityId}" class="city-id-value">`
       - dynamic row template: tambah `<input type="hidden" name="addresses[INDEX].cityId" class="city-id-value" value="">`
       - hapus `name="addresses[...].cityId"` dari `<select class="city-ts">`; select hanya UI TomSelect
@@ -139,15 +139,15 @@ Steps:
       - pertahankan hidden helper `.initial-city-id` untuk hierarchy prefill edit
       ref: src/main/resources/templates/master/parties/form.html:L317-L338 — existing city select + initial helper
       ref: src/main/resources/templates/master/parties/form.html:L468-L473 — dynamic city select
-- [ ] **Party hierarchy fetch** — semua fetch ke `GEO_HIER` juga tambahkan `Accept: application/json` + cek `r.ok`. Jika hierarchy prefill gagal, tampilkan warning paling banyak 1x per page load dan JANGAN kosongkan hidden canonical `cityId`; user tetap dapat menyimpan perubahan unrelated tanpa kehilangan kota lama.
+- [x] **Party hierarchy fetch** — semua fetch ke `GEO_HIER` juga tambahkan `Accept: application/json` + cek `r.ok`. Jika hierarchy prefill gagal, tampilkan warning paling banyak 1x per page load dan JANGAN kosongkan hidden canonical `cityId`; user tetap dapat menyimpan perubahan unrelated tanpa kehilangan kota lama.
       ref: src/main/resources/templates/master/parties/form.html:L555-L569,L607-L615,L652-L677 — hierarchy fetch manual
       ref: src/main/java/com/solusi/erp/master/geographic/web/controller/GeographicController.java:L165-L182 — hierarchy endpoint dilindungi `LOOKUP_GEOGRAPHIC`
-- [ ] Konfirmasi loader dropdown pada `goods-receipt-form.js`, `purchase-order-form.js`, `purchase-requisition-form.js`, dan `signature-capture.js` memakai shared `initLookup` (sudah tercakup Task 2). Fetch detail/payload pendukung bukan loader dropdown diaudit pada langkah berikutnya.
+- [x] Konfirmasi loader dropdown pada `goods-receipt-form.js`, `purchase-order-form.js`, `purchase-requisition-form.js`, dan `signature-capture.js` memakai shared `initLookup` (sudah tercakup Task 2). Fetch detail/payload pendukung bukan loader dropdown diaudit pada langkah berikutnya.
       ref: src/main/resources/static/js/inventory/goods-receipt-form.js:L485-L486 — pakai initLookup shared
-- [ ] Audit fetch detail/payload pendukung secara terpisah. Jangan perluas patch ini untuk fetch yang bukan loader dropdown kecuali fetch hierarchy Party di atas, karena hierarchy tersebut memengaruhi preservasi nilai submit edit.
+- [x] Audit fetch detail/payload pendukung secara terpisah. Jangan perluas patch ini untuk fetch yang bukan loader dropdown kecuali fetch hierarchy Party di atas, karena hierarchy tersebut memengaruhi preservasi nilai submit edit.
       ref: src/main/resources/static/js/purchasing/purchase-order-form.js:L204-L209 — product detail payload
       ref: src/main/resources/static/js/purchasing/purchase-requisition-form.js:L90-L102 — product detail payload
-- [ ] (Out of scope — catat di report saja) Refactor agar stock-adjustment memakai shared `initLookup` daripada menyalin. JANGAN refactor sekarang.
+- [x] (Out of scope — catat di report saja) Refactor agar stock-adjustment memakai shared `initLookup` daripada menyalin. JANGAN refactor sekarang.
 
 **Validation criteria:**
 - Audit bersih: seluruh `TomSelect.load` handler yang memanggil endpoint lookup sudah mengirim `Accept: application/json`, mengecek `r.ok`, dan menampilkan feedback; cakup `erp-common-handler.js`, `stock-adjustment-form.js`, `layout/master.html`, dan `master/parties/form.html`.

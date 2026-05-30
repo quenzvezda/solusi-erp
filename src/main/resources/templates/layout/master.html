@@ -95,6 +95,9 @@
 
             const menuSearchEl = document.getElementById('global-menu-search');
             if (menuSearchEl) {
+                let menuSearchLoadError = null;
+                const lookupI18n = window.ErpI18n || {};
+                const lookupFailed = lookupI18n.lookupError || 'Failed to load. Please try again.';
                 new TomSelect('#global-menu-search', {
                     valueField: 'urlPath',
                     labelField: 'name',
@@ -102,10 +105,22 @@
                     openOnFocus: true,
                     preload: false,
                     load: debounce(function (q, callback) {
-                        fetch(`/api/lookup/menus?q=${encodeURIComponent(q)}&limit=10`)
-                            .then(r => r.json())
-                            .then(callback)
-                            .catch(() => callback([]));
+                        menuSearchLoadError = null;
+                        fetch(`/api/lookup/menus?q=${encodeURIComponent(q)}&limit=10`, {
+                            headers: { 'Accept': 'application/json' }
+                        })
+                            .then(r => {
+                                if (!r.ok) {
+                                    menuSearchLoadError = lookupFailed;
+                                    callback([]);
+                                    return;
+                                }
+                                return r.json().then(callback);
+                            })
+                            .catch(() => {
+                                menuSearchLoadError = lookupFailed;
+                                callback([]);
+                            });
                     }, 100),
                     render: {
                         option: function(data, escape) {
@@ -114,6 +129,11 @@
                         },
                         item: function(data, escape) {
                             return `<span>${escape(data.name)}</span>`;
+                        },
+                        no_results: function(data, escape) {
+                            const message = menuSearchLoadError || lookupI18n.lookupNoResults || 'No results found';
+                            const errorClass = menuSearchLoadError ? ' text-danger' : '';
+                            return `<div class="no-results${errorClass} px-2 py-1">${escape(message)}</div>`;
                         }
                     },
                     onChange: function(value) {

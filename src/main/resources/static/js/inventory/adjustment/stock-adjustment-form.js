@@ -29,6 +29,19 @@
         if (!el || typeof TomSelect === 'undefined') return null;
         if (el.tomselect) el.tomselect.destroy();
 
+        let loadError = null;
+        let errorShownForThisOpen = false;
+        const lookupI18n = window.ErpI18n || {};
+        const lookupForbidden = lookupI18n.lookupForbidden || "You don't have access to this list.";
+        const lookupFailed = lookupI18n.lookupError || 'Failed to load. Please try again.';
+        const showLookupErrorOnce = (message) => {
+            if (errorShownForThisOpen) return;
+            errorShownForThisOpen = true;
+            if (window.ErpModal && typeof window.ErpModal.showWarning === 'function') {
+                window.ErpModal.showWarning(message);
+            }
+        };
+
         const ts = new TomSelect(el, {
             valueField: 'id',
             labelField: 'name',
@@ -37,13 +50,28 @@
             allowEmptyOption: false,
             preload: 'focus',
             load: debounce(function (q, callback) {
+                loadError = null;
                 const separator = lookupPath.includes('?') ? '&' : '?';
                 let url = `/api/lookup/${lookupPath}${separator}q=${encodeURIComponent(q)}&limit=10`;
                 if (parentProvider) {
                     const parent = parentProvider();
                     if (parent && parent.id) url += `&${parent.key || 'parentId'}=${parent.id}`;
                 }
-                fetch(url).then(r => r.json()).then(callback).catch(() => callback([]));
+                fetch(url, { headers: { 'Accept': 'application/json' } })
+                    .then(r => {
+                        if (!r.ok) {
+                            loadError = r.status === 403 ? lookupForbidden : lookupFailed;
+                            showLookupErrorOnce(loadError);
+                            callback([]);
+                            return;
+                        }
+                        return r.json().then(callback);
+                    })
+                    .catch(() => {
+                        loadError = lookupFailed;
+                        showLookupErrorOnce(loadError);
+                        callback([]);
+                    });
             }, 150),
             render: {
                 option: (data, escape) => {
@@ -54,9 +82,14 @@
                 item: (data, escape) => {
                     const sub = data.subText ? `<small class="text-muted ms-1" style="font-size:0.8em;opacity:0.7">${escape(data.subText)}</small>` : '';
                     return `<span>${escape(data.name)}${sub}</span>`;
-                }
+                },
+                no_results: (data, escape) => loadError
+                    ? `<div class="no-results text-danger px-2 py-1"><i class="ti ti-alert-triangle me-1"></i>${escape(loadError)}</div>`
+                    : `<div class="no-results px-2 py-1">${escape((window.ErpI18n && window.ErpI18n.lookupNoResults) || 'No results found')}</div>`
             }
         });
+
+        ts.on('dropdown_open', () => { errorShownForThisOpen = false; });
 
         if (parentProvider) {
             ts.on('dropdown_open', () => {

@@ -316,13 +316,13 @@
                                                     </div>
                                                     <!-- City (submitted to server) -->
                                                     <div class="col-md-4">
-                                                        <label class="form-label small mb-0">Kota / Kab</label>
-                                                        <select class="city-ts form-select form-select-sm"
-                                                            th:name="'addresses[' + ${stat.index} + '].cityId'"
-                                                            th:id="'city-ts-' + ${stat.index}"
-                                                            th:attr="data-address-index=${stat.index}">
-                                                            <option value=""></option>
-                                                        </select>
+                                                         <label class="form-label small mb-0">Kota / Kab</label>
+                                                         <select class="city-ts form-select form-select-sm"
+                                                             th:id="'city-ts-' + ${stat.index}"
+                                                             th:attr="data-address-index=${stat.index}">
+                                                             <option value=""></option>
+                                                         </select>
+                                                         <input type="hidden" th:field="*{addresses[__${stat.index}__].cityId}" class="city-id-value">
                                                     </div>
                                                 </div>
                                                 <div class="row g-2">
@@ -467,10 +467,11 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small mb-0">Kota / Kab</label>
-                                <select class="city-ts form-select form-select-sm" name="addresses[INDEX].cityId" id="city-ts-INDEX"
-                                    data-address-index="INDEX">
-                                    <option value=""></option>
-                                </select>
+                                 <select class="city-ts form-select form-select-sm" id="city-ts-INDEX"
+                                     data-address-index="INDEX">
+                                     <option value=""></option>
+                                 </select>
+                                 <input type="hidden" name="addresses[INDEX].cityId" class="city-id-value" value="">
                             </div>
                         </div>
                         <div class="row g-2">
@@ -493,6 +494,77 @@
 
             const GEO_API = '/api/lookup/geographics'; // GeographicLookupController
             const GEO_HIER = '/master/geographics/api/hierarchy'; // GeographicController
+            const lookupI18n = window.ErpI18n || {};
+            const lookupForbidden = lookupI18n.lookupForbidden || "You don't have access to this list.";
+            const lookupError = lookupI18n.lookupError || 'Failed to load. Please try again.';
+            let geoHierarchyWarningShown = false;
+
+            function warnGeoHierarchyOnce(message) {
+                if (geoHierarchyWarningShown) return;
+                geoHierarchyWarningShown = true;
+                if (window.ErpModal && typeof window.ErpModal.showWarning === 'function') {
+                    window.ErpModal.showWarning(message);
+                }
+            }
+
+            function lookupMessageForStatus(status) {
+                return status === 403 ? lookupForbidden : lookupError;
+            }
+
+            function createGeoLoader(urlBuilder) {
+                let loadError = null;
+                let errorShownForThisOpen = false;
+                const showLookupErrorOnce = (message) => {
+                    if (errorShownForThisOpen) return;
+                    errorShownForThisOpen = true;
+                    if (window.ErpModal && typeof window.ErpModal.showWarning === 'function') {
+                        window.ErpModal.showWarning(message);
+                    }
+                };
+
+                return {
+                    load: debounce(function (q, callback) {
+                        loadError = null;
+                        const url = urlBuilder(q);
+                        fetch(url, { headers: { 'Accept': 'application/json' } })
+                            .then(r => {
+                                if (!r.ok) {
+                                    loadError = lookupMessageForStatus(r.status);
+                                    showLookupErrorOnce(loadError);
+                                    callback([]);
+                                    return;
+                                }
+                                return r.json().then(callback);
+                            })
+                            .catch(() => {
+                                loadError = lookupError;
+                                showLookupErrorOnce(loadError);
+                                callback([]);
+                            });
+                    }, 100),
+                    noResults: (data, escape) => loadError
+                        ? `<div class="no-results text-danger px-2 py-1"><i class="ti ti-alert-triangle me-1"></i>${escape(loadError)}</div>`
+                        : `<div class="no-results px-2 py-1">${escape(lookupI18n.lookupNoResults || 'No results found')}</div>`,
+                    resetWarning: () => { errorShownForThisOpen = false; }
+                };
+            }
+
+            function loadGeoHierarchy(id) {
+                return fetch(`${GEO_HIER}/${id}`, { headers: { 'Accept': 'application/json' } })
+                    .then(r => {
+                        if (!r.ok) {
+                            const error = new Error(`HTTP ${r.status}`);
+                            error.status = r.status;
+                            throw error;
+                        }
+                        return r.json();
+                    })
+                    .catch(error => {
+                        console.error('Geo hierarchy error:', error);
+                        warnGeoHierarchyOnce(lookupMessageForStatus(error.status));
+                        return null;
+                    });
+            }
 
             /**
              * Renders a TomSelect option with subText below main name.
@@ -520,8 +592,23 @@
              */
             function initGeoAutocomplete(row, initialCityId) {
                 const idx = row.querySelector('[data-address-index]').dataset.addressIndex;
+                const cityIdValue = row.querySelector('.city-id-value');
+                const syncCityIdValue = (val) => {
+                    if (cityIdValue) cityIdValue.value = val || '';
+                };
 
                 let countryTs, provinceTs, cityTs;
+                const cityLoader = createGeoLoader(q => {
+                    const provinceId = provinceTs ? provinceTs.getValue() : '';
+                    const param = provinceId ? `&provinceId=${provinceId}` : '';
+                    return `${GEO_API}/cities?q=${encodeURIComponent(q)}&limit=5${param}`;
+                });
+                const provinceLoader = createGeoLoader(q => {
+                    const countryId = countryTs ? countryTs.getValue() : '';
+                    const param = countryId ? `&countryId=${countryId}` : '';
+                    return `${GEO_API}/provinces?q=${encodeURIComponent(q)}&limit=5${param}`;
+                });
+                const countryLoader = createGeoLoader(q => `${GEO_API}/countries?q=${encodeURIComponent(q)}&limit=5`);
 
                 // ---- City TomSelect ----------------------------------------
                 cityTs = new TomSelect(`#city-ts-${idx}`, {
@@ -531,15 +618,11 @@
                     placeholder: '-- Pilih Kota --',
                     openOnFocus: true,
                     preload: false,
-                    load: debounce(function (q, callback) {
-                        const provinceId = provinceTs ? provinceTs.getValue() : '';
-                        const param = provinceId ? `&provinceId=${provinceId}` : '';
-                        fetch(`${GEO_API}/cities?q=${encodeURIComponent(q)}&limit=5${param}`)
-                            .then(r => r.json()).then(callback).catch(() => callback([]));
-                    }, 100),
+                    load: cityLoader.load,
                     render: {
                         option: (data, escape) => renderGeoOption(data, escape),
-                        item: (data, escape) => `<span>${escape(data.name)}</span>`
+                        item: (data, escape) => `<span>${escape(data.name)}</span>`,
+                        no_results: cityLoader.noResults
                     },
                     onFocus() {
                         this.load('');
@@ -547,14 +630,16 @@
                     onDelete() {
                         this.clear(true);
                         this.clearOptions();
+                        syncCityIdValue('');
                         return false; // prevent default char-delete
                     },
                     onChange(val) {
+                        syncCityIdValue(val);
                         if (!val) return;
                         // Auto-fill province & country (reverse lookup)
-                        fetch(`${GEO_HIER}/${val}`)
-                            .then(r => r.json())
+                        loadGeoHierarchy(val)
                             .then(hierarchy => {
+                                if (!hierarchy) return;
                                 const country = hierarchy.find(g => g.type === 'COUNTRY');
                                 const province = hierarchy.find(g => g.type === 'STATE_PROVINCE');
                                 if (country) {
@@ -566,9 +651,10 @@
                                     provinceTs.addOption({ id: province.id, name: province.name, subText: cName });
                                     provinceTs.setValue(province.id, true);
                                 }
-                            }).catch(() => { });
+                            });
                     }
                 });
+                cityTs.on('dropdown_open', cityLoader.resetWarning);
 
                 // ---- Province TomSelect ------------------------------------
                 provinceTs = new TomSelect(`#province-ts-${idx}`, {
@@ -578,15 +664,11 @@
                     placeholder: '-- Pilih Provinsi --',
                     openOnFocus: true,
                     preload: false,
-                    load: debounce(function (q, callback) {
-                        const countryId = countryTs ? countryTs.getValue() : '';
-                        const param = countryId ? `&countryId=${countryId}` : '';
-                        fetch(`${GEO_API}/provinces?q=${encodeURIComponent(q)}&limit=5${param}`)
-                            .then(r => r.json()).then(callback).catch(() => callback([]));
-                    }, 100),
+                    load: provinceLoader.load,
                     render: {
                         option: (data, escape) => renderGeoOption(data, escape),
-                        item: (data, escape) => `<span>${escape(data.name)}</span>`
+                        item: (data, escape) => `<span>${escape(data.name)}</span>`,
+                        no_results: provinceLoader.noResults
                     },
                     onFocus() {
                         this.load('');
@@ -596,25 +678,28 @@
                         this.clearOptions();
                         cityTs.clear(true);
                         cityTs.clearOptions();
+                        syncCityIdValue('');
                         return false;
                     },
                     onChange(val) {
                         cityTs.clear(true);
                         cityTs.clearOptions();
+                        syncCityIdValue('');
 
                         if (!val) return;
                         // Auto-fill country
-                        fetch(`${GEO_HIER}/${val}`)
-                            .then(r => r.json())
+                        loadGeoHierarchy(val)
                             .then(hierarchy => {
+                                if (!hierarchy) return;
                                 const country = hierarchy.find(g => g.type === 'COUNTRY');
                                 if (country) {
                                     countryTs.addOption({ id: country.id, name: country.name, subText: country.code });
                                     countryTs.setValue(country.id, true);
                                 }
-                            }).catch(() => { });
+                            });
                     }
                 });
+                provinceTs.on('dropdown_open', provinceLoader.resetWarning);
 
                 // ---- Country TomSelect -------------------------------------
                 countryTs = new TomSelect(`#country-ts-${idx}`, {
@@ -624,13 +709,11 @@
                     placeholder: '-- Pilih Negara --',
                     openOnFocus: true,
                     preload: 'focus',
-                    load: debounce(function (q, callback) {
-                        fetch(`${GEO_API}/countries?q=${encodeURIComponent(q)}&limit=5`)
-                            .then(r => r.json()).then(callback).catch(() => callback([]));
-                    }, 100),
+                    load: countryLoader.load,
                     render: {
                         option: (data, escape) => renderGeoOption(data, escape),
-                        item: (data, escape) => `<span>${escape(data.name)}</span>`
+                        item: (data, escape) => `<span>${escape(data.name)}</span>`,
+                        no_results: countryLoader.noResults
                     },
                     onDelete() {
                         this.clear(true);
@@ -639,6 +722,7 @@
                         provinceTs.clearOptions();
                         cityTs.clear(true);
                         cityTs.clearOptions();
+                        syncCityIdValue('');
                         return false;
                     },
                     onChange(val) {
@@ -646,14 +730,16 @@
                         provinceTs.clearOptions();
                         cityTs.clear(true);
                         cityTs.clearOptions();
+                        syncCityIdValue('');
                     }
                 });
+                countryTs.on('dropdown_open', countryLoader.resetWarning);
 
                 // ---- Reverse lookup for edit mode -------------------------
                 if (initialCityId) {
-                    fetch(`${GEO_HIER}/${initialCityId}`)
-                        .then(r => r.json())
+                    loadGeoHierarchy(initialCityId)
                         .then(hierarchy => {
+                            if (!hierarchy) return;
                             const country = hierarchy.find(g => g.type === 'COUNTRY');
                             const province = hierarchy.find(g => g.type === 'STATE_PROVINCE');
                             const city = hierarchy.find(g => g.id == initialCityId);
@@ -673,8 +759,7 @@
                                 cityTs.addOption({ id: city.id, name: city.name, subText: sub });
                                 cityTs.setValue(city.id, true);
                             }
-                        })
-                        .catch(err => console.error('Geo hierarchy error:', err));
+                        });
                 }
             }
 

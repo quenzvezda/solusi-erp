@@ -23,3 +23,30 @@
 - **Status:** findings
 - **Summary:** Added status-aware shared lookup loading, localized error selection, JSON content negotiation, inline no-results feedback, and throttled modal fallback.
 - **Verification:** `mvn -q -Dtest=LookupFeedbackTemplateTest test`; `mvn -q compile -pl .`; headless Chromium TomSelect probe with stubbed 403 responses.
+
+## Task 3: Audit dan fix loader non-shared
+
+### Finding: Party edit memakai select UI sebagai nilai submit canonical
+- **Type:** bug
+- **Severity:** high
+- **Detail:** Nilai `cityId` edit sebelumnya bergantung pada select TomSelect. Saat hierarchy prefill gagal karena 403, nilai kota lama berisiko hilang ketika user menyimpan perubahan unrelated.
+- **Action taken:** Added a hidden canonical `cityId` field for existing and dynamic rows, synchronized it on city changes and clears, and preserved it when hierarchy prefill fails.
+- **Ref:** `src/main/resources/templates/master/parties/form.html`
+
+### Finding: Stock Adjustment masih memiliki salinan private lookup handler
+- **Type:** deviation
+- **Severity:** info
+- **Detail:** Form Stock Adjustment tidak memakai shared `initLookup`, sehingga fix global harus diterapkan dua kali.
+- **Action taken:** Applied the same lookup feedback behavior locally. Refactoring the duplicate into the shared handler remains out of scope for this patch.
+- **Ref:** `src/main/resources/static/js/inventory/adjustment/stock-adjustment-form.js`
+
+### Finding: Fetch payload produk lama bukan dropdown loader
+- **Type:** debt
+- **Severity:** info
+- **Detail:** Purchase Order dan Purchase Requisition masih memiliki supporting product-detail fetch yang tidak mengeraskan semua status handling. Keduanya bukan `TomSelect.load` dan tidak memengaruhi preservasi submit Party.
+- **Action taken:** Audited and left unchanged as explicitly out of scope.
+- **Ref:** `src/main/resources/static/js/purchasing/purchase-order-form.js`; `src/main/resources/static/js/purchasing/purchase-requisition-form.js`
+
+- **Status:** findings
+- **Summary:** Added status-aware feedback to Stock Adjustment, menu search, and all three Party geographic dropdowns; hardened Party hierarchy loading; preserved canonical edit `cityId`; confirmed remaining lookup consumers use shared `initLookup`.
+- **Verification:** `mvn -q -Dtest=LookupFeedbackTemplateTest,PartyTemplateTest,StockAdjustmentTemplateTest test`; `mvn -q compile -pl .`; headless Chromium Party probe with stubbed 403 hierarchy and dropdown responses.
