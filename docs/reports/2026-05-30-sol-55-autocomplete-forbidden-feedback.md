@@ -55,3 +55,15 @@
 - **Status:** clean
 - **Summary:** Ran the Windows E2E runner end to end. The runner rebuilt the JAR with profile `e2e`, started its own server, warmed routes, and completed the entire Playwright suite. Existing Stock Adjustment flow exercised authorized autocomplete loading successfully. A separate actual-app Party smoke created a temporary addressed Party, opened edit as admin, confirmed country/province/city prefill, updated only notes through the real AJAX form handler, reloaded edit, verified `cityId` remained unchanged, and deleted the smoke record.
 - **Verification:** `cd e2e-tests && npx tsc --noEmit`; `.\e2e-tests\scripts\run-e2e.ps1` → `73 passed`; actual-app Party edit smoke → hidden `cityId` remained `18`.
+
+## Task 5: Versioning dan final gate
+
+### Finding: Maven masih menampilkan warning agent Mockito untuk JDK mendatang
+- **Type:** debt
+- **Severity:** info
+- **Detail:** `mvn clean test` sukses, tetapi Mockito mencatat bahwa inline mock maker masih self-attach dan dynamic Java agent loading akan dibatasi pada rilis JDK mendatang. Compiler juga mencatat fallback ke `javac` dari environment.
+- **Action taken:** Recorded only. Tidak terkait SOL-55 dan tidak memengaruhi gate saat ini.
+
+- **Status:** clean
+- **Summary:** Bumped project version from `1.8.0` to `1.8.1`, validated the POM offline, ran the full Maven test and coverage gate, then reran the Windows E2E runner so the final browser evidence used the `1.8.1` artifact.
+- **Verification:** `mvn -q -o validate`; `mvn clean test` → `1547` tests passed and coverage checks met; `.\e2e-tests\scripts\run-e2e.ps1` → `73 passed` using `target\solusi-program-erp-1.8.1.jar`.

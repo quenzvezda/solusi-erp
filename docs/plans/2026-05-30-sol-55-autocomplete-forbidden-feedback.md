@@ -4,7 +4,7 @@
 > URL: https://linear.app/solusi-program/issue/SOL-55
 > Created: 2026-05-30
 > Sprint: minor-fix-bug-batch-1
-> Status: IN_PROGRESS
+> Status: COMPLETED
 
 ## Summary
 
@@ -181,14 +181,14 @@ Steps:
 
 ---
 
-### Task 5: Versioning (SemVer PATCH)
+### Task 5: Versioning (SemVer PATCH) [x]
 Naikkan versi pom sesuai protokol AGENTS.md §9.A (bug fix → PATCH).
 
 **Depends on:** Task 4
 Steps:
-- [ ] Bump `<version>` proyek dari `1.8.0` → `1.8.1` di pom.xml (PATCH: bug fix, tanpa fitur baru).
+- [x] Bump `<version>` proyek dari `1.8.0` → `1.8.1` di pom.xml (PATCH: bug fix, tanpa fitur baru).
       ref: pom.xml:L13 — project version (BUKAN versi Spring Boot di L8)
-- [ ] Lakukan SETELAH user manual verification lolos (bug fix, sesuai §9.A.2).
+- [x] Lakukan SETELAH user manual verification lolos (bug fix, sesuai §9.A.2).
 
 **Validation criteria:**
 - `mvn -q -o validate` sukses; versi terbaca 1.8.1.

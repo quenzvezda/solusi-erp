@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.solusi</groupId>
     <artifactId>solusi-program-erp</artifactId>
-    <version>1.8.0</version>
+    <version>1.8.1</version>
     <name>solusi-program-erp</name>
     <description>Enterprise Resource Planning System for Learning</description>
 
