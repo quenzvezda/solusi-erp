@@ -157,7 +157,7 @@ Steps:
 
 ---
 
-### Task 4: Regression gate — seluruh E2E existing harus pass
+### Task 4: Regression gate — seluruh E2E existing harus pass [x]
 Bug fix ini menyentuh jalur autocomplete global (shared `initLookup`) yang dipakai banyak form, jadi risiko utamanya adalah **regresi** pada lookup yang sudah jalan. Spec E2E khusus "forbidden" DI-SKIP untuk patch ini (sesuai keputusan); gantinya, gate finalisasi = seluruh suite E2E yang ada tetap hijau.
 
 **Depends on:** Task 3
@@ -165,13 +165,13 @@ Bug fix ini menyentuh jalur autocomplete global (shared `initLookup`) yang dipak
 > WAJIB baca dulu: docs/tests/playwright-pitfalls.md + docs/tests/playwright-e2e-guide.md. Catatan: server dijalankan agen sendiri (profile `e2e`), JANGAN minta user start server.
 
 Steps:
-- [ ] Build dulu agar perubahan JS/i18n ikut ter-package: `mvn -q -o -DskipTests package` (atau mekanisme build E2E sesuai guide).
+- [x] Build dulu agar perubahan JS/i18n ikut ter-package: `mvn -q -o -DskipTests package` (atau mekanisme build E2E sesuai guide).
       ref: docs/tests/playwright-e2e-guide.md — cara start server profile e2e + pemilihan JAR
-- [ ] Start server profile `e2e` secara mandiri sesuai guide, tunggu sampai siap.
-- [ ] Jalankan SELURUH suite: `cd e2e-tests && npx playwright test`. Bukan hanya `--list` / `tsc`.
-- [ ] Jika ada yang gagal: pastikan kegagalan BUKAN akibat perubahan ini (regresi lookup). Tangkap screenshot/trace, diagnosa, perbaiki sebelum lanjut.
-- [ ] Smoke manual cepat (di luar E2E): satu form ber-autocomplete yang user-nya punya izin → pastikan dropdown masih memuat hasil normal (mengonfirmasi `r.ok` path tidak merusak happy path).
-- [ ] Smoke manual Party edit: buka Party yang memiliki alamat sebagai user berizin lookup, pastikan country/province/city prefill tetap tampil dan save unrelated field mempertahankan `cityId`.
+- [x] Start server profile `e2e` secara mandiri sesuai guide, tunggu sampai siap.
+- [x] Jalankan SELURUH suite: `cd e2e-tests && npx playwright test`. Bukan hanya `--list` / `tsc`.
+- [x] Jika ada yang gagal: pastikan kegagalan BUKAN akibat perubahan ini (regresi lookup). Tangkap screenshot/trace, diagnosa, perbaiki sebelum lanjut.
+- [x] Smoke manual cepat (di luar E2E): satu form ber-autocomplete yang user-nya punya izin → pastikan dropdown masih memuat hasil normal (mengonfirmasi `r.ok` path tidak merusak happy path).
+- [x] Smoke manual Party edit: buka Party yang memiliki alamat sebagai user berizin lookup, pastikan country/province/city prefill tetap tampil dan save unrelated field mempertahankan `cityId`.
 
 **Validation criteria:**
 - `cd e2e-tests && npx tsc --noEmit` clean (jika ada perubahan TS).

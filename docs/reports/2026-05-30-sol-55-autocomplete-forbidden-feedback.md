@@ -50,3 +50,8 @@
 - **Status:** findings
 - **Summary:** Added status-aware feedback to Stock Adjustment, menu search, and all three Party geographic dropdowns; hardened Party hierarchy loading; preserved canonical edit `cityId`; confirmed remaining lookup consumers use shared `initLookup`.
 - **Verification:** `mvn -q -Dtest=LookupFeedbackTemplateTest,PartyTemplateTest,StockAdjustmentTemplateTest test`; `mvn -q compile -pl .`; headless Chromium Party probe with stubbed 403 hierarchy and dropdown responses.
+
+## Task 4: Regression gate
+- **Status:** clean
+- **Summary:** Ran the Windows E2E runner end to end. The runner rebuilt the JAR with profile `e2e`, started its own server, warmed routes, and completed the entire Playwright suite. Existing Stock Adjustment flow exercised authorized autocomplete loading successfully. A separate actual-app Party smoke created a temporary addressed Party, opened edit as admin, confirmed country/province/city prefill, updated only notes through the real AJAX form handler, reloaded edit, verified `cityId` remained unchanged, and deleted the smoke record.
+- **Verification:** `cd e2e-tests && npx tsc --noEmit`; `.\e2e-tests\scripts\run-e2e.ps1` → `73 passed`; actual-app Party edit smoke → hidden `cityId` remained `18`.
