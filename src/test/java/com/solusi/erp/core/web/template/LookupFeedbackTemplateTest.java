@@ -41,6 +41,22 @@ class LookupFeedbackTemplateTest {
                 .contains("lookupNoResults: /*[[#{label.lookup.no-results}]]*/");
     }
 
+    @Test
+    void sharedLookupHandlerReportsForbiddenAndGenericFailures() throws Exception {
+        String handler = readResource("static/js/shared/erp-common-handler.js");
+
+        assertThat(handler)
+                .contains("const lookupI18n = window.ErpI18n || {};")
+                .contains("headers: { 'Accept': 'application/json' }")
+                .contains("if (!r.ok)")
+                .contains("r.status === 403 ? lookupForbidden : lookupFailed")
+                .contains("no_results: (data, escape) => loadError")
+                .contains("window.ErpI18n && window.ErpI18n.lookupNoResults")
+                .contains("let errorShownForThisOpen = false;")
+                .contains("window.ErpModal.showWarning(message);")
+                .contains("errorShownForThisOpen = false;");
+    }
+
     private Properties loadProperties(String resource) throws Exception {
         Properties props = new Properties();
         try (InputStream in = getResource(resource);

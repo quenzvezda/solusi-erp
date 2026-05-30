@@ -72,14 +72,14 @@ Steps:
 
 ---
 
-### Task 2: Fix shared `initLookup` — cek `r.ok` + tampilkan feedback row
+### Task 2: Fix shared `initLookup` — cek `r.ok` + tampilkan feedback row [x]
 Perbaiki load handler agar mendeteksi kegagalan dan menampilkan pesan di dropdown via `render.no_results`. Ini perbaikan inti yang berlaku global.
 
 **Depends on:** Task 1
 **Reference module:** erp-common-handler.js initLookup
 
 Steps:
-- [ ] Di `initLookup`, deklarasikan closure var dan fallback string sebelum `new TomSelect(...)` (closure aman dipakai arrow fn di `render`):
+- [x] Di `initLookup`, deklarasikan closure var dan fallback string sebelum `new TomSelect(...)` (closure aman dipakai arrow fn di `render`):
       ```js
       let loadError = null;
       const lookupI18n = window.ErpI18n || {};
@@ -87,22 +87,22 @@ Steps:
       const lookupFailed = lookupI18n.lookupError || 'Failed to load. Please try again.';
       ```
       ref: src/main/resources/static/js/shared/erp-common-handler.js:L321-L325 — awal fungsi initLookup
-- [ ] Ganti body `load`:
+- [x] Ganti body `load`:
       - reset `loadError = null;` di awal
       - `fetch(url, { headers: { 'Accept': 'application/json' } })`
       - cek `if (!r.ok) { loadError = r.status === 403 ? lookupForbidden : lookupFailed; callback([]); return; }`
       - jika ok: `return r.json().then(callback);`
       - `.catch(() => { loadError = lookupFailed; callback([]); });`
       ref: src/main/resources/static/js/shared/erp-common-handler.js:L352-L360 — load handler lama
-- [ ] Tambah `no_results` ke object `render`:
+- [x] Tambah `no_results` ke object `render`:
       ```js
       no_results: (data, escape) => loadError
         ? `<div class="no-results text-danger px-2 py-1"><i class="ti ti-alert-triangle me-1"></i>${escape(loadError)}</div>`
         : `<div class="no-results px-2 py-1">${escape((window.ErpI18n && window.ErpI18n.lookupNoResults) || 'No results found')}</div>`
       ```
       ref: src/main/resources/static/js/shared/erp-common-handler.js:L361-L371 — object render (option/item)
-- [ ] Pastikan akses `window.ErpI18n` defensif (fallback string) agar tidak error bila i18n block belum termuat.
-- [ ] **VERIFIKASI EMPIRIS (titik keputusan #1):** jalankan skenario forbidden, BUKA dropdown TANPA mengetik (karena `preload: 'focus'` memuat `q=''`). Konfirmasi baris merah muncul.
+- [x] Pastikan akses `window.ErpI18n` defensif (fallback string) agar tidak error bila i18n block belum termuat.
+- [x] **VERIFIKASI EMPIRIS (titik keputusan #1):** jalankan skenario forbidden, BUKA dropdown TANPA mengetik (karena `preload: 'focus'` memuat `q=''`). Konfirmasi baris merah muncul.
       - JIKA `no_results` tidak ter-render saat query kosong → aktifkan **FALLBACK POPUP**: di handler `load`, saat `loadError` ter-set, panggil `ErpModal.showWarning(loadError)` dengan guard throttle (mis. flag `errorShownForThisOpen`, di-reset pada event `dropdown_open`) agar tidak spam tiap keystroke. Catat keputusan ini di report.
       ref: src/main/resources/static/js/shared/erp-common-handler.js:L377-L397 — event dropdown_open/close (tempat reset throttle flag)
 
