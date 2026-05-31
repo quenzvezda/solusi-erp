@@ -1,6 +1,7 @@
 package com.solusi.erp.accounting.journal.application.usecase.command;
 
 import com.solusi.erp.accounting.coa.domain.port.CoaPostingValidator;
+import com.solusi.erp.accounting.journal.domain.model.JournalEntry;
 import com.solusi.erp.accounting.journal.domain.model.JournalLine;
 import com.solusi.erp.core.exception.DomainException;
 import com.solusi.erp.master.currency.domain.port.CurrencyPostingValidator;
@@ -30,15 +31,28 @@ class ManualJournalCommandValidator {
                 .toList();
     }
 
+    void validateEntry(JournalEntry entry) {
+        validateCurrency(entry.getCurrencyId(), entry.getExchangeRate());
+        for (JournalLine line : entry.getLines()) {
+            if (!coaPostingValidator.isPostable(line.accountId())) {
+                throw new DomainException("msg.error.journal.account.invalid");
+            }
+        }
+    }
+
     private void validateCurrency(ManualJournalCommand command) {
-        if (command.exchangeRate() == null || command.exchangeRate().signum() <= 0) {
+        validateCurrency(command.currencyId(), command.exchangeRate());
+    }
+
+    private void validateCurrency(Long currencyId, BigDecimal exchangeRate) {
+        if (exchangeRate == null || exchangeRate.signum() <= 0) {
             throw new DomainException("msg.error.journal.exchange.rate.required");
         }
-        CurrencyPostingInfo currency = currencyPostingValidator.getPostingInfo(command.currencyId());
+        CurrencyPostingInfo currency = currencyPostingValidator.getPostingInfo(currencyId);
         if (currency == null || !currency.active()) {
             throw new DomainException("msg.error.journal.currency.invalid");
         }
-        if (currency.defaultCurrency() && command.exchangeRate().compareTo(BigDecimal.ONE) != 0) {
+        if (currency.defaultCurrency() && exchangeRate.compareTo(BigDecimal.ONE) != 0) {
             throw new DomainException("msg.error.journal.default.currency.rate.invalid");
         }
     }

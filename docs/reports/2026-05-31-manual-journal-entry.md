@@ -49,3 +49,8 @@
 
 - **Status:** clean
 - **Summary:** Added manual journal command records, shared reference validator, create/update/delete draft use cases, and Mockito edge tests for balance, currency, COA, status, manual-only, and missing ID cases. Verified with `mvn -q -Dtest=CreateManualJournalUseCaseTest,UpdateManualJournalUseCaseTest,DeleteManualJournalUseCaseTest test`.
+
+## Task 7: Implement Post And Reverse Use Cases
+
+- **Status:** clean
+- **Summary:** Added post and reverse use cases with period guard, reference revalidation, duplicate reversal protection, unique constraint translation, and Mockito edge tests. Verified with `mvn -q -Dtest=PostManualJournalUseCaseTest,ReverseManualJournalUseCaseTest test`.

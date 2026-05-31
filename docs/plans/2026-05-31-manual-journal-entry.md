@@ -495,7 +495,7 @@ Create/update/delete manual journal memakai validator backend dan domain lifecyc
 
 Expected: draft lifecycle tests lulus.
 
-### Task 7: Implement Post And Reverse Use Cases
+### Task 7: Implement Post And Reverse Use Cases [x]
 
 Post draft dan reversal original manual harus memakai period guard, revalidation, dan database race protection.
 
@@ -506,7 +506,7 @@ Post draft dan reversal original manual harus memakai period guard, revalidation
 - Test: `src/test/java/com/solusi/erp/accounting/journal/application/usecase/command/PostManualJournalUseCaseTest.java`
 - Test: `src/test/java/com/solusi/erp/accounting/journal/application/usecase/command/ReverseManualJournalUseCaseTest.java`
 
-- [ ] Implement `PostManualJournalUseCase.execute(Long id)`:
+- [x] Implement `PostManualJournalUseCase.execute(Long id)`:
   - load journal;
   - reject missing/non-manual/non-draft;
   - revalidate currency dan accounts agar akun yang dinonaktifkan setelah draft tidak lolos;
@@ -515,7 +515,7 @@ Post draft dan reversal original manual harus memakai period guard, revalidation
   - `entry.post()`;
   - save.
 
-- [ ] Implement `ReverseManualJournalUseCase.execute(Long id, LocalDate reversalDate)`:
+- [x] Implement `ReverseManualJournalUseCase.execute(Long id, LocalDate reversalDate)`:
   - load journal;
   - reject missing, non-manual, non-posted, dan journal reversal (`reversalOfId != null`);
   - reject bila `existsReversalOf(id)`;
@@ -524,9 +524,9 @@ Post draft dan reversal original manual harus memakai period guard, revalidation
   - buat reversal via domain;
   - save sebagai row baru.
 
-- [ ] Tangkap pelanggaran unique reversal constraint di boundary yang sesuai dan resolve ke message domain konsisten, misalnya `msg.error.journal.already.reversed`.
+- [x] Tangkap pelanggaran unique reversal constraint di boundary yang sesuai dan resolve ke message domain konsisten, misalnya `msg.error.journal.already.reversed`.
 
-- [ ] Tambahkan Mockito tests:
+- [x] Tambahkan Mockito tests:
   - post happy path memanggil period guard sebelum save;
   - post draft dengan closed period mempropagasi error dan tidak save;
   - post posted/non-manual/missing ditolak;
