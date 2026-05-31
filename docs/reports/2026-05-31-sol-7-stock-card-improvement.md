@@ -34,3 +34,7 @@
 - **Detail:** `layout/master.html` calls `initAllLookups()` on `DOMContentLoaded` and `htmx:afterSwap`; `erp-common-handler.js` initializes every `select[data-lookup-path]`, and the autocomplete fragment backs `productId`/`containerId` with real `<select th:field>` controls.
 - **Action taken:** Kept stock-card without page-specific JavaScript and marked the plan step complete based on the global auto-initialization path.
 - **Ref:** src/main/resources/static/js/shared/erp-common-handler.js
+
+## Final Verification
+- **Status:** clean
+- **Summary:** On version `1.9.0`, `mvn clean test` completed with 1552 tests, 0 failures/errors/skips; `e2e-tests/scripts/run-e2e.ps1` completed with 73 Playwright tests passing.

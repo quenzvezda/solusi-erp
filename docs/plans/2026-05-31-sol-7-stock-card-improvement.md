@@ -3,7 +3,8 @@
 > Source: Linear SOL-7 — https://linear.app/solusi-program/issue/SOL-7/improvement-for-stock-card
 > Created: 2026-05-31
 > Sprint: Inventory Feature
-> Status: IN_PROGRESS
+> Status: COMPLETED
+> Completed: 2026-05-31
 
 ## Summary
 
