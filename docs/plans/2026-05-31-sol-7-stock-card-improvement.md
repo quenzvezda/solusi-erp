@@ -77,17 +77,17 @@ Wire the controller for autocomplete trinity prefill and supply enum lists for t
 **Reference module:** `docs/spec/autocomplete-generic.md` §4 (buildXxxUI controller pattern)
 
 Steps:
-- [ ] Inject `ProductLookupProvider` and `ContainerLookupProvider` into `InventoryReportController` (constructor via `@RequiredArgsConstructor`). Per AGENTS layer-boundary rule, use the lookup **ports**, not JPA repositories.
+- [x] Inject `ProductLookupProvider` and `ContainerLookupProvider` into `InventoryReportController` (constructor via `@RequiredArgsConstructor`). Per AGENTS layer-boundary rule, use the lookup **ports**, not JPA repositories.
       ref: docs/AGENTS.md:L133 — web layer may inject lookup/query ports, not repositories
-- [ ] In `stockCard(...)`: remove `findProductsUseCase` preload (`products`) and `getContainerLookupUseCase.findAll()` (`containers`). Replace with a `buildFilterUI(filter)` helper that resolves trinity data only when `filter.productId`/`filter.containerId` is set, returning a `Map<String,Object>` with `productText/productSubtext/containerText/containerSubtext`.
+- [x] In `stockCard(...)`: remove `findProductsUseCase` preload (`products`) and `getContainerLookupUseCase.findAll()` (`containers`). Replace with a `buildFilterUI(filter)` helper that resolves trinity data only when `filter.productId`/`filter.containerId` is set, returning a `Map<String,Object>` with `productText/productSubtext/containerText/containerSubtext`.
       ref: src/main/java/com/solusi/erp/inventory/report/web/controller/InventoryReportController.java:L54-L69 — current stockCard method to refactor
       ref: docs/spec/autocomplete-generic.md:L143-L171 — buildXxxUI() controller pattern + template binding
-- [ ] Add model attributes for the two enum dropdowns: `movementTypes = MovementType.values()`, `referenceTypes = ReferenceType.values()`.
+- [x] Add model attributes for the two enum dropdowns: `movementTypes = MovementType.values()`, `referenceTypes = ReferenceType.values()`.
       ref: src/main/java/com/solusi/erp/inventory/stock/domain/model/MovementType.java:L11-L19
       ref: src/main/java/com/solusi/erp/inventory/stock/domain/model/ReferenceType.java:L11-L19
-- [ ] Remove now-unused `FindProductsUseCase`, `GetContainerLookupUseCase`, `ProductWebMapper`, `Pageable` imports/fields if no longer referenced elsewhere in the controller. (Keep `getProductUseCase` etc. used by on-hand methods.)
+- [x] Remove now-unused `FindProductsUseCase`, `GetContainerLookupUseCase`, `ProductWebMapper`, `Pageable` imports/fields if no longer referenced elsewhere in the controller. (Keep `getProductUseCase` etc. used by on-hand methods.)
       ref: src/main/java/com/solusi/erp/inventory/report/web/controller/InventoryReportController.java:L26-L32 — field declarations
-- [ ] **TEST:** Update `InventoryReportControllerTest` (Mockito): assert `@PreAuthorize("hasAuthority('STOCK-CARD_READ')")` preserved on `stockCard`; assert model contains `movementTypes`, `referenceTypes`, `page`, and filter UI map; assert no `products`/`containers` preload attribute.
+- [x] **TEST:** Update `InventoryReportControllerTest` (Mockito): assert `@PreAuthorize("hasAuthority('STOCK-CARD_READ')")` preserved on `stockCard`; assert model contains `movementTypes`, `referenceTypes`, `page`, and filter UI map; assert no `products`/`containers` preload attribute.
 
 **Validation criteria:**
 - `mvn -q -Dtest=InventoryReportControllerTest test` green.

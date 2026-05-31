@@ -13,3 +13,7 @@
 ## Task 2: Response enrichment - total cost
 - **Status:** clean
 - **Summary:** Added `totalCostLocal` response enrichment as absolute quantity multiplied by local unit cost, with mapper coverage for computed and null-cost cases.
+
+## Task 3: Controller - autocomplete prefill + enum dropdowns
+- **Status:** clean
+- **Summary:** Replaced stock-card preload dropdown data with lookup-provider Trinity prefill, added movement/reference enum lists, and covered model attributes plus `STOCK-CARD_READ` authorization.
