@@ -254,7 +254,7 @@ Ubah aggregate agar mendukung manual draft, update, post, reversal, memo line, h
 
 Expected: domain tests lulus tanpa Spring context.
 
-### Task 3: Add Backend Posting Reference Validators
+### Task 3: Add Backend Posting Reference Validators [x]
 
 Validasi COA/currency harus terjadi di backend melalui provider slice, bukan hanya lewat TomSelect.
 
@@ -270,7 +270,7 @@ Validasi COA/currency harus terjadi di backend melalui provider slice, bukan han
 - Test: `src/test/java/com/solusi/erp/accounting/coa/infrastructure/adapter/CoaPostingValidatorImplTest.java`
 - Test: `src/test/java/com/solusi/erp/master/currency/infrastructure/adapter/CurrencyPostingValidatorImplTest.java`
 
-- [ ] Buat port COA:
+- [x] Buat port COA:
 
   ```java
   public interface CoaPostingValidator {
@@ -282,7 +282,7 @@ Validasi COA/currency harus terjadi di backend melalui provider slice, bukan han
 
   ref: `src/main/java/com/solusi/erp/accounting/coa/infrastructure/persistence/CoaJpaRepository.java:L46-L50`
 
-- [ ] Buat port currency:
+- [x] Buat port currency:
 
   ```java
   public interface CurrencyPostingValidator {
@@ -295,9 +295,9 @@ Validasi COA/currency harus terjadi di backend melalui provider slice, bukan han
 
   ref: `src/main/java/com/solusi/erp/master/currency/infrastructure/adapter/CurrencyLookupProviderImpl.java:L25-L42`
 
-- [ ] Wire dua adapter di composition root pemilik slice masing-masing.
+- [x] Wire dua adapter di composition root pemilik slice masing-masing.
 
-- [ ] Tambahkan unit test edge cases:
+- [x] Tambahkan unit test edge cases:
   - COA active leaf diterima;
   - COA inactive ditolak;
   - COA header ditolak;

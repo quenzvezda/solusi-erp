@@ -21,3 +21,8 @@
 
 - **Status:** clean
 - **Summary:** Added manual journal draft/update/post/reversal lifecycle, line memo support, transaction-currency balance validation, and domain edge tests. Verified with `mvn -q -Dtest=JournalEntryTest,JournalVariableTest test`.
+
+## Task 3: Add Backend Posting Reference Validators
+
+- **Status:** clean
+- **Summary:** Added COA and currency posting validator ports, adapters, composition-root beans, and edge tests for active/header/missing/default cases. Verified with `mvn -q -Dtest=CoaPostingValidatorImplTest,CurrencyPostingValidatorImplTest test`.
