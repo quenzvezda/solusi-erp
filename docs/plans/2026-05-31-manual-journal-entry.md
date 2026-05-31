@@ -550,7 +550,7 @@ Post draft dan reversal original manual harus memakai period guard, revalidation
 
 Expected: posting dan reversal tests lulus.
 
-### Task 8: Wire Journal Composition Root
+### Task 8: Wire Journal Composition Root [x]
 
 Semua journal commands harus memiliki transaction boundary eksplisit.
 
@@ -560,11 +560,11 @@ Semua journal commands harus memiliki transaction boundary eksplisit.
 - Modify: `src/main/java/com/solusi/erp/accounting/journal/infrastructure/config/JournalConfig.java`
 - Create: `src/test/java/com/solusi/erp/accounting/journal/infrastructure/config/JournalConfigTest.java`
 
-- [ ] Wire create/update/delete/post/reverse use cases di `JournalConfig`.
-- [ ] Wrap command use cases dengan `TransactionTemplate`.
-- [ ] Pertahankan query use case dalam read-only transaction.
-- [ ] Pertahankan `PostJournalForEventUseCase` existing agar auto-posting GR/VB tidak regress.
-- [ ] Tambahkan config context test dengan mocked JPA repository, validator ports, schema repository, period guard, dan transaction manager. Assert seluruh bean journal tersedia.
+- [x] Wire create/update/delete/post/reverse use cases di `JournalConfig`.
+- [x] Wrap command use cases dengan `TransactionTemplate`.
+- [x] Pertahankan query use case dalam read-only transaction.
+- [x] Pertahankan `PostJournalForEventUseCase` existing agar auto-posting GR/VB tidak regress.
+- [x] Tambahkan config context test dengan mocked JPA repository, validator ports, schema repository, period guard, dan transaction manager. Assert seluruh bean journal tersedia.
 
   ref: `src/main/java/com/solusi/erp/accounting/schema/infrastructure/config/SchemaConfig.java:L30-L75`
   ref: `src/test/java/com/solusi/erp/accountspayable/vendorbill/infrastructure/config/VendorBillConfigTest.java:L27-L95`

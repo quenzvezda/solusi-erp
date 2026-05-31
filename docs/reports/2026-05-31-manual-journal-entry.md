@@ -54,3 +54,8 @@
 
 - **Status:** clean
 - **Summary:** Added post and reverse use cases with period guard, reference revalidation, duplicate reversal protection, unique constraint translation, and Mockito edge tests. Verified with `mvn -q -Dtest=PostManualJournalUseCaseTest,ReverseManualJournalUseCaseTest test`.
+
+## Task 8: Wire Journal Composition Root
+
+- **Status:** clean
+- **Summary:** Wired manual journal command beans, retained auto-posting, wrapped command/query use cases in `TransactionTemplate`, and added `JournalConfigTest`. Verified with `mvn -q -Dtest=JournalConfigTest,PostJournalForEventUseCaseTest test`.
