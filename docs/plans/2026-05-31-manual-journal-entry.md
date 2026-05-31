@@ -102,7 +102,7 @@ Pengecekan `existsByReversalOfId()` diperlukan untuk pesan domain yang jelas, te
 
 ## 5. Task Order
 
-### Task 1: Add MariaDB And H2 Migration V64
+### Task 1: Add MariaDB And H2 Migration V64 [x]
 
 Tambah schema manual journal, permission baru, grant admin, dan mirror H2 yang benar-benar kompatibel.
 
@@ -113,7 +113,7 @@ Tambah schema manual journal, permission baru, grant admin, dan mirror H2 yang b
 - Create: `src/main/resources/db/migration-h2/V64__Add_Manual_Journal.sql`
 - Test: `src/test/java/com/solusi/erp/accounting/journal/infrastructure/persistence/JournalManualMigrationTest.java`
 
-- [ ] Buat migration MariaDB `V64__Add_Manual_Journal.sql`.
+- [x] Buat migration MariaDB `V64__Add_Manual_Journal.sql`.
 
   Header:
 
@@ -137,17 +137,17 @@ Tambah schema manual journal, permission baru, grant admin, dan mirror H2 yang b
   ref: `src/main/resources/db/migration/V55__Add_Journal_Core.sql:L1-L30` - existing journal tables and source unique key
   ref: `src/main/resources/db/migration/V60__Journal_Multicurrency_And_VB_Exchange_Rate.sql:L1-L10` - MariaDB alter/FK precedent
 
-- [ ] Seed permissions ke group existing `ACC-05`: `JOURNAL-ENTRY_CREATE`, `JOURNAL-ENTRY_UPDATE`, `JOURNAL-ENTRY_DELETE`, `JOURNAL-ENTRY_POST`, `JOURNAL-ENTRY_REVERSE`. Grant semuanya ke `ROLE_ADMIN` dengan daftar eksplisit `IN (...)`, bukan wildcard `LIKE`.
+- [x] Seed permissions ke group existing `ACC-05`: `JOURNAL-ENTRY_CREATE`, `JOURNAL-ENTRY_UPDATE`, `JOURNAL-ENTRY_DELETE`, `JOURNAL-ENTRY_POST`, `JOURNAL-ENTRY_REVERSE`. Grant semuanya ke `ROLE_ADMIN` dengan daftar eksplisit `IN (...)`, bukan wildcard `LIKE`.
 
   ref: `src/main/resources/db/migration/V55__Add_Journal_Core.sql:L32-L58` - existing journal permission group
   ref: `src/main/resources/db/migration/V58__Add_Vendor_Bill_Module.sql:L102-L121` - permission insert and admin grant pattern
 
-- [ ] Buat mirror H2 `db/migration-h2/V64__Add_Manual_Journal.sql`. Pecah setiap `ADD COLUMN`, `ALTER COLUMN source_id BIGINT NULL`, dan `ADD CONSTRAINT` menjadi statement terpisah. Jangan pakai `AFTER` atau `MODIFY COLUMN`.
+- [x] Buat mirror H2 `db/migration-h2/V64__Add_Manual_Journal.sql`. Pecah setiap `ADD COLUMN`, `ALTER COLUMN source_id BIGINT NULL`, dan `ADD CONSTRAINT` menjadi statement terpisah. Jangan pakai `AFTER` atau `MODIFY COLUMN`.
 
   ref: `src/main/resources/db/migration-h2/V60__Journal_Multicurrency_And_VB_Exchange_Rate.sql:L1-L9` - H2 compatibility style
   ref: `docs/tests/playwright-e2e-guide.md:L57-L73` - mandatory 1:1 mirror and syntax differences
 
-- [ ] Tambahkan `JournalManualMigrationTest` berbasis `@SpringBootTest` + `@ActiveProfiles("e2e")` + `JdbcTemplate`. Assert:
+- [x] Tambahkan `JournalManualMigrationTest` berbasis `@SpringBootTest` + `@ActiveProfiles("e2e")` + `JdbcTemplate`. Assert:
   - `currency_id`, `exchange_rate`, `reference_no`, `reversal_of_id` ada pada `acc_journal_entries`.
   - `description` ada pada `acc_journal_lines`.
   - `source_id` menerima `NULL`.
