@@ -165,7 +165,7 @@ Expected: H2 Flyway menjalankan V64 dan test lulus.
 
 **MariaDB follow-up gate:** saat profile dev tersedia, boot aplikasi atau jalankan Flyway terhadap MariaDB dan pastikan V64 applied tanpa syntax error.
 
-### Task 2: Refactor Journal Domain For Manual Lifecycle
+### Task 2: Refactor Journal Domain For Manual Lifecycle [x]
 
 Ubah aggregate agar mendukung manual draft, update, post, reversal, memo line, header currency, dan kompatibilitas auto-posting lama.
 
@@ -176,11 +176,11 @@ Ubah aggregate agar mendukung manual draft, update, post, reversal, memo line, h
 - Modify: `src/main/java/com/solusi/erp/accounting/journal/domain/model/JournalLine.java`
 - Test: `src/test/java/com/solusi/erp/accounting/journal/domain/model/JournalEntryTest.java`
 
-- [ ] Ubah `JournalEntry.eventType` dari `SchemaEventType` ke `String`. Pertahankan overload factory auto-posting yang menerima `SchemaEventType` lalu menyimpan `.name()` agar caller GR/VB tidak dipaksa berubah sekaligus.
+- [x] Ubah `JournalEntry.eventType` dari `SchemaEventType` ke `String`. Pertahankan overload factory auto-posting yang menerima `SchemaEventType` lalu menyimpan `.name()` agar caller GR/VB tidak dipaksa berubah sekaligus.
 
   ref: `src/main/java/com/solusi/erp/accounting/journal/domain/model/JournalEntry.java:L14-L52`
 
-- [ ] Tambahkan header fields:
+- [x] Tambahkan header fields:
 
   ```java
   private final Long currencyId;
@@ -193,7 +193,7 @@ Ubah aggregate agar mendukung manual draft, update, post, reversal, memo line, h
 
   `currencyId/exchangeRate` nullable hanya untuk compatibility row auto-posting lama. Factory manual wajib mengisinya.
 
-- [ ] Tambahkan `JournalLine.description`. Pertahankan helper auto-posting lama dengan memo `null`. Tambahkan helper manual yang menerima transaction amount, currency, rate, dan memo lalu mengisi:
+- [x] Tambahkan `JournalLine.description`. Pertahankan helper auto-posting lama dengan memo `null`. Tambahkan helper manual yang menerima transaction amount, currency, rate, dan memo lalu mengisi:
   - base debit/credit = transaction amount x rate
   - original currency ID = header currency ID
   - original debit/credit = transaction amount
@@ -201,7 +201,7 @@ Ubah aggregate agar mendukung manual draft, update, post, reversal, memo line, h
 
   ref: `src/main/java/com/solusi/erp/accounting/journal/domain/model/JournalLine.java:L7-L47`
 
-- [ ] Tambahkan factory/manual methods dengan kontrak eksplisit:
+- [x] Tambahkan factory/manual methods dengan kontrak eksplisit:
 
   ```java
   JournalEntry.createDraft(LocalDate postingDate, Long currencyId, BigDecimal exchangeRate,
@@ -216,7 +216,7 @@ Ubah aggregate agar mendukung manual draft, update, post, reversal, memo line, h
 
   Manual identity selalu `eventType="MANUAL"`, `sourceType="MANUAL"`, `sourceId=null`, `sourceCode=null`.
 
-- [ ] Pisahkan invariant manual dari compatibility auto:
+- [x] Pisahkan invariant manual dari compatibility auto:
   - factory/update manual menolak kurang dari dua line;
   - line menolak `accountId=null`;
   - line menolak debit dan credit sama-sama positif;
@@ -228,9 +228,9 @@ Ubah aggregate agar mendukung manual draft, update, post, reversal, memo line, h
   - update/post hanya status `DRAFT`;
   - reversal hanya original `POSTED`, source manual, dan `reversalOfId == null`.
 
-- [ ] Pada `createReversal()`, swap debit/credit base dan original amounts, pertahankan account/memo/currency/rate, set `reversalOfId = original.id`, dan set status reversal langsung `POSTED`.
+- [x] Pada `createReversal()`, swap debit/credit base dan original amounts, pertahankan account/memo/currency/rate, set `reversalOfId = original.id`, dan set status reversal langsung `POSTED`.
 
-- [ ] Extend `JournalEntryTest` dengan edge cases:
+- [x] Extend `JournalEntryTest` dengan edge cases:
   - auto-posting existing factory masih menghasilkan `POSTED`;
   - create draft happy path;
   - draft menolak satu line dan zero line;

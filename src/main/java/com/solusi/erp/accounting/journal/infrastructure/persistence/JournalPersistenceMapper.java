@@ -3,7 +3,6 @@ package com.solusi.erp.accounting.journal.infrastructure.persistence;
 import com.solusi.erp.accounting.journal.domain.model.JournalEntry;
 import com.solusi.erp.accounting.journal.domain.model.JournalLine;
 import com.solusi.erp.accounting.journal.domain.model.JournalStatus;
-import com.solusi.erp.accounting.schema.domain.model.SchemaEventType;
 import com.solusi.erp.core.domain.model.AuditMetadata;
 
 import java.util.ArrayList;
@@ -13,7 +12,7 @@ public class JournalPersistenceMapper {
 
     public JournalEntryEntity toEntity(JournalEntry domain) {
         JournalEntryEntity entity = new JournalEntryEntity();
-        entity.setEventType(domain.getEventType().name());
+        entity.setEventType(domain.getEventType());
         entity.setSourceType(domain.getSourceType());
         entity.setSourceId(domain.getSourceId());
         entity.setSourceCode(domain.getSourceCode());
@@ -65,10 +64,14 @@ public class JournalPersistenceMapper {
 
         return new JournalEntry(
                 metadata,
-                SchemaEventType.valueOf(entity.getEventType()),
+                entity.getEventType(),
                 entity.getSourceType(),
                 entity.getSourceId(),
                 entity.getSourceCode(),
+                null,
+                null,
+                null,
+                null,
                 entity.getPostingDate(),
                 entity.getDescription(),
                 JournalStatus.valueOf(entity.getStatus()),
