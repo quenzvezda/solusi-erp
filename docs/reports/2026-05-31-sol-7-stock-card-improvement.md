@@ -21,3 +21,7 @@
 ## Task 4: i18n keys
 - **Status:** clean
 - **Summary:** Added matching English and Indonesian stock-card labels for new filters, serial/reference/cost columns, advanced toggle, and all-option dropdown text; verified movement/reference enum key coverage remains 16 keys per locale.
+
+## Task 5: Template - HTML structure
+- **Status:** clean
+- **Summary:** Rebuilt the stock-card filter/table with autocomplete fragments, compact advanced filters, serial column, movement/reference labels, total/unit cost display, and GR/Stock Adjustment reference links.

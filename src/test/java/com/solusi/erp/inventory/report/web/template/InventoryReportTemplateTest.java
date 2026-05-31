@@ -107,9 +107,24 @@ public class InventoryReportTemplateTest {
         assertThat(template).contains("${item.referenceCode}");
         assertThat(template).contains("${item.referenceType}");
         assertThat(template).contains("item.unitCostLocal");
+        assertThat(template).contains("item.totalCostLocal");
+        assertThat(template).contains("item.serialNumber");
         assertThat(template).contains("${filter}");
-        assertThat(template).contains("${products}");
-        assertThat(template).contains("${containers}");
+        assertThat(template).contains("fragments/inputs :: autocomplete(field='productId'");
+        assertThat(template).contains("path='inventory/products'");
+        assertThat(template).contains("fragments/inputs :: autocomplete(field='containerId'");
+        assertThat(template).contains("path='inventory/containers'");
+        assertThat(template).contains("label.stock-card.serial");
+        assertThat(template).contains("label.stock-card.cost.each");
+        assertThat(template).contains("label.stock-card.movement-type");
+        assertThat(template).contains("label.stock-card.reference");
+        assertThat(template).contains("label.stock-card.search.placeholder");
+        assertThat(template).contains("id=\"advFilters\"");
+        assertThat(template).contains("th:switch=\"${item.referenceType}\"");
+        assertThat(template).contains("/inventory/goods-receipts/{id}");
+        assertThat(template).contains("/inventory/adjustments/view/{id}");
+        assertThat(template).doesNotContain("${products}");
+        assertThat(template).doesNotContain("${containers}");
         assertThat(template).contains("/inventory/reports/stock-card");
     }
 

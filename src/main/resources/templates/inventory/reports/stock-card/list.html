@@ -21,33 +21,55 @@
                 <div class="card mb-3">
                     <div class="card-body">
                         <form th:action="@{/inventory/reports/stock-card}" method="get" th:object="${filter}">
-                            <div class="row row-cards">
+                            <div class="row row-cards align-items-end">
                                 <div class="col-md-3">
-                                    <label class="form-label">Product</label>
-                                    <select class="form-select" th:field="*{productId}">
-                                        <option value="">-- All Products --</option>
-                                        <option th:each="p : ${products}" th:value="${p.id}" th:text="${p.code + ' - ' + p.name}"></option>
-                                    </select>
+                                    <div th:replace="~{fragments/inputs :: autocomplete(field='productId', label=#{label.product}, path='inventory/products', initialValue=${filter.productId}, initialText=${filterUI != null ? filterUI.productText : ''}, initialSubtext=${filterUI != null ? filterUI.productSubtext : ''})}"></div>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Container</label>
-                                    <select class="form-select" th:field="*{containerId}">
-                                        <option value="">-- All Containers --</option>
-                                        <option th:each="c : ${containers}" th:value="${c.id}" th:text="${c.name}"></option>
-                                    </select>
+                                    <div th:replace="~{fragments/inputs :: autocomplete(field='containerId', label=#{label.container}, path='inventory/containers', initialValue=${filter.containerId}, initialText=${filterUI != null ? filterUI.containerText : ''}, initialSubtext=${filterUI != null ? filterUI.containerSubtext : ''})}"></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label" th:text="#{label.stock-card.reference}">Reference</label>
+                                    <input type="text" class="form-control" th:field="*{keyword}" th:placeholder="#{label.stock-card.search.placeholder}">
                                 </div>
                                 <div class="col-md-2">
-                                    <label class="form-label">From Date</label>
-                                    <input type="date" data-picker="date" class="form-control" th:field="*{startDate}">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">To Date</label>
-                                    <input type="date" data-picker="date" class="form-control" th:field="*{endDate}">
-                                </div>
-                                <div class="col-md-2 d-flex align-items-end">
                                     <button type="submit" class="btn btn-primary w-100">
                                         <i class="ti ti-filter"></i> Filter
                                     </button>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <a class="text-secondary small" data-bs-toggle="collapse" href="#advFilters" role="button" aria-expanded="false" aria-controls="advFilters">
+                                    <i class="ti ti-adjustments-horizontal"></i>
+                                    <span th:text="#{label.stock-card.filter.advanced}">Advanced</span>
+                                </a>
+                            </div>
+                            <div class="collapse mt-3"
+                                 id="advFilters"
+                                 th:classappend="${filter.startDate != null or filter.endDate != null or filter.movementType != null or filter.referenceType != null} ? 'show'">
+                                <div class="row row-cards">
+                                    <div class="col-md-3">
+                                        <label class="form-label" th:text="#{label.stock-adjustment.date}">From Date</label>
+                                        <input type="date" data-picker="date" class="form-control" th:field="*{startDate}">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label" th:text="#{label.stock-adjustment.date}">To Date</label>
+                                        <input type="date" data-picker="date" class="form-control" th:field="*{endDate}">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label" th:text="#{label.stock-card.document-type}">Document Type</label>
+                                        <select class="form-select" th:field="*{referenceType}">
+                                            <option value="" th:text="#{label.stock-card.all-document-types}">-- All Document Types --</option>
+                                            <option th:each="t : ${referenceTypes}" th:value="${t}" th:text="#{__${t.messageKey}__}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label" th:text="#{label.stock-card.movement-type}">Movement Type</label>
+                                        <select class="form-select" th:field="*{movementType}">
+                                            <option value="" th:text="#{label.stock-card.all-movement-types}">-- All Movement Types --</option>
+                                            <option th:each="t : ${movementTypes}" th:value="${t}" th:text="#{__${t.messageKey}__}"></option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </form>
@@ -62,10 +84,11 @@
                                     <th th:text="#{label.stock-adjustment.date}">Date</th>
                                     <th th:text="#{label.product}">Product</th>
                                     <th th:text="#{label.container}">Location</th>
+                                    <th th:text="#{label.stock-card.serial}">Serial No.</th>
                                     <th th:text="#{label.pagination.entries}">Qty</th>
-                                    <th th:text="#{label.stock-adjustment.status}">Type</th>
-                                    <th th:text="#{label.stock-adjustment.code}">Reference</th>
-                                    <th class="text-end">Cost (Local)</th>
+                                    <th th:text="#{label.stock-card.movement-type}">Movement Type</th>
+                                    <th th:text="#{label.stock-card.reference}">Reference</th>
+                                    <th class="text-end" th:text="#{label.stock-card.cost-local}">Cost (Local)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -79,24 +102,36 @@
                                         <div th:text="${item.containerCode}">BIN</div>
                                         <div class="text-secondary small" th:text="${item.facilityName}">Facility</div>
                                     </td>
+                                    <td th:text="${item.serialNumber} ?: '-'">SN</td>
                                     <td class="font-weight-medium" 
                                         th:classappend="${item.quantity.signum() > 0 ? 'text-green' : 'text-red'}"
                                         th:text="${(item.quantity.signum() > 0 ? '+' : '') + #numbers.formatDecimal(item.quantity, 1, 'COMMA', 2, 'POINT')}">QTY</td>
                                     <td>
                                         <span class="badge badge-outline text-blue" th:text="${item.movementType}">TYPE</span>
                                     </td>
-                                    <td>
-                                        <div th:text="${item.referenceCode}">REF-001</div>
-                                        <div class="text-muted small" th:text="${item.referenceType}">TYPE</div>
+                                    <td th:switch="${item.referenceType}">
+                                        <a th:case="${T(com.solusi.erp.inventory.stock.domain.model.ReferenceType).GOODS_RECEIPT}"
+                                           th:href="@{/inventory/goods-receipts/{id}(id=${item.referenceId})}"
+                                           th:text="${item.referenceCode}">REF-001</a>
+                                        <a th:case="${T(com.solusi.erp.inventory.stock.domain.model.ReferenceType).STOCK_ADJUSTMENT}"
+                                           th:href="@{/inventory/adjustments/view/{id}(id=${item.referenceId})}"
+                                           th:text="${item.referenceCode}">REF-001</a>
+                                        <div th:case="*" th:text="${item.referenceCode}">REF-001</div>
+                                        <div class="text-muted small" th:text="#{__${item.referenceType.messageKey}__}">TYPE</div>
                                     </td>
-                                    <td class="text-end font-weight-medium">
-                                        <span th:if="${item.unitCostLocal != null}" 
-                                              th:text="${#numbers.formatDecimal(item.unitCostLocal, 1, 'COMMA', 2, 'POINT')}">0.00</span>
-                                        <span th:if="${item.unitCostLocal == null}">-</span>
+                                    <td class="text-end">
+                                        <div class="font-weight-medium"
+                                             th:if="${item.totalCostLocal != null}"
+                                             th:text="${#numbers.formatDecimal(item.totalCostLocal, 1, 'COMMA', 2, 'POINT')}">0.00</div>
+                                        <div th:if="${item.totalCostLocal == null}">-</div>
+                                        <div class="text-muted small" th:if="${item.unitCostLocal != null}">
+                                            <span th:text="${#numbers.formatDecimal(item.unitCostLocal, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                                            <span th:text="#{label.stock-card.cost.each}">Each</span>
+                                        </div>
                                     </td>
                                 </tr>
                                 <tr th:if="${page.totalElements == 0}">
-                                    <td colspan="7" class="text-center text-secondary py-4">No movement history found.</td>
+                                    <td colspan="8" class="text-center text-secondary py-4">No movement history found.</td>
                                 </tr>
                             </tbody>
                         </table>

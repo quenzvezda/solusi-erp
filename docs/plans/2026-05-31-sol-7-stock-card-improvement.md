@@ -119,25 +119,25 @@ Rebuild `list.html` filter bar and table per the locked layout. **Read `docs/spe
 **Reference module:** `docs/spec/autocomplete-generic.md` (fragment usage), `fragments/inputs :: autocomplete`
 
 Steps:
-- [ ] Replace Product `<select>` with autocomplete fragment: `~{fragments/inputs :: autocomplete(field='productId', label=#{label.product}, path='inventory/products', initialValue=${filter.productId}, initialText=${filterUI != null ? filterUI.productText : ''}, initialSubtext=${filterUI != null ? filterUI.productSubtext : ''})}`.
+- [x] Replace Product `<select>` with autocomplete fragment: `~{fragments/inputs :: autocomplete(field='productId', label=#{label.product}, path='inventory/products', initialValue=${filter.productId}, initialText=${filterUI != null ? filterUI.productText : ''}, initialSubtext=${filterUI != null ? filterUI.productSubtext : ''})}`.
       ref: docs/spec/autocomplete-generic.md:L37-L48 — autocomplete fragment + Trinity Data rule
       ref: src/main/resources/templates/fragments/inputs.html:L33-L41 — autocomplete fragment signature
-- [ ] Replace Container `<select>` with the same fragment pattern: `field='containerId'`, `path='inventory/containers'`, `initialText/Subtext` from `filterUI`.
-- [ ] Wrap filter form in two-tier layout: **primary row** = Product, Container, Search input (`name=keyword`, placeholder `#{label.stock-card.search.placeholder}`), Filter button. **Advanced collapsible** (`<a data-bs-toggle="collapse" href="#advFilters">` + `<div class="collapse" id="advFilters">`) = From/To date, Document Type `<select th:field="*{referenceType}">`, Movement Type `<select th:field="*{movementType}">`. Auto-expand the collapse when any advanced filter is active (`th:classappend="${filter.startDate != null or filter.endDate != null or filter.movementType != null or filter.referenceType != null} ? 'show'"`).
+- [x] Replace Container `<select>` with the same fragment pattern: `field='containerId'`, `path='inventory/containers'`, `initialText/Subtext` from `filterUI`.
+- [x] Wrap filter form in two-tier layout: **primary row** = Product, Container, Search input (`name=keyword`, placeholder `#{label.stock-card.search.placeholder}`), Filter button. **Advanced collapsible** (`<a data-bs-toggle="collapse" href="#advFilters">` + `<div class="collapse" id="advFilters">`) = From/To date, Document Type `<select th:field="*{referenceType}">`, Movement Type `<select th:field="*{movementType}">`. Auto-expand the collapse when any advanced filter is active (`th:classappend="${filter.startDate != null or filter.endDate != null or filter.movementType != null or filter.referenceType != null} ? 'show'"`).
       ref: src/main/resources/templates/inventory/reports/stock-card/list.html:L21-L55 — current filter card to replace
-- [ ] Build Document Type & Movement Type `<select>` options from `${referenceTypes}` / `${movementTypes}`, label via `#{__${t.messageKey}__}`, with an "all" option (`#{label.stock-card.all-document-types}` / `...all-movement-types}`).
+- [x] Build Document Type & Movement Type `<select>` options from `${referenceTypes}` / `${movementTypes}`, label via `#{__${t.messageKey}__}`, with an "all" option (`#{label.stock-card.all-document-types}` / `...all-movement-types}`).
       ref: src/main/java/com/solusi/erp/inventory/stock/domain/model/ReferenceType.java:L21 — messageKey getter
-- [ ] Add a permanent **Serial No.** column header (`#{label.stock-card.serial}`) and cell (`th:text="${item.serialNumber} ?: '-'"`).
+- [x] Add a permanent **Serial No.** column header (`#{label.stock-card.serial}`) and cell (`th:text="${item.serialNumber} ?: '-'"`).
       ref: src/main/resources/templates/inventory/reports/stock-card/list.html:L60-L69 — thead to extend
-- [ ] Rename the badge column header from `#{label.stock-adjustment.status}` to `#{label.stock-card.movement-type}` (still binds `item.movementType`). Keep the Reference header as `#{label.stock-card.reference}`.
+- [x] Rename the badge column header from `#{label.stock-adjustment.status}` to `#{label.stock-card.movement-type}` (still binds `item.movementType`). Keep the Reference header as `#{label.stock-card.reference}`.
       ref: src/main/resources/templates/inventory/reports/stock-card/list.html:L66 — current "Status" header
-- [ ] Convert the Cost cell to two lines: top = `totalCostLocal` (formatted), bottom = `unitCostLocal` + ` ` + `#{label.stock-card.cost.each}` in muted small text. Null-guard both. Use `#numbers.formatDecimal(..., 1, 'COMMA', 2, 'POINT')`.
+- [x] Convert the Cost cell to two lines: top = `totalCostLocal` (formatted), bottom = `unitCostLocal` + ` ` + `#{label.stock-card.cost.each}` in muted small text. Null-guard both. Use `#numbers.formatDecimal(..., 1, 'COMMA', 2, 'POINT')`.
       ref: src/main/resources/templates/inventory/reports/stock-card/list.html:L92-L96 — current single-line cost cell
-- [ ] Convert the Reference cell to a hyperlink via `th:switch="${item.referenceType}"`: case `GOODS_RECEIPT` → `@{/inventory/goods-receipts/{id}(id=${item.referenceId})}`; case `STOCK_ADJUSTMENT` → `@{/inventory/adjustments/view/{id}(id=${item.referenceId})}`; default → plain text. Show `referenceCode` as link text, `enum.reference.type.*` as subtitle.
+- [x] Convert the Reference cell to a hyperlink via `th:switch="${item.referenceType}"`: case `GOODS_RECEIPT` → `@{/inventory/goods-receipts/{id}(id=${item.referenceId})}`; case `STOCK_ADJUSTMENT` → `@{/inventory/adjustments/view/{id}(id=${item.referenceId})}`; default → plain text. Show `referenceCode` as link text, `enum.reference.type.*` as subtitle.
       ref: src/main/resources/templates/inventory/reports/stock-card/list.html:L88-L91 — current reference cell
-- [ ] Update empty-state `colspan` to match the new column count (was 7 → now 8 with Serial).
+- [x] Update empty-state `colspan` to match the new column count (was 7 → now 8 with Serial).
       ref: src/main/resources/templates/inventory/reports/stock-card/list.html:L98-L100
-- [ ] **TEST:** Add/extend a template test (`TemplateTestUtils` static read): assert presence of autocomplete fragment markers (`data-lookup-path`), serial header key, `cost.each` key, and hyperlink `th:switch`.
+- [x] **TEST:** Add/extend a template test (`TemplateTestUtils` static read): assert presence of autocomplete fragment markers (`data-lookup-path`), serial header key, `cost.each` key, and hyperlink `th:switch`.
       ref: docs/spec/autocomplete-generic.md:L37-L41 — data-lookup-path attribute to assert
 
 **Validation criteria:**
