@@ -10,13 +10,16 @@
 
 **Journal Entry** adalah catatan akuntansi double-entry yang merekam dampak finansial dari setiap transaksi operasional. Setiap transaksi yang mengubah posisi keuangan perusahaan (penerimaan barang, pembayaran, penjualan) **wajib** menghasilkan jurnal yang seimbang: total Debit = total Kredit.
 
-Dalam sistem ini, journal entry dibuat secara **otomatis** (auto-posting) ketika transaksi operasional dikonfirmasi — pengguna tidak perlu membuat jurnal secara manual untuk transaksi yang didukung sistem.
+Dalam sistem ini, journal entry memiliki dua jalur:
+
+- **Auto-posting** dari transaksi operasional yang sudah didukung sistem. Jurnal langsung `POSTED`, immutable, dan mengikuti Accounting Schema.
+- **Manual journal** untuk penyesuaian akuntansi. Pengguna membuat `DRAFT`, mengubah/menghapus selama draft, lalu `POST`. Koreksi jurnal manual dilakukan lewat reversal journal.
 
 ---
 
 ## 2. Sumber Jurnal (Event Types)
 
-Sistem mendukung 8 jenis event yang dapat memicu auto-posting jurnal:
+Sistem mendukung 8 jenis event yang dapat memicu auto-posting jurnal, ditambah pseudo-event `MANUAL` untuk jurnal yang dibuat langsung oleh pengguna:
 
 | Event Type | Trigger Operasional | Status |
 |---|---|---|
@@ -28,6 +31,7 @@ Sistem mendukung 8 jenis event yang dapat memicu auto-posting jurnal:
 | `CUSTOMER_RECEIPT` | Pembayaran dari customer diterima | 🔲 Sprint 6+ |
 | `STOCK_ADJUSTMENT_IN` | Penyesuaian stok positif dikonfirmasi | 🔲 Sprint 6+ |
 | `STOCK_ADJUSTMENT_OUT` | Penyesuaian stok negatif dikonfirmasi | 🔲 Sprint 6+ |
+| `MANUAL` | Input jurnal manual oleh user | ✅ Live |
 
 ---
 
@@ -178,11 +182,19 @@ Sebelum posting, sistem mencari **Active Accounting Schema** untuk event type ya
 Jika tidak ditemukan → `DomainException: msg.error.journal.schema.notfound` dan transaksi di-rollback.
 
 ### 5.4 Immutability
-Journal Entry yang sudah di-post **tidak dapat diubah atau dihapus**.  
-Status selalu `POSTED` — tidak ada status `DRAFT` untuk auto-posting.  
-Koreksi dilakukan via jurnal pembalik (reversal journal) — *belum diimplementasi*.
+Auto-posted journal selalu `POSTED` dan **tidak dapat diubah atau dihapus**.
 
-### 5.5 Posting Sinkronus & Atomik
+Manual journal memiliki lifecycle:
+
+1. `DRAFT` dapat dibuat, diubah, dan dihapus.
+2. `POSTED` tidak dapat diubah atau dihapus.
+3. Koreksi `POSTED` dilakukan dengan reversal journal yang menukar debit/kredit dan terhubung ke jurnal asal.
+4. Reversal journal tidak dapat di-reverse lagi.
+
+### 5.5 Manual Journal Period Guard
+Posting manual dan reversal hanya boleh dilakukan pada accounting period yang terbuka. Draft masih bisa disiapkan, tetapi posting/reversal gagal jika tanggal posting berada di periode tertutup atau tidak tersedia.
+
+### 5.6 Posting Sinkronus & Atomik
 Auto-posting berjalan **dalam transaksi yang sama** dengan transaksi induk.  
 Jika posting gagal → seluruh transaksi induk (GR complete, dll.) ikut di-rollback.
 
@@ -195,24 +207,33 @@ Journal Entry Header
 ├── Journal Code         : JNL-000001 (format: JNL- + 6 digit ID)
 ├── Event Type           : GOODS_RECEIPT | VENDOR_BILL | ...
 ├── Source Type          : String (e.g. "GOODS_RECEIPT")
-├── Source ID            : Long (FK ke dokumen asal)
-├── Source Code          : String (e.g. "GR-202605-00001")
+├── Source ID            : Long nullable (FK ke dokumen asal; null untuk manual)
+├── Source Code          : String nullable (e.g. "GR-202605-00001")
 ├── Posting Date         : LocalDate
+├── Currency ID          : Long nullable untuk compatibility row lama; wajib untuk manual
+├── Exchange Rate        : Decimal nullable untuk compatibility row lama; wajib > 0 untuk manual
+├── Reference No         : String nullable
+├── Reversal Of ID       : Long nullable, terisi pada jurnal reversal
 ├── Description          : String (auto-generated)
-└── Status               : POSTED
+└── Status               : DRAFT | POSTED
 
 Journal Lines (minimal 2 baris)
 ├── Line No              : urutan (1, 2, 3, ...)
 ├── Account              : COA account (code + name)
 ├── Debit Amount         : Decimal (0 jika credit line)
-└── Credit Amount        : Decimal (0 jika debit line)
+├── Credit Amount        : Decimal (0 jika debit line)
+├── Original Currency ID : Long nullable
+├── Original Debit       : Decimal
+├── Original Credit      : Decimal
+├── Exchange Rate        : Decimal nullable
+└── Description          : String nullable
 ```
 
 ---
 
 ## 7. UI / Halaman
 
-Saat ini fitur Journal Entry hanya menyediakan tampilan **read-only**:
+Fitur Journal Entry menyediakan daftar/detail untuk semua jurnal, plus form manual journal untuk user yang memiliki permission terkait.
 
 ### 7.1 Daftar Jurnal (`/accounting/journal-entries`)
 **Filter yang tersedia:**
@@ -233,7 +254,43 @@ Saat ini fitur Journal Entry hanya menyediakan tampilan **read-only**:
 | Status | Badge hijau: POSTED |
 
 ### 7.2 Detail Jurnal (`/accounting/journal-entries/{id}`)
-Menampilkan header + tabel lines dengan kolom Account (nama + kode), Debit, Credit, dan baris total di bagian bawah.
+Menampilkan header + tabel lines dengan kolom Account (nama + kode), Debit, Credit, memo, dan baris total di bagian bawah. Untuk jurnal manual:
+
+- Draft menampilkan aksi edit, delete, dan post.
+- Posted menampilkan aksi reverse jika belum pernah dibalik.
+- Reversal menampilkan link ke jurnal asal.
+- Jurnal asal yang sudah dibalik menampilkan link ke reversal.
+
+### 7.3 Manual Journal Form
+
+Route:
+
+- `GET /accounting/journal-entries/create`
+- `GET /accounting/journal-entries/edit/{id}`
+- `POST /accounting/journal-entries`
+- `PUT /accounting/journal-entries/{id}`
+- `DELETE /accounting/journal-entries/{id}`
+- `POST /accounting/journal-entries/{id}/post`
+- `POST /accounting/journal-entries/{id}/reverse`
+
+Validasi utama:
+
+- minimal dua line;
+- setiap line wajib memilih akun posting aktif;
+- header currency wajib aktif;
+- exchange rate wajib `> 0`;
+- jika currency adalah default currency, exchange rate wajib `1`;
+- total original debit wajib sama dengan total original credit.
+
+### 7.4 Permissions
+
+Permission manual journal:
+
+- `JOURNAL-ENTRY_CREATE`
+- `JOURNAL-ENTRY_UPDATE`
+- `JOURNAL-ENTRY_DELETE`
+- `JOURNAL-ENTRY_POST`
+- `JOURNAL-ENTRY_REVERSE`
 
 ---
 
@@ -252,6 +309,12 @@ Untuk menambah event baru:
 2. Tambah variable(s) di `JournalVariable` enum
 3. Buat record Accounting Schema via UI
 4. Hubungkan ke use case transaksi baru
+
+Deferred items:
+
+- Approval workflow manual journal belum diterapkan.
+- Attachment/supporting document belum tersedia.
+- Import jurnal massal belum tersedia.
 
 ---
 

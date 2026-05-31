@@ -7,7 +7,10 @@
 
 ## 1. Gambaran Umum
 
-Journal Auto-Posting Engine adalah **framework generik** yang memungkinkan setiap modul operasional (GR, Vendor Bill, Payment, dll.) memposting jurnal akuntansi tanpa perlu mengetahui detail COA atau aturan debit/kredit. Aturan tersebut dikonfigurasi di **Accounting Schema** oleh administrator.
+Journal module memiliki dua jalur penulisan:
+
+- **Auto-posting engine**: framework generik yang memungkinkan modul operasional (GR, Vendor Bill, Payment, dll.) memposting jurnal akuntansi tanpa mengetahui detail COA atau aturan debit/kredit. Aturan tersebut dikonfigurasi di **Accounting Schema**.
+- **Manual journal lifecycle**: command use case untuk membuat draft, mengubah draft, menghapus draft, posting draft, dan membuat reversal untuk koreksi jurnal manual yang sudah posted.
 
 ```
 Modul Operasional                 Engine                      Accounting
@@ -44,12 +47,16 @@ accounting/
 │   │   └── repository/
 │   │       ├── JournalEntryRepository.java     ← Write port
 │   │       └── JournalEntryQueryPort.java      ← Read port
-│   ├── application/
+    │   ├── application/
 │   │   └── usecase/
 │   │       ├── command/
-│   │       │   ├── JournalPostingCommand.java          ← Input DTO
-│   │       │   ├── PostJournalForEventUseCase.java     ← Interface
-│   │       │   └── PostJournalForEventUseCaseImpl.java ← Implementation
+│   │       │   ├── JournalPostingCommand.java          ← Auto-posting input DTO
+│   │       │   ├── PostJournalForEventUseCase.java     ← Auto-posting interface
+│   │       │   ├── CreateManualJournalUseCase.java
+│   │       │   ├── UpdateManualJournalUseCase.java
+│   │       │   ├── DeleteManualJournalUseCase.java
+│   │       │   ├── PostManualJournalUseCase.java
+│   │       │   └── ReverseManualJournalUseCase.java
 │   │       └── query/
 │   │           ├── FindJournalEntriesUseCase(Impl).java
 │   │           └── GetJournalEntryDetailUseCase(Impl).java
@@ -91,14 +98,18 @@ accounting/
 ```java
 public class JournalEntry {
     AuditMetadata metadata;       // id, version, audit trail
-    SchemaEventType eventType;    // GOODS_RECEIPT, VENDOR_BILL, ...
+    String eventType;             // GOODS_RECEIPT, VENDOR_BILL, MANUAL, ...
     String sourceType;            // "GOODS_RECEIPT"
-    Long sourceId;                // FK ke dokumen asal
-    String sourceCode;            // "GR-202605-00001"
+    Long sourceId;                // FK ke dokumen asal, null untuk MANUAL
+    String sourceCode;            // "GR-202605-00001", null untuk MANUAL
     LocalDate journalDate;
+    Long currencyId;              // wajib untuk manual
+    BigDecimal exchangeRate;      // wajib > 0 untuk manual
+    String referenceNo;           // optional manual reference
+    Long reversalOfId;            // original journal ID untuk reversal
     String description;
-    JournalStatus status;         // selalu POSTED untuk auto-journal
-    List<JournalLine> lines;      // immutable
+    JournalStatus status;         // DRAFT atau POSTED
+    List<JournalLine> lines;
 }
 ```
 
@@ -106,16 +117,24 @@ public class JournalEntry {
 ```java
 JournalEntry.createPosted(eventType, sourceType, sourceId, sourceCode,
                           postingDate, description, lines)
+JournalEntry.createDraft(postingDate, currencyId, exchangeRate,
+                         referenceNo, description, lines)
 ```
 
 **Invariant:**
 - `lines` tidak boleh kosong
 - `validateBalanced()`: `Σ debit = Σ kredit` atau throw `DomainException`
+- manual journal minimal dua line, currency wajib, exchange rate wajib `> 0`
+- manual balance dihitung dari original debit/credit dalam transaction currency
+- posted manual journal immutable; koreksi lewat reversal
 
 ### 3.2 JournalLine (Value Object — Record)
 
 ```java
-public record JournalLine(Long accountId, BigDecimal debitAmount, BigDecimal creditAmount) {
+public record JournalLine(Long accountId, BigDecimal debitAmount, BigDecimal creditAmount,
+                          Long originalCurrencyId, BigDecimal originalDebitAmount,
+                          BigDecimal originalCreditAmount, BigDecimal exchangeRate,
+                          String description) {
     static JournalLine debit(Long accountId, BigDecimal amount)
     static JournalLine credit(Long accountId, BigDecimal amount)
 }
@@ -282,9 +301,13 @@ CREATE TABLE acc_journal_entries (
     id          BIGINT PRIMARY KEY AUTO_INCREMENT,
     event_type  VARCHAR(50) NOT NULL,
     source_type VARCHAR(50) NOT NULL,
-    source_id   BIGINT NOT NULL,
+    source_id   BIGINT NULL,
     source_code VARCHAR(60),
     posting_date DATE NOT NULL,
+    currency_id BIGINT NULL,
+    exchange_rate DECIMAL(19,6) NULL,
+    reference_no VARCHAR(80) NULL,
+    reversal_of_id BIGINT NULL,
     description VARCHAR(255),
     status      VARCHAR(20) NOT NULL,
     -- audit columns ...
@@ -299,6 +322,11 @@ CREATE TABLE acc_journal_lines (
     account_id       BIGINT NOT NULL,
     debit_amount     DECIMAL(19,4) NOT NULL DEFAULT 0,
     credit_amount    DECIMAL(19,4) NOT NULL DEFAULT 0,
+    original_currency_id BIGINT NULL,
+    original_debit_amount DECIMAL(19,4) NOT NULL DEFAULT 0,
+    original_credit_amount DECIMAL(19,4) NOT NULL DEFAULT 0,
+    exchange_rate DECIMAL(19,6) NULL,
+    description VARCHAR(255) NULL,
     -- audit columns ...
     CONSTRAINT fk_acc_journal_lines_entry
         FOREIGN KEY (journal_entry_id) REFERENCES acc_journal_entries(id)
@@ -307,7 +335,8 @@ CREATE TABLE acc_journal_lines (
 ```
 
 **Key design decisions:**
-- `UNIQUE (source_type, source_id)` → idempotency di level DB (backup dari aplikasi)
+- `UNIQUE (source_type, source_id)` tetap menjaga idempotency auto-posting; `source_id` nullable agar banyak manual journal bisa dibuat.
+- `UNIQUE (reversal_of_id)` menjaga satu original journal hanya punya satu reversal.
 - `ON DELETE CASCADE` → lines ikut terhapus jika header dihapus (admin only)
 - `DECIMAL(19,4)` → presisi tinggi untuk nilai moneter
 
@@ -341,8 +370,14 @@ Controller
 | `msg.error.journal.schema.notfound` | Tidak ada active schema untuk event type |
 | `msg.error.journal.unbalanced` | Total debit ≠ total kredit |
 | `msg.error.journal.lines.required` | Journal entry tanpa lines |
+| `msg.error.journal.lines.minimum` | Manual journal kurang dari dua line |
 | `msg.error.journal.invalid.amount` | Amount bernilai negatif |
 | `msg.error.journal.invalid.line` | Line memiliki debit dan kredit sekaligus |
+| `msg.error.journal.account.invalid` | Akun tidak aktif/tidak postable |
+| `msg.error.journal.currency.invalid` | Currency tidak aktif/tidak tersedia |
+| `msg.error.journal.default.currency.rate.invalid` | Default currency memakai rate selain 1 |
+| `msg.error.journal.already.reversed` | Original journal sudah memiliki reversal |
+| `msg.error.journal.reversal.chain.not.allowed` | Reversal journal dicoba di-reverse lagi |
 
 ---
 
@@ -353,6 +388,11 @@ Controller
 | Domain | `JournalEntryTest` | Balance validation, factory methods, line constraints |
 | Domain | `JournalVariableTest` | Variable filtering per event type |
 | Application | `PostJournalForEventUseCaseTest` | Schema missing, happy path |
+| Application | `CreateManualJournalUseCaseTest` | Draft creation, validator edge cases |
+| Application | `UpdateManualJournalUseCaseTest` | Draft update, immutable posted guard |
+| Application | `DeleteManualJournalUseCaseTest` | Draft delete, missing ID |
+| Application | `PostManualJournalUseCaseTest` | Period guard, reference revalidation |
+| Application | `ReverseManualJournalUseCaseTest` | Reversal happy path, duplicate guard |
 | Application | `JournalQueryUseCasesTest` | Delegation ke query port |
 | Infrastructure | `JournalEntryQueryPortImplTest` | Filter + mapping |
 | Web | `JournalEntryControllerTest` | View + model attributes |

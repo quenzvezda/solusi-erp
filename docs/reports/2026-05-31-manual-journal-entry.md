@@ -88,3 +88,15 @@
 - **Severity:** warning
 - **Detail:** The plan requested direct `ErpLineManager` usage. The current table markup is simple, so the page script implements equivalent add/remove/reindex behavior directly while still using global numeric/currency hooks where available.
 - **Action taken:** Kept the script scoped to the journal page and covered required static contracts. E2E will validate the actual user flow.
+
+## Task 12: Add i18n Keys And Synchronize Journal Documentation
+
+- **Status:** findings
+- **Summary:** Added manual journal labels/messages to default and Indonesian bundles, enforced key presence in `JournalMessageBundleTest`, and updated business/architecture docs for the manual draft-post-reversal lifecycle. Verified with `mvn -q -Dtest=JournalMessageBundleTest test`.
+
+### Finding: English bundle file name
+
+- **Type:** deviation
+- **Severity:** info
+- **Detail:** The plan referenced `messages_en.properties`, but the project uses `messages.properties` as the default English bundle and `messages_id.properties` for Indonesian.
+- **Action taken:** Updated `messages.properties` instead of creating a parallel English bundle that the application does not currently load.

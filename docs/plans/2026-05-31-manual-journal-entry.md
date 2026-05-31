@@ -795,7 +795,7 @@ Wire dynamic rows, TomSelect, AutoNumeric, currency lock, balance recap, client 
 
 Expected: script contract static test lulus.
 
-### Task 12: Add i18n Keys And Synchronize Journal Documentation
+### Task 12: Add i18n Keys And Synchronize Journal Documentation [x]
 
 Tambahkan message keys ID/EN dan ubah business docs dari read-only menjadi lifecycle manual + auto.
 
@@ -808,7 +808,7 @@ Tambahkan message keys ID/EN dan ubah business docs dari read-only menjadi lifec
 - Modify: `docs/architecture/journal-posting-engine.md`
 - Modify: `src/test/java/com/solusi/erp/accounting/journal/web/template/JournalMessageBundleTest.java`
 
-- [ ] Tambahkan keys ID dan EN untuk:
+- [x] Tambahkan keys ID dan EN untuk:
   - label manual journal, reference no, currency, exchange rate, memo, transaction amount, base amount;
   - create/edit/post/delete/reverse;
   - balanced/unbalanced;
@@ -817,9 +817,9 @@ Tambahkan message keys ID/EN dan ubah business docs dari read-only menjadi lifec
   - success create/update/delete/post/reverse;
   - errors lines minimum, invalid currency, default rate must one, invalid account, invalid status, auto journal immutable, already reversed, reversal-of-reversal forbidden.
 
-- [ ] Update bundle test agar setiap key baru wajib ada di kedua locale. Jangan gunakan template render MessageSource untuk bundle existence karena test helper tidak memuat application MessageSource lengkap.
+- [x] Update bundle test agar setiap key baru wajib ada di kedua locale. Jangan gunakan template render MessageSource untuk bundle existence karena test helper tidak memuat application MessageSource lengkap.
 
-- [ ] Update business docs:
+- [x] Update business docs:
   - journal sekarang memiliki dua jalur: auto-posted immutable dan manual draft-post-reversal;
   - schema data/header currency/reference/reversal;
   - permission baru;
