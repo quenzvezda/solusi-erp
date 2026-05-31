@@ -5,15 +5,11 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
-public class JournalLineResponse {
+public class JournalLineSaveRequest {
     private Long accountId;
-    private String accountCode;
     private String accountName;
+    private String accountCode;
     private BigDecimal debitAmount;
     private BigDecimal creditAmount;
-    private String originalCurrencyCode;
-    private BigDecimal exchangeRate;
-    private BigDecimal originalDebitAmount;
-    private BigDecimal originalCreditAmount;
     private String description;
 }

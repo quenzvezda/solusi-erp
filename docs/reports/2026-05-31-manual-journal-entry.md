@@ -59,3 +59,8 @@
 
 - **Status:** clean
 - **Summary:** Wired manual journal command beans, retained auto-posting, wrapped command/query use cases in `TransactionTemplate`, and added `JournalConfigTest`. Verified with `mvn -q -Dtest=JournalConfigTest,PostJournalForEventUseCaseTest test`.
+
+## Task 9: Add Web DTOs, Mapper, And Controller Routes
+
+- **Status:** clean
+- **Summary:** Added manual journal save/reverse DTOs, extended journal response DTOs, mapped detail view and save requests, added create/edit/create/update/delete/post/reverse controller routes, and kept web layer repository-free. Verified with `mvn -q -Dtest=JournalEntryControllerTest,JournalEntryWebMapperTest,WebLayerDependencyGuardTest test`.

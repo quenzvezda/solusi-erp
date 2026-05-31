@@ -17,10 +17,25 @@ public class JournalEntryDetailResponse extends BaseAuditResponse {
     private Long sourceId;
     private String sourceCode;
     private LocalDate postingDate;
+    private Long currencyId;
+    private String currencyName;
+    private String currencyCode;
+    private BigDecimal exchangeRate;
+    private String referenceNo;
+    private Long reversalOfId;
+    private String reversalOfCode;
+    private Long reversedById;
+    private String reversedByCode;
     private String description;
     private String status;
     private List<JournalLineResponse> lines;
     private BigDecimal totalDebit;
     private BigDecimal totalCredit;
+    private BigDecimal totalOriginalDebit;
+    private BigDecimal totalOriginalCredit;
     private boolean hasMultiCurrencyLines;
+    private boolean manual;
+    private boolean reversal;
+    private boolean reversed;
+    private boolean multiCurrency;
 }

@@ -577,7 +577,7 @@ Semua journal commands harus memiliki transaction boundary eksplisit.
 
 Expected: composition root valid dan auto-posting test existing tetap hijau.
 
-### Task 9: Add Web DTOs, Mapper, And Controller Routes
+### Task 9: Add Web DTOs, Mapper, And Controller Routes [x]
 
 Expose form, CRUD, post, reverse, list manual filter, currency prefill, dan detail reversal secara konsisten.
 
@@ -592,22 +592,22 @@ Expose form, CRUD, post, reverse, list manual filter, currency prefill, dan deta
 - Test: `src/test/java/com/solusi/erp/accounting/journal/web/controller/JournalEntryControllerTest.java`
 - Test: `src/test/java/com/solusi/erp/architecture/WebLayerDependencyGuardTest.java`
 
-- [ ] Buat `JournalEntrySaveRequest extends BaseAuditResponse`:
+- [x] Buat `JournalEntrySaveRequest extends BaseAuditResponse`:
   - `postingDate` dengan `@NotNull` dan `@DateTimeFormat(pattern="yyyy-MM-dd")`;
   - `currencyId`, `exchangeRate`, `referenceNo`, `description`;
   - `List<JournalLineSaveRequest> lines`;
   - line DTO: `accountId`, `accountName`, `accountCode`, `debitAmount`, `creditAmount`, `description`.
 
-- [ ] Buat `ReverseJournalRequest` dengan `@NotNull @DateTimeFormat(pattern="yyyy-MM-dd") LocalDate postingDate`.
+- [x] Buat `ReverseJournalRequest` dengan `@NotNull @DateTimeFormat(pattern="yyyy-MM-dd") LocalDate postingDate`.
 
-- [ ] Extend response DTO:
+- [x] Extend response DTO:
   - header currency ID/name/code, exchangeRate, referenceNo;
   - reversalOfId/code dan reversedById/code;
   - line memo;
   - transaction totals dan base totals;
   - helper booleans `manual`, `reversal`, `reversed`, `multiCurrency`.
 
-- [ ] Extend mapper:
+- [x] Extend mapper:
   - map detail read model, bukan entity;
   - format journal code tetap `JNL-%06d`;
   - enrich currency/account label via lookup provider;
@@ -617,9 +617,9 @@ Expose form, CRUD, post, reverse, list manual filter, currency prefill, dan deta
 
   ref: `src/main/java/com/solusi/erp/accounting/journal/web/mapper/JournalEntryWebMapper.java:L20-L117`
 
-- [ ] Tambahkan `@DefaultRedirectUrl` pada controller. Inject hanya use case, `GetDefaultCurrencyUseCase`, `CurrencyLookupProvider`, mapper, dan `MessageSource`; jangan inject JPA repository.
+- [x] Tambahkan `@DefaultRedirectUrl` pada controller. Inject hanya use case, `GetDefaultCurrencyUseCase`, `CurrencyLookupProvider`, mapper, dan `MessageSource`; jangan inject JPA repository.
 
-- [ ] Tambahkan routes:
+- [x] Tambahkan routes:
 
   | Method | Route | Permission | Result |
   |---|---|---|---|
@@ -634,9 +634,9 @@ Expose form, CRUD, post, reverse, list manual filter, currency prefill, dan deta
   ref: `src/main/java/com/solusi/erp/accountspayable/vendorpayment/web/controller/VendorPaymentController.java:L85-L180`
   ref: `docs/spec/form-submission.md:L116-L128`
 
-- [ ] Pada list, expose filter values string: semua `SchemaEventType.name()` plus `"MANUAL"`.
+- [x] Pada list, expose filter values string: semua `SchemaEventType.name()` plus `"MANUAL"`.
 
-- [ ] Extend controller/mapper tests:
+- [x] Extend controller/mapper tests:
   - create form prefills hari ini, default currency, rate one, dan lookup trinity;
   - edit form rejects missing journal melalui global handler path;
   - list exposes manual filter;
