@@ -45,6 +45,9 @@ public abstract class InventoryMovementMapper {
 
     @AfterMapping
     protected void enrichResponse(InventoryMovementEntity entity, @MappingTarget InventoryMovementResponse response) {
+        if (response.getUnitCostLocal() != null && entity.getQuantity() != null) {
+            response.setTotalCostLocal(response.getUnitCostLocal().multiply(entity.getQuantity().abs()));
+        }
         if (entity.getProductId() != null) {
             productRepository.findById(entity.getProductId()).ifPresent(p -> {
                 response.setProductCode(p.getCode());

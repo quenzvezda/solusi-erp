@@ -9,3 +9,7 @@
 ## Task 1: Extend filter + repository search
 - **Status:** clean
 - **Summary:** Added movement type, document type, and document-code keyword filtering to stock-card query flow with Mockito coverage for parameter forwarding and blank keyword normalization.
+
+## Task 2: Response enrichment - total cost
+- **Status:** clean
+- **Summary:** Added `totalCostLocal` response enrichment as absolute quantity multiplied by local unit cost, with mapper coverage for computed and null-cost cases.

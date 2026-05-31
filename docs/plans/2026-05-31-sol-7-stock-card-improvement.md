@@ -59,11 +59,11 @@ Add a derived `totalCostLocal` to the response so the Cost column can show total
 **Reference module:** `inventory.report` (self)
 
 Steps:
-- [ ] Add `BigDecimal totalCostLocal` field to `InventoryMovementResponse`.
+- [x] Add `BigDecimal totalCostLocal` field to `InventoryMovementResponse`.
       ref: src/main/java/com/solusi/erp/inventory/report/web/dto/InventoryMovementResponse.java:L38-L41 — existing cost fields (unitCostOriginal/Local, currencyAlias)
-- [ ] In `InventoryMovementMapper.enrichResponse(...)` (`@AfterMapping`), compute `totalCostLocal = unitCostLocal × quantity.abs()` when both are non-null (use `quantity.abs()` so issues/negatives show a positive money figure; the sign stays on the Qty column).
+- [x] In `InventoryMovementMapper.enrichResponse(...)` (`@AfterMapping`), compute `totalCostLocal = unitCostLocal × quantity.abs()` when both are non-null (use `quantity.abs()` so issues/negatives show a positive money figure; the sign stays on the Qty column).
       ref: src/main/java/com/solusi/erp/inventory/report/web/mapper/InventoryMovementMapper.java:L46-L67 — existing @AfterMapping enrichment block
-- [ ] **TEST:** Extend `InventoryMovementMapperTest` (or create if absent): given qty=5, unitCostLocal=5,000,000 → `totalCostLocal`=25,000,000; null unitCost → null total.
+- [x] **TEST:** Extend `InventoryMovementMapperTest` (or create if absent): given qty=5, unitCostLocal=5,000,000 → `totalCostLocal`=25,000,000; null unitCost → null total.
       ref: src/main/java/com/solusi/erp/inventory/report/web/mapper/InventoryMovementMapper.java:L69-L100 — resolveCurrencyAlias pattern to follow for test setup
 
 **Validation criteria:**

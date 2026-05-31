@@ -246,6 +246,42 @@ class InventoryMovementMapperTest {
     }
 
     @Test
+    @DisplayName("toResponse() computes totalCostLocal from absolute quantity and local unit cost")
+    void toResponse_computesTotalCostLocal() {
+        InventoryMovementEntity entity = new InventoryMovementEntity();
+        entity.setTransactionDate(LocalDateTime.of(2024, 1, 15, 10, 0));
+        entity.setProductId(100L);
+        entity.setContainerId(200L);
+        entity.setQuantity(new BigDecimal("-5"));
+        entity.setMovementType(MovementType.ISSUE);
+
+        CurrencyAmount unitCost = new CurrencyAmount();
+        unitCost.setCurrencyId(null);
+        unitCost.setLocalAmount(new BigDecimal("5000000.00"));
+        entity.setUnitCost(unitCost);
+
+        InventoryMovementResponse response = mapper.toResponse(entity);
+
+        assertThat(response.getTotalCostLocal()).isEqualByComparingTo(new BigDecimal("25000000.00"));
+    }
+
+    @Test
+    @DisplayName("toResponse() leaves totalCostLocal null when unit cost is absent")
+    void toResponse_nullUnitCostLeavesTotalCostLocalNull() {
+        InventoryMovementEntity entity = new InventoryMovementEntity();
+        entity.setTransactionDate(LocalDateTime.of(2024, 1, 15, 10, 0));
+        entity.setProductId(100L);
+        entity.setContainerId(200L);
+        entity.setQuantity(new BigDecimal("5"));
+        entity.setMovementType(MovementType.RECEIPT);
+        entity.setUnitCost(null);
+
+        InventoryMovementResponse response = mapper.toResponse(entity);
+
+        assertThat(response.getTotalCostLocal()).isNull();
+    }
+
+    @Test
     @DisplayName("toResponse() leaves currencyAlias null when unitCost is null")
     void toResponse_nullUnitCost() {
         InventoryMovementEntity entity = new InventoryMovementEntity();

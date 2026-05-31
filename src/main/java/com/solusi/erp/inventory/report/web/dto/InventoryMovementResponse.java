@@ -37,5 +37,6 @@ public class InventoryMovementResponse extends BaseAuditResponse {
 
     private BigDecimal unitCostOriginal;
     private BigDecimal unitCostLocal;
+    private BigDecimal totalCostLocal;
     private String currencyAlias;
 }
