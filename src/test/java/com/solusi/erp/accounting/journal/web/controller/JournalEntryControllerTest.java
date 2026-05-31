@@ -2,6 +2,7 @@ package com.solusi.erp.accounting.journal.web.controller;
 
 import com.solusi.erp.accounting.journal.application.usecase.query.FindJournalEntriesUseCase;
 import com.solusi.erp.accounting.journal.application.usecase.query.GetJournalEntryDetailUseCase;
+import com.solusi.erp.accounting.journal.application.usecase.query.JournalEntryDetailView;
 import com.solusi.erp.accounting.journal.domain.model.JournalEntry;
 import com.solusi.erp.accounting.journal.domain.model.JournalLine;
 import com.solusi.erp.accounting.journal.domain.model.JournalStatus;
@@ -66,7 +67,7 @@ class JournalEntryControllerTest {
 
     @Test
     void detail_returnsCorrectViewAndModel() {
-        when(getDetailUseCase.execute(1L)).thenReturn(Optional.of(sampleEntry));
+        when(getDetailUseCase.execute(1L)).thenReturn(Optional.of(new JournalEntryDetailView(sampleEntry, null)));
         when(webMapper.toDetailResponse(any())).thenReturn(new JournalEntryDetailResponse());
         
         ExtendedModelMap model = new ExtendedModelMap();

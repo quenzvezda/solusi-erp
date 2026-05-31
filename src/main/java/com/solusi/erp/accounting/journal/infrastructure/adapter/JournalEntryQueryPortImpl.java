@@ -33,7 +33,7 @@ public class JournalEntryQueryPortImpl implements JournalEntryQueryPort {
         Specification<JournalEntryEntity> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (filter.sourceType() != null) {
-                predicates.add(cb.equal(root.get("eventType"), filter.sourceType().name()));
+                predicates.add(cb.equal(root.get("eventType"), filter.sourceType()));
             }
             if (StringUtils.hasText(filter.sourceCode())) {
                 predicates.add(cb.like(cb.lower(root.get("sourceCode")), "%" + filter.sourceCode().toLowerCase() + "%"));
@@ -61,6 +61,12 @@ public class JournalEntryQueryPortImpl implements JournalEntryQueryPort {
     @Transactional(readOnly = true)
     public Optional<JournalEntry> getJournalEntryDetail(Long id) {
         return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<JournalEntry> findReversalOf(Long originalJournalId) {
+        return jpaRepository.findByReversalOfId(originalJournalId).map(mapper::toDomain);
     }
     
     private Long tryParseId(String code) {

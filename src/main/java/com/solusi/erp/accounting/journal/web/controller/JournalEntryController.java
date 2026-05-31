@@ -34,7 +34,7 @@ public class JournalEntryController {
     @GetMapping
     @PreAuthorize("hasAuthority('JOURNAL-ENTRY_READ')")
     public String list(
-            @RequestParam(required = false) SchemaEventType sourceType,
+            @RequestParam(required = false) String sourceType,
             @RequestParam(required = false) String sourceCode,
             @RequestParam(required = false) String journalCode,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate postingDateFrom,
@@ -60,6 +60,7 @@ public class JournalEntryController {
     @PreAuthorize("hasAuthority('JOURNAL-ENTRY_READ')")
     public String detail(@PathVariable Long id, Model model) {
         JournalEntry entry = getJournalEntryDetailUseCase.execute(id)
+                .map(com.solusi.erp.accounting.journal.application.usecase.query.JournalEntryDetailView::entry)
                 .orElseThrow(() -> new RuntimeException("Journal Entry not found"));
         JournalEntryDetailResponse response = webMapper.toDetailResponse(entry);
         model.addAttribute("journal", response);

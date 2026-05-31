@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface JournalEntryQueryPort {
     Page<JournalEntry> findJournalEntries(JournalEntryFilter filter, Pageable pageable);
     Optional<JournalEntry> getJournalEntryDetail(Long id);
+    Optional<JournalEntry> findReversalOf(Long originalJournalId);
 }

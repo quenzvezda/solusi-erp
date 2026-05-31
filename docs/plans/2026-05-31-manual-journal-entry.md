@@ -378,7 +378,7 @@ Persist header currency/reference/reversal, line memo, update draft, delete draf
 
 Expected: persistence mapping dan adapter tests lulus.
 
-### Task 5: Extend Journal Read Path And Detail Read Model
+### Task 5: Extend Journal Read Path And Detail Read Model [x]
 
 List filter harus dapat mencari `MANUAL`; detail view perlu relasi reversal tanpa mencampur query ke controller.
 
@@ -395,15 +395,15 @@ List filter harus dapat mencari `MANUAL`; detail view perlu relasi reversal tanp
 - Test: `src/test/java/com/solusi/erp/accounting/journal/infrastructure/adapter/JournalEntryQueryPortImplTest.java`
 - Test: `src/test/java/com/solusi/erp/accounting/journal/application/usecase/query/JournalQueryUseCasesTest.java`
 
-- [ ] Ubah `JournalEntryFilter.sourceType` dari `SchemaEventType` menjadi `String`.
+- [x] Ubah `JournalEntryFilter.sourceType` dari `SchemaEventType` menjadi `String`.
 
-- [ ] Pada specification query, bandingkan string langsung ke `eventType`. Pastikan filter `MANUAL` bekerja dan existing filter `GOODS_RECEIPT` tidak regress.
+- [x] Pada specification query, bandingkan string langsung ke `eventType`. Pastikan filter `MANUAL` bekerja dan existing filter `GOODS_RECEIPT` tidak regress.
 
   ref: `src/main/java/com/solusi/erp/accounting/journal/infrastructure/adapter/JournalEntryQueryPortImpl.java:L30-L50`
 
-- [ ] Tambahkan query port untuk mencari reversal berdasarkan original ID.
+- [x] Tambahkan query port untuk mencari reversal berdasarkan original ID.
 
-- [ ] Buat read model:
+- [x] Buat read model:
 
   ```java
   public record JournalEntryDetailView(
@@ -414,9 +414,9 @@ List filter harus dapat mencari `MANUAL`; detail view perlu relasi reversal tanp
 
   `entry.getReversalOfId()` menjelaskan “Reversal of”; `reversedById` menjelaskan “Reversed by”.
 
-- [ ] Ubah `GetJournalEntryDetailUseCase` agar mengembalikan `Optional<JournalEntryDetailView>`, dengan lookup reversal dilakukan di query/application layer.
+- [x] Ubah `GetJournalEntryDetailUseCase` agar mengembalikan `Optional<JournalEntryDetailView>`, dengan lookup reversal dilakukan di query/application layer.
 
-- [ ] Extend tests:
+- [x] Extend tests:
   - manual string filter menghasilkan predicate event type manual;
   - unknown string filter tidak crash;
   - detail original mengisi `reversedById`;

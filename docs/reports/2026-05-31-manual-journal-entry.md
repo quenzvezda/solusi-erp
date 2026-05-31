@@ -31,3 +31,16 @@
 
 - **Status:** clean
 - **Summary:** Added V64 entity fields, raw string event mapping, line memo mapping, safe update mapper, repository find/delete/reversal methods, and adapter tests for existing-row updates. Verified with `mvn -q -Dtest=JournalPersistenceMapperTest,JournalEntryRepositoryImplTest test`.
+
+## Task 5: Extend Journal Read Path And Detail Read Model
+
+### Finding: Controller compile compatibility
+
+- **Type:** deviation
+- **Severity:** info
+- **Detail:** Changing `GetJournalEntryDetailUseCase` to return `JournalEntryDetailView` required a minimal controller/test adjustment before the planned web task.
+- **Action taken:** Mapped the detail view back to the entry in the existing controller path. Full UI exposure of reversal metadata remains in Task 9/10.
+- **Ref:** `src/main/java/com/solusi/erp/accounting/journal/web/controller/JournalEntryController.java`
+
+- **Status:** clean
+- **Summary:** Switched journal filter source type to string, added reversal lookup to query port, introduced `JournalEntryDetailView`, and covered manual/unknown filters plus original/reversal detail behavior. Verified with `mvn -q -Dtest=JournalEntryFilterTest,JournalEntryQueryPortImplTest,JournalQueryUseCasesTest test`.
