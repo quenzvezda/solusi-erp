@@ -56,9 +56,33 @@ class JournalTemplateTest {
         assertThat(template).contains("line.description");
     }
 
+    @Test
+    void pageScripts_containRequiredJournalClientContracts() throws Exception {
+        String formTemplate = readTemplate("accounting/journal/journal-entry-form.html");
+        String detailTemplate = readTemplate("accounting/journal/journal-entry-detail.html");
+        String formJs = readStatic("js/accounting/journal/journal-entry-form.js");
+        String detailJs = readStatic("js/accounting/journal/journal-entry-detail.js");
+
+        assertThat(formTemplate).contains("journal-entry-form.js");
+        assertThat(detailTemplate).contains("journal-entry-detail.js");
+        assertThat(formJs).contains("ERP.CurrencyRateLock");
+        assertThat(formJs).contains("journal:balance");
+        assertThat(detailJs).contains("/reverse");
+        assertThat(detailJs).contains("reversal-posting-date");
+        assertThat(detailJs).contains("erp_pending_success");
+    }
+
     private String readTemplate(String path) throws Exception {
         InputStream is = getClass().getClassLoader().getResourceAsStream("templates/" + path);
         assertThat(is).as("Template not found: %s", path).isNotNull();
+        try (InputStream in = is) {
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
+    }
+
+    private String readStatic(String path) throws Exception {
+        InputStream is = getClass().getClassLoader().getResourceAsStream("static/" + path);
+        assertThat(is).as("Static resource not found: %s", path).isNotNull();
         try (InputStream in = is) {
             return new String(in.readAllBytes(), StandardCharsets.UTF_8);
         }

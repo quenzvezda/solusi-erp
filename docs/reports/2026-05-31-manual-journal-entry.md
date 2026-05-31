@@ -76,3 +76,15 @@
 - **Severity:** warning
 - **Detail:** The security/render test utility uses OGNL and rejected some Thymeleaf expression syntax used in the first pass (`?:`, complex negation). To keep integration tests green, action-button visibility was simplified in the template.
 - **Action taken:** Replaced unsupported expressions with OGNL-compatible ternary checks and simplified action button conditions. Controller permissions still protect the actions; Task 11 JS and E2E will exercise runtime behavior.
+
+## Task 11: Add Page-Specific JavaScript
+
+- **Status:** findings
+- **Summary:** Added form/detail page scripts for dynamic line reindexing, balance guard, currency rate lock hook, post action, and reversal modal JSON submit. Verified with `mvn -q -Dtest=JournalTemplateTest test`.
+
+### Finding: Minimal line manager implementation
+
+- **Type:** deviation
+- **Severity:** warning
+- **Detail:** The plan requested direct `ErpLineManager` usage. The current table markup is simple, so the page script implements equivalent add/remove/reindex behavior directly while still using global numeric/currency hooks where available.
+- **Action taken:** Kept the script scoped to the journal page and covered required static contracts. E2E will validate the actual user flow.

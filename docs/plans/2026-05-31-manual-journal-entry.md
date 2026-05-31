@@ -743,7 +743,7 @@ Buat UI manual journal dengan pola header-lines, security visibility, numeric/da
 
 Expected: template static dan render tests lulus.
 
-### Task 11: Add Page-Specific JavaScript
+### Task 11: Add Page-Specific JavaScript [x]
 
 Wire dynamic rows, TomSelect, AutoNumeric, currency lock, balance recap, client guard, dan reversal modal.
 
@@ -756,7 +756,7 @@ Wire dynamic rows, TomSelect, AutoNumeric, currency lock, balance recap, client 
 - Modify: `src/main/resources/templates/accounting/journal/journal-entry-detail.html`
 - Modify: `src/test/java/com/solusi/erp/accounting/journal/web/template/JournalTemplateTest.java`
 
-- [ ] Pada form JS:
+- [x] Pada form JS:
   - instantiate `new ErpLineManager("line-container", "row-template-source", { onUpdate: calculateTotals })`;
   - init lookup existing dan row baru dengan `initLookup(select, "accounting/coa")`;
   - init numeric row baru melalui helper global;
@@ -773,11 +773,11 @@ Wire dynamic rows, TomSelect, AutoNumeric, currency lock, balance recap, client 
   ref: `src/main/resources/static/js/accountspayable/vendor-payments/form.js:L235-L274`
   ref: `docs/spec/form-submission.md:L52-L57`
 
-- [ ] Jangan mengandalkan TomSelect payload untuk COA edit row. Nama/kode initial harus berasal dari rendered `<option selected data-subtext="...">`.
+- [x] Jangan mengandalkan TomSelect payload untuk COA edit row. Nama/kode initial harus berasal dari rendered `<option selected data-subtext="...">`.
 
   ref: `docs/spec/page-specific-scripts.md:L79-L90`
 
-- [ ] Pada detail JS:
+- [x] Pada detail JS:
   - open reversal modal;
   - ambil ISO date dari input;
   - POST JSON ke `/{id}/reverse` dengan CSRF;
@@ -785,7 +785,7 @@ Wire dynamic rows, TomSelect, AutoNumeric, currency lock, balance recap, client 
   - on success simpan `erp_pending_success`, redirect ke detail reversal;
   - on error tampilkan `ErpModal.showError` dan re-enable button.
 
-- [ ] Tambahkan static test bahwa kedua scripts di-include via page script slot, currency rate lock dimuat sebelum form JS, dan reverse modal mempunyai endpoint/date binding yang dibutuhkan.
+- [x] Tambahkan static test bahwa kedua scripts di-include via page script slot, currency rate lock dimuat sebelum form JS, dan reverse modal mempunyai endpoint/date binding yang dibutuhkan.
 
 **Simple verification:**
 
