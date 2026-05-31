@@ -25,3 +25,12 @@
 ## Task 5: Template - HTML structure
 - **Status:** clean
 - **Summary:** Rebuilt the stock-card filter/table with autocomplete fragments, compact advanced filters, serial column, movement/reference labels, total/unit cost display, and GR/Stock Adjustment reference links.
+
+## Task 6: Template - JS wiring for autocomplete
+
+### Finding: Manual page script not required
+- **Type:** decision
+- **Severity:** info
+- **Detail:** `layout/master.html` calls `initAllLookups()` on `DOMContentLoaded` and `htmx:afterSwap`; `erp-common-handler.js` initializes every `select[data-lookup-path]`, and the autocomplete fragment backs `productId`/`containerId` with real `<select th:field>` controls.
+- **Action taken:** Kept stock-card without page-specific JavaScript and marked the plan step complete based on the global auto-initialization path.
+- **Ref:** src/main/resources/static/js/shared/erp-common-handler.js

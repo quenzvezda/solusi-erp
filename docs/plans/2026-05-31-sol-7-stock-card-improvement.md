@@ -152,12 +152,12 @@ Add page-specific JS to initialize the two TomSelect autocompletes (filter conte
 **Reference module:** `docs/spec/autocomplete-generic.md` §2B (global auto-init) / §2C (`initLookup`)
 
 Steps:
-- [ ] Prefer **global auto-initialization**: the `autocomplete` fragment with `data-lookup-path` is auto-initialized by the shared handler — confirm no manual JS is needed for a plain (non-cascading) filter. If the filter `<select>`s are inside the GET form and submit correctly as `productId`/`containerId`, no custom script is required.
+- [x] Prefer **global auto-initialization**: the `autocomplete` fragment with `data-lookup-path` is auto-initialized by the shared handler — confirm no manual JS is needed for a plain (non-cascading) filter. If the filter `<select>`s are inside the GET form and submit correctly as `productId`/`containerId`, no custom script is required.
       ref: docs/spec/autocomplete-generic.md:L34-L48 — Global Auto-Initialization
-- [ ] If auto-init does not fire in this page's layout slot, add a minimal page script using `initLookup(el, 'inventory/products')` and `initLookup(el, 'inventory/containers')` in the layout's JS slot.
+- [x] If auto-init does not fire in this page's layout slot, add a minimal page script using `initLookup(el, 'inventory/products')` and `initLookup(el, 'inventory/containers')` in the layout's JS slot.
       ref: docs/spec/autocomplete-generic.md:L50-L62 — initLookup manual init
       ref: src/main/resources/templates/layout/master.html — JS slot / HTMX re-init hook
-- [ ] Ensure the GET filter form serializes the TomSelect values (TomSelect backs a real `<select th:field>`, so standard form GET works — verify the submitted query string includes `productId`/`containerId`).
+- [x] Ensure the GET filter form serializes the TomSelect values (TomSelect backs a real `<select th:field>`, so standard form GET works — verify the submitted query string includes `productId`/`containerId`).
 
 **Validation criteria:**
 - Typing in Product/Container triggers async search (network call to `/api/lookup/...`).
