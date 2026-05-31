@@ -26,3 +26,8 @@
 
 - **Status:** clean
 - **Summary:** Added COA and currency posting validator ports, adapters, composition-root beans, and edge tests for active/header/missing/default cases. Verified with `mvn -q -Dtest=CoaPostingValidatorImplTest,CurrencyPostingValidatorImplTest test`.
+
+## Task 4: Extend Journal Persistence Safely
+
+- **Status:** clean
+- **Summary:** Added V64 entity fields, raw string event mapping, line memo mapping, safe update mapper, repository find/delete/reversal methods, and adapter tests for existing-row updates. Verified with `mvn -q -Dtest=JournalPersistenceMapperTest,JournalEntryRepositoryImplTest test`.

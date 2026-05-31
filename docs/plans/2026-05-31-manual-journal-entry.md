@@ -314,7 +314,7 @@ Validasi COA/currency harus terjadi di backend melalui provider slice, bukan han
 
 Expected: validator adapter tests lulus.
 
-### Task 4: Extend Journal Persistence Safely
+### Task 4: Extend Journal Persistence Safely [x]
 
 Persist header currency/reference/reversal, line memo, update draft, delete draft, dan query reversal tanpa insert duplikat.
 
@@ -330,19 +330,19 @@ Persist header currency/reference/reversal, line memo, update draft, delete draf
 - Test: `src/test/java/com/solusi/erp/accounting/journal/infrastructure/adapter/JournalEntryRepositoryImplTest.java`
 - Create: `src/test/java/com/solusi/erp/accounting/journal/infrastructure/persistence/JournalPersistenceMapperTest.java`
 
-- [ ] Tambahkan entity fields sesuai V64. Ubah `sourceId` menjadi nullable. Tambahkan `description` pada `JournalLineEntity`.
+- [x] Tambahkan entity fields sesuai V64. Ubah `sourceId` menjadi nullable. Tambahkan `description` pada `JournalLineEntity`.
 
   ref: `src/main/java/com/solusi/erp/accounting/journal/infrastructure/persistence/JournalEntryEntity.java:L18-L41`
   ref: `src/main/java/com/solusi/erp/accounting/journal/infrastructure/persistence/JournalLineEntity.java:L20-L42`
 
-- [ ] Refactor mapper:
+- [x] Refactor mapper:
   - `toDomain()` tidak lagi memanggil `SchemaEventType.valueOf`;
   - map header currency/rate/reference/reversal;
   - map line memo;
   - buat `toNewEntity(domain)` dan `applyToEntity(domain, entity)`;
   - `applyToEntity` mempertahankan ID/version/audit header existing, clear old child lines, dan add child lines baru dengan back-reference benar.
 
-- [ ] Extend repository domain port:
+- [x] Extend repository domain port:
 
   ```java
   Optional<JournalEntry> findById(Long id);
@@ -351,16 +351,16 @@ Persist header currency/reference/reversal, line memo, update draft, delete draf
   Optional<JournalEntry> findReversalOf(Long originalJournalId);
   ```
 
-- [ ] Extend JPA repository dengan `existsByReversalOfId(Long)` dan `findByReversalOfId(Long)`.
+- [x] Extend JPA repository dengan `existsByReversalOfId(Long)` dan `findByReversalOfId(Long)`.
 
-- [ ] Ubah adapter `save()`:
+- [x] Ubah adapter `save()`:
   - ID null -> `toNewEntity`;
   - ID non-null -> load entity existing atau throw not-found, lalu `applyToEntity`;
   - save dan map kembali.
 
   Ini wajib agar update draft dan perubahan status post tidak menjadi insert baru.
 
-- [ ] Tambahkan mapper/repository tests:
+- [x] Tambahkan mapper/repository tests:
   - round trip row auto lama dengan currency null tetap valid;
   - row manual `eventType=MANUAL` dapat dibaca;
   - line memo round trip;
