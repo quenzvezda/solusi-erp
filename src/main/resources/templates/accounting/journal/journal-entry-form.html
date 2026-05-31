@@ -30,12 +30,12 @@
                         <div class="row g-3">
                             <div class="col-md-3">
                                 <label class="form-label" th:text="#{label.journal.postingDate}">Posting Date</label>
-                                <input type="text" class="form-control" name="postingDate" data-picker="date"
+                                <input type="text" class="form-control erp-input" name="postingDate" data-picker="date"
                                        th:value="${journalRequest.postingDate}">
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label" th:text="#{label.currency}">Currency</label>
-                                <select name="currencyId" id="currencyId" class="form-select" data-lookup-path="master/currencies">
+                                <select name="currencyId" id="currencyId" class="form-select erp-input-ts" data-lookup-path="master/currencies">
                                     <option value=""></option>
                                     <option th:if="${journalRequest.currencyId != null}"
                                             th:value="${journalRequest.currencyId}"
@@ -47,16 +47,16 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label" th:text="#{label.exchangeRate}">Exchange Rate</label>
-                                <input type="text" class="form-control erp-number-decimal text-end" name="exchangeRate"
+                                <input type="text" class="form-control erp-input erp-number-decimal text-end" name="exchangeRate"
                                        th:value="${journalRequest.exchangeRate}">
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label" th:text="#{label.journal.referenceNo}">Reference No</label>
-                                <input type="text" class="form-control" name="referenceNo" th:value="${journalRequest.referenceNo}">
+                                <input type="text" class="form-control erp-input" name="referenceNo" th:value="${journalRequest.referenceNo}">
                             </div>
                             <div class="col-12">
                                 <label class="form-label" th:text="#{label.description}">Description</label>
-                                <textarea class="form-control" name="description" rows="2" th:text="${journalRequest.description}"></textarea>
+                                <textarea class="form-control erp-input" name="description" rows="2" th:text="${journalRequest.description}"></textarea>
                             </div>
                         </div>
                     </div>
@@ -70,20 +70,20 @@
                         </button>
                     </div>
                     <div class="table-responsive">
-                        <table class="table card-table" id="journal-lines-table">
+                        <table class="table table-vcenter card-table" id="journal-lines-table" style="table-layout: fixed;">
                             <thead>
                             <tr>
-                                <th th:text="#{label.journal.account}">Account</th>
-                                <th class="text-end" th:text="#{label.journal.debit}">Debit</th>
-                                <th class="text-end" th:text="#{label.journal.credit}">Credit</th>
-                                <th th:text="#{label.description}">Description</th>
-                                <th></th>
+                                <th style="width: 30%;" th:text="#{label.journal.account}">Account</th>
+                                <th class="text-end" style="width: 16%;" th:text="#{label.journal.debit}">Debit</th>
+                                <th class="text-end" style="width: 16%;" th:text="#{label.journal.credit}">Credit</th>
+                                <th style="width: 30%;" th:text="#{label.description}">Description</th>
+                                <th class="text-end" style="width: 8%;"></th>
                             </tr>
                             </thead>
                             <tbody>
-                            <tr th:each="line, iter : ${journalRequest.lines}" class="journal-line-row">
+                            <tr th:each="line, iter : ${journalRequest.lines}" class="line-row journal-line-row">
                                 <td>
-                                    <select class="form-select account-select"
+                                    <select class="form-select form-select-sm erp-input-ts-sm account-select"
                                             data-lookup-path="accounting/coa"
                                             th:name="|lines[${iter.index}].accountId|">
                                         <option value=""></option>
@@ -94,18 +94,18 @@
                                                 selected></option>
                                     </select>
                                 </td>
-                                <td><input type="text" class="form-control erp-number-decimal text-end"
-                                           th:name="|lines[${iter.index}].debitAmount|" th:value="${line.debitAmount}"></td>
-                                <td><input type="text" class="form-control erp-number-decimal text-end"
-                                           th:name="|lines[${iter.index}].creditAmount|" th:value="${line.creditAmount}"></td>
-                                <td><input type="text" class="form-control" th:name="|lines[${iter.index}].description|" th:value="${line.description}"></td>
-                                <td><button type="button" class="btn btn-icon btn-outline-danger btn-remove-journal-line"><i class="ti ti-trash"></i></button></td>
+                                <td><input type="text" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end"
+                                           th:name="|lines[${iter.index}].debitAmount|" th:value="${line.debitAmount != null ? line.debitAmount : '0.00'}" value="0.00"></td>
+                                <td><input type="text" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end"
+                                           th:name="|lines[${iter.index}].creditAmount|" th:value="${line.creditAmount != null ? line.creditAmount : '0.00'}" value="0.00"></td>
+                                <td><input type="text" class="form-control form-control-sm erp-input-sm" th:name="|lines[${iter.index}].description|" th:value="${line.description}"></td>
+                                <td class="text-end"><button type="button" class="btn btn-sm btn-white btn-icon text-danger btn-remove-journal-line"><i class="ti ti-trash"></i></button></td>
                             </tr>
                             </tbody>
                         </table>
                     </div>
-                    <div class="card-footer text-end">
-                        <span id="journal-balance-badge" class="badge bg-secondary me-2" th:text="#{label.journal.unbalanced}">Unbalanced</span>
+                    <div class="card-footer d-flex justify-content-end align-items-center gap-2">
+                        <span id="journal-balance-badge" class="badge bg-danger-lt" th:text="#{label.journal.unbalanced}">Unbalanced</span>
                         <a th:href="@{/accounting/journal-entries}" class="btn btn-link" th:text="#{label.cancel}">Cancel</a>
                         <button type="submit" class="btn btn-primary" th:text="#{label.save}">Save</button>
                     </div>

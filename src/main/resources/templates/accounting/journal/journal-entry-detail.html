@@ -82,7 +82,11 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label text-muted" th:text="#{label.status}">Status</label>
-                                <div><span class="badge bg-success" th:text="${journal.status}">POSTED</span></div>
+                                <div>
+                                    <span class="badge"
+                                          th:classappend="${journal.status == 'DRAFT'} ? 'bg-warning-lt' : (${journal.status == 'POSTED'} ? 'bg-success-lt' : 'bg-secondary-lt')"
+                                          th:text="${journal.status}">POSTED</span>
+                                </div>
                             </div>
                             <div class="col-12 mb-3">
                                 <label class="form-label text-muted" th:text="#{label.description}">Description</label>

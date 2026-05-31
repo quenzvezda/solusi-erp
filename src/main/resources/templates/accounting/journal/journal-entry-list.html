@@ -72,7 +72,11 @@
                                     <td th:text="${entry.postingDate != null ? #temporals.format(entry.postingDate, 'dd/MM/yyyy') : '-'}">01/01/2026</td>
                                     <td class="text-end" th:text="${#numbers.formatDecimal(entry.totalDebit, 1, 'COMMA', 2, 'POINT')}">100.00</td>
                                     <td class="text-end" th:text="${#numbers.formatDecimal(entry.totalCredit, 1, 'COMMA', 2, 'POINT')}">100.00</td>
-                                    <td><span class="badge bg-success" th:text="${entry.status}">POSTED</span></td>
+                                    <td>
+                                        <span class="badge"
+                                              th:classappend="${entry.status == 'DRAFT'} ? 'bg-warning-lt' : (${entry.status == 'POSTED'} ? 'bg-success-lt' : 'bg-secondary-lt')"
+                                              th:text="${entry.status}">POSTED</span>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>

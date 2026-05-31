@@ -50,7 +50,7 @@
       });
     });
     clone.querySelectorAll("input").forEach(function (input) {
-      input.value = "";
+      input.value = input.matches('[name$=".debitAmount"], [name$=".creditAmount"]') ? "0.00" : "";
       input.removeAttribute("data-autonumeric");
     });
     tbody.appendChild(clone);
@@ -77,9 +77,9 @@
       var badge = document.getElementById("journal-balance-badge");
       if (!badge) return;
       badge.textContent = event.detail.balanced ? "Balanced" : "Unbalanced";
-      badge.classList.toggle("bg-success", event.detail.balanced);
-      badge.classList.toggle("bg-danger", !event.detail.balanced);
-      badge.classList.remove("bg-secondary");
+      badge.classList.toggle("bg-success-lt", event.detail.balanced);
+      badge.classList.toggle("bg-danger-lt", !event.detail.balanced);
+      badge.classList.remove("bg-secondary", "bg-success", "bg-danger");
     });
 
     document.addEventListener("input", function (event) {

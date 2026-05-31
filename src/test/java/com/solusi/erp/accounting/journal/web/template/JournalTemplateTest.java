@@ -41,13 +41,36 @@ class JournalTemplateTest {
 
         assertThat(template).contains("data-ajax-form=\"true\"");
         assertThat(template).contains("data-picker=\"date\"");
+        assertThat(template).contains("class=\"form-control erp-input\"");
+        assertThat(template).contains("class=\"form-control erp-input erp-number-decimal text-end\"");
         assertThat(template).contains("erp-number-decimal");
         assertThat(template).contains("data-lookup-path=\"master/currencies\"");
         assertThat(template).contains("data-lookup-path=\"accounting/coa\"");
+        assertThat(template).contains("class=\"line-row journal-line-row\"");
+        assertThat(template).contains("form-control form-control-sm erp-input-sm erp-number-decimal text-end");
+        assertThat(template).contains("form-control form-control-sm erp-input-sm");
+        assertThat(template).contains("value=\"0.00\"");
+        assertThat(template).contains("style=\"width: 30%;\"");
+        assertThat(template).contains("style=\"width: 16%;\"");
+        assertThat(template).contains("table-layout: fixed");
         assertThat(template).contains("journal-balance-badge");
+        assertThat(template).contains("bg-danger-lt");
         assertThat(template).contains("journal-lines-table");
         assertThat(template).contains("erp-currency-rate-lock.js");
         assertThat(template).contains("journal-entry-form.js");
+    }
+
+    @Test
+    void listAndDetailTemplates_useReadableLightStatusBadges() throws Exception {
+        String listTemplate = readTemplate("accounting/journal/journal-entry-list.html");
+        String detailTemplate = readTemplate("accounting/journal/journal-entry-detail.html");
+
+        assertThat(listTemplate).contains("bg-warning-lt");
+        assertThat(listTemplate).contains("bg-success-lt");
+        assertThat(listTemplate).doesNotContain("class=\"badge bg-success\"");
+        assertThat(detailTemplate).contains("bg-warning-lt");
+        assertThat(detailTemplate).contains("bg-success-lt");
+        assertThat(detailTemplate).doesNotContain("class=\"badge bg-success\"");
     }
 
     @Test
@@ -72,6 +95,9 @@ class JournalTemplateTest {
         assertThat(detailTemplate).contains("journal-entry-detail.js");
         assertThat(formJs).contains("ERP.CurrencyRateLock");
         assertThat(formJs).contains("journal:balance");
+        assertThat(formJs).contains("bg-success-lt");
+        assertThat(formJs).contains("bg-danger-lt");
+        assertThat(formJs).contains("\"0.00\"");
         assertThat(detailJs).contains("/reverse");
         assertThat(detailJs).contains("reversal-posting-date");
         assertThat(detailJs).contains("erp_pending_success");
