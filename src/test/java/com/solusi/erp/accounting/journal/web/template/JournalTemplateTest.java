@@ -79,6 +79,7 @@ class JournalTemplateTest {
 
         assertThat(template).contains("btn-post-journal");
         assertThat(template).contains("journal-reversal-modal");
+        assertThat(template).contains("journal-reversal-error");
         assertThat(template).contains("data-bs-target=\"#journal-reversal-modal\"");
         assertThat(template).contains("journal-entry-detail.js");
         assertThat(template).contains("line.description");
@@ -101,6 +102,12 @@ class JournalTemplateTest {
         assertThat(detailJs).contains("/reverse");
         assertThat(detailJs).contains("reversal-posting-date");
         assertThat(detailJs).contains("erp_pending_success");
+        assertThat(detailJs).contains("\"Accept\": \"application/json\"");
+        assertThat(detailJs).contains("\"X-Requested-With\": \"XMLHttpRequest\"");
+        assertThat(detailJs).contains("payload.message");
+        assertThat(detailJs).contains("showWarning");
+        assertThat(detailJs).contains("showReversalError");
+        assertThat(detailJs).doesNotContain("throw new Error(\"Request failed\")");
     }
 
     private String readTemplate(String path) throws Exception {

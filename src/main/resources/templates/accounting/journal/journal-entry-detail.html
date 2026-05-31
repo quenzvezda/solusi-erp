@@ -142,6 +142,7 @@
             <div class="modal-content">
                 <div class="modal-header"><h5 class="modal-title" th:text="#{label.reverse}">Reverse</h5></div>
                 <div class="modal-body">
+                    <div id="journal-reversal-error" class="alert alert-warning d-none" role="alert"></div>
                     <label class="form-label" th:text="#{label.journal.postingDate}">Posting Date</label>
                     <input type="text" class="form-control" id="reversal-posting-date" data-picker="date">
                 </div>

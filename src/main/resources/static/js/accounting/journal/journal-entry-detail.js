@@ -2,9 +2,58 @@
   function csrfHeaders() {
     var token = document.querySelector('meta[name="_csrf"]');
     var header = document.querySelector('meta[name="_csrf_header"]');
-    var headers = { "Content-Type": "application/json" };
+    var headers = {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "X-Requested-With": "XMLHttpRequest"
+    };
     if (token && header) headers[header.content] = token.content;
     return headers;
+  }
+
+  function actionError(message, status) {
+    var error = new Error(message || "Action failed");
+    error.status = status;
+    return error;
+  }
+
+  function parsePayload(response) {
+    return response.text().then(function (text) {
+      if (!text) return {};
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        return { message: text };
+      }
+    });
+  }
+
+  function showActionError(error) {
+    if (!window.ErpModal) return;
+    var message = error && error.message ? error.message : "Action failed. Please try again.";
+    if (error && error.status && error.status < 500 && ErpModal.showWarning) {
+      ErpModal.showWarning(message);
+      return;
+    }
+    ErpModal.showError(message);
+  }
+
+  function hideReversalError() {
+    var alert = document.getElementById("journal-reversal-error");
+    if (!alert) return;
+    alert.textContent = "";
+    alert.classList.add("d-none");
+  }
+
+  function showReversalError(error) {
+    var alert = document.getElementById("journal-reversal-error");
+    var message = error && error.message ? error.message : "Action failed. Please try again.";
+    if (!alert) {
+      showActionError(error);
+      return;
+    }
+    alert.textContent = message;
+    alert.classList.remove("d-none");
   }
 
   function idFromPath() {
@@ -18,8 +67,12 @@
       headers: csrfHeaders(),
       body: body == null ? null : JSON.stringify(body)
     }).then(function (response) {
-      if (!response.ok) throw new Error("Request failed");
-      return response.json();
+      return parsePayload(response).then(function (payload) {
+        if (!response.ok || payload.success === false) {
+          throw actionError(payload.message || response.statusText, response.status);
+        }
+        return payload;
+      });
     });
   }
 
@@ -39,7 +92,7 @@
             .then(function () { window.location.reload(); })
             .catch(function (error) {
               postButton.disabled = false;
-              if (window.ErpModal) ErpModal.showError(error.message);
+              showActionError(error);
             });
         };
         var message = postButton.getAttribute("data-confirm-message");
@@ -52,12 +105,16 @@
     }
 
     if (reverseButton && modal) {
-      reverseButton.addEventListener("click", function () { modal.show(); });
+      reverseButton.addEventListener("click", function () {
+        hideReversalError();
+        modal.show();
+      });
     }
 
     if (confirmButton) {
       confirmButton.addEventListener("click", function () {
         var date = document.getElementById("reversal-posting-date").value;
+        hideReversalError();
         confirmButton.disabled = true;
         postJson("/accounting/journal-entries/" + id + "/reverse", { postingDate: date })
           .then(function (payload) {
@@ -69,7 +126,7 @@
           })
           .catch(function (error) {
             confirmButton.disabled = false;
-            if (window.ErpModal) ErpModal.showError(error.message);
+            showReversalError(error);
           });
       });
     }

@@ -7,6 +7,7 @@ import { setTomSelectValue } from '../../helpers/tomselect';
 import { waitForNetworkIdle } from '../../helpers/waits';
 
 const POSTING_DATE = '2026-05-20';
+const CLOSED_PERIOD_DATE = '2026-06-01';
 const DEBIT_ACCOUNT_ID = '9401';
 const CREDIT_ACCOUNT_ID = '9405';
 const AMOUNT = 125_000;
@@ -110,6 +111,12 @@ test.describe('@accounting Manual Journal Entry flow', () => {
 
     await page.locator('#btn-reverse-journal').click();
     await expect(page.locator('#journal-reversal-modal.show')).toBeVisible({ timeout: 10_000 });
+    await setFlatpickrDate(page, '#reversal-posting-date', CLOSED_PERIOD_DATE);
+    await page.locator('#btn-confirm-reversal').click();
+    await expect(page.locator('#journal-reversal-error')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('#journal-reversal-error')).toContainText(/No open accounting period|Tidak ada periode akuntansi terbuka/);
+    await expect(page.locator('#journal-reversal-modal.show')).toBeVisible();
+
     await setFlatpickrDate(page, '#reversal-posting-date', POSTING_DATE);
     await Promise.all([
       page.waitForURL(
