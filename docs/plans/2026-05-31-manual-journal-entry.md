@@ -432,7 +432,7 @@ List filter harus dapat mencari `MANUAL`; detail view perlu relasi reversal tanp
 
 Expected: journal read path tests lulus.
 
-### Task 6: Implement Draft Lifecycle Use Cases
+### Task 6: Implement Draft Lifecycle Use Cases [x]
 
 Create/update/delete manual journal memakai validator backend dan domain lifecycle.
 
@@ -444,7 +444,7 @@ Create/update/delete manual journal memakai validator backend dan domain lifecyc
 - Create: create/update/delete manual journal use case interfaces and implementations under `application/usecase/command`
 - Test: create/update/delete use case tests under `src/test/java/com/solusi/erp/accounting/journal/application/usecase/command`
 
-- [ ] Buat command records:
+- [x] Buat command records:
 
   ```java
   ManualJournalLineCommand(Long accountId, BigDecimal debitAmount,
@@ -454,7 +454,7 @@ Create/update/delete manual journal memakai validator backend dan domain lifecyc
                        String description, List<ManualJournalLineCommand> lines)
   ```
 
-- [ ] Buat helper application private/shared untuk:
+- [x] Buat helper application private/shared untuk:
   - resolve currency via `CurrencyPostingValidator`;
   - reject missing/inactive currency;
   - reject default currency bila rate bukan `1`;
@@ -463,13 +463,13 @@ Create/update/delete manual journal memakai validator backend dan domain lifecyc
   - build `JournalLine` manual dari transaction amounts;
   - invoke transaction-currency balance validation.
 
-- [ ] Implement `CreateManualJournalUseCase`: validate references, build domain draft, save.
+- [x] Implement `CreateManualJournalUseCase`: validate references, build domain draft, save.
 
-- [ ] Implement `UpdateManualJournalUseCase`: find by ID, reject missing/non-manual/non-draft, validate references lagi, invoke `updateDraft`, save.
+- [x] Implement `UpdateManualJournalUseCase`: find by ID, reject missing/non-manual/non-draft, validate references lagi, invoke `updateDraft`, save.
 
-- [ ] Implement `DeleteManualJournalUseCase`: find by ID, reject missing/non-manual/non-draft, delete by ID.
+- [x] Implement `DeleteManualJournalUseCase`: find by ID, reject missing/non-manual/non-draft, delete by ID.
 
-- [ ] Tambahkan Mockito unit tests dengan edge cases:
+- [x] Tambahkan Mockito unit tests dengan edge cases:
   - create happy path;
   - create unbalanced ditolak dan repository tidak save;
   - create kurang dari dua line ditolak;

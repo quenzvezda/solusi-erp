@@ -44,3 +44,8 @@
 
 - **Status:** clean
 - **Summary:** Switched journal filter source type to string, added reversal lookup to query port, introduced `JournalEntryDetailView`, and covered manual/unknown filters plus original/reversal detail behavior. Verified with `mvn -q -Dtest=JournalEntryFilterTest,JournalEntryQueryPortImplTest,JournalQueryUseCasesTest test`.
+
+## Task 6: Implement Draft Lifecycle Use Cases
+
+- **Status:** clean
+- **Summary:** Added manual journal command records, shared reference validator, create/update/delete draft use cases, and Mockito edge tests for balance, currency, COA, status, manual-only, and missing ID cases. Verified with `mvn -q -Dtest=CreateManualJournalUseCaseTest,UpdateManualJournalUseCaseTest,DeleteManualJournalUseCaseTest test`.
