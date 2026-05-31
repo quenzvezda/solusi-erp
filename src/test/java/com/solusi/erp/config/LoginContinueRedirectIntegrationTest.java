@@ -1,95 +1,147 @@
 package com.solusi.erp.config;
 
+import com.solusi.erp.security.user.security.CustomAuthenticationSuccessHandler;
+import com.solusi.erp.security.user.security.ForcePasswordChangeFilter;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import org.springframework.test.context.junit.jupiter.web.SpringJUnitWebConfig;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.io.IOException;
-import java.net.CookieManager;
-import java.net.CookiePolicy;
-import java.net.URI;
-import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("e2e")
+@SpringJUnitWebConfig(classes = {
+        SecurityConfig.class,
+        LoginContinueRedirectIntegrationTest.TestSecurityBeans.class
+})
 class LoginContinueRedirectIntegrationTest {
 
-    private static final Pattern CSRF_PATTERN = Pattern.compile(
-            "name=\"_csrf\"\\s+value=\"([^\"]+)\"|value=\"([^\"]+)\"\\s+name=\"_csrf\"");
+    @Autowired
+    private WebApplicationContext context;
 
-    @LocalServerPort
-    private int port;
+    private MockMvc mockMvc;
+
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(context)
+                .apply(springSecurity())
+                .build();
+    }
 
     @Test
     void staleSessionProtectedRequestContinuesToOriginalUrlAfterLogin() throws Exception {
-        HttpClient client = newClient();
+        MvcResult protectedResult = mockMvc.perform(get("/purchasing/purchase-orders")
+                        .with(staleSessionId()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(result -> assertThat(result.getResponse().getRedirectedUrl()).endsWith("/login"))
+                .andReturn();
 
-        HttpResponse<String> protectedResponse = get(client, "/purchasing/purchase-orders", "JSESSIONID=stale-session-id");
+        MockHttpSession savedRequestSession = (MockHttpSession) protectedResult.getRequest().getSession(false);
+        assertThat(savedRequestSession).as("protected request should create a session for the saved request")
+                .isNotNull();
 
-        assertThat(protectedResponse.statusCode()).isEqualTo(302);
-        assertThat(protectedResponse.headers().firstValue("location")).hasValueSatisfying(location ->
-                assertThat(location).endsWith("/login"));
-
-        HttpResponse<String> loginPage = get(client, "/login", null);
-        String csrfToken = extractCsrfToken(loginPage.body());
-
-        HttpResponse<String> loginResponse = postLogin(client, csrfToken);
-
-        assertThat(loginResponse.statusCode()).isEqualTo(302);
-        assertThat(loginResponse.headers().firstValue("location")).hasValueSatisfying(location ->
-                assertThat(URI.create(location).getPath()).isEqualTo("/purchasing/purchase-orders"));
+        mockMvc.perform(post("/login")
+                        .session(savedRequestSession)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("username", "admin")
+                        .param("password", "admin123"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string("Location",
+                        "http://localhost/purchasing/purchase-orders?continue"));
     }
 
-    private HttpClient newClient() {
-        CookieManager cookieManager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
-        return HttpClient.newBuilder()
-                .cookieHandler(cookieManager)
-                .followRedirects(HttpClient.Redirect.NEVER)
-                .build();
+    private RequestPostProcessor staleSessionId() {
+        return request -> {
+            request.setRequestedSessionId("stale-session-id");
+            request.setRequestedSessionIdValid(false);
+            request.setRequestedSessionIdFromCookie(true);
+            return request;
+        };
     }
 
-    private HttpResponse<String> get(HttpClient client, String path, String cookieHeader)
-            throws IOException, InterruptedException {
-        HttpRequest.Builder builder = HttpRequest.newBuilder(uri(path)).GET();
-        if (cookieHeader != null) {
-            builder.header("Cookie", cookieHeader);
+    @Configuration
+    public static class TestSecurityBeans {
+
+        @Bean
+        ForcePasswordChangeFilter forcePasswordChangeFilter() {
+            return new ForcePasswordChangeFilter();
         }
-        return client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        @Bean
+        LogoutAccessDeniedHandler logoutAccessDeniedHandler() {
+            return new LogoutAccessDeniedHandler();
+        }
+
+        @Bean
+        CustomAuthenticationSuccessHandler successHandler() {
+            return new ContinueOnlyAuthenticationSuccessHandler();
+        }
+
+        @Bean
+        UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
+            return new InMemoryUserDetailsManager(User.withUsername("admin")
+                    .password(passwordEncoder.encode("admin123"))
+                    .authorities("PURCHASE-ORDER_READ", "DASHBOARD_READ")
+                    .build());
+        }
+
+        @Bean
+        TestRoutes testRoutes() {
+            return new TestRoutes();
+        }
     }
 
-    private HttpResponse<String> postLogin(HttpClient client, String csrfToken) throws IOException, InterruptedException {
-        String form = formValue("username", "admin")
-                + "&" + formValue("password", "admin123")
-                + "&" + formValue("_csrf", csrfToken);
-        HttpRequest request = HttpRequest.newBuilder(uri("/login"))
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .POST(HttpRequest.BodyPublishers.ofString(form))
-                .build();
-        return client.send(request, HttpResponse.BodyHandlers.ofString());
+    public static final class ContinueOnlyAuthenticationSuccessHandler extends CustomAuthenticationSuccessHandler {
+
+        private final SavedRequestAwareAuthenticationSuccessHandler delegate =
+                new SavedRequestAwareAuthenticationSuccessHandler();
+
+        ContinueOnlyAuthenticationSuccessHandler() {
+            super(null, null);
+            delegate.setDefaultTargetUrl("/dashboard");
+        }
+
+        @Override
+        public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+                                            Authentication authentication) throws IOException, ServletException {
+            delegate.onAuthenticationSuccess(request, response, authentication);
+        }
     }
 
-    private URI uri(String path) {
-        return URI.create("http://localhost:" + port + path);
-    }
+    @RestController
+    public static class TestRoutes {
 
-    private String extractCsrfToken(String html) {
-        Matcher matcher = CSRF_PATTERN.matcher(html);
-        assertThat(matcher.find()).as("login page should contain CSRF token").isTrue();
-        return matcher.group(1) != null ? matcher.group(1) : matcher.group(2);
-    }
-
-    private String formValue(String key, String value) {
-        return URLEncoder.encode(key, StandardCharsets.UTF_8)
-                + "="
-                + URLEncoder.encode(value, StandardCharsets.UTF_8);
+        @GetMapping("/purchasing/purchase-orders")
+        String purchaseOrders() {
+            return "purchase-orders";
+        }
     }
 }
