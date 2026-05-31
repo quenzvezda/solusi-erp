@@ -4,7 +4,6 @@ import com.solusi.erp.accounting.journal.domain.model.JournalEntry;
 import com.solusi.erp.accounting.journal.domain.model.JournalEntryFilter;
 import com.solusi.erp.accounting.journal.infrastructure.persistence.JournalEntryJpaRepository;
 import com.solusi.erp.accounting.journal.infrastructure.persistence.JournalPersistenceMapper;
-import com.solusi.erp.accounting.schema.domain.model.SchemaEventType;
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -45,7 +44,7 @@ class JournalEntryQueryPortImplTest {
                 .thenReturn(new PageImpl<>(List.of()));
 
         JournalEntryFilter filter = new JournalEntryFilter(
-                SchemaEventType.GOODS_RECEIPT, "GR-123", "JNL-001",
+                "GOODS_RECEIPT", "GR-123", "JNL-001",
                 LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31)
         );
 
@@ -101,6 +100,34 @@ class JournalEntryQueryPortImplTest {
     }
 
     @Test
+    void findReversalOf_callsRepositoryAndMaps() {
+        JournalEntryQueryPortImpl port = new JournalEntryQueryPortImpl(jpaRepository, mapper);
+        var entity = new com.solusi.erp.accounting.journal.infrastructure.persistence.JournalEntryEntity();
+        var domain = mock(JournalEntry.class);
+        when(jpaRepository.findByReversalOfId(1L)).thenReturn(Optional.of(entity));
+        when(mapper.toDomain(entity)).thenReturn(domain);
+
+        assertThat(port.findReversalOf(1L)).contains(domain);
+    }
+
+    @Test
+    void findJournalEntries_acceptsManualStringFilter() {
+        JournalEntryQueryPortImpl port = new JournalEntryQueryPortImpl(jpaRepository, mapper);
+        when(jpaRepository.findAll(any(Specification.class), any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        port.findJournalEntries(new JournalEntryFilter("MANUAL", null, null, null, null), new Pageable(1, 10, null, null));
+
+        ArgumentCaptor<Specification> specCaptor = ArgumentCaptor.forClass(Specification.class);
+        verify(jpaRepository).findAll(specCaptor.capture(), any(org.springframework.data.domain.Pageable.class));
+        when(root.get(anyString())).thenReturn(path);
+
+        specCaptor.getValue().toPredicate(root, query, cb);
+
+        verify(cb).equal(path, "MANUAL");
+    }
+
+    @Test
     void readMethods_areTransactionalReadOnly() throws NoSuchMethodException {
         Transactional findAllTx = JournalEntryQueryPortImpl.class
                 .getMethod("findJournalEntries", JournalEntryFilter.class, Pageable.class)
@@ -108,10 +135,15 @@ class JournalEntryQueryPortImplTest {
         Transactional detailTx = JournalEntryQueryPortImpl.class
                 .getMethod("getJournalEntryDetail", Long.class)
                 .getAnnotation(Transactional.class);
+        Transactional reversalTx = JournalEntryQueryPortImpl.class
+                .getMethod("findReversalOf", Long.class)
+                .getAnnotation(Transactional.class);
 
         assertThat(findAllTx).isNotNull();
         assertThat(findAllTx.readOnly()).isTrue();
         assertThat(detailTx).isNotNull();
         assertThat(detailTx.readOnly()).isTrue();
+        assertThat(reversalTx).isNotNull();
+        assertThat(reversalTx.readOnly()).isTrue();
     }
 }

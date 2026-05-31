@@ -4,7 +4,6 @@ import com.solusi.erp.accounting.journal.domain.model.JournalEntryFilter;
 import com.solusi.erp.accounting.journal.web.dto.JournalEntryDetailResponse;
 import com.solusi.erp.accounting.journal.web.dto.JournalEntryListResponse;
 import com.solusi.erp.accounting.journal.web.dto.JournalLineResponse;
-import com.solusi.erp.accounting.schema.domain.model.SchemaEventType;
 import com.solusi.erp.testutils.TemplateTestUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -49,7 +48,7 @@ class JournalTemplateIntegrationTest {
                 Map.of(
                         "page", new PageImpl<>(List.of(row), PageRequest.of(0, 20), 1),
                         "filter", new JournalEntryFilter(null, null, null, null, null),
-                        "eventTypes", SchemaEventType.values()
+                        "eventTypes", List.of("GOODS_RECEIPT", "VENDOR_BILL", "MANUAL")
                 ),
                 auth("JOURNAL-ENTRY_READ")
         );

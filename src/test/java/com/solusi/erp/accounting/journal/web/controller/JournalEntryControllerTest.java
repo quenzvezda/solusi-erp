@@ -1,7 +1,13 @@
 package com.solusi.erp.accounting.journal.web.controller;
 
+import com.solusi.erp.accounting.journal.application.usecase.command.CreateManualJournalUseCase;
+import com.solusi.erp.accounting.journal.application.usecase.command.DeleteManualJournalUseCase;
+import com.solusi.erp.accounting.journal.application.usecase.command.PostManualJournalUseCase;
+import com.solusi.erp.accounting.journal.application.usecase.command.ReverseManualJournalUseCase;
+import com.solusi.erp.accounting.journal.application.usecase.command.UpdateManualJournalUseCase;
 import com.solusi.erp.accounting.journal.application.usecase.query.FindJournalEntriesUseCase;
 import com.solusi.erp.accounting.journal.application.usecase.query.GetJournalEntryDetailUseCase;
+import com.solusi.erp.accounting.journal.application.usecase.query.JournalEntryDetailView;
 import com.solusi.erp.accounting.journal.domain.model.JournalEntry;
 import com.solusi.erp.accounting.journal.domain.model.JournalLine;
 import com.solusi.erp.accounting.journal.domain.model.JournalStatus;
@@ -17,8 +23,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.MessageSource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.ui.ExtendedModelMap;
+import com.solusi.erp.master.currency.application.usecase.query.GetDefaultCurrencyUseCase;
+import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -34,14 +43,23 @@ class JournalEntryControllerTest {
 
     @Mock private FindJournalEntriesUseCase findUseCase;
     @Mock private GetJournalEntryDetailUseCase getDetailUseCase;
+    @Mock private CreateManualJournalUseCase createUseCase;
+    @Mock private UpdateManualJournalUseCase updateUseCase;
+    @Mock private DeleteManualJournalUseCase deleteUseCase;
+    @Mock private PostManualJournalUseCase postUseCase;
+    @Mock private ReverseManualJournalUseCase reverseUseCase;
+    @Mock private GetDefaultCurrencyUseCase getDefaultCurrencyUseCase;
+    @Mock private CurrencyLookupProvider currencyLookupProvider;
     @Mock private JournalEntryWebMapper webMapper;
+    @Mock private MessageSource messageSource;
 
     private JournalEntryController controller;
     private JournalEntry sampleEntry;
 
     @BeforeEach
     void setUp() {
-        controller = new JournalEntryController(findUseCase, getDetailUseCase, webMapper);
+        controller = new JournalEntryController(createUseCase, updateUseCase, deleteUseCase, postUseCase, reverseUseCase,
+                findUseCase, getDetailUseCase, getDefaultCurrencyUseCase, currencyLookupProvider, webMapper, messageSource);
         sampleEntry = new JournalEntry(
                 new AuditMetadata(1L, 1L, null, null, null, null),
                 SchemaEventType.GOODS_RECEIPT, "GOODS_RECEIPT", 101L, "GR-001",
@@ -61,13 +79,13 @@ class JournalEntryControllerTest {
         assertThat(view).isEqualTo("accounting/journal/journal-entry-list");
         assertThat(model.get("page")).isNotNull();
         assertThat(model.get("filter")).isNotNull();
-        assertThat(model.get("eventTypes")).isEqualTo(SchemaEventType.values());
+        assertThat((List<String>) model.get("eventTypes")).contains("GOODS_RECEIPT", "MANUAL");
     }
 
     @Test
     void detail_returnsCorrectViewAndModel() {
-        when(getDetailUseCase.execute(1L)).thenReturn(Optional.of(sampleEntry));
-        when(webMapper.toDetailResponse(any())).thenReturn(new JournalEntryDetailResponse());
+        when(getDetailUseCase.execute(1L)).thenReturn(Optional.of(new JournalEntryDetailView(sampleEntry, null)));
+        when(webMapper.toDetailResponse(any(JournalEntryDetailView.class))).thenReturn(new JournalEntryDetailResponse());
         
         ExtendedModelMap model = new ExtendedModelMap();
         String view = controller.detail(1L, model);

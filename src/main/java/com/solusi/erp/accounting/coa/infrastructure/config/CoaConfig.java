@@ -4,9 +4,11 @@ import com.solusi.erp.accounting.coa.application.usecase.command.*;
 import com.solusi.erp.accounting.coa.application.usecase.query.*;
 import com.solusi.erp.accounting.coa.domain.port.CoaInUseChecker;
 import com.solusi.erp.accounting.coa.domain.port.CoaLookupProvider;
+import com.solusi.erp.accounting.coa.domain.port.CoaPostingValidator;
 import com.solusi.erp.accounting.coa.domain.repository.CoaRepository;
 import com.solusi.erp.accounting.coa.infrastructure.adapter.CoaInUseCheckerImpl;
 import com.solusi.erp.accounting.coa.infrastructure.adapter.CoaLookupProviderImpl;
+import com.solusi.erp.accounting.coa.infrastructure.adapter.CoaPostingValidatorImpl;
 import com.solusi.erp.accounting.coa.infrastructure.adapter.CoaRepositoryImpl;
 import com.solusi.erp.accounting.coa.infrastructure.persistence.CoaJpaRepository;
 import com.solusi.erp.accounting.coa.infrastructure.persistence.CoaPersistenceMapper;
@@ -32,6 +34,11 @@ public class CoaConfig {
     @Bean
     public CoaLookupProvider coaLookupProvider(CoaJpaRepository jpaRepository) {
         return new CoaLookupProviderImpl(jpaRepository);
+    }
+
+    @Bean
+    public CoaPostingValidator coaPostingValidator(CoaJpaRepository jpaRepository) {
+        return new CoaPostingValidatorImpl(jpaRepository);
     }
 
     @Bean

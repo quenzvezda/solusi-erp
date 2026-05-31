@@ -15,4 +15,5 @@ public class JournalLineResponse {
     private BigDecimal exchangeRate;
     private BigDecimal originalDebitAmount;
     private BigDecimal originalCreditAmount;
+    private String description;
 }

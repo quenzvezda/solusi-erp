@@ -21,11 +21,23 @@ public class JournalEntryEntity extends BaseModel {
     @Column(name = "source_type", nullable = false, length = 50)
     private String sourceType;
 
-    @Column(name = "source_id", nullable = false)
+    @Column(name = "source_id")
     private Long sourceId;
 
     @Column(name = "source_code", length = 60)
     private String sourceCode;
+
+    @Column(name = "currency_id")
+    private Long currencyId;
+
+    @Column(name = "exchange_rate", precision = 19, scale = 6)
+    private java.math.BigDecimal exchangeRate;
+
+    @Column(name = "reference_no", length = 100)
+    private String referenceNo;
+
+    @Column(name = "reversal_of_id")
+    private Long reversalOfId;
 
     @Column(name = "posting_date", nullable = false)
     private LocalDate postingDate;

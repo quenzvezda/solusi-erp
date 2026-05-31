@@ -7,4 +7,6 @@ import java.util.Optional;
 public interface JournalEntryJpaRepository extends JpaRepository<JournalEntryEntity, Long>, JpaSpecificationExecutor<JournalEntryEntity> {
     boolean existsBySourceTypeAndSourceId(String sourceType, Long sourceId);
     Optional<JournalEntryEntity> findBySourceTypeAndSourceId(String sourceType, Long sourceId);
+    boolean existsByReversalOfId(Long reversalOfId);
+    Optional<JournalEntryEntity> findByReversalOfId(Long reversalOfId);
 }

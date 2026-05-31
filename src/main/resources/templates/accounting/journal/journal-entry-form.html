@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/master :: head(#{label.journal})}"></head>
+<body th:replace="~{layout/master :: layout(~{:: .journal-form-content}, ~{:: #page-specific-scripts})}">
+<div class="journal-form-content">
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <div class="page-pretitle" th:text="#{label.journal}">Journal Entry</div>
+                    <h2 class="page-title" th:text="${journalRequest.id == null ? #messages.msg('label.create') : #messages.msg('label.edit')}">Manual Journal</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="page-body">
+        <div class="container-xl">
+            <form id="journal-entry-form"
+                  data-ajax-form="true"
+                  th:attr="data-method=${journalRequest.id == null ? 'POST' : 'PUT'}"
+                  th:action="${journalRequest.id == null ? '/accounting/journal-entries' : '/accounting/journal-entries/' + journalRequest.id}"
+                  data-redirect-on-success="/accounting/journal-entries">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <input type="hidden" name="id" th:value="${journalRequest.id}">
+                <input type="hidden" name="version" th:value="${journalRequest.version}">
+
+                <div class="card mb-3">
+                    <div class="card-header"><h3 class="card-title" th:text="#{label.detail}">Detail</h3></div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label" th:text="#{label.journal.postingDate}">Posting Date</label>
+                                <input type="text" class="form-control erp-input" name="postingDate" data-picker="date"
+                                       th:value="${journalRequest.postingDate}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label" th:text="#{label.currency}">Currency</label>
+                                <select name="currencyId" id="currencyId" class="form-select erp-input-ts" data-lookup-path="master/currencies">
+                                    <option value=""></option>
+                                    <option th:if="${journalRequest.currencyId != null}"
+                                            th:value="${journalRequest.currencyId}"
+                                            th:text="${journalUI != null ? journalUI.currencyText : journalRequest.currencyId}"
+                                            th:attr="data-subtext=${journalUI != null ? journalUI.currencySubtext : null},
+                                                     data-payload-is-default=${journalUI != null ? journalUI.currencyIsDefault : false}"
+                                            selected></option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label" th:text="#{label.exchangeRate}">Exchange Rate</label>
+                                <input type="text" class="form-control erp-input erp-number-decimal text-end" name="exchangeRate"
+                                       th:value="${journalRequest.exchangeRate}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label" th:text="#{label.journal.referenceNo}">Reference No</label>
+                                <input type="text" class="form-control erp-input" name="referenceNo" th:value="${journalRequest.referenceNo}">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" th:text="#{label.description}">Description</label>
+                                <textarea class="form-control erp-input" name="description" rows="2" th:text="${journalRequest.description}"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="card-title" th:text="#{label.journal.lines}">Journal Lines</h3>
+                        <button type="button" class="btn btn-sm btn-primary" id="btn-add-journal-line">
+                            <i class="ti ti-plus"></i> <span th:text="#{label.add}">Add</span>
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table" id="journal-lines-table" style="table-layout: fixed;">
+                            <thead>
+                            <tr>
+                                <th style="width: 30%;" th:text="#{label.journal.account}">Account</th>
+                                <th class="text-end" style="width: 16%;" th:text="#{label.journal.debit}">Debit</th>
+                                <th class="text-end" style="width: 16%;" th:text="#{label.journal.credit}">Credit</th>
+                                <th style="width: 30%;" th:text="#{label.description}">Description</th>
+                                <th class="text-end" style="width: 8%;"></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="line, iter : ${journalRequest.lines}" class="line-row journal-line-row">
+                                <td>
+                                    <select class="form-select form-select-sm erp-input-ts-sm account-select"
+                                            data-lookup-path="accounting/coa"
+                                            th:name="|lines[${iter.index}].accountId|">
+                                        <option value=""></option>
+                                        <option th:if="${line.accountId != null}"
+                                                th:value="${line.accountId}"
+                                                th:text="${line.accountName != null ? line.accountName : line.accountId}"
+                                                th:attr="data-subtext=${line.accountCode}"
+                                                selected></option>
+                                    </select>
+                                </td>
+                                <td><input type="text" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end"
+                                           th:name="|lines[${iter.index}].debitAmount|" th:value="${line.debitAmount != null ? line.debitAmount : '0.00'}" value="0.00"></td>
+                                <td><input type="text" class="form-control form-control-sm erp-input-sm erp-number-decimal text-end"
+                                           th:name="|lines[${iter.index}].creditAmount|" th:value="${line.creditAmount != null ? line.creditAmount : '0.00'}" value="0.00"></td>
+                                <td><input type="text" class="form-control form-control-sm erp-input-sm" th:name="|lines[${iter.index}].description|" th:value="${line.description}"></td>
+                                <td class="text-end"><button type="button" class="btn btn-sm btn-white btn-icon text-danger btn-remove-journal-line"><i class="ti ti-trash"></i></button></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer d-flex justify-content-end align-items-center gap-2">
+                        <span id="journal-balance-badge" class="badge bg-danger-lt" th:text="#{label.journal.unbalanced}">Unbalanced</span>
+                        <a th:href="@{/accounting/journal-entries}" class="btn btn-link" th:text="#{label.cancel}">Cancel</a>
+                        <button type="submit" class="btn btn-primary" th:text="#{label.save}">Save</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div id="page-specific-scripts" th:fragment="pageScripts">
+    <script th:src="@{/js/shared/erp-currency-rate-lock.js}"></script>
+    <script th:src="@{/js/accounting/journal/journal-entry-form.js}"></script>
+</div>
+</body>
+</html>

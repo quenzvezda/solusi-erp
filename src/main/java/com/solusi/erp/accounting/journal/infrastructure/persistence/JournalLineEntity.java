@@ -40,4 +40,7 @@ public class JournalLineEntity extends BaseModel {
 
     @Column(name = "original_credit_amount", precision = 19, scale = 4)
     private BigDecimal originalCreditAmount;
+
+    @Column(length = 255)
+    private String description;
 }

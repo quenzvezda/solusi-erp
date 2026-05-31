@@ -1,11 +1,15 @@
 package com.solusi.erp.accounting.journal.web.mapper;
 
 import com.solusi.erp.accounting.coa.domain.port.CoaLookupProvider;
+import com.solusi.erp.accounting.journal.application.usecase.command.ManualJournalCommand;
+import com.solusi.erp.accounting.journal.application.usecase.query.JournalEntryDetailView;
 import com.solusi.erp.accounting.journal.domain.model.JournalEntry;
 import com.solusi.erp.accounting.journal.domain.model.JournalLine;
 import com.solusi.erp.accounting.journal.domain.model.JournalStatus;
 import com.solusi.erp.accounting.journal.web.dto.JournalEntryDetailResponse;
 import com.solusi.erp.accounting.journal.web.dto.JournalEntryListResponse;
+import com.solusi.erp.accounting.journal.web.dto.JournalEntrySaveRequest;
+import com.solusi.erp.accounting.journal.web.dto.JournalLineSaveRequest;
 import com.solusi.erp.accounting.schema.domain.model.SchemaEventType;
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.dto.LookupDto;
@@ -57,6 +61,40 @@ class JournalEntryWebMapperTest {
         assertThat(response.getLines().get(1).getAccountCode()).isEqualTo("2101.01");
     }
 
+    @Test
+    void toDetailResponse_mapsReversalMetadata() {
+        JournalEntryDetailResponse response = mapper.toDetailResponse(new JournalEntryDetailView(manualEntry(), 3L));
+
+        assertThat(response.isManual()).isTrue();
+        assertThat(response.isReversal()).isFalse();
+        assertThat(response.isReversed()).isTrue();
+        assertThat(response.getReversedById()).isEqualTo(3L);
+        assertThat(response.getReferenceNo()).isEqualTo("REF-001");
+    }
+
+    @Test
+    void toManualCommand_mapsSaveRequestLines() {
+        JournalEntrySaveRequest request = new JournalEntrySaveRequest();
+        request.setPostingDate(LocalDate.of(2026, 5, 31));
+        request.setCurrencyId(1L);
+        request.setExchangeRate(BigDecimal.ONE);
+        request.setReferenceNo("REF-001");
+        request.setDescription("Manual");
+        JournalLineSaveRequest debit = new JournalLineSaveRequest();
+        debit.setAccountId(101L);
+        debit.setDebitAmount(BigDecimal.TEN);
+        JournalLineSaveRequest credit = new JournalLineSaveRequest();
+        credit.setAccountId(201L);
+        credit.setCreditAmount(BigDecimal.TEN);
+        request.setLines(List.of(debit, credit));
+
+        ManualJournalCommand command = mapper.toManualJournalCommand(request);
+
+        assertThat(command.postingDate()).isEqualTo(LocalDate.of(2026, 5, 31));
+        assertThat(command.lines()).hasSize(2);
+        assertThat(command.lines().get(0).accountId()).isEqualTo(101L);
+    }
+
     private JournalEntry sampleEntry() {
         return new JournalEntry(
                 new AuditMetadata(1L, 1L, null, null, null, null),
@@ -70,6 +108,19 @@ class JournalEntryWebMapperTest {
                 List.of(
                         JournalLine.debit(24L, new BigDecimal("12500000.00")),
                         JournalLine.credit(33L, new BigDecimal("12500000.00"))
+                )
+        );
+    }
+
+    private JournalEntry manualEntry() {
+        return new JournalEntry(
+                new AuditMetadata(2L, 1L, null, null, null, null),
+                "MANUAL", "MANUAL", null, null,
+                1L, BigDecimal.ONE, "REF-001", null,
+                LocalDate.of(2026, 5, 31), "Manual", JournalStatus.POSTED,
+                List.of(
+                        JournalLine.manualDebit(101L, BigDecimal.TEN, 1L, BigDecimal.ONE, "Debit"),
+                        JournalLine.manualCredit(201L, BigDecimal.TEN, 1L, BigDecimal.ONE, "Credit")
                 )
         );
     }

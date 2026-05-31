@@ -4,9 +4,11 @@ import com.solusi.erp.master.currency.application.usecase.command.*;
 import com.solusi.erp.master.currency.application.usecase.query.*;
 import com.solusi.erp.master.currency.domain.port.CurrencyInUseChecker;
 import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
+import com.solusi.erp.master.currency.domain.port.CurrencyPostingValidator;
 import com.solusi.erp.master.currency.domain.repository.CurrencyRepository;
 import com.solusi.erp.master.currency.infrastructure.adapter.CurrencyInUseCheckerImpl;
 import com.solusi.erp.master.currency.infrastructure.adapter.CurrencyLookupProviderImpl;
+import com.solusi.erp.master.currency.infrastructure.adapter.CurrencyPostingValidatorImpl;
 import com.solusi.erp.master.currency.infrastructure.adapter.CurrencyRepositoryImpl;
 import com.solusi.erp.master.currency.infrastructure.persistence.CurrencyPersistenceMapper;
 import org.springframework.context.annotation.Bean;
@@ -107,6 +109,12 @@ public class CurrencyConfig {
     public CurrencyLookupProvider currencyLookupProvider(
             com.solusi.erp.master.currency.infrastructure.persistence.CurrencyJpaRepository currencyJpaRepository) {
         return new CurrencyLookupProviderImpl(currencyJpaRepository);
+    }
+
+    @Bean
+    public CurrencyPostingValidator currencyPostingValidator(
+            com.solusi.erp.master.currency.infrastructure.persistence.CurrencyJpaRepository currencyJpaRepository) {
+        return new CurrencyPostingValidatorImpl(currencyJpaRepository);
     }
 }
 

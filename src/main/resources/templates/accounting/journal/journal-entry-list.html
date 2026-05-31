@@ -9,6 +9,11 @@
                     <div class="col">
                         <h2 class="page-title" th:text="#{label.journal}">Journal Entries</h2>
                     </div>
+                    <div class="col-auto ms-auto" sec:authorize="hasAuthority('JOURNAL-ENTRY_CREATE')">
+                        <a th:href="@{/accounting/journal-entries/create}" class="btn btn-primary">
+                            <i class="ti ti-plus me-1"></i> <span th:text="#{label.create}">Create</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -22,8 +27,8 @@
                                 <select name="sourceType" class="form-select form-select-sm" onchange="this.form.submit()">
                                     <option value="" th:text="#{label.all}">All</option>
                                     <option th:each="type : ${eventTypes}"
-                                            th:val="${type.name()}"
-                                            th:text="#{${'label.schema.event.' + type.name()}}"
+                                            th:val="${type}"
+                                            th:text="#{${'label.schema.event.' + type}}"
                                             th:selected="${filter.sourceType == type}">
                                         Goods Receipt
                                     </option>
@@ -67,7 +72,11 @@
                                     <td th:text="${entry.postingDate != null ? #temporals.format(entry.postingDate, 'dd/MM/yyyy') : '-'}">01/01/2026</td>
                                     <td class="text-end" th:text="${#numbers.formatDecimal(entry.totalDebit, 1, 'COMMA', 2, 'POINT')}">100.00</td>
                                     <td class="text-end" th:text="${#numbers.formatDecimal(entry.totalCredit, 1, 'COMMA', 2, 'POINT')}">100.00</td>
-                                    <td><span class="badge bg-success" th:text="${entry.status}">POSTED</span></td>
+                                    <td>
+                                        <span class="badge"
+                                              th:classappend="${entry.status == 'DRAFT'} ? 'bg-warning-lt' : (${entry.status == 'POSTED'} ? 'bg-success-lt' : 'bg-secondary-lt')"
+                                              th:text="${entry.status}">POSTED</span>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
