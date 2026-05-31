@@ -654,7 +654,7 @@ Expose form, CRUD, post, reverse, list manual filter, currency prefill, dan deta
 
 Expected: controller, mapper, dan dependency guard tests lulus.
 
-### Task 10: Build Thymeleaf Form And Extend List/Detail Templates
+### Task 10: Build Thymeleaf Form And Extend List/Detail Templates [x]
 
 Buat UI manual journal dengan pola header-lines, security visibility, numeric/date/autocomplete standards, dan reversal modal.
 
@@ -667,7 +667,7 @@ Buat UI manual journal dengan pola header-lines, security visibility, numeric/da
 - Modify: `src/test/java/com/solusi/erp/accounting/journal/web/template/JournalTemplateTest.java`
 - Modify: `src/test/java/com/solusi/erp/accounting/journal/web/template/integration/JournalTemplateIntegrationTest.java`
 
-- [ ] Sebelum edit, baca ulang spesifikasi frontend:
+- [x] Sebelum edit, baca ulang spesifikasi frontend:
   - `docs/spec/autocomplete-generic.md`
   - `docs/spec/numeric-standards.md`
   - `docs/spec/datetime-standards.md`
@@ -677,7 +677,7 @@ Buat UI manual journal dengan pola header-lines, security visibility, numeric/da
   - `docs/spec/currency-exchange-rate.md`
   - `docs/spec/page-specific-scripts.md`
 
-- [ ] Buat satu form create/edit:
+- [x] Buat satu form create/edit:
   - `data-ajax-form="true"`;
   - action create/update sesuai ID;
   - hidden CSRF, ID, version;

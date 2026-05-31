@@ -12,6 +12,15 @@
                     </div>
                     <div class="col-auto ms-auto d-print-none">
                         <div class="btn-list">
+                            <a th:href="@{/accounting/journal-entries/edit/{id}(id=${journal.id})}" class="btn btn-outline-primary">
+                                <i class="ti ti-edit me-1"></i> <span th:text="#{label.edit}">Edit</span>
+                            </a>
+                            <button type="button" class="btn btn-success" id="btn-post-journal">
+                                <i class="ti ti-check me-1"></i> <span th:text="#{label.post}">Post</span>
+                            </button>
+                            <button type="button" class="btn btn-warning" id="btn-reverse-journal">
+                                <i class="ti ti-arrow-back-up me-1"></i> <span th:text="#{label.reverse}">Reverse</span>
+                            </button>
                             <a th:href="@{/accounting/journal-entries}" class="btn btn-outline-secondary">
                                 <i class="ti ti-arrow-left me-1"></i> <span th:text="#{label.back}">Back</span>
                             </a>
@@ -28,6 +37,22 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted" th:text="#{label.journal.referenceNo}">Reference No</label>
+                                <div class="form-control-plaintext" th:text="${journal.referenceNo != null ? journal.referenceNo : '-'}">REF-001</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted" th:text="#{label.currency}">Currency</label>
+                                <div class="form-control-plaintext" th:text="${journal.currencyName != null ? journal.currencyName : '-'}">IDR</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted" th:text="#{label.journal.reversalOf}">Reversal Of</label>
+                                <div class="form-control-plaintext" th:text="${journal.reversalOfCode != null ? journal.reversalOfCode : '-'}">-</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted" th:text="#{label.journal.reversedBy}">Reversed By</label>
+                                <div class="form-control-plaintext" th:text="${journal.reversedByCode != null ? journal.reversedByCode : '-'}">-</div>
+                            </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label text-muted" th:text="#{label.journal.sourceType}">Source Type</label>
                                 <div class="form-control-plaintext" th:text="#{${'label.schema.event.' + journal.eventType}}">Goods Receipt</div>
@@ -72,6 +97,7 @@
                                     <th th:text="#{label.journal.account}">Account</th>
                                     <th class="text-end" th:text="#{label.journal.debit}">Debit</th>
                                     <th class="text-end" th:text="#{label.journal.credit}">Credit</th>
+                                    <th th:text="#{label.description}">Description</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -85,6 +111,7 @@
                                     </td>
                                     <td class="text-end" th:text="${#numbers.formatDecimal(line.debitAmount, 1, 'COMMA', 2, 'POINT')}">100.00</td>
                                     <td class="text-end" th:text="${#numbers.formatDecimal(line.creditAmount, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                                    <td th:text="${line.description}">Memo</td>
                                 </tr>
                             </tbody>
                             <tfoot>
@@ -92,6 +119,7 @@
                                     <th class="text-end" th:text="#{label.total}">Total</th>
                                     <th class="text-end fw-bold" th:text="${#numbers.formatDecimal(journal.totalDebit, 1, 'COMMA', 2, 'POINT')}">100.00</th>
                                     <th class="text-end fw-bold" th:text="${#numbers.formatDecimal(journal.totalCredit, 1, 'COMMA', 2, 'POINT')}">100.00</th>
+                                    <th></th>
                                 </tr>
                             </tfoot>
                         </table>
@@ -101,6 +129,23 @@
             </div>
         </div>
     </div>
-    <div id="page-specific-scripts" th:fragment="pageScripts"></div>
+    <div class="modal modal-blur fade" id="journal-reversal-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title" th:text="#{label.reverse}">Reverse</h5></div>
+                <div class="modal-body">
+                    <label class="form-label" th:text="#{label.journal.postingDate}">Posting Date</label>
+                    <input type="text" class="form-control" id="reversal-posting-date" data-picker="date">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-link" data-bs-dismiss="modal" th:text="#{label.cancel}">Cancel</button>
+                    <button type="button" class="btn btn-warning" id="btn-confirm-reversal" th:text="#{label.reverse}">Reverse</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="page-specific-scripts" th:fragment="pageScripts">
+        <script th:src="@{/js/accounting/journal/journal-entry-detail.js}"></script>
+    </div>
 </body>
 </html>

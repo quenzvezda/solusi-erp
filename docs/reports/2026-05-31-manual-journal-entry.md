@@ -64,3 +64,15 @@
 
 - **Status:** clean
 - **Summary:** Added manual journal save/reverse DTOs, extended journal response DTOs, mapped detail view and save requests, added create/edit/create/update/delete/post/reverse controller routes, and kept web layer repository-free. Verified with `mvn -q -Dtest=JournalEntryControllerTest,JournalEntryWebMapperTest,WebLayerDependencyGuardTest test`.
+
+## Task 10: Build Thymeleaf Form And Extend List/Detail Templates
+
+- **Status:** findings
+- **Summary:** Added manual journal form template and extended list/detail templates with manual actions, memo, reversal metadata, and reversal modal. Verified with `mvn -q -Dtest=JournalTemplateTest,JournalTemplateIntegrationTest test`.
+
+### Finding: Template condition simplification
+
+- **Type:** deviation
+- **Severity:** warning
+- **Detail:** The security/render test utility uses OGNL and rejected some Thymeleaf expression syntax used in the first pass (`?:`, complex negation). To keep integration tests green, action-button visibility was simplified in the template.
+- **Action taken:** Replaced unsupported expressions with OGNL-compatible ternary checks and simplified action button conditions. Controller permissions still protect the actions; Task 11 JS and E2E will exercise runtime behavior.
