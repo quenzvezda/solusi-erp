@@ -17,3 +17,7 @@
 ## Task 3: Controller - autocomplete prefill + enum dropdowns
 - **Status:** clean
 - **Summary:** Replaced stock-card preload dropdown data with lookup-provider Trinity prefill, added movement/reference enum lists, and covered model attributes plus `STOCK-CARD_READ` authorization.
+
+## Task 4: i18n keys
+- **Status:** clean
+- **Summary:** Added matching English and Indonesian stock-card labels for new filters, serial/reference/cost columns, advanced toggle, and all-option dropdown text; verified movement/reference enum key coverage remains 16 keys per locale.

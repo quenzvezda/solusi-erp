@@ -100,12 +100,12 @@ Add all new message keys for column headers, the "Each" suffix, filter labels, a
 **Reference module:** `docs/spec/i18n-guide.md`
 
 Steps:
-- [ ] Using the **replace tool** (NOT echo — per AGENTS §5 i18n protocol), add to `messages.properties` (English): `label.stock-card.movement-type=Movement Type`, `label.stock-card.document-type=Document Type`, `label.stock-card.serial=Serial No.`, `label.stock-card.cost-local=Cost (Local)`, `label.stock-card.cost.each=Each`, `label.stock-card.reference=Reference`, `label.stock-card.search.placeholder=Search document no.`, `label.stock-card.filter.advanced=Advanced`, `label.stock-card.all-movement-types=-- All Movement Types --`, `label.stock-card.all-document-types=-- All Document Types --`.
+- [x] Using the **replace tool** (NOT echo — per AGENTS §5 i18n protocol), add to `messages.properties` (English): `label.stock-card.movement-type=Movement Type`, `label.stock-card.document-type=Document Type`, `label.stock-card.serial=Serial No.`, `label.stock-card.cost-local=Cost (Local)`, `label.stock-card.cost.each=Each`, `label.stock-card.reference=Reference`, `label.stock-card.search.placeholder=Search document no.`, `label.stock-card.filter.advanced=Advanced`, `label.stock-card.all-movement-types=-- All Movement Types --`, `label.stock-card.all-document-types=-- All Document Types --`.
       ref: src/main/resources/messages.properties:L802-L803 — existing stock-card.title/subtitle keys (insert near here)
       ref: docs/spec/i18n-guide.md#7-ai-guidelines-for-updating-i18n-files-critical — replace-tool protocol
-- [ ] Add the Indonesian equivalents to `messages_id.properties` with the same keys (e.g. `...movement-type=Tipe Pergerakan`, `...document-type=Tipe Dokumen`, `...serial=No. Seri`, `...cost.each=Per Unit`, `...filter.advanced=Lanjutan`).
+- [x] Add the Indonesian equivalents to `messages_id.properties` with the same keys (e.g. `...movement-type=Tipe Pergerakan`, `...document-type=Tipe Dokumen`, `...serial=No. Seri`, `...cost.each=Per Unit`, `...filter.advanced=Lanjutan`).
       ref: src/main/resources/messages_id.properties — mirror the en keys (find the stock-card block)
-- [ ] Verify enum keys already exist (no add needed): `enum.reference.type.*` and `enum.movement.type.*`.
+- [x] Verify enum keys already exist (no add needed): `enum.reference.type.*` and `enum.movement.type.*`.
       ref: src/main/resources/messages.properties:L747-L754 — reference.type keys confirmed present
 
 **Validation criteria:**
