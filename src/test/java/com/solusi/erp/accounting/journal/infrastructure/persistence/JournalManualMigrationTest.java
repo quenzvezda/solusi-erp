@@ -1,20 +1,19 @@
 package com.solusi.erp.accounting.journal.infrastructure.persistence;
 
+import org.flywaydb.core.Flyway;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@SpringBootTest
-@ActiveProfiles("e2e")
 class JournalManualMigrationTest {
 
     private static final List<String> MANUAL_PERMISSIONS = List.of(
@@ -25,8 +24,28 @@ class JournalManualMigrationTest {
             "JOURNAL-ENTRY_REVERSE"
     );
 
-    @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @BeforeEach
+    void migrateH2Schema() {
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        dataSource.setDriverClassName("org.h2.Driver");
+        dataSource.setUrl("jdbc:h2:mem:" + UUID.randomUUID()
+                + ";MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE"
+                + ";DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;NON_KEYWORDS=VALUE");
+        dataSource.setUsername("sa");
+        dataSource.setPassword("");
+
+        Flyway.configure()
+                .dataSource(dataSource)
+                .baselineOnMigrate(true)
+                .outOfOrder(true)
+                .locations("classpath:db/migration-h2")
+                .load()
+                .migrate();
+
+        jdbcTemplate = new JdbcTemplate(dataSource);
+    }
 
     @Test
     void migration_adds_manual_journal_columns_permissions_and_unique_reversal_guard() {
