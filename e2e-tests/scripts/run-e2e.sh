@@ -10,7 +10,7 @@ cd "$PROJECT_ROOT"
 # Remove stale versioned JARs before building. Bash globs are sorted
 # lexicographically, so `head -1` can otherwise boot an older artifact.
 rm -f target/solusi-program-erp-*.jar
-./mvnw -B package -DskipTests -Pe2e -q
+./mvnw -B clean package -DskipTests -Pe2e -q
 
 JAR=$(ls -t target/solusi-program-erp-*.jar | head -1)
 echo "=== Starting server: $JAR ==="

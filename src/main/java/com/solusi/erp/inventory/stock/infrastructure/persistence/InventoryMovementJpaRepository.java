@@ -1,5 +1,7 @@
 package com.solusi.erp.inventory.stock.infrastructure.persistence;
 
+import com.solusi.erp.inventory.stock.domain.model.MovementType;
+import com.solusi.erp.inventory.stock.domain.model.ReferenceType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,11 +22,17 @@ public interface InventoryMovementJpaRepository extends JpaRepository<InventoryM
            "AND (:containerId IS NULL OR m.containerId = :containerId) " +
            "AND (:startDate IS NULL OR m.transactionDate >= :startDate) " +
            "AND (:endDate IS NULL OR m.transactionDate <= :endDate) " +
+           "AND (:movementType IS NULL OR m.movementType = :movementType) " +
+           "AND (:referenceType IS NULL OR m.referenceType = :referenceType) " +
+           "AND (:keyword IS NULL OR LOWER(m.referenceCode) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
            "ORDER BY m.transactionDate DESC, m.id DESC")
     Page<InventoryMovementEntity> search(@Param("productId") Long productId,
                                          @Param("containerId") Long containerId,
                                          @Param("startDate") LocalDateTime startDate,
                                          @Param("endDate") LocalDateTime endDate,
+                                         @Param("movementType") MovementType movementType,
+                                         @Param("referenceType") ReferenceType referenceType,
+                                         @Param("keyword") String keyword,
                                          Pageable pageable);
 
     boolean existsByContainerId(Long containerId);

@@ -175,7 +175,7 @@ Setelah PO berstatus **SENT** atau **PARTIALLY_RECEIVED**, bagian gudang dapat m
 2. Gunakan tombol **Create Goods Receipt** untuk membuka halaman pre-add GR (hanya relevan jika masih ada line outstanding).
 3. Gunakan tombol **Goods Receipts** untuk membuka halaman list GR yang sudah terealisasi dari PO ini.
 4. Link list GR menggunakan filter kanonik `referenceType=PURCHASE_ORDER&referenceId={poId}`; `poId` dipertahankan hanya sebagai fallback legacy.
-5. Dari pre-add GR, isi kuantitas barang yang diterima untuk setiap line item lalu simpan sebagai **DRAFT**.
+5. Dari pre-add GR, cek **Outstanding Qty / Sisa Qty** read-only pada setiap line item, isi kuantitas barang yang diterima, lalu simpan sebagai **DRAFT**.
 6. Setelah verifikasi fisik selesai, tekan **Complete** untuk finalisasi GR (status → **COMPLETED**).
 7. Sistem akan update status PO:
    - Jika semua line item fully received → PO status = **FULLY_RECEIVED**

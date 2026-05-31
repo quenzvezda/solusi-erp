@@ -13,8 +13,8 @@
 </head>
 
 
-<body th:fragment="layout(content, pageScripts)" 
-      th:attr="data-bs-theme=${userProfile != null ? userProfile.theme : 'light'}, hx-headers='{&quot;' + ${_csrf.headerName} + '&quot;: &quot;' + ${_csrf.token} + '&quot;}'">
+<body th:fragment="layout(content, pageScripts)"
+      th:attr="data-bs-theme=${userProfile != null ? userProfile.theme : 'light'}, hx-headers=${_csrf != null ? '{&quot;' + _csrf.headerName + '&quot;: &quot;' + _csrf.token + '&quot;}' : null}">
     
     <!-- Global Modals -->
     <div th:replace="~{fragments/modals :: standard-modals}"></div>
@@ -63,6 +63,9 @@
             errorTitle: /*[[#{msg.error.ajax.title}]]*/ 'An Error Occurred',
             serverError: /*[[#{msg.error.ajax.server}]]*/ 'An unexpected server error occurred.',
             networkError: /*[[#{msg.error.ajax.network}]]*/ 'Connection error. Please check your network.',
+            lookupForbidden: /*[[#{msg.error.lookup.forbidden}]]*/ "You don't have access to this list.",
+            lookupError: /*[[#{msg.error.lookup.failed}]]*/ 'Failed to load. Please try again.',
+            lookupNoResults: /*[[#{label.lookup.no-results}]]*/ 'No results found',
             successGeneric: /*[[#{msg.success.ajax.generic}]]*/ 'Action completed successfully.'
         };
     </script>
@@ -92,6 +95,9 @@
 
             const menuSearchEl = document.getElementById('global-menu-search');
             if (menuSearchEl) {
+                let menuSearchLoadError = null;
+                const lookupI18n = window.ErpI18n || {};
+                const lookupFailed = lookupI18n.lookupError || 'Failed to load. Please try again.';
                 new TomSelect('#global-menu-search', {
                     valueField: 'urlPath',
                     labelField: 'name',
@@ -99,10 +105,22 @@
                     openOnFocus: true,
                     preload: false,
                     load: debounce(function (q, callback) {
-                        fetch(`/api/lookup/menus?q=${encodeURIComponent(q)}&limit=10`)
-                            .then(r => r.json())
-                            .then(callback)
-                            .catch(() => callback([]));
+                        menuSearchLoadError = null;
+                        fetch(`/api/lookup/menus?q=${encodeURIComponent(q)}&limit=10`, {
+                            headers: { 'Accept': 'application/json' }
+                        })
+                            .then(r => {
+                                if (!r.ok) {
+                                    menuSearchLoadError = lookupFailed;
+                                    callback([]);
+                                    return;
+                                }
+                                return r.json().then(callback);
+                            })
+                            .catch(() => {
+                                menuSearchLoadError = lookupFailed;
+                                callback([]);
+                            });
                     }, 100),
                     render: {
                         option: function(data, escape) {
@@ -111,6 +129,11 @@
                         },
                         item: function(data, escape) {
                             return `<span>${escape(data.name)}</span>`;
+                        },
+                        no_results: function(data, escape) {
+                            const message = menuSearchLoadError || lookupI18n.lookupNoResults || 'No results found';
+                            const errorClass = menuSearchLoadError ? ' text-danger' : '';
+                            return `<div class="no-results${errorClass} px-2 py-1">${escape(message)}</div>`;
                         }
                     },
                     onChange: function(value) {

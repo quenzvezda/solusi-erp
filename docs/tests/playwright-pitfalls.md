@@ -152,13 +152,13 @@ async function isStateValid(file: string, baseURL: string): Promise<boolean> {
 # Clean stale JARs first
 Get-ChildItem "$ProjectRoot\target\solusi-program-erp-*.jar" -ErrorAction SilentlyContinue |
     Remove-Item -Force -ErrorAction SilentlyContinue
-.\mvnw.cmd -B package -DskipTests -Pe2e -q
+.\mvnw.cmd -B clean package -DskipTests -Pe2e -q
 # Pick newest by mtime, defensive even after cleanup
 $jar = (Get-ChildItem "$ProjectRoot\target\solusi-program-erp-*.jar" |
         Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName
 ```
 
-**Fix in `run-poc.sh`:** Replace `ls target/*.jar | head -1` with `ls -t target/*.jar | head -1` (mtime sort) and add `rm -f target/solusi-program-erp-*.jar` before `mvnw package`.
+**Fix in `run-poc.sh`:** Replace `ls target/*.jar | head -1` with `ls -t target/*.jar | head -1` (mtime sort), add `rm -f target/solusi-program-erp-*.jar`, and run `mvnw clean package`.
 
 **Reference:** Round 2 fix.
 

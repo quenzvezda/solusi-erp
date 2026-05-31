@@ -91,6 +91,7 @@ public class GoodsReceiptController {
         ReferenceFilter filter = canonicalizeReferenceFilter(referenceType, referenceId, poId);
         GoodsReceipt draftGr = getGoodsReceiptCreateViewUseCase.execute(filter.referenceType(), filter.referenceId());
         GoodsReceiptSaveRequest request = webMapper.toSaveRequest(draftGr);
+        applyReferenceSnapshots(request);
         model.addAttribute("grRequest", request);
         return "inventory/goods-receipts/form";
     }
@@ -164,6 +165,7 @@ public class GoodsReceiptController {
         GoodsReceipt domain = getGoodsReceiptEditViewUseCase.execute(id)
             .orElseThrow(() -> new RuntimeException("Goods receipt not found"));
         GoodsReceiptSaveRequest saveRequest = webMapper.toSaveRequest(domain);
+        applyReferenceSnapshots(saveRequest);
         model.addAttribute("grRequest", saveRequest);
         return "inventory/goods-receipts/form";
     }
@@ -246,6 +248,18 @@ public class GoodsReceiptController {
         if (line.getUnitPrice() == null) {
             line.setUnitPrice(snapshot.unitPrice());
         }
+    }
+
+    private void applyReferenceSnapshots(GoodsReceiptSaveRequest request) {
+        if (request == null || request.getLines() == null || request.getLines().isEmpty()) {
+            return;
+        }
+        Map<Long, GoodsReceiptReferenceLookupProvider.ReferenceLineSnapshot> snapshots =
+            referenceLookupProvider.resolveReferenceLineSnapshots(request.getReferenceType(), request.getReferenceId());
+        if (snapshots == null || snapshots.isEmpty()) {
+            return;
+        }
+        request.getLines().forEach(line -> applyReferenceSnapshot(line, snapshots.get(line.getReferenceLineId())));
     }
 
     private void validateCreateReferenceType(GoodsReceiptReferenceType referenceType) {

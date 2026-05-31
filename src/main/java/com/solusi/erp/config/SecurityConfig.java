@@ -28,6 +28,7 @@ public class SecurityConfig {
 
     private final ForcePasswordChangeFilter forcePasswordChangeFilter;
     private final CustomAuthenticationSuccessHandler successHandler;
+    private final LogoutAccessDeniedHandler logoutAccessDeniedHandler;
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
@@ -78,6 +79,9 @@ public class SecurityConfig {
                 .invalidateHttpSession(true)
                 .deleteCookies("JSESSIONID")
                 .permitAll()
+            )
+            .exceptionHandling(exception -> exception
+                .accessDeniedHandler(logoutAccessDeniedHandler)
             )
             // Mandate: AGENTS.md Section 5 (Stateful Security)
             .sessionManagement(session -> session

@@ -2,21 +2,22 @@ package com.solusi.erp.inventory.report.web;
 
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.dto.LookupDto;
-import com.solusi.erp.inventory.container.application.usecase.query.GetContainerLookupUseCase;
+import com.solusi.erp.inventory.container.domain.port.ContainerLookupProvider;
+import com.solusi.erp.inventory.product.domain.port.ProductLookupProvider;
 import com.solusi.erp.inventory.report.web.controller.InventoryReportController;
 import com.solusi.erp.inventory.report.web.dto.InventoryMovementResponse;
 import com.solusi.erp.inventory.report.web.dto.LocationStockDetailResponse;
 import com.solusi.erp.inventory.report.web.dto.ProductStockSummaryResponse;
 import com.solusi.erp.inventory.report.web.dto.StockCardFilter;
-import com.solusi.erp.inventory.product.application.usecase.query.FindProductsUseCase;
 import com.solusi.erp.inventory.product.application.usecase.query.GetProductUseCase;
 import com.solusi.erp.inventory.product.domain.model.Product;
 import com.solusi.erp.inventory.product.web.dto.ProductDetailResponse;
-import com.solusi.erp.inventory.product.web.dto.ProductSummaryResponse;
 import com.solusi.erp.inventory.product.web.mapper.ProductWebMapper;
 import com.solusi.erp.inventory.report.application.usecase.query.GetOnHandDetailUseCase;
 import com.solusi.erp.inventory.report.application.usecase.query.GetOnHandSummaryUseCase;
 import com.solusi.erp.inventory.report.application.usecase.query.GetStockCardUseCase;
+import com.solusi.erp.inventory.stock.domain.model.MovementType;
+import com.solusi.erp.inventory.stock.domain.model.ReferenceType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,16 +27,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -48,9 +50,9 @@ class InventoryReportControllerTest {
     @Mock private GetOnHandDetailUseCase getOnHandDetailUseCase;
     @Mock private GetStockCardUseCase getStockCardUseCase;
     @Mock private GetProductUseCase getProductUseCase;
-    @Mock private FindProductsUseCase findProductsUseCase;
-    @Mock private GetContainerLookupUseCase getContainerLookupUseCase;
     @Mock private ProductWebMapper webMapper;
+    @Mock private ProductLookupProvider productLookupProvider;
+    @Mock private ContainerLookupProvider containerLookupProvider;
 
     private InventoryReportController controller;
 
@@ -61,9 +63,9 @@ class InventoryReportControllerTest {
                 getOnHandDetailUseCase,
                 getStockCardUseCase,
                 getProductUseCase,
-                findProductsUseCase,
-                getContainerLookupUseCase,
-                webMapper);
+                webMapper,
+                productLookupProvider,
+                containerLookupProvider);
     }
 
     @Test
@@ -109,33 +111,50 @@ class InventoryReportControllerTest {
     }
 
     @Test
-    @DisplayName("stockCard returns list view with page, products, and containers")
+    @DisplayName("stockCard returns list view with page, enum dropdowns, and autocomplete prefill")
     void stockCard_returnsViewWithModel() {
         Pageable pageable = PageRequest.of(0, 20);
         StockCardFilter filter = new StockCardFilter();
+        filter.setProductId(10L);
+        filter.setContainerId(20L);
         InventoryMovementResponse movResponse = InventoryMovementResponse.builder().build();
         org.springframework.data.domain.Page<InventoryMovementResponse> page =
                 new PageImpl<>(List.of(movResponse), pageable, 1);
 
-        Product product = mock(Product.class);
-        Page<Product> domainPage = new Page<>(List.of(product), 0, 1000, 1L);
-        ProductSummaryResponse summaryResponse = new ProductSummaryResponse();
-
-        LookupDto containerLookup = mock(LookupDto.class);
+        LookupDto productLookup = new LookupDto(10L, "Widget", "P001");
+        LookupDto containerLookup = new LookupDto(20L, "BIN-A1", "Rack A");
 
         when(getStockCardUseCase.execute(filter, pageable)).thenReturn(page);
-        when(findProductsUseCase.execute(any(), any())).thenReturn(domainPage);
-        when(webMapper.toSummaryResponse(product)).thenReturn(summaryResponse);
-        when(getContainerLookupUseCase.findAll()).thenReturn(List.of(containerLookup));
+        when(productLookupProvider.resolve(10L)).thenReturn(productLookup);
+        when(containerLookupProvider.resolve(20L)).thenReturn(containerLookup);
 
         Model model = new ExtendedModelMap();
         String view = controller.stockCard(filter, pageable, model);
 
         assertEquals("inventory/reports/stock-card/list", view);
         assertThat(model.getAttribute("page")).isEqualTo(page);
-        assertThat((List<?>) model.getAttribute("products")).hasSize(1);
-        assertThat((List<?>) model.getAttribute("containers")).hasSize(1);
+        assertThat(model.getAttribute("movementTypes")).isEqualTo(MovementType.values());
+        assertThat(model.getAttribute("referenceTypes")).isEqualTo(ReferenceType.values());
+        assertThat((Map<String, Object>) model.getAttribute("filterUI"))
+                .containsEntry("productText", "Widget")
+                .containsEntry("productSubtext", "P001")
+                .containsEntry("containerText", "BIN-A1")
+                .containsEntry("containerSubtext", "Rack A");
+        assertThat(model.containsAttribute("products")).isFalse();
+        assertThat(model.containsAttribute("containers")).isFalse();
         verify(getStockCardUseCase).execute(filter, pageable);
-        verify(getContainerLookupUseCase).findAll();
+        verify(productLookupProvider).resolve(10L);
+        verify(containerLookupProvider).resolve(20L);
+    }
+
+    @Test
+    @DisplayName("stockCard requires STOCK-CARD_READ authority")
+    void stockCard_requiresStockCardReadAuthority() throws NoSuchMethodException {
+        PreAuthorize annotation = InventoryReportController.class
+                .getMethod("stockCard", StockCardFilter.class, Pageable.class, Model.class)
+                .getAnnotation(PreAuthorize.class);
+
+        assertThat(annotation).isNotNull();
+        assertThat(annotation.value()).isEqualTo("hasAuthority('STOCK-CARD_READ')");
     }
 }
