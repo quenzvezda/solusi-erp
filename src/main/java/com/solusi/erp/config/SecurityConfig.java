@@ -85,7 +85,6 @@ public class SecurityConfig {
             )
             // Mandate: AGENTS.md Section 5 (Stateful Security)
             .sessionManagement(session -> session
-                .invalidSessionUrl("/login")
                 .maximumSessions(1)
                 .maxSessionsPreventsLogin(false)
             );
