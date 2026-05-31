@@ -22,11 +22,17 @@ public class GetStockCardUseCaseImpl implements GetStockCardUseCase {
     public Page<InventoryMovementResponse> execute(StockCardFilter filter, Pageable pageable) {
         LocalDateTime start = filter.getStartDate() != null ? filter.getStartDate().atStartOfDay() : null;
         LocalDateTime end = filter.getEndDate() != null ? filter.getEndDate().atTime(LocalTime.MAX) : null;
+        String keyword = filter.getKeyword() != null && !filter.getKeyword().isBlank()
+                ? filter.getKeyword().trim()
+                : null;
         Page<InventoryMovementEntity> page = inventoryMovementRepository.search(
                 filter.getProductId(),
                 filter.getContainerId(),
                 start,
                 end,
+                filter.getMovementType(),
+                filter.getReferenceType(),
+                keyword,
                 pageable);
         return page.map(inventoryMovementMapper::toResponse);
     }
