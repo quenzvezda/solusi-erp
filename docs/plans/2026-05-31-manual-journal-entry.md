@@ -837,7 +837,7 @@ Tambahkan message keys ID/EN dan ubah business docs dari read-only menjadi lifec
 
 Expected: bundle ID/EN lengkap.
 
-### Task 13: Add Playwright E2E Happy Path
+### Task 13: Add Playwright E2E Happy Path [x]
 
 Uji flow user nyata: create draft, edit, post, reverse, dan verifikasi linkage dari browser.
 
@@ -849,18 +849,18 @@ Uji flow user nyata: create draft, edit, post, reverse, dan verifikasi linkage d
 - Modify: `e2e-tests/scripts/warmup-urls.txt`
 - Reference only: `src/main/resources/db/migration-h2/V9000__e2e_seed_data.sql`
 
-- [ ] Sebelum menulis spec, baca ulang `docs/tests/playwright-pitfalls.md`, journal list/detail/form templates, dan dua journal JS files. Jangan memakai helper `selectTomSelect()` karena signature load-nya known broken.
+- [x] Sebelum menulis spec, baca ulang `docs/tests/playwright-pitfalls.md`, journal list/detail/form templates, dan dua journal JS files. Jangan memakai helper `selectTomSelect()` karena signature load-nya known broken.
 
   ref: `docs/tests/playwright-pitfalls.md:L53-L87`
 
-- [ ] Gunakan admin storage state. Tambahkan warmup:
+- [x] Gunakan admin storage state. Tambahkan warmup:
 
   ```text
   /accounting/journal-entries
   /accounting/journal-entries/create
   ```
 
-- [ ] Tambahkan parameter optional pada `run-e2e.ps1` agar task dapat menjalankan spec terarah tanpa mengubah default full-suite behavior:
+- [x] Tambahkan parameter optional pada `run-e2e.ps1` agar task dapat menjalankan spec terarah tanpa mengubah default full-suite behavior:
 
   ```powershell
   param(
@@ -875,7 +875,7 @@ Uji flow user nyata: create draft, edit, post, reverse, dan verifikasi linkage d
 
   ref: `e2e-tests/scripts/run-e2e.ps1:L1-L88` - current runner always calls `npx playwright test`
 
-- [ ] Buat helper lokal untuk add row dan set COA. Karena COA tidak membutuhkan payload turunan, `setTomSelectValue()` boleh dipakai setelah row dan TomSelect siap. Gunakan seeded accounts:
+- [x] Buat helper lokal untuk add row dan set COA. Karena COA tidak membutuhkan payload turunan, `setTomSelectValue()` boleh dipakai setelah row dan TomSelect siap. Gunakan seeded accounts:
   - debit: `9401` / `E2E Inventory`
   - credit: `9405` / `E2E Bank`
   - default currency IDR dari seeder
@@ -884,7 +884,7 @@ Uji flow user nyata: create draft, edit, post, reverse, dan verifikasi linkage d
   ref: `src/main/resources/db/migration-h2/V9000__e2e_seed_data.sql:L219-L243`
   ref: `e2e-tests/helpers/tomselect.ts:L53-L83`
 
-- [ ] Buat satu scenario serial `"manual journal create edit post and reverse happy path"`:
+- [x] Buat satu scenario serial `"manual journal create edit post and reverse happy path"`:
   1. Navigate `/accounting/journal-entries/create`.
   2. Assert default IDR terpilih, rate `1`, dan readonly.
   3. Set posting date `2026-05-20` dengan `setFlatpickrDate`.
@@ -904,7 +904,7 @@ Uji flow user nyata: create draft, edit, post, reverse, dan verifikasi linkage d
   ref: `e2e-tests/helpers/flatpickr.ts:L20-L51`
   ref: `docs/tests/playwright-pitfalls.md:L91-L112` - Bootstrap modal confirmation
 
-- [ ] Pada kegagalan pertama, baca screenshot/video/trace dari Playwright artifact sebelum mengubah selector. Jangan menandai task selesai hanya karena `tsc` dan `--list` lulus.
+- [x] Pada kegagalan pertama, baca screenshot/video/trace dari Playwright artifact sebelum mengubah selector. Jangan menandai task selesai hanya karena `tsc` dan `--list` lulus.
 
 **Simple verification:**
 

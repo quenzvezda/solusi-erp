@@ -41,8 +41,12 @@ class JournalTemplateTest {
 
         assertThat(template).contains("data-ajax-form=\"true\"");
         assertThat(template).contains("data-picker=\"date\"");
-        assertThat(template).contains("data-autonumeric=\"decimal\"");
+        assertThat(template).contains("erp-number-decimal");
+        assertThat(template).contains("data-lookup-path=\"master/currencies\"");
+        assertThat(template).contains("data-lookup-path=\"accounting/coa\"");
+        assertThat(template).contains("journal-balance-badge");
         assertThat(template).contains("journal-lines-table");
+        assertThat(template).contains("erp-currency-rate-lock.js");
         assertThat(template).contains("journal-entry-form.js");
     }
 
@@ -52,6 +56,7 @@ class JournalTemplateTest {
 
         assertThat(template).contains("btn-post-journal");
         assertThat(template).contains("journal-reversal-modal");
+        assertThat(template).contains("data-bs-target=\"#journal-reversal-modal\"");
         assertThat(template).contains("journal-entry-detail.js");
         assertThat(template).contains("line.description");
     }

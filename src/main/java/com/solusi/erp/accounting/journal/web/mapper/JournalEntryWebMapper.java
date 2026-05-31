@@ -93,8 +93,8 @@ public abstract class JournalEntryWebMapper {
 
     @AfterMapping
     protected void mapAuditFields(JournalEntry domain, @MappingTarget BaseAuditResponse target) {
+        target.setId(domain.getId());
         if (domain.getMetadata() != null) {
-            target.setId(domain.getId());
             target.setVersion(domain.getMetadata().version() != null ? domain.getMetadata().version().intValue() : null);
             target.setCreatedDate(domain.getMetadata().createdDate());
             target.setUpdatedDate(domain.getMetadata().updatedDate());

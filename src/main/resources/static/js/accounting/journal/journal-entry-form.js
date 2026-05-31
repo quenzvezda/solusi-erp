@@ -37,11 +37,26 @@
     var first = tbody && tbody.querySelector("tr");
     if (!tbody || !first) return;
     var clone = first.cloneNode(true);
+    clone.querySelectorAll(".ts-wrapper").forEach(function (wrapper) {
+      wrapper.remove();
+    });
+    clone.querySelectorAll("select").forEach(function (select) {
+      select.classList.remove("tomselect-initialized", "tomselected", "ts-hidden-accessible");
+      select.removeAttribute("tabindex");
+      select.removeAttribute("style");
+      select.value = "";
+      Array.from(select.options).forEach(function (option) {
+        if (option.value) option.remove();
+      });
+    });
     clone.querySelectorAll("input").forEach(function (input) {
       input.value = "";
+      input.removeAttribute("data-autonumeric");
     });
     tbody.appendChild(clone);
     reindexRows();
+    if (window.initNumericInputs) initNumericInputs(clone);
+    if (window.ERP && ERP.initAutocompleteInContainer) ERP.initAutocompleteInContainer(clone);
     calculateTotals();
   }
 
@@ -58,7 +73,21 @@
       calculateTotals();
     });
 
+    document.addEventListener("journal:balance", function (event) {
+      var badge = document.getElementById("journal-balance-badge");
+      if (!badge) return;
+      badge.textContent = event.detail.balanced ? "Balanced" : "Unbalanced";
+      badge.classList.toggle("bg-success", event.detail.balanced);
+      badge.classList.toggle("bg-danger", !event.detail.balanced);
+      badge.classList.remove("bg-secondary");
+    });
+
     document.addEventListener("input", function (event) {
+      if (event.target.matches('[name$=".debitAmount"], [name$=".creditAmount"], [name="exchangeRate"]')) {
+        calculateTotals();
+      }
+    });
+    document.addEventListener("change", function (event) {
       if (event.target.matches('[name$=".debitAmount"], [name$=".creditAmount"], [name="exchangeRate"]')) {
         calculateTotals();
       }

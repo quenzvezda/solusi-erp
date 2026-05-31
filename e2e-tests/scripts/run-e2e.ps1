@@ -1,6 +1,11 @@
 # E2E PoC Validation Script (Windows PowerShell)
 # Usage: .\e2e-tests\scripts\run-poc.ps1
 
+param(
+    [Parameter(ValueFromRemainingArguments = $true)]
+    [string[]]$PlaywrightArgs
+)
+
 $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 
@@ -78,7 +83,7 @@ try {
     npx playwright install chromium
 
     Write-Host "=== Running Playwright tests ===" -ForegroundColor Cyan
-    npx playwright test
+    npx playwright test @PlaywrightArgs
     $testExit = $LASTEXITCODE
 } finally {
     Write-Host "=== Stopping server (PID: $($proc.Id)) ===" -ForegroundColor Cyan

@@ -10,6 +10,7 @@ import com.solusi.erp.accounting.schema.domain.model.SchemaEventType;
 import com.solusi.erp.accounting.journal.web.dto.JournalEntrySaveRequest;
 import com.solusi.erp.accounting.journal.web.dto.JournalEntryDetailResponse;
 import com.solusi.erp.accounting.journal.web.dto.JournalEntryListResponse;
+import com.solusi.erp.accounting.journal.web.dto.JournalLineSaveRequest;
 import com.solusi.erp.accounting.journal.web.dto.ReverseJournalRequest;
 import com.solusi.erp.accounting.journal.web.mapper.JournalEntryWebMapper;
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
@@ -90,6 +91,8 @@ public class JournalEntryController {
         JournalEntrySaveRequest request = new JournalEntrySaveRequest();
         request.setPostingDate(LocalDate.now());
         request.setExchangeRate(BigDecimal.ONE);
+        request.getLines().add(new JournalLineSaveRequest());
+        request.getLines().add(new JournalLineSaveRequest());
         Map<String, Object> journalUI = new HashMap<>();
         getDefaultCurrencyUseCase.execute().ifPresent(currency -> {
             request.setCurrencyId(currency.getId());

@@ -12,13 +12,18 @@
                     </div>
                     <div class="col-auto ms-auto d-print-none">
                         <div class="btn-list">
-                            <a th:href="@{/accounting/journal-entries/edit/{id}(id=${journal.id})}" class="btn btn-outline-primary">
+                            <a th:if="${journal.manual == true and journal.status == 'DRAFT'}"
+                               th:href="@{/accounting/journal-entries/edit/{id}(id=${journal.id})}" class="btn btn-outline-primary">
                                 <i class="ti ti-edit me-1"></i> <span th:text="#{label.edit}">Edit</span>
                             </a>
-                            <button type="button" class="btn btn-success" id="btn-post-journal">
+                            <button th:if="${journal.manual == true and journal.status == 'DRAFT'}"
+                                    type="button" class="btn btn-success" id="btn-post-journal"
+                                    th:attr="data-confirm-message=#{msg.confirm.journal.post}">
                                 <i class="ti ti-check me-1"></i> <span th:text="#{label.post}">Post</span>
                             </button>
-                            <button type="button" class="btn btn-warning" id="btn-reverse-journal">
+                            <button th:if="${journal.manual == true and journal.status == 'POSTED' and journal.reversal == false and journal.reversed == false}"
+                                    type="button" class="btn btn-warning" id="btn-reverse-journal"
+                                    data-bs-toggle="modal" data-bs-target="#journal-reversal-modal">
                                 <i class="ti ti-arrow-back-up me-1"></i> <span th:text="#{label.reverse}">Reverse</span>
                             </button>
                             <a th:href="@{/accounting/journal-entries}" class="btn btn-outline-secondary">
@@ -128,8 +133,7 @@
                 <div th:replace="~{fragments/audit-info :: audit-info(${journal})}"></div>
             </div>
         </div>
-    </div>
-    <div class="modal modal-blur fade" id="journal-reversal-modal" tabindex="-1" role="dialog">
+        <div class="modal modal-blur fade" id="journal-reversal-modal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header"><h5 class="modal-title" th:text="#{label.reverse}">Reverse</h5></div>
@@ -142,6 +146,7 @@
                     <button type="button" class="btn btn-warning" id="btn-confirm-reversal" th:text="#{label.reverse}">Reverse</button>
                 </div>
             </div>
+        </div>
         </div>
     </div>
     <div id="page-specific-scripts" th:fragment="pageScripts">

@@ -33,13 +33,21 @@
 
     if (postButton) {
       postButton.addEventListener("click", function () {
-        postButton.disabled = true;
-        postJson("/accounting/journal-entries/" + id + "/post")
-          .then(function () { window.location.reload(); })
-          .catch(function (error) {
-            postButton.disabled = false;
-            if (window.ErpModal) ErpModal.showError(error.message);
-          });
+        var performPost = function () {
+          postButton.disabled = true;
+          postJson("/accounting/journal-entries/" + id + "/post")
+            .then(function () { window.location.reload(); })
+            .catch(function (error) {
+              postButton.disabled = false;
+              if (window.ErpModal) ErpModal.showError(error.message);
+            });
+        };
+        var message = postButton.getAttribute("data-confirm-message");
+        if (window.ErpModal && message) {
+          ErpModal.confirm(message, performPost);
+        } else {
+          performPost();
+        }
       });
     }
 
@@ -53,7 +61,9 @@
         confirmButton.disabled = true;
         postJson("/accounting/journal-entries/" + id + "/reverse", { postingDate: date })
           .then(function (payload) {
-            var newId = payload && payload.data ? payload.data.id : id;
+            var data = payload && payload.data ? payload.data : {};
+            var codeMatch = data.journalCode ? String(data.journalCode).match(/JNL-(\d+)/) : null;
+            var newId = data.id || (codeMatch ? Number(codeMatch[1]) : id);
             sessionStorage.setItem("erp_pending_success", "Journal reversed.");
             window.location.href = "/accounting/journal-entries/" + newId;
           })

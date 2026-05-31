@@ -102,6 +102,7 @@ const ErpFormHandler = (function () {
         const submitBtn = form.querySelector('[type="submit"]');
         const indicator = form.querySelector('.spinner-border') || document.getElementById('loading-indicator');
         const redirectUrl = form.dataset.redirectOnSuccess;
+        const method = form.dataset.method || 'POST';
 
         form.dataset.isSubmitting = 'true';
         let skipSubmittingReset = false;
@@ -170,7 +171,7 @@ const ErpFormHandler = (function () {
 
             const csrfToken = document.querySelector('input[name="_csrf"]')?.value;
             const response = await fetch(form.action, {
-                method: 'POST',
+                method: method,
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',

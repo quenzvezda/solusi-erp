@@ -100,3 +100,22 @@
 - **Severity:** info
 - **Detail:** The plan referenced `messages_en.properties`, but the project uses `messages.properties` as the default English bundle and `messages_id.properties` for Indonesian.
 - **Action taken:** Updated `messages.properties` instead of creating a parallel English bundle that the application does not currently load.
+
+## Task 13: Add Playwright E2E Happy Path
+
+- **Status:** findings
+- **Summary:** Added the manual journal Playwright happy path, runner argument pass-through, warmup URLs, and runtime fixes needed for browser use of the manual journal form/detail pages. Verified with `npx tsc --noEmit`, `npx playwright test tests/accounting/manual-journal-entry.spec.ts --list`, and `powershell -NoProfile -ExecutionPolicy Bypass -File .\e2e-tests\scripts\run-e2e.ps1 tests/accounting/manual-journal-entry.spec.ts`.
+
+### Finding: Runtime form contracts needed correction
+
+- **Type:** bugfix
+- **Severity:** warning
+- **Detail:** The initial form markup used `input data-autocomplete` and `data-autonumeric`, but the project runtime initializes TomSelect via `select[data-lookup-path]` and AutoNumeric via `.erp-number-decimal`. The create form also had no starter lines, and the shared AJAX form handler ignored `data-method`, so edit submissions would POST to a PUT route.
+- **Action taken:** Switched journal currency/COA fields to standard lookup selects, added numeric classes and two default draft lines, taught the shared form handler to honor `data-method`, and covered the contracts in template tests.
+
+### Finding: Detail reversal browser flow was not fully wired
+
+- **Type:** bugfix
+- **Severity:** warning
+- **Detail:** The reversal modal was outside the Thymeleaf content fragment passed to the layout, and the reverse button relied on `window.bootstrap` instead of the project's working Bootstrap data-attribute pattern. Reversal redirect also needed a robust response ID because the detail payload can be consumed before audit metadata is hydrated.
+- **Action taken:** Moved the modal into the content fragment, added `data-bs-toggle/data-bs-target`, set response IDs directly in the web mapper, and kept a journal-code fallback in the detail script.
