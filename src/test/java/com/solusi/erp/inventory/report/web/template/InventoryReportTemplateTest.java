@@ -4,9 +4,14 @@ import com.solusi.erp.inventory.report.web.dto.InventoryMovementResponse;
 import com.solusi.erp.inventory.report.web.dto.LocationStockDetailResponse;
 import com.solusi.erp.inventory.report.web.dto.ProductStockSummaryResponse;
 import org.junit.jupiter.api.Test;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
+import org.thymeleaf.templatemode.TemplateMode;
+import org.thymeleaf.templateresolver.StringTemplateResolver;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -126,6 +131,40 @@ public class InventoryReportTemplateTest {
         assertThat(template).doesNotContain("${products}");
         assertThat(template).doesNotContain("${containers}");
         assertThat(template).contains("/inventory/reports/stock-card");
+    }
+
+    @Test
+    public void stockCardAutocompleteFragment_usesMapSafeFilterUiExpressions() throws Exception {
+        String template = loadTemplate("templates/inventory/reports/stock-card/list.html");
+
+        assertThat(template).contains("filterUI['productText']");
+        assertThat(template).contains("filterUI['productSubtext']");
+        assertThat(template).contains("filterUI['containerText']");
+        assertThat(template).contains("filterUI['containerSubtext']");
+        assertThat(template).doesNotContain("filterUI.productText");
+        assertThat(template).doesNotContain("filterUI.productSubtext");
+        assertThat(template).doesNotContain("filterUI.containerText");
+        assertThat(template).doesNotContain("filterUI.containerSubtext");
+
+        SpringTemplateEngine engine = new SpringTemplateEngine();
+        StringTemplateResolver stringResolver = new StringTemplateResolver();
+        stringResolver.setTemplateMode(TemplateMode.HTML);
+        stringResolver.setCacheable(false);
+        engine.addTemplateResolver(stringResolver);
+
+        Context context = new Context();
+        context.setVariable("filterUI", Map.of(
+                "productText", "Widget",
+                "productSubtext", "P001"
+        ));
+
+        String html = engine.process("""
+                <span th:text="${filterUI != null ? filterUI['productText'] : ''}"></span>
+                <small th:text="${filterUI != null ? filterUI['productSubtext'] : ''}"></small>
+                """, context);
+
+        assertThat(html).contains("Widget");
+        assertThat(html).contains("P001");
     }
 
     @Test

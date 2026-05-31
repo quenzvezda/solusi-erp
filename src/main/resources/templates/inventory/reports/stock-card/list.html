@@ -23,10 +23,10 @@
                         <form th:action="@{/inventory/reports/stock-card}" method="get" th:object="${filter}">
                             <div class="row row-cards align-items-end">
                                 <div class="col-md-3">
-                                    <div th:replace="~{fragments/inputs :: autocomplete(field='productId', label=#{label.product}, path='inventory/products', initialValue=${filter.productId}, initialText=${filterUI != null ? filterUI.productText : ''}, initialSubtext=${filterUI != null ? filterUI.productSubtext : ''})}"></div>
+                                    <div th:replace="~{fragments/inputs :: autocomplete(field='productId', label=#{label.product}, path='inventory/products', initialValue=${filter.productId}, initialText=${filterUI != null ? filterUI['productText'] : ''}, initialSubtext=${filterUI != null ? filterUI['productSubtext'] : ''})}"></div>
                                 </div>
                                 <div class="col-md-3">
-                                    <div th:replace="~{fragments/inputs :: autocomplete(field='containerId', label=#{label.container}, path='inventory/containers', initialValue=${filter.containerId}, initialText=${filterUI != null ? filterUI.containerText : ''}, initialSubtext=${filterUI != null ? filterUI.containerSubtext : ''})}"></div>
+                                    <div th:replace="~{fragments/inputs :: autocomplete(field='containerId', label=#{label.container}, path='inventory/containers', initialValue=${filter.containerId}, initialText=${filterUI != null ? filterUI['containerText'] : ''}, initialSubtext=${filterUI != null ? filterUI['containerSubtext'] : ''})}"></div>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label" th:text="#{label.stock-card.reference}">Reference</label>
