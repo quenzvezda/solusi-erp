@@ -3,7 +3,7 @@
 > Source: `docs/brainstorming/2026-05-31-manual-journal-entry.md`
 > Created: 2026-05-31
 > Sprint: 6 - Accounting Core
-> Status: IN_PROGRESS
+> Status: COMPLETE
 >
 > **For agentic workers:** execute task-by-task. Explore references fresh before editing each task, update checkbox state incrementally, record deviations in `docs/reports/2026-05-31-manual-journal-entry.md`, and do not mark a task complete before its validation command passes.
 
@@ -689,7 +689,7 @@ Buat UI manual journal dengan pola header-lines, security visibility, numeric/da
   ref: `src/main/resources/templates/accountspayable/vendor-payments/form.html:L24-L94`
   ref: `docs/spec/autocomplete-generic.md:L34-L48`
 
-- [ ] Buat kartu Journal Lines:
+- [x] Buat kartu Journal Lines:
   - `<tbody id="line-container">`;
   - row existing memakai class `.line-row`;
   - hidden template `<tbody id="row-template-source">`;
@@ -705,14 +705,14 @@ Buat UI manual journal dengan pola header-lines, security visibility, numeric/da
   ref: `docs/spec/header-lines-form.md:L18-L26`
   ref: `docs/spec/numeric-standards.md:L29-L39`
 
-- [ ] Extend list:
+- [x] Extend list:
   - tombol create guarded `JOURNAL-ENTRY_CREATE`;
   - manual filter option;
   - draft badge berbeda dari posted;
   - delete action hanya draft manual dan guarded `JOURNAL-ENTRY_DELETE`;
   - pertahankan pagination fragment existing.
 
-- [ ] Extend detail:
+- [x] Extend detail:
   - tampilkan Reference No, Currency, Exchange Rate;
   - source type `MANUAL` memakai label manual tanpa link source;
   - line memo;
@@ -722,11 +722,11 @@ Buat UI manual journal dengan pola header-lines, security visibility, numeric/da
   - original POSTED manual belum reversed: Reverse sesuai permission;
   - auto-posted dan reversal row tidak menampilkan tombol reverse.
 
-- [ ] Post button memakai `ErpForm.postAction` karena tidak membutuhkan payload. Reverse button membuka Bootstrap modal `#reverse-journal-modal` berisi date picker default hari ini karena reversal membutuhkan payload tanggal.
+- [x] Post button memakai `ErpForm.postAction` karena tidak membutuhkan payload. Reverse button membuka Bootstrap modal `#reverse-journal-modal` berisi date picker default hari ini karena reversal membutuhkan payload tanggal.
 
   ref: `docs/spec/action-buttons.md:L5-L49`
 
-- [ ] Extend static/template render tests:
+- [x] Extend static/template render tests:
   - form memiliki AJAX attrs, row template, binding names, picker, autocomplete, numeric classes;
   - initial currency payload metadata dirender;
   - detail action visibility sesuai permission/status;
@@ -918,7 +918,7 @@ cd ..
 
 Expected: TypeScript clean, scenario terdaftar, lalu spec hidup lulus minimal satu kali.
 
-### Task 14: Final Regression, SemVer, And Report
+### Task 14: Final Regression, SemVer, And Report [x]
 
 Jalankan gate menyeluruh, update version setelah feature lolos, dan isi report implementasi.
 
@@ -928,36 +928,36 @@ Jalankan gate menyeluruh, update version setelah feature lolos, dan isi report i
 - Modify after successful implementation verification: `pom.xml`
 - Populate: `docs/reports/2026-05-31-manual-journal-entry.md`
 
-- [ ] Jalankan journal-focused suite:
+- [x] Jalankan journal-focused suite:
 
   ```powershell
   .\mvnw.cmd -q -Dtest="*Journal*" test
   ```
 
-- [ ] Jalankan full Java gate:
+- [x] Jalankan full Java gate:
 
   ```powershell
   .\mvnw.cmd clean test
   ```
 
-- [ ] Jalankan full E2E gate:
+- [x] Jalankan full E2E gate:
 
   ```powershell
   .\e2e-tests\scripts\run-e2e.ps1
   ```
 
-- [ ] Setelah implementasi dan testing sukses, bump versi `pom.xml` dengan SemVer **MINOR** karena manual journal adalah fitur baru backward-compatible. Jangan bump version sebelum gate feature lolos.
+- [x] Setelah implementasi dan testing sukses, bump versi `pom.xml` dengan SemVer **MINOR** karena manual journal adalah fitur baru backward-compatible. Jangan bump version sebelum gate feature lolos.
 
   ref: `docs/AGENTS.md` section `9.A Semantic Versioning Automation`
 
-- [ ] Setelah version bump, jalankan ulang:
+- [x] Setelah version bump, jalankan ulang:
 
   ```powershell
   .\mvnw.cmd clean test
   .\e2e-tests\scripts\run-e2e.ps1
   ```
 
-- [ ] Isi report dengan:
+- [x] Isi report dengan:
   - task yang selesai;
   - file yang berubah;
   - keputusan/deviation dari plan;
@@ -965,7 +965,7 @@ Jalankan gate menyeluruh, update version setelah feature lolos, dan isi report i
   - status MariaDB migration smoke;
   - risiko residual bila ada.
 
-- [ ] Periksa `git status --short` dan pastikan tidak ada file generated artifact yang ikut staged.
+- [x] Periksa `git status --short` dan pastikan tidak ada file generated artifact yang ikut staged.
 
 **Final validation criteria:**
 

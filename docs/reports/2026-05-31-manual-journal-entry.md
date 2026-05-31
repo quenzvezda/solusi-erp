@@ -2,7 +2,7 @@
 
 > Plan: `docs/plans/2026-05-31-manual-journal-entry.md`
 > Source: `docs/brainstorming/2026-05-31-manual-journal-entry.md`
-> Status: IN_PROGRESS
+> Status: COMPLETE
 
 ## Task 1: Add MariaDB And H2 Migration V64
 
@@ -119,3 +119,29 @@
 - **Severity:** warning
 - **Detail:** The reversal modal was outside the Thymeleaf content fragment passed to the layout, and the reverse button relied on `window.bootstrap` instead of the project's working Bootstrap data-attribute pattern. Reversal redirect also needed a robust response ID because the detail payload can be consumed before audit metadata is hydrated.
 - **Action taken:** Moved the modal into the content fragment, added `data-bs-toggle/data-bs-target`, set response IDs directly in the web mapper, and kept a journal-code fallback in the detail script.
+
+## Task 14: Final Regression, SemVer, And Report
+
+- **Status:** clean
+- **Summary:** Completed final regression gates, bumped project version from `1.9.2` to `1.10.0`, and recorded final verification for the manual journal feature.
+
+### Verification Evidence
+
+- `mvn -q -Pe2e -Dtest=*Journal* test` passed for the journal-focused suite.
+- `mvn clean test` passed after the version bump with 1612 tests, 0 failures, 0 errors, and 0 skipped.
+- `powershell -NoProfile -ExecutionPolicy Bypass -File .\e2e-tests\scripts\run-e2e.ps1` passed after the version bump with 74 Playwright tests passed.
+- `.last-run.json` reported `"status": "passed"` and no failed tests after full E2E.
+
+### Finding: H2 driver needed for default Java gate
+
+- **Type:** deviation
+- **Severity:** info
+- **Detail:** `JournalManualMigrationTest` runs in the standard Maven test phase and uses the H2-backed `e2e` Spring profile. Before Task 14, H2 was only present inside the Maven `e2e` profile runtime dependencies, so default `mvn clean test` could not load the migration test context.
+- **Action taken:** Added the H2 dependency with `test` scope in the main dependency list while keeping the existing `e2e` profile runtime dependency for packaged E2E execution.
+
+### Finding: MariaDB migration smoke not run locally
+
+- **Type:** deployment gate
+- **Severity:** info
+- **Detail:** Local verification covered the H2 mirror migration and full application/E2E behavior. A live MariaDB profile migration smoke was not run in this workspace because no MariaDB environment was provided.
+- **Action taken:** Kept V64 MariaDB SQL in the deployment path and recorded MariaDB migration smoke as the remaining environment-specific deployment check.
