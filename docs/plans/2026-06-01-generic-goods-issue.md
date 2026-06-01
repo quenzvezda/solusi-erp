@@ -93,24 +93,24 @@ Add source reference metadata to valuation layers and stock movement payload so 
 **Reference module:** `inventory.stock`, `inventory.goodsreceipt`
 
 Steps:
-- [ ] Add nullable columns `reference_type`, `reference_id`, and `reference_line_id` to `inv_valuation_layers` in both MariaDB and H2 migrations.
+- [x] Add nullable columns `reference_type`, `reference_id`, and `reference_line_id` to `inv_valuation_layers` in both MariaDB and H2 migrations.
       ref: `src/main/resources/db/migration/V23__Inventory_Core_Valuation_And_Movements.sql:L87-L114` - current `inv_valuation_layers` table shape
-- [ ] Add the same fields to `ValuationLayer` domain, factory methods, getters, entity, mapper, and repository adapter.
+- [x] Add the same fields to `ValuationLayer` domain, factory methods, getters, entity, mapper, and repository adapter.
       ref: `src/main/java/com/solusi/erp/inventory/stock/domain/model/ValuationLayer.java:L12-L37` - current immutable valuation layer constructor and factory
       ref: `src/main/java/com/solusi/erp/inventory/stock/infrastructure/persistence/ValuationLayerEntity.java:L19-L44` - JPA entity columns and embedded `unitCost`
-- [ ] Extend `StockMovementPayload` with `valuationReferenceType`, `valuationReferenceId`, and `valuationReferenceLineId`; use these only for valuation layer creation/consumption, not for `InventoryMovement.referenceType`.
+- [x] Extend `StockMovementPayload` with `valuationReferenceType`, `valuationReferenceId`, and `valuationReferenceLineId`; use these only for valuation layer creation/consumption, not for `InventoryMovement.referenceType`.
       ref: `src/main/java/com/solusi/erp/inventory/stock/application/dto/StockMovementPayload.java:L22-L55` - stock adjustment payload contract
-- [ ] Modify positive stock valuation so GR completion writes valuation layer reference metadata from payload.
+- [x] Modify positive stock valuation so GR completion writes valuation layer reference metadata from payload.
       ref: `src/main/java/com/solusi/erp/inventory/stock/infrastructure/service/StockServiceImpl.java:L78-L86` - current add/consume FIFO valuation branch
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/application/usecase/command/CompleteGoodsReceiptUseCaseImpl.java:L261-L277` - GR stock payload builder to enrich with GR header/line reference
-- [ ] Add repository methods for specific layer lookup by `productId`, `containerId`, `referenceType`, `referenceId`, `referenceLineId`, and optional `serialNumber`.
+- [x] Add repository methods for specific layer lookup by `productId`, `containerId`, `referenceType`, `referenceId`, `referenceLineId`, and optional `serialNumber`.
       ref: `src/main/java/com/solusi/erp/inventory/stock/domain/repository/ValuationLayerRepository.java:L12-L26` - existing FIFO lookup methods
       ref: `src/main/java/com/solusi/erp/inventory/stock/infrastructure/persistence/ValuationLayerJpaRepository.java:L10-L24` - current Spring Data query naming pattern
-- [ ] Add `FifoValuationService.consumeSpecificLayers(...)` that consumes only matching reference layers and still throws insufficient stock if remaining target qty cannot be fulfilled.
+- [x] Add `FifoValuationService.consumeSpecificLayers(...)` that consumes only matching reference layers and still throws insufficient stock if remaining target qty cannot be fulfilled.
       ref: `src/main/java/com/solusi/erp/inventory/stock/domain/service/FifoValuationService.java:L39-L70` - current FIFO consume algorithm and save behavior
-- [ ] **TEST:** Extend `FifoValuationServiceTest` for specific-layer success, insufficient specific layer, and serial-specific layer.
+- [x] **TEST:** Extend `FifoValuationServiceTest` for specific-layer success, insufficient specific layer, and serial-specific layer.
       ref: `src/test/java/com/solusi/erp/inventory/stock/domain/FifoValuationServiceTest.java` - pure domain service test location
-- [ ] **TEST:** Extend `StockServiceImplTest` to prove GR receipt creates layers with GR reference metadata and GI issue can request specific layer consumption.
+- [x] **TEST:** Extend `StockServiceImplTest` to prove GR receipt creates layers with GR reference metadata and GI issue can request specific layer consumption.
       ref: `src/main/java/com/solusi/erp/inventory/stock/infrastructure/service/StockServiceImpl.java:L70-L86` - behavior under test
 
 **Validation criteria:**
@@ -545,4 +545,3 @@ Steps:
 - Warehouse approval workflow before completion.
 - Picking/shipping workflow and WMS mobile UI.
 - Full Playwright E2E specs. Add after core page behavior stabilizes.
-

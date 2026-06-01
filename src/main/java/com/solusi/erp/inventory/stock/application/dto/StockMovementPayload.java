@@ -50,6 +50,12 @@ public class StockMovementPayload {
 
     private BigDecimal netPrice;
 
+    private ReferenceType valuationReferenceType;
+
+    private Long valuationReferenceId;
+
+    private Long valuationReferenceLineId;
+
     @Builder.Default
     private LocalDateTime transactionDate = LocalDateTime.now();
 }

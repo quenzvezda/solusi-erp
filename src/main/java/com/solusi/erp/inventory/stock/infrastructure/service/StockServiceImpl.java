@@ -79,12 +79,38 @@ public class StockServiceImpl implements StockService {
         BigDecimal absQuantity = baseQuantity.abs();
         if (isPositiveAdjustment(payload)) {
             CostAmount cost = resolveCostAmount(payload, baseQuantity);
-            fifoValuationService.addLayer(payload.getProductId(), payload.getContainerId(), serialNumber, absQuantity, cost);
+            fifoValuationService.addLayer(
+                    payload.getProductId(),
+                    payload.getContainerId(),
+                    serialNumber,
+                    absQuantity,
+                    cost,
+                    payload.getValuationReferenceType(),
+                    payload.getValuationReferenceId(),
+                    payload.getValuationReferenceLineId()
+            );
             return cost;
         } else if (isNegativeAdjustment(payload)) {
+            if (hasValuationReference(payload)) {
+                return fifoValuationService.consumeSpecificLayers(
+                        payload.getProductId(),
+                        payload.getContainerId(),
+                        serialNumber,
+                        payload.getValuationReferenceType(),
+                        payload.getValuationReferenceId(),
+                        payload.getValuationReferenceLineId(),
+                        absQuantity
+                );
+            }
             return fifoValuationService.consumeLayers(payload.getProductId(), payload.getContainerId(), serialNumber, absQuantity);
         }
         return null;
+    }
+
+    private boolean hasValuationReference(StockMovementPayload payload) {
+        return payload.getValuationReferenceType() != null
+                && payload.getValuationReferenceId() != null
+                && payload.getValuationReferenceLineId() != null;
     }
 
     private CostAmount resolveCostAmount(StockMovementPayload payload, BigDecimal baseQuantity) {

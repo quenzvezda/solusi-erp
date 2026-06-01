@@ -298,6 +298,72 @@ public class StockServiceTest {
         stockService.adjust(payload);
 
         verify(fifoValuationService).addLayer(eq(1L), eq(1L), isNull(), eq(new BigDecimal("120")),
-                argThat(cost -> cost.originalAmount().compareTo(new BigDecimal("10.000000")) == 0));
+                argThat(cost -> cost.originalAmount().compareTo(new BigDecimal("10.000000")) == 0),
+                isNull(), isNull(), isNull());
+    }
+
+    @Test
+    void receiptCreatesValuationLayerWithReferenceMetadata() {
+        StockMovementPayload payload = StockMovementPayload.builder()
+                .productId(1L)
+                .containerId(1L)
+                .quantity(BigDecimal.TEN)
+                .movementType(MovementType.RECEIPT)
+                .referenceType(ReferenceType.GOODS_RECEIPT)
+                .referenceId(100L)
+                .referenceCode("GR-001")
+                .valuationReferenceType(ReferenceType.GOODS_RECEIPT)
+                .valuationReferenceId(100L)
+                .valuationReferenceLineId(1001L)
+                .build();
+
+        when(stockBalanceRepository.findByProductContainerSerial(1L, 1L, null)).thenReturn(Optional.empty());
+        when(stockBalanceRepository.save(any(StockBalance.class))).thenAnswer(i -> i.getArgument(0));
+
+        stockService.adjust(payload);
+
+        verify(fifoValuationService).addLayer(
+                eq(1L),
+                eq(1L),
+                isNull(),
+                eq(BigDecimal.TEN),
+                any(),
+                eq(ReferenceType.GOODS_RECEIPT),
+                eq(100L),
+                eq(1001L)
+        );
+    }
+
+    @Test
+    void issueConsumesSpecificValuationLayerWhenReferenceMetadataPresent() {
+        StockMovementPayload payload = StockMovementPayload.builder()
+                .productId(1L)
+                .containerId(1L)
+                .quantity(new BigDecimal("4"))
+                .movementType(MovementType.ISSUE)
+                .referenceType(ReferenceType.GOODS_ISSUE)
+                .referenceId(200L)
+                .valuationReferenceType(ReferenceType.GOODS_RECEIPT)
+                .valuationReferenceId(100L)
+                .valuationReferenceLineId(1001L)
+                .build();
+
+        StockBalance existingBalance = StockBalance.createNew(1L, 1L, null);
+        existingBalance.applyMovement(MovementType.RECEIPT, BigDecimal.TEN);
+        when(stockBalanceRepository.findByProductContainerSerial(1L, 1L, null)).thenReturn(Optional.of(existingBalance));
+        when(stockBalanceRepository.save(any(StockBalance.class))).thenAnswer(i -> i.getArgument(0));
+
+        stockService.adjust(payload);
+
+        verify(fifoValuationService).consumeSpecificLayers(
+                1L,
+                1L,
+                null,
+                ReferenceType.GOODS_RECEIPT,
+                100L,
+                1001L,
+                new BigDecimal("4")
+        );
+        verify(fifoValuationService, never()).consumeLayers(any(), any(), any(), any());
     }
 }

@@ -2,6 +2,7 @@ package com.solusi.erp.inventory.stock.infrastructure.persistence;
 
 import com.solusi.erp.core.model.BaseModel;
 import com.solusi.erp.core.model.CurrencyAmount;
+import com.solusi.erp.inventory.stock.domain.model.ReferenceType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -41,4 +42,14 @@ public class ValuationLayerEntity extends BaseModel {
         @AttributeOverride(name = "localAmount", column = @Column(name = "unit_cost_amount_local"))
     })
     private CurrencyAmount unitCost;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "reference_type", length = 50)
+    private ReferenceType referenceType;
+
+    @Column(name = "reference_id")
+    private Long referenceId;
+
+    @Column(name = "reference_line_id")
+    private Long referenceLineId;
 }
