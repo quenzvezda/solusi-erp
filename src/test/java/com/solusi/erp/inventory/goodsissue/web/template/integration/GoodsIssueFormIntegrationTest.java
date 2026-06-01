@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class GoodsIssueFormIntegrationTest {
 
     private final String html = readTemplate();
+    private final String js = readScript();
 
     @Test
     void formTemplate_containsAjaxDateHiddenSourceAndActionContracts() {
@@ -70,9 +71,36 @@ class GoodsIssueFormIntegrationTest {
         assertThat(html).contains("erp-number-decimal");
     }
 
+    @Test
+    void pageScript_containsSourceSelectorNumericModalAndSubmitContracts() {
+        assertThat(js).contains("modal-gi-source-line-selector");
+        assertThat(js).contains("gi-source-line-selector-results");
+        assertThat(js).contains("currentReferenceLineIds");
+        assertThat(js).contains("duplicateReferenceLine");
+        assertThat(js).contains(".input-valuation-ref-type");
+        assertThat(js).contains(".input-valuation-ref-id");
+        assertThat(js).contains(".input-valuation-ref-line-id");
+        assertThat(js).contains("window.ERP.ModalSelector.open");
+        assertThat(js).contains("window.ERP.ModalSelector.close");
+        assertThat(js).contains("ErpModal.confirm");
+        assertThat(js).contains("ErpNumeric.get");
+        assertThat(js).contains("ErpNumeric.set");
+        assertThat(js).contains("addEventListener('submit', validateBeforeSubmit, true)");
+        assertThat(js).contains("beforeunload");
+        assertThat(js).doesNotContain("new bootstrap.Modal");
+    }
+
     private static String readTemplate() {
         try {
             return Files.readString(Path.of("src/main/resources/templates/inventory/goods-issues/form.html"));
+        } catch (Exception ex) {
+            throw new IllegalStateException(ex);
+        }
+    }
+
+    private static String readScript() {
+        try {
+            return Files.readString(Path.of("src/main/resources/static/js/inventory/goods-issue/goods-issue-form.js"));
         } catch (Exception ex) {
             throw new IllegalStateException(ex);
         }

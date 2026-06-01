@@ -370,39 +370,39 @@ Implement GI form behavior in a dedicated JS file instead of expanding global he
 **Reference module:** `inventory.goodsreceipt`, `inventory.adjustment`
 
 Steps:
-- [ ] Create `static/js/inventory/goods-issue/goods-issue-form.js` and keep only small page config inline in the template.
+- [x] Create `static/js/inventory/goods-issue/goods-issue-form.js` and keep only small page config inline in the template.
       ref: `docs/spec/page-specific-scripts.md:L12-L36` - when to move JS into feature file
       ref: `src/main/resources/templates/inventory/goods-receipts/form.html:L306-L319` - inline config plus deferred script pattern
-- [ ] Initialize dynamic lines through existing global helpers where available (`window.ERP.initAutocompleteInContainer`, `initLookup`, `ErpNumeric`, `ErpDrawer`, `ErpModal`) instead of duplicating generic behavior.
+- [x] Initialize dynamic lines through existing global helpers where available (`window.ERP.initAutocompleteInContainer`, `initLookup`, `ErpNumeric`, `ErpDrawer`, `ErpModal`) instead of duplicating generic behavior.
       ref: `docs/spec/page-specific-scripts.md:L61-L70` - allowed global helper boundaries
       ref: `docs/spec/ui-standards.md:L142-L166` - global auto-initialization and `initLookup`
-- [ ] Use `initLookup` for cascading `facility -> grid -> container` or inverse `container -> grid/facility` behavior. Container lookup payload must include parent grid/facility data.
+- [x] Use `initLookup` for cascading `facility -> grid -> container` or inverse `container -> grid/facility` behavior. Container lookup payload must include parent grid/facility data.
       ref: `docs/spec/autocomplete-generic.md:L50-L63` - cascading lookup pattern
       ref: `docs/spec/autocomplete-generic.md:L68-L97` - inverse auto-populate payload pattern
-- [ ] When user changes header facility, require confirmation if draft lines exist; after confirmation clear incompatible lines or reset grid/container fields. Use `ErpModal.confirm`, not `window.confirm`.
+- [x] When user changes header facility, require confirmation if draft lines exist; after confirmation clear incompatible lines or reset grid/container fields. Use `ErpModal.confirm`, not `window.confirm`.
       ref: `docs/spec/header-lines-form.md:L62-L65` - header-to-line synchronization
       ref: `docs/spec/ui-standards.md:L96-L115` - global `ErpModal` rule
-- [ ] For source-derived lines, lock product/UOM/source valuation fields and open source line selector when Add Line is clicked. For manual future source, allow blank row only when `referenceType=MANUAL`.
+- [x] For source-derived lines, lock product/UOM/source valuation fields and open source line selector when Add Line is clicked. For manual future source, allow blank row only when `referenceType=MANUAL`.
       ref: `docs/spec/header-lines-form.md:L47-L54` - derived vs manual line behavior
       ref: `src/main/resources/static/js/inventory/goods-receipt/goods-receipt-form.js:L578-L586` - Add Line switches to selector when source-based
-- [ ] Implement source line selector apply: parse `data-*` payload, prevent duplicate `referenceLineId`, create clean row from template, fill product/UOM/valuation/location snapshots, and close modal through shared modal selector helper.
+- [x] Implement source line selector apply: parse `data-*` payload, prevent duplicate `referenceLineId`, create clean row from template, fill product/UOM/valuation/location snapshots, and close modal through shared modal selector helper.
       ref: `docs/spec/modal-selector.md:L77-L90` - multi-select apply behavior
       ref: `src/main/resources/static/js/inventory/goods-receipt/goods-receipt-form.js:L597-L641` - selector apply and duplicate guard
-- [ ] Implement drawer save: write qty/UOM/base qty and serialized CSV back to hidden line inputs; for serialized items, require whole base qty.
+- [x] Implement drawer save: write qty/UOM/base qty and serialized CSV back to hidden line inputs; for serialized items, require whole base qty.
       ref: `src/main/resources/static/js/inventory/goods-receipt/goods-receipt-form.js:L435-L479` - drawer setup and save pattern
       ref: `src/main/resources/static/js/inventory/goods-receipt/goods-receipt-form.js:L299-L333` - serial row sync pattern
-- [ ] Calculate summary totals: total base qty, total inventory amount, total tax amount when available, and line count. Display recap in `bg-secondary-lt` or neutral theme-safe class.
+- [x] Calculate summary totals: total base qty, total inventory amount, total tax amount when available, and line count. Display recap in `bg-secondary-lt` or neutral theme-safe class.
       ref: `docs/spec/header-lines-form.md:L11-L15` - summary card expectation
       ref: `docs/spec/ui-standards.md:L80-L93` - theme-safe background/text classes
-- [ ] Use `ErpNumeric.get/set` when manipulating AutoNumeric values. Avoid ad-hoc parsing except as fallback.
+- [x] Use `ErpNumeric.get/set` when manipulating AutoNumeric values. Avoid ad-hoc parsing except as fallback.
       ref: `docs/spec/numeric-standards.md:L33-L40` - `ErpNumeric` helper requirement
-- [ ] Register submit validation in capture phase. Validate at least one line, product, positive qty, UOM, container, grid/facility consistency, and serial count for serialized item.
+- [x] Register submit validation in capture phase. Validate at least one line, product, positive qty, UOM, container, grid/facility consistency, and serial count for serialized item.
       ref: `docs/spec/form-submission.md:L52-L58` - capture-phase custom validation
       ref: `src/main/resources/static/js/inventory/goods-receipt/goods-receipt-form.js:L645-L682` - line-level submit guard pattern
-- [ ] Add dirty form beforeunload guard and suppress it for intentional complete/cancel action redirects.
+- [x] Add dirty form beforeunload guard and suppress it for intentional complete/cancel action redirects.
       ref: `docs/spec/form-submission.md:L59-L67` - intentional navigation and beforeunload rule
       ref: `src/main/resources/static/js/inventory/goods-receipt/goods-receipt-form.js:L684-L699` - dirty form guard pattern
-- [ ] **TEST:** Add static JS contract tests in `GoodsIssueFormIntegrationTest`: verifies selector ids, duplicate guard, hidden valuation field population, `ErpModal.confirm`, `ErpNumeric.get/set`, capture submit listener, and no direct `new bootstrap.Modal()`.
+- [x] **TEST:** Add static JS contract tests in `GoodsIssueFormIntegrationTest`: verifies selector ids, duplicate guard, hidden valuation field population, `ErpModal.confirm`, `ErpNumeric.get/set`, capture submit listener, and no direct `new bootstrap.Modal()`.
       ref: `src/test/java/com/solusi/erp/inventory/goodsreceipt/web/template/integration/GoodsReceiptFormIntegrationTest.java:L226-L240` - script block contract test pattern
       ref: `docs/spec/ui-standards.md:L96-L115` - no direct bootstrap modal rule
 

@@ -133,3 +133,21 @@
 - **Detail:** `mvn test -Dtest=GoodsIssueFormIntegrationTest -DfailIfNoTests=false` reported 3 tests with 0 failures/errors and `BUILD SUCCESS`, while JaCoCo printed a branch-coverage warning in the focused subset run.
 - **Action taken:** Treated the focused Task 7 validation as passed because Maven exited successfully; the final `mvn clean test` remains the authoritative full-suite gate.
 - **Ref:** `src/test/java/com/solusi/erp/inventory/goodsissue/web/template/integration/GoodsIssueFormIntegrationTest.java`
+
+## Task 8: GI Page-Specific JavaScript
+- **Status:** findings
+- **Summary:** Added the GI page-specific JavaScript for dynamic line creation, source-line selector apply, cascading grid/container lookup hooks, drawer save, summary recalculation, submit validation, dirty-form guard, and static JS contract coverage.
+
+### Finding: Header facility change hook is defensive only for the current form
+- **Type:** scope note
+- **Severity:** info
+- **Detail:** Task 7 renders GI facility as a source snapshot plus hidden `facilityId`, so there is no editable header facility field in the current UI for normal source-derived GI flows.
+- **Action taken:** Implemented `ErpModal.confirm`-based reset handling only when a non-hidden header facility field exists, keeping the JS ready for future manual GI without adding an inactive visible control.
+- **Ref:** `src/main/resources/static/js/inventory/goods-issue/goods-issue-form.js`
+
+### Finding: Focused Maven run emitted a JaCoCo warning but exited successfully
+- **Type:** execution note
+- **Severity:** info
+- **Detail:** `mvn test -Dtest=GoodsIssueFormIntegrationTest -DfailIfNoTests=false` reported 4 tests with 0 failures/errors and `BUILD SUCCESS`, while JaCoCo printed a branch-coverage warning in the focused subset run.
+- **Action taken:** Treated the focused Task 8 validation as passed because Maven exited successfully; the final `mvn clean test` remains the authoritative full-suite gate.
+- **Ref:** `src/test/java/com/solusi/erp/inventory/goodsissue/web/template/integration/GoodsIssueFormIntegrationTest.java`
