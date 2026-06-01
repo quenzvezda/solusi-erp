@@ -266,34 +266,34 @@ Expose GI list/detail and JSON-backed command endpoints while keeping web layer 
 **Reference module:** `inventory.goodsreceipt`
 
 Steps:
-- [ ] Create DTOs extending `BaseAuditResponse`: `GoodsIssueSummaryResponse`, `GoodsIssueDetailResponse`, `GoodsIssueLineDetailResponse`, `GoodsIssueSaveRequest`, and `GoodsIssueSaveLineRequest`.
+- [x] Create DTOs extending `BaseAuditResponse`: `GoodsIssueSummaryResponse`, `GoodsIssueDetailResponse`, `GoodsIssueLineDetailResponse`, `GoodsIssueSaveRequest`, and `GoodsIssueSaveLineRequest`.
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/web/dto/GoodsReceiptSaveRequest.java:L15-L31` - request DTO inheritance and nested validation
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/web/dto/GoodsReceiptSummaryResponse.java:L11-L23` - summary DTO shape
-- [ ] Add `@DateTimeFormat(pattern = "yyyy-MM-dd")` to `issueDate` and validation annotations for mandatory header/line fields.
+- [x] Add `@DateTimeFormat(pattern = "yyyy-MM-dd")` to `issueDate` and validation annotations for mandatory header/line fields.
       ref: `docs/spec/datetime-standards.md:L65-L91` - backend date annotation requirement
-- [ ] Create `GoodsIssueWebMapper` using lookup providers for party, facility, grid, container, product, UOM, currency, and reference code enrichment.
+- [x] Create `GoodsIssueWebMapper` using lookup providers for party, facility, grid, container, product, UOM, currency, and reference code enrichment.
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/web/mapper/GoodsReceiptWebMapper.java:L23-L73` - mapper and lookup provider enrichment pattern
       ref: `docs/spec/autocomplete-generic.md:L121-L173` - lookup provider boundary and Trinity display data
-- [ ] Create `GoodsIssueController` with `@DefaultRedirectUrl`, list, create form, edit form, view, save JSON, complete JSON action, cancel JSON action, and delete draft endpoint.
+- [x] Create `GoodsIssueController` with `@DefaultRedirectUrl`, list, create form, edit form, view, save JSON, complete JSON action, cancel JSON action, and delete draft endpoint.
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/web/controller/GoodsReceiptController.java:L35-L83` - controller list shape and permission annotations
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/web/controller/GoodsReceiptController.java:L206-L235` - AJAX JSON save endpoint
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/web/controller/GoodsReceiptController.java:L271-L289` - document action and HTMX delete endpoint
-- [ ] Enforce permissions with `@PreAuthorize`: read/create/update/delete/complete/cancel. Do not use `hasRole()`.
+- [x] Enforce permissions with `@PreAuthorize`: read/create/update/delete/complete/cancel. Do not use `hasRole()`.
       ref: `docs/AGENTS.md:L137-L143` - backend/frontend RBAC requirement
-- [ ] Build list template with Tabler card, right-aligned search bar, `div.input-icon`, `.form-control-sm`, generic sortable fragment, generic pagination fragment, active reference chip, status badge, action buttons with `.btn-white.btn-sm`, and delete modal fragment for draft rows.
+- [x] Build list template with Tabler card, right-aligned search bar, `div.input-icon`, `.form-control-sm`, generic sortable fragment, generic pagination fragment, active reference chip, status badge, action buttons with `.btn-white.btn-sm`, and delete modal fragment for draft rows.
       ref: `docs/spec/ui-standards.md:L8-L19` - standard list page layout
       ref: `src/main/resources/templates/inventory/goods-receipts/list.html:L29-L66` - GR search/filter/table container pattern
       ref: `src/main/resources/templates/inventory/goods-receipts/list.html:L69-L139` - sortable, action buttons, delete modal, pagination
-- [ ] Build detail template with header status badge, readonly header snapshot, journal link area for completed GI, line table with issue qty/base qty/location/serial/cost/amount, complete/cancel action buttons, and audit fragment.
+- [x] Build detail template with header status badge, readonly header snapshot, journal link area for completed GI, line table with issue qty/base qty/location/serial/cost/amount, complete/cancel action buttons, and audit fragment.
       ref: `src/main/resources/templates/inventory/goods-receipts/view.html:L10-L65` - detail header/status/journal link pattern
       ref: `src/main/resources/templates/inventory/goods-receipts/view.html:L98-L143` - line detail table pattern
       ref: `src/main/resources/templates/inventory/goods-receipts/view.html:L145-L198` - action buttons and delete modal pattern
-- [ ] Use adaptive theme classes only: avoid manual `bg-light`, `bg-white`, and `text-dark`; use `bg-body-tertiary`, `bg-secondary-lt`, `text-body`, or default text.
+- [x] Use adaptive theme classes only: avoid manual `bg-light`, `bg-white`, and `text-dark`; use `bg-body-tertiary`, `bg-secondary-lt`, `text-body`, or default text.
       ref: `docs/spec/ui-standards.md:L77-L93` - dark/warm/green theme compatibility rules
-- [ ] **TEST:** Add controller tests for view names, model attributes, JSON save responses, action endpoints, delete endpoint, unsupported source handling, and `@PreAuthorize` values.
+- [x] **TEST:** Add controller tests for view names, model attributes, JSON save responses, action endpoints, delete endpoint, unsupported source handling, and `@PreAuthorize` values.
       ref: `src/test/java/com/solusi/erp/inventory/goodsreceipt/web/controller/GoodsReceiptControllerTest.java:L48-L84` - controller test setup
       ref: `src/test/java/com/solusi/erp/inventory/goodsreceipt/web/controller/GoodsReceiptControllerTest.java:L102-L181` - list/reference filter tests
-- [ ] **TEST:** Add list/detail template contract tests for search structure, sortable/pagination fragments, action button attributes, security guards, adaptive classes, and no hardcoded static text outside i18n.
+- [x] **TEST:** Add list/detail template contract tests for search structure, sortable/pagination fragments, action button attributes, security guards, adaptive classes, and no hardcoded static text outside i18n.
       ref: `src/test/java/com/solusi/erp/inventory/goodsreceipt/web/template/integration/GoodsReceiptListIntegrationTest.java:L18-L57` - list contract test pattern
       ref: `src/test/java/com/solusi/erp/inventory/goodsreceipt/web/template/integration/GoodsReceiptViewIntegrationTest.java:L18-L64` - view contract test pattern
 

@@ -1,0 +1,42 @@
+package com.solusi.erp.inventory.goodsissue.web.template.integration;
+
+import org.junit.jupiter.api.Test;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+class GoodsIssueViewIntegrationTest {
+
+    private final String html = readTemplate();
+
+    @Test
+    void viewTemplate_containsHeaderJournalLinesActionsAndAudit() {
+        assertThat(html).contains("GOODS_ISSUE");
+        assertThat(html).contains("id=\"table-lines\"");
+        assertThat(html).contains("label.qty.issued");
+        assertThat(html).contains("label.base.qty");
+        assertThat(html).contains("label.unit.cost");
+        assertThat(html).contains("ErpForm.postAction(this)");
+        assertThat(html).contains("fragments/audit-info :: audit-info");
+    }
+
+    @Test
+    void viewTemplate_usesGiAuthoritiesAndAdaptiveClasses() {
+        assertThat(html).contains("hasAuthority('GOODS-ISSUE_UPDATE')");
+        assertThat(html).contains("hasAuthority('GOODS-ISSUE_COMPLETE')");
+        assertThat(html).contains("hasAuthority('GOODS-ISSUE_CANCEL')");
+        assertThat(html).doesNotContain("bg-light");
+        assertThat(html).doesNotContain("bg-white");
+        assertThat(html).doesNotContain("text-dark");
+    }
+
+    private static String readTemplate() {
+        try {
+            return Files.readString(Path.of("src/main/resources/templates/inventory/goods-issues/view.html"));
+        } catch (Exception ex) {
+            throw new IllegalStateException(ex);
+        }
+    }
+}

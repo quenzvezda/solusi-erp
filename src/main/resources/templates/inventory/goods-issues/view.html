@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.gi.detail})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .gi-view-content}, ~{:: #page-specific-scripts})}">
+    <div class="gi-view-content">
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title">
+                            <span th:text="${gi.code}">GI-001</span>
+                            <span class="badge ms-2"
+                                  th:classappend="${gi.status == 'DRAFT'} ? 'bg-warning-lt' : (${gi.status == 'COMPLETED'} ? 'bg-success-lt' : 'bg-secondary-lt')"
+                                  th:text="${gi.status}">DRAFT</span>
+                        </h2>
+                    </div>
+                    <div class="col-auto ms-auto d-print-none">
+                        <a th:href="@{/inventory/goods-issues}" class="btn btn-secondary">
+                            <i class="ti ti-arrow-left me-1"></i><span th:text="#{label.back}">Back</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+                <div class="row row-cards">
+                    <div class="col-12">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.gi.code}">Code</label>
+                                        <div class="form-control-plaintext fw-bold" th:text="${gi.code}">GI-001</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.gi.issueDate}">Issue Date</label>
+                                        <div class="form-control-plaintext" th:text="${#temporals.format(gi.issueDate, 'dd MMM yyyy')}">01 Jun 2026</div>
+                                    </div>
+                                    <div class="col-md-4" th:if="${gi.status == 'COMPLETED'}">
+                                        <label class="form-label text-secondary" th:text="#{label.journal}">Journal Entry</label>
+                                        <div class="form-control-plaintext">
+                                            <a th:href="@{/accounting/journal-entries(sourceType='GOODS_ISSUE', sourceCode=${gi.code})}" class="btn btn-sm btn-outline-primary">
+                                                <i class="ti ti-external-link me-1"></i><span th:text="#{label.view}">View</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.gi.referenceType}">Reference Type</label>
+                                        <div class="form-control-plaintext" th:text="${gi.referenceType ?: '-'}">PURCHASE_RETURN</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.gi.referenceCode}">Reference Code</label>
+                                        <div class="form-control-plaintext" th:text="${gi.referenceCode ?: '-'}">PRTN-001</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.gi.party}">Party</label>
+                                        <div class="form-control-plaintext" th:text="${gi.partyName ?: '-'}">-</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.gi.facility}">Facility</label>
+                                        <div class="form-control-plaintext" th:text="${gi.facilityName ?: '-'}">-</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.gi.currency}">Currency</label>
+                                        <div class="form-control-plaintext" th:text="${gi.currencyCode ?: '-'}">IDR</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.gi.exchangeRate}">Exchange Rate</label>
+                                        <div class="form-control-plaintext" th:text="${gi.exchangeRate != null ? #numbers.formatDecimal(gi.exchangeRate, 1, 'COMMA', 4, 'POINT') : '-'}">1.0000</div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label text-secondary" th:text="#{label.gi.notes}">Notes</label>
+                                        <div class="form-control-plaintext" th:text="${gi.notes ?: '-'}">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title" th:text="#{label.gi.line.title}">Issue Lines</h3>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-vcenter card-table" id="table-lines">
+                                    <thead>
+                                        <tr>
+                                            <th th:text="#{label.product}">Product</th>
+                                            <th class="text-end" th:text="#{label.qty.issued}">Qty Issued</th>
+                                            <th class="text-end" th:text="#{label.base.qty}">Base Qty</th>
+                                            <th th:text="#{label.uom}">UoM</th>
+                                            <th th:text="#{label.gi.facility}">Facility</th>
+                                            <th th:text="#{label.grid}">Grid</th>
+                                            <th th:text="#{label.container}">Container</th>
+                                            <th th:text="#{label.serial}">Serial</th>
+                                            <th class="text-end" th:text="#{label.unit.cost}">Unit Cost</th>
+                                            <th class="text-end" th:text="#{label.inventory.amount}">Inventory Amt</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="line : ${gi.lines}">
+                                            <td th:text="${line.productName ?: '-'}">Product A</td>
+                                            <td class="text-end" th:text="${line.quantityIssued != null ? #numbers.formatDecimal(line.quantityIssued, 1, 'COMMA', 4, 'POINT') : '-'}">1.0000</td>
+                                            <td class="text-end" th:text="${line.baseQuantity != null ? #numbers.formatDecimal(line.baseQuantity, 1, 'COMMA', 4, 'POINT') : '-'}">1.0000</td>
+                                            <td th:text="${line.uomCode ?: '-'}">PCS</td>
+                                            <td th:text="${line.facilityName ?: '-'}">Main</td>
+                                            <td th:text="${line.gridCode ?: '-'}">A01</td>
+                                            <td th:text="${line.containerCode ?: '-'}">BIN-A01</td>
+                                            <td th:text="${line.serialDisplay ?: '-'}">-</td>
+                                            <td class="text-end" th:text="${line.unitCost != null ? #numbers.formatDecimal(line.unitCost, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                            <td class="text-end" th:text="${line.inventoryAmount != null ? #numbers.formatDecimal(line.inventoryAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                        </tr>
+                                        <tr th:if="${#lists.isEmpty(gi.lines)}">
+                                            <td colspan="10" class="text-center py-4 text-secondary" th:text="#{label.gi.line.empty}">No lines.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="btn-list justify-content-between">
+                                    <div th:if="${gi.status == 'DRAFT'}" class="btn-group">
+                                        <a th:href="@{/inventory/goods-issues/edit/{id}(id=${gi.id})}" class="btn btn-primary" sec:authorize="hasAuthority('GOODS-ISSUE_UPDATE')">
+                                            <i class="ti ti-edit me-1"></i><span th:text="#{label.edit}">Edit</span>
+                                        </a>
+                                        <button type="button" class="btn btn-success"
+                                                sec:authorize="hasAuthority('GOODS-ISSUE_COMPLETE')"
+                                                th:data-action-url="@{'/inventory/goods-issues/' + ${gi.id} + '/complete'}"
+                                                th:data-redirect-url="@{'/inventory/goods-issues/' + ${gi.id}}"
+                                                th:data-confirm-message="#{msg.confirm.gi.complete}"
+                                                onclick="ErpForm.postAction(this)">
+                                            <i class="ti ti-check me-1"></i><span th:text="#{label.gi.complete}">Complete</span>
+                                        </button>
+                                    </div>
+                                    <div th:if="${gi.status == 'COMPLETED'}">
+                                        <button type="button" class="btn btn-warning"
+                                                sec:authorize="hasAuthority('GOODS-ISSUE_CANCEL')"
+                                                th:data-action-url="@{'/inventory/goods-issues/' + ${gi.id} + '/cancel'}"
+                                                th:data-redirect-url="@{'/inventory/goods-issues/' + ${gi.id}}"
+                                                th:data-confirm-message="#{msg.confirm.gi.cancel}"
+                                                onclick="ErpForm.postAction(this)">
+                                            <i class="ti ti-rotate-clockwise me-1"></i><span th:text="#{label.gi.cancel}">Cancel</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div th:if="${gi.id != null}" th:replace="~{fragments/audit-info :: audit-info(${gi})}"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="page-specific-scripts"></div>
+</body>
+
+</html>

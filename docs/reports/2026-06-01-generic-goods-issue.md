@@ -97,3 +97,21 @@
 - **Detail:** `mvn test -Dtest=*GoodsIssue*UseCaseTest -DfailIfNoTests=false` reported 19 tests with 0 failures/errors and `BUILD SUCCESS`, while JaCoCo printed a branch-coverage warning in the focused subset run.
 - **Action taken:** Treated the focused Task 5 validation as passed because Maven exited successfully; the final `mvn clean test` remains the authoritative full-suite gate.
 - **Ref:** `src/test/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CompleteGoodsIssueUseCaseTest.java`
+
+## Task 6: Web DTO, Mapper, Controller, List, And Detail UI
+- **Status:** findings
+- **Summary:** Added GI web DTOs, MapStruct web mapper with lookup enrichment, controller list/create/edit/view/save/complete/cancel/delete endpoints, list and detail templates, and focused controller/mapper/template contract tests.
+
+### Finding: Full form template intentionally remains Task 7
+- **Type:** scope note
+- **Severity:** info
+- **Detail:** Task 6 requires controller create/edit routes, while Task 7 separately owns the complete GI form HTML structure and header-lines UI.
+- **Action taken:** `GoodsIssueController` returns `inventory/goods-issues/form` with `giRequest`; the actual form template will be created in Task 7.
+- **Ref:** `docs/plans/2026-06-01-generic-goods-issue.md`
+
+### Finding: Focused Maven run emitted a JaCoCo warning but exited successfully
+- **Type:** execution note
+- **Severity:** info
+- **Detail:** `mvn test -Dtest=GoodsIssueControllerTest,GoodsIssueWebMapperTest,GoodsIssueListIntegrationTest,GoodsIssueViewIntegrationTest -DfailIfNoTests=false` reported 11 tests with 0 failures/errors and `BUILD SUCCESS`, while JaCoCo printed a branch-coverage warning in the focused subset run.
+- **Action taken:** Treated the focused Task 6 validation as passed because Maven exited successfully; the final `mvn clean test` remains the authoritative full-suite gate.
+- **Ref:** `src/test/java/com/solusi/erp/inventory/goodsissue/web/controller/GoodsIssueControllerTest.java`
