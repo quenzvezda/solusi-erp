@@ -1,0 +1,80 @@
+package com.solusi.erp.inventory.goodsissue.web.template.integration;
+
+import org.junit.jupiter.api.Test;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+class GoodsIssueFormIntegrationTest {
+
+    private final String html = readTemplate();
+
+    @Test
+    void formTemplate_containsAjaxDateHiddenSourceAndActionContracts() {
+        assertThat(html).contains("layout(~{:: .gi-form-content}, ~{:: #page-specific-scripts})");
+        assertThat(html).contains("data-ajax-form=\"true\"");
+        assertThat(html).contains("data-redirect-on-success=\"/inventory/goods-issues\"");
+        assertThat(html).contains("class=\"alert-container\"");
+        assertThat(html).contains("id=\"loading-indicator\"");
+        assertThat(html).contains("data-picker=\"date\"");
+        assertThat(html).contains("th:field=\"*{referenceType}\"");
+        assertThat(html).contains("th:field=\"*{referenceId}\"");
+        assertThat(html).contains("th:field=\"*{referenceCode}\"");
+        assertThat(html).contains("th:field=\"*{partyId}\"");
+        assertThat(html).contains("th:field=\"*{partyType}\"");
+        assertThat(html).contains("th:field=\"*{facilityId}\"");
+        assertThat(html).contains("th:field=\"*{currencyId}\"");
+        assertThat(html).contains("th:field=\"*{exchangeRate}\"");
+        assertThat(html).contains("ErpForm.postAction(this)");
+        assertThat(html).contains("msg.confirm.gi.complete");
+        assertThat(html).contains("msg.confirm.gi.cancel");
+    }
+
+    @Test
+    void formTemplate_containsLineTableValuationAutocompleteAndRowTemplateContracts() {
+        assertThat(html).contains("id=\"table-lines\"");
+        assertThat(html).contains("class=\"required\"");
+        assertThat(html).contains("fragments/inputs :: table-autocomplete");
+        assertThat(html).contains("initialValue=${line.productId}");
+        assertThat(html).contains("initialText=${line.productName}");
+        assertThat(html).contains("initialSubtext=${line.productCode}");
+        assertThat(html).contains("initialValue=${line.gridId}");
+        assertThat(html).contains("initialText=${line.gridName}");
+        assertThat(html).contains("initialSubtext=${line.gridCode}");
+        assertThat(html).contains("initialValue=${line.containerId}");
+        assertThat(html).contains("initialText=${line.containerName}");
+        assertThat(html).contains("initialSubtext=${line.containerCode}");
+        assertThat(html).contains("name=\"lines[INDEX].valuationRefType\"");
+        assertThat(html).contains("name=\"lines[INDEX].valuationRefId\"");
+        assertThat(html).contains("name=\"lines[INDEX].valuationRefLineId\"");
+        assertThat(html).contains("id=\"row-template-source\"");
+        assertThat(html).doesNotContain("ts-wrapper");
+    }
+
+    @Test
+    void formTemplate_containsDrawerModalScriptAndThemeSafetyContracts() {
+        assertThat(html).contains("id=\"drawer-non-serial\"");
+        assertThat(html).contains("id=\"drawer-serial\"");
+        assertThat(html).contains("serial-input-container");
+        assertThat(html).contains("modal-gi-source-line-selector");
+        assertThat(html).contains("gi-source-line-selector-results");
+        assertThat(html).contains("GoodsIssuePageConfig");
+        assertThat(html).contains("/js/inventory/goods-issue/goods-issue-form.js");
+        assertThat(html).contains("bg-secondary-lt");
+        assertThat(html).doesNotContain("bg-light");
+        assertThat(html).doesNotContain("bg-white");
+        assertThat(html).doesNotContain("text-dark");
+        assertThat(html).doesNotContain("type=\"number\"");
+        assertThat(html).contains("erp-number-decimal");
+    }
+
+    private static String readTemplate() {
+        try {
+            return Files.readString(Path.of("src/main/resources/templates/inventory/goods-issues/form.html"));
+        } catch (Exception ex) {
+            throw new IllegalStateException(ex);
+        }
+    }
+}

@@ -310,49 +310,49 @@ Create the GI create/edit form as a complete transaction screen, with source sna
 **Reference module:** `inventory.goodsreceipt`, UI specs
 
 Steps:
-- [ ] Read `docs/spec/index.md` before editing the form and keep the relevant component specs open: UI standards, header-lines form, autocomplete, modal selector, numeric, datetime, form submission, action buttons, and page-specific scripts.
+- [x] Read `docs/spec/index.md` before editing the form and keep the relevant component specs open: UI standards, header-lines form, autocomplete, modal selector, numeric, datetime, form submission, action buttons, and page-specific scripts.
       ref: `docs/spec/index.md:L5-L17` - relevant UI specs list
-- [ ] Create `templates/inventory/goods-issues/form.html` using native Thymeleaf layout slot `layout(~{:: .gi-form-content}, ~{:: #page-specific-scripts})`.
+- [x] Create `templates/inventory/goods-issues/form.html` using native Thymeleaf layout slot `layout(~{:: .gi-form-content}, ~{:: #page-specific-scripts})`.
       ref: `src/main/resources/templates/inventory/goods-receipts/form.html:L1-L8` - native Thymeleaf layout usage
       ref: `docs/spec/page-specific-scripts.md:L40-L59` - page script slot pattern
-- [ ] Header area: show read-only `referenceType`, `referenceCode`, `partyType`, `partyName`, `facilityName`, `currencyCode`, and `exchangeRate`; use plaintext display for source-derived values so users do not edit source snapshots accidentally.
+- [x] Header area: show read-only `referenceType`, `referenceCode`, `partyType`, `partyName`, `facilityName`, `currencyCode`, and `exchangeRate`; use plaintext display for source-derived values so users do not edit source snapshots accidentally.
       ref: `src/main/resources/templates/inventory/goods-receipts/form.html:L55-L79` - readonly source snapshot header pattern
       ref: `docs/brainstorming/2026-06-01-generic-goods-issue.md:L90-L96` - generic party and facility decisions
-- [ ] Include hidden fields for `id`, `referenceType`, `referenceId`, `referenceCode`, `partyId`, `partyType`, `facilityId`, `currencyId`, `exchangeRate`, and line valuation references to preserve source data through AJAX submit.
+- [x] Include hidden fields for `id`, `referenceType`, `referenceId`, `referenceCode`, `partyId`, `partyType`, `facilityId`, `currencyId`, `exchangeRate`, and line valuation references to preserve source data through AJAX submit.
       ref: `src/main/resources/templates/inventory/goods-receipts/form.html:L39-L50` - hidden reference fields pattern
-- [ ] Date field: render `issueDate` through the standard date fragment or `data-picker="date"` input; DTO must have `@DateTimeFormat("yyyy-MM-dd")`.
+- [x] Date field: render `issueDate` through the standard date fragment or `data-picker="date"` input; DTO must have `@DateTimeFormat("yyyy-MM-dd")`.
       ref: `docs/spec/datetime-standards.md:L21-L44` - `data-picker` HTML contract
       ref: `docs/spec/datetime-standards.md:L144-L153` - date form checklist
-- [ ] Form submission: mark the form with `data-ajax-form="true"` and `data-redirect-on-success="/inventory/goods-issues"`; include `.alert-container` and loading indicator.
+- [x] Form submission: mark the form with `data-ajax-form="true"` and `data-redirect-on-success="/inventory/goods-issues"`; include `.alert-container` and loading indicator.
       ref: `docs/spec/form-submission.md:L16-L50` - AJAX CRUD form contract
       ref: `src/main/resources/templates/inventory/goods-receipts/form.html:L39-L54` - GR form AJAX setup
-- [ ] Line table columns: product, issue qty, base qty, UOM, facility snapshot, grid, container, serial/detail, unit cost, inventory amount, and actions. Mandatory columns must show `required` marker.
+- [x] Line table columns: product, issue qty, base qty, UOM, facility snapshot, grid, container, serial/detail, unit cost, inventory amount, and actions. Mandatory columns must show `required` marker.
       ref: `docs/spec/header-lines-form.md:L7-L15` - required header-lines structure
       ref: `docs/spec/header-lines-form.md:L55-L59` - mandatory marker and backend validation
-- [ ] Use `fragments/inputs :: table-autocomplete` for product, grid, and container fields where editable/manual; for source-derived lines, product/UOM/valuation fields are locked snapshot values.
+- [x] Use `fragments/inputs :: table-autocomplete` for product, grid, and container fields where editable/manual; for source-derived lines, product/UOM/valuation fields are locked snapshot values.
       ref: `docs/spec/autocomplete-generic.md:L34-L49` - fragment usage and Trinity data
       ref: `docs/spec/header-lines-form.md:L47-L54` - derived document line locking rule
-- [ ] Every autocomplete-backed line DTO must carry initial Trinity data: `productName/productCode`, `gridName/gridCode`, `containerName/containerCode`, `uomName/uomCode`.
+- [x] Every autocomplete-backed line DTO must carry initial Trinity data: `productName/productCode`, `gridName/gridCode`, `containerName/containerCode`, `uomName/uomCode`.
       ref: `docs/spec/autocomplete-generic.md:L42-L49` - required `initialValue`, `initialText`, `initialSubtext`
       ref: `docs/spec/ui-standards.md:L149-L156` - Trinity data rule in UI standards
-- [ ] Numeric inputs must use text inputs with `.erp-number-decimal` or standard numeric fragments. Do not use `<input type="number">`.
+- [x] Numeric inputs must use text inputs with `.erp-number-decimal` or standard numeric fragments. Do not use `<input type="number">`.
       ref: `docs/spec/numeric-standards.md:L7-L17` - numeric input rule
       ref: `docs/spec/numeric-standards.md:L65-L71` - precision consistency for dynamic lines
-- [ ] Add row template in hidden `#row-template-source` with clean `INDEX` placeholders, no stale TomSelect wrappers, and all hidden source/valuation fields.
+- [x] Add row template in hidden `#row-template-source` with clean `INDEX` placeholders, no stale TomSelect wrappers, and all hidden source/valuation fields.
       ref: `src/main/resources/templates/inventory/goods-receipts/form.html:L164-L195` - dynamic row template pattern
       ref: `docs/spec/header-lines-form.md:L18-L26` - `ErpLineManager` indexing expectation
-- [ ] Detail drawer/offcanvas: provide separate standard and serialized item drawers. Serialized drawer edits serial CSV through row-level inputs; standard drawer edits qty/UOM and computes base qty.
+- [x] Detail drawer/offcanvas: provide separate standard and serialized item drawers. Serialized drawer edits serial CSV through row-level inputs; standard drawer edits qty/UOM and computes base qty.
       ref: `src/main/resources/templates/inventory/goods-receipts/form.html:L197-L301` - drawer pattern for standard and serialized GR lines
       ref: `docs/spec/header-lines-form.md:L29-L37` - `ErpInventory` and serial sync requirement
-- [ ] Add action buttons: save, back/cancel link, complete button for draft persisted GI, and cancel button for completed GI. Complete/cancel must use `ErpForm.postAction` and modal confirmation.
+- [x] Add action buttons: save, back/cancel link, complete button for draft persisted GI, and cancel button for completed GI. Complete/cancel must use `ErpForm.postAction` and modal confirmation.
       ref: `docs/spec/action-buttons.md:L5-L29` - document action button contract
       ref: `src/main/resources/templates/inventory/goods-receipts/form.html:L19-L31` - complete button attributes
-- [ ] Include modal selector shell for source line selector with stable `modal-gi-source-line-selector` and root/body id `gi-source-line-selector-results`.
+- [x] Include modal selector shell for source line selector with stable `modal-gi-source-line-selector` and root/body id `gi-source-line-selector-results`.
       ref: `docs/spec/modal-selector.md:L28-L39` - modal shell/root id contract
       ref: `src/main/resources/templates/inventory/goods-receipts/form.html:L303-L319` - modal shell and script include pattern
-- [ ] Keep form dense and operational. Do not add marketing/instructional copy; use compact helper text only where it prevents transaction mistakes.
+- [x] Keep form dense and operational. Do not add marketing/instructional copy; use compact helper text only where it prevents transaction mistakes.
       ref: `docs/spec/ui-standards.md:L47-L60` - standard input heights
-- [ ] **TEST:** Add form template contract tests for AJAX attributes, hidden source/valuation fields, date picker, numeric class use, autocomplete Trinity params, source-derived lock indicators, drawer elements, modal shell ids, and action button data attributes.
+- [x] **TEST:** Add form template contract tests for AJAX attributes, hidden source/valuation fields, date picker, numeric class use, autocomplete Trinity params, source-derived lock indicators, drawer elements, modal shell ids, and action button data attributes.
       ref: `src/test/java/com/solusi/erp/inventory/goodsreceipt/web/template/integration/GoodsReceiptFormIntegrationTest.java:L54-L74` - form contract basics
       ref: `src/test/java/com/solusi/erp/inventory/goodsreceipt/web/template/integration/GoodsReceiptFormIntegrationTest.java:L167-L224` - serialized drawer contract tests
 

@@ -115,3 +115,21 @@
 - **Detail:** `mvn test -Dtest=GoodsIssueControllerTest,GoodsIssueWebMapperTest,GoodsIssueListIntegrationTest,GoodsIssueViewIntegrationTest -DfailIfNoTests=false` reported 11 tests with 0 failures/errors and `BUILD SUCCESS`, while JaCoCo printed a branch-coverage warning in the focused subset run.
 - **Action taken:** Treated the focused Task 6 validation as passed because Maven exited successfully; the final `mvn clean test` remains the authoritative full-suite gate.
 - **Ref:** `src/test/java/com/solusi/erp/inventory/goodsissue/web/controller/GoodsIssueControllerTest.java`
+
+## Task 7: GI Form HTML Structure With Header-Lines UI
+- **Status:** findings
+- **Summary:** Added GI form template with native layout slot, source snapshot header, hidden source/valuation fields, date picker, AJAX form contract, header-lines table, row template, standard/serialized drawers, modal selector shell, summary card, action buttons, and form contract tests.
+
+### Finding: Interactive behavior is reserved for Task 8 JavaScript
+- **Type:** scope note
+- **Severity:** info
+- **Detail:** Task 7 owns the HTML structure while Task 8 explicitly owns dynamic line behavior, source selector apply, cascading lookup, drawer save, and summary recalculation.
+- **Action taken:** Added the required HTML hooks (`GoodsIssuePageConfig`, row template, drawer IDs, modal IDs, classes/data attributes) without duplicating generic JS behavior inline.
+- **Ref:** `src/main/resources/templates/inventory/goods-issues/form.html`
+
+### Finding: Focused Maven run emitted a JaCoCo warning but exited successfully
+- **Type:** execution note
+- **Severity:** info
+- **Detail:** `mvn test -Dtest=GoodsIssueFormIntegrationTest -DfailIfNoTests=false` reported 3 tests with 0 failures/errors and `BUILD SUCCESS`, while JaCoCo printed a branch-coverage warning in the focused subset run.
+- **Action taken:** Treated the focused Task 7 validation as passed because Maven exited successfully; the final `mvn clean test` remains the authoritative full-suite gate.
+- **Ref:** `src/test/java/com/solusi/erp/inventory/goodsissue/web/template/integration/GoodsIssueFormIntegrationTest.java`
