@@ -25,3 +25,14 @@
 - **Detail:** The MariaDB migration uses `AFTER` column placement for readability, but H2 migrations are safer without MySQL-specific column-position syntax.
 - **Action taken:** Kept MariaDB migration with `AFTER`; used separate simple `ALTER TABLE ... ADD COLUMN` statements in `migration-h2`.
 - **Ref:** `src/main/resources/db/migration-h2/V65__Add_Valuation_Layer_Reference_Metadata.sql`
+
+## Task 2: Goods Issue Migration, Sequence, Permission, And Menu
+- **Status:** findings
+- **Summary:** Added GI core migrations for MariaDB and H2, sequence registration, menu/permission seeds, i18n keys, and a focused H2 Flyway migration test.
+
+### Finding: Migration version shifted from V65 to V66
+- **Type:** deviation
+- **Severity:** info
+- **Detail:** The plan named `V65__Add_Goods_Issue_Core.sql`, but Task 1 consumed `V65` for valuation layer reference metadata.
+- **Action taken:** Used `V66__Add_Goods_Issue_Core.sql` in both `db/migration` and `db/migration-h2`, and updated the plan checklist text to match the actual migration.
+- **Ref:** `src/main/resources/db/migration/V66__Add_Goods_Issue_Core.sql`

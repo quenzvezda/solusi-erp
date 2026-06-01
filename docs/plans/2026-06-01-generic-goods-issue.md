@@ -126,24 +126,24 @@ Create the persistent skeleton for GI, including header/line tables, sequence re
 **Reference module:** `inventory.goodsreceipt`
 
 Steps:
-- [ ] Create `V65__Add_Goods_Issue_Core.sql` in MariaDB and H2 migration folders.
+- [x] Create `V66__Add_Goods_Issue_Core.sql` in MariaDB and H2 migration folders.
       ref: `src/main/resources/db/migration/V50__Add_Goods_Receipt_Module.sql:L6-L62` - GR header/line DDL pattern
       ref: `src/main/resources/db/migration-h2/` - H2 migration mirror requirement for E2E profile
-- [ ] Add `inv_goods_issues` with `code`, `issue_date`, `reference_type`, `reference_id`, `reference_code`, `party_id`, `party_type`, `facility_id`, `currency_id`, `exchange_rate`, `status`, `note`, and audit fields.
+- [x] Add `inv_goods_issues` with `code`, `issue_date`, `reference_type`, `reference_id`, `reference_code`, `party_id`, `party_type`, `facility_id`, `currency_id`, `exchange_rate`, `status`, `note`, and audit fields.
       ref: `docs/brainstorming/2026-06-01-generic-goods-issue.md:L69-L96` - chosen GI header fields and single-facility rule
-- [ ] Add `inv_goods_issue_lines` with line source reference, product snapshot, qty/UOM/base qty, `facility_id`, `grid_id`, `container_id`, `serial_number`, monetary snapshots, and valuation references.
+- [x] Add `inv_goods_issue_lines` with line source reference, product snapshot, qty/UOM/base qty, `facility_id`, `grid_id`, `container_id`, `serial_number`, monetary snapshots, and valuation references.
       ref: `docs/brainstorming/2026-06-01-generic-goods-issue.md:L97-L133` - chosen GI line fields and dual references
-- [ ] Add indexes for list/search and integration: `(code)`, `(status)`, `(issue_date)`, `(reference_type, reference_id)`, `(party_type, party_id)`, `(facility_id)`, and line `(valuation_ref_type, valuation_ref_id, valuation_ref_line_id)`.
+- [x] Add indexes for list/search and integration: `(code)`, `(status)`, `(issue_date)`, `(reference_type, reference_id)`, `(party_type, party_id)`, `(facility_id)`, and line `(valuation_ref_type, valuation_ref_id, valuation_ref_line_id)`.
       ref: `src/main/resources/db/migration/V51__Generalize_Goods_Receipt_Reference.sql:L1-L21` - GR generalized reference migration and index
-- [ ] Register sequence `GOODS_ISSUE` with `GI-{date:yyyyMM}-{seq}`.
+- [x] Register sequence `GOODS_ISSUE` with `GI-{date:yyyyMM}-{seq}`.
       ref: `src/main/resources/db/migration/V50__Add_Goods_Receipt_Module.sql:L64-L69` - sequence registration pattern
-- [ ] Add permission group `INV-13` or next available inventory sort slot with URL `/inventory/goods-issues` and icon `ti-package-export`.
+- [x] Add permission group `INV-13` or next available inventory sort slot with URL `/inventory/goods-issues` and icon `ti-package-export`.
       ref: `src/main/resources/db/migration/V50__Add_Goods_Receipt_Module.sql:L72-L80` - GR permission group/menu pattern
       ref: `docs/spec/menu-structure.md` - menu hierarchy source of truth
-- [ ] Add permissions `GOODS-ISSUE_READ`, `GOODS-ISSUE_CREATE`, `GOODS-ISSUE_UPDATE`, `GOODS-ISSUE_DELETE`, `GOODS-ISSUE_COMPLETE`, and `GOODS-ISSUE_CANCEL`; grant all to `ROLE_ADMIN`.
+- [x] Add permissions `GOODS-ISSUE_READ`, `GOODS-ISSUE_CREATE`, `GOODS-ISSUE_UPDATE`, `GOODS-ISSUE_DELETE`, `GOODS-ISSUE_COMPLETE`, and `GOODS-ISSUE_CANCEL`; grant all to `ROLE_ADMIN`.
       ref: `docs/AGENTS.md:L126-L146` - RBAC naming convention and wildcard safety
       ref: `src/main/resources/db/migration/V50__Add_Goods_Receipt_Module.sql:L82-L99` - permission seed pattern
-- [ ] Add i18n keys for enum reference type, GI status, menu, list, form, view, action messages, warnings, and validation errors using the repo i18n update protocol.
+- [x] Add i18n keys for enum reference type, GI status, menu, list, form, view, action messages, warnings, and validation errors using the repo i18n update protocol.
       ref: `docs/AGENTS.md:L83-L91` - i18n rules and replace-tool warning
 
 **Validation criteria:**
