@@ -88,6 +88,12 @@ class CompleteGoodsIssueUseCaseTest {
         ArgumentCaptor<JournalPostingCommand> journalCaptor = ArgumentCaptor.forClass(JournalPostingCommand.class);
         verify(postJournalForEventUseCase).execute(journalCaptor.capture());
         assertThat(journalCaptor.getValue().eventType()).isEqualTo(SchemaEventType.GOODS_ISSUE);
+        assertThat(journalCaptor.getValue().sourceType()).isEqualTo("GOODS_ISSUE");
+        assertThat(journalCaptor.getValue().sourceId()).isEqualTo(7L);
+        assertThat(journalCaptor.getValue().sourceCode()).isEqualTo("GI-202606-00001");
+        assertThat(journalCaptor.getValue().originalCurrencyId()).isNull();
+        assertThat(journalCaptor.getValue().originalValues()).isNull();
+        assertThat(journalCaptor.getValue().accountOverrides()).isNull();
         assertThat(journalCaptor.getValue().values().get(JournalVariable.GI_COGS_AMT))
                 .isEqualByComparingTo("300.0000");
         assertThat(journalCaptor.getValue().values().get(JournalVariable.GI_INVENTORY_AMT))

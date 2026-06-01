@@ -187,3 +187,28 @@
 - **Detail:** `mvn test -Dtest=PurchaseReturnGoodsIssueSourcePortTest -DfailIfNoTests=false` reported 1 test with 0 failures/errors and `BUILD SUCCESS`, while JaCoCo printed a branch-coverage warning in the focused subset run.
 - **Action taken:** Treated the focused Task 10 validation as passed because Maven exited successfully; the final `mvn clean test` remains the authoritative full-suite gate.
 - **Ref:** `src/test/java/com/solusi/erp/inventory/goodsissue/domain/port/PurchaseReturnGoodsIssueSourcePortTest.java`
+
+## Task 11: Accounting Schema And Journal Support
+- **Status:** findings
+- **Summary:** Reviewed existing accounting event/variable support, kept core GI on `GOODS_ISSUE` with `GI_COGS_AMT` and `GI_INVENTORY_AMT`, and tightened complete-GI journal assertions for source/id/code and no FX/original-value posting.
+
+### Finding: No new schema event or journal variables were introduced
+- **Type:** decision
+- **Severity:** info
+- **Detail:** `SchemaEventType.GOODS_ISSUE` and the existing `GI_COGS_AMT`/`GI_INVENTORY_AMT` variables already cover generic GI posting. Purchase Return-specific AP/GRIR/Input VAT accounting cannot be finalized until the Purchase Return module and bill-clearing behavior exist.
+- **Action taken:** Left accounting schema setup as manual admin configuration for now and documented that Purchase Return-specific schema/event decisions remain part of the future Purchase Return integration.
+- **Ref:** `src/main/java/com/solusi/erp/accounting/journal/domain/model/JournalVariable.java`
+
+### Finding: Focused Maven command needed PowerShell-specific quoting
+- **Type:** execution note
+- **Severity:** info
+- **Detail:** Two initial attempts to run the wildcard test selector failed before executing tests because the shell treated `*Journal*Test` as command syntax/lifecycle text.
+- **Action taken:** Reran with PowerShell quoting: `mvn test '-Dtest=*GoodsIssue*UseCaseTest,*Journal*Test,*Schema*Test' -DfailIfNoTests=false`; it executed 147 tests with 0 failures/errors and `BUILD SUCCESS`.
+- **Ref:** `src/test/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CompleteGoodsIssueUseCaseTest.java`
+
+### Finding: Focused Maven run emitted a JaCoCo warning but exited successfully
+- **Type:** execution note
+- **Severity:** info
+- **Detail:** The successful Task 11 focused run reported 147 tests with 0 failures/errors and `BUILD SUCCESS`, while JaCoCo printed a branch-coverage warning in the focused subset run.
+- **Action taken:** Treated the focused Task 11 validation as passed because Maven exited successfully; the final `mvn clean test` remains the authoritative full-suite gate.
+- **Ref:** `src/test/java/com/solusi/erp/accounting/journal/domain/model/JournalVariableTest.java`

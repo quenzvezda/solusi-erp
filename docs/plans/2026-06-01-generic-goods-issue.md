@@ -478,22 +478,22 @@ Add journal variables/schema support for GI and Purchase Return-specific return 
 **Reference module:** `accounting.journal`, `accounting.schema`, `inventory.goodsreceipt`
 
 Steps:
-- [ ] Review current `SchemaEventType.GOODS_ISSUE` and existing GI variables. Keep generic `GOODS_ISSUE` for sales/COGS-style future flows, but add Purchase Return-specific variables/event only if journal differs from generic GI.
+- [x] Review current `SchemaEventType.GOODS_ISSUE` and existing GI variables. Keep generic `GOODS_ISSUE` for sales/COGS-style future flows, but add Purchase Return-specific variables/event only if journal differs from generic GI.
       ref: `src/main/java/com/solusi/erp/accounting/schema/domain/model/SchemaEventType.java:L7-L15` - existing auto-journal event enum
       ref: `src/main/java/com/solusi/erp/accounting/journal/domain/model/JournalVariable.java:L23-L30` - existing GI and stock adjustment variables
       ref: `docs/brainstorming/2026-06-01-generic-goods-issue.md:L234-L242` - source-specific journal recommendation
-- [ ] For core generic GI completion, post journal command with source type `GOODS_ISSUE`, source id `gi.id`, source code `gi.code`, and values such as inventory credit amount and debit counterpart variable.
+- [x] For core generic GI completion, post journal command with source type `GOODS_ISSUE`, source id `gi.id`, source code `gi.code`, and values such as inventory credit amount and debit counterpart variable.
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/application/usecase/command/CompleteGoodsReceiptUseCaseImpl.java:L92-L104` - journal command construction pattern
       ref: `src/main/java/com/solusi/erp/accounting/journal/application/usecase/command/PostJournalForEventUseCaseImpl.java:L29-L70` - schema-driven posting behavior
-- [ ] For Purchase Return, plan event/source-specific schema such as `PURCHASE_RETURN` if generic `GOODS_ISSUE` cannot represent debit GR/IR or AP, credit Inventory, and credit Input VAT.
+- [x] For Purchase Return, plan event/source-specific schema such as `PURCHASE_RETURN` if generic `GOODS_ISSUE` cannot represent debit GR/IR or AP, credit Inventory, and credit Input VAT.
       ref: `docs/brainstorming/2026-06-01-generic-goods-issue.md:L243-L265` - Purchase Return journal variants
-- [ ] Add migration seed for default accounting schema lines only if the existing schema seed approach supports it. Otherwise, add menu/admin configuration notes and leave schema setup as manual admin data.
+- [x] Add migration seed for default accounting schema lines only if the existing schema seed approach supports it. Otherwise, add menu/admin configuration notes and leave schema setup as manual admin data.
       ref: `docs/modules/accounting/accounting-schema.md` - accounting schema business documentation
-- [ ] Ensure `PostJournalForEventUseCase` idempotency by source type/id still works for GI.
+- [x] Ensure `PostJournalForEventUseCase` idempotency by source type/id still works for GI.
       ref: `src/main/java/com/solusi/erp/accounting/journal/application/usecase/command/PostJournalForEventUseCaseImpl.java:L29-L35` - duplicate source guard
-- [ ] **TEST:** Add complete GI use case assertion that `PostJournalForEventUseCase` receives the expected event/source/values and does not post FX variance for Purchase Return source.
+- [x] **TEST:** Add complete GI use case assertion that `PostJournalForEventUseCase` receives the expected event/source/values and does not post FX variance for Purchase Return source.
       ref: `src/test/java/com/solusi/erp/inventory/goodsreceipt/application/usecase/command/CompleteGoodsReceiptUseCaseTest.java:L3-L8` - journal imports and verification style
-- [ ] **TEST:** Add schema variable unit tests if new `JournalVariable` entries are introduced.
+- [x] **TEST:** Add schema variable unit tests if new `JournalVariable` entries are introduced.
       ref: `src/main/java/com/solusi/erp/accounting/journal/domain/model/JournalVariable.java:L42-L46` - `getVariablesForEvent` filter behavior
 
 **Validation criteria:**
