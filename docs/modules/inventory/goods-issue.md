@@ -1,0 +1,130 @@
+# Goods Issue (GI)
+
+Dokumen ini merangkum kondisi implementasi aktual **Goods Issue** pada codebase saat ini. GI adalah dokumen inventory outbound generik, yaitu pasangan konseptual dari Goods Receipt untuk arus barang keluar.
+
+## 1. Ringkasan
+
+GI dipakai sebagai lapisan dokumen fisik/audit di atas stock ledger. Source module tidak boleh langsung mengeluarkan stock tanpa dokumen outbound ketika flow bisnisnya membutuhkan audit dokumen. Keputusan awal untuk Purchase Return adalah: return barang akan membuat atau mengisi GI, lalu GI yang memanggil `StockService.adjust()` dengan `MovementType.ISSUE`.
+
+Source aktif saat ini masih berupa core seam. Purchase Return module belum ada, sehingga adapter konkret Purchase Return belum dibuat.
+
+## 2. Lifecycle
+
+| Status | Keterangan |
+|---|---|
+| `DRAFT` | Draft bisa dibuat, diubah, dihapus, dan dilengkapi line. |
+| `COMPLETED` | Dokumen sudah mem-post stock issue dan auto journal. Normal edit/delete ditolak. |
+| `CANCELLED` | Dokumen completed yang dibalik. Stock reversal dan journal reversal dipost sebagai nilai negatif melalui API journal yang ada. |
+
+Transisi utama:
+
+1. `DRAFT -> COMPLETED`
+2. `COMPLETED -> CANCELLED`
+
+Dokumen `COMPLETED` dan `CANCELLED` diperlakukan immutable untuk update draft.
+
+## 3. Model Data
+
+### Header
+
+| Field | Keterangan |
+|---|---|
+| `code` | Nomor dokumen dari sequence `GOODS_ISSUE`. |
+| `issueDate` | Tanggal barang keluar dan posting date. |
+| `referenceType` | Source dokumen, misalnya `PURCHASE_RETURN` atau `MANUAL`. |
+| `referenceId` | ID dokumen sumber. |
+| `referenceCode` | Snapshot kode dokumen sumber. |
+| `partyId` / `partyType` | Snapshot pihak bisnis, misalnya supplier untuk Purchase Return. |
+| `facilityId` | Snapshot facility sumber. |
+| `currencyId` / `exchangeRate` | Snapshot currency dan rate dari source. |
+| `status` | `DRAFT`, `COMPLETED`, atau `CANCELLED`. |
+| `note` | Catatan dokumen. |
+
+### Line
+
+| Field | Keterangan |
+|---|---|
+| `referenceLineId` | Line sumber, jika GI berasal dari dokumen lain. |
+| `productId` | Produk yang dikeluarkan. |
+| `serialized` | Penanda item serial. |
+| `quantityIssued` / `baseQuantity` | Qty transaksi dan qty base untuk stock/valuation. |
+| `uomId` | UoM transaksi. |
+| `facilityId`, `gridId`, `containerId` | Snapshot lokasi barang keluar. |
+| `serialNumber` | CSV serial per line untuk draft awal. |
+| `unitCost`, `inventoryAmount`, `taxBaseAmount`, `taxAmount`, `clearingAmount` | Snapshot nilai saat complete. |
+| `valuationRefType`, `valuationRefId`, `valuationRefLineId` | Referensi valuation layer spesifik. Untuk Purchase Return, ini menunjuk GR/GR line asal. |
+
+## 4. Source Resolver Model
+
+Core GI memakai `GoodsIssueSourceResolverRegistry` dan `GoodsIssueSourceResolver`.
+
+Resolver bertugas membuat draft GI dari source:
+
+1. memuat header source
+2. mengisi snapshot reference, party, facility, currency, dan rate
+3. mengisi eligible line
+4. menyertakan valuation reference bila source membutuhkan specific-layer consumption
+
+Jika source belum tersedia, core tetap compile melalui no-op lookup provider dan source selector akan menampilkan warning unsupported.
+
+## 5. Stock Posting Dan Valuation
+
+Saat `COMPLETE`, GI:
+
+1. memastikan accounting period untuk `issueDate` masih OPEN
+2. menghitung ulang base quantity dan amount snapshot
+3. memanggil `StockService.adjust()` dengan `MovementType.ISSUE`
+4. mengirim `ReferenceType.GOODS_ISSUE`, GI id, dan GI code ke stock movement
+5. meneruskan `valuationRefType`, `valuationRefId`, dan `valuationRefLineId` agar stock service dapat mengonsumsi layer spesifik
+6. untuk serialized item, mem-post satu movement per serial dan mewajibkan base quantity bilangan bulat
+
+Untuk Purchase Return, valuation wajib memakai GR asal agar nilai inventory keluar sama dengan penerimaan yang dikembalikan.
+
+## 6. Accounting
+
+Core GI memakai event accounting `GOODS_ISSUE` dengan variable:
+
+| Variable | Makna |
+|---|---|
+| `GI_COGS_AMT` | Debit counterpart generic untuk GI. |
+| `GI_INVENTORY_AMT` | Credit inventory amount. |
+
+Accounting schema GI disiapkan sebagai data admin/manual configuration. Tidak ada seed default baru karena pemetaan account bergantung kebijakan tenant dan Purchase Return-specific accounting belum final.
+
+Purchase Return-specific journal, seperti debit GR/IR atau AP, credit Inventory, dan credit Input VAT, akan ditentukan saat module Purchase Return ada. Core GI tidak mem-post FX variance untuk Purchase Return reversal; rate berasal dari source/original GR.
+
+## 7. Purchase Return Seam
+
+Port `PurchaseReturnGoodsIssueSourcePort` mendefinisikan kontrak minimum yang harus disediakan module Purchase Return:
+
+1. header lookup berisi purchase return code, supplier, facility, currency, exchange rate, bill posted flag, dan clearing account target
+2. eligible return lines berisi product, qty, UoM, location, serial CSV, original GR/GR line, valuation refs, inventory amount, tax reversal amount, dan clearing amount
+3. `hasCompletedGoodsIssue(purchaseReturnId)` sebagai guard idempotency agar satu Purchase Return tidak membuat GI completed ganda
+
+Adapter `GoodsIssueSourceResolver` untuk Purchase Return belum dibuat karena module Purchase Return belum ada di codebase.
+
+## 8. UI Behavior
+
+GI UI terdiri dari list, detail, create/edit form, dan source-line selector.
+
+Form memakai pola header-lines:
+
+1. header source tampil sebagai snapshot read-only
+2. source data tetap disimpan sebagai hidden fields untuk submit AJAX
+3. line source-derived mengunci product/UOM/valuation ref
+4. tombol Add Line membuka modal selector untuk source-based GI
+5. manual blank line hanya disiapkan untuk `referenceType=MANUAL`
+6. product, grid, dan container memakai autocomplete/TomSelect contract dengan Trinity data
+7. qty/UOM/serial diedit melalui drawer
+8. numeric input memakai AutoNumeric class dan page JS memakai `ErpNumeric.get/set`
+9. submit validation berjalan pada capture phase sebelum AJAX handler global
+10. dirty-form guard disuppressed untuk action complete/cancel yang intentional
+
+## 9. Deferred Items
+
+1. Purchase Return concrete resolver dan confirm integration.
+2. Purchase Return-specific accounting schema/event jika generic GI schema tidak cukup.
+3. Manual GI business rules yang lengkap.
+4. Sales/Delivery Order, scrap, internal use, production/consumption resolvers.
+5. Dedicated serial detail table per line.
+6. Playwright E2E flow untuk selector, drawer, save, complete, dan cancel.

@@ -212,3 +212,39 @@
 - **Detail:** The successful Task 11 focused run reported 147 tests with 0 failures/errors and `BUILD SUCCESS`, while JaCoCo printed a branch-coverage warning in the focused subset run.
 - **Action taken:** Treated the focused Task 11 validation as passed because Maven exited successfully; the final `mvn clean test` remains the authoritative full-suite gate.
 - **Ref:** `src/test/java/com/solusi/erp/accounting/journal/domain/model/JournalVariableTest.java`
+
+## Task 12: Documentation, Module Index, And Final Verification
+- **Status:** findings
+- **Summary:** Added Goods Issue module documentation, linked it from the documentation index, reviewed GI i18n/template labels, ran focused verification, and ran the final full Maven gate.
+
+### Finding: No reusable spec doc update was needed
+- **Type:** decision
+- **Severity:** info
+- **Detail:** Task 8 added GI-specific page JavaScript only. No new shared UI component or reusable horizontal pattern was introduced.
+- **Action taken:** Did not update `docs/spec/index.md`; kept GI-specific behavior documented in `docs/modules/inventory/goods-issue.md`.
+- **Ref:** `docs/spec/page-specific-scripts.md`
+
+### Finding: Purchase Return adapter remains deferred
+- **Type:** pending dependency
+- **Severity:** info
+- **Detail:** Core GI is implemented and verified, but concrete Purchase Return resolver/confirm integration still depends on a Purchase Return module that does not exist in production code.
+- **Action taken:** Documented the seam in `docs/modules/inventory/goods-issue.md` and `PurchaseReturnGoodsIssueSourcePort`; source selector returns unsupported-source warning rather than fake PR rows.
+- **Ref:** `src/main/java/com/solusi/erp/inventory/goodsissue/domain/port/PurchaseReturnGoodsIssueSourcePort.java`
+
+### Finding: Final Maven run emitted a JaCoCo warning but exited successfully
+- **Type:** execution note
+- **Severity:** info
+- **Detail:** `mvn clean test` ran 1670 tests with 0 failures/errors and `BUILD SUCCESS` on version `1.11.0`. JaCoCo still printed branch coverage 0.78 vs expected 0.80 as a warning, but did not fail the Maven build.
+- **Action taken:** Treated the final verification as passed because Maven exited successfully and reported `BUILD SUCCESS`.
+- **Ref:** `pom.xml`
+
+### Finding: Version bumped for the new GI feature
+- **Type:** release note
+- **Severity:** info
+- **Detail:** Generic Goods Issue is a new feature/module surface, so the project version was bumped from `1.10.2` to `1.11.0`.
+- **Action taken:** Updated `pom.xml` and reran `mvn clean test` after the version change.
+- **Ref:** `pom.xml`
+
+## Final Verification
+- `mvn test '-Dtest=FifoValuationServiceTest,StockServiceTest,*GoodsIssue*,*Journal*Test,*Schema*Test,GoodsIssueMigrationTest' -DfailIfNoTests=false`: 201 tests, 0 failures, 0 errors, `BUILD SUCCESS`.
+- `mvn clean test`: 1670 tests, 0 failures, 0 errors, `BUILD SUCCESS`.

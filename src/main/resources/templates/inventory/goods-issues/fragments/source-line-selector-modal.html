@@ -90,7 +90,7 @@
                     <div class="text-secondary small" th:text="${row.productCode}">PRD-001</div>
                     <span class="badge mt-1"
                           th:classappend="${row.serialized} ? 'bg-azure-lt text-azure' : 'bg-secondary-lt text-secondary'"
-                          th:text="${row.serialized} ? 'Serialized' : 'Standard'">Standard</span>
+                          th:text="${row.serialized} ? #{label.serialized} : #{label.standard}">Standard</span>
                 </td>
                 <td>
                     <div th:text="${row.uomName}">PCS</div>

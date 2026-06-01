@@ -509,19 +509,19 @@ Document GI core behavior and run focused verification before handoff.
 **Reference module:** project docs
 
 Steps:
-- [ ] Create `docs/modules/inventory/goods-issue.md` describing purpose, lifecycle, fields, source resolver model, stock posting, valuation, Purchase Return seam, cancel rules, and UI behavior.
+- [x] Create `docs/modules/inventory/goods-issue.md` describing purpose, lifecycle, fields, source resolver model, stock posting, valuation, Purchase Return seam, cancel rules, and UI behavior.
       ref: `docs/index.md:L30-L32` - inventory module docs placement
       ref: `docs/brainstorming/2026-06-01-generic-goods-issue.md:L6-L15` - executive summary to preserve in module docs
-- [ ] Update `docs/index.md` inventory module list with Goods Issue.
+- [x] Update `docs/index.md` inventory module list with Goods Issue.
       ref: `docs/index.md:L30-L32` - current inventory docs list
-- [ ] Update `docs/spec/index.md` only if a new reusable component pattern was added. GI-specific JS should not be added to spec docs.
+- [x] Update `docs/spec/index.md` only if a new reusable component pattern was added. GI-specific JS should not be added to spec docs.
       ref: `docs/spec/page-specific-scripts.md:L5-L10` - keep feature-specific logic out of shared helper docs
-- [ ] Verify i18n keys for Indonesian and English messages. No hardcoded labels in templates except intentionally data-driven enum/status values.
+- [x] Verify i18n keys for Indonesian and English messages. No hardcoded labels in templates except intentionally data-driven enum/status values.
       ref: `docs/AGENTS.md:L83-L91` - i18n implementation rules
-- [ ] Run focused tests for inventory stock, GI domain/use cases/web/template, accounting journal, and migration-sensitive config tests.
+- [x] Run focused tests for inventory stock, GI domain/use cases/web/template, accounting journal, and migration-sensitive config tests.
       ref: `docs/tests/web-layer-testing.md` - web layer test guidance
-- [ ] Run full test suite if focused tests pass and time permits: `mvn test`.
-- [ ] Record final verification output, skipped items, and deferred Purchase Return adapter status in `docs/reports/2026-06-01-generic-goods-issue.md`.
+- [x] Run full test suite if focused tests pass and time permits: `mvn test`.
+- [x] Record final verification output, skipped items, and deferred Purchase Return adapter status in `docs/reports/2026-06-01-generic-goods-issue.md`.
 
 **Validation criteria:**
 - Focused GI-related tests pass.
