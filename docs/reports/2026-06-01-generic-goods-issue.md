@@ -36,3 +36,21 @@
 - **Detail:** The plan named `V65__Add_Goods_Issue_Core.sql`, but Task 1 consumed `V65` for valuation layer reference metadata.
 - **Action taken:** Used `V66__Add_Goods_Issue_Core.sql` in both `db/migration` and `db/migration-h2`, and updated the plan checklist text to match the actual migration.
 - **Ref:** `src/main/resources/db/migration/V66__Add_Goods_Issue_Core.sql`
+
+## Task 3: Goods Issue Domain, Repository, And Persistence
+- **Status:** findings
+- **Summary:** Added pure GI domain models, repository contract, JPA entities, MapStruct persistence mapper, repository adapter/configuration, and focused domain/mapper tests.
+
+### Finding: Task order adjusted for TDD
+- **Type:** deviation
+- **Severity:** info
+- **Detail:** The approved plan listed implementation steps before tests, but the active TDD workflow requires RED tests before production code.
+- **Action taken:** Added `GoodsIssueTest` and `GoodsIssuePersistenceMapperTest`, observed expected compile failures for missing GI domain/persistence types, then implemented the production code and reran the focused tests successfully.
+- **Ref:** `src/test/java/com/solusi/erp/inventory/goodsissue/domain/model/GoodsIssueTest.java`
+
+### Finding: Focused verification run was interrupted once
+- **Type:** execution note
+- **Severity:** info
+- **Detail:** One focused Maven run stopped with `^C` before producing a valid result.
+- **Action taken:** Reran `mvn test -Dtest=GoodsIssueTest,GoodsIssuePersistenceMapperTest -DfailIfNoTests=false`; it passed with 9 tests, 0 failures, 0 errors.
+- **Ref:** `src/test/java/com/solusi/erp/inventory/goodsissue/infrastructure/persistence/GoodsIssuePersistenceMapperTest.java`

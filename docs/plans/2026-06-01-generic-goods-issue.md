@@ -159,24 +159,24 @@ Implement pure domain model and persistence mapping for `GoodsIssue` and `GoodsI
 **Reference module:** `inventory.goodsreceipt`
 
 Steps:
-- [ ] Create `GoodsIssueStatus` with `DRAFT`, `COMPLETED`, and `CANCELLED`; expose lifecycle helpers such as `isEditable()`, `canComplete()`, and `canCancel()`.
+- [x] Create `GoodsIssueStatus` with `DRAFT`, `COMPLETED`, and `CANCELLED`; expose lifecycle helpers such as `isEditable()`, `canComplete()`, and `canCancel()`.
       ref: `docs/brainstorming/2026-06-01-generic-goods-issue.md:L144-L178` - GI lifecycle rules
-- [ ] Create `GoodsIssueReferenceType` with at least `PURCHASE_RETURN`, `DELIVERY_ORDER`, `MANUAL`, `PRODUCTION`, `SCRAP`, and `INTERNAL_USE`, while only allowing implemented resolver types at use-case boundary.
+- [x] Create `GoodsIssueReferenceType` with at least `PURCHASE_RETURN`, `DELIVERY_ORDER`, `MANUAL`, `PRODUCTION`, `SCRAP`, and `INTERNAL_USE`, while only allowing implemented resolver types at use-case boundary.
       ref: `docs/brainstorming/2026-06-01-generic-goods-issue.md:L288-L315` - reference type candidates and ledger recommendation
-- [ ] Create `GoodsIssueLine` as an immutable value object with source reference, valuation reference, qty/UOM/base qty, location snapshot, serial CSV, and amount snapshots.
+- [x] Create `GoodsIssueLine` as an immutable value object with source reference, valuation reference, qty/UOM/base qty, location snapshot, serial CSV, and amount snapshots.
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/domain/model/GoodsReceiptLine.java:L5-L82` - immutable line object pattern
       ref: `docs/brainstorming/2026-06-01-generic-goods-issue.md:L316-L328` - data kept as historical snapshot
-- [ ] Create `GoodsIssue` aggregate with factory `createNew`, `update`, `complete`, and `cancel`, enforcing positive issue quantity and immutability after completed/cancelled.
+- [x] Create `GoodsIssue` aggregate with factory `createNew`, `update`, `complete`, and `cancel`, enforcing positive issue quantity and immutability after completed/cancelled.
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/domain/model/GoodsReceipt.java:L51-L86` - aggregate factory/update/complete pattern
-- [ ] Create repository interface with `save`, `findById`, `delete`, `findAll(keyword, referenceType, referenceId, pageable)`, `existsByCode`, and `existsByReference`.
+- [x] Create repository interface with `save`, `findById`, `delete`, `findAll(keyword, referenceType, referenceId, pageable)`, `existsByCode`, and `existsByReference`.
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/domain/repository/GoodsReceiptRepository.java` - repository shape to mirror
-- [ ] Create JPA entities and MapStruct persistence mapper. Ensure `BaseModel` audit inheritance is used and no JPA entity leaks outside infrastructure.
+- [x] Create JPA entities and MapStruct persistence mapper. Ensure `BaseModel` audit inheritance is used and no JPA entity leaks outside infrastructure.
       ref: `src/test/java/com/solusi/erp/inventory/goodsreceipt/infrastructure/persistence/GoodsReceiptPersistenceMapperTest.java:L20-L78` - mapper field coverage test pattern
-- [ ] Create repository adapter backed by `GoodsIssueJpaRepository`.
+- [x] Create repository adapter backed by `GoodsIssueJpaRepository`.
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/infrastructure/adapter/GoodsReceiptRepositoryImpl.java` - infrastructure adapter pattern
-- [ ] **TEST:** Add `GoodsIssueTest` for immutable line, complete requires positive qty, completed/cancelled immutable, cancel only after completed, and typed reference metadata.
+- [x] **TEST:** Add `GoodsIssueTest` for immutable line, complete requires positive qty, completed/cancelled immutable, cancel only after completed, and typed reference metadata.
       ref: `src/test/java/com/solusi/erp/inventory/goodsreceipt/domain/model/GoodsReceiptTest.java:L18-L84` - domain test style
-- [ ] **TEST:** Add persistence mapper test for all header fields, all line snapshots, audit fields, status enum mapping, and defensive line copies.
+- [x] **TEST:** Add persistence mapper test for all header fields, all line snapshots, audit fields, status enum mapping, and defensive line copies.
       ref: `src/test/java/com/solusi/erp/inventory/goodsreceipt/infrastructure/persistence/GoodsReceiptPersistenceMapperTest.java:L22-L107` - mapper assertions
 
 **Validation criteria:**
