@@ -1,0 +1,1317 @@
+ ▐▛███▜▌   Claude Code v2.1.159
+▝▜█████▛▘  Opus 4 · API Usage Billing
+  ▘▘ ▝▝    F:\solusi-program-erp
+
+
+❯ /model                                                                        
+  ⎿  Set model to Opus 4 and saved as your default for new sessions
+
+❯ @docs/AGENTS.md                                                               
+  jadi saya ada roadmap kurang lebih kayak gini:                                
+  🗺️ Roadmap Visual yang Disarankan                                             
+                                                                                
+  Sprint 1: Accounting Foundation                                               
+                                                                                
+  - [X] Chart of Accounts (COA)                                                 
+  - [X] Accounting Schema                                                       
+  - [X] Accounting Period / Fiscal Year                                         
+                                                                                
+  Sprint 2-3: Procurement Operations                                            
+                                                                                
+  - [X] Supplier Price List                                                     
+  - [X] Purchase Requisition (PR)                                               
+  - [X] RFQ & Supplier Quotation (opsional)                                     
+  - [X] Purchase Order (PO) + Approval                                          
+                                                                                
+  Sprint 4: Goods Receipt & Inventory Link                                      
+                                                                                
+  - [X] Goods Receipt (GR)                                                      
+  - [X] Partial GR & Backorder                                                  
+  - [X] Auto-Journal: GR → Inventory + GR/IR Clearing                           
+                                                                                
+  Sprint 5: Accounts Payable                                                    
+                                                                                
+  - [X] Vendor Bill (Three-Way Matching: PO+GR+Invoice)                         
+  - [ ] Purchase Return & Debit Memo                                            
+  - [X] Vendor Payment                                                          
+  - [X] Auto-Journal: AP Cycle lengkap                                          
+                                                                                
+  Sprint 6: Accounting Core                                                     
+                                                                                
+  - [X] Journal Entry (Manual & Auto dari semua modul)                          
+  - [ ] General Ledger View                                                     
+  - [ ] Trial Balance                                                           
+                                                                                
+  Sprint 7+: Financial Reports                                                  
+                                                                                
+  - [ ] AR & AP Aging                                                           
+  - [ ] Income Statement                                                        
+  - [ ] Balance Sheet                                                           
+  - [ ] Cash Flow                                                               
+                                                                                
+  sekarang lagi ngerjain yang Purchase Return dan Debit Memo (tergambarkan pada 
+  branch saat ini).                                                             
+  nah karena PR ada flow bisnis mengeluarkan barang maka saya membuat fitur     
+  Core Goods Issue secara generik dulu, anda bisa baca                          
+  @docs/modules/inventory/goods-issue.md                                        
+  secara unit test sudah selesai sih, tapi blom dicek smoke / happy path        
+  testnya.                                                                      
+                                                                                
+  saya mikirnya mending langsung membuat fitur PRnya dulu untuk cek fitur GInya 
+  berhasil atau tidak.                                                          
+  nah mari kita diskusi tentang purchase returnnya mau seperti apa. tapi        
+  pertama-tama anda harus explore dulu bagaimana cara kerja PO dan lainnya      
+  bekerja jadi saya sarankan anda explore codebase pattern dan bisnis yang      
+  berhubungan dengan PO, GR, dan lainnya karena data PR butuh PO yang sudah di  
+  receipt tapi barangnya itu masih ada di gudang alias belum keluar gudang.     
+                                                                                
+  @docs/modules/procurement/purchase-order.md                                   
+  @docs/modules/inventory/goods-receipt.md                                      
+  sempat diskusi juga di @docs/brainstorming/2026-06-01-generic-goods-issue.md  
+  ⎿  Read docs\AGENTS.md (193 lines)
+  ⎿  Read docs\modules\inventory\goods-issue.md (131 lines)
+  ⎿  Read docs\modules\procurement\purchase-order.md (322 lines)
+  ⎿  Read docs\modules\inventory\goods-receipt.md (188 lines)
+  ⎿  Read docs\brainstorming\2026-06-01-generic-goods-issue.md (371 lines)
+
+● Skill(copilot-brainstorming)
+  ⎿  Successfully loaded skill
+
+● Saya mulai dengan meng-explore codebase untuk memahami pattern yang sudah ada
+  di PO, GR, dan GI sebelum kita diskusi Purchase Return.
+
+  Called lean-ctx 7 times (ctrl+o to expand)
+
+● ...
+
+  Called lean-ctx 3 times (ctrl+o to expand)
+
+● ...
+
+  Called lean-ctx 2 times (ctrl+o to expand)
+
+● Let me read these files with the native Read tool since ctx_read is having
+  issues with the compressed mode.
+
+  Read 3 files (ctrl+o to expand)
+
+● ...
+
+  Read 2 files (ctrl+o to expand)
+
+● ...
+
+  Read 1 file (ctrl+o to expand)
+
+● Good, now I have a solid understanding of the GI core. Let me also look at how
+  GR's source resolver pattern works as a reference, and check the PO status
+  model for receiving/return eligibility.
+
+  Searched for 1 pattern, read 3 files (ctrl+o to expand)
+
+● Good. Now I have a clear picture of the existing patterns. Let me check one
+  more thing — the Vendor Bill integration to understand the "billed" state,
+  since Purchase Return journal depends on whether the bill has been posted.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● ...
+
+  Read 1 file (ctrl+o to expand)
+
+● Okay, I've explored enough of the codebase to have a solid understanding. Let
+  me synthesize what I've found and start the brainstorming discussion.
+
+  ---
+  Hasil Eksplorasi Codebase
+
+  Berikut yang sudah saya pahami:
+
+  Pattern yang sudah ada:
+  1. GI Core sudah lengkap — domain model (GoodsIssue, GoodsIssueLine),
+  lifecycle (DRAFT → COMPLETED → CANCELLED), source resolver registry, dan
+  PurchaseReturnGoodsIssueSourcePort sebagai kontrak yang harus dipenuhi modul
+  Purchase Return.
+  2. GR ← PO pattern sebagai referensi: resolver memuat PO, validasi status
+  canReceive(), filter line outstanding, prefill GR draft.
+  3. PO lifecycle sudah punya FULLY_RECEIVED dan BILLED — Purchase Return perlu
+  tahu apakah barang sudah di-bill atau belum (menentukan debit GR/IR vs AP).
+  4. Vendor Bill menyimpan grRefs dan punya status lifecycle sendiri — ini
+  penting untuk flag billPosted di
+  PurchaseReturnGoodsIssueSourcePort.HeaderSnapshot.
+
+  Kontrak GI yang sudah disiapkan untuk Purchase Return:
+  - PurchaseReturnGoodsIssueSourcePort mendefinisikan HeaderSnapshot (termasuk
+  billPosted, clearingAccountId) dan LineSnapshot (termasuk
+  originalGoodsReceiptId/LineId, valuationRefType/Id/LineId, unitCost,
+  inventoryAmount, taxReversalAmount, clearingAmount).
+
+  ---
+  Pertanyaan Diskusi Pertama
+
+  Sebelum saya masuk ke desain lengkap, ada beberapa keputusan kunci yang perlu
+  kita selaraskan:
+
+  1. Lifecycle Purchase Return — seberapa kompleks?
+
+  Opsi yang saya lihat:
+
+  ┌─────────────┬────────────────────────────┬──────────────────────────────┐
+  │    Opsi     │            Flow            │          Keterangan          │
+  ├─────────────┼────────────────────────────┼──────────────────────────────┤
+  │             │                            │ Confirm langsung             │
+  │ A. Simple   │ DRAFT → CONFIRMED          │ create+complete GI. Cocok    │
+  │             │                            │ untuk MVP.                   │
+  ├─────────────┼────────────────────────────┼──────────────────────────────┤
+  │ B. With     │ DRAFT → SUBMITTED →        │ Ada approval layer sebelum   │
+  │ Approval    │ APPROVED → CONFIRMED       │ barang keluar.               │
+  ├─────────────┼────────────────────────────┼──────────────────────────────┤
+  │ C.          │ DRAFT → APPROVED →         │ Gudang punya kesempatan      │
+  │ Two-phase   │ CONFIRMED (GI DRAFT) →     │ verifikasi fisik sebelum GI  │
+  │             │ COMPLETED (GI COMPLETED)   │ complete.                    │
+  └─────────────┴────────────────────────────┴──────────────────────────────┘
+
+  Dari brainstorming doc, rekomendasi awal adalah opsi A (confirm langsung
+  auto-create+complete GI). Apakah kamu masih prefer ini, atau mau ada
+  approval/warehouse verification step?
+
+  2. Scope awal — Purchase Return saja, atau sekaligus Debit Memo?
+
+  Saya lihat GoodsIssueReferenceType sudah punya DEBIT_MEMO. Apakah:
+  - PR dulu, Debit Memo nanti (terpisah, mungkin tanpa stock movement)?
+  - PR + Debit Memo sekaligus sebagai satu modul (Debit Memo = dokumen AP
+  adjustment tanpa barang keluar)?
+
+  3. Source data Purchase Return — dari mana user memulai?
+
+  - Dari detail PO (seperti GR)?
+  - Dari detail GR (karena return = reversal penerimaan)?
+  - Dari menu Purchase Return sendiri lalu pilih GR yang mau di-return?
+
+  Ini menentukan entrypoint UI dan bagaimana selector bekerja.
+
+  Mana yang mau dibahas duluan, atau ada preferensi langsung untuk ketiga
+  pertanyaan di atas?
+  ⎿  Stop says: Claude Code selesai
+
+✻ Sautéed for 1m 56s
+
+❯ 1. Saya ingin coba ada approval pada Purchase Returnnya jadi flownya DRAFT -> 
+  SUBMIT for APPROVAL -> APPROVED -> CONFIRM ada flow kalau approval di reject  
+  juga ya saya lupa patternnya ada di PO atau di mana gitu kalau di reject qty  
+  yang bisa di return kembali lagi.                                             
+                                                                                
+  2. Pada diskusi ini fokus pembuatan Purchase Return aja dulu, untuk Debit     
+  Memo saya disclaimer fitur ini adalah untuk memotong dari Vendor Bill ketika  
+  Purchase Return selesai. nah untuk flow bisnis asli/detailnya kita bisa       
+  diskusi lebih detail bagusnya gimana. soalnya saya cuma tau garis besar       
+  Return + Debit Memo aja.                                                      
+                                                                                
+  3. Bagusnya sih langsung dari menu list Purchase Return nanti ada multi step  
+  form, misal di preadd1 user memilih PO/GR atau dokument referensi yang masih  
+  bisa di Return (misal cek outstanding returable > 0 secara logika bisnis),    
+  baru setelah dipilih dokumentnya lanjut ke preadd2 untuk mengisi detailnya    
+  misal tanggal atau data-data yang dibutuhkan oleh PR dan GI dan juga          
+  Journalnya.                                                                   
+                                                                                
+  Catatan ekstra, untuk barang di gudang / onhand bisa tidak kalau saat proses  
+  PR barangnya kayak di hold gitu jadi tidak bisa di keluarkan dari proses lain 
+  misal stock adjustment atau nanti ada GI dari dokument Delivery Order (Sales  
+  Flow)?                                                                        
+
+● Bagus, ini sudah cukup jelas arahnya. Saya rangkum pemahaman saya dan lanjut
+  ke pertanyaan berikutnya:
+
+  Pemahaman Saya
+
+  Lifecycle: DRAFT → SUBMITTED → APPROVED → CONFIRMED (+ REJECTED dari
+  SUBMITTED)
+  - Reject mengembalikan qty returnable ke pool
+  - Approval memakai pattern yang sama dengan PO (ApprovalRequest)
+
+  Scope: Purchase Return dulu, Debit Memo nanti (sebagai dokumen AP adjustment
+  setelah PR selesai)
+
+  Entrypoint: Menu Purchase Return sendiri → multi-step form:
+  - Pre-add 1: Pilih dokumen referensi (PO/GR yang masih punya outstanding
+  returnable > 0)
+  - Pre-add 2: Isi detail (tanggal, qty return, reason, data untuk GI + journal)
+
+  Stock Hold: Saat PR di-draft/submitted/approved, qty yang di-claim untuk
+  return di-"hold" agar tidak bisa dikeluarkan oleh proses lain.
+
+  ---
+  Pertanyaan Lanjutan
+
+  4. Referensi source — PO-level atau GR-level?
+
+  Ini penting karena menentukan granularity:
+
+  Opsi: GR-level
+  Keterangan: User pilih GR spesifik, lalu pilih line GR mana yang di-return
+  Pro: Valuation layer langsung jelas (GR line → valuation ref). Presisi tinggi.
+  Con: Kalau 1 PO punya 5 GR, user harus tahu GR mana yang mau di-return
+  ────────────────────────────────────────
+  Opsi: PO-level
+  Keterangan: User pilih PO, sistem aggregate semua GR yang sudah received
+  Pro: UX lebih simpel untuk user yang mikir "saya mau return barang dari PO
+  ini"
+  Con: Perlu logic tambahan untuk resolve GR mana yang di-consume (FIFO per GR?)
+
+  Rekomendasi saya: GR-level, karena:
+  1. Valuation reference langsung clear (GR line → specific layer)
+  2. Untuk serialized item, serial number tercatat di GR line
+  3. Konsisten dengan prinsip "return = reversal penerimaan spesifik"
+
+  Tapi UX-nya bisa dipermudah: di pre-add 1, tampilkan list GR yang eligible
+  (filter by PO juga bisa), jadi user tetap bisa navigate dari konteks PO.
+
+  Setuju GR-level, atau prefer PO-level?
+
+  5. Stock Hold mechanism — kapan hold, kapan release?
+
+  Untuk hold, saya pikirkan dua pendekatan:
+
+  ┌─────────────────┬───────────────────────────────────────────────────────┐
+  │      Opsi       │                       Mekanisme                       │
+  ├─────────────────┼───────────────────────────────────────────────────────┤
+  │                 │ Tambah field reservedQuantity di stock/container      │
+  │ A. Soft         │ level. Saat PR draft/submit, qty di-reserve.          │
+  │ reservation     │ Available = onHand - reserved. Release saat           │
+  │                 │ reject/cancel.                                        │
+  ├─────────────────┼───────────────────────────────────────────────────────┤
+  │ B. Hold via PR  │ Tidak ada physical reservation di stock table.        │
+  │ status only     │ Validasi saat GI complete: cek apakah on-hand masih   │
+  │                 │ cukup. Jika tidak cukup, GI gagal complete.           │
+  └─────────────────┴───────────────────────────────────────────────────────┘
+
+  Opsi A lebih aman (benar-benar block), tapi butuh enhancement di stock
+  service. Opsi B lebih simpel tapi ada race condition risk (barang bisa habis
+  sebelum PR confirmed).
+
+  Preferensi kamu yang mana? Atau ada ide lain?
+
+  6. Qty returnable — bagaimana hitungnya?
+
+  Logika dasar yang saya bayangkan:
+  returnableQty(grLine) = grLine.quantityReceived
+                          - alreadyReturnedQty(grLine)
+                          - pendingReturnQty(grLine)  // dari PR yang masih
+  DRAFT/SUBMITTED/APPROVED
+
+  pendingReturnQty ini yang jadi mekanisme "claim" agar tidak double-return.
+  Setuju dengan formula ini?
+  ⎿  Stop says: Claude Code selesai
+
+✻ Cooked for 29s
+
+※ recap: We're brainstorming Purchase Return design. I asked three questions: GR-level vs PO-level as reference source, stock hold mechanism (soft reservation vs validate-on-complete), and returnable qty formula. Waiting for your answers to continue. (disable recaps in /config)
+
+❯ 4. GR-Level tapi kalau bisa service preadd1nya bisa meresolve / filter        
+  berdasarkan dokument sumbernya misal PO (ini secara UX di preadd1), kalau     
+  bisa sih Generic siapa tau ada Purchase Return selain dari PO                 
+                                                                                
+  5. Tambah quantity untuk mereserve barangnya. Tapi pastikan di level          
+  domain/service tidak bisa melakukan reserve pada barang serial secara         
+  sebagian, misal ada barang serial A001, Product id 1, container 1, qty 5,     
+  lalu di reserve 2 itu tidak bisa secara bisnis harusnya kan ya ? makanya      
+  biasanya barang serial itu Qty harusanya sih 1 (asumsi sumber barang serial   
+  selalu 1)                                                                     
+                                                                                
+  6. saya setuju dengan formula anda, tapi apakah anda sudah memperhitungkan    
+  barang yang sudah terlanjut keluar ? misal sudah PO>GR, anggap module Sales   
+  udah ada, salah satu barangnya sudah keluar / terjual itu gimana ?            
+  lalu sempat di bahas juga saat diskusi GI Core, barang non-serial, kalau      
+  barang serial kan mudah trackingnya. tapi kalau barang non-serial gimana ?    
+  apakah ambil dari FIFO layer atau ambil langsung referensi GRnya ?            
+                                                                                
+  Catatn Extra: untuk masalah journal kalau tidak salah sempat dibahas dan      
+  disepakati bahwa untuk harga / price returnnya di samakan dengan PO agar      
+  tidak terjadi selisih di journal benar tidak ?                                
+  secara ERP profesional kalau flow PO -> PR ini bagaimana menanggapi perbedaan 
+  harga atau perbedaan currency ratenya ?                                       
+  Thought for 18s, called lean-ctx 5 times (ctrl+o to expand)
+
+● Oke, ini makin solid. Saya jawab satu-satu, sekaligus saya refine rancangan
+  awalnya.
+
+  ---
+  4. Source GR-level tapi pre-add bisa filter by dokumen sumber
+
+  Saya setuju: domain Purchase Return sebaiknya GR-level, tapi UX pre-add 1 bisa
+  document-source aware.
+
+  Artinya secara internal:
+
+  Purchase Return Header
+  - referenceType = GOODS_RECEIPT
+  - referenceId = grId
+  - sourceType/sourceDocumentType optional untuk filter UX, misal PURCHASE_ORDER
+  - sourceDocumentId optional, misal poId
+
+  Tapi di UI pre-add 1 user bisa memilih dengan beberapa mode:
+
+  Create Purchase Return
+  1. Filter by:
+     - Purchase Order
+     - Goods Receipt
+     - Supplier
+     - Date range
+  2. Sistem menampilkan GR eligible untuk return
+  3. User pilih satu GR
+  4. Masuk pre-add 2: detail return line dari GR tersebut
+
+  Kenapa saya tetap prefer 1 Purchase Return = 1 GR asal untuk MVP:
+  - valuation ref paling aman: GOODS_RECEIPT + grId + grLineId
+  - serial tracking jelas
+  - journal reversal lebih deterministic
+  - tidak perlu split satu PR ke banyak GI valuation ref lintas GR
+
+  Tapi nanti kalau perlu UX batch return dari beberapa GR, bisa dibuat sebagai
+  enhancement:
+
+  Purchase Return Batch / Multi-GR Return
+  - Header supplier sama
+  - Lines boleh refer multiple GR line
+
+  Namun untuk awal saya sarankan jangan multi-GR dulu supaya stock hold,
+  approval, GI completion, dan journal tidak meledak kompleksitasnya.
+
+  ---
+  5. Stock reserve/hold — saya setuju tambah reservation quantity
+
+  Saya setuju dengan pendekatan reservation/hold quantity di inventory layer.
+  Untuk Purchase Return yang belum confirmed, barang sebaiknya dianggap tidak 
+  available untuk outbound lain.
+
+  Secara konsep:
+
+  onHandQty = quantity fisik ada
+  reservedQty = quantity sudah di-hold untuk dokumen outbound belum completed
+  availableQty = onHandQty - reservedQty
+
+  Lalu GI / Stock Adjustment / Delivery Order nantinya harus memakai
+  availableQty, bukan hanya onHandQty.
+
+  Untuk serialized item
+
+  Catatan kamu benar: barang serial tidak boleh reserve sebagian secara abstrak.
+
+  Untuk serialized item, reservation harus by serial number:
+
+  Product 1, Container 1:
+  - Serial A001 → reserved by PR-001
+  - Serial A002 → free
+  - Serial A003 → free
+
+  Bukan:
+
+  Product 1, Container 1, qty 5, reserved 2
+
+  Karena “reserved 2” tidak menjawab serial mana yang di-hold.
+
+  Jadi saya pikir desain reservation-nya perlu dua level:
+
+  A. Non-serialized reservation
+
+  InventoryReservation
+  - productId
+  - containerId
+  - quantityReserved
+  - sourceType = PURCHASE_RETURN
+  - sourceId = purchaseReturnId
+  - sourceLineId = purchaseReturnLineId
+  - valuationRefType = GOODS_RECEIPT
+  - valuationRefId = grId
+  - valuationRefLineId = grLineId
+  - status = ACTIVE / RELEASED / CONSUMED
+
+  B. Serialized reservation
+
+  InventoryReservation
+  - productId
+  - containerId
+  - serialNumber
+  - quantityReserved = 1
+  - sourceType = PURCHASE_RETURN
+  - sourceId = purchaseReturnId
+  - sourceLineId = purchaseReturnLineId
+  - valuationRef...
+  - status = ACTIVE / RELEASED / CONSUMED
+
+  Domain rule:
+  - Jika product serialized:
+    - quantityReserved harus 1 per reservation row
+    - serialNumber wajib
+    - base qty harus bilangan bulat
+    - jumlah serial selected harus sama dengan qty return
+  - Jika non-serialized:
+    - serialNumber harus null
+    - quantity boleh decimal sesuai UOM/base UOM policy
+
+  Kapan reserve dibuat?
+
+  Menurut saya:
+
+  ┌───────────┬─────────────────────────────────────────────────┐
+  │ Status PR │                   Reservation                   │
+  ├───────────┼─────────────────────────────────────────────────┤
+  │ DRAFT     │ Belum reserve, atau reserve optional sementara? │
+  ├───────────┼─────────────────────────────────────────────────┤
+  │ SUBMITTED │ Reserve aktif                                   │
+  ├───────────┼─────────────────────────────────────────────────┤
+  │ APPROVED  │ Reserve tetap aktif                             │
+  ├───────────┼─────────────────────────────────────────────────┤
+  │ REJECTED  │ Release                                         │
+  ├───────────┼─────────────────────────────────────────────────┤
+  │ CANCELLED │ Release                                         │
+  ├───────────┼─────────────────────────────────────────────────┤
+  │ CONFIRMED │ Consumed oleh GI                                │
+  └───────────┴─────────────────────────────────────────────────┘
+
+  Saya cenderung: reserve saat SUBMIT, bukan saat DRAFT.
+
+  Alasannya:
+  - Draft bisa lama dan incomplete; kalau draft langsung reserve, user bisa
+  “mengunci” stok tanpa komitmen.
+  - Submit for approval berarti sudah ada intent bisnis formal.
+  - Formula returnable tetap bisa mengurangi pending submitted/approved.
+
+  Tapi kalau kamu ingin draft juga langsung mengunci agar user tidak kehilangan
+  barang saat mengisi form, bisa dibuat draft reservation dengan expiry, namun
+  itu lebih kompleks.
+
+  ---
+  6. Returnable qty harus memperhitungkan barang yang sudah keluar
+
+  Betul, formula saya sebelumnya belum lengkap kalau ada Sales/GI outbound lain.
+  Formula yang lebih benar:
+
+  returnableQty(grLine)
+  =
+  min(
+    grLine.receivedBaseQty
+      - completedReturnedBaseQtyFromThisGrLine
+      - pendingReturnReservedBaseQtyFromThisGrLine,
+
+    remainingSpecificLayerQty(grLine)
+      - activeNonReturnReservationsAgainstThisLayer
+  )
+
+  Atau versi bisnisnya:
+
+  returnable = barang dari GR line ini yang:
+  1. pernah diterima
+  2. belum pernah di-return confirmed
+  3. belum sedang di-hold oleh PR lain
+  4. masih benar-benar available/on-hand
+  5. masih berada pada valuation layer asal yang sama
+
+  Ini menjawab kasus:
+
+  ▎ PO → GR 10 pcs, lalu 3 pcs sudah dijual/keluar lewat Sales Delivery.
+
+  Maka secara valuation layer:
+  - GR line awal: 10
+  - sudah consumed outbound lain: 3
+  - remaining layer: 7
+  - returnable max: 7, bukan 10
+
+  Jadi source of truth terpenting untuk non-serial adalah 
+  ValuationLayer.remainingQuantity dari GR line asal, bukan cuma GR quantity.
+
+  Untuk serial item
+
+  Lebih mudah:
+  - serial yang sudah keluar tidak ada di on-hand / layer aktif
+  - hanya serial yang masih available di container yang bisa dipilih
+  - serial yang sudah reserved oleh PR lain juga tidak bisa dipilih
+
+  Untuk non-serial item: FIFO atau referensi GR?
+
+  Untuk Purchase Return, saya tetap rekomendasikan bukan FIFO umum, tapi
+  specific GR valuation layer.
+
+  Karena return ke supplier secara akuntansi adalah reversal dari penerimaan
+  tertentu. Kalau sistem pakai FIFO umum, bisa terjadi salah nilai.
+
+  Contoh:
+
+  GR-001: 10 pcs @ 100.000
+  GR-002: 10 pcs @ 120.000
+
+  User return barang dari GR-002 sebanyak 2 pcs.
+
+  Kalau FIFO umum, sistem bisa consume GR-001 @100.000, padahal return yang
+  dipilih berasal dari GR-002 @120.000. Ini menyebabkan inventory dan
+  clearing/AP reversal salah.
+
+  Jadi untuk Purchase Return:
+
+  GI line valuationRefType = GOODS_RECEIPT
+  GI line valuationRefId = grId
+  GI line valuationRefLineId = grLineId
+
+  Kemudian StockService.adjust(ISSUE) harus consume layer yang match dengan
+  valuation ref tersebut. Dari GI core, field ini sudah disiapkan dan dipassing
+  ke stock payload.
+
+  ---
+  Catatan Journal: harga return disamakan dengan PO atau GR?
+
+  Ini perlu diluruskan sedikit.
+
+  Dari diskusi GI core, yang paling aman bukan sekadar “sama dengan PO”, tetapi:
+
+  ▎ Inventory value return harus mengikuti nilai layer GR asal.
+
+  Dalam sistem saat ini, GR valuation kemungkinan mengambil harga dari PO +
+  exchange rate PO/GR snapshot. Jadi secara praktis nilainya sering sama dengan
+  PO. Tapi istilah yang lebih akurat adalah:
+
+  Purchase Return memakai cost/value dari Goods Receipt / valuation layer asal.
+
+  Bukan harga return baru.
+
+  Kenapa bukan harga baru di Purchase Return?
+
+  Karena Purchase Return adalah reversal fisik atas barang yang sudah masuk
+  inventory. Kalau barang masuk dengan nilai buku Rp100.000, lalu keluar untuk
+  return juga harus mengurangi inventory Rp100.000. Kalau return pakai harga
+  lain, inventory valuation bisa mismatch.
+
+  ---
+  Bagaimana ERP profesional menangani perbedaan harga atau currency rate?
+
+  Biasanya tergantung timing dan dokumen AP-nya.
+
+  Case A — Return sebelum Vendor Bill
+
+  Flow:
+
+  PO → GR → Purchase Return
+  Vendor Bill belum dibuat/dipost
+
+  Accounting umum:
+
+  Saat GR:
+  DR Inventory
+     CR GR/IR Clearing
+
+  Saat Return:
+  DR GR/IR Clearing
+     CR Inventory
+
+  Nilai return biasanya mengikuti nilai GR/PO receipt. Tidak ada FX gain/loss
+  karena belum ada liability invoice final. Ini murni membalik GR/IR.
+
+  Case B — Return setelah Vendor Bill dipost
+
+  Flow:
+
+  PO → GR → Vendor Bill Posted → Purchase Return → Debit Memo
+
+  Accounting-nya biasanya:
+
+  Saat GR:
+  DR Inventory
+     CR GR/IR Clearing
+
+  Saat Vendor Bill:
+  DR GR/IR Clearing
+  DR Input VAT
+  DR/CR FX Variance jika ada
+     CR Accounts Payable
+
+  Saat Purchase Return:
+  DR Purchase Return Clearing / AP Adjustment / Debit Memo Receivable
+     CR Inventory
+     CR Input VAT Reversal (jika pajak ikut dibalik)
+
+  Lalu Debit Memo memotong AP:
+
+  DR Accounts Payable
+     CR Purchase Return Clearing / Debit Memo
+
+  Atau dalam implementasi yang lebih sederhana, saat PR confirmed bisa langsung:
+
+  DR Accounts Payable
+     CR Inventory
+     CR Input VAT
+
+  Tapi secara profesional biasanya Debit Memo/Credit Note dari vendor menjadi
+  dokumen finansial yang memotong AP, terutama kalau Vendor Bill sudah posted.
+
+  Perbedaan currency rate
+
+  Misalnya:
+
+  PO/GR: USD 1 @ 15.000
+  Vendor Bill: USD 1 @ 15.300
+  Return date: USD 1 @ 15.500
+
+  Untuk inventory:
+  - inventory keluar tetap berdasarkan cost layer: Rp15.000
+
+  Untuk AP/debit memo:
+  - tergantung kebijakan accounting:
+    a. Debit memo memakai original bill rate
+    b. Debit memo memakai return date rate
+    c. Selisih masuk FX gain/loss
+
+  Namun untuk MVP dan agar tidak kacau:
+  - Purchase Return inventory side pakai GR layer/original rate
+  - Debit Memo nanti bisa diputuskan apakah:
+    - pakai Vendor Bill rate agar memotong AP secara natural, atau
+    - pakai GR rate sebagai pure reversal
+  - FX variance kalau ada sebaiknya ditangani di Debit Memo, bukan di GI.
+
+  Jadi saya sarankan boundary-nya:
+
+  Purchase Return + GI:
+  - Fokus fisik dan inventory valuation.
+  - Pakai GR layer cost.
+  - Tidak hitung FX variance.
+
+  Debit Memo:
+  - Fokus AP adjustment.
+  - Menentukan pemotongan AP, pajak, dan FX treatment.
+
+  ---
+  Rancangan sementara lifecycle dengan reservation
+
+  Saya propose:
+
+  DRAFT
+    - editable
+    - belum reserve
+    - returnable qty dihitung dari available layer saat form dibuka/save
+
+  SUBMITTED
+    - create ApprovalRequest
+    - create inventory reservation
+    - tidak editable kecuali cancel/reject path
+
+  APPROVED
+    - reservation tetap aktif
+    - siap confirm
+
+  REJECTED
+    - reservation released
+    - tidak bisa confirm
+    - qty kembali returnable
+
+  CONFIRMED
+    - auto create GI from Purchase Return
+    - GI complete consume reservation / consume specific GR layer
+    - reservation marked CONSUMED
+    - Purchase Return locked
+
+  Open question kecil: apakah APPROVED → CONFIRMED dilakukan oleh user
+  procurement/accounting, atau warehouse? Karena confirm akan benar-benar
+  mengeluarkan stock via GI.
+
+  ---
+  Pertanyaan berikutnya
+
+  Saya rasa keputusan berikutnya paling penting:
+
+  Saat SUBMIT for APPROVAL, reservation dibuat. Kalau ternyata reservation gagal
+  karena stok/layer sudah tidak available, apakah submit harus gagal?
+
+  Pilihan:
+
+  1. Submit gagal langsung jika barang tidak available/reservable.
+  Lebih ketat, data approval pasti valid.
+  2. Submit tetap boleh, tapi status masuk PENDING_STOCK atau warning, dan
+  approval/confirm nanti yang gagal kalau stok tidak ada.
+  Lebih fleksibel, tapi kompleks dan rawan approval atas data yang tidak bisa
+  dieksekusi.
+
+  Saya rekomendasikan opsi 1: submit gagal jika reservation gagal, supaya
+  approval hanya untuk return yang benar-benar bisa dilakukan secara fisik.
+
+  Setuju?
+  ⎿  Stop says: Claude Code selesai
+
+✻ Worked for 1m 27s
+
+※ recap: Kita sedang mendesain Purchase Return berbasis GR-level dengan approval dan stock reservation sebelum confirm ke GI. Next: putuskan apakah submit harus gagal jika reservation/stock hold tidak bisa dibuat. (disable recaps in /config)
+
+❯ untuk question kecilnya dari Approved ke Confirmed bisa dilakukan oleh siapa  
+  saja asal ada permissionnya. untuk sekarang kita bisa skip bagian role, yang  
+  penting admin bisa akses semua fiturnya dan mencobanya.                       
+                                                                                
+  untuk submit for approval, submit langsung gagal                              
+                                                                                
+  apakah ada pertanyaan lainnya ?                                               
+
+  Thought for 17s (ctrl+o to expand)
+
+● Ada beberapa pertanyaan terakhir yang menurut saya perlu diputuskan sebelum
+  nanti dibuat implementation plan. Sebagian bisa kita jadikan default kalau
+  kamu setuju.
+
+  Keputusan yang sudah locked sejauh ini
+
+  - Purchase Return pakai approval flow:
+  DRAFT → SUBMITTED → APPROVED → CONFIRMED
+              └──→ REJECTED
+  - APPROVED → CONFIRMED boleh dilakukan siapa saja yang punya permission.
+  - Saat SUBMIT, sistem langsung coba reserve stock.
+  - Kalau reserve gagal, submit gagal.
+  - Reject/cancel release reservation.
+  - Confirm create + complete GI otomatis.
+  - Source utama domain: Goods Receipt line, dengan UX pre-add bisa filter dari
+  PO/source document.
+  - Return valuation: specific GR valuation layer, bukan FIFO umum.
+  - Debit Memo belum diimplementasikan sekarang; hanya disiapkan seam/konsepnya.
+
+  ---
+  Pertanyaan tersisa
+
+  1. Apakah Purchase Return boleh diubah setelah SUBMITTED?
+
+  Saya sarankan:
+
+  ┌───────────┬───────────────────────────┬─────────────────────────────────┐
+  │  Status   │           Edit?           │             Alasan              │
+  ├───────────┼───────────────────────────┼─────────────────────────────────┤
+  │ DRAFT     │                        Ya │ Belum reserve formal            │
+  ├───────────┼───────────────────────────┼─────────────────────────────────┤
+  │ SUBMITTED │                     Tidak │ Sudah reserve + menunggu        │
+  │           │                           │ approval                        │
+  ├───────────┼───────────────────────────┼─────────────────────────────────┤
+  │ APPROVED  │                     Tidak │ Sudah disetujui atas qty/data   │
+  │           │                           │ tertentu                        │
+  ├───────────┼───────────────────────────┼─────────────────────────────────┤
+  │ REJECTED  │         Tidak, atau bisa  │ Agar audit approval bersih      │
+  │           │              clone/revise │                                 │
+  ├───────────┼───────────────────────────┼─────────────────────────────────┤
+  │ CONFIRMED │                     Tidak │ Sudah post GI                   │
+  └───────────┴───────────────────────────┴─────────────────────────────────┘
+
+  Untuk MVP, saya rekomendasikan tidak bisa edit setelah submit. Kalau reject
+  lalu user mau perbaiki, buat return baru atau nanti tambah fitur “revise”.
+
+  Setuju?
+
+  ---
+  2. Apakah DRAFT bisa dihapus / cancel?
+
+  Rekomendasi saya:
+
+  DRAFT → CANCELLED
+  SUBMITTED → CANCELLED? mungkin tidak, harus reject approval
+  APPROVED → CANCELLED? boleh dengan release reservation
+
+  Atau lebih sederhana:
+
+  ┌───────────┬────────────────────────────────┐
+  │  Status   │              Aksi              │
+  ├───────────┼────────────────────────────────┤
+  │ DRAFT     │ Delete / Cancel                │
+  ├───────────┼────────────────────────────────┤
+  │ SUBMITTED │ Reject via approval only       │
+  ├───────────┼────────────────────────────────┤
+  │ APPROVED  │ Cancel allowed sebelum confirm │
+  ├───────────┼────────────────────────────────┤
+  │ CONFIRMED │ Tidak cancel dulu untuk MVP    │
+  ├───────────┼────────────────────────────────┤
+  │ REJECTED  │ Locked                         │
+  └───────────┴────────────────────────────────┘
+
+  Pertanyaan khusus: apakah kamu ingin Purchase Return CONFIRMED bisa 
+  dibatalkan?
+  GI core sudah punya CANCELLED, tapi untuk Purchase Return kita bisa tunda 
+  cancel confirmed dulu karena butuh reversal stock + journal + debit memo
+  implications.
+
+  Rekomendasi: skip cancel confirmed untuk MVP.
+
+  ---
+  3. Return reason wajib atau optional?
+
+  ERP biasanya punya reason/cause agar audit jelas:
+
+  - barang rusak
+  - salah kirim
+  - kualitas tidak sesuai
+  - over receipt
+  - barang expired
+  - lainnya
+
+  Untuk MVP bisa pakai field sederhana:
+
+  reasonCode optional/required?
+  reasonNote optional/required?
+
+  Saya sarankan:
+  - reason / reasonCode: required
+  - note: optional
+
+  Belum perlu master Return Reason dulu; bisa enum/string sederhana dulu. Tapi
+  kalau ingin rapi, master reason bisa menyusul.
+
+  ---
+  4. Apakah satu Purchase Return boleh return partial line?
+
+  Saya asumsikan boleh partial.
+
+  Contoh:
+
+  GR line qty 10
+  Purchase Return qty 3
+  remaining returnable 7
+
+  Lalu nanti bisa bikin Purchase Return lain untuk sisa 7 selama masih
+  available.
+
+  Ini sudah cocok dengan formula:
+  returnable = received - confirmedReturned - pendingReserved -
+  alreadyConsumedElsewhere
+
+  Setuju?
+
+  ---
+  5. Untuk serialized item, pemilihan serial dilakukan di pre-add2 atau 
+  otomatis?
+
+  Saya sarankan user wajib pilih serial untuk serialized item di pre-add2.
+
+  Karena kalau sistem auto-pick serial:
+  - audit return jadi kurang jelas
+  - barang fisik yang dikembalikan harus serial spesifik
+  - approval harus tahu serial mana yang akan keluar
+
+  Untuk non-serial, user cukup isi qty + container.
+
+  Untuk serial:
+  qty return = jumlah serial dipilih
+  serial list wajib
+  masing-masing serial harus available dan belum reserved
+
+  Setuju?
+
+  ---
+  6. Accounting event Purchase Return — sekarang dibuat atau ditunda?
+
+  GI core saat complete sekarang post event generic GOODS_ISSUE.
+
+  Untuk Purchase Return, secara desain idealnya nanti pakai event
+  source-specific:
+
+  PURCHASE_RETURN
+
+  Namun untuk MVP awal, ada dua opsi:
+
+  ┌─────────────────────────────────────┬───────────────────────────────────┐
+  │                Opsi                 │            Keterangan             │
+  ├─────────────────────────────────────┼───────────────────────────────────┤
+  │ A. Confirm PR hanya complete GI dan │ Cepat, cocok smoke test GI, tapi  │
+  │  memakai journal generic            │ jurnal Purchase Return belum      │
+  │ GOODS_ISSUE                         │ akurat                            │
+  ├─────────────────────────────────────┼───────────────────────────────────┤
+  │ B. Tambah event journal             │ Lebih benar, tapi tambah scope:   │
+  │ PURCHASE_RETURN dari awal           │ schema event type, variables,     │
+  │                                     │ policy, config                    │
+  └─────────────────────────────────────┴───────────────────────────────────┘
+
+  Karena tujuan awal kamu juga ingin membuktikan GI happy path, saya condong ke:
+
+  Phase 1: Purchase Return confirm → create+complete GI, pakai mekanisme GI
+  stock + minimal journal yang sudah ada.
+  Phase 2: Purchase Return-specific journal + Debit Memo.
+
+  Tapi kalau kamu ingin Purchase Return langsung accounting-correct, kita perlu
+  bahas variable journalnya sekarang.
+
+  ---
+  Rekomendasi default saya
+
+  Kalau kamu setuju, saya akan catat arah desain final seperti ini:
+
+  1. No edit after submit.
+  2. DRAFT can delete/cancel. APPROVED can cancel before confirm. CONFIRMED 
+  cancel deferred.
+  3. Return reason required.
+  4. Partial return allowed.
+  5. Serialized item wajib pilih serial eksplisit.
+  6. Phase awal fokus Purchase Return + Reservation + GI integration; Debit Memo
+  dan PR-specific journal detail dipisah ke fase berikutnya, tapi field
+  monetary snapshot tetap disiapkan agar tidak bongkar model besar nanti.
+
+  Apakah keenam default ini cocok, atau ada yang mau kamu ubah?
+  ⎿  Stop says: Claude Code selesai
+
+✻ Churned for 37s
+
+❯ 1. ya setuju                                                                  
+  2. ya cancel bukan delete data                                                
+  3. Ya required di line item dan header reason/notenya                         
+  4. ya bisa partial                                                            
+  5. ya wajib pilih serial mana yang mau di return tapi hanya serial dari GR/PO 
+  yang dipilih pada preadd1                                                     
+  untuk barang serial yang penting tidak melebihi dari GR/POnya.                
+  untuk Ui/Ux lebih baik tambahkan kolom readonly outstanding sisanya           
+  6. Ya boleh pakai journal generic dulu, tapi harus dibuat catatan yang tidak  
+  boleh lupa nanti saat phase 2 harus di ganti ke event journal PURCHASE_RETURN 
+                                                                                
+  apakah ada yang perlu ditanyakan lagi ?                                       
+                                                                                
+  terutama UI @docs/spec/ui-standards.md @docs/spec/autocomplete-generic.md dan 
+  @docs/spec/modal-selector.md                                                  
+                                                                                
+  saya lebih prefer untuk data yang dipilih perlu menampilkan data yang         
+  kompleks gunakan modal tapi kalau cuma milih data sederhana bisa gunakan      
+  autocomplete.                                                                 
+  ⎿  Read docs\spec\ui-standards.md (180 lines)
+  ⎿  Read docs\spec\autocomplete-generic.md (175 lines)
+  ⎿  Read docs\spec\modal-selector.md (136 lines)
+
+● Ada beberapa pertanyaan UI/UX yang masih worth diputuskan, tapi menurut saya
+  sudah bukan blocker besar. Dari dokumen UI yang kamu referensikan, preferensi
+  kamu cocok dengan standar project:
+
+  - data kompleks → modal selector
+  - data sederhana → autocomplete
+  - selector wajib query-level exclusion, bukan cuma hide row di frontend
+  - line selector boleh multi-select
+  - selected data harus dibawa via data-* payload dan dimapping oleh
+  page-specific JS
+
+  Untuk Purchase Return, saya akan sarankan pola UI seperti ini.
+
+  ---
+  Usulan UI Flow Purchase Return
+
+  List Page
+
+  Menu:
+
+  Purchasing / Procurement → Purchase Returns
+
+  List columns:
+
+  ┌─────────────┬───────────────────────────────────────────────────────────┐
+  │    Kolom    │                            Isi                            │
+  ├─────────────┼───────────────────────────────────────────────────────────┤
+  │ Code        │ PRT-2606-00001 atau prefix lain                           │
+  ├─────────────┼───────────────────────────────────────────────────────────┤
+  │ Return Date │ tanggal return                                            │
+  ├─────────────┼───────────────────────────────────────────────────────────┤
+  │ Supplier    │ supplier dari GR/PO                                       │
+  ├─────────────┼───────────────────────────────────────────────────────────┤
+  │ Reference   │ GR code, optional PO code                                 │
+  ├─────────────┼───────────────────────────────────────────────────────────┤
+  │ Status      │ DRAFT / SUBMITTED / APPROVED / REJECTED / CONFIRMED /     │
+  │             │ CANCELLED                                                 │
+  ├─────────────┼───────────────────────────────────────────────────────────┤
+  │ Total Qty   │ total qty return                                          │
+  ├─────────────┼───────────────────────────────────────────────────────────┤
+  │ Total       │ inventory amount / clearing amount                        │
+  │ Amount      │                                                           │
+  ├─────────────┼───────────────────────────────────────────────────────────┤
+  │ Actions     │ View, Edit kalau DRAFT, Submit, Approve/Reject, Confirm,  │
+  │             │ Cancel                                                    │
+  └─────────────┴───────────────────────────────────────────────────────────┘
+
+  Search:
+  - code
+  - supplier
+  - GR code / PO code
+
+  ---
+  Create Flow
+
+  Pre-add 1: Select Return Source
+
+  Karena datanya kompleks, gunakan modal selector / table page, bukan
+  autocomplete.
+
+  Entry page:
+
+  /purchasing/purchase-returns/create
+
+  User melihat filter:
+
+  Filter by:
+  - Supplier autocomplete
+  - PO autocomplete atau modal lookup sederhana
+  - Date range
+  - Keyword GR/PO
+
+  Lalu tabel eligible GR:
+
+  ┌──────┬─────┬─────┬────────┬───────┬────────┬─────────┬─────────┬──────┐
+  │ Sele │ GR  │ PO  │ Suppli │ Recei │ Facili │ Returna │ Returna │ Stat │
+  │  ct  │ Cod │ Cod │   er   │  pt   │   ty   │  ble    │ ble Qty │  us  │
+  │      │  e  │  e  │        │ Date  │        │  Lines  │         │      │
+  ├──────┼─────┼─────┼────────┼───────┼────────┼─────────┼─────────┼──────┤
+  └──────┴─────┴─────┴────────┴───────┴────────┴─────────┴─────────┴──────┘
+
+  Rules:
+  - hanya GR COMPLETED
+  - punya minimal 1 line dengan returnableQty > 0
+  - returnable memperhitungkan:
+    - valuation layer remaining
+    - reservation aktif
+    - confirmed return sebelumnya
+    - serial still available kalau serialized
+
+  Action:
+  Select GR → lanjut ke pre-add 2
+
+  URL bisa:
+
+  /purchasing/purchase-returns/create/details?referenceType=GOODS_RECEIPT&refere
+  nceId={grId}
+
+  Untuk generic future source, service selector bisa punya parameter:
+
+  sourceType=PURCHASE_ORDER
+  sourceId={poId}
+
+  Tapi Purchase Return header tetap mengarah ke GR.
+
+  ---
+  Pre-add 2: Return Detail Form
+
+  Header section:
+
+  ┌───────────────┬────────────────────────────────┬───────┐
+  │     Field     │               UI               │ Notes │
+  ├───────────────┼────────────────────────────────┼───────┤
+  │ Reference GR  │ readonly                       │       │
+  ├───────────────┼────────────────────────────────┼───────┤
+  │ Source PO     │ readonly                       │       │
+  ├───────────────┼────────────────────────────────┼───────┤
+  │ Supplier      │ readonly                       │       │
+  ├───────────────┼────────────────────────────────┼───────┤
+  │ Facility      │ readonly                       │       │
+  ├───────────────┼────────────────────────────────┼───────┤
+  │ Currency      │ readonly                       │       │
+  ├───────────────┼────────────────────────────────┼───────┤
+  │ Exchange Rate │ readonly                       │       │
+  ├───────────────┼────────────────────────────────┼───────┤
+  │ Return Date   │ date input                     │       │
+  ├───────────────┼────────────────────────────────┼───────┤
+  │ Header Reason │ required                       │       │
+  ├───────────────┼────────────────────────────────┼───────┤
+  │ Header Note   │ required sesuai keputusan kamu │       │
+  ├───────────────┼────────────────────────────────┼───────┤
+  │ Status        │ hidden/default DRAFT           │       │
+  └───────────────┴────────────────────────────────┴───────┘
+
+  Line table:
+
+  ┌─────┬───────┬──────┬──────┬──────────┬────────┬─────┬─────┬─────┬─────┐
+  │ Pro │       │ Rece │ Alre │          │ Outsta │ Ret │     │     │     │
+  │ duc │ Seria │ ived │ ady  │ Reserved │ nding  │ urn │ Rea │ Not │ Ser │
+  │  t  │ lized │  Qty │ Retu │ /Pending │ Return │     │ son │  e  │ ial │
+  │     │       │      │ rned │          │  able  │ Qty │     │     │     │
+  ├─────┼───────┼──────┼──────┼──────────┼────────┼─────┼─────┼─────┼─────┤
+  └─────┴───────┴──────┴──────┴──────────┴────────┴─────┴─────┴─────┴─────┘
+
+  Poin penting:
+  - Outstanding Returnable readonly wajib tampil.
+  - Untuk non-serial:
+    - user isi returnQty
+    - tidak boleh > outstanding
+    - container/grid dari GR asal bisa readonly atau selectable terbatas; ini
+  perlu dicek implementasi GR menyimpan container per line.
+  - Untuk serial:
+    - returnQty derived dari jumlah serial yang dipilih
+    - tombol “Select Serial”
+    - serial selector hanya menampilkan serial dari GR/PO yang dipilih, masih
+  on-hand, belum reserved
+    - tidak boleh melebihi GR/PO selected source
+
+  Line reason/note:
+  - lineReason required
+  - lineNote required sesuai keputusan kamu
+
+  ---
+  Selector yang dibutuhkan
+
+  1. GR Eligible Source Selector
+
+  Karena kompleks: modal/table selector.
+
+  Endpoint kira-kira:
+
+  GET /purchasing/purchase-returns/selectors/goods-receipts
+
+  Filter:
+  - q
+  - supplierId
+  - poId
+  - fromDate
+  - toDate
+
+  DTO:
+
+  PurchaseReturnGoodsReceiptSelectorRow
+  - goodsReceiptId
+  - goodsReceiptCode
+  - purchaseOrderId
+  - purchaseOrderCode
+  - supplierId
+  - supplierName
+  - supplierCode
+  - receiptDate
+  - facilityName
+  - currencyCode
+  - returnableLineCount
+  - totalReturnableQuantity
+
+  ---
+  2. Return Line Selector / Pre-filled Lines
+
+  Kalau pre-add 2 langsung menampilkan semua eligible GR lines, mungkin tidak
+  butuh modal line selector di awal.
+
+  Tapi kalau GR punya banyak line, lebih baik:
+
+  - pre-add 2 tampil header + tombol Add Return Line
+  - tombol buka modal multi-select eligible GR lines
+
+  Selector line columns:
+
+  ┌───────┬───────┬─────┬───────┬───────┬─────────┬─────┬────────┬─────────┐
+  │ Check │ Produ │ GR  │ Retur │ Reser │ Outstan │ UOM │ Contai │ Seriali │
+  │  box  │  ct   │ Qty │  ned  │  ved  │  ding   │     │  ner   │   zed   │
+  ├───────┼───────┼─────┼───────┼───────┼─────────┼─────┼────────┼─────────┤
+  └───────┴───────┴─────┴───────┴───────┴─────────┴─────┴────────┴─────────┘
+
+  Endpoint:
+
+  GET /purchasing/purchase-returns/selectors/goods-receipt-lines?goodsReceiptId=
+  {id}&excludeLineIds=...
+
+  Ini mengikuti modal-selector.md karena:
+  - data kompleks
+  - perlu multi-select
+  - perlu query-level exclusion
+  - perlu outstanding readonly
+
+  Rekomendasi saya untuk MVP: pre-add 2 langsung prefill all eligible lines 
+  dengan qty 0, seperti GR from PO. User isi qty yang mau di-return. Lebih cepat
+  untuk implementasi dan konsisten dengan GR.
+
+  Kalau nanti line banyak, baru tambah modal “Add Line”.
+
+  ---
+  3. Serial Selector
+
+  Untuk serialized item, wajib modal selector.
+
+  Endpoint:
+
+  GET /purchasing/purchase-returns/selectors/serials?goodsReceiptLineId={id}&con
+  tainerId={id}
+
+  Columns:
+
+  ┌──────────┬───────────────┬─────────┬───────────┬────────┐
+  │ Checkbox │ Serial Number │ Product │ Container │ Status │
+  ├──────────┼───────────────┼─────────┼───────────┼────────┤
+  └──────────┴───────────────┴─────────┴───────────┴────────┘
+
+  Rules:
+  - hanya serial dari selected GR line / selected PO-GR context
+  - masih on-hand
+  - belum reserved
+  - belum returned
+  - query-level exclusion
+
+  Ini sebaiknya multi-select modal. Return qty otomatis = jumlah serial
+  selected.
+
+  ---
+  Autocomplete yang masih cocok
+
+  Autocomplete dipakai untuk filter sederhana saja:
+
+  - Supplier filter
+  - PO filter/search kalau hanya untuk menyempitkan GR selector
+  - mungkin Product filter di line selector
+
+  Tapi untuk memilih actual source document dan serial, saya setuju pakai modal
+  karena butuh konteks tabel.
+
+  ---
+  Pertanyaan UI terakhir
+
+  Menurut saya tinggal 2 pertanyaan kecil:
+
+  1. Di pre-add 2, mau langsung tampilkan semua eligible GR lines atau pakai 
+  tombol Add Line + modal multi-select?
+
+  Rekomendasi saya untuk MVP: langsung tampilkan semua eligible GR lines dengan
+  returnQty = 0.
+
+  Alasannya:
+  - mirip GR pre-add dari PO
+  - user langsung lihat seluruh outstanding
+  - lebih mudah untuk smoke/happy path
+  - tidak perlu line selector tambahan dulu
+
+  Kalau GR bisa sangat panjang, nanti baru tambah modal line selector.
+
+  2. Header note required dan line note required — apakah keduanya benar-benar 
+  wajib?
+
+  Kamu bilang “header reason/notenya” dan “line item reason/notenya” required.
+  Saya interpretasikan:
+  - header reason: required
+  - header note: required
+  - line reason: required
+  - line note: required
+
+  Ini agak strict, tapi bagus untuk audit. Mau tetap strict seperti itu?
+
+  ---
+  Kalau jawaban kamu:
+  1. pre-add2 langsung tampil semua eligible lines, dan
+  2. semua reason/note required,
+
+  maka menurut saya tidak ada pertanyaan blocker lagi. Setelah itu saya bisa
+  tulis summary brainstorming ke
+  docs/brainstorming/2026-06-01-purchase-return.md sebagai artefak final
+  diskusi.
+  ⎿  Stop says: Claude Code selesai
+
+✻ Baked for 47s
+
+❯ List Page:                                                                    
+  untuk tombol actions di sederhanakan saja menjadi Edit, untuk tombol lainnya  
+  di dalam halaman form/view                                                    
+                                                                                
+  Preadd1:                                                                      
+  Saran untuk eligible GRnya ada hyperlink ke halaman GR dan POnya agar bisa    
+  lihat detail line itemnya dengan mudah.                                       
+  sebenarnya ini bukan modal tapi halaman biasa kalau tidak salah yang multi    
+  step form itu di fitur Vendir Bill                                            
+                                                                                
+  Preadd2                                                                       
+  Reason required tapi Note optional maaf saya keliru                           
+  dan untuk line item anda benar secara otomatis mengisi line item tapi qtynya  
+  0 dan bisa di delete line itemnya. dan tetap butuh modal selector agar ketika 
+  line item yang sudah di delete bisa di tambah lagi.                           
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+  berdasarkan jawaban ini apakah ada yang perlu ditanyakan lagi pada UInya ?    
+  atau hal lain ?                                                               
+  ⎿  API Error: API returned an empty or malformed response (HTTP 200) — check 
+     for a proxy or gateway intercepting the request
+
+✻ Cogitated for 1m 25s
+
+❯ /model 
+  ⎿  Kept model as cx/gpt-5.5
+
+❯ /model 
+  ⎿  Kept model as cx/gpt-5.5
