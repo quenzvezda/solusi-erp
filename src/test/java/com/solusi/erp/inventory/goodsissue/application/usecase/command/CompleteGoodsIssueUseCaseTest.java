@@ -165,7 +165,129 @@ class CompleteGoodsIssueUseCaseTest {
         verify(repository, never()).save(any());
     }
 
+    @Test
+    void complete_whenGoodsIssueDoesNotExist_throwsNotFound() {
+        when(repository.findById(7L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> useCase.execute(7L))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.gi.notfound");
+    }
+
+    @Test
+    void complete_whenAlreadyCompleted_rejectsImmutableDocument() {
+        GoodsIssue issue = issue(GoodsIssueStatus.COMPLETED, List.of(line(false, "2.0000", null)));
+        when(repository.findById(7L)).thenReturn(Optional.of(issue));
+
+        assertThatThrownBy(() -> useCase.execute(7L))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.gi.completed.immutable");
+
+        verify(stockService, never()).adjust(any());
+    }
+
+    @Test
+    void complete_whenCancelled_rejectsImmutableDocument() {
+        GoodsIssue issue = issue(GoodsIssueStatus.CANCELLED, List.of(line(false, "2.0000", null)));
+        when(repository.findById(7L)).thenReturn(Optional.of(issue));
+
+        assertThatThrownBy(() -> useCase.execute(7L))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.gi.cancelled.immutable");
+
+        verify(stockService, never()).adjust(any());
+    }
+
+    @Test
+    void complete_whenNoPositiveLines_rejectsEmptyDocument() {
+        GoodsIssue issue = draftIssue(List.of());
+        when(repository.findById(7L)).thenReturn(Optional.of(issue));
+
+        assertThatThrownBy(() -> useCase.execute(7L))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.gi.complete.no.lines");
+
+        verify(stockService, never()).adjust(any());
+    }
+
+    @Test
+    void complete_skipsNullQuantityLineAndUsesNullableSnapshotFallbacks() {
+        GoodsIssueLine emptyLine = flexibleLine(null, null, null, null, null, null);
+        GoodsIssueLine nullableSnapshotLine = flexibleLine(
+                new BigDecimal("2.0000"), null, new BigDecimal("2.0000"), null, null, null);
+        GoodsIssue issue = draftIssue(List.of(emptyLine, nullableSnapshotLine));
+        when(repository.findById(7L)).thenReturn(Optional.of(issue));
+
+        useCase.execute(7L);
+
+        ArgumentCaptor<StockMovementPayload> stockCaptor = ArgumentCaptor.forClass(StockMovementPayload.class);
+        verify(stockService).adjust(stockCaptor.capture());
+        assertThat(stockCaptor.getValue().getNetPrice()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(stockCaptor.getValue().getValuationReferenceType()).isNull();
+
+        ArgumentCaptor<JournalPostingCommand> journalCaptor = ArgumentCaptor.forClass(JournalPostingCommand.class);
+        verify(postJournalForEventUseCase).execute(journalCaptor.capture());
+        assertThat(journalCaptor.getValue().values().get(JournalVariable.GI_INVENTORY_AMT))
+                .isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    void complete_whenUomAndBaseQuantityMissing_usesIssuedQuantityAsBase() {
+        GoodsIssueLine nullableUomLine = flexibleLine(
+                new BigDecimal("2.0000"), null, null, new BigDecimal("10.0000"), BigDecimal.ZERO, BigDecimal.ZERO);
+        GoodsIssue issue = draftIssue(List.of(nullableUomLine));
+        when(repository.findById(7L)).thenReturn(Optional.of(issue));
+
+        useCase.execute(7L);
+
+        ArgumentCaptor<JournalPostingCommand> journalCaptor = ArgumentCaptor.forClass(JournalPostingCommand.class);
+        verify(postJournalForEventUseCase).execute(journalCaptor.capture());
+        assertThat(journalCaptor.getValue().values().get(JournalVariable.GI_INVENTORY_AMT))
+                .isEqualByComparingTo("20.0000");
+    }
+
+    @Test
+    void complete_serializedRejectsMissingSerialNumbers() {
+        GoodsIssue issue = draftIssue(List.of(line(true, "2.0000", null)));
+        when(repository.findById(7L)).thenReturn(Optional.of(issue));
+        when(uomConversionService.convertToBaseUom(201L, 1L, new BigDecimal("2.0000")))
+                .thenReturn(new BigDecimal("2.0000"));
+
+        assertThatThrownBy(() -> useCase.execute(7L))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.gi.serial.quantity.whole");
+
+        verify(stockService, never()).adjust(any());
+    }
+
+    @Test
+    void complete_serializedRejectsZeroBaseQuantity() {
+        GoodsIssue issue = draftIssue(List.of(line(true, "2.0000", "SN-001,SN-002")));
+        when(repository.findById(7L)).thenReturn(Optional.of(issue));
+        when(uomConversionService.convertToBaseUom(201L, 1L, new BigDecimal("2.0000")))
+                .thenReturn(BigDecimal.ZERO);
+
+        assertThatThrownBy(() -> useCase.execute(7L))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.gi.serial.quantity.whole");
+
+        verify(stockService, never()).adjust(any());
+    }
+
+    @Test
+    void inventoryTotal_ignoresNullAmounts() {
+        GoodsIssueLine nullAmountLine = flexibleLine(BigDecimal.ONE, null, BigDecimal.ONE, null, null, null);
+        GoodsIssueLine amountLine = lineWithInventoryAmount(BigDecimal.TEN);
+
+        assertThat(CompleteGoodsIssueUseCaseImpl.inventoryTotal(List.of(nullAmountLine, amountLine)))
+                .isEqualByComparingTo(BigDecimal.TEN);
+    }
+
     static GoodsIssue draftIssue(List<GoodsIssueLine> lines) {
+        return issue(GoodsIssueStatus.DRAFT, lines);
+    }
+
+    static GoodsIssue issue(GoodsIssueStatus status, List<GoodsIssueLine> lines) {
         return new GoodsIssue(
                 new AuditMetadata(7L, 1L, null, null, null, null),
                 "GI-202606-00001",
@@ -178,7 +300,7 @@ class CompleteGoodsIssueUseCaseTest {
                 3L,
                 1L,
                 BigDecimal.ONE,
-                GoodsIssueStatus.DRAFT,
+                status,
                 null,
                 lines
         );
@@ -195,6 +317,33 @@ class CompleteGoodsIssueUseCaseTest {
                 unitCost, amount,
                 BigDecimal.ZERO, BigDecimal.ZERO, amount,
                 "GOODS_RECEIPT", 301L, 401L
+        );
+    }
+
+    static GoodsIssueLine flexibleLine(BigDecimal quantity,
+                                       Long uomId,
+                                       BigDecimal baseQuantity,
+                                       BigDecimal unitCost,
+                                       BigDecimal taxBaseAmount,
+                                       BigDecimal taxAmount) {
+        return GoodsIssueLine.prefill(
+                101L, 201L, false,
+                quantity, uomId, baseQuantity,
+                3L, 4L, 5L, null,
+                unitCost, null,
+                taxBaseAmount, taxAmount, null,
+                null, null, null
+        );
+    }
+
+    static GoodsIssueLine lineWithInventoryAmount(BigDecimal inventoryAmount) {
+        return GoodsIssueLine.prefill(
+                101L, 201L, false,
+                BigDecimal.ONE, null, BigDecimal.ONE,
+                3L, 4L, 5L, null,
+                inventoryAmount, inventoryAmount,
+                BigDecimal.ZERO, BigDecimal.ZERO, inventoryAmount,
+                null, null, null
         );
     }
 }

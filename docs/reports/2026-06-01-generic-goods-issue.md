@@ -231,11 +231,11 @@
 - **Action taken:** Documented the seam in `docs/modules/inventory/goods-issue.md` and `PurchaseReturnGoodsIssueSourcePort`; source selector returns unsupported-source warning rather than fake PR rows.
 - **Ref:** `src/main/java/com/solusi/erp/inventory/goodsissue/domain/port/PurchaseReturnGoodsIssueSourcePort.java`
 
-### Finding: Final Maven run emitted a JaCoCo warning but exited successfully
+### Finding: Initial full Maven run emitted a JaCoCo warning but exited successfully
 - **Type:** execution note
 - **Severity:** info
 - **Detail:** `mvn clean test` ran 1670 tests with 0 failures/errors and `BUILD SUCCESS` on version `1.11.0`. JaCoCo still printed branch coverage 0.78 vs expected 0.80 as a warning, but did not fail the Maven build.
-- **Action taken:** Treated the final verification as passed because Maven exited successfully and reported `BUILD SUCCESS`.
+- **Action taken:** Added targeted `CompleteGoodsIssueUseCaseTest` edge-case coverage in a follow-up pass, then reran the full gate until JaCoCo reported `All coverage checks have been met.`
 - **Ref:** `pom.xml`
 
 ### Finding: Version bumped for the new GI feature
@@ -247,4 +247,5 @@
 
 ## Final Verification
 - `mvn test '-Dtest=FifoValuationServiceTest,StockServiceTest,*GoodsIssue*,*Journal*Test,*Schema*Test,GoodsIssueMigrationTest' -DfailIfNoTests=false`: 201 tests, 0 failures, 0 errors, `BUILD SUCCESS`.
-- `mvn clean test`: 1670 tests, 0 failures, 0 errors, `BUILD SUCCESS`.
+- Initial `mvn clean test`: 1670 tests, 0 failures, 0 errors, `BUILD SUCCESS`, with JaCoCo branch warning 0.78 vs 0.80.
+- Final `mvn clean test`: 1679 tests, 0 failures, 0 errors, `BUILD SUCCESS`, `All coverage checks have been met.`
