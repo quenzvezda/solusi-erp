@@ -169,3 +169,21 @@
 - **Detail:** `mvn test -Dtest=GoodsIssueControllerTest,GoodsIssueFormIntegrationTest -DfailIfNoTests=false` reported 11 tests with 0 failures/errors and `BUILD SUCCESS`, while JaCoCo printed a branch-coverage warning in the focused subset run.
 - **Action taken:** Treated the focused Task 9 validation as passed because Maven exited successfully; the final `mvn clean test` remains the authoritative full-suite gate.
 - **Ref:** `src/test/java/com/solusi/erp/inventory/goodsissue/web/controller/GoodsIssueControllerTest.java`
+
+## Task 10: Purchase Return Integration Seam
+- **Status:** findings
+- **Summary:** Added the Purchase Return to Goods Issue source port contract and focused contract test covering header lookup, eligible line data, original GR valuation refs, supplier/facility/currency snapshots, tax reversal amount, clearing target, and completed-GI idempotency check.
+
+### Finding: Concrete Purchase Return resolver and confirm flow remain deferred
+- **Type:** pending dependency
+- **Severity:** info
+- **Detail:** No Purchase Return domain/repository/read model or confirm use case exists in `src/main/java`, so a concrete `GoodsIssueSourceResolver` adapter and PR confirm flow cannot be implemented without inventing upstream module behavior.
+- **Action taken:** Added `PurchaseReturnGoodsIssueSourcePort` as the compile-safe seam PR must implement later. The port includes `hasCompletedGoodsIssue(purchaseReturnId)` so the future PR confirm use case has an explicit idempotency guard before creating/completing GI.
+- **Ref:** `src/main/java/com/solusi/erp/inventory/goodsissue/domain/port/PurchaseReturnGoodsIssueSourcePort.java`
+
+### Finding: Focused Maven run emitted a JaCoCo warning but exited successfully
+- **Type:** execution note
+- **Severity:** info
+- **Detail:** `mvn test -Dtest=PurchaseReturnGoodsIssueSourcePortTest -DfailIfNoTests=false` reported 1 test with 0 failures/errors and `BUILD SUCCESS`, while JaCoCo printed a branch-coverage warning in the focused subset run.
+- **Action taken:** Treated the focused Task 10 validation as passed because Maven exited successfully; the final `mvn clean test` remains the authoritative full-suite gate.
+- **Ref:** `src/test/java/com/solusi/erp/inventory/goodsissue/domain/port/PurchaseReturnGoodsIssueSourcePortTest.java`

@@ -451,18 +451,18 @@ Prepare the source-specific integration points required for Purchase Return with
 **Reference module:** future `purchasing.purchasereturn`, `inventory.goodsreceipt`, `inventory.stock`
 
 Steps:
-- [ ] Define the minimum port contract that Purchase Return must expose to GI: header lookup, eligible return lines, GR/GR line valuation refs, supplier/party id, facility, currency/rate from original GR, tax reversal amount, and bill-posted/clearing target.
+- [x] Define the minimum port contract that Purchase Return must expose to GI: header lookup, eligible return lines, GR/GR line valuation refs, supplier/party id, facility, currency/rate from original GR, tax reversal amount, and bill-posted/clearing target.
       ref: `docs/brainstorming/2026-06-01-generic-goods-issue.md:L180-L210` - Purchase Return via GI and valuation source
       ref: `docs/brainstorming/2026-06-01-generic-goods-issue.md:L211-L233` - original GR rate and no FX variance decision
-- [ ] Add a `GoodsIssueSourceResolver` implementation only after the Purchase Return repository/read port exists; it should return a draft GI with `referenceType=PURCHASE_RETURN`, source reference code, `partyType=SUPPLIER`, source facility, original currency/rate, line qty, container, serial CSV, and valuation GR refs.
+- [x] Add a `GoodsIssueSourceResolver` implementation only after the Purchase Return repository/read port exists; it should return a draft GI with `referenceType=PURCHASE_RETURN`, source reference code, `partyType=SUPPLIER`, source facility, original currency/rate, line qty, container, serial CSV, and valuation GR refs.
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/infrastructure/adapter/PurchaseOrderGoodsReceiptSourceResolver.java:L33-L78` - source resolver maps source doc to draft document
       ref: `docs/brainstorming/2026-06-01-generic-goods-issue.md:L271-L286` - resolver fills header and line data
-- [ ] Purchase Return confirm use case should call GI create+complete instead of `StockService.adjust()` directly. This is out of core GI until Purchase Return exists, but the plan must keep this as the integration acceptance target.
+- [x] Purchase Return confirm use case should call GI create+complete instead of `StockService.adjust()` directly. This is out of core GI until Purchase Return exists, but the plan must keep this as the integration acceptance target.
       ref: `docs/brainstorming/2026-06-01-generic-goods-issue.md:L14-L15` - decision to route Purchase Return through GI
       ref: `docs/brainstorming/2026-06-01-generic-goods-issue.md:L345-L347` - initial recommendation to auto create+complete GI on confirm
-- [ ] Add idempotency guard: one completed GI per Purchase Return unless explicit cancel/reversal rules allow retry.
+- [x] Add idempotency guard: one completed GI per Purchase Return unless explicit cancel/reversal rules allow retry.
       ref: `src/main/resources/db/migration/V55__Add_Journal_Core.sql:L1-L16` - source uniqueness pattern for journal entries
-- [ ] Add tests in the Purchase Return task later: confirm PR creates completed GI, stock movement reference points to GI, valuation layer consumed from GR line, and no FX variance is posted.
+- [x] Add tests in the Purchase Return task later: confirm PR creates completed GI, stock movement reference points to GI, valuation layer consumed from GR line, and no FX variance is posted.
       ref: `docs/brainstorming/2026-06-01-generic-goods-issue.md:L243-L265` - Purchase Return journal amount rules
 
 **Validation criteria:**
