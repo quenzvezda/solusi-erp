@@ -192,22 +192,22 @@ Build source resolver contracts so GI can be created from different source docum
 **Reference module:** `inventory.goodsreceipt`
 
 Steps:
-- [ ] Create `GoodsIssueSourceResolver` with `getReferenceType()` and `resolve(Long referenceId)` returning a draft `GoodsIssue`.
+- [x] Create `GoodsIssueSourceResolver` with `getReferenceType()` and `resolve(Long referenceId)` returning a draft `GoodsIssue`.
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/infrastructure/adapter/PurchaseOrderGoodsReceiptSourceResolver.java:L17-L31` - existing resolver type contract usage
       ref: `docs/brainstorming/2026-06-01-generic-goods-issue.md:L267-L286` - GI resolver responsibilities
-- [ ] Create `GoodsIssueSourceResolverRegistry` backed by `EnumMap`; reject duplicate resolver and unsupported source types.
+- [x] Create `GoodsIssueSourceResolverRegistry` backed by `EnumMap`; reject duplicate resolver and unsupported source types.
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/infrastructure/service/GoodsReceiptSourceResolverRegistry.java:L11-L30` - resolver registry pattern
-- [ ] Create `GoodsIssueReferenceLookupProvider` for reference code, reference line snapshots, and optional source line selector rows. The provider may return empty for unimplemented future source types, but must not throw in list/detail enrichment for historical rows.
+- [x] Create `GoodsIssueReferenceLookupProvider` for reference code, reference line snapshots, and optional source line selector rows. The provider may return empty for unimplemented future source types, but must not throw in list/detail enrichment for historical rows.
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/domain/port/GoodsReceiptReferenceLookupProvider.java` - GR reference lookup provider shape
-- [ ] Create `GetGoodsIssueCreateViewUseCase` to call resolver when `referenceType/referenceId` are supplied and to reject unsupported source types with `msg.error.gi.reference.unsupported`.
+- [x] Create `GetGoodsIssueCreateViewUseCase` to call resolver when `referenceType/referenceId` are supplied and to reject unsupported source types with `msg.error.gi.reference.unsupported`.
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/application/usecase/query/GetGoodsReceiptCreateViewUseCaseImpl.java` - create-view resolver use case
-- [ ] Create `GetGoodsIssueEditViewUseCase`, `GetGoodsIssueUseCase`, and `FindGoodsIssuesUseCase`.
+- [x] Create `GetGoodsIssueEditViewUseCase`, `GetGoodsIssueUseCase`, and `FindGoodsIssuesUseCase`.
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/infrastructure/config/GoodsReceiptConfig.java:L69-L108` - query use-case bean map
-- [ ] Add a `PurchaseReturnGoodsIssueSourceResolver` only when the Purchase Return domain/repository exists. Until then, add a report finding and leave concrete PR adapter task pending.
+- [x] Add a `PurchaseReturnGoodsIssueSourceResolver` only when the Purchase Return domain/repository exists. Until then, add a report finding and leave concrete PR adapter task pending.
       ref: `docs/brainstorming/2026-06-01-generic-goods-issue.md:L180-L210` - Purchase Return via GI and specific-layer valuation requirement
-- [ ] **TEST:** Add registry duplicate/unsupported tests.
+- [x] **TEST:** Add registry duplicate/unsupported tests.
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/infrastructure/service/GoodsReceiptSourceResolverRegistry.java:L15-L29` - error branches to cover
-- [ ] **TEST:** Add create-view use case tests for supported resolver, unsupported source, and missing source id.
+- [x] **TEST:** Add create-view use case tests for supported resolver, unsupported source, and missing source id.
       ref: `src/test/java/com/solusi/erp/inventory/goodsreceipt/application/usecase/query/` - query use case test package pattern
 
 **Validation criteria:**

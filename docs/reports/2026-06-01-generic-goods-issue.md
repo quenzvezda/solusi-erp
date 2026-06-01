@@ -54,3 +54,21 @@
 - **Detail:** One focused Maven run stopped with `^C` before producing a valid result.
 - **Action taken:** Reran `mvn test -Dtest=GoodsIssueTest,GoodsIssuePersistenceMapperTest -DfailIfNoTests=false`; it passed with 9 tests, 0 failures, 0 errors.
 - **Ref:** `src/test/java/com/solusi/erp/inventory/goodsissue/infrastructure/persistence/GoodsIssuePersistenceMapperTest.java`
+
+## Task 4: Resolver Registry And Create/Edit View Query Use Cases
+- **Status:** findings
+- **Summary:** Added GI source resolver port, EnumMap resolver registry, no-op reference lookup provider for future sources, create/edit/get/find query use cases, Spring wiring, and focused registry/create/query tests.
+
+### Finding: Purchase Return adapter deferred
+- **Type:** pending dependency
+- **Severity:** info
+- **Detail:** The plan allows `PurchaseReturnGoodsIssueSourceResolver` only when a Purchase Return domain/repository exists. No `PurchaseReturn` production type is present under `src/main/java`.
+- **Action taken:** Did not add a concrete Purchase Return resolver. Kept GI core source-agnostic through the resolver port/registry and a no-op lookup provider that returns empty data for unimplemented future source types.
+- **Ref:** `src/main/java/com/solusi/erp/inventory/goodsissue/domain/port/GoodsIssueSourceResolver.java`
+
+### Finding: Task order adjusted for TDD
+- **Type:** deviation
+- **Severity:** info
+- **Detail:** The approved plan listed implementation steps before tests, but the active TDD workflow requires RED tests before production code.
+- **Action taken:** Added registry/create-view/query tests first, observed expected compile failures for missing ports/use cases, then implemented production code and reran the focused tests successfully.
+- **Ref:** `src/test/java/com/solusi/erp/inventory/goodsissue/application/usecase/query/GetGoodsIssueCreateViewUseCaseTest.java`
