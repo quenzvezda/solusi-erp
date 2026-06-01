@@ -11,6 +11,7 @@ class GoodsIssueFormIntegrationTest {
 
     private final String html = readTemplate();
     private final String js = readScript();
+    private final String sourceLineSelectorFragment = readSourceLineSelectorFragment();
 
     @Test
     void formTemplate_containsAjaxDateHiddenSourceAndActionContracts() {
@@ -90,6 +91,33 @@ class GoodsIssueFormIntegrationTest {
         assertThat(js).doesNotContain("new bootstrap.Modal");
     }
 
+    @Test
+    void sourceLineSelectorFragment_containsHtmxPayloadPaginationAndApplyContracts() {
+        assertThat(sourceLineSelectorFragment).contains("id=\"gi-source-line-selector-results\"");
+        assertThat(sourceLineSelectorFragment).contains("th:fragment=\"gi-source-line-selector-results\"");
+        assertThat(sourceLineSelectorFragment).contains("hx-get=\"/inventory/goods-issues/selectors/source-lines\"");
+        assertThat(sourceLineSelectorFragment).contains("hx-target=\"#gi-source-line-selector-results\"");
+        assertThat(sourceLineSelectorFragment).contains("name=\"excludeReferenceLineIds\"");
+        assertThat(sourceLineSelectorFragment).contains("msg.warning.gi.selector.sourceLine.unsupported");
+        assertThat(sourceLineSelectorFragment).contains("data-reference-line-id=${row.referenceLineId}");
+        assertThat(sourceLineSelectorFragment).contains("data-product-id=${row.productId}");
+        assertThat(sourceLineSelectorFragment).contains("data-product-name=${row.productName}");
+        assertThat(sourceLineSelectorFragment).contains("data-product-subtext=${row.productCode}");
+        assertThat(sourceLineSelectorFragment).contains("data-uom-id=${row.uomId}");
+        assertThat(sourceLineSelectorFragment).contains("data-uom-name=${row.uomName}");
+        assertThat(sourceLineSelectorFragment).contains("data-uom-subtext=${row.uomCode}");
+        assertThat(sourceLineSelectorFragment).contains("data-facility-id=${row.facilityId}");
+        assertThat(sourceLineSelectorFragment).contains("data-grid-id=${row.gridId}");
+        assertThat(sourceLineSelectorFragment).contains("data-container-id=${row.containerId}");
+        assertThat(sourceLineSelectorFragment).contains("data-valuation-ref-type=${row.valuationRefType}");
+        assertThat(sourceLineSelectorFragment).contains("data-valuation-ref-id=${row.valuationRefId}");
+        assertThat(sourceLineSelectorFragment).contains("data-valuation-ref-line-id=${row.valuationRefLineId}");
+        assertThat(sourceLineSelectorFragment).contains("data-serialized=${row.serialized}");
+        assertThat(sourceLineSelectorFragment).contains("data-remaining-quantity=${row.remainingQuantity}");
+        assertThat(sourceLineSelectorFragment).contains("fragments/table :: pagination(${page})");
+        assertThat(sourceLineSelectorFragment).contains("js-gi-source-line-selector-apply");
+    }
+
     private static String readTemplate() {
         try {
             return Files.readString(Path.of("src/main/resources/templates/inventory/goods-issues/form.html"));
@@ -101,6 +129,14 @@ class GoodsIssueFormIntegrationTest {
     private static String readScript() {
         try {
             return Files.readString(Path.of("src/main/resources/static/js/inventory/goods-issue/goods-issue-form.js"));
+        } catch (Exception ex) {
+            throw new IllegalStateException(ex);
+        }
+    }
+
+    private static String readSourceLineSelectorFragment() {
+        try {
+            return Files.readString(Path.of("src/main/resources/templates/inventory/goods-issues/fragments/source-line-selector-modal.html"));
         } catch (Exception ex) {
             throw new IllegalStateException(ex);
         }

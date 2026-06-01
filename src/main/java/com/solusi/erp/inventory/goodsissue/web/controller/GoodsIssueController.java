@@ -17,6 +17,7 @@ import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIss
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueUseCase;
 import com.solusi.erp.inventory.goodsissue.domain.model.GoodsIssue;
 import com.solusi.erp.inventory.goodsissue.domain.model.GoodsIssueReferenceType;
+import com.solusi.erp.inventory.goodsissue.domain.port.GoodsIssueReferenceLookupProvider;
 import com.solusi.erp.inventory.goodsissue.web.dto.GoodsIssueDetailResponse;
 import com.solusi.erp.inventory.goodsissue.web.dto.GoodsIssueSaveRequest;
 import com.solusi.erp.inventory.goodsissue.web.dto.GoodsIssueSummaryResponse;
@@ -41,6 +42,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -59,6 +61,7 @@ public class GoodsIssueController {
     private final GetGoodsIssueUseCase getGoodsIssueUseCase;
     private final GetGoodsIssueEditViewUseCase getGoodsIssueEditViewUseCase;
     private final GetGoodsIssueCreateViewUseCase getGoodsIssueCreateViewUseCase;
+    private final GoodsIssueReferenceLookupProvider referenceLookupProvider;
     private final GoodsIssueWebMapper webMapper;
     private final MessageSource messageSource;
 
@@ -94,6 +97,42 @@ public class GoodsIssueController {
         GoodsIssue draft = getGoodsIssueCreateViewUseCase.execute(referenceType, referenceId);
         model.addAttribute("giRequest", webMapper.toSaveRequest(draft));
         return "inventory/goods-issues/form";
+    }
+
+    @GetMapping("/selectors/source-lines")
+    @PreAuthorize("hasAnyAuthority('GOODS-ISSUE_CREATE', 'GOODS-ISSUE_UPDATE')")
+    public String showSourceLineSelector(@RequestParam(required = false) GoodsIssueReferenceType referenceType,
+                                         @RequestParam(required = false) Long referenceId,
+                                         @RequestParam(required = false) String keyword,
+                                         @RequestParam(required = false) List<Long> excludeReferenceLineIds,
+                                         org.springframework.data.domain.Pageable springPageable,
+                                         Model model) {
+        List<Long> excludedLineIds = excludeReferenceLineIds == null ? List.of() : excludeReferenceLineIds;
+        boolean supportedReferenceType = referenceLookupProvider.supportsSourceLineSelector(referenceType);
+
+        List<GoodsIssueReferenceLookupProvider.SourceLineSelectorRow> sourceRows = supportedReferenceType
+                ? referenceLookupProvider.resolveSourceLineSelectorRows(referenceType, referenceId)
+                : List.of();
+
+        List<GoodsIssueReferenceLookupProvider.SourceLineSelectorRow> filteredRows = sourceRows.stream()
+                .filter(row -> row.referenceLineId() == null || !excludedLineIds.contains(row.referenceLineId()))
+                .filter(this::hasRemainingQuantity)
+                .filter(row -> matchesKeyword(row, keyword))
+                .collect(Collectors.toList());
+
+        int start = (int) springPageable.getOffset();
+        int end = Math.min(start + springPageable.getPageSize(), filteredRows.size());
+        List<GoodsIssueReferenceLookupProvider.SourceLineSelectorRow> pageContent = start >= filteredRows.size()
+                ? List.of()
+                : filteredRows.subList(start, end);
+
+        model.addAttribute("page", new PageImpl<>(pageContent, springPageable, filteredRows.size()));
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("referenceType", referenceType);
+        model.addAttribute("referenceId", referenceId);
+        model.addAttribute("excludeReferenceLineIds", excludedLineIds);
+        model.addAttribute("unsupportedReferenceType", !supportedReferenceType);
+        return "inventory/goods-issues/fragments/source-line-selector-modal";
     }
 
     @GetMapping("/edit/{id}")
@@ -171,5 +210,19 @@ public class GoodsIssueController {
         deleteGoodsIssueUseCase.execute(id);
         String msg = messageSource.getMessage("msg.success.gi.deleted", null, LocaleContextHolder.getLocale());
         return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
+    }
+
+    private boolean hasRemainingQuantity(GoodsIssueReferenceLookupProvider.SourceLineSelectorRow row) {
+        return row.remainingQuantity() != null && row.remainingQuantity().compareTo(BigDecimal.ZERO) > 0;
+    }
+
+    private boolean matchesKeyword(GoodsIssueReferenceLookupProvider.SourceLineSelectorRow row, String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return true;
+        }
+        String normalizedKeyword = keyword.toLowerCase();
+        String productName = row.productName() != null ? row.productName().toLowerCase() : "";
+        String productCode = row.productCode() != null ? row.productCode().toLowerCase() : "";
+        return productName.contains(normalizedKeyword) || productCode.contains(normalizedKeyword);
     }
 }

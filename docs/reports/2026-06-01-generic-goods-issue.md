@@ -151,3 +151,21 @@
 - **Detail:** `mvn test -Dtest=GoodsIssueFormIntegrationTest -DfailIfNoTests=false` reported 4 tests with 0 failures/errors and `BUILD SUCCESS`, while JaCoCo printed a branch-coverage warning in the focused subset run.
 - **Action taken:** Treated the focused Task 8 validation as passed because Maven exited successfully; the final `mvn clean test` remains the authoritative full-suite gate.
 - **Ref:** `src/test/java/com/solusi/erp/inventory/goodsissue/web/template/integration/GoodsIssueFormIntegrationTest.java`
+
+## Task 9: Source Line Selector Endpoint And Fragment
+- **Status:** findings
+- **Summary:** Added source-line selector support through the GI reference lookup provider contract, controller endpoint, HTMX fragment, i18n keys, and controller/template contract tests.
+
+### Finding: Source selector support is explicit because Purchase Return is absent
+- **Type:** pending dependency
+- **Severity:** info
+- **Detail:** The Purchase Return module is still absent, so GI cannot produce real eligible Purchase Return rows without fabricating source data.
+- **Action taken:** Added `supportsSourceLineSelector(referenceType)` to the lookup provider. The default no-op provider returns an empty page plus an unsupported-source warning; future Purchase Return integration can opt in by returning `true` and supplying real rows.
+- **Ref:** `src/main/java/com/solusi/erp/inventory/goodsissue/domain/port/GoodsIssueReferenceLookupProvider.java`
+
+### Finding: Focused Maven run emitted a JaCoCo warning but exited successfully
+- **Type:** execution note
+- **Severity:** info
+- **Detail:** `mvn test -Dtest=GoodsIssueControllerTest,GoodsIssueFormIntegrationTest -DfailIfNoTests=false` reported 11 tests with 0 failures/errors and `BUILD SUCCESS`, while JaCoCo printed a branch-coverage warning in the focused subset run.
+- **Action taken:** Treated the focused Task 9 validation as passed because Maven exited successfully; the final `mvn clean test` remains the authoritative full-suite gate.
+- **Ref:** `src/test/java/com/solusi/erp/inventory/goodsissue/web/controller/GoodsIssueControllerTest.java`

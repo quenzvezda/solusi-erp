@@ -15,6 +15,7 @@ import com.solusi.erp.inventory.goodsissue.domain.model.GoodsIssue;
 import com.solusi.erp.inventory.goodsissue.domain.model.GoodsIssuePartyType;
 import com.solusi.erp.inventory.goodsissue.domain.model.GoodsIssueReferenceType;
 import com.solusi.erp.inventory.goodsissue.domain.model.GoodsIssueStatus;
+import com.solusi.erp.inventory.goodsissue.domain.port.GoodsIssueReferenceLookupProvider;
 import com.solusi.erp.inventory.goodsissue.web.dto.GoodsIssueDetailResponse;
 import com.solusi.erp.inventory.goodsissue.web.dto.GoodsIssueSaveRequest;
 import com.solusi.erp.inventory.goodsissue.web.dto.GoodsIssueSummaryResponse;
@@ -22,6 +23,8 @@ import com.solusi.erp.inventory.goodsissue.web.mapper.GoodsIssueWebMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.MessageSource;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
@@ -58,6 +61,7 @@ class GoodsIssueControllerTest {
     private GetGoodsIssueUseCase getUseCase;
     private GetGoodsIssueEditViewUseCase editViewUseCase;
     private GetGoodsIssueCreateViewUseCase createViewUseCase;
+    private GoodsIssueReferenceLookupProvider referenceLookupProvider;
     private GoodsIssueWebMapper webMapper;
     private MessageSource messageSource;
     private GoodsIssueController controller;
@@ -73,11 +77,13 @@ class GoodsIssueControllerTest {
         getUseCase = mock(GetGoodsIssueUseCase.class);
         editViewUseCase = mock(GetGoodsIssueEditViewUseCase.class);
         createViewUseCase = mock(GetGoodsIssueCreateViewUseCase.class);
+        referenceLookupProvider = mock(GoodsIssueReferenceLookupProvider.class);
         webMapper = mock(GoodsIssueWebMapper.class);
         messageSource = mock(MessageSource.class);
         controller = new GoodsIssueController(
                 createUseCase, updateUseCase, deleteUseCase, completeUseCase, cancelUseCase,
-                findUseCase, getUseCase, editViewUseCase, createViewUseCase, webMapper, messageSource);
+                findUseCase, getUseCase, editViewUseCase, createViewUseCase, referenceLookupProvider,
+                webMapper, messageSource);
     }
 
     @Test
@@ -155,11 +161,62 @@ class GoodsIssueControllerTest {
     }
 
     @Test
+    void sourceLineSelector_returnsUnsupportedEmptyFragmentWhenProviderDoesNotSupportReferenceType() throws Exception {
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+                .build();
+
+        mockMvc.perform(get("/inventory/goods-issues/selectors/source-lines")
+                        .param("referenceType", "PURCHASE_RETURN")
+                        .param("referenceId", "70")
+                        .header("HX-Request", "true"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("inventory/goods-issues/fragments/source-line-selector-modal"))
+                .andExpect(model().attribute("unsupportedReferenceType", true))
+                .andExpect(model().attribute("referenceType", GoodsIssueReferenceType.PURCHASE_RETURN))
+                .andExpect(model().attribute("referenceId", 70L));
+    }
+
+    @Test
+    void sourceLineSelector_filtersExcludedKeywordAndExhaustedRowsBeforeRender() {
+        when(referenceLookupProvider.supportsSourceLineSelector(GoodsIssueReferenceType.PURCHASE_RETURN)).thenReturn(true);
+        when(referenceLookupProvider.resolveSourceLineSelectorRows(GoodsIssueReferenceType.PURCHASE_RETURN, 70L))
+                .thenReturn(List.of(
+                        sourceRow(10L, "USB-C Cable", "USB-001", new BigDecimal("5.00")),
+                        sourceRow(11L, "USB-C Adapter", "USB-002", BigDecimal.ZERO),
+                        sourceRow(12L, "HDMI Cable", "HDMI-001", new BigDecimal("3.00"))
+                ));
+
+        Model model = new ExtendedModelMap();
+        String view = controller.showSourceLineSelector(
+                GoodsIssueReferenceType.PURCHASE_RETURN,
+                70L,
+                "usb",
+                List.of(12L),
+                PageRequest.of(0, 20),
+                model
+        );
+
+        assertThat(view).isEqualTo("inventory/goods-issues/fragments/source-line-selector-modal");
+        assertThat(model.getAttribute("unsupportedReferenceType")).isEqualTo(false);
+        assertThat(model.getAttribute("excludeReferenceLineIds")).isEqualTo(List.of(12L));
+        @SuppressWarnings("unchecked")
+        PageImpl<GoodsIssueReferenceLookupProvider.SourceLineSelectorRow> page =
+                (PageImpl<GoodsIssueReferenceLookupProvider.SourceLineSelectorRow>) model.getAttribute("page");
+        assertThat(page.getContent()).extracting(GoodsIssueReferenceLookupProvider.SourceLineSelectorRow::referenceLineId)
+                .containsExactly(10L);
+        verify(referenceLookupProvider).resolveSourceLineSelectorRows(GoodsIssueReferenceType.PURCHASE_RETURN, 70L);
+    }
+
+    @Test
     void preAuthorizeValues_areExactAuthorities() throws Exception {
         assertPreAuthorize("list", "hasAuthority('GOODS-ISSUE_READ')", String.class,
                 GoodsIssueReferenceType.class, Long.class, org.springframework.data.domain.Pageable.class, Model.class);
         assertPreAuthorize("createForm", "hasAuthority('GOODS-ISSUE_CREATE')",
                 GoodsIssueReferenceType.class, Long.class, Model.class);
+        assertPreAuthorize("showSourceLineSelector", "hasAnyAuthority('GOODS-ISSUE_CREATE', 'GOODS-ISSUE_UPDATE')",
+                GoodsIssueReferenceType.class, Long.class, String.class, List.class,
+                org.springframework.data.domain.Pageable.class, Model.class);
         assertPreAuthorize("save", "hasAnyAuthority('GOODS-ISSUE_CREATE', 'GOODS-ISSUE_UPDATE')",
                 GoodsIssueSaveRequest.class);
         assertPreAuthorize("complete", "hasAuthority('GOODS-ISSUE_COMPLETE')", Long.class);
@@ -190,6 +247,40 @@ class GoodsIssueControllerTest {
                 GoodsIssueStatus.DRAFT,
                 "note",
                 List.of()
+        );
+    }
+
+    private static GoodsIssueReferenceLookupProvider.SourceLineSelectorRow sourceRow(Long lineId,
+                                                                                    String productName,
+                                                                                    String productCode,
+                                                                                    BigDecimal remainingQuantity) {
+        return new GoodsIssueReferenceLookupProvider.SourceLineSelectorRow(
+                lineId,
+                100L + lineId,
+                productCode,
+                productName,
+                new BigDecimal("10.00"),
+                new BigDecimal("2.00"),
+                remainingQuantity,
+                1L,
+                "PCS",
+                "Pieces",
+                2L,
+                "WH-01",
+                "Main Warehouse",
+                3L,
+                "GRID-01",
+                "Grid 01",
+                4L,
+                "BIN-01",
+                "Bin 01",
+                false,
+                new BigDecimal("1250.00"),
+                remainingQuantity.multiply(new BigDecimal("1250.00")),
+                BigDecimal.ZERO,
+                "GOODS_RECEIPT",
+                90L,
+                900L + lineId
         );
     }
 }

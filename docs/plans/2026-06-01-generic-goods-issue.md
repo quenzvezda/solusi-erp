@@ -419,23 +419,23 @@ Add selector infrastructure for source lines so GI can pull eligible outbound li
 **Reference module:** `inventory.goodsreceipt`
 
 Steps:
-- [ ] Create selector row DTO such as `GoodsIssueSourceLineSelectorRow` with only data needed by the UI: source line id, product Trinity data, qty remaining, UOM Trinity data, facility/grid/container snapshot, serialized flag, valuation reference, and monetary source values.
+- [x] Create selector row DTO such as `GoodsIssueSourceLineSelectorRow` with only data needed by the UI: source line id, product Trinity data, qty remaining, UOM Trinity data, facility/grid/container snapshot, serialized flag, valuation reference, and monetary source values.
       ref: `docs/spec/modal-selector.md:L49-L65` - row DTO vs selection payload contract
-- [ ] Add controller endpoint `GET /inventory/goods-issues/selectors/source-lines` with `referenceType`, `referenceId`, `keyword`, and `excludeReferenceLineIds`.
+- [x] Add controller endpoint `GET /inventory/goods-issues/selectors/source-lines` with `referenceType`, `referenceId`, `keyword`, and `excludeReferenceLineIds`.
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/web/controller/GoodsReceiptController.java:L99-L143` - GR PO line selector endpoint pattern
-- [ ] Apply query-level exclusion before rendering: no exhausted lines, no ineligible source status, no lines already selected in current draft.
+- [x] Apply query-level exclusion before rendering: no exhausted lines, no ineligible source status, no lines already selected in current draft.
       ref: `docs/spec/modal-selector.md:L67-L76` - query-level exclusion rules
-- [ ] Create `templates/inventory/goods-issues/fragments/source-line-selector-modal.html` with root id and fragment name `gi-source-line-selector-results`, HTMX search form, table, empty state, generic pagination, and footer Apply button.
+- [x] Create `templates/inventory/goods-issues/fragments/source-line-selector-modal.html` with root id and fragment name `gi-source-line-selector-results`, HTMX search form, table, empty state, generic pagination, and footer Apply button.
       ref: `docs/spec/modal-selector.md:L40-L48` - selector fragment minimum structure
       ref: `src/main/resources/templates/inventory/goods-receipts/fragments/po-line-selector-modal.html:L4-L28` - selector search form pattern
       ref: `src/main/resources/templates/inventory/goods-receipts/fragments/po-line-selector-modal.html:L31-L92` - selector table, payload, pagination, apply button
-- [ ] Put selection payload in `data-*` attributes, including valuation refs: `data-reference-line-id`, `data-product-id`, `data-product-name`, `data-product-subtext`, `data-uom-id`, `data-uom-name`, `data-uom-subtext`, `data-facility-id`, `data-grid-id`, `data-container-id`, `data-valuation-ref-type`, `data-valuation-ref-id`, `data-valuation-ref-line-id`, `data-serialized`, and `data-remaining-quantity`.
+- [x] Put selection payload in `data-*` attributes, including valuation refs: `data-reference-line-id`, `data-product-id`, `data-product-name`, `data-product-subtext`, `data-uom-id`, `data-uom-name`, `data-uom-subtext`, `data-facility-id`, `data-grid-id`, `data-container-id`, `data-valuation-ref-type`, `data-valuation-ref-id`, `data-valuation-ref-line-id`, `data-serialized`, and `data-remaining-quantity`.
       ref: `src/main/resources/templates/inventory/goods-receipts/fragments/po-line-selector-modal.html:L47-L56` - row `data-*` payload pattern
-- [ ] If Purchase Return is unavailable, endpoint should return empty page with a clear i18n warning for unsupported reference type. Do not fake Purchase Return data.
+- [x] If Purchase Return is unavailable, endpoint should return empty page with a clear i18n warning for unsupported reference type. Do not fake Purchase Return data.
       ref: `docs/brainstorming/2026-06-01-generic-goods-issue.md:L345-L348` - Purchase Return confirm flow can be automatic later
-- [ ] **TEST:** Add controller tests for endpoint model attributes, unsupported reference type, exclusion ids, and HTMX fragment view.
+- [x] **TEST:** Add controller tests for endpoint model attributes, unsupported reference type, exclusion ids, and HTMX fragment view.
       ref: `src/test/java/com/solusi/erp/inventory/goodsreceipt/web/controller/GoodsReceiptControllerTest.java:L203-L220` - selector enrichment test setup pattern
-- [ ] **TEST:** Add template contract tests for root id/fragment matching, search `hx-target`, payload attributes, pagination fragment, and apply button class.
+- [x] **TEST:** Add template contract tests for root id/fragment matching, search `hx-target`, payload attributes, pagination fragment, and apply button class.
       ref: `docs/spec/modal-selector.md:L116-L135` - selector consumer/testing checklist
 
 **Validation criteria:**

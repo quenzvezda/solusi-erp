@@ -11,7 +11,11 @@ public interface GoodsIssueReferenceLookupProvider {
     String resolveReferenceCode(GoodsIssueReferenceType referenceType, Long referenceId);
 
     Map<Long, ReferenceLineSnapshot> resolveReferenceLineSnapshots(GoodsIssueReferenceType referenceType,
-                                                                   Long referenceId);
+                                                                    Long referenceId);
+
+    default boolean supportsSourceLineSelector(GoodsIssueReferenceType referenceType) {
+        return false;
+    }
 
     List<SourceLineSelectorRow> resolveSourceLineSelectorRows(GoodsIssueReferenceType referenceType,
                                                               Long referenceId);
@@ -30,12 +34,26 @@ public interface GoodsIssueReferenceLookupProvider {
                                  String productCode,
                                  String productName,
                                  BigDecimal sourceQuantity,
-                                 BigDecimal issuedToDateQuantity,
-                                 BigDecimal remainingQuantity,
-                                 Long uomId,
-                                 BigDecimal unitCost,
-                                 String valuationRefType,
-                                 Long valuationRefId,
-                                 Long valuationRefLineId) {
+                                  BigDecimal issuedToDateQuantity,
+                                  BigDecimal remainingQuantity,
+                                  Long uomId,
+                                  String uomCode,
+                                  String uomName,
+                                  Long facilityId,
+                                  String facilityCode,
+                                  String facilityName,
+                                  Long gridId,
+                                  String gridCode,
+                                  String gridName,
+                                  Long containerId,
+                                  String containerCode,
+                                  String containerName,
+                                  boolean serialized,
+                                  BigDecimal unitCost,
+                                  BigDecimal inventoryAmount,
+                                  BigDecimal taxAmount,
+                                  String valuationRefType,
+                                  Long valuationRefId,
+                                  Long valuationRefLineId) {
     }
 }
