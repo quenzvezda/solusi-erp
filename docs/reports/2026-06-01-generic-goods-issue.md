@@ -72,3 +72,28 @@
 - **Detail:** The approved plan listed implementation steps before tests, but the active TDD workflow requires RED tests before production code.
 - **Action taken:** Added registry/create-view/query tests first, observed expected compile failures for missing ports/use cases, then implemented production code and reran the focused tests successfully.
 - **Ref:** `src/test/java/com/solusi/erp/inventory/goodsissue/application/usecase/query/GetGoodsIssueCreateViewUseCaseTest.java`
+
+## Task 5: Command Use Cases For Save, Complete, Delete, And Cancel
+- **Status:** findings
+- **Summary:** Added GI command records/use cases for create, update, delete, complete, and cancel; wired complete/cancel through `TransactionTemplate`; forwarded specific valuation references into stock payloads; and covered draft, complete, serialized, and cancel behavior with focused Mockito tests.
+
+### Finding: Journal reversal uses existing posting API
+- **Type:** decision
+- **Severity:** info
+- **Detail:** The current journal command API does not expose a dedicated reversal operation for source documents.
+- **Action taken:** `CancelGoodsIssueUseCaseImpl` posts a GOODS_ISSUE journal command with negative GI values as the reversal representation, while preserving stock reversal movements and setting GI status to `CANCELLED`.
+- **Ref:** `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CancelGoodsIssueUseCaseImpl.java`
+
+### Finding: Source-specific eligibility remains extension-based
+- **Type:** pending dependency
+- **Severity:** info
+- **Detail:** Purchase Return source classes still do not exist, so concrete source eligibility validation cannot bind to PR rules yet.
+- **Action taken:** Kept create source resolution behind `GoodsIssueSourceResolverRegistry` and implemented completion against the generic GI snapshot. Future PR resolver/validator can add source rules without changing the controller contract.
+- **Ref:** `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CompleteGoodsIssueUseCaseImpl.java`
+
+### Finding: Focused Maven run emitted a JaCoCo warning but exited successfully
+- **Type:** execution note
+- **Severity:** info
+- **Detail:** `mvn test -Dtest=*GoodsIssue*UseCaseTest -DfailIfNoTests=false` reported 19 tests with 0 failures/errors and `BUILD SUCCESS`, while JaCoCo printed a branch-coverage warning in the focused subset run.
+- **Action taken:** Treated the focused Task 5 validation as passed because Maven exited successfully; the final `mvn clean test` remains the authoritative full-suite gate.
+- **Ref:** `src/test/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CompleteGoodsIssueUseCaseTest.java`

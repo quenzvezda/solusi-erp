@@ -223,34 +223,34 @@ Implement command behavior for draft maintenance, stock issue posting, source-sp
 **Reference module:** `inventory.goodsreceipt`, `inventory.stock`, `accounting.journal`
 
 Steps:
-- [ ] Create command records/classes for GI line input, complete request, and cancel request if cancel needs a note/reason.
+- [x] Create command records/classes for GI line input, complete request, and cancel request if cancel needs a note/reason.
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/application/usecase/command/GoodsReceiptLineCommand.java` - line command package pattern
-- [ ] Implement `CreateGoodsIssueUseCaseImpl`: generate code via `SequenceGeneratorService`, resolve draft from source resolver when source-based, validate header/line consistency, and save `DRAFT`.
+- [x] Implement `CreateGoodsIssueUseCaseImpl`: generate code via `SequenceGeneratorService`, resolve draft from source resolver when source-based, validate header/line consistency, and save `DRAFT`.
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/application/usecase/command/CreateGoodsReceiptUseCaseImpl.java` - create command pattern
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/infrastructure/config/GoodsReceiptConfig.java:L37-L42` - sequence service wiring
-- [ ] Implement `UpdateGoodsIssueUseCaseImpl`: only `DRAFT`, preserve reference metadata, replace lines using immutable value objects, and revalidate facility/grid/container consistency.
+- [x] Implement `UpdateGoodsIssueUseCaseImpl`: only `DRAFT`, preserve reference metadata, replace lines using immutable value objects, and revalidate facility/grid/container consistency.
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/domain/model/GoodsReceipt.java:L68-L75` - immutable update guard pattern
-- [ ] Implement `DeleteGoodsIssueUseCaseImpl`: allow delete only for `DRAFT`; completed/cancelled documents are audit records and must not be hard-deleted.
+- [x] Implement `DeleteGoodsIssueUseCaseImpl`: allow delete only for `DRAFT`; completed/cancelled documents are audit records and must not be hard-deleted.
       ref: `docs/brainstorming/2026-06-01-generic-goods-issue.md:L152-L178` - status meaning
-- [ ] Implement `CompleteGoodsIssueUseCaseImpl` in a transaction: load GI, ensure period open, validate source still eligible, resolve valuation cost, call `StockService.adjust()` with `MovementType.ISSUE` and `ReferenceType.GOODS_ISSUE`, snapshot amounts, post source/event journal, then save GI.
+- [x] Implement `CompleteGoodsIssueUseCaseImpl` in a transaction: load GI, ensure period open, validate source still eligible, resolve valuation cost, call `StockService.adjust()` with `MovementType.ISSUE` and `ReferenceType.GOODS_ISSUE`, snapshot amounts, post source/event journal, then save GI.
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/application/usecase/command/CompleteGoodsReceiptUseCaseImpl.java:L54-L108` - completion transaction behavior to mirror
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/application/usecase/command/CompleteGoodsReceiptUseCaseImpl.java:L261-L277` - stock payload builder pattern
       ref: `src/main/java/com/solusi/erp/inventory/stock/domain/model/ReferenceType.java:L11-L19` - `GOODS_ISSUE` already exists for movement ledger
-- [ ] For specific-layer lines, pass valuation reference metadata into stock valuation so Purchase Return can consume the GR layer rather than global FIFO.
+- [x] For specific-layer lines, pass valuation reference metadata into stock valuation so Purchase Return can consume the GR layer rather than global FIFO.
       ref: `docs/brainstorming/2026-06-01-generic-goods-issue.md:L189-L210` - specific GR layer costing rule
-- [ ] For serialized issue lines, require whole base quantity, parse CSV serials, and post one stock movement per serial where needed.
+- [x] For serialized issue lines, require whole base quantity, parse CSV serials, and post one stock movement per serial where needed.
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/application/usecase/command/CompleteGoodsReceiptUseCaseImpl.java:L156-L230` - serialized GR line handling
-- [ ] Implement `CancelGoodsIssueUseCaseImpl`: validate `COMPLETED`, ensure open period, guard downstream dependencies via future `GoodsIssueInUseChecker`, post reversal stock movements and journal reversal, then set `CANCELLED`.
+- [x] Implement `CancelGoodsIssueUseCaseImpl`: validate `COMPLETED`, ensure open period, guard downstream dependencies via future `GoodsIssueInUseChecker`, post reversal stock movements and journal reversal, then set `CANCELLED`.
       ref: `docs/brainstorming/2026-06-01-generic-goods-issue.md:L170-L178` - cancellation requirement and conservative guard
       ref: `src/main/java/com/solusi/erp/accounting/journal/application/usecase/command/PostJournalForEventUseCaseImpl.java:L29-L70` - current journal post behavior; reversal may require extension
-- [ ] Wire command use cases in `GoodsIssueConfig` with `TransactionTemplate` for complete/cancel.
+- [x] Wire command use cases in `GoodsIssueConfig` with `TransactionTemplate` for complete/cancel.
       ref: `src/main/java/com/solusi/erp/inventory/goodsreceipt/infrastructure/config/GoodsReceiptConfig.java:L55-L67` - transactional wrapper pattern
-- [ ] **TEST:** Add create/update/delete use case tests with Mockito.
+- [x] **TEST:** Add create/update/delete use case tests with Mockito.
       ref: `src/test/java/com/solusi/erp/inventory/goodsreceipt/application/usecase/command/CreateGoodsReceiptUseCaseTest.java` - command test package pattern
-- [ ] **TEST:** Add complete use case tests for stock payload, specific valuation metadata, journal command values, period closed, insufficient stock, serialized CSV, and immutable status.
+- [x] **TEST:** Add complete use case tests for stock payload, specific valuation metadata, journal command values, period closed, insufficient stock, serialized CSV, and immutable status.
       ref: `src/test/java/com/solusi/erp/inventory/goodsreceipt/application/usecase/command/CompleteGoodsReceiptUseCaseTest.java:L44-L92` - Mockito setup and stock payload verification
       ref: `src/test/java/com/solusi/erp/inventory/goodsreceipt/application/usecase/command/CompleteGoodsReceiptUseCaseTest.java:L247-L270` - amount snapshot verification pattern
-- [ ] **TEST:** Add cancel use case tests for happy path reversal and all guard failures.
+- [x] **TEST:** Add cancel use case tests for happy path reversal and all guard failures.
       ref: `docs/brainstorming/2026-06-01-generic-goods-issue.md:L339-L343` - cancel and journal open questions resolved in this plan
 
 **Validation criteria:**
