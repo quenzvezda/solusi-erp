@@ -499,19 +499,19 @@ Expose SSR and JSON endpoints without leaking repositories or entities into web.
 
 **Reference modules:** Vendor Bill multi-step create, Purchase Order selectors, Goods Issue controller
 
-- [ ] Create request/response DTOs:
+- [x] Create request/response DTOs:
       `PurchaseReturnSaveRequest`,
       `PurchaseReturnSaveLineRequest`,
       `PurchaseReturnSummaryResponse`,
       `PurchaseReturnDetailResponse`,
       `PurchaseReturnLineDetailResponse`.
       Request/response DTOs extend `BaseAuditResponse` where required by project convention.
-- [ ] Add `@DateTimeFormat(pattern = "yyyy-MM-dd")` to `returnDate`.
+- [x] Add `@DateTimeFormat(pattern = "yyyy-MM-dd")` to `returnDate`.
       ref: `docs/spec/datetime-standards.md:L73-L110` - backend date contract
-- [ ] Create `PurchaseReturnWebMapper`. Keep cross-slice label resolution in read ports/lookup providers, not JPA repository injection.
+- [x] Create `PurchaseReturnWebMapper`. Keep cross-slice label resolution in read ports/lookup providers, not JPA repository injection.
       ref: `docs/AGENTS.md` - web-layer injection boundary
       ref: `docs/spec/autocomplete-generic.md:L108-L171` - SSR Trinity-data boundary
-- [ ] Create controller route `/purchasing/purchase-returns` with:
+- [x] Create controller route `/purchasing/purchase-returns` with:
       list,
       `/select-source`,
       `/create-from-reference`,
@@ -524,24 +524,24 @@ Expose SSR and JSON endpoints without leaking repositories or entities into web.
       `/{id}/cancel-submission`,
       `/{id}/confirm`,
       `/{id}/cancel`.
-- [ ] Create `PurchaseReturnLookupController` endpoint `GET /api/lookup/purchasing/purchase-return-source-pos?q=...&limit=10`.
+- [x] Create `PurchaseReturnLookupController` endpoint `GET /api/lookup/purchasing/purchase-return-source-pos?q=...&limit=10`.
       Back it with `GetEligiblePurchaseReturnPurchaseOrderLookupUseCase`; return standard `LookupDto(id, name, subText, payload)` where PO name is the human-readable PO label and `subText` is the PO code. Do not add a repository dependency to the lookup controller.
       ref: `docs/spec/autocomplete-generic.md:L7-L25` - standard lookup DTO and endpoint shape
-- [ ] Implement Pre-add 1 as a regular page:
+- [x] Implement Pre-add 1 as a regular page:
       filter keyword, supplier, PO, receipt date range;
       return only eligible GR rows;
       provide GR and PO links.
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorbill/web/controller/VendorBillController.java:L72-L124` - regular-page multi-step create
-- [ ] Implement modal selector endpoints with Spring `Pageable`, model attrs for retained filters/exclusions, and selector fragment names.
+- [x] Implement modal selector endpoints with Spring `Pageable`, model attrs for retained filters/exclusions, and selector fragment names.
       ref: `src/main/java/com/solusi/erp/purchasing/purchaseorder/web/controller/PurchaseOrderController.java:L108-L132` - modal selector endpoints
-- [ ] Implement `/view/{id}` approval panel attrs using `FindApprovalRequestByReferenceUseCase("PURCHASE_RETURN", id)` and `SecurityUser`.
+- [x] Implement `/view/{id}` approval panel attrs using `FindApprovalRequestByReferenceUseCase("PURCHASE_RETURN", id)` and `SecurityUser`.
       ref: `src/main/java/com/solusi/erp/purchasing/purchaseorder/web/controller/PurchaseOrderController.java:L232-L260` - approval panel attrs
-- [ ] Apply permissions:
+- [x] Apply permissions:
       READ, CREATE, UPDATE, SUBMIT, CONFIRM, CANCEL.
       Status-specific guards remain in use cases even when buttons are hidden.
-- [ ] Add controller tests for every route, `@PreAuthorize` values, view names, model attrs, paging retention, links, stale selector behavior, submit requester/approver extraction, and view approval attrs.
+- [x] Add controller tests for every route, `@PreAuthorize` values, view names, model attrs, paging retention, links, stale selector behavior, submit requester/approver extraction, and view approval attrs.
       ref: `src/test/java/com/solusi/erp/purchasing/purchaseorder/web/controller/PurchaseOrderControllerTest.java` - Mockito controller test style
-- [ ] Add mapper tests for source snapshots, reasons, current container labels, serial CSV, outstanding qty, and generated GI link.
+- [x] Add mapper tests for source snapshots, reasons, current container labels, serial CSV, outstanding qty, and generated GI link.
 
 **Validation criteria:**
 

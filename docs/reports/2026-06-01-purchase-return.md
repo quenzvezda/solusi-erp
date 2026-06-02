@@ -119,3 +119,17 @@
 - **Status:** clean
 - **Summary:** Added approved-return GI snapshot adapter and resolver, OPEN-period confirm flow, completed-GI idempotency guard, generated-GI linking, reserved outbound movement coverage assertion, post-journal reservation consumption, and generic GI regression coverage.
 - **Verification:** `mvn test -Dtest=CompleteGoodsIssueUseCaseTest,PurchaseReturnGoodsIssueSourceAdapterTest,PurchaseReturnGoodsIssueSourceResolverTest,ConfirmPurchaseReturnUseCaseTest,PurchaseReturnConfigTest,PurchaseReturnGoodsIssueSourcePortTest`
+
+## Task 10: Web DTOs, Mapper, Controller, and Lookup Boundary
+
+### Finding: Submit identity has two distinct meanings
+- **Type:** decision
+- **Severity:** warning
+- **Detail:** Purchase Return stores the authenticated submitting user ID for creator-only cancellation, while generic approval stores the authenticated requester's party ID.
+- **Action taken:** Extracted and passed both values separately from `SecurityUser` in the submit endpoint.
+- **Ref:** `src/main/java/com/solusi/erp/purchasing/purchasereturn/web/controller/PurchaseReturnController.java`
+
+- **Status:** clean
+- **Summary:** Added Purchase Return request/response DTOs, ISO date binding, lookup-provider mapper, SSR/JSON controller routes, PO source autocomplete endpoint, source and serial selector endpoints, approval panel attributes, and permission contracts.
+- **Verification:** `mvn test -Dtest=PurchaseReturnControllerTest,PurchaseReturnWebMapperTest`
+- **Boundary check:** `rg "JpaRepository|infrastructure\\.persistence|domain\\.repository" src/main/java/com/solusi/erp/purchasing/purchasereturn/web -n` returned no matches.
