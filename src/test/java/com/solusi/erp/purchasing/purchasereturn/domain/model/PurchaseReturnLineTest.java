@@ -28,11 +28,35 @@ class PurchaseReturnLineTest {
     }
 
     @Test
+    void create_nullQuantity_rejects() {
+        assertThatThrownBy(() -> line(false, null, BigDecimal.ONE, null,
+                PurchaseReturnReason.DAMAGED, null))
+                .isInstanceOf(DomainException.class)
+                .hasMessage("msg.error.purchase-return.line.quantity-positive");
+    }
+
+    @Test
+    void create_nullBaseQuantity_rejects() {
+        assertThatThrownBy(() -> line(false, BigDecimal.ONE, null, null,
+                PurchaseReturnReason.DAMAGED, null))
+                .isInstanceOf(DomainException.class)
+                .hasMessage("msg.error.purchase-return.line.quantity-positive");
+    }
+
+    @Test
     void create_otherWithoutNote_rejects() {
         assertThatThrownBy(() -> line(false, BigDecimal.ONE, BigDecimal.ONE, null,
                 PurchaseReturnReason.OTHER, null))
                 .isInstanceOf(DomainException.class)
                 .hasMessage("msg.error.purchase-return.line.other-note-required");
+    }
+
+    @Test
+    void create_otherWithNote_succeeds() {
+        PurchaseReturnLine line = line(false, BigDecimal.ONE, BigDecimal.ONE, null,
+                PurchaseReturnReason.OTHER, "Packaging is incomplete");
+
+        assertThat(line.getNote()).isEqualTo("Packaging is incomplete");
     }
 
     @Test
@@ -63,6 +87,14 @@ class PurchaseReturnLineTest {
     @Test
     void create_serializedCountMismatch_rejects() {
         assertThatThrownBy(() -> line(true, BigDecimal.valueOf(2), BigDecimal.valueOf(2), "SER-001",
+                PurchaseReturnReason.DAMAGED, null))
+                .isInstanceOf(DomainException.class)
+                .hasMessage("msg.error.purchase-return.line.serial-count-mismatch");
+    }
+
+    @Test
+    void create_serializedWithoutSerials_rejects() {
+        assertThatThrownBy(() -> line(true, BigDecimal.ONE, BigDecimal.ONE, null,
                 PurchaseReturnReason.DAMAGED, null))
                 .isInstanceOf(DomainException.class)
                 .hasMessage("msg.error.purchase-return.line.serial-count-mismatch");

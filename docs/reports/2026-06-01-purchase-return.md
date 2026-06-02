@@ -204,7 +204,7 @@
 ### Finding: First runtime failure artifacts retained
 - **Type:** verification
 - **Severity:** info
-- **Detail:** Screenshot, video, and Playwright context from the first selector runtime failure were retained under `target/e2e-artifacts/purchase-return-first-runtime-failure/`.
+- **Detail:** Screenshot, video, and Playwright context from the first selector runtime failure were retained under `target/e2e-artifacts/purchase-return-first-runtime-failure/` during diagnosis. The required final `mvn clean test` later removed the generated `target/` directory.
 
 - **Status:** clean
 - **Summary:** Added deterministic H2 Purchase Return fixtures, warmup URLs, and a browser flow covering source links and filters, SSR slices, modal restore, multiple containers, moved serial selection, OTHER notes, reservations, release through final cancellation, second-document approval, confirm, and linked completed GI.
@@ -214,3 +214,31 @@
 - **Verification:** `cd e2e-tests && npx playwright test tests/procurement/purchase-return.spec.ts --list` listed setup plus focused browser coverage.
 - **Verification:** `PLAYWRIGHT_ARGS='tests/procurement/purchase-return.spec.ts' e2e-tests/scripts/run-e2e.sh` passed normally and again after `rm -rf e2e-tests/.auth`; each run reported `5 passed`.
 - **Boundary check:** No new known-issue entry is required in `docs/tests/playwright-pitfalls.md`.
+
+## Task 14: Regression Suite, Edge-Case Matrix, and Final Quality Gate
+
+### Finding: JaCoCo report and check use different exclusion scopes
+- **Type:** deviation
+- **Severity:** warning
+- **Detail:** The HTML/XML `report` execution includes a broader class set than the enforced `check` execution. Raw XML root branch coverage therefore remains below 80% even when the configured quality gate passes.
+- **Action taken:** Recorded both scopes and verified the effective `jacoco:check` counters after applying its configured exclusions. Added Purchase Return line validation tests when the first clean gate reported effective branch coverage `79.7872%`.
+- **Ref:** `pom.xml`
+
+### Finding: IntelliJ background compilation raced Maven output
+- **Type:** verification
+- **Severity:** warning
+- **Detail:** An IntelliJ JPS writer was rebuilding `target/test-classes` while Maven was running. This first caused missing shared test-fixture classes during Surefire and then caused `maven-clean-plugin` to fail deleting a partially rewritten directory.
+- **Action taken:** Waited for the writer to stabilize before the final clean gate and co-located shared Purchase Return command-test factories with `CreatePurchaseReturnUseCaseTest` so command tests do not depend on a separately emitted fixture class.
+
+- **Status:** clean
+- **Summary:** Added four focused Purchase Return line validation contracts for null quantity, null base quantity, serialized lines without serial selection, and valid `OTHER` notes. Completed focused backend, frontend, related-module, browser, and clean Maven gates.
+- **Verification:** `mvn test -Dtest=StockBalanceDomainTest,StockServiceTest,InventoryReservationServiceTest,PurchaseReturnTest,PurchaseReturnLineTest,SubmitPurchaseReturnUseCaseTest,ConfirmPurchaseReturnUseCaseTest,PurchaseReturnControllerTest` passed 91 tests.
+- **Verification:** `mvn test -Dtest=PurchaseReturnListIntegrationTest,PurchaseReturnSelectSourceIntegrationTest,PurchaseReturnFormIntegrationTest,PurchaseReturnViewIntegrationTest,PurchaseReturnMessagesTest` passed 12 tests.
+- **Verification:** `mvn test -Dtest=*GoodsIssue*,*GoodsReceipt*,*PurchaseOrder*,*Approval*` passed 429 tests.
+- **Verification:** `mvn test -Dtest=PurchaseReturnLineTest` passed 12 tests after branch hardening.
+- **Verification:** `mvn clean test` passed 1815 tests with `All coverage checks have been met`.
+- **Coverage:** Raw XML report root: LINE `5966 / 7134 = 83.6277%`; BRANCH `1443 / 1981 = 72.8420%`.
+- **Coverage:** Enforced `jacoco:check` scope: LINE `4654 / 5136 = 90.6153%`; BRANCH `1054 / 1316 = 80.0912%`.
+- **Playwright:** Version `1.60.0`; normal and cold-cache focused runs each passed `5` tests.
+- **Version:** Accepted MINOR SemVer bump is `1.12.0`.
+- **Boundary check:** Phase 2 Debit Memo and dedicated `PURCHASE_RETURN` accounting event remain documented and intentionally unimplemented.
