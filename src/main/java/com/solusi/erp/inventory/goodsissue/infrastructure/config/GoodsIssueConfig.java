@@ -24,13 +24,16 @@ import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIss
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueUseCaseImpl;
 import com.solusi.erp.inventory.goodsissue.domain.port.GoodsIssueReferenceLookupProvider;
 import com.solusi.erp.inventory.goodsissue.domain.port.GoodsIssueSourceResolver;
+import com.solusi.erp.inventory.goodsissue.domain.port.PurchaseReturnGoodsIssueSourcePort;
 import com.solusi.erp.inventory.goodsissue.domain.repository.GoodsIssueRepository;
 import com.solusi.erp.inventory.goodsissue.infrastructure.adapter.GoodsIssueReferenceLookupProviderImpl;
 import com.solusi.erp.inventory.goodsissue.infrastructure.adapter.GoodsIssueRepositoryImpl;
+import com.solusi.erp.inventory.goodsissue.infrastructure.adapter.PurchaseReturnGoodsIssueSourceResolver;
 import com.solusi.erp.inventory.goodsissue.infrastructure.persistence.GoodsIssueJpaRepository;
 import com.solusi.erp.inventory.goodsissue.infrastructure.persistence.GoodsIssuePersistenceMapper;
 import com.solusi.erp.inventory.goodsissue.infrastructure.service.GoodsIssueSourceResolverRegistry;
 import com.solusi.erp.inventory.stock.domain.port.StockService;
+import com.solusi.erp.inventory.stock.domain.port.InventoryReservationService;
 import com.solusi.erp.inventory.uomconversion.domain.port.UomConversionService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -76,9 +79,11 @@ public class GoodsIssueConfig {
                                                                StockService stockService,
                                                                UomConversionService uomConversionService,
                                                                PostJournalForEventUseCase postJournalForEventUseCase,
+                                                               InventoryReservationService reservationService,
                                                                PlatformTransactionManager txManager) {
         CompleteGoodsIssueUseCase pure = new CompleteGoodsIssueUseCaseImpl(
-                repository, ensureOpenPeriod, stockService, uomConversionService, postJournalForEventUseCase);
+                repository, ensureOpenPeriod, stockService, uomConversionService, postJournalForEventUseCase,
+                reservationService);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         return id -> tx.execute(status -> { pure.execute(id); return null; });
     }
@@ -104,6 +109,12 @@ public class GoodsIssueConfig {
     @Bean
     public GoodsIssueSourceResolverRegistry goodsIssueSourceResolverRegistry(List<GoodsIssueSourceResolver> resolvers) {
         return new GoodsIssueSourceResolverRegistry(resolvers);
+    }
+
+    @Bean
+    public GoodsIssueSourceResolver purchaseReturnGoodsIssueSourceResolver(
+            PurchaseReturnGoodsIssueSourcePort sourcePort) {
+        return new PurchaseReturnGoodsIssueSourceResolver(sourcePort);
     }
 
     @Bean

@@ -187,14 +187,18 @@ public class PurchaseReturn {
     }
 
     public void confirm(Long generatedGoodsIssueId) {
-        if (!status.canConfirm()) {
-            throw new DomainException("msg.error.purchase-return.confirm.invalid-status");
-        }
+        validateConfirmation();
         if (generatedGoodsIssueId == null) {
             throw new DomainException("msg.error.purchase-return.confirm.gi-required");
         }
         this.generatedGoodsIssueId = generatedGoodsIssueId;
         status = PurchaseReturnStatus.CONFIRMED;
+    }
+
+    public void validateConfirmation() {
+        if (!status.canConfirm()) {
+            throw new DomainException("msg.error.purchase-return.confirm.invalid-status");
+        }
     }
 
     private static void validateHeader(String referenceType,

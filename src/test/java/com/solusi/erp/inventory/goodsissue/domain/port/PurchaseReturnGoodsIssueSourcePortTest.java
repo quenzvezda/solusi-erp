@@ -3,6 +3,7 @@ package com.solusi.erp.inventory.goodsissue.domain.port;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +17,7 @@ class PurchaseReturnGoodsIssueSourcePortTest {
                 new PurchaseReturnGoodsIssueSourcePort.HeaderSnapshot(
                         70L,
                         "PRTN-0070",
+                        LocalDate.of(2026, 6, 1),
                         11L,
                         3L,
                         1L,

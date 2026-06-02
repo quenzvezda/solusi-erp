@@ -1,6 +1,11 @@
 package com.solusi.erp.purchasing.purchasereturn.infrastructure.config;
 
 import com.solusi.erp.purchasing.purchasereturn.domain.repository.PurchaseReturnRepository;
+import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeriodForDateUseCase;
+import com.solusi.erp.inventory.goodsissue.application.usecase.command.CompleteGoodsIssueUseCase;
+import com.solusi.erp.inventory.goodsissue.domain.port.PurchaseReturnGoodsIssueSourcePort;
+import com.solusi.erp.inventory.goodsissue.domain.repository.GoodsIssueRepository;
+import com.solusi.erp.inventory.goodsissue.infrastructure.service.GoodsIssueSourceResolverRegistry;
 import com.solusi.erp.inventory.stock.domain.port.InventoryReservationService;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindEligiblePurchaseReturnGoodsReceiptsUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindPurchaseReturnGrLineSlicesUseCase;
@@ -11,6 +16,7 @@ import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.Canc
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CancelApprovedPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CancelPurchaseReturnSubmissionUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CreatePurchaseReturnUseCase;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.ConfirmPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.SubmitPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.UpdatePurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.domain.port.PurchaseReturnApprovalCancellationPort;
@@ -71,6 +77,12 @@ class PurchaseReturnConfigTest {
     private CancelApprovedPurchaseReturnUseCase cancelApprovedPurchaseReturnUseCase;
 
     @Autowired
+    private ConfirmPurchaseReturnUseCase confirmPurchaseReturnUseCase;
+
+    @Autowired
+    private PurchaseReturnGoodsIssueSourcePort purchaseReturnGoodsIssueSourcePort;
+
+    @Autowired
     private FindPurchaseReturnsUseCase findPurchaseReturnsUseCase;
 
     @Autowired
@@ -92,6 +104,8 @@ class PurchaseReturnConfigTest {
         assertThat(submitPurchaseReturnUseCase).isNotNull();
         assertThat(cancelPurchaseReturnSubmissionUseCase).isNotNull();
         assertThat(cancelApprovedPurchaseReturnUseCase).isNotNull();
+        assertThat(confirmPurchaseReturnUseCase).isNotNull();
+        assertThat(purchaseReturnGoodsIssueSourcePort).isNotNull();
         assertThat(findPurchaseReturnsUseCase).isNotNull();
         assertThat(getPurchaseReturnUseCase).isNotNull();
         assertThat(getPurchaseReturnEditViewUseCase).isNotNull();
@@ -138,6 +152,26 @@ class PurchaseReturnConfigTest {
         @Bean
         PurchaseReturnApprovalCancellationPort purchaseReturnApprovalCancellationPort() {
             return mock(PurchaseReturnApprovalCancellationPort.class);
+        }
+
+        @Bean
+        GoodsIssueSourceResolverRegistry goodsIssueSourceResolverRegistry() {
+            return mock(GoodsIssueSourceResolverRegistry.class);
+        }
+
+        @Bean
+        GoodsIssueRepository goodsIssueRepository() {
+            return mock(GoodsIssueRepository.class);
+        }
+
+        @Bean
+        CompleteGoodsIssueUseCase completeGoodsIssueUseCase() {
+            return mock(CompleteGoodsIssueUseCase.class);
+        }
+
+        @Bean
+        EnsureOpenPeriodForDateUseCase ensureOpenPeriodForDateUseCase() {
+            return mock(EnsureOpenPeriodForDateUseCase.class);
         }
     }
 }

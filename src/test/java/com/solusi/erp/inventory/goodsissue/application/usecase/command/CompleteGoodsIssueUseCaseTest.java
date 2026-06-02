@@ -16,6 +16,8 @@ import com.solusi.erp.inventory.goodsissue.domain.repository.GoodsIssueRepositor
 import com.solusi.erp.inventory.stock.application.dto.StockMovementPayload;
 import com.solusi.erp.inventory.stock.domain.model.MovementType;
 import com.solusi.erp.inventory.stock.domain.model.ReferenceType;
+import com.solusi.erp.inventory.stock.domain.model.ReservationOwnerType;
+import com.solusi.erp.inventory.stock.domain.port.InventoryReservationService;
 import com.solusi.erp.inventory.stock.domain.port.StockService;
 import com.solusi.erp.inventory.uomconversion.domain.port.UomConversionService;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,13 +58,16 @@ class CompleteGoodsIssueUseCaseTest {
     @Mock
     private PostJournalForEventUseCase postJournalForEventUseCase;
 
+    @Mock
+    private InventoryReservationService reservationService;
+
     private CompleteGoodsIssueUseCase useCase;
 
     @BeforeEach
     void setUp() {
         useCase = new CompleteGoodsIssueUseCaseImpl(
                 repository, ensureOpenPeriodForDateUseCase, stockService, uomConversionService,
-                postJournalForEventUseCase);
+                postJournalForEventUseCase, reservationService);
     }
 
     @Test
@@ -283,17 +288,120 @@ class CompleteGoodsIssueUseCaseTest {
                 .isEqualByComparingTo(BigDecimal.TEN);
     }
 
+    @Test
+    void complete_purchaseReturn_usesReservedIssueAndConsumesReservationAfterJournal() {
+        GoodsIssue issue = purchaseReturnIssue(List.of(line(false, "2.0000", null)));
+        when(repository.findById(7L)).thenReturn(Optional.of(issue));
+        when(uomConversionService.convertToBaseUom(201L, 1L, new BigDecimal("2.0000")))
+                .thenReturn(new BigDecimal("2.0000"));
+
+        useCase.execute(7L);
+
+        ArgumentCaptor<StockMovementPayload> stockCaptor = ArgumentCaptor.forClass(StockMovementPayload.class);
+        verify(stockService).adjust(stockCaptor.capture());
+        assertThat(stockCaptor.getValue().getMovementType()).isEqualTo(MovementType.ISSUE_RESERVED);
+        verify(reservationService).assertActiveCoverage(
+                org.mockito.ArgumentMatchers.eq(ReservationOwnerType.PURCHASE_RETURN),
+                org.mockito.ArgumentMatchers.eq(70L),
+                org.mockito.ArgumentMatchers.anyList());
+        verify(reservationService).consume(ReservationOwnerType.PURCHASE_RETURN, 70L);
+    }
+
+    @Test
+    void complete_purchaseReturnCoverageMismatch_rejectsBeforeStockMovement() {
+        GoodsIssue issue = purchaseReturnIssue(List.of(line(false, "2.0000", null)));
+        when(repository.findById(7L)).thenReturn(Optional.of(issue));
+        when(uomConversionService.convertToBaseUom(201L, 1L, new BigDecimal("2.0000")))
+                .thenReturn(new BigDecimal("2.0000"));
+        doThrow(new DomainException("msg.error.inventory.reservation.coverage_mismatch"))
+                .when(reservationService).assertActiveCoverage(any(), any(), any());
+
+        assertThatThrownBy(() -> useCase.execute(7L))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.inventory.reservation.coverage_mismatch");
+
+        verify(stockService, never()).adjust(any());
+        verify(reservationService, never()).consume(any(), any());
+    }
+
+    @Test
+    void complete_purchaseReturnJournalFailure_doesNotConsumeReservation() {
+        GoodsIssue issue = purchaseReturnIssue(List.of(line(false, "2.0000", null)));
+        when(repository.findById(7L)).thenReturn(Optional.of(issue));
+        when(uomConversionService.convertToBaseUom(201L, 1L, new BigDecimal("2.0000")))
+                .thenReturn(new BigDecimal("2.0000"));
+        doThrow(new DomainException("msg.error.journal.failed"))
+                .when(postJournalForEventUseCase).execute(any());
+
+        assertThatThrownBy(() -> useCase.execute(7L))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.journal.failed");
+
+        verify(reservationService, never()).consume(any(), any());
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void complete_purchaseReturnSerialized_buildsOneCoverageRequestPerSerial() {
+        GoodsIssue issue = purchaseReturnIssue(List.of(line(true, "2.0000", "SN-001,SN-002")));
+        when(repository.findById(7L)).thenReturn(Optional.of(issue));
+        when(uomConversionService.convertToBaseUom(201L, 1L, new BigDecimal("2.0000")))
+                .thenReturn(new BigDecimal("2.0000"));
+
+        useCase.execute(7L);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<com.solusi.erp.inventory.stock.domain.model.InventoryReservationRequest>> requests =
+                ArgumentCaptor.forClass(List.class);
+        verify(reservationService).assertActiveCoverage(
+                org.mockito.ArgumentMatchers.eq(ReservationOwnerType.PURCHASE_RETURN),
+                org.mockito.ArgumentMatchers.eq(70L),
+                requests.capture());
+        assertThat(requests.getValue()).extracting(
+                com.solusi.erp.inventory.stock.domain.model.InventoryReservationRequest::serialNumber)
+                .containsExactly("SN-001", "SN-002");
+    }
+
+    @Test
+    void complete_purchaseReturnMultiContainer_postsEachActualContainer() {
+        GoodsIssue issue = purchaseReturnIssue(List.of(
+                line(false, "1.0000", null, 5L),
+                line(false, "1.0000", null, 6L)
+        ));
+        when(repository.findById(7L)).thenReturn(Optional.of(issue));
+        when(uomConversionService.convertToBaseUom(201L, 1L, new BigDecimal("1.0000")))
+                .thenReturn(new BigDecimal("1.0000"));
+
+        useCase.execute(7L);
+
+        ArgumentCaptor<StockMovementPayload> stockCaptor = ArgumentCaptor.forClass(StockMovementPayload.class);
+        verify(stockService, org.mockito.Mockito.times(2)).adjust(stockCaptor.capture());
+        assertThat(stockCaptor.getAllValues()).extracting(StockMovementPayload::getContainerId)
+                .containsExactly(5L, 6L);
+    }
+
     static GoodsIssue draftIssue(List<GoodsIssueLine> lines) {
         return issue(GoodsIssueStatus.DRAFT, lines);
     }
 
     static GoodsIssue issue(GoodsIssueStatus status, List<GoodsIssueLine> lines) {
+        return issue(status, lines, GoodsIssueReferenceType.MANUAL, null);
+    }
+
+    static GoodsIssue purchaseReturnIssue(List<GoodsIssueLine> lines) {
+        return issue(GoodsIssueStatus.DRAFT, lines, GoodsIssueReferenceType.PURCHASE_RETURN, 70L);
+    }
+
+    static GoodsIssue issue(GoodsIssueStatus status,
+                            List<GoodsIssueLine> lines,
+                            GoodsIssueReferenceType referenceType,
+                            Long referenceId) {
         return new GoodsIssue(
                 new AuditMetadata(7L, 1L, null, null, null, null),
                 "GI-202606-00001",
                 LocalDate.of(2026, 6, 1),
-                GoodsIssueReferenceType.PURCHASE_RETURN,
-                70L,
+                referenceType,
+                referenceId,
                 "PRTN-0070",
                 11L,
                 GoodsIssuePartyType.SUPPLIER,
@@ -307,13 +415,17 @@ class CompleteGoodsIssueUseCaseTest {
     }
 
     static GoodsIssueLine line(boolean serialized, String quantity, String serialNumber) {
+        return line(serialized, quantity, serialNumber, 5L);
+    }
+
+    static GoodsIssueLine line(boolean serialized, String quantity, String serialNumber, Long containerId) {
         BigDecimal qty = new BigDecimal(quantity);
         BigDecimal unitCost = new BigDecimal("150.000000");
         BigDecimal amount = qty.multiply(unitCost).setScale(4);
         return GoodsIssueLine.prefill(
                 101L, 201L, serialized,
                 qty, 1L, qty,
-                3L, 4L, 5L, serialNumber,
+                3L, 4L, containerId, serialNumber,
                 unitCost, amount,
                 BigDecimal.ZERO, BigDecimal.ZERO, amount,
                 "GOODS_RECEIPT", 301L, 401L

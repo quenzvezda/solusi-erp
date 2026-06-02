@@ -8,11 +8,14 @@ import com.solusi.erp.accounting.schema.domain.model.SchemaEventType;
 import com.solusi.erp.core.exception.DomainException;
 import com.solusi.erp.inventory.goodsissue.domain.model.GoodsIssue;
 import com.solusi.erp.inventory.goodsissue.domain.model.GoodsIssueLine;
+import com.solusi.erp.inventory.goodsissue.domain.model.GoodsIssueReferenceType;
 import com.solusi.erp.inventory.goodsissue.domain.model.GoodsIssueStatus;
 import com.solusi.erp.inventory.goodsissue.domain.repository.GoodsIssueRepository;
 import com.solusi.erp.inventory.stock.application.dto.StockMovementPayload;
 import com.solusi.erp.inventory.stock.domain.model.MovementType;
 import com.solusi.erp.inventory.stock.domain.model.ReferenceType;
+import com.solusi.erp.inventory.stock.domain.model.ReservationOwnerType;
+import com.solusi.erp.inventory.stock.domain.port.InventoryReservationService;
 import com.solusi.erp.inventory.stock.domain.port.StockService;
 import com.solusi.erp.inventory.uomconversion.domain.port.UomConversionService;
 import org.springframework.util.StringUtils;
@@ -30,17 +33,20 @@ public class CompleteGoodsIssueUseCaseImpl implements CompleteGoodsIssueUseCase 
     private final StockService stockService;
     private final UomConversionService uomConversionService;
     private final PostJournalForEventUseCase postJournalForEventUseCase;
+    private final InventoryReservationService reservationService;
 
     public CompleteGoodsIssueUseCaseImpl(GoodsIssueRepository goodsIssueRepository,
                                          EnsureOpenPeriodForDateUseCase ensureOpenPeriodForDateUseCase,
                                          StockService stockService,
                                          UomConversionService uomConversionService,
-                                         PostJournalForEventUseCase postJournalForEventUseCase) {
+                                         PostJournalForEventUseCase postJournalForEventUseCase,
+                                         InventoryReservationService reservationService) {
         this.goodsIssueRepository = goodsIssueRepository;
         this.ensureOpenPeriodForDateUseCase = ensureOpenPeriodForDateUseCase;
         this.stockService = stockService;
         this.uomConversionService = uomConversionService;
         this.postJournalForEventUseCase = postJournalForEventUseCase;
+        this.reservationService = reservationService;
     }
 
     @Override
@@ -60,6 +66,13 @@ public class CompleteGoodsIssueUseCaseImpl implements CompleteGoodsIssueUseCase 
         if (issue.getLines().stream().noneMatch(GoodsIssueLine::hasIssueQuantity)) {
             throw new DomainException("msg.error.gi.complete.no.lines");
         }
+        if (isPurchaseReturn(issue)) {
+            reservationService.assertActiveCoverage(
+                    ReservationOwnerType.PURCHASE_RETURN,
+                    issue.getReferenceId(),
+                    GoodsIssueReservationRequests.from(issue.getLines())
+            );
+        }
 
         for (GoodsIssueLine line : issue.getLines()) {
             if (!line.hasIssueQuantity()) {
@@ -75,6 +88,9 @@ public class CompleteGoodsIssueUseCaseImpl implements CompleteGoodsIssueUseCase 
         BigDecimal inventoryTotal = inventoryTotal(issue.getLines());
         postJournalForEventUseCase.execute(goodsIssueJournal(issue, inventoryTotal, inventoryTotal));
 
+        if (isPurchaseReturn(issue)) {
+            reservationService.consume(ReservationOwnerType.PURCHASE_RETURN, issue.getReferenceId());
+        }
         issue.complete();
         goodsIssueRepository.save(issue);
     }
@@ -164,7 +180,7 @@ public class CompleteGoodsIssueUseCaseImpl implements CompleteGoodsIssueUseCase 
                 .serialNumber(serialNumber)
                 .quantity(quantity)
                 .uomId(line.getUomId())
-                .movementType(MovementType.ISSUE)
+                .movementType(isPurchaseReturn(issue) ? MovementType.ISSUE_RESERVED : MovementType.ISSUE)
                 .referenceType(ReferenceType.GOODS_ISSUE)
                 .referenceId(issue.getId())
                 .referenceCode(issue.getCode())
@@ -176,6 +192,10 @@ public class CompleteGoodsIssueUseCaseImpl implements CompleteGoodsIssueUseCase 
                 .netPrice(line.getUnitCost())
                 .transactionDate(issue.getIssueDate().atStartOfDay())
                 .build();
+    }
+
+    private boolean isPurchaseReturn(GoodsIssue issue) {
+        return issue.getReferenceType() == GoodsIssueReferenceType.PURCHASE_RETURN;
     }
 
     private ReferenceType parseReferenceType(String value) {

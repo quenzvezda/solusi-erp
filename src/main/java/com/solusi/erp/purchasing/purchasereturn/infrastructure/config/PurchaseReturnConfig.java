@@ -1,6 +1,11 @@
 package com.solusi.erp.purchasing.purchasereturn.infrastructure.config;
 
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
+import com.solusi.erp.inventory.goodsissue.domain.port.PurchaseReturnGoodsIssueSourcePort;
+import com.solusi.erp.inventory.goodsissue.application.usecase.command.CompleteGoodsIssueUseCase;
+import com.solusi.erp.inventory.goodsissue.domain.repository.GoodsIssueRepository;
+import com.solusi.erp.inventory.goodsissue.infrastructure.service.GoodsIssueSourceResolverRegistry;
+import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeriodForDateUseCase;
 import com.solusi.erp.inventory.stock.domain.port.InventoryReservationService;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CancelApprovedPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CancelApprovedPurchaseReturnUseCaseImpl;
@@ -10,6 +15,8 @@ import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.Canc
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CancelPurchaseReturnSubmissionUseCaseImpl;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CreatePurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CreatePurchaseReturnUseCaseImpl;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.ConfirmPurchaseReturnUseCase;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.ConfirmPurchaseReturnUseCaseImpl;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.SubmitPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.SubmitPurchaseReturnUseCaseImpl;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.UpdatePurchaseReturnUseCase;
@@ -36,6 +43,7 @@ import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPur
 import com.solusi.erp.purchasing.purchasereturn.domain.port.PurchaseReturnSourceQueryPort;
 import com.solusi.erp.purchasing.purchasereturn.infrastructure.adapter.PurchaseReturnSourceQueryAdapter;
 import com.solusi.erp.purchasing.purchasereturn.infrastructure.adapter.PurchaseReturnRepositoryImpl;
+import com.solusi.erp.purchasing.purchasereturn.infrastructure.adapter.PurchaseReturnGoodsIssueSourceAdapter;
 import com.solusi.erp.purchasing.purchasereturn.infrastructure.persistence.PurchaseReturnJpaRepository;
 import com.solusi.erp.purchasing.purchasereturn.infrastructure.persistence.PurchaseReturnPersistenceMapper;
 import org.springframework.context.annotation.Bean;
@@ -58,6 +66,12 @@ public class PurchaseReturnConfig {
     public PurchaseReturnSourceQueryPort purchaseReturnSourceQueryPort(
             NamedParameterJdbcTemplate jdbcTemplate) {
         return new PurchaseReturnSourceQueryAdapter(jdbcTemplate);
+    }
+
+    @Bean
+    public PurchaseReturnGoodsIssueSourcePort purchaseReturnGoodsIssueSourcePort(
+            NamedParameterJdbcTemplate jdbcTemplate) {
+        return new PurchaseReturnGoodsIssueSourceAdapter(jdbcTemplate);
     }
 
     @Bean
@@ -156,6 +170,23 @@ public class PurchaseReturnConfig {
             PlatformTransactionManager txManager) {
         CancelApprovedPurchaseReturnUseCaseImpl pure = new CancelApprovedPurchaseReturnUseCaseImpl(
                 repository, reservationService);
+        TransactionTemplate tx = new TransactionTemplate(txManager);
+        return id -> tx.execute(status -> pure.execute(id));
+    }
+
+    @Bean
+    public ConfirmPurchaseReturnUseCase confirmPurchaseReturnUseCase(
+            PurchaseReturnRepository purchaseReturnRepository,
+            PurchaseReturnGoodsIssueSourcePort sourcePort,
+            GoodsIssueSourceResolverRegistry resolverRegistry,
+            SequenceGeneratorService sequenceGeneratorService,
+            GoodsIssueRepository goodsIssueRepository,
+            CompleteGoodsIssueUseCase completeGoodsIssueUseCase,
+            EnsureOpenPeriodForDateUseCase ensureOpenPeriodForDateUseCase,
+            PlatformTransactionManager txManager) {
+        ConfirmPurchaseReturnUseCaseImpl pure = new ConfirmPurchaseReturnUseCaseImpl(
+                purchaseReturnRepository, sourcePort, resolverRegistry, sequenceGeneratorService,
+                goodsIssueRepository, completeGoodsIssueUseCase, ensureOpenPeriodForDateUseCase);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         return id -> tx.execute(status -> pure.execute(id));
     }

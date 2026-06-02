@@ -451,20 +451,20 @@ Confirm an approved Purchase Return by creating and completing one GI that consu
 
 **Reference modules:** Goods Issue seam and completion flow
 
-- [ ] Implement `PurchaseReturnGoodsIssueSourceAdapter` for the existing `PurchaseReturnGoodsIssueSourcePort`.
+- [x] Implement `PurchaseReturnGoodsIssueSourceAdapter` for the existing `PurchaseReturnGoodsIssueSourcePort`.
       Header snapshot supplies Purchase Return code, supplier, facility, original GR currency/rate, `billPosted`, and temporary clearing target metadata.
       Line snapshots supply actual container, serial CSV, original GR references, value snapshots, and valuation refs.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/domain/port/PurchaseReturnGoodsIssueSourcePort.java:L7-L52` - existing contract
-- [ ] Implement `PurchaseReturnGoodsIssueSourceResolver` in GI infrastructure. Resolve `GoodsIssueReferenceType.PURCHASE_RETURN` into a draft GI.
+- [x] Implement `PurchaseReturnGoodsIssueSourceResolver` in GI infrastructure. Resolve `GoodsIssueReferenceType.PURCHASE_RETURN` into a draft GI.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/domain/port/GoodsIssueSourceResolver.java:L6-L10` - resolver contract
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/infrastructure/service/GoodsIssueSourceResolverRegistry.java:L15-L30` - registry wiring
-- [ ] Modify GI completion so Purchase Return source lines use `MovementType.ISSUE_RESERVED`; generic/manual GI remains `MovementType.ISSUE`.
+- [x] Modify GI completion so Purchase Return source lines use `MovementType.ISSUE_RESERVED`; generic/manual GI remains `MovementType.ISSUE`.
       Before posting Purchase Return GI movements, assert reservation coverage for the source owner. After successful movements and temporary generic `GOODS_ISSUE` journal posting, mark reservations CONSUMED.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CompleteGoodsIssueUseCaseImpl.java:L64-L79` - current stock issue loop
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CompleteGoodsIssueUseCaseImpl.java:L157-L178` - current payload hardcodes `ISSUE`
-- [ ] Wire resolver and reservation service into GI configuration.
+- [x] Wire resolver and reservation service into GI configuration.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/infrastructure/config/GoodsIssueConfig.java:L73-L107` - completion and resolver registry beans
-- [ ] Implement `ConfirmPurchaseReturnUseCaseImpl` transaction:
+- [x] Implement `ConfirmPurchaseReturnUseCaseImpl` transaction:
       require APPROVED;
       require OPEN period for `returnDate`;
       guard `hasCompletedGoodsIssue`;
@@ -472,8 +472,8 @@ Confirm an approved Purchase Return by creating and completing one GI that consu
       complete GI;
       persist generated GI id;
       transition Purchase Return CONFIRMED.
-- [ ] Keep journal Phase 1 behavior explicit: GI posts generic `SchemaEventType.GOODS_ISSUE`. Do not add dedicated `PURCHASE_RETURN` journal event in this task.
-- [ ] Add tests:
+- [x] Keep journal Phase 1 behavior explicit: GI posts generic `SchemaEventType.GOODS_ISSUE`. Do not add dedicated `PURCHASE_RETURN` journal event in this task.
+- [x] Add tests:
       approved return creates one completed GI;
       second confirm rejected idempotently;
       GI uses `ISSUE_RESERVED`;

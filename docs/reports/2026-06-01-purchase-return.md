@@ -99,3 +99,23 @@
 - **Status:** clean
 - **Summary:** Added generic approval cancellation, Purchase Return approval publishing, submit-time reservation, approved/rejected listeners, submitted and approved cancellation flows, transactional wiring, and lifecycle coverage.
 - **Verification:** `mvn test -Dtest=ApprovalRequestTest,CancelApprovalRequestUseCaseTest,SubmitPurchaseReturnUseCaseTest,OnPurchaseReturnApprovedListenerTest,OnPurchaseReturnRejectedListenerTest,CancelPurchaseReturnSubmissionUseCaseTest,CancelApprovedPurchaseReturnUseCaseTest,PurchaseReturnConfigTest`
+
+## Task 9: Purchase Return Confirm and Goods Issue Resolver
+
+### Finding: Goods Issue source snapshot needed Purchase Return date
+- **Type:** deviation
+- **Severity:** warning
+- **Detail:** The existing Purchase Return GI seam carried header accounting snapshots but omitted `returnDate`, while the locked date rule requires generated GI `issueDate` to copy it.
+- **Action taken:** Extended `HeaderSnapshot` with `returnDate` and used it in the resolver and confirm path.
+- **Ref:** `src/main/java/com/solusi/erp/inventory/goodsissue/domain/port/PurchaseReturnGoodsIssueSourcePort.java`
+
+### Finding: Phase 1 clearing metadata has no persisted Debit Memo model yet
+- **Type:** decision
+- **Severity:** info
+- **Detail:** `billPosted` and clearing account targeting belong to the deferred Debit Memo and dedicated Purchase Return accounting flow.
+- **Action taken:** Kept the GI source contract explicit and returned `false` / `null` placeholders in Phase 1. Generated GI continues to post generic `SchemaEventType.GOODS_ISSUE`.
+- **Ref:** `src/main/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/adapter/PurchaseReturnGoodsIssueSourceAdapter.java`
+
+- **Status:** clean
+- **Summary:** Added approved-return GI snapshot adapter and resolver, OPEN-period confirm flow, completed-GI idempotency guard, generated-GI linking, reserved outbound movement coverage assertion, post-journal reservation consumption, and generic GI regression coverage.
+- **Verification:** `mvn test -Dtest=CompleteGoodsIssueUseCaseTest,PurchaseReturnGoodsIssueSourceAdapterTest,PurchaseReturnGoodsIssueSourceResolverTest,ConfirmPurchaseReturnUseCaseTest,PurchaseReturnConfigTest,PurchaseReturnGoodsIssueSourcePortTest`

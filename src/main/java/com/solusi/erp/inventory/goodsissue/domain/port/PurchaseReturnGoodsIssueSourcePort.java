@@ -1,6 +1,7 @@
 package com.solusi.erp.inventory.goodsissue.domain.port;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,6 +15,7 @@ public interface PurchaseReturnGoodsIssueSourcePort {
 
     record HeaderSnapshot(Long purchaseReturnId,
                           String purchaseReturnCode,
+                          LocalDate returnDate,
                           Long supplierId,
                           Long facilityId,
                           Long currencyId,
