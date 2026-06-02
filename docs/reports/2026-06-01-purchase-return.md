@@ -34,3 +34,16 @@
 - **Status:** clean
 - **Summary:** Added reservation JPA persistence, repository adapter, transactional reservation service, stock config wiring, outbound availability regression coverage, rollback expectation coverage, and a focused config test.
 - **Verification:** `mvn test -Dtest=StockBalanceDomainTest,StockServiceTest,InventoryReservationServiceTest,StockConfigTest`
+
+## Task 4: Purchase Return Domain Aggregate
+
+### Finding: Mixed-GR line validation belongs to the source read boundary
+- **Type:** decision
+- **Severity:** info
+- **Detail:** The approved schema stores canonical GR ownership on the Purchase Return header and `goods_receipt_line_id` on each line, without duplicating GR header ID per line.
+- **Action taken:** The aggregate enforces a canonical `GOODS_RECEIPT` header source. Task 7 will validate each selected line against slices returned for that GR before constructing domain lines.
+- **Ref:** `src/main/java/com/solusi/erp/purchasing/purchasereturn/domain/model/PurchaseReturn.java`
+
+- **Status:** clean
+- **Summary:** Added Purchase Return reason/status enums, immutable line snapshots, aggregate lifecycle transitions, source and serial invariants, and branch-focused domain tests.
+- **Verification:** `mvn test -Dtest=PurchaseReturnTest,PurchaseReturnLineTest`

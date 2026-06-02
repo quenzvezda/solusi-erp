@@ -236,7 +236,7 @@ Persist ownership rows and connect reservation movements to stock balances atomi
 - `mvn test -Dtest=StockBalanceDomainTest,StockServiceTest,InventoryReservationServiceTest` passes.
 - Every outbound movement respects `availableQty`, except `ISSUE_RESERVED`, which consumes its owning hold.
 
-### Task 4: Purchase Return Domain Aggregate
+### Task 4: Purchase Return Domain Aggregate [x]
 
 Implement the Purchase Return aggregate independently of persistence and web concerns.
 
@@ -244,10 +244,10 @@ Implement the Purchase Return aggregate independently of persistence and web con
 
 **Reference modules:** `purchasing.purchaseorder`, `inventory.goodsissue`
 
-- [ ] Create `PurchaseReturnStatus` with `DRAFT`, `SUBMITTED`, `APPROVED`, `REJECTED`, `CANCELLED`, and `CONFIRMED`, plus helpers for editability and allowed actions.
-- [ ] Create `PurchaseReturnReason` with `DAMAGED`, `WRONG_ITEM`, `QUALITY_ISSUE`, `OVER_RECEIPT`, `EXPIRED`, and `OTHER`. Keep stable codes in persistence; UI labels must use i18n keys.
-- [ ] Create immutable `PurchaseReturnLine`. Store one actual container per row. Permit repeated GR line ids only when rows represent different actual container slices or serialized selections.
-- [ ] Create `PurchaseReturn` with factory and transitions:
+- [x] Create `PurchaseReturnStatus` with `DRAFT`, `SUBMITTED`, `APPROVED`, `REJECTED`, `CANCELLED`, and `CONFIRMED`, plus helpers for editability and allowed actions.
+- [x] Create `PurchaseReturnReason` with `DAMAGED`, `WRONG_ITEM`, `QUALITY_ISSUE`, `OVER_RECEIPT`, `EXPIRED`, and `OTHER`. Keep stable codes in persistence; UI labels must use i18n keys.
+- [x] Create immutable `PurchaseReturnLine`. Store one actual container per row. Permit repeated GR line ids only when rows represent different actual container slices or serialized selections.
+- [x] Create `PurchaseReturn` with factory and transitions:
       `updateDraft(...)`,
       `submit(submitterUserId)`,
       `approve()`,
@@ -256,7 +256,7 @@ Implement the Purchase Return aggregate independently of persistence and web con
       `cancelSubmission(actorUserId)`,
       `cancelApproved()`,
       `confirm(generatedGiId)`.
-- [ ] Enforce invariants:
+- [x] Enforce invariants:
       one source GR per header;
       positive persisted line qty;
       header and line reason required;
@@ -267,7 +267,7 @@ Implement the Purchase Return aggregate independently of persistence and web con
       creator-only cancel submission;
       no cancel after confirmed in Phase 1.
       ref: `docs/brainstorming/2026-06-01-purchase-return.md` - locked lifecycle, serial, reason, and Phase 1 cancellation rules
-- [ ] Add `PurchaseReturnTest` and `PurchaseReturnLineTest` for every state transition and invariant branch.
+- [x] Add `PurchaseReturnTest` and `PurchaseReturnLineTest` for every state transition and invariant branch.
       ref: `src/test/java/com/solusi/erp/purchasing/purchaseorder/domain/model/PurchaseOrderTest.java` - transaction aggregate test style
       ref: `src/test/java/com/solusi/erp/inventory/goodsissue/domain/model/GoodsIssueTest.java` - immutable outbound aggregate style
 
