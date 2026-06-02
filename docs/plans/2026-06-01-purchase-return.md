@@ -681,15 +681,15 @@ Prove real browser wiring after unit/controller/template tests are green.
 
 **Reference modules:** Goods Receipt and Purchase Order Playwright specs
 
-- [ ] Read `docs/tests/playwright-pitfalls.md`, the final Purchase Return templates, `form.js`, controller `@RequestMapping`, and helper implementations before writing selectors.
+- [x] Read `docs/tests/playwright-pitfalls.md`, the final Purchase Return templates, `form.js`, controller `@RequestMapping`, and helper implementations before writing selectors.
       ref: `docs/tests/playwright-pitfalls.md` - known runtime failures
       ref: `e2e-tests/helpers/tomselect.ts` - helper behavior; use payload-aware local helper when onchange needs payload
-- [ ] Extend `src/main/resources/db/migration-h2/V9000__e2e_seed_data.sql` with deterministic eligible completed GR fixtures:
+- [x] Extend `src/main/resources/db/migration-h2/V9000__e2e_seed_data.sql` with deterministic eligible completed GR fixtures:
       non-serial GR layer available in two containers;
       one serialized item originating from selected GR but currently stored in a moved container;
       OPEN accounting period;
       configured generic `GOODS_ISSUE` schema required by temporary Phase 1 confirm.
-- [ ] Create `e2e-tests/tests/procurement/purchase-return.spec.ts` with scenarios:
+- [x] Create `e2e-tests/tests/procurement/purchase-return.spec.ts` with scenarios:
       Pre-add 1 filters and GR/PO links;
       create draft from one GR;
       remove and restore line through modal;
@@ -701,14 +701,14 @@ Prove real browser wiring after unit/controller/template tests are green.
       creator cancel submission releases qty;
       approval then confirm creates linked completed GI;
       list exposes `View` action only.
-- [ ] Use HTTP setup probes through Playwright `request`, not `page.evaluate(fetch(...))` before navigation.
-- [ ] On first runtime failure, retain screenshot/video and record diagnosis in `docs/reports/2026-06-01-purchase-return.md`.
-- [ ] Run TypeScript compile and list:
+- [x] Use HTTP setup probes through Playwright `request`, not `page.evaluate(fetch(...))` before navigation.
+- [x] On first runtime failure, retain screenshot/video and record diagnosis in `docs/reports/2026-06-01-purchase-return.md`.
+- [x] Run TypeScript compile and list:
       `cd e2e-tests && npx tsc --noEmit`
       `npx playwright test tests/procurement/purchase-return.spec.ts --list`
-- [ ] Run focused browser spec:
+- [x] Run focused browser spec:
       `cd e2e-tests && npx playwright test tests/procurement/purchase-return.spec.ts`
-- [ ] Run cold-cache browser spec:
+- [x] Run cold-cache browser spec:
       `cd e2e-tests && Remove-Item -Recurse -Force .auth -ErrorAction SilentlyContinue`
       `npx playwright test tests/procurement/purchase-return.spec.ts`
 

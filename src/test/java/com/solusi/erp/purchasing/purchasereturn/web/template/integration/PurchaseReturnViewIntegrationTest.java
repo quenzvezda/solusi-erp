@@ -18,6 +18,7 @@ class PurchaseReturnViewIntegrationTest {
         assertThat(html).contains("#{label.purchase-return.reservation-summary}");
         assertThat(html).contains("approve-action-banner");
         assertThat(html).contains("approve-reject-panel");
+        assertThat(html).contains("approvalRequestId != null && !isCurrentApprover");
         assertThat(html).contains("approval-history-drawer");
     }
 

@@ -53,12 +53,13 @@ public class PurchaseReturnSourceQueryAdapter implements PurchaseReturnSourceQue
             SELECT gr.id AS gr_id, gr.code AS gr_code, po.id AS po_id, po.code AS po_code,
                    gr.supplier_id, supplier.name AS supplier_name, gr.receipt_date,
                    gr.facility_id, facility.name AS facility_name, gr.currency_id,
-                   currency.code AS currency_code, gr.exchange_rate,
+                   currency.alias AS currency_code, gr.exchange_rate,
                    COUNT(DISTINCT grl.id) AS eligible_line_count,
                    SUM(vl.remaining_quantity - COALESCE(reserved.reserved_qty, 0)) AS total_returnable_qty
             FROM pur_goods_receipts gr
             JOIN pur_goods_receipt_lines grl ON grl.header_id = gr.id
-            JOIN pur_purchase_orders po ON po.id = gr.po_id
+            JOIN pur_purchase_orders po ON gr.reference_type = 'PURCHASE_ORDER'
+                                       AND po.id = gr.reference_id
             JOIN parties supplier ON supplier.id = gr.supplier_id
             JOIN inv_facilities facility ON facility.id = gr.facility_id
             JOIN master_currencies currency ON currency.id = gr.currency_id
@@ -71,21 +72,22 @@ public class PurchaseReturnSourceQueryAdapter implements PurchaseReturnSourceQue
               AND (vl.remaining_quantity - COALESCE(reserved.reserved_qty, 0)) > 0
               AND (:grId IS NULL OR gr.id = :grId)
               AND (:supplierId IS NULL OR gr.supplier_id = :supplierId)
-              AND (:purchaseOrderId IS NULL OR gr.po_id = :purchaseOrderId)
+              AND (:purchaseOrderId IS NULL OR gr.reference_id = :purchaseOrderId)
               AND (:receiptDateFrom IS NULL OR gr.receipt_date >= :receiptDateFrom)
               AND (:receiptDateTo IS NULL OR gr.receipt_date <= :receiptDateTo)
               AND (:keyword IS NULL OR LOWER(gr.code) LIKE LOWER(CONCAT('%', :keyword, '%'))
                    OR LOWER(po.code) LIKE LOWER(CONCAT('%', :keyword, '%'))
                    OR LOWER(supplier.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
             GROUP BY gr.id, gr.code, po.id, po.code, gr.supplier_id, supplier.name, gr.receipt_date,
-                     gr.facility_id, facility.name, gr.currency_id, currency.code, gr.exchange_rate
+                     gr.facility_id, facility.name, gr.currency_id, currency.alias, gr.exchange_rate
             ORDER BY gr.receipt_date DESC, gr.id DESC
             """;
 
     private static final String SQL_FIND_ELIGIBLE_POS = """
             SELECT DISTINCT po.id AS po_id, po.code AS po_code
             FROM pur_purchase_orders po
-            JOIN pur_goods_receipts gr ON gr.po_id = po.id
+            JOIN pur_goods_receipts gr ON gr.reference_type = 'PURCHASE_ORDER'
+                                      AND gr.reference_id = po.id
             JOIN pur_goods_receipt_lines grl ON grl.header_id = gr.id
             """ + VALUATION_LAYER_AGGREGATE + """
                                         AND vl.reference_id = gr.id
@@ -100,7 +102,7 @@ public class PurchaseReturnSourceQueryAdapter implements PurchaseReturnSourceQue
             """;
 
     private static final String SQL_FIND_GR_LINE_SLICES = """
-            SELECT CONCAT(CAST(grl.id AS CHAR), ':', CAST(vl.container_id AS CHAR)) AS selection_key,
+                    SELECT CONCAT(grl.id, ':', vl.container_id) AS selection_key,
                    gr.id AS gr_id, grl.id AS gr_line_id, grl.product_id, product.name AS product_name,
                    product.code AS product_code, grl.is_serialized, grl.uom_id, uom.name AS uom_name,
                    uom.code AS uom_code, facility.id AS facility_id, facility.name AS facility_name,
@@ -137,7 +139,7 @@ public class PurchaseReturnSourceQueryAdapter implements PurchaseReturnSourceQue
               AND (:keyword IS NULL OR LOWER(product.code) LIKE LOWER(CONCAT('%', :keyword, '%'))
                    OR LOWER(product.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
                    OR LOWER(container.code) LIKE LOWER(CONCAT('%', :keyword, '%')))
-              AND (:excludedKeysEmpty = TRUE OR CONCAT(CAST(grl.id AS CHAR), ':', CAST(vl.container_id AS CHAR))
+                      AND (:excludedKeysEmpty = TRUE OR CONCAT(grl.id, ':', vl.container_id)
                    NOT IN (:excludedKeys))
             GROUP BY gr.id, grl.id, grl.product_id, product.name, product.code, grl.is_serialized,
                      grl.uom_id, uom.name, uom.code, facility.id, facility.name, grid.id, grid.name,
@@ -148,7 +150,7 @@ public class PurchaseReturnSourceQueryAdapter implements PurchaseReturnSourceQue
             """;
 
     private static final String SQL_FIND_SERIALS = """
-            SELECT CONCAT(CAST(grl.id AS CHAR), ':', CAST(vl.container_id AS CHAR), ':', vl.serial_number) AS selection_key,
+                    SELECT CONCAT(grl.id, ':', vl.container_id, ':', vl.serial_number) AS selection_key,
                    gr.id AS gr_id, grl.id AS gr_line_id, grl.product_id, product.name AS product_name,
                    product.code AS product_code, grl.uom_id, uom.name AS uom_name, uom.code AS uom_code,
                    facility.id AS facility_id, facility.name AS facility_name, grid.id AS grid_id,
@@ -179,7 +181,7 @@ public class PurchaseReturnSourceQueryAdapter implements PurchaseReturnSourceQue
               AND (vl.remaining_quantity - COALESCE(reserved.reserved_qty, 0)) > 0
               AND (:keyword IS NULL OR LOWER(vl.serial_number) LIKE LOWER(CONCAT('%', :keyword, '%'))
                    OR LOWER(container.code) LIKE LOWER(CONCAT('%', :keyword, '%')))
-              AND (:excludedKeysEmpty = TRUE OR CONCAT(CAST(grl.id AS CHAR), ':', CAST(vl.container_id AS CHAR), ':', vl.serial_number)
+                      AND (:excludedKeysEmpty = TRUE OR CONCAT(grl.id, ':', vl.container_id, ':', vl.serial_number)
                    NOT IN (:excludedKeys))
             ORDER BY vl.serial_number
             """;

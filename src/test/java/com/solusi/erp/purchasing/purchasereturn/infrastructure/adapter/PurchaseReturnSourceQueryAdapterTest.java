@@ -65,7 +65,7 @@ class PurchaseReturnSourceQueryAdapterTest {
         SqlCapture capture = captureQuery();
         assertThat(capture.sql()).doesNotContain("grl.is_serialized = FALSE");
         assertThat(capture.sql()).contains("SUM(remaining_quantity) AS remaining_quantity");
-        assertThat(capture.sql()).contains("CAST(vl.container_id AS CHAR)");
+        assertThat(capture.sql()).contains("CONCAT(grl.id, ':', vl.container_id)");
         assertThat(capture.sql()).contains("NOT IN (:excludedKeys)");
         assertThat(capture.sql()).contains("GROUP BY");
         assertThat(capture.params().getValue("excludedKeys")).isEqualTo(List.of("11:22"));

@@ -29,5 +29,9 @@
 /purchasing/purchase-orders
 /purchasing/purchase-orders/create
 /purchasing/supplier-price-lists
+/purchasing/purchase-returns
+/purchasing/purchase-returns/select-source
+/purchasing/purchase-returns/create?goodsReceiptId=9601
+/purchasing/purchase-returns/selectors/goods-receipt-lines?goodsReceiptId=9601
 
 /security/menu-groups

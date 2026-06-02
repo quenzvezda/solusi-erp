@@ -5,10 +5,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+
+import com.solusi.erp.purchasing.purchasereturn.infrastructure.adapter.PurchaseReturnSourceQueryAdapter;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -88,6 +92,33 @@ class PurchaseReturnMigrationTest {
             assertThat(mariaDb).contains(requiredToken);
             assertThat(h2).contains(requiredToken);
         }
+    }
+
+    @Test
+    void e2e_seed_executes_purchase_return_selector_queries_against_h2() {
+        PurchaseReturnSourceQueryAdapter adapter =
+                new PurchaseReturnSourceQueryAdapter(new NamedParameterJdbcTemplate(jdbcTemplate));
+
+        assertThat(adapter.findEligibleGoodsReceipts("E2E-GR-RETURN", null, null, null, null))
+                .singleElement()
+                .satisfies(row -> {
+                    assertThat(row.goodsReceiptId()).isEqualTo(9601L);
+                    assertThat(row.purchaseOrderId()).isEqualTo(9202L);
+                    assertThat(row.currencyCode()).isEqualTo("IDR");
+                });
+        assertThat(adapter.findEligiblePurchaseOrders("E2E-PO-RETURN", 10))
+                .singleElement()
+                .satisfies(row -> assertThat(row.id()).isEqualTo(9202L));
+        assertThat(adapter.findReturnableGrLineSlices(9601L, null, List.of()))
+                .extracting(row -> row.selectionKey())
+                .containsExactly("9601:9101", "9601:9102", "9602:9102");
+        assertThat(adapter.findReturnableSerials(9601L, 9602L, null, List.of()))
+                .singleElement()
+                .satisfies(row -> {
+                    assertThat(row.selectionKey()).isEqualTo("9602:9102:E2E-SER-MOVED-001");
+                    assertThat(row.serialNumber()).isEqualTo("E2E-SER-MOVED-001");
+                    assertThat(row.containerId()).isEqualTo(9102L);
+                });
     }
 
     private void assertTableExists(String tableName) {

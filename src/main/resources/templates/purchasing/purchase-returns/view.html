@@ -140,7 +140,9 @@
                             </button>
                         </div>
                     </div>
-                    <div th:if="${approvalRequestId != null}" th:replace="~{fragments/approval :: approve-reject-panel(${approvalRequestId}, ${isCurrentApprover}, ${approvalStatus})}"></div>
+                    <th:block th:if="${approvalRequestId != null && !isCurrentApprover}">
+                        <div th:replace="~{fragments/approval :: approve-reject-panel(${approvalRequestId}, ${isCurrentApprover}, ${approvalStatus})}"></div>
+                    </th:block>
                 </div>
             </div>
         </div>

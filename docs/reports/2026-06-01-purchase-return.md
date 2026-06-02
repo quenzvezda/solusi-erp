@@ -177,3 +177,40 @@
 - **Summary:** Registered the module menu and permissions, bumped the minor version to `1.12.0`, added localized labels and feedback messages, localized detail-page actions, documented the Phase 1 accounting boundary, corrected JaCoCo documentation, and added bundle and migration contracts.
 - **Verification:** `mvn test -Dtest=PurchaseReturnMessagesTest,PurchaseReturnMigrationTest,PurchaseReturnListIntegrationTest,PurchaseReturnSelectSourceIntegrationTest,PurchaseReturnFormIntegrationTest,PurchaseReturnViewIntegrationTest` passed 14 tests.
 - **Boundary check:** Referenced Purchase Return message keys exist in both bundles; the only audit-only prefix is the expected dynamic `label.purchase-return.status.` prefix.
+
+## Task 13: Playwright Happy Path and Frontend Edge Cases
+
+### Finding: Source selector SQL still used pre-generalization Goods Receipt columns
+- **Type:** defect
+- **Severity:** blocking
+- **Detail:** The first browser run redirected source selection back to the list because eligible-source SQL still joined `gr.po_id` and selected `currency.code`; the active schema uses `gr.reference_type`, `gr.reference_id`, and `currency.alias`.
+- **Action taken:** Updated source SQL to the generalized Goods Receipt contract and added an H2 migration integration test that executes eligible GR, eligible PO, slice, and serial queries against the E2E seed.
+- **Ref:** `src/main/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/adapter/PurchaseReturnSourceQueryAdapter.java`
+
+### Finding: H2 truncated selector keys built with `CAST(... AS CHAR)`
+- **Type:** defect
+- **Severity:** blocking
+- **Detail:** H2 reduced numeric IDs to one character when selector keys used `CAST(... AS CHAR)`, producing repeated `9:9` exclusions. MariaDB behavior masked the portability issue.
+- **Action taken:** Built keys with numeric `CONCAT` arguments and asserted exact multi-digit slice and serial keys in the H2 migration integration test.
+- **Ref:** `src/test/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/persistence/PurchaseReturnMigrationTest.java`
+
+### Finding: Current approver page rendered duplicate request IDs
+- **Type:** defect
+- **Severity:** warning
+- **Detail:** Purchase Return rendered both the action banner and sidebar approval panel for the current approver. Both generic fragments contain `#current-approval-request-id`; placing `th:if` beside `th:replace` did not suppress the panel because replacement runs first.
+- **Action taken:** Wrapped the sidebar replacement with `th:block th:if` and render it only for non-current approvers. Added a static template contract.
+- **Ref:** `src/main/resources/templates/purchasing/purchase-returns/view.html`
+
+### Finding: First runtime failure artifacts retained
+- **Type:** verification
+- **Severity:** info
+- **Detail:** Screenshot, video, and Playwright context from the first selector runtime failure were retained under `target/e2e-artifacts/purchase-return-first-runtime-failure/`.
+
+- **Status:** clean
+- **Summary:** Added deterministic H2 Purchase Return fixtures, warmup URLs, and a browser flow covering source links and filters, SSR slices, modal restore, multiple containers, moved serial selection, OTHER notes, reservations, release through final cancellation, second-document approval, confirm, and linked completed GI.
+- **Verification:** `mvn test -Dtest=PurchaseReturnMigrationTest,PurchaseReturnSourceQueryAdapterTest` passed 7 tests.
+- **Verification:** `mvn test -Dtest=PurchaseReturnViewIntegrationTest` passed 2 tests.
+- **Verification:** `cd e2e-tests && npx tsc --noEmit` passed.
+- **Verification:** `cd e2e-tests && npx playwright test tests/procurement/purchase-return.spec.ts --list` listed setup plus focused browser coverage.
+- **Verification:** `PLAYWRIGHT_ARGS='tests/procurement/purchase-return.spec.ts' e2e-tests/scripts/run-e2e.sh` passed normally and again after `rm -rf e2e-tests/.auth`; each run reported `5 passed`.
+- **Boundary check:** No new known-issue entry is required in `docs/tests/playwright-pitfalls.md`.
