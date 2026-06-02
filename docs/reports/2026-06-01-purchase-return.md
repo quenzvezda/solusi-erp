@@ -47,3 +47,16 @@
 - **Status:** clean
 - **Summary:** Added Purchase Return reason/status enums, immutable line snapshots, aggregate lifecycle transitions, source and serial invariants, and branch-focused domain tests.
 - **Verification:** `mvn test -Dtest=PurchaseReturnTest,PurchaseReturnLineTest`
+
+## Task 5: Purchase Return Persistence and Spring Wiring
+
+### Finding: Composition root must grow with later tasks
+- **Type:** deviation
+- **Severity:** info
+- **Detail:** Task 5 requests repository and pure use-case wiring, but Purchase Return use-case classes are introduced only in Tasks 6-9.
+- **Action taken:** Added and verified the repository bean now. The same `PurchaseReturnConfig` will be extended with query and transactional command beans when their implementations land.
+- **Ref:** `src/main/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/config/PurchaseReturnConfig.java`
+
+- **Status:** clean
+- **Summary:** Added audited Purchase Return JPA entities, MapStruct persistence mapping, repository port and adapter, composition root, and round-trip/config tests.
+- **Verification:** `mvn test -Dtest=PurchaseReturnPersistenceMapperTest,PurchaseReturnConfigTest`

@@ -287,7 +287,7 @@ Implement the Purchase Return aggregate independently of persistence and web con
 
 - `mvn test -Dtest=PurchaseReturnTest,PurchaseReturnLineTest` passes.
 
-### Task 5: Purchase Return Persistence and Spring Wiring
+### Task 5: Purchase Return Persistence and Spring Wiring [x]
 
 Add repository implementation and configuration while keeping the aggregate pure.
 
@@ -295,21 +295,21 @@ Add repository implementation and configuration while keeping the aggregate pure
 
 **Reference modules:** `purchasing.purchaseorder`, `accountspayable.vendorbill`
 
-- [ ] Create JPA header/line entities extending `BaseModel`, with enum string persistence and cascade/orphan-removal line mapping.
+- [x] Create JPA header/line entities extending `BaseModel`, with enum string persistence and cascade/orphan-removal line mapping.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/infrastructure/persistence/GoodsIssueEntity.java` - audited header entity pattern
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/infrastructure/persistence/GoodsIssueLineEntity.java` - audited line entity pattern
-- [ ] Create `PurchaseReturnPersistenceMapper` and ensure reconstitution preserves status, source snapshots, `submittedByUserId`, generated GI id, valuation references, reasons, notes, and audit metadata.
-- [ ] Create repository port and adapter with:
+- [x] Create `PurchaseReturnPersistenceMapper` and ensure reconstitution preserves status, source snapshots, `submittedByUserId`, generated GI id, valuation references, reasons, notes, and audit metadata.
+- [x] Create repository port and adapter with:
       `save`,
       `findById`,
       `findAll(keyword, status, pageable)`,
       `existsByCode`,
       `existsConfirmedOrOpenBySource`,
       `findByGeneratedGoodsIssueId`.
-- [ ] Create `PurchaseReturnConfig` and wire repository plus pure use cases through `TransactionTemplate` for multi-write operations.
+- [x] Create `PurchaseReturnConfig` and wire repository. Extend it with pure use cases and `TransactionTemplate` wrappers as those multi-write operations are added in Tasks 6-9.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/infrastructure/config/GoodsIssueConfig.java:L45-L127` - bean and transaction wrapper style
-- [ ] Add `PurchaseReturnPersistenceMapperTest` for round-trip field coverage, line copies, enums, audit metadata, and generated GI link.
-- [ ] Add `PurchaseReturnConfigTest` with mocked external ports to prove Spring wiring.
+- [x] Add `PurchaseReturnPersistenceMapperTest` for round-trip field coverage, line copies, enums, audit metadata, and generated GI link.
+- [x] Add `PurchaseReturnConfigTest` with mocked external ports to prove Spring wiring.
       ref: `src/test/java/com/solusi/erp/accountspayable/vendorbill/infrastructure/config/VendorBillConfigTest.java` - focused config test pattern
 
 **Validation criteria:**
