@@ -5,6 +5,13 @@ import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindEl
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindPurchaseReturnGrLineSlicesUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindPurchaseReturnSerialsUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnCreateViewUseCase;
+import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CancelDraftPurchaseReturnUseCase;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CreatePurchaseReturnUseCase;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.UpdatePurchaseReturnUseCase;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindPurchaseReturnsUseCase;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnEditViewUseCase;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.infrastructure.persistence.PurchaseReturnJpaRepository;
 import com.solusi.erp.purchasing.purchasereturn.infrastructure.persistence.PurchaseReturnPersistenceMapper;
 import org.junit.jupiter.api.Test;
@@ -13,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -38,6 +46,24 @@ class PurchaseReturnConfigTest {
     @Autowired
     private FindPurchaseReturnSerialsUseCase findPurchaseReturnSerialsUseCase;
 
+    @Autowired
+    private CreatePurchaseReturnUseCase createPurchaseReturnUseCase;
+
+    @Autowired
+    private UpdatePurchaseReturnUseCase updatePurchaseReturnUseCase;
+
+    @Autowired
+    private CancelDraftPurchaseReturnUseCase cancelDraftPurchaseReturnUseCase;
+
+    @Autowired
+    private FindPurchaseReturnsUseCase findPurchaseReturnsUseCase;
+
+    @Autowired
+    private GetPurchaseReturnUseCase getPurchaseReturnUseCase;
+
+    @Autowired
+    private GetPurchaseReturnEditViewUseCase getPurchaseReturnEditViewUseCase;
+
     @Test
     void wiresPurchaseReturnRepository() {
         assertThat(purchaseReturnRepository).isNotNull();
@@ -45,6 +71,12 @@ class PurchaseReturnConfigTest {
         assertThat(getPurchaseReturnCreateViewUseCase).isNotNull();
         assertThat(findPurchaseReturnGrLineSlicesUseCase).isNotNull();
         assertThat(findPurchaseReturnSerialsUseCase).isNotNull();
+        assertThat(createPurchaseReturnUseCase).isNotNull();
+        assertThat(updatePurchaseReturnUseCase).isNotNull();
+        assertThat(cancelDraftPurchaseReturnUseCase).isNotNull();
+        assertThat(findPurchaseReturnsUseCase).isNotNull();
+        assertThat(getPurchaseReturnUseCase).isNotNull();
+        assertThat(getPurchaseReturnEditViewUseCase).isNotNull();
     }
 
     @Configuration
@@ -63,6 +95,16 @@ class PurchaseReturnConfigTest {
         @Bean
         NamedParameterJdbcTemplate namedParameterJdbcTemplate() {
             return mock(NamedParameterJdbcTemplate.class);
+        }
+
+        @Bean
+        SequenceGeneratorService sequenceGeneratorService() {
+            return mock(SequenceGeneratorService.class);
+        }
+
+        @Bean
+        PlatformTransactionManager platformTransactionManager() {
+            return mock(PlatformTransactionManager.class);
         }
     }
 }

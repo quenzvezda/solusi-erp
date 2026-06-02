@@ -73,3 +73,16 @@
 - **Status:** clean
 - **Summary:** Added eligible GR, PO lookup, non-serial slice, and serial read models; implemented SQL-backed source queries with query-level exclusion; wired paged query use cases and contract coverage.
 - **Verification:** `mvn test -Dtest=PurchaseReturnSourceQueryAdapterTest,*PurchaseReturn*Selector*UseCaseTest,GetPurchaseReturnCreateViewUseCaseTest,FindEligiblePurchaseReturnGoodsReceiptsUseCaseTest,PurchaseReturnConfigTest`
+
+## Task 7: Purchase Return Draft Application Use Cases
+
+### Finding: Browser base quantity must not become a stock snapshot authority
+- **Type:** decision
+- **Severity:** warning
+- **Detail:** Returnable selector quantities originate from valuation layers and are already expressed in base inventory units. Trusting a hidden browser `baseQuantity` would allow a stale or tampered payload to reserve a different amount later.
+- **Action taken:** Rebuild product, UOM, actual location, valuation, monetary snapshots, and non-serial base quantity from current selector data. Serialized quantities are derived from selected serial count.
+- **Ref:** `src/main/java/com/solusi/erp/purchasing/purchasereturn/application/usecase/command/PurchaseReturnDraftLineFactory.java`
+
+- **Status:** clean
+- **Summary:** Added draft create/update/cancel, list/detail/edit queries, sequence generation, stale selector validation, snapshot rebuilding, transactional wiring, and focused Mockito coverage.
+- **Verification:** `mvn test -Dtest=*PurchaseReturn*Draft*Test,CreatePurchaseReturnUseCaseTest,UpdatePurchaseReturnUseCaseTest,CancelDraftPurchaseReturnUseCaseTest,FindPurchaseReturnsUseCaseTest,PurchaseReturnConfigTest`

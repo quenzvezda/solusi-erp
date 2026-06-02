@@ -356,7 +356,7 @@ Implement read-side eligibility using valuation-layer remaining stock and active
 
 - `mvn test -Dtest=PurchaseReturnSourceQueryAdapterTest,*PurchaseReturn*Selector*UseCaseTest,GetPurchaseReturnCreateViewUseCaseTest` passes.
 
-### Task 7: Purchase Return Draft Application Use Cases
+### Task 7: Purchase Return Draft Application Use Cases [x]
 
 Implement code generation, draft save/update, list, view, and draft cancellation.
 
@@ -364,8 +364,8 @@ Implement code generation, draft save/update, list, view, and draft cancellation
 
 **Reference modules:** Goods Receipt create-from-source, Goods Issue draft commands
 
-- [ ] Create command records for header and line input. Keep UI-only labels out of domain commands.
-- [ ] Implement `CreatePurchaseReturnUseCaseImpl`:
+- [x] Create command records for header and line input. Keep UI-only labels out of domain commands.
+- [x] Implement `CreatePurchaseReturnUseCaseImpl`:
       generate `PURCHASE_RETURN` code;
       resolve selected GR through query port;
       reject stale/ineligible GR;
@@ -374,10 +374,10 @@ Implement code generation, draft save/update, list, view, and draft cancellation
       snapshot GR value and rate;
       save DRAFT.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CreateGoodsIssueUseCaseImpl.java:L29-L112` - sequence and positive-line filtering
-- [ ] Implement `UpdatePurchaseReturnUseCaseImpl` with the same stale-draft checks and DRAFT-only guard.
-- [ ] Implement `CancelDraftPurchaseReturnUseCaseImpl` as a status transition to `CANCELLED`, never hard delete.
-- [ ] Implement `FindPurchaseReturnsUseCaseImpl`, `GetPurchaseReturnUseCaseImpl`, and edit-view query.
-- [ ] Add Mockito tests:
+- [x] Implement `UpdatePurchaseReturnUseCaseImpl` with the same stale-draft checks and DRAFT-only guard.
+- [x] Implement `CancelDraftPurchaseReturnUseCaseImpl` as a status transition to `CANCELLED`, never hard delete.
+- [x] Implement `FindPurchaseReturnsUseCaseImpl`, `GetPurchaseReturnUseCaseImpl`, and edit-view query.
+- [x] Add Mockito tests:
       create happy path;
       selected GR no longer eligible;
       mixed GR line input;
