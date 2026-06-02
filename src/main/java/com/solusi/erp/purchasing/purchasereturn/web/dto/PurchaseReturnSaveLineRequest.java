@@ -25,8 +25,10 @@ public class PurchaseReturnSaveLineRequest {
     private Long facilityId;
     private String facilityName;
     private Long gridId;
+    private String gridName;
     private String gridCode;
     private Long containerId;
+    private String containerName;
     private String containerCode;
     private String serialNumbers;
     private BigDecimal outstandingQuantity;

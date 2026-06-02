@@ -34,7 +34,7 @@ class FindPurchaseReturnGrLineSelectorUseCaseTest {
     static ReturnableGrLineSlice row(String selectionKey) {
         return new ReturnableGrLineSlice(
                 selectionKey, 1L, 1L, 10L, "Product", "P-001", false, 20L, "Piece", "PCS",
-                30L, "Main", 35L, "A", 40L, "BIN", java.math.BigDecimal.ONE,
+                30L, "Main", 35L, "Grid A", "A", 40L, "Bin", "BIN", java.math.BigDecimal.ONE,
                 "GOODS_RECEIPT", 1L, 1L, java.math.BigDecimal.ONE, java.math.BigDecimal.ONE,
                 java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO
         );

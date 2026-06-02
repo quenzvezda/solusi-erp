@@ -104,7 +104,8 @@ public class PurchaseReturnSourceQueryAdapter implements PurchaseReturnSourceQue
                    gr.id AS gr_id, grl.id AS gr_line_id, grl.product_id, product.name AS product_name,
                    product.code AS product_code, grl.is_serialized, grl.uom_id, uom.name AS uom_name,
                    uom.code AS uom_code, facility.id AS facility_id, facility.name AS facility_name,
-                   grid.id AS grid_id, grid.code AS grid_code, container.id AS container_id,
+                   grid.id AS grid_id, grid.name AS grid_name, grid.code AS grid_code,
+                   container.id AS container_id, container.name AS container_name,
                    container.code AS container_code,
                    SUM(vl.remaining_quantity - COALESCE(reserved.reserved_qty, 0)) AS outstanding_qty,
                    vl.reference_type AS valuation_ref_type, vl.reference_id AS valuation_ref_id,
@@ -132,8 +133,6 @@ public class PurchaseReturnSourceQueryAdapter implements PurchaseReturnSourceQue
             """ + RESERVATION_AGGREGATE + """
             WHERE gr.id = :grId
               AND gr.status = :completedStatus
-              AND grl.is_serialized = FALSE
-              AND vl.serial_number IS NULL
               AND (vl.remaining_quantity - COALESCE(reserved.reserved_qty, 0)) > 0
               AND (:keyword IS NULL OR LOWER(product.code) LIKE LOWER(CONCAT('%', :keyword, '%'))
                    OR LOWER(product.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
@@ -141,8 +140,9 @@ public class PurchaseReturnSourceQueryAdapter implements PurchaseReturnSourceQue
               AND (:excludedKeysEmpty = TRUE OR CONCAT(CAST(grl.id AS CHAR), ':', CAST(vl.container_id AS CHAR))
                    NOT IN (:excludedKeys))
             GROUP BY gr.id, grl.id, grl.product_id, product.name, product.code, grl.is_serialized,
-                     grl.uom_id, uom.name, uom.code, facility.id, facility.name, grid.id, grid.code,
-                     container.id, container.code, vl.reference_type, vl.reference_id, vl.reference_line_id,
+                     grl.uom_id, uom.name, uom.code, facility.id, facility.name, grid.id, grid.name,
+                     grid.code, container.id, container.name, container.code, vl.reference_type,
+                     vl.reference_id, vl.reference_line_id,
                      grl.base_quantity, grl.tax_amount, grl.gr_ir_amount
             ORDER BY product.code, container.code
             """;
@@ -152,7 +152,8 @@ public class PurchaseReturnSourceQueryAdapter implements PurchaseReturnSourceQue
                    gr.id AS gr_id, grl.id AS gr_line_id, grl.product_id, product.name AS product_name,
                    product.code AS product_code, grl.uom_id, uom.name AS uom_name, uom.code AS uom_code,
                    facility.id AS facility_id, facility.name AS facility_name, grid.id AS grid_id,
-                   grid.code AS grid_code, container.id AS container_id, container.code AS container_code,
+                   grid.name AS grid_name, grid.code AS grid_code, container.id AS container_id,
+                   container.name AS container_name, container.code AS container_code,
                    vl.serial_number, vl.reference_type AS valuation_ref_type, vl.reference_id AS valuation_ref_id,
                    vl.reference_line_id AS valuation_ref_line_id, vl.unit_cost_amount_original AS unit_cost,
                    COALESCE(vl.unit_cost_amount_local, 0) AS inventory_amount,
@@ -278,8 +279,9 @@ public class PurchaseReturnSourceQueryAdapter implements PurchaseReturnSourceQue
                 rs.getLong("product_id"), rs.getString("product_name"), rs.getString("product_code"),
                 rs.getBoolean("is_serialized"), rs.getLong("uom_id"), rs.getString("uom_name"),
                 rs.getString("uom_code"), rs.getLong("facility_id"), rs.getString("facility_name"),
-                rs.getLong("grid_id"), rs.getString("grid_code"), rs.getLong("container_id"),
-                rs.getString("container_code"), rs.getBigDecimal("outstanding_qty"),
+                rs.getLong("grid_id"), rs.getString("grid_name"), rs.getString("grid_code"),
+                rs.getLong("container_id"), rs.getString("container_name"), rs.getString("container_code"),
+                rs.getBigDecimal("outstanding_qty"),
                 rs.getString("valuation_ref_type"), rs.getLong("valuation_ref_id"),
                 rs.getLong("valuation_ref_line_id"), rs.getBigDecimal("unit_cost"),
                 rs.getBigDecimal("inventory_amount"), rs.getBigDecimal("tax_reversal_amount"),
@@ -293,7 +295,8 @@ public class PurchaseReturnSourceQueryAdapter implements PurchaseReturnSourceQue
                 rs.getLong("product_id"), rs.getString("product_name"), rs.getString("product_code"),
                 rs.getLong("uom_id"), rs.getString("uom_name"), rs.getString("uom_code"),
                 rs.getLong("facility_id"), rs.getString("facility_name"), rs.getLong("grid_id"),
-                rs.getString("grid_code"), rs.getLong("container_id"), rs.getString("container_code"),
+                rs.getString("grid_name"), rs.getString("grid_code"), rs.getLong("container_id"),
+                rs.getString("container_name"), rs.getString("container_code"),
                 rs.getString("serial_number"), rs.getString("valuation_ref_type"),
                 rs.getLong("valuation_ref_id"), rs.getLong("valuation_ref_line_id"),
                 rs.getBigDecimal("unit_cost"), rs.getBigDecimal("inventory_amount"),

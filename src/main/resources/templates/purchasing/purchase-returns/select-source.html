@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/master :: head(#{label.purchase-return.select-source})}"></head>
+<body th:replace="~{layout/master :: layout(~{:: .purchase-return-source-content}, ~{:: #page-specific-scripts})}">
+<div class="purchase-return-source-content">
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title" th:text="#{label.purchase-return.select-source}">Select Goods Receipt</h2>
+                    <div class="text-secondary mt-1" th:text="#{label.purchase-return.select-source.subtitle}">Choose an eligible completed goods receipt.</div>
+                </div>
+                <div class="col-auto ms-auto">
+                    <a th:href="@{/purchasing/purchase-returns}" class="btn btn-secondary">
+                        <i class="ti ti-arrow-left me-1"></i><span th:text="#{label.back}">Back</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <form th:action="@{/purchasing/purchase-returns/select-source}" method="get" class="row g-2 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label" th:text="#{label.search}">Search</label>
+                            <div class="input-icon">
+                                <input type="text" name="keyword" th:value="${keyword}" class="form-control form-control-sm">
+                                <span class="input-icon-addon"><i class="ti ti-search"></i></span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" th:text="#{label.purchase-return.supplier}">Supplier</label>
+                            <select name="supplierId" id="source-supplier" class="form-select erp-input-ts" data-lookup-path="parties">
+                                <option value=""></option>
+                                <option th:if="${supplierLookup != null}" th:value="${supplierLookup.id}"
+                                        th:text="${supplierLookup.name}" th:attr="data-subtext=${supplierLookup.subText}" selected></option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" th:text="#{label.purchase-return.purchase-order}">Purchase Order</label>
+                            <select name="purchaseOrderId" id="source-po" class="form-select erp-input-ts"
+                                    data-lookup-path="purchasing/purchase-return-source-pos">
+                                <option value=""></option>
+                                <option th:if="${purchaseOrderLookup != null}" th:value="${purchaseOrderLookup.id}"
+                                        th:text="${purchaseOrderLookup.name}" th:attr="data-subtext=${purchaseOrderLookup.subText}" selected></option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" th:text="#{label.purchase-return.receipt-date-from}">Receipt From</label>
+                            <input type="date" data-picker="date" name="receiptDateFrom" th:value="${receiptDateFrom}"
+                                   class="form-control form-control-sm">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" th:text="#{label.purchase-return.receipt-date-to}">Receipt To</label>
+                            <input type="date" data-picker="date" name="receiptDateTo" th:value="${receiptDateTo}"
+                                   class="form-control form-control-sm">
+                        </div>
+                        <div class="col-12 text-end">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="ti ti-filter me-1"></i><span th:text="#{label.filter}">Filter</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table">
+                        <thead><tr>
+                            <th th:text="#{label.purchase-return.goods-receipt}">Goods Receipt</th>
+                            <th th:text="#{label.purchase-return.purchase-order}">Purchase Order</th>
+                            <th th:text="#{label.purchase-return.receipt-date}">Receipt Date</th>
+                            <th th:text="#{label.purchase-return.supplier}">Supplier</th>
+                            <th th:text="#{label.purchase-return.facility}">Facility</th>
+                            <th class="text-end" th:text="#{label.purchase-return.eligible-lines}">Lines</th>
+                            <th class="text-end" th:text="#{label.purchase-return.returnable-qty}">Returnable Qty</th>
+                            <th class="text-end" th:text="#{label.actions}">Actions</th>
+                        </tr></thead>
+                        <tbody>
+                        <tr th:each="row : ${page.content}">
+                            <td><a th:href="@{/inventory/goods-receipts/{id}(id=${row.goodsReceiptId})}"
+                                   th:text="${row.goodsReceiptCode}">GR-001</a></td>
+                            <td><a th:href="@{/purchasing/purchase-orders/view/{id}(id=${row.purchaseOrderId})}"
+                                   th:text="${row.purchaseOrderCode}">PO-001</a></td>
+                            <td th:text="${#temporals.format(row.receiptDate, 'dd MMM yyyy')}">01 Jun 2026</td>
+                            <td th:text="${row.supplierName}">Supplier</td>
+                            <td th:text="${row.facilityName}">Main</td>
+                            <td class="text-end" th:text="${row.eligibleLineCount}">1</td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(row.totalReturnableQuantity, 1, 'COMMA', 2, 'POINT')}">1.00</td>
+                            <td class="text-end">
+                                <a th:href="@{/purchasing/purchase-returns/create-from-reference(goodsReceiptId=${row.goodsReceiptId})}"
+                                   class="btn btn-primary btn-sm">
+                                    <span th:text="#{label.continue}">Continue</span><i class="ti ti-arrow-right ms-1"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        <tr th:if="${page.empty}">
+                            <td colspan="8" class="text-center py-4 text-secondary" th:text="#{label.purchase-return.select-source.empty}">No eligible goods receipt.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="page-specific-scripts"></div>
+</body>
+</html>

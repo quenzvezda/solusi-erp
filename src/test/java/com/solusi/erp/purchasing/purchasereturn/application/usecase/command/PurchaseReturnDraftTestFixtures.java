@@ -28,7 +28,7 @@ final class PurchaseReturnDraftTestFixtures {
     static ReturnableGrLineSlice slice() {
         return new ReturnableGrLineSlice(
                 "11:40", 1L, 11L, 10L, "Product", "P-001", false, 20L, "Piece", "PCS",
-                30L, "Main", 35L, "A", 40L, "BIN", BigDecimal.TEN,
+                30L, "Main", 35L, "Grid A", "A", 40L, "Bin", "BIN", BigDecimal.TEN,
                 "GOODS_RECEIPT", 1L, 11L, new BigDecimal("100"), new BigDecimal("1000"),
                 new BigDecimal("100"), new BigDecimal("1000")
         );
@@ -37,7 +37,8 @@ final class PurchaseReturnDraftTestFixtures {
     static ReturnableSerialRow serial() {
         return new ReturnableSerialRow(
                 "12:41:SER-001", 1L, 12L, 10L, "Product", "P-001", 20L, "Piece", "PCS",
-                30L, "Main", 35L, "A", 41L, "MOVED", "SER-001", "GOODS_RECEIPT", 1L, 12L,
+                30L, "Main", 35L, "Grid A", "A", 41L, "Moved Bin", "MOVED", "SER-001",
+                "GOODS_RECEIPT", 1L, 12L,
                 new BigDecimal("100"), new BigDecimal("100"), new BigDecimal("10"), new BigDecimal("100")
         );
     }

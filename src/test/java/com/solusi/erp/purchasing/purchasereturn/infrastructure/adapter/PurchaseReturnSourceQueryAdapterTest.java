@@ -63,7 +63,7 @@ class PurchaseReturnSourceQueryAdapterTest {
         adapter.findReturnableGrLineSlices(1L, "product", List.of("11:22"));
 
         SqlCapture capture = captureQuery();
-        assertThat(capture.sql()).contains("grl.is_serialized = FALSE");
+        assertThat(capture.sql()).doesNotContain("grl.is_serialized = FALSE");
         assertThat(capture.sql()).contains("SUM(remaining_quantity) AS remaining_quantity");
         assertThat(capture.sql()).contains("CAST(vl.container_id AS CHAR)");
         assertThat(capture.sql()).contains("NOT IN (:excludedKeys)");

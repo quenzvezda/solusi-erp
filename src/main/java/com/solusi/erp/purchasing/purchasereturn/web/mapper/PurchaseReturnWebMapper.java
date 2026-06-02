@@ -146,8 +146,10 @@ public class PurchaseReturnWebMapper {
         target.setFacilityId(slice.facilityId());
         target.setFacilityName(slice.facilityName());
         target.setGridId(slice.gridId());
+        target.setGridName(slice.gridName());
         target.setGridCode(slice.gridCode());
         target.setContainerId(slice.containerId());
+        target.setContainerName(slice.containerName());
         target.setContainerCode(slice.containerCode());
         target.setOutstandingQuantity(slice.outstandingQuantity());
         target.setValuationReferenceType(slice.valuationReferenceType());
@@ -177,8 +179,10 @@ public class PurchaseReturnWebMapper {
         target.setFacilityId(line.getFacilityId());
         target.setFacilityName(name(facilityLookupProvider.resolve(line.getFacilityId())));
         target.setGridId(line.getGridId());
+        target.setGridName(name(gridLookupProvider.resolve(line.getGridId())));
         target.setGridCode(subText(gridLookupProvider.resolve(line.getGridId())));
         target.setContainerId(line.getContainerId());
+        target.setContainerName(name(containerLookupProvider.resolve(line.getContainerId())));
         target.setContainerCode(subText(containerLookupProvider.resolve(line.getContainerId())));
         target.setSerialNumbers(line.getSerialNumbers());
         target.setOutstandingQuantity(line.getBaseQuantity());

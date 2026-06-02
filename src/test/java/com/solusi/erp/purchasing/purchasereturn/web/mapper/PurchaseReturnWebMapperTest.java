@@ -121,7 +121,7 @@ class PurchaseReturnWebMapperTest {
     private ReturnableGrLineSlice slice() {
         return new ReturnableGrLineSlice(
                 "11:40", 1L, 11L, 10L, "Product", "P-001", false, 20L, "Piece", "PCS",
-                30L, "Main", 35L, "A", 40L, "BIN", BigDecimal.TEN, "GOODS_RECEIPT",
+                30L, "Main", 35L, "Grid A", "A", 40L, "Bin", "BIN", BigDecimal.TEN, "GOODS_RECEIPT",
                 1L, 11L, new BigDecimal("100"), new BigDecimal("1000"), BigDecimal.ZERO, BigDecimal.ZERO);
     }
 

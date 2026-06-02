@@ -24,7 +24,7 @@ class FindPurchaseReturnSerialSelectorUseCaseTest {
     void execute_mapsSerialRowsToPage() {
         ReturnableSerialRow row = new ReturnableSerialRow(
                 "1:40:SER-001", 1L, 1L, 10L, "Product", "P-001", 20L, "Piece", "PCS",
-                30L, "Main", 35L, "A", 40L, "BIN", "SER-001", "GOODS_RECEIPT", 1L, 1L,
+                30L, "Main", 35L, "Grid A", "A", 40L, "Bin", "BIN", "SER-001", "GOODS_RECEIPT", 1L, 1L,
                 BigDecimal.ONE, BigDecimal.ONE, BigDecimal.ZERO, BigDecimal.ZERO
         );
         when(queryPort.findReturnableSerials(1L, 1L, null, List.of())).thenReturn(List.of(row));

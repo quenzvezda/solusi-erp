@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div id="purchase-return-gr-line-selector-results" th:fragment="purchase-return-gr-line-selector-results">
+    <div class="card-header border-0 pb-0">
+        <form class="row g-2" hx-get="/purchasing/purchase-returns/selectors/goods-receipt-lines"
+              hx-target="#purchase-return-gr-line-selector-results" hx-swap="outerHTML">
+            <input type="hidden" name="goodsReceiptId" th:value="${goodsReceiptId}">
+            <th:block th:each="key : ${excludedSelectionKeys}">
+                <input type="hidden" name="excludedSelectionKeys" th:value="${key}">
+            </th:block>
+            <div class="col"><input type="search" class="form-control" name="keyword" th:value="${keyword}"
+                                    th:placeholder="#{label.purchase-return.selector.search}"></div>
+            <div class="col-auto"><button type="submit" class="btn btn-primary">
+                <i class="ti ti-search me-1"></i><span th:text="#{label.search}">Search</span>
+            </button></div>
+        </form>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead><tr>
+                <th class="w-1"></th><th th:text="#{label.product}">Product</th><th th:text="#{label.container}">Container</th>
+                <th class="text-end" th:text="#{label.purchase-return.returnable-qty}">Outstanding</th>
+                <th class="text-end" th:text="#{label.unit.cost}">Unit Cost</th>
+            </tr></thead>
+            <tbody>
+            <tr th:if="${page.empty}"><td colspan="5" class="text-center text-secondary py-4" th:text="#{label.purchase-return.selector.gr-line.empty}">No lines.</td></tr>
+            <tr th:each="row : ${page.content}"
+                th:attr="data-selection-key=${row.selectionKey},
+                         data-goods-receipt-line-id=${row.goodsReceiptLineId},
+                         data-product-id=${row.productId},data-product-name=${row.productName},data-product-subtext=${row.productCode},
+                         data-uom-id=${row.uomId},data-uom-name=${row.uomName},data-uom-subtext=${row.uomCode},
+                         data-facility-id=${row.facilityId},data-facility-name=${row.facilityName},
+                         data-grid-id=${row.gridId},data-grid-name=${row.gridName},data-grid-subtext=${row.gridCode},
+                         data-container-id=${row.containerId},data-container-name=${row.containerName},data-container-subtext=${row.containerCode},
+                         data-serialized=${row.serialized},data-outstanding-quantity=${row.outstandingQuantity},
+                         data-valuation-reference-type=${row.valuationReferenceType},data-valuation-reference-id=${row.valuationReferenceId},
+                         data-valuation-reference-line-id=${row.valuationReferenceLineId},data-unit-cost=${row.unitCost},
+                         data-inventory-amount=${row.inventoryAmount},data-tax-reversal-amount=${row.taxReversalAmount},
+                         data-clearing-amount=${row.clearingAmount}">
+                <td><label class="form-check m-0"><input class="form-check-input js-purchase-return-gr-line-item" type="checkbox"></label></td>
+                <td><div class="fw-semibold" th:text="${row.productName}">Product</div><div class="text-secondary small" th:text="${row.productCode + ' / ' + row.uomCode}">P-001 / PCS</div>
+                    <span class="badge mt-1" th:classappend="${row.serialized} ? 'bg-azure-lt' : 'bg-secondary-lt'"
+                          th:text="${row.serialized} ? #{label.serialized} : #{label.standard}">Standard</span></td>
+                <td><div th:text="${row.containerName}">Bin</div><div class="text-secondary small" th:text="${row.facilityName + ' / ' + row.gridCode + ' / ' + row.containerCode}">Main / A / BIN</div></td>
+                <td class="text-end" th:text="${#numbers.formatDecimal(row.outstandingQuantity, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                <td class="text-end" th:text="${#numbers.formatDecimal(row.unitCost, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+    <div class="card-footer d-flex justify-content-end">
+        <button type="button" class="btn btn-primary js-purchase-return-gr-line-apply">
+            <i class="ti ti-check me-1"></i><span th:text="#{label.apply}">Apply</span>
+        </button>
+    </div>
+</div>
+</body>
+</html>

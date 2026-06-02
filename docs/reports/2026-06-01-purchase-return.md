@@ -133,3 +133,26 @@
 - **Summary:** Added Purchase Return request/response DTOs, ISO date binding, lookup-provider mapper, SSR/JSON controller routes, PO source autocomplete endpoint, source and serial selector endpoints, approval panel attributes, and permission contracts.
 - **Verification:** `mvn test -Dtest=PurchaseReturnControllerTest,PurchaseReturnWebMapperTest`
 - **Boundary check:** `rg "JpaRepository|infrastructure\\.persistence|domain\\.repository" src/main/java/com/solusi/erp/purchasing/purchasereturn/web -n` returned no matches.
+
+## Task 11: Thymeleaf Pages and Frontend Interaction Wiring
+
+### Finding: Serialized return lines need selector context before individual serial selection
+- **Type:** decision
+- **Severity:** warning
+- **Detail:** The source slice query originally returned non-serial rows only. That left the create form without an original GR-line context from which to open the serialized-item selector.
+- **Action taken:** Included serialized source slices grouped by actual container while preserving individual serial selection in the dedicated serial endpoint. The page script groups applied serials by current container and derives quantity from selected serial count.
+- **Ref:** `src/main/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/adapter/PurchaseReturnSourceQueryAdapter.java`
+
+### Finding: Selector Trinity payload needed grid and container names
+- **Type:** decision
+- **Severity:** info
+- **Detail:** Facility carried a display name, but grid and container slices exposed only IDs and codes. This was insufficient for consistent `id`, `name`, `subText` payloads.
+- **Action taken:** Added grid and container names to source read models, DTO snapshots, mapper prefill, and selector `data-*` attributes.
+- **Ref:** `src/main/java/com/solusi/erp/purchasing/purchasereturn/application/usecase/query/ReturnableGrLineSlice.java`
+
+- **Status:** clean
+- **Summary:** Added list, regular source-selection page, form, GR-slice and serial modal fragments, detail page, feature-local JS, SSR hidden snapshots, capture-phase validation, theme-safe action wiring, and four template contract suites.
+- **Verification:** `node --check src/main/resources/static/js/purchasing/purchase-return/form.js`
+- **Verification:** `mvn test -Dtest=PurchaseReturnListIntegrationTest,PurchaseReturnSelectSourceIntegrationTest,PurchaseReturnFormIntegrationTest,PurchaseReturnViewIntegrationTest`
+- **Verification:** `mvn test -Dtest='com.solusi.erp.purchasing.purchasereturn.**.*Test'` passed 94 tests.
+- **Boundary check:** No forbidden fixed theme classes, `window.confirm`, or direct `new bootstrap.Modal` usage under Purchase Return templates/scripts.

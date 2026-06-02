@@ -556,7 +556,7 @@ Build the two-step UX using mandatory project UI standards and browser-safe JS w
 
 **Reference modules:** Vendor Bill select page, Goods Receipt form, PO modal selectors, GI form
 
-- [ ] Before editing UI files, re-read:
+- [x] Before editing UI files, re-read:
       `docs/spec/ui-standards.md`,
       `docs/spec/modal-selector.md`,
       `docs/spec/header-lines-form.md`,
@@ -566,36 +566,36 @@ Build the two-step UX using mandatory project UI standards and browser-safe JS w
       `docs/spec/autocomplete-generic.md`,
       `docs/spec/action-buttons.md`,
       `docs/spec/page-specific-scripts.md`.
-- [ ] Create `list.html` with standard right-aligned search bar, generic sorting fragment, generic pagination fragment, HTMX retention, and exactly one row action: `View`.
+- [x] Create `list.html` with standard right-aligned search bar, generic sorting fragment, generic pagination fragment, HTMX retention, and exactly one row action: `View`.
       ref: `docs/spec/ui-standards.md:L7-L24` - list-page layout
-- [ ] Create `select-source.html` as a regular page, not a modal. Render filters and eligible GR table with hyperlinks to GR and PO view pages. Continue with one selected GR.
+- [x] Create `select-source.html` as a regular page, not a modal. Render filters and eligible GR table with hyperlinks to GR and PO view pages. Continue with one selected GR.
       ref: `src/main/resources/templates/accountspayable/vendor-bills/select-references.html:L7-L85` - regular pre-add page pattern
-- [ ] Use autocomplete for simple Pre-add 1 filters:
+- [x] Use autocomplete for simple Pre-add 1 filters:
       supplier through the existing party lookup contract;
       PO through `purchasing/purchase-return-source-pos`.
       Carry Trinity data (`id`, `name`, `subText`) and keep date range/keyword as standard compact inputs.
       ref: `docs/spec/autocomplete-generic.md:L30-L48` - autocomplete selection and Trinity data
-- [ ] Create `form.html` with native Thymeleaf layout slot, AJAX form attributes, alert container, loading indicator, source header snapshots, `returnDate` date picker, reason enum selector rendered via i18n, optional note, summary card, dynamic line table, modal shells, and page script config.
+- [x] Create `form.html` with native Thymeleaf layout slot, AJAX form attributes, alert container, loading indicator, source header snapshots, `returnDate` date picker, reason enum selector rendered via i18n, optional note, summary card, dynamic line table, modal shells, and page script config.
       ref: `docs/spec/form-submission.md:L16-L50` - AJAX form contract
       ref: `docs/spec/header-lines-form.md:L7-L36` - header-lines structure and helpers
       ref: `docs/spec/datetime-standards.md:L21-L44` - `data-picker="date"`
-- [ ] Prefill all eligible GR slices with qty `0`. Persist only positive rows. Permit row removal and keep Add Line available so removed rows can be restored from selector.
-- [ ] For non-serial rows:
+- [x] Prefill all eligible GR slices with qty `0`. Persist only positive rows. Permit row removal and keep Add Line available so removed rows can be restored from selector.
+- [x] For non-serial rows:
       show readonly outstanding returnable;
       show actual container slice;
       allow qty up to slice outstanding;
       allow multiple rows for the same GR line when containers differ.
-- [ ] For serialized rows:
+- [x] For serialized rows:
       use serial modal selector;
       show original GR context and actual current container;
       exclude already-selected serials at query level;
       group applied serial selections by actual container into separate Purchase Return rows;
       derive qty from selected serial count.
-- [ ] Create `gr-line-selector-modal.html` and `serial-selector-modal.html`.
+- [x] Create `gr-line-selector-modal.html` and `serial-selector-modal.html`.
       Root `id`, `th:fragment`, modal shell `bodyId`, search `hx-target`, and pagination target must match exactly.
       ref: `docs/spec/modal-selector.md:L28-L47` - stable root contract
       ref: `src/main/resources/templates/purchasing/purchase-orders/fragments/pr-line-selector-modal.html:L4-L89` - multi-select payload fragment
-- [ ] Put selector payload in `data-*` attrs only:
+- [x] Put selector payload in `data-*` attrs only:
       stable selection key;
       GR line;
       product Trinity data;
@@ -607,11 +607,11 @@ Build the two-step UX using mandatory project UI standards and browser-safe JS w
       valuation reference triple;
       unit cost and amount snapshots.
       ref: `docs/spec/modal-selector.md:L49-L65` - selector DTO and payload split
-- [ ] Create `form.js` using `ErpLineManager`, `ErpNumeric.get/set`, `window.ERP.ModalSelector`, `ErpModal`, and capture-phase submit validation.
+- [x] Create `form.js` using `ErpLineManager`, `ErpNumeric.get/set`, `window.ERP.ModalSelector`, `ErpModal`, and capture-phase submit validation.
       Do not add Purchase Return flow into shared JS.
       ref: `docs/spec/page-specific-scripts.md:L5-L20` - feature JS boundary
       ref: `docs/spec/form-submission.md:L52-L67` - capture validation and beforeunload
-- [ ] Implement JS guards:
+- [x] Implement JS guards:
       duplicate selection key prevention;
       qty above outstanding;
       required reason for positive rows;
@@ -620,15 +620,15 @@ Build the two-step UX using mandatory project UI standards and browser-safe JS w
       reindex after remove;
       preserve hidden fields needed after SSR pre-edit without relying only on TomSelect payload.
       ref: `docs/spec/page-specific-scripts.md:L79-L90` - SSR TomSelect payload trap
-- [ ] Create `view.html` with status badge, source hyperlinks, line table, reservation summary, GI link after confirmation, approval panel/history drawer, and status-aware actions.
-- [ ] Status-changing actions use `ErpForm.postAction` and modal confirmation. Do not use `window.confirm()` or direct `new bootstrap.Modal()`.
+- [x] Create `view.html` with status badge, source hyperlinks, line table, reservation summary, GI link after confirmation, approval panel/history drawer, and status-aware actions.
+- [x] Status-changing actions use `ErpForm.postAction` and modal confirmation. Do not use `window.confirm()` or direct `new bootstrap.Modal()`.
       ref: `docs/spec/action-buttons.md:L5-L29` - document action contract
       ref: `docs/spec/ui-standards.md:L96-L115` - `ErpModal` rule
-- [ ] Keep theme compatibility:
+- [x] Keep theme compatibility:
       no `bg-light`, `bg-white`, or `text-dark`;
       use `bg-body-tertiary`, `bg-secondary-lt`, `text-body`, and default readonly styling.
       ref: `docs/spec/ui-standards.md:L72-L94` - dark-mode requirements
-- [ ] Add template contract tests:
+- [x] Add template contract tests:
       `PurchaseReturnListIntegrationTest`,
       `PurchaseReturnSelectSourceIntegrationTest`,
       `PurchaseReturnFormIntegrationTest`,
