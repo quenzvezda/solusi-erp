@@ -1,12 +1,21 @@
 package com.solusi.erp.purchasing.purchasereturn.infrastructure.config;
 
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
+import com.solusi.erp.inventory.stock.domain.port.InventoryReservationService;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CancelApprovedPurchaseReturnUseCase;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CancelApprovedPurchaseReturnUseCaseImpl;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CancelDraftPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CancelDraftPurchaseReturnUseCaseImpl;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CancelPurchaseReturnSubmissionUseCase;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CancelPurchaseReturnSubmissionUseCaseImpl;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CreatePurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CreatePurchaseReturnUseCaseImpl;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.SubmitPurchaseReturnUseCase;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.SubmitPurchaseReturnUseCaseImpl;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.UpdatePurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.UpdatePurchaseReturnUseCaseImpl;
+import com.solusi.erp.purchasing.purchasereturn.domain.port.PurchaseReturnApprovalCancellationPort;
+import com.solusi.erp.purchasing.purchasereturn.domain.port.PurchaseReturnEventPublisher;
 import com.solusi.erp.purchasing.purchasereturn.domain.repository.PurchaseReturnRepository;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindEligiblePurchaseReturnGoodsReceiptsUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindEligiblePurchaseReturnGoodsReceiptsUseCaseImpl;
@@ -110,6 +119,43 @@ public class PurchaseReturnConfig {
             PurchaseReturnRepository repository,
             PlatformTransactionManager txManager) {
         CancelDraftPurchaseReturnUseCaseImpl pure = new CancelDraftPurchaseReturnUseCaseImpl(repository);
+        TransactionTemplate tx = new TransactionTemplate(txManager);
+        return id -> tx.execute(status -> pure.execute(id));
+    }
+
+    @Bean
+    public SubmitPurchaseReturnUseCase submitPurchaseReturnUseCase(
+            PurchaseReturnRepository repository,
+            InventoryReservationService reservationService,
+            PurchaseReturnEventPublisher eventPublisher,
+            PlatformTransactionManager txManager) {
+        SubmitPurchaseReturnUseCaseImpl pure = new SubmitPurchaseReturnUseCaseImpl(
+                repository, reservationService, eventPublisher);
+        TransactionTemplate tx = new TransactionTemplate(txManager);
+        return (id, submitterUserId, requesterPartyId, approverId) -> tx.execute(
+                status -> pure.execute(id, submitterUserId, requesterPartyId, approverId));
+    }
+
+    @Bean
+    public CancelPurchaseReturnSubmissionUseCase cancelPurchaseReturnSubmissionUseCase(
+            PurchaseReturnRepository repository,
+            InventoryReservationService reservationService,
+            PurchaseReturnApprovalCancellationPort approvalCancellationPort,
+            PlatformTransactionManager txManager) {
+        CancelPurchaseReturnSubmissionUseCaseImpl pure = new CancelPurchaseReturnSubmissionUseCaseImpl(
+                repository, reservationService, approvalCancellationPort);
+        TransactionTemplate tx = new TransactionTemplate(txManager);
+        return (id, actorUserId, notes) -> tx.execute(
+                status -> pure.execute(id, actorUserId, notes));
+    }
+
+    @Bean
+    public CancelApprovedPurchaseReturnUseCase cancelApprovedPurchaseReturnUseCase(
+            PurchaseReturnRepository repository,
+            InventoryReservationService reservationService,
+            PlatformTransactionManager txManager) {
+        CancelApprovedPurchaseReturnUseCaseImpl pure = new CancelApprovedPurchaseReturnUseCaseImpl(
+                repository, reservationService);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         return id -> tx.execute(status -> pure.execute(id));
     }

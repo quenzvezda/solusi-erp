@@ -131,6 +131,12 @@ public class PurchaseReturn {
     }
 
     public void submit(Long submitterUserId) {
+        validateSubmission(submitterUserId);
+        submittedByUserId = submitterUserId;
+        status = PurchaseReturnStatus.SUBMITTED;
+    }
+
+    public void validateSubmission(Long submitterUserId) {
         if (!status.canSubmit()) {
             throw new DomainException("msg.error.purchase-return.submit.invalid-status");
         }
@@ -140,8 +146,6 @@ public class PurchaseReturn {
         if (lines.isEmpty()) {
             throw new DomainException("msg.error.purchase-return.lines-required");
         }
-        submittedByUserId = submitterUserId;
-        status = PurchaseReturnStatus.SUBMITTED;
     }
 
     public void approve() {

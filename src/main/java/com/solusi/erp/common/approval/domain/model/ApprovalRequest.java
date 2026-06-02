@@ -67,6 +67,13 @@ public class ApprovalRequest {
         addHistory(ApprovalAction.REJECTED, actorId, null, notes);
     }
 
+    public void cancel(Long actorId, String notes) {
+        validatePending();
+        validateNotesRequired(notes);
+        this.status = ApprovalStatus.CANCELLED;
+        addHistory(ApprovalAction.CANCELLED, actorId, null, notes);
+    }
+
     private void validatePending() {
         if (this.status != ApprovalStatus.PENDING) {
             throw new DomainException("msg.error.approval.not-pending");

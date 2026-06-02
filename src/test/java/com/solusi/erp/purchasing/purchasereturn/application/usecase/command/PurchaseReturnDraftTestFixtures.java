@@ -1,5 +1,6 @@
 package com.solusi.erp.purchasing.purchasereturn.application.usecase.command;
 
+import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.EligibleGoodsReceiptRow;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.ReturnableGrLineSlice;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.ReturnableSerialRow;
@@ -63,6 +64,30 @@ final class PurchaseReturnDraftTestFixtures {
             purchaseReturn.approve();
         }
         return purchaseReturn;
+    }
+
+    static PurchaseReturn persisted(PurchaseReturnStatus status) {
+        PurchaseReturn purchaseReturn = withStatus(status);
+        return PurchaseReturn.reconstitute(
+                new AuditMetadata(1L, 0L, null, null, null, null),
+                purchaseReturn.getCode(),
+                purchaseReturn.getReturnDate(),
+                purchaseReturn.getReferenceType(),
+                purchaseReturn.getReferenceId(),
+                purchaseReturn.getReferenceCode(),
+                purchaseReturn.getPurchaseOrderId(),
+                purchaseReturn.getPurchaseOrderCode(),
+                purchaseReturn.getSupplierId(),
+                purchaseReturn.getFacilityId(),
+                purchaseReturn.getCurrencyId(),
+                purchaseReturn.getExchangeRate(),
+                purchaseReturn.getStatus(),
+                purchaseReturn.getReason(),
+                purchaseReturn.getNote(),
+                purchaseReturn.getSubmittedByUserId(),
+                purchaseReturn.getGeneratedGoodsIssueId(),
+                purchaseReturn.getLines()
+        );
     }
 
     private static PurchaseReturnLine line() {

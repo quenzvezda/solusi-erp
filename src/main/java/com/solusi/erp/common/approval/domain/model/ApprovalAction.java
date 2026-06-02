@@ -8,5 +8,6 @@ public enum ApprovalAction {
     APPROVE_AND_FINISH,
     APPROVE_AND_FORWARD,
     FORWARD,
-    REJECTED
+    REJECTED,
+    CANCELLED
 }

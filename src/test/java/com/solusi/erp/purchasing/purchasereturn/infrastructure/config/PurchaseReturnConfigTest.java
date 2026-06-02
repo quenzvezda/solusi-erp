@@ -1,14 +1,20 @@
 package com.solusi.erp.purchasing.purchasereturn.infrastructure.config;
 
 import com.solusi.erp.purchasing.purchasereturn.domain.repository.PurchaseReturnRepository;
+import com.solusi.erp.inventory.stock.domain.port.InventoryReservationService;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindEligiblePurchaseReturnGoodsReceiptsUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindPurchaseReturnGrLineSlicesUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindPurchaseReturnSerialsUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnCreateViewUseCase;
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CancelDraftPurchaseReturnUseCase;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CancelApprovedPurchaseReturnUseCase;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CancelPurchaseReturnSubmissionUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CreatePurchaseReturnUseCase;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.SubmitPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.UpdatePurchaseReturnUseCase;
+import com.solusi.erp.purchasing.purchasereturn.domain.port.PurchaseReturnApprovalCancellationPort;
+import com.solusi.erp.purchasing.purchasereturn.domain.port.PurchaseReturnEventPublisher;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindPurchaseReturnsUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnEditViewUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnUseCase;
@@ -56,6 +62,15 @@ class PurchaseReturnConfigTest {
     private CancelDraftPurchaseReturnUseCase cancelDraftPurchaseReturnUseCase;
 
     @Autowired
+    private SubmitPurchaseReturnUseCase submitPurchaseReturnUseCase;
+
+    @Autowired
+    private CancelPurchaseReturnSubmissionUseCase cancelPurchaseReturnSubmissionUseCase;
+
+    @Autowired
+    private CancelApprovedPurchaseReturnUseCase cancelApprovedPurchaseReturnUseCase;
+
+    @Autowired
     private FindPurchaseReturnsUseCase findPurchaseReturnsUseCase;
 
     @Autowired
@@ -74,6 +89,9 @@ class PurchaseReturnConfigTest {
         assertThat(createPurchaseReturnUseCase).isNotNull();
         assertThat(updatePurchaseReturnUseCase).isNotNull();
         assertThat(cancelDraftPurchaseReturnUseCase).isNotNull();
+        assertThat(submitPurchaseReturnUseCase).isNotNull();
+        assertThat(cancelPurchaseReturnSubmissionUseCase).isNotNull();
+        assertThat(cancelApprovedPurchaseReturnUseCase).isNotNull();
         assertThat(findPurchaseReturnsUseCase).isNotNull();
         assertThat(getPurchaseReturnUseCase).isNotNull();
         assertThat(getPurchaseReturnEditViewUseCase).isNotNull();
@@ -105,6 +123,21 @@ class PurchaseReturnConfigTest {
         @Bean
         PlatformTransactionManager platformTransactionManager() {
             return mock(PlatformTransactionManager.class);
+        }
+
+        @Bean
+        InventoryReservationService inventoryReservationService() {
+            return mock(InventoryReservationService.class);
+        }
+
+        @Bean
+        PurchaseReturnEventPublisher purchaseReturnEventPublisher() {
+            return mock(PurchaseReturnEventPublisher.class);
+        }
+
+        @Bean
+        PurchaseReturnApprovalCancellationPort purchaseReturnApprovalCancellationPort() {
+            return mock(PurchaseReturnApprovalCancellationPort.class);
         }
     }
 }

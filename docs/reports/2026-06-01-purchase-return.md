@@ -86,3 +86,16 @@
 - **Status:** clean
 - **Summary:** Added draft create/update/cancel, list/detail/edit queries, sequence generation, stale selector validation, snapshot rebuilding, transactional wiring, and focused Mockito coverage.
 - **Verification:** `mvn test -Dtest=*PurchaseReturn*Draft*Test,CreatePurchaseReturnUseCaseTest,UpdatePurchaseReturnUseCaseTest,CancelDraftPurchaseReturnUseCaseTest,FindPurchaseReturnsUseCaseTest,PurchaseReturnConfigTest`
+
+## Task 8: Submit, Approval, Reject, and Cancel Submission Integration
+
+### Finding: Submission validation must run before reservation side effects
+- **Type:** decision
+- **Severity:** warning
+- **Detail:** Calling the reservation service before validating Purchase Return status or submitter user ID would allow duplicate or malformed submissions to touch stock before failing.
+- **Action taken:** Extracted aggregate submission validation and invoked it before reserving inventory. A reservation failure still leaves the persisted Purchase Return in DRAFT and publishes no approval event.
+- **Ref:** `src/main/java/com/solusi/erp/purchasing/purchasereturn/application/usecase/command/SubmitPurchaseReturnUseCaseImpl.java`
+
+- **Status:** clean
+- **Summary:** Added generic approval cancellation, Purchase Return approval publishing, submit-time reservation, approved/rejected listeners, submitted and approved cancellation flows, transactional wiring, and lifecycle coverage.
+- **Verification:** `mvn test -Dtest=ApprovalRequestTest,CancelApprovalRequestUseCaseTest,SubmitPurchaseReturnUseCaseTest,OnPurchaseReturnApprovedListenerTest,OnPurchaseReturnRejectedListenerTest,CancelPurchaseReturnSubmissionUseCaseTest,CancelApprovedPurchaseReturnUseCaseTest,PurchaseReturnConfigTest`

@@ -252,4 +252,29 @@ class ApprovalRequestTest {
                 .satisfies(ex -> assertThat(((DomainException) ex).getKey())
                         .isEqualTo("msg.error.approval.reason-required"));
     }
+
+    @Test
+    void cancel_pending_marksCancelledAndRecordsHistory() {
+        ApprovalRequest request = ApprovalRequest.createNew("PURCHASE_RETURN", 1L, "PRT-001", 10L, 50L);
+
+        request.cancel(10L, "Cancelled by submitter");
+
+        assertThat(request.getStatus()).isEqualTo(ApprovalStatus.CANCELLED);
+        assertThat(request.getHistories()).hasSize(2);
+        ApprovalHistory history = request.getHistories().get(1);
+        assertThat(history.action()).isEqualTo(ApprovalAction.CANCELLED);
+        assertThat(history.actorId()).isEqualTo(10L);
+        assertThat(history.notes()).isEqualTo("Cancelled by submitter");
+    }
+
+    @Test
+    void cancel_nonPending_throwsException() {
+        ApprovalRequest request = ApprovalRequest.createNew("PURCHASE_RETURN", 1L, "PRT-001", 10L, 50L);
+        request.reject(50L, "Rejected");
+
+        assertThatThrownBy(() -> request.cancel(10L, "Too late"))
+                .isInstanceOf(DomainException.class)
+                .satisfies(ex -> assertThat(((DomainException) ex).getKey())
+                        .isEqualTo("msg.error.approval.not-pending"));
+    }
 }

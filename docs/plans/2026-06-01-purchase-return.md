@@ -401,13 +401,13 @@ Reserve inventory at submit and follow the existing generic approval flow.
 
 **Reference modules:** Purchase Order submit, Purchase Requisition reject listener, generic approval aggregate
 
-- [ ] Extend generic approval with `ApprovalAction.CANCELLED` and `ApprovalRequest.cancel(actorId, notes)`. Only PENDING requests can be cancelled; write a history entry.
+- [x] Extend generic approval with `ApprovalAction.CANCELLED` and `ApprovalRequest.cancel(actorId, notes)`. Only PENDING requests can be cancelled; write a history entry.
       ref: `src/main/java/com/solusi/erp/common/approval/domain/model/ApprovalRequest.java:L40-L93` - transition and history pattern
       ref: `src/main/java/com/solusi/erp/common/approval/domain/model/ApprovalStatus.java:L6-L10` - `CANCELLED` status already exists
-- [ ] Add `CancelApprovalRequestUseCase` keyed by polymorphic reference type/id and wire it in `ApprovalConfig`.
-- [ ] Create `PurchaseReturnEventPublisher` and adapter that publishes `ApprovalRequestedEvent("PURCHASE_RETURN", ...)`.
+- [x] Add `CancelApprovalRequestUseCase` keyed by polymorphic reference type/id and wire it in `ApprovalConfig`.
+- [x] Create `PurchaseReturnEventPublisher` and adapter that publishes `ApprovalRequestedEvent("PURCHASE_RETURN", ...)`.
       ref: `src/main/java/com/solusi/erp/purchasing/purchaseorder/application/usecase/command/SubmitPurchaseOrderUseCaseImpl.java:L20-L31` - submit event publishing
-- [ ] Implement `SubmitPurchaseReturnUseCaseImpl` transaction:
+- [x] Implement `SubmitPurchaseReturnUseCaseImpl` transaction:
       load DRAFT;
       rebuild reservation requests from current lines;
       call `InventoryReservationService.reserve(...)`;
@@ -415,19 +415,19 @@ Reserve inventory at submit and follow the existing generic approval flow.
       save;
       publish approval request with authenticated requester party id and selected approver id.
       If reserve fails, the transaction must leave the Purchase Return DRAFT and publish no approval request.
-- [ ] Create approved/rejected event listeners:
+- [x] Create approved/rejected event listeners:
       approved transitions SUBMITTED to APPROVED and keeps reservation ACTIVE;
       rejected transitions SUBMITTED to REJECTED and releases reservation.
       ref: `src/main/java/com/solusi/erp/purchasing/purchaseorder/infrastructure/listener/OnPurchaseOrderApprovedListener.java:L18-L27` - approved listener
       ref: `src/main/java/com/solusi/erp/purchasing/purchaserequisition/infrastructure/listener/OnPurchaseRequisitionRejectedListener.java:L18-L27` - rejected listener
-- [ ] Implement `CancelPurchaseReturnSubmissionUseCaseImpl`:
+- [x] Implement `CancelPurchaseReturnSubmissionUseCaseImpl`:
       only SUBMITTED;
       actor user id must equal stored submitter user id;
       cancel generic approval request;
       release reservation;
       transition Purchase Return to CANCELLED.
-- [ ] Implement `CancelApprovedPurchaseReturnUseCaseImpl`: only APPROVED, release reservation, transition CANCELLED.
-- [ ] Add approval aggregate tests and Purchase Return Mockito tests for:
+- [x] Implement `CancelApprovedPurchaseReturnUseCaseImpl`: only APPROVED, release reservation, transition CANCELLED.
+- [x] Add approval aggregate tests and Purchase Return Mockito tests for:
       reserve success;
       reserve failure atomicity;
       duplicate submit;
