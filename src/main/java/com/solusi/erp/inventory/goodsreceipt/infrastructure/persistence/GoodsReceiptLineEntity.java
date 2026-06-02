@@ -53,6 +53,6 @@ public class GoodsReceiptLineEntity extends BaseModel {
     @Column(name = "gr_ir_amount", nullable = false, precision = 19, scale = 4)
     private BigDecimal grIrAmount;
 
-    @Column(name = "serial_number", length = 100)
+    @Column(name = "serial_number", length = 1000)
     private String serialNumber;
 }

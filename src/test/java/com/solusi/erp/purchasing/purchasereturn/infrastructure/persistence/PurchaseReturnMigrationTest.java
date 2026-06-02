@@ -61,6 +61,19 @@ class PurchaseReturnMigrationTest {
     }
 
     @Test
+    void goods_receipt_line_serial_number_supports_resolved_serial_csv() {
+        Number length = jdbcTemplate.queryForObject("""
+                SELECT character_maximum_length
+                FROM information_schema.columns
+                WHERE LOWER(table_name) = 'pur_goods_receipt_lines'
+                  AND LOWER(column_name) = 'serial_number'
+                """, Number.class);
+
+        assertThat(length).isNotNull();
+        assertThat(length.longValue()).isGreaterThanOrEqualTo(1000L);
+    }
+
+    @Test
     void mariadb_and_h2_migrations_keep_required_contracts_in_sync() throws IOException {
         String mariaDb = readResource("db/migration/V67__Add_Purchase_Return_Phase_1.sql");
         String h2 = readResource("db/migration-h2/V67__Add_Purchase_Return_Phase_1.sql");
@@ -92,6 +105,11 @@ class PurchaseReturnMigrationTest {
             assertThat(mariaDb).contains(requiredToken);
             assertThat(h2).contains(requiredToken);
         }
+
+        String serialMariaDb = readResource("db/migration/V68__Widen_Goods_Receipt_Line_Serial_Number.sql");
+        String serialH2 = readResource("db/migration-h2/V68__Widen_Goods_Receipt_Line_Serial_Number.sql");
+        assertThat(serialMariaDb).contains("pur_goods_receipt_lines", "serial_number", "1000");
+        assertThat(serialH2).contains("pur_goods_receipt_lines", "serial_number", "1000");
     }
 
     @Test
