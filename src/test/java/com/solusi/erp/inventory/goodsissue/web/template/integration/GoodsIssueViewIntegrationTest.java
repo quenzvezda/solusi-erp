@@ -32,6 +32,12 @@ class GoodsIssueViewIntegrationTest {
         assertThat(html).doesNotContain("text-dark");
     }
 
+    @Test
+    void viewTemplate_placesCompletedCancelActionInHeader() {
+        assertThat(html.indexOf("hasAuthority('GOODS-ISSUE_CANCEL')"))
+                .isLessThan(html.indexOf("th:href=\"@{/inventory/goods-issues}\""));
+    }
+
     private static String readTemplate() {
         try {
             return Files.readString(Path.of("src/main/resources/templates/inventory/goods-issues/view.html"));
