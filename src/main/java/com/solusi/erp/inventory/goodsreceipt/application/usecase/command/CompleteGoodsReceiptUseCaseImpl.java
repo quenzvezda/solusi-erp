@@ -134,7 +134,8 @@ public class CompleteGoodsReceiptUseCaseImpl implements CompleteGoodsReceiptUseC
             BigDecimal taxAmount = inventoryAmount.multiply(poLine.getTaxRate()).setScale(4, RoundingMode.HALF_UP);
             BigDecimal grIrAmount = inventoryAmount.add(taxAmount).setScale(4, RoundingMode.HALF_UP);
 
-            return GoodsReceiptLine.prefill(
+            return GoodsReceiptLine.reconstitute(
+                    line.getId(),
                     line.getReferenceLineId(),
                     line.getProductId(),
                     line.getSourceFacilityId(),
@@ -160,7 +161,8 @@ public class CompleteGoodsReceiptUseCaseImpl implements CompleteGoodsReceiptUseC
             }
             int totalUnits = resolveSerializedUnitCount(line);
             List<String> serialNumbers = resolveSerialNumbers(line, totalUnits);
-            return GoodsReceiptLine.prefill(
+            return GoodsReceiptLine.reconstitute(
+                    line.getId(),
                     line.getReferenceLineId(),
                     line.getProductId(),
                     line.getSourceFacilityId(),
