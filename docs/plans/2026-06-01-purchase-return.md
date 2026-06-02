@@ -316,7 +316,7 @@ Add repository implementation and configuration while keeping the aggregate pure
 
 - `mvn test -Dtest=PurchaseReturnPersistenceMapperTest,PurchaseReturnConfigTest` passes.
 
-### Task 6: Returnable GR Query and Selector Read Models
+### Task 6: Returnable GR Query and Selector Read Models [x]
 
 Implement read-side eligibility using valuation-layer remaining stock and active reservation ownership.
 
@@ -324,33 +324,33 @@ Implement read-side eligibility using valuation-layer remaining stock and active
 
 **Reference modules:** Vendor Bill billable GR query, PO modal selector
 
-- [ ] Create read records:
+- [x] Create read records:
       `EligibleGoodsReceiptRow`,
       `ReturnableGrLineSlice`,
       `ReturnableSerialRow`.
-- [ ] Create `PurchaseReturnSourceQueryPort` and JDBC adapter using `NamedParameterJdbcTemplate`.
+- [x] Create `PurchaseReturnSourceQueryPort` and JDBC adapter using `NamedParameterJdbcTemplate`.
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorbill/infrastructure/adapter/BillableGrQueryAdapter.java:L18-L71` - source eligibility query pattern
-- [ ] Implement eligible GR header query:
+- [x] Implement eligible GR header query:
       GR status must be `COMPLETED`;
       at least one original GR valuation layer has remaining quantity after active reservation;
       expose GR hyperlink id/code, PO hyperlink id/code, supplier, receipt date, facility, currency, eligible line count, and total returnable qty.
-- [ ] Implement non-serial slice query aggregated by `grLineId + actual containerId`, not only `grLineId`.
+- [x] Implement non-serial slice query aggregated by `grLineId + actual containerId`, not only `grLineId`.
       This preserves valid stock when one GR line was transferred into multiple containers.
-- [ ] Implement serial query by GR context and actual current serial location. Include only on-hand, unreserved serials from the selected GR valuation origin. A serial moved after receipt remains eligible if the GR valuation reference is preserved.
-- [ ] Use a stable selection key:
+- [x] Implement serial query by GR context and actual current serial location. Include only on-hand, unreserved serials from the selected GR valuation origin. A serial moved after receipt remains eligible if the GR valuation reference is preserved.
+- [x] Use a stable selection key:
       non-serial: `grLineId:containerId`;
       serialized: `grLineId:containerId:serialNumber`.
       Query-level exclusion receives selection keys, so selecting one container slice does not hide valid stock in another container.
       ref: `docs/spec/modal-selector.md:L67-L90` - exclusion must happen before render
-- [ ] Add query use cases:
+- [x] Add query use cases:
       `FindEligiblePurchaseReturnGoodsReceiptsUseCase`,
       `GetEligiblePurchaseReturnPurchaseOrderLookupUseCase`,
       `GetPurchaseReturnCreateViewUseCase`,
       `FindPurchaseReturnGrLineSlicesUseCase`,
       `FindPurchaseReturnSerialsUseCase`.
-- [ ] Add `PurchaseReturnSourceQueryAdapterTest` using mocked JDBC interactions or H2 slice fixtures. Cover completed-only GR, exhausted layer exclusion, active reservation subtraction, non-serial multi-container split, serial moved-container eligibility, serial reservation exclusion, PO filter, supplier filter, and selection-key exclusion.
+- [x] Add `PurchaseReturnSourceQueryAdapterTest` using mocked JDBC interactions or H2 slice fixtures. Cover completed-only GR, exhausted layer exclusion, active reservation subtraction, non-serial multi-container split, serial moved-container eligibility, serial reservation exclusion, PO filter, supplier filter, and selection-key exclusion.
       ref: `src/test/java/com/solusi/erp/accountspayable/vendorbill/infrastructure/adapter/BillableGrQueryAdapterTest.java` - JDBC query adapter test style
-- [ ] Add query use-case tests for pagination mapping and empty result behavior.
+- [x] Add query use-case tests for pagination mapping and empty result behavior.
 
 **Validation criteria:**
 

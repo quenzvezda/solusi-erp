@@ -60,3 +60,16 @@
 - **Status:** clean
 - **Summary:** Added audited Purchase Return JPA entities, MapStruct persistence mapping, repository port and adapter, composition root, and round-trip/config tests.
 - **Verification:** `mvn test -Dtest=PurchaseReturnPersistenceMapperTest,PurchaseReturnConfigTest`
+
+## Task 6: Returnable GR Query and Selector Read Models
+
+### Finding: Reservation subtraction must happen after valuation fragment aggregation
+- **Type:** decision
+- **Severity:** warning
+- **Detail:** A GR valuation origin can be represented by multiple layer fragments for the same actual container after stock movement. Joining reservation rows directly to raw layers would subtract the same reservation once per fragment.
+- **Action taken:** Aggregated valuation layers by origin, product, actual container, and serial before joining active reservation ownership. Selector grouping remains `grLineId + actualContainerId`.
+- **Ref:** `src/main/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/adapter/PurchaseReturnSourceQueryAdapter.java`
+
+- **Status:** clean
+- **Summary:** Added eligible GR, PO lookup, non-serial slice, and serial read models; implemented SQL-backed source queries with query-level exclusion; wired paged query use cases and contract coverage.
+- **Verification:** `mvn test -Dtest=PurchaseReturnSourceQueryAdapterTest,*PurchaseReturn*Selector*UseCaseTest,GetPurchaseReturnCreateViewUseCaseTest,FindEligiblePurchaseReturnGoodsReceiptsUseCaseTest,PurchaseReturnConfigTest`
