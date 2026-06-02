@@ -206,6 +206,13 @@
 - **Severity:** info
 - **Detail:** Screenshot, video, and Playwright context from the first selector runtime failure were retained under `target/e2e-artifacts/purchase-return-first-runtime-failure/` during diagnosis. The required final `mvn clean test` later removed the generated `target/` directory.
 
+### Finding: June accounting period invalidated manual journal negative E2E date
+- **Type:** defect
+- **Severity:** warning
+- **Detail:** The Purchase Return E2E seed opens June 2026 so confirm can post its generated Goods Issue. The existing manual journal reversal spec used `2026-06-01` as a non-open-period date and therefore no longer received a modal validation error.
+- **Action taken:** Updated the manual journal spec to use `2026-07-01`, which remains outside the E2E OPEN periods, preserving the negative reversal assertion while keeping June open for Purchase Return confirm.
+- **Ref:** `e2e-tests/tests/accounting/manual-journal-entry.spec.ts`
+
 - **Status:** clean
 - **Summary:** Added deterministic H2 Purchase Return fixtures, warmup URLs, and a browser flow covering source links and filters, SSR slices, modal restore, multiple containers, moved serial selection, OTHER notes, reservations, release through final cancellation, second-document approval, confirm, and linked completed GI.
 - **Verification:** `mvn test -Dtest=PurchaseReturnMigrationTest,PurchaseReturnSourceQueryAdapterTest` passed 7 tests.
@@ -213,6 +220,8 @@
 - **Verification:** `cd e2e-tests && npx tsc --noEmit` passed.
 - **Verification:** `cd e2e-tests && npx playwright test tests/procurement/purchase-return.spec.ts --list` listed setup plus focused browser coverage.
 - **Verification:** `PLAYWRIGHT_ARGS='tests/procurement/purchase-return.spec.ts' e2e-tests/scripts/run-e2e.sh` passed normally and again after `rm -rf e2e-tests/.auth`; each run reported `5 passed`.
+- **Verification:** `PLAYWRIGHT_ARGS='tests/accounting/manual-journal-entry.spec.ts' e2e-tests/scripts/run-e2e.sh` passed `5` tests.
+- **Verification:** `e2e-tests/scripts/run-e2e.sh` passed `75` tests.
 - **Boundary check:** No new known-issue entry is required in `docs/tests/playwright-pitfalls.md`.
 
 ## Task 14: Regression Suite, Edge-Case Matrix, and Final Quality Gate
