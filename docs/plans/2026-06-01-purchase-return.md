@@ -206,7 +206,7 @@ Model reservation ownership and enforce stock-balance invariants in pure Java.
 - `mvn test -Dtest=StockBalanceDomainTest,InventoryReservationTest` passes.
 - Normal outbound cannot reduce `availableQty` below zero.
 
-### Task 3: Reservation Persistence and Inventory Availability Enforcement
+### Task 3: Reservation Persistence and Inventory Availability Enforcement [x]
 
 Persist ownership rows and connect reservation movements to stock balances atomically.
 
@@ -214,22 +214,22 @@ Persist ownership rows and connect reservation movements to stock balances atomi
 
 **Reference modules:** stock repository adapters, `StockServiceImpl`
 
-- [ ] Create reservation JPA entity, Spring Data repository, MapStruct mapper, and repository adapter.
+- [x] Create reservation JPA entity, Spring Data repository, MapStruct mapper, and repository adapter.
       ref: `src/main/java/com/solusi/erp/inventory/stock/infrastructure/persistence/StockBalanceEntity.java:L15-L49` - inventory entity style
       ref: `src/main/java/com/solusi/erp/inventory/stock/infrastructure/adapter/ValuationLayerRepositoryImpl.java:L17-L78` - domain repository adapter style
-- [ ] Implement `InventoryReservationServiceImpl.reserve(...)`: reject an owner that already has active reservations; reject duplicate serial requests; call `StockService.adjust()` using `MovementType.RESERVE`; persist ACTIVE ownership rows only when every movement succeeds.
-- [ ] Implement `release(...)`: load ACTIVE rows, call `StockService.adjust()` with `MovementType.RELEASE`, then mark rows RELEASED.
-- [ ] Implement `assertActiveCoverage(...)`: compare owner, valuation reference, actual container, serial, and quantity. Reject missing, extra, or mismatched rows.
-- [ ] Implement `consume(...)`: mark matching ACTIVE rows CONSUMED after GI has consumed balances with `ISSUE_RESERVED`.
-- [ ] Extend `StockMovementPayload` only if reservation owner metadata is needed for audit diagnostics. Keep stock ledger `referenceType/referenceId/referenceCode` populated with the owning Purchase Return for RESERVE/RELEASE movements.
+- [x] Implement `InventoryReservationServiceImpl.reserve(...)`: reject an owner that already has active reservations; reject duplicate serial requests; call `StockService.adjust()` using `MovementType.RESERVE`; persist ACTIVE ownership rows only when every movement succeeds.
+- [x] Implement `release(...)`: load ACTIVE rows, call `StockService.adjust()` with `MovementType.RELEASE`, then mark rows RELEASED.
+- [x] Implement `assertActiveCoverage(...)`: compare owner, valuation reference, actual container, serial, and quantity. Reject missing, extra, or mismatched rows.
+- [x] Implement `consume(...)`: mark matching ACTIVE rows CONSUMED after GI has consumed balances with `ISSUE_RESERVED`.
+- [x] Extend `StockMovementPayload` only if reservation owner metadata is needed for audit diagnostics. Keep stock ledger `referenceType/referenceId/referenceCode` populated with the owning Purchase Return for RESERVE/RELEASE movements. (no payload extension needed)
       ref: `src/main/java/com/solusi/erp/inventory/stock/application/dto/StockMovementPayload.java:L22-L60` - existing movement payload
-- [ ] Add `ReferenceType.PURCHASE_RETURN` for RESERVE/RELEASE inventory-movement audit rows. Completed physical outbound movements generated through GI continue to use `ReferenceType.GOODS_ISSUE`.
+- [x] Add `ReferenceType.PURCHASE_RETURN` for RESERVE/RELEASE inventory-movement audit rows. Completed physical outbound movements generated through GI continue to use `ReferenceType.GOODS_ISSUE`.
       ref: `src/main/java/com/solusi/erp/inventory/stock/domain/model/ReferenceType.java:L11-L19` - existing inventory ledger reference types
-- [ ] Wire the reservation repository and service in `StockConfig`.
+- [x] Wire the reservation repository and service in `StockConfig`.
       ref: `src/main/java/com/solusi/erp/inventory/stock/infrastructure/config/StockConfig.java` - existing stock bean configuration
-- [ ] Extend `StockServiceTest`: reserve above available fails, normal ISSUE cannot consume reserved qty, TRANSFER_OUT cannot consume reserved qty, RELEASE above owner reserve fails, and ISSUE_RESERVED decrements both on-hand and reserved.
+- [x] Extend `StockServiceTest`: reserve above available fails, normal ISSUE cannot consume reserved qty, TRANSFER_OUT cannot consume reserved qty, RELEASE above owner reserve fails, and ISSUE_RESERVED decrements both on-hand and reserved.
       ref: `src/test/java/com/solusi/erp/inventory/stock/infrastructure/service/StockServiceTest.java:L102-L228` - existing movement coverage
-- [ ] Add `InventoryReservationServiceTest` using Mockito for atomic reserve success, second reserve rejection, partial movement failure rollback expectation, serial duplicate rejection, release, active coverage mismatch, and consume.
+- [x] Add `InventoryReservationServiceTest` using Mockito for atomic reserve success, second reserve rejection, partial movement failure rollback expectation, serial duplicate rejection, release, active coverage mismatch, and consume.
 
 **Validation criteria:**
 

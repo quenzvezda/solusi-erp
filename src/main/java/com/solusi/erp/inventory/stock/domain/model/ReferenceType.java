@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 public enum ReferenceType {
     GOODS_RECEIPT("enum.reference.type.goods_receipt"),
     GOODS_ISSUE("enum.reference.type.goods_issue"),
+    PURCHASE_RETURN("enum.reference.type.purchase_return"),
     SALES_ORDER("enum.reference.type.sales_order"),
     DELIVERY_ORDER("enum.reference.type.delivery_order"),
     STOCK_ADJUSTMENT("enum.reference.type.stock_adjustment"),

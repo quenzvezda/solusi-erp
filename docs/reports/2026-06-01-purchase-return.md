@@ -21,3 +21,16 @@
 - **Status:** clean
 - **Summary:** Enforced `reserved <= onHand`, added the generic reservation aggregate, ownership and service ports, serialized-stock validation, and focused domain coverage.
 - **Verification:** `mvn test -Dtest=StockBalanceDomainTest,InventoryReservationTest`
+
+## Task 3: Reservation Persistence and Inventory Availability Enforcement
+
+### Finding: Stock payload already carries sufficient owner audit metadata
+- **Type:** decision
+- **Severity:** info
+- **Detail:** Existing `StockMovementPayload.referenceType/referenceId/referenceCode` fields are sufficient to audit reservation movements against their Purchase Return owner.
+- **Action taken:** Added `ReferenceType.PURCHASE_RETURN` and reused the existing payload contract instead of adding parallel owner fields.
+- **Ref:** `src/main/java/com/solusi/erp/inventory/stock/application/dto/StockMovementPayload.java`
+
+- **Status:** clean
+- **Summary:** Added reservation JPA persistence, repository adapter, transactional reservation service, stock config wiring, outbound availability regression coverage, rollback expectation coverage, and a focused config test.
+- **Verification:** `mvn test -Dtest=StockBalanceDomainTest,StockServiceTest,InventoryReservationServiceTest,StockConfigTest`

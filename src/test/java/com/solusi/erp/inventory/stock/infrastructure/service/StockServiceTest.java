@@ -234,6 +234,56 @@ public class StockServiceTest {
     }
 
     @Test
+    void shouldThrowExceptionIfReserveExceedsAvailableStock() {
+        StockMovementPayload payload = StockMovementPayload.builder()
+                .productId(1L)
+                .containerId(1L)
+                .quantity(BigDecimal.valueOf(11))
+                .movementType(MovementType.RESERVE)
+                .build();
+        StockBalance existingBalance = StockBalance.createNew(1L, 1L, null);
+        existingBalance.applyMovement(MovementType.RECEIPT, BigDecimal.TEN);
+        when(stockBalanceRepository.findByProductContainerSerial(1L, 1L, null)).thenReturn(Optional.of(existingBalance));
+        when(messageSource.getMessage(anyString(), any(), any())).thenReturn("Insufficient available stock");
+
+        assertThrows(RuntimeException.class, () -> stockService.adjust(payload));
+    }
+
+    @Test
+    void shouldThrowExceptionIfIssueConsumesReservedStock() {
+        StockMovementPayload payload = StockMovementPayload.builder()
+                .productId(1L)
+                .containerId(1L)
+                .quantity(BigDecimal.valueOf(4))
+                .movementType(MovementType.ISSUE)
+                .build();
+        StockBalance existingBalance = StockBalance.createNew(1L, 1L, null);
+        existingBalance.applyMovement(MovementType.RECEIPT, BigDecimal.TEN);
+        existingBalance.applyMovement(MovementType.RESERVE, BigDecimal.valueOf(7));
+        when(stockBalanceRepository.findByProductContainerSerial(1L, 1L, null)).thenReturn(Optional.of(existingBalance));
+        when(messageSource.getMessage(anyString(), any(), any())).thenReturn("Insufficient available stock");
+
+        assertThrows(RuntimeException.class, () -> stockService.adjust(payload));
+    }
+
+    @Test
+    void shouldThrowExceptionIfTransferOutConsumesReservedStock() {
+        StockMovementPayload payload = StockMovementPayload.builder()
+                .productId(1L)
+                .containerId(1L)
+                .quantity(BigDecimal.valueOf(4))
+                .movementType(MovementType.TRANSFER_OUT)
+                .build();
+        StockBalance existingBalance = StockBalance.createNew(1L, 1L, null);
+        existingBalance.applyMovement(MovementType.RECEIPT, BigDecimal.TEN);
+        existingBalance.applyMovement(MovementType.RESERVE, BigDecimal.valueOf(7));
+        when(stockBalanceRepository.findByProductContainerSerial(1L, 1L, null)).thenReturn(Optional.of(existingBalance));
+        when(messageSource.getMessage(anyString(), any(), any())).thenReturn("Insufficient available stock");
+
+        assertThrows(RuntimeException.class, () -> stockService.adjust(payload));
+    }
+
+    @Test
     void shouldNotAutoGenerateSerialNumberIfProductIsSerializedAndNoSNProvided() {
         StockMovementPayload payload = StockMovementPayload.builder()
                 .productId(1L)
