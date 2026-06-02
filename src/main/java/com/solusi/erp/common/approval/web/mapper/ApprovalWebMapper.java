@@ -85,7 +85,8 @@ public class ApprovalWebMapper {
     private static final Map<String, String> DOCUMENT_URL_PATTERNS = Map.of(
             "NEWS", "/common/news/",
             "PURCHASE_REQUISITION", "/purchasing/purchase-requisitions/view/",
-            "PURCHASE_ORDER", "/purchasing/purchase-orders/view/"
+            "PURCHASE_ORDER", "/purchasing/purchase-orders/view/",
+            "PURCHASE_RETURN", "/purchasing/purchase-returns/view/"
     );
 
     private String resolveDocumentUrl(String referenceType, Long referenceId) {
