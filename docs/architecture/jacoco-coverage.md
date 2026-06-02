@@ -40,13 +40,13 @@ mvn clean test
 
 | Counter | Minimum | Status Saat Ini |
 |---------|---------|----------------|
-| **LINE** | 60% | ~85% ✅ |
-| **BRANCH** | 50% | ~65% ✅ |
+| **LINE** | 80% | Periksa laporan XML terbaru |
+| **BRANCH** | 80% | Periksa laporan XML terbaru |
 
 Konfigurasi: `<haltOnFailure>false</haltOnFailure>` — build **tidak gagal** meski threshold 
 tidak terpenuhi, hanya warning. Ini sengaja agar CI tidak terganggu saat menambah fitur baru.
 
-> Setelah proyek mature, naikkan threshold ke 70% line / 60% branch dan set `<haltOnFailure>true</haltOnFailure>`.
+> Karena `<haltOnFailure>false</haltOnFailure>`, agent tetap wajib membaca warning dan laporan XML. `BUILD SUCCESS` saja belum membuktikan threshold terpenuhi.
 
 ---
 

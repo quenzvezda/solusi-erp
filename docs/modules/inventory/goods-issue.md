@@ -4,9 +4,9 @@ Dokumen ini merangkum kondisi implementasi aktual **Goods Issue** pada codebase 
 
 ## 1. Ringkasan
 
-GI dipakai sebagai lapisan dokumen fisik/audit di atas stock ledger. Source module tidak boleh langsung mengeluarkan stock tanpa dokumen outbound ketika flow bisnisnya membutuhkan audit dokumen. Keputusan awal untuk Purchase Return adalah: return barang akan membuat atau mengisi GI, lalu GI yang memanggil `StockService.adjust()` dengan `MovementType.ISSUE`.
+GI dipakai sebagai lapisan dokumen fisik/audit di atas stock ledger. Source module tidak boleh langsung mengeluarkan stock tanpa dokumen outbound ketika flow bisnisnya membutuhkan audit dokumen. GI manual memanggil `StockService.adjust()` dengan `MovementType.ISSUE`. Purchase Return memakai `MovementType.ISSUE_RESERVED` untuk mengonsumsi stock yang sudah direservasi saat submit.
 
-Source aktif saat ini masih berupa core seam. Purchase Return module belum ada, sehingga adapter konkret Purchase Return belum dibuat.
+Integrasi konkret Purchase Return aktif melalui resolver dan adapter source GI.
 
 ## 2. Lifecycle
 
@@ -73,7 +73,7 @@ Saat `COMPLETE`, GI:
 
 1. memastikan accounting period untuk `issueDate` masih OPEN
 2. menghitung ulang base quantity dan amount snapshot
-3. memanggil `StockService.adjust()` dengan `MovementType.ISSUE`
+3. memanggil `StockService.adjust()` dengan `MovementType.ISSUE`, atau `MovementType.ISSUE_RESERVED` untuk source Purchase Return
 4. mengirim `ReferenceType.GOODS_ISSUE`, GI id, dan GI code ke stock movement
 5. meneruskan `valuationRefType`, `valuationRefId`, dan `valuationRefLineId` agar stock service dapat mengonsumsi layer spesifik
 6. untuk serialized item, mem-post satu movement per serial dan mewajibkan base quantity bilangan bulat
@@ -101,7 +101,7 @@ Port `PurchaseReturnGoodsIssueSourcePort` mendefinisikan kontrak minimum yang ha
 2. eligible return lines berisi product, qty, UoM, location, serial CSV, original GR/GR line, valuation refs, inventory amount, tax reversal amount, dan clearing amount
 3. `hasCompletedGoodsIssue(purchaseReturnId)` sebagai guard idempotency agar satu Purchase Return tidak membuat GI completed ganda
 
-Adapter `GoodsIssueSourceResolver` untuk Purchase Return belum dibuat karena module Purchase Return belum ada di codebase.
+Adapter `GoodsIssueSourceResolver` untuk Purchase Return sudah aktif. Confirm Purchase Return membuat GI dari snapshot return, menyelesaikan posting reserved issue, lalu mengonsumsi reservation setelah jurnal GI berhasil diposting.
 
 ## 8. UI Behavior
 
@@ -122,9 +122,8 @@ Form memakai pola header-lines:
 
 ## 9. Deferred Items
 
-1. Purchase Return concrete resolver dan confirm integration.
-2. Purchase Return-specific accounting schema/event jika generic GI schema tidak cukup.
-3. Manual GI business rules yang lengkap.
-4. Sales/Delivery Order, scrap, internal use, production/consumption resolvers.
-5. Dedicated serial detail table per line.
-6. Playwright E2E flow untuk selector, drawer, save, complete, dan cancel.
+1. Purchase Return-specific accounting schema/event dan Debit Memo.
+2. Manual GI business rules yang lengkap.
+3. Sales/Delivery Order, scrap, internal use, production/consumption resolvers.
+4. Dedicated serial detail table per line.
+5. Playwright E2E flow untuk selector, drawer, save, complete, dan cancel.

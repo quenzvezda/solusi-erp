@@ -27,6 +27,7 @@ Dokumentasi dikelompokkan ke dalam folder berikut berdasarkan konteksnya:
         - [Supplier Price List (SPL)](modules/procurement/spl.md) — Master harga supplier, soft delete, date range validity
         - [Purchase Requisition (PR)](modules/procurement/purchase-requisition.md) — Permintaan pembelian internal, approval flow, priority
         - [Purchase Order (PO)](modules/procurement/purchase-order.md) — Pesanan pembelian resmi, tipe DIRECT/STANDARD, line drawer, approval integration
+        - [Purchase Return](modules/procurement/purchase-return.md) — Retur barang ke supplier berbasis GR, reservasi stok, approval, dan konfirmasi GI
     - **[/modules/inventory](modules/inventory/)**: Sprint 4+ — Inventory Operations
         - [Goods Receipt (GR)](modules/inventory/goods-receipt.md) — Penerimaan barang dari dokumen sumber (saat ini operasional: Purchase Order)
         - [Goods Issue (GI)](modules/inventory/goods-issue.md) — Pengeluaran barang generik untuk Purchase Return seam dan source outbound masa depan

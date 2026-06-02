@@ -123,3 +123,29 @@ CREATE TABLE IF NOT EXISTS pur_purchase_return_lines (
 INSERT INTO system_sequences (module_code, format_pattern, pad_length, reset_cycle, updated_by_user_id, updated_date)
 VALUES ('PURCHASE_RETURN', 'PRT-{date:yyyyMM}-{seq}', 5, 'MONTHLY', 1, NOW())
 ON DUPLICATE KEY UPDATE module_code = module_code;
+
+-- 5. Permission Group (Menu Entry)
+INSERT INTO permission_groups (code, name_id, name_en, breadcrumb_id, breadcrumb_en, url_path, icon_class, description_id, description_en, sort_order, created_by_user_id, created_date)
+VALUES
+('PUR-04', 'Retur Pembelian', 'Purchase Return',
+ 'Pengadaan > Retur Pembelian', 'Procurement (Purchase) > Purchase Return',
+ '/purchasing/purchase-returns', 'ti-package-export',
+ 'Kelola retur pembelian ke supplier', 'Manage supplier purchase returns',
+ 203, 1, NOW());
+
+-- 6. Permissions
+INSERT INTO permissions (name, description, created_by_user_id, created_date, permission_group_id) VALUES
+('PURCHASE-RETURN_READ',    'Melihat daftar retur pembelian',                  1, NOW(), (SELECT id FROM permission_groups WHERE code = 'PUR-04')),
+('PURCHASE-RETURN_CREATE',  'Membuat retur pembelian baru',                    1, NOW(), (SELECT id FROM permission_groups WHERE code = 'PUR-04')),
+('PURCHASE-RETURN_UPDATE',  'Mengubah retur pembelian draft',                  1, NOW(), (SELECT id FROM permission_groups WHERE code = 'PUR-04')),
+('PURCHASE-RETURN_SUBMIT',  'Mengajukan retur pembelian untuk persetujuan',    1, NOW(), (SELECT id FROM permission_groups WHERE code = 'PUR-04')),
+('PURCHASE-RETURN_CONFIRM', 'Mengonfirmasi retur pembelian yang disetujui',    1, NOW(), (SELECT id FROM permission_groups WHERE code = 'PUR-04')),
+('PURCHASE-RETURN_CANCEL',  'Membatalkan pengajuan atau retur pembelian',      1, NOW(), (SELECT id FROM permission_groups WHERE code = 'PUR-04'));
+
+-- 7. Grant all Purchase Return permissions to ROLE_ADMIN
+INSERT IGNORE INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r, permissions p
+WHERE r.name = 'ROLE_ADMIN'
+  AND p.name IN ('PURCHASE-RETURN_READ', 'PURCHASE-RETURN_CREATE', 'PURCHASE-RETURN_UPDATE',
+                 'PURCHASE-RETURN_SUBMIT', 'PURCHASE-RETURN_CONFIRM', 'PURCHASE-RETURN_CANCEL');

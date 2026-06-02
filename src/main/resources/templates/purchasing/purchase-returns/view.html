@@ -119,7 +119,7 @@
                         <div class="card-body">
                             <button th:if="${purchaseReturn.status.name() == 'SUBMITTED'}" type="button" class="btn btn-warning w-100"
                                     sec:authorize="hasAuthority('PURCHASE-RETURN_CANCEL')"
-                                    th:data-action-url="@{'/purchasing/purchase-returns/' + ${purchaseReturn.id} + '/cancel-submission'(notes='Cancelled from purchase return view')}"
+                                    th:data-action-url="@{'/purchasing/purchase-returns/' + ${purchaseReturn.id} + '/cancel-submission'(notes=#{msg.purchase-return.cancel-submission.notes})}"
                                     th:data-redirect-url="@{'/purchasing/purchase-returns/view/' + ${purchaseReturn.id}}"
                                     th:data-confirm-message="#{msg.confirm.purchase-return.cancel-submission}" onclick="ErpForm.postAction(this)">
                                 <i class="ti ti-rotate-clockwise me-1"></i><span th:text="#{label.purchase-return.cancel-submission}">Cancel Submission</span>
@@ -150,13 +150,13 @@
     </th:block>
 </div>
 <div id="page-specific-scripts" th:fragment="pageScripts">
-    <script>
+    <script th:inline="javascript">
         window.PurchaseReturnActions = {
             submit: function (button) {
                 var approver = document.getElementById('purchase-return-approver');
                 var approverId = approver && approver.tomselect ? approver.tomselect.getValue() : (approver ? approver.value : '');
                 if (!approverId) {
-                    ErpModal.showWarning('Please select an approver.');
+                    ErpModal.showWarning(/*[[#{msg.error.purchase-return.submit.approver-required}]]*/ 'Please select an approver.');
                     return;
                 }
                 var submitUrl = button.getAttribute('data-submit-url').split('?')[0];

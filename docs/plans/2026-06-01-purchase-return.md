@@ -649,7 +649,7 @@ Register the module and document the Phase 1 boundary.
 
 **Reference modules:** GI migration seeding, i18n guide, module docs
 
-- [ ] Extend both `V67` migrations with PermissionGroup row for Purchase Return and permissions:
+- [x] Extend both `V67` migrations with PermissionGroup row for Purchase Return and permissions:
       `PURCHASE-RETURN_READ`,
       `PURCHASE-RETURN_CREATE`,
       `PURCHASE-RETURN_UPDATE`,
@@ -659,14 +659,14 @@ Register the module and document the Phase 1 boundary.
       Grant all to `ROLE_ADMIN`.
       ref: `src/main/resources/db/migration/V66__Add_Goods_Issue_Core.sql:L88-L117` - PermissionGroup and admin grants
       ref: `docs/AGENTS.md` - dash/underscore permission naming convention and wildcard safety
-- [ ] Add Indonesian and English keys for labels, statuses, reason codes, selector empty states, confirmations, success messages, validation failures, reservation failures, and Phase 1 warnings.
+- [x] Add Indonesian and English keys for labels, statuses, reason codes, selector empty states, confirmations, success messages, validation failures, reservation failures, and Phase 1 warnings.
       Use targeted replace edits; do not append with `echo`.
       ref: `docs/spec/i18n-guide.md` - i18n update protocol
-- [ ] Add `docs/modules/procurement/purchase-return.md` describing actual implementation, reservation rules, UI flow, temporary generic GI journal, and mandatory Phase 2 migration to `PURCHASE_RETURN` event plus Debit Memo.
-- [ ] Update `docs/index.md` procurement module list.
-- [ ] Correct `docs/architecture/jacoco-coverage.md` thresholds to match active `pom.xml`: LINE 80%, BRANCH 80%, `haltOnFailure=false`.
+- [x] Add `docs/modules/procurement/purchase-return.md` describing actual implementation, reservation rules, UI flow, temporary generic GI journal, and mandatory Phase 2 migration to `PURCHASE_RETURN` event plus Debit Memo.
+- [x] Update `docs/index.md` procurement module list.
+- [x] Correct `docs/architecture/jacoco-coverage.md` thresholds to match active `pom.xml`: LINE 80%, BRANCH 80%, `haltOnFailure=false`.
       ref: `pom.xml:L285-L299` - active JaCoCo check configuration
-- [ ] Add static message bundle test `PurchaseReturnMessagesTest` asserting every template and domain key exists in both bundles.
+- [x] Add static message bundle test `PurchaseReturnMessagesTest` asserting every template and domain key exists in both bundles.
 
 **Validation criteria:**
 

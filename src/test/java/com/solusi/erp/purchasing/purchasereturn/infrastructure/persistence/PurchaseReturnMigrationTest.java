@@ -75,7 +75,15 @@ class PurchaseReturnMigrationTest {
                 "idx_purchase_return_source_po",
                 "uk_purchase_return_generated_gi",
                 "'PURCHASE_RETURN'",
-                "'PRT-{date:yyyyMM}-{seq}'"
+                "'PRT-{date:yyyyMM}-{seq}'",
+                "'PUR-04'",
+                "'PURCHASE-RETURN_READ'",
+                "'PURCHASE-RETURN_CREATE'",
+                "'PURCHASE-RETURN_UPDATE'",
+                "'PURCHASE-RETURN_SUBMIT'",
+                "'PURCHASE-RETURN_CONFIRM'",
+                "'PURCHASE-RETURN_CANCEL'",
+                "r.name = 'ROLE_ADMIN'"
         }) {
             assertThat(mariaDb).contains(requiredToken);
             assertThat(h2).contains(requiredToken);

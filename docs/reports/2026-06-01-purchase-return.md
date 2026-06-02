@@ -156,3 +156,24 @@
 - **Verification:** `mvn test -Dtest=PurchaseReturnListIntegrationTest,PurchaseReturnSelectSourceIntegrationTest,PurchaseReturnFormIntegrationTest,PurchaseReturnViewIntegrationTest`
 - **Verification:** `mvn test -Dtest='com.solusi.erp.purchasing.purchasereturn.**.*Test'` passed 94 tests.
 - **Boundary check:** No forbidden fixed theme classes, `window.confirm`, or direct `new bootstrap.Modal` usage under Purchase Return templates/scripts.
+
+## Task 12: Permissions, Menu, i18n, and Documentation
+
+### Finding: Sidebar registration is data-driven
+- **Type:** decision
+- **Severity:** info
+- **Detail:** The sidebar builds procurement menu entries from `permission_groups`, so the Purchase Return menu does not require a template edit.
+- **Action taken:** Registered `PUR-04`, its route, icon, six permissions, and explicit `ROLE_ADMIN` grants in both V67 migrations.
+- **Ref:** `src/main/resources/db/migration/V67__Add_Purchase_Return_Phase_1.sql`
+
+### Finding: Goods Issue documentation still described the pre-integration seam
+- **Type:** deviation
+- **Severity:** info
+- **Detail:** The GI module document still stated that Purchase Return had no concrete resolver and that outbound posting always used `MovementType.ISSUE`.
+- **Action taken:** Updated the document for active Purchase Return resolution, reserved issue posting, and post-journal reservation consumption.
+- **Ref:** `docs/modules/inventory/goods-issue.md`
+
+- **Status:** clean
+- **Summary:** Registered the module menu and permissions, bumped the minor version to `1.12.0`, added localized labels and feedback messages, localized detail-page actions, documented the Phase 1 accounting boundary, corrected JaCoCo documentation, and added bundle and migration contracts.
+- **Verification:** `mvn test -Dtest=PurchaseReturnMessagesTest,PurchaseReturnMigrationTest,PurchaseReturnListIntegrationTest,PurchaseReturnSelectSourceIntegrationTest,PurchaseReturnFormIntegrationTest,PurchaseReturnViewIntegrationTest` passed 14 tests.
+- **Boundary check:** Referenced Purchase Return message keys exist in both bundles; the only audit-only prefix is the expected dynamic `label.purchase-return.status.` prefix.
