@@ -176,7 +176,7 @@ Add MariaDB and H2 persistence schema before Java classes depend on it.
 - `mvn test -Dtest=PurchaseReturnMigrationTest` passes.
 - MariaDB and H2 migration files contain equivalent business columns.
 
-### Task 2: Generic Inventory Reservation Domain
+### Task 2: Generic Inventory Reservation Domain [x]
 
 Model reservation ownership and enforce stock-balance invariants in pure Java.
 
@@ -184,22 +184,22 @@ Model reservation ownership and enforce stock-balance invariants in pure Java.
 
 **Reference modules:** `inventory.stock`
 
-- [ ] Extend `StockBalance.validate()` to reject `reservedQuantity > quantity`, not only negative totals. This closes the existing gap where `RESERVE`, normal `ISSUE`, or `TRANSFER_OUT` can leave negative available stock while on-hand remains non-negative.
+- [x] Extend `StockBalance.validate()` to reject `reservedQuantity > quantity`, not only negative totals. This closes the existing gap where `RESERVE`, normal `ISSUE`, or `TRANSFER_OUT` can leave negative available stock while on-hand remains non-negative.
       ref: `src/main/java/com/solusi/erp/inventory/stock/domain/model/StockBalance.java:L42-L83` - movement application and current invariants
-- [ ] Create enums `InventoryReservationStatus { ACTIVE, CONSUMED, RELEASED }` and `ReservationOwnerType { PURCHASE_RETURN }`.
-- [ ] Create immutable `InventoryReservationRequest` containing product, actual facility/grid/container, optional serial, valuation reference triple, and quantity.
-- [ ] Create aggregate/entity `InventoryReservation` with factories and transitions:
+- [x] Create enums `InventoryReservationStatus { ACTIVE, CONSUMED, RELEASED }` and `ReservationOwnerType { PURCHASE_RETURN }`.
+- [x] Create immutable `InventoryReservationRequest` containing product, actual facility/grid/container, optional serial, valuation reference triple, and quantity.
+- [x] Create aggregate/entity `InventoryReservation` with factories and transitions:
       `createActive(...)`, `release()`, and `consume()`.
       Reject non-positive quantities, repeated terminal transitions, serialized reservations without serial number, and serialized quantity other than `1`.
-- [ ] Create repository port `InventoryReservationRepository` with save/find operations by owner and active serial ownership.
-- [ ] Create service port `InventoryReservationService` with:
+- [x] Create repository port `InventoryReservationRepository` with save/find operations by owner and active serial ownership.
+- [x] Create service port `InventoryReservationService` with:
       `reserve(ownerType, ownerId, ownerCode, requests)`,
       `release(ownerType, ownerId)`,
       `assertActiveCoverage(ownerType, ownerId, requests)`,
       `consume(ownerType, ownerId)`.
-- [ ] Extend `StockBalanceDomainTest` for reserve exceeding available qty, normal issue touching reserved qty, transfer touching reserved qty, valid release, and valid `ISSUE_RESERVED`.
+- [x] Extend `StockBalanceDomainTest` for reserve exceeding available qty, normal issue touching reserved qty, transfer touching reserved qty, valid release, and valid `ISSUE_RESERVED`.
       ref: `src/test/java/com/solusi/erp/inventory/stock/domain/StockBalanceDomainTest.java:L32-L152` - existing reservation primitive tests
-- [ ] Add `InventoryReservationTest` covering status transitions, duplicate terminal transition failure, serialized quantity `1`, serialized missing serial failure, non-serial quantity greater than `1`, and required valuation reference.
+- [x] Add `InventoryReservationTest` covering status transitions, duplicate terminal transition failure, serialized quantity `1`, serialized missing serial failure, non-serial quantity greater than `1`, and required valuation reference.
 
 **Validation criteria:**
 

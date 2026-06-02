@@ -16,3 +16,8 @@
 - **Status:** clean after correction
 - **Summary:** Added generic reservation and Purchase Return schema, source indexes, generated-GI uniqueness guard, sequence registration, H2 mirror, and migration contract coverage.
 - **Verification:** `mvn test -Dtest=PurchaseReturnMigrationTest`
+
+## Task 2: Generic Inventory Reservation Domain
+- **Status:** clean
+- **Summary:** Enforced `reserved <= onHand`, added the generic reservation aggregate, ownership and service ports, serialized-stock validation, and focused domain coverage.
+- **Verification:** `mvn test -Dtest=StockBalanceDomainTest,InventoryReservationTest`
