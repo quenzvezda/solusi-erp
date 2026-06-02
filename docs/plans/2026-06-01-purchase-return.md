@@ -147,7 +147,7 @@
 
 ## Tasks
 
-### Task 1: Flyway Schema for Generic Reservation and Purchase Return
+### Task 1: Flyway Schema for Generic Reservation and Purchase Return [x]
 
 Add MariaDB and H2 persistence schema before Java classes depend on it.
 
@@ -155,20 +155,20 @@ Add MariaDB and H2 persistence schema before Java classes depend on it.
 
 **Reference modules:** Goods Issue migration, Goods Receipt migration, Purchase Order migration
 
-- [ ] Create `V67__Add_Purchase_Return_Phase_1.sql` in both migration folders with table `inv_stock_reservations`.
+- [x] Create `V67__Add_Purchase_Return_Phase_1.sql` in both migration folders with table `inv_stock_reservations`.
       Required columns: audit fields, optimistic `version`, `owner_ref_type`, `owner_ref_id`, `owner_ref_code`, `product_id`, `facility_id`, `grid_id`, `container_id`, nullable `serial_number`, `valuation_ref_type`, `valuation_ref_id`, `valuation_ref_line_id`, `quantity`, and `status`.
       Add indexes for owner lookup, active container quantity checks, valuation-reference availability, and serial lookup.
       ref: `src/main/resources/db/migration/V23__Inventory_Core_Valuation_And_Movements.sql:L3-L20` - existing stock balance schema and audit shape
       ref: `src/main/resources/db/migration/V65__Add_Valuation_Layer_Reference_Metadata.sql:L1-L8` - GR valuation reference metadata
-- [ ] Add `pur_purchase_returns` with `code`, `return_date`, canonical `reference_type/reference_id/reference_code`, PO snapshot id/code, supplier, facility, currency, exchange rate, status, required header `reason_code`, optional `note`, `submitted_by_user_id`, nullable `generated_gi_id`, and audit fields.
+- [x] Add `pur_purchase_returns` with `code`, `return_date`, canonical `reference_type/reference_id/reference_code`, PO snapshot id/code, supplier, facility, currency, exchange rate, status, required header `reason_code`, optional `note`, `submitted_by_user_id`, nullable `generated_gi_id`, and audit fields.
       Keep `reference_type='GOODS_RECEIPT'` in Phase 1 but retain generic columns for future return sources.
       ref: `src/main/resources/db/migration/V66__Add_Goods_Issue_Core.sql:L6-L37` - transaction header migration pattern
-- [ ] Add `pur_purchase_return_lines` with header FK, GR line id, product, serialized flag, quantity, UOM, base quantity, actual facility/grid/container, nullable serial CSV, required line `reason_code`, optional note, GR valuation references, and monetary snapshots (`unit_cost`, `inventory_amount`, `tax_reversal_amount`, `clearing_amount`).
+- [x] Add `pur_purchase_return_lines` with header FK, GR line id, product, serialized flag, quantity, UOM, base quantity, actual facility/grid/container, nullable serial CSV, required line `reason_code`, optional note, GR valuation references, and monetary snapshots (`unit_cost`, `inventory_amount`, `tax_reversal_amount`, `clearing_amount`).
       ref: `src/main/resources/db/migration/V66__Add_Goods_Issue_Core.sql:L42-L79` - outbound line snapshots and valuation references
-- [ ] Add a uniqueness guard so one Purchase Return can resolve at most one completed/generated GI. Add list/search indexes for code, return date, status, supplier, source GR, and source PO.
-- [ ] Register sequence `PURCHASE_RETURN` with format `PRT-{date:yyyyMM}-{seq}`.
+- [x] Add a uniqueness guard so one Purchase Return can resolve at most one completed/generated GI. Add list/search indexes for code, return date, status, supplier, source GR, and source PO.
+- [x] Register sequence `PURCHASE_RETURN` with format `PRT-{date:yyyyMM}-{seq}`.
       ref: `src/main/resources/db/migration/V66__Add_Goods_Issue_Core.sql:L82-L86` - transaction sequence registration
-- [ ] Add migration contract test `src/test/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/persistence/PurchaseReturnMigrationTest.java` that reads both migration files and asserts required tables, source indexes, reservation ownership indexes, sequence registration, and H2 mirror presence.
+- [x] Add migration contract test `src/test/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/persistence/PurchaseReturnMigrationTest.java` that reads both migration files and asserts required tables, source indexes, reservation ownership indexes, sequence registration, and H2 mirror presence.
       ref: `src/test/java/com/solusi/erp/inventory/goodsissue/infrastructure/persistence/GoodsIssueMigrationTest.java` - migration static contract pattern
 
 **Validation criteria:**
