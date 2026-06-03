@@ -1561,7 +1561,7 @@ Phase A -> Phase B -> Phase C -> Phase D -> Phase E -> Phase F -> Phase G
 Suggested plan:
 
 ```text
-docs/plans/2026-06-02-generic-reversal-foundation.md
+docs/plans/2026-06-02-phase-a-generic-reversal-foundation.md
 ```
 
 Scope:
@@ -1723,7 +1723,7 @@ Alasan:
 File plan berikutnya yang disarankan untuk dibuat:
 
 ```text
-docs/plans/2026-06-02-generic-reversal-foundation.md
+docs/plans/2026-06-02-phase-a-generic-reversal-foundation.md
 ```
 
 ## Deferred Beyond MVP
