@@ -208,27 +208,27 @@ Replace payment-only summary naming with a neutral settlement projection that ca
 - Vendor Bill detail/list no longer infer payment state from document status.
 - Projection shape can accept DMA values later without changing UI contracts again.
 
-### Task 4: Vendor Payment Payable Query And Confirm Revalidation [ ]
+### Task 4: Vendor Payment Payable Query And Confirm Revalidation [x]
 
 Make Vendor Payment confirmation safe against stale outstanding amounts and future settlement concurrency.
 
 **Depends on:** Tasks 2 and 3
 **Reference modules:** `accountspayable.vendorpayment`, `accountspayable.vendorbill`
 
-- [ ] Update `PayableVendorBillQueryAdapter` to filter by `document_status='CONFIRMED'`, `settlement_status IN ('OPEN','PARTIALLY_SETTLED')`, vendor, currency, and computed outstanding amount.
+- [x] Update `PayableVendorBillQueryAdapter` to filter by `document_status='CONFIRMED'`, `settlement_status IN ('OPEN','PARTIALLY_SETTLED')`, vendor, currency, and computed outstanding amount.
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorpayment/infrastructure/adapter/PayableVendorBillQueryAdapter.java:L17-L35` - current payable query uses old status values
-- [ ] Update `PayableVendorBillQueryPort.PayableVendorBillView` and response DTO only if a settlement status or DMA seam field is needed by the payment form. Keep the payment form narrowly scoped if no UI behavior changes are required.
+- [x] Update `PayableVendorBillQueryPort.PayableVendorBillView` and response DTO only if a settlement status or DMA seam field is needed by the payment form. Keep the payment form narrowly scoped if no UI behavior changes are required. (no DTO change needed)
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorpayment/domain/port/PayableVendorBillQueryPort.java:L1-L16` - current payable bill read model
-- [ ] Replace or extend `VendorBillPaymentUpdatePort` with a settlement update/guard port that can:
+- [x] Replace or extend `VendorBillPaymentUpdatePort` with a settlement update/guard port that can:
       lock all target Vendor Bills for update;
       validate document status, settlement status, vendor, currency, duplicate bill lines, current outstanding, and over-application;
       update settlement statuses after payment confirmation.
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorpayment/domain/port/VendorBillPaymentUpdatePort.java:L1-L7` - current status update-only port
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md:L911-L927` - lock and revalidation rules
-- [ ] Implement the guard in the existing adapter or a renamed adapter using `SELECT ... FOR UPDATE` on `ap_vendor_bills` rows and current confirmed payment totals.
+- [x] Implement the guard in the existing adapter or a renamed adapter using `SELECT ... FOR UPDATE` on `ap_vendor_bills` rows and current confirmed payment totals.
       H2-compatible query behavior must be covered by tests or isolated SQL.
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorpayment/infrastructure/adapter/VendorBillPaymentUpdateAdapter.java:L15-L42` - current direct status update SQL to replace
-- [ ] Refactor `ConfirmVendorPaymentUseCaseImpl` flow:
+- [x] Refactor `ConfirmVendorPaymentUseCaseImpl` flow:
       load draft payment;
       validate payment domain totals;
       lock/revalidate target Vendor Bills before journal posting;
@@ -236,16 +236,16 @@ Make Vendor Payment confirmation safe against stale outstanding amounts and futu
       save confirmed payment;
       refresh Vendor Bill settlement statuses.
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorpayment/application/usecase/command/ConfirmVendorPaymentUseCaseImpl.java:L31-L86` - current confirm sequence
-- [ ] Keep journal amount calculation unchanged. Phase C changes settlement eligibility and status, not Vendor Payment accounting.
+- [x] Keep journal amount calculation unchanged. Phase C changes settlement eligibility and status, not Vendor Payment accounting.
       ref: `docs/modules/accountspayable/vendor-payment.md:L100-L126` - current `VENDOR_PAYMENT` journal variables
-- [ ] Add friendly errors for stale outstanding, settled target bill, wrong vendor/currency, duplicate target bill, and over-applied amount.
+- [x] Add friendly errors for stale outstanding, settled target bill, wrong vendor/currency, duplicate target bill, and over-applied amount.
       Use `MessageSource`-resolved keys where existing use cases do so; at minimum add message bundle entries for new `DomainException` keys.
       ref: `docs/spec/i18n-guide.md:L1-L90` - i18n key naming and update protocol
-- [ ] **TEST:** Extend `ConfirmVendorPaymentUseCaseTest` to verify guard invocation before journal posting, no journal when guard rejects, status update after save, and unchanged journal variables.
+- [x] **TEST:** Extend `ConfirmVendorPaymentUseCaseTest` to verify guard invocation before journal posting, no journal when guard rejects, status update after save, and unchanged journal variables.
       ref: `src/test/java/com/solusi/erp/accountspayable/vendorpayment/application/usecase/command/ConfirmVendorPaymentUseCaseTest.java:L31-L119` - current confirm use case tests
-- [ ] **TEST:** Add or extend adapter tests for payable bill SQL and payment settlement guard SQL/parameter behavior.
+- [x] **TEST:** Add or extend adapter tests for payable bill SQL and payment settlement guard SQL/parameter behavior.
       ref: `src/test/java/com/solusi/erp/accountspayable/vendorbill/infrastructure/adapter/VendorBillPaymentSummaryAdapterTest.java:L1-L76` - JDBC adapter test pattern
-- [ ] **TEST:** Update `VendorPaymentConfigTest` so new/renamed guard/update port wiring is covered.
+- [x] **TEST:** Update `VendorPaymentConfigTest` so new/renamed guard/update port wiring is covered.
       ref: `src/test/java/com/solusi/erp/accountspayable/vendorpayment/infrastructure/config/VendorPaymentConfigTest.java:L1-L89` - config wiring test pattern
 
 **Validation criteria:**

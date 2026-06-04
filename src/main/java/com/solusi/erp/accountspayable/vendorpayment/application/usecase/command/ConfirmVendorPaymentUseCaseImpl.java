@@ -42,6 +42,7 @@ public class ConfirmVendorPaymentUseCaseImpl implements ConfirmVendorPaymentUseC
                 .orElseThrow(() -> new DomainException("msg.err.vp.not.found"));
 
         payment.confirm();
+        vendorBillPaymentUpdatePort.lockAndValidatePayment(payment);
 
         BigDecimal paymentAmountBase = payment.getPaymentAmount()
                 .multiply(payment.getExchangeRate())
@@ -86,6 +87,6 @@ public class ConfirmVendorPaymentUseCaseImpl implements ConfirmVendorPaymentUseC
                 .map(VendorPaymentLine::getVendorBillId)
                 .distinct()
                 .toList();
-        vendorBillPaymentUpdatePort.updatePaymentStatus(billIds);
+        vendorBillPaymentUpdatePort.updateSettlementStatus(billIds);
     }
 }

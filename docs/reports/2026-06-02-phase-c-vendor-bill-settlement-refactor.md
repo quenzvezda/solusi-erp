@@ -48,3 +48,23 @@
 - **Status:** findings
 - **Summary:** Replaced the payment-only projection with `VendorBillSettlementSummaryPort`, added zero-DMA seam data, clamped negative outstanding values, and computed settlement status from confirmed Vendor Payments.
 - **Validation:** `mvn test -Dtest=FindVendorBillsUseCaseTest,GetVendorBillDetailUseCaseTest,VendorBillSettlementSummaryAdapterTest` passed.
+
+## Task 4: Vendor Payment Payable Query And Confirm Revalidation
+
+### Finding: existing billable GR SQL still referenced dropped `vb.status`
+- **Type:** bug
+- **Severity:** warning
+- **Detail:** After V72 drops `ap_vendor_bills.status`, billable Goods Receipt queries would fail at runtime because they still filtered confirmed Vendor Bills with `vb.status = :confirmedStatus`.
+- **Action taken:** Updated the billable GR query adapter and reference provider to filter `vb.document_status = :confirmedStatus`.
+- **Ref:** `src/main/java/com/solusi/erp/accountspayable/vendorbill/infrastructure/adapter/BillableGrQueryAdapter.java`, `src/main/java/com/solusi/erp/accountspayable/vendorbill/infrastructure/adapter/GoodsReceiptBillableReferenceProvider.java`
+
+### Finding: guard port was extended, not renamed
+- **Type:** decision
+- **Severity:** info
+- **Detail:** The existing `VendorBillPaymentUpdatePort` was extended with `lockAndValidatePayment(...)` and `updateSettlementStatus(...)` instead of introducing a new port name, keeping configuration and dependent use cases smaller for this task.
+- **Action taken:** Added adapter tests around lock/query/update SQL and use-case tests around guard ordering.
+- **Ref:** `src/main/java/com/solusi/erp/accountspayable/vendorpayment/domain/port/VendorBillPaymentUpdatePort.java`
+
+- **Status:** findings
+- **Summary:** Updated payable bill selection, added locked outstanding revalidation before journal posting, changed Vendor Bill updates to settlement status only, and added i18n messages for stale/invalid target bill errors.
+- **Validation:** `mvn test -Dtest=ConfirmVendorPaymentUseCaseTest,VendorPaymentConfigTest,*VendorBill*AdapterTest,*Payable*Test` passed; AP Java scan for `PARTIAL_PAID`, `PAID`, and `vb.status` returned 0 matches.

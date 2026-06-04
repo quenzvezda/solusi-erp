@@ -15,6 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -54,8 +55,30 @@ class ConfirmVendorPaymentUseCaseTest {
 
         verify(postJournalForEventUseCase).execute(any(JournalPostingCommand.class));
         verify(repository).save(payment);
-        verify(vendorBillPaymentUpdatePort).updatePaymentStatus(List.of(10L));
+        InOrder inOrder = inOrder(vendorBillPaymentUpdatePort, postJournalForEventUseCase, repository);
+        inOrder.verify(vendorBillPaymentUpdatePort).lockAndValidatePayment(payment);
+        inOrder.verify(postJournalForEventUseCase).execute(any(JournalPostingCommand.class));
+        inOrder.verify(repository).save(payment);
+        verify(vendorBillPaymentUpdatePort).updateSettlementStatus(List.of(10L));
         assertThat(payment.getStatus()).isEqualTo(VendorPaymentStatus.CONFIRMED);
+    }
+
+    @Test
+    @DisplayName("execute does not post journal when vendor bill guard rejects")
+    void execute_doesNotPostJournalWhenGuardRejects() {
+        VendorPayment payment = draftPaymentWithId(1L);
+        when(repository.findById(1L)).thenReturn(Optional.of(payment));
+        doThrow(new DomainException("msg.err.vp.vendor.bill.overapplied"))
+                .when(vendorBillPaymentUpdatePort).lockAndValidatePayment(payment);
+
+        assertThatThrownBy(() -> useCase.execute(1L))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.err.vp.vendor.bill.overapplied");
+
+        verify(vendorBillPaymentUpdatePort).lockAndValidatePayment(payment);
+        verifyNoInteractions(postJournalForEventUseCase);
+        verify(repository, never()).save(any());
+        verify(vendorBillPaymentUpdatePort, never()).updateSettlementStatus(any());
     }
 
     @Test
