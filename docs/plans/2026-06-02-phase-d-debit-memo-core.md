@@ -73,7 +73,7 @@ Expected modified files:
 - `docs/modules/procurement/purchase-return.md`
 - E2E specs under `e2e-tests/tests/`
 
-## Task 1: Add Database Contract, Sequence, Permissions, and Menu Entry
+## Task 1: Add Database Contract, Sequence, Permissions, and Menu Entry [x]
 
 Goal: create the persistent contract for Debit Memo core before introducing domain/application code.
 
@@ -525,4 +525,3 @@ Commit:
 - [ ] `.\e2e-tests\scripts\run-e2e.ps1` passes.
 - [ ] Phase E deferrals are explicit in docs and UI.
 - [ ] No active Debit Memo Allocation UI/action is shipped in Phase D.
-
