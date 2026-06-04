@@ -99,23 +99,23 @@ Phase ini tidak membuat Debit Memo, tidak menambah event `PURCHASE_RETURN`, dan 
 
 ## 5. Tasks
 
-### Task 1: Reversal Schema Migration
+### Task 1: Reversal Schema Migration [x]
 
 Add database primitives for linked stock movement reversal and valuation layer reversal.
 
 **Depends on:** none
 **Reference modules:** `accounting.journal`, `inventory.stock`
 
-- [ ] Create `V69__Add_Generic_Reversal_Foundation.sql` in MariaDB and H2 migration folders.
+- [x] Create `V69__Add_Generic_Reversal_Foundation.sql` in MariaDB and H2 migration folders.
       ref: `src/main/resources/db/migration/V64__Add_Manual_Journal.sql:L1-L11` - linked journal `reversal_of_id` and unique guard pattern
       ref: `src/main/resources/db/migration/V23__Inventory_Core_Valuation_And_Movements.sql:L29-L114` - current movement and valuation table shape
-- [ ] Add nullable `reversal_of_movement_id` to `inv_movements`, with FK to `inv_movements(id)` and unique constraint so one movement can be reversed at most once.
+- [x] Add nullable `reversal_of_movement_id` to `inv_movements`, with FK to `inv_movements(id)` and unique constraint so one movement can be reversed at most once.
       ref: `src/main/java/com/solusi/erp/inventory/stock/infrastructure/persistence/InventoryMovementEntity.java:L18-L63` - current movement entity fields
-- [ ] Add indexes for reversal lookup and source movement fetch: `(reference_type, reference_id)`, `(reversal_of_movement_id)`, and any existing search indexes needed by `InventoryMovementJpaRepository`.
+- [x] Add indexes for reversal lookup and source movement fetch: `(reference_type, reference_id)`, `(reversal_of_movement_id)`, and any existing search indexes needed by `InventoryMovementJpaRepository`.
       ref: `src/main/java/com/solusi/erp/inventory/stock/infrastructure/persistence/InventoryMovementJpaRepository.java:L19-L38` - current movement search filters
-- [ ] Add nullable `reversal_of_movement_id` to `inv_valuation_layers` so inbound reversal layers can be tied to the original issue movement.
+- [x] Add nullable `reversal_of_movement_id` to `inv_valuation_layers` so inbound reversal layers can be tied to the original issue movement.
       ref: `src/main/resources/db/migration/V65__Add_Valuation_Layer_Reference_Metadata.sql:L1-L8` - valuation reference metadata migration pattern
-- [ ] Add static migration contract tests for MariaDB and H2 files covering new columns, FK, unique guard, indexes, and mirror parity.
+- [x] Add static migration contract tests for MariaDB and H2 files covering new columns, FK, unique guard, indexes, and mirror parity.
       ref: `src/test/java/com/solusi/erp/inventory/goodsissue/infrastructure/persistence/GoodsIssueMigrationTest.java` - migration static contract test pattern
 
 **Validation criteria:**
