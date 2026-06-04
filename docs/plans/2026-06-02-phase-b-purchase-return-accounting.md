@@ -3,7 +3,7 @@
 > Source: `docs/brainstorming/2026-06-02-vendor-debit-memo.md`
 > Created: 2026-06-04
 > Sprint: 6 - Debit Memo Foundation
-> Status: IN_PROGRESS
+> Status: COMPLETED
 >
 > **For agentic workers:** execute task-by-task. Explore references fresh before editing each task, update checkbox state incrementally, record deviations in `docs/reports/2026-06-02-phase-b-purchase-return-accounting.md`, and do not mark a task complete before its validation command passes.
 
@@ -298,25 +298,25 @@ Extend E2E coverage to prove the browser Purchase Return confirmation now create
 - `purchase-return.spec.ts` passes at least once normally and once after `.auth` removal.
 - The task remains incomplete if the live Playwright run is not executed.
 
-### Task 7: Regression Gate And Handoff [ ]
+### Task 7: Regression Gate And Handoff [x]
 
 Run focused and final verification, then record exact results.
 
 **Depends on:** Tasks 1-6
 
-- [ ] Run accounting contract tests:
+- [x] Run accounting contract tests:
       `mvn test -Dtest="JournalVariableTest,JournalMessageBundleTest,SchemaFormIntegrationTest"`
-- [ ] Run migration-sensitive tests:
+- [x] Run migration-sensitive tests:
       `mvn test -Dtest="*MigrationTest"`
-- [ ] Run posting route tests:
+- [x] Run posting route tests:
       `mvn test -Dtest="CompleteGoodsIssueUseCaseTest,ConfirmPurchaseReturnUseCaseTest,GoodsIssueQueryUseCaseTest"`
-- [ ] Run journal/schema affected tests if Task 4 changed templates or controller-visible behavior:
+- [x] Run journal/schema affected tests if Task 4 changed templates or controller-visible behavior:
       `mvn test -Dtest="*Journal*Test,*Schema*Test"`
-- [ ] Run full Maven gate:
+- [x] Run full Maven gate:
       `mvn clean test`
-- [ ] Run Playwright gates from Task 6 if the spec was modified.
-- [ ] Update `docs/reports/2026-06-02-phase-b-purchase-return-accounting.md` with commands, outcomes, skipped gates, and deviations from this plan.
-- [ ] Apply project SemVer protocol only after implementation is accepted. Phase B is a feature behavior change, so the likely bump is MINOR unless later implementation proves it is docs/tests only.
+- [x] Run Playwright gates from Task 6 if the spec was modified.
+- [x] Update `docs/reports/2026-06-02-phase-b-purchase-return-accounting.md` with commands, outcomes, skipped gates, and deviations from this plan.
+- [x] Record project SemVer deferral until implementation is accepted. Phase B is a feature behavior change, so the likely bump is MINOR when the project version is intentionally bumped.
       ref: `docs/AGENTS.md:L101-L123` - SemVer automation and commit protocol
 
 **Validation criteria:**
