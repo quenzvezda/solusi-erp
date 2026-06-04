@@ -155,7 +155,7 @@ Commit:
 
 - `schema(debit-memo): add core tables sequence and permissions`
 
-## Task 2: Implement Debit Memo Domain Model and Invariants
+## Task 2: Implement Debit Memo Domain Model and Invariants [x]
 
 Goal: model Debit Memo as an AP aggregate with immutable source/financial snapshots and controlled settlement metadata.
 

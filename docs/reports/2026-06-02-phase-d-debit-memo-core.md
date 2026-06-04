@@ -28,9 +28,16 @@ Source Brainstorm: [docs/brainstorming/2026-06-02-vendor-debit-memo.md](../brain
 - **Action taken:** The migration contract test now asserts unique constraints via `information_schema.table_constraints` and non-unique indexes via `information_schema.indexes`.
 - **Ref:** `src/test/java/com/solusi/erp/accountspayable/debitmemo/infrastructure/persistence/DebitMemoCoreMigrationTest.java`
 
+## Task 2: Implement Debit Memo Domain Model and Invariants
+
+- **Status:** clean
+- **Summary:** Added Debit Memo aggregate, line value object, settlement status enum, and domain tests for monetary invariants, metadata mutability, settlement transitions, cancellation, and defensive copies.
+- **Tests:** `mvn test -Dtest=DebitMemoTest` passed with 11 tests.
+
 ## Verification
 
 - Task 1: `mvn test -Dtest=DebitMemoCoreMigrationTest` passed.
+- Task 2: `mvn test -Dtest=DebitMemoTest` passed.
 
 ## Notes
 
