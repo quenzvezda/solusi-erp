@@ -39,4 +39,6 @@ public interface ValuationLayerRepository {
                                                                  String serialNumber,
                                                                  ReferenceType referenceType, Long referenceId,
                                                                  Long referenceLineId, BigDecimal minQuantity);
+
+    List<ValuationLayer> findByReversalOfMovementId(Long reversalOfMovementId);
 }

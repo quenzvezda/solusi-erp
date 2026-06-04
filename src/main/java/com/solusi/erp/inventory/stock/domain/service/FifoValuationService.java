@@ -33,9 +33,17 @@ public class FifoValuationService {
     public void addLayer(Long productId, Long containerId, String serialNumber,
                          BigDecimal quantity, CostAmount unitCost,
                          ReferenceType referenceType, Long referenceId, Long referenceLineId) {
+        addLayer(productId, containerId, serialNumber, quantity, unitCost,
+                referenceType, referenceId, referenceLineId, null);
+    }
+
+    public void addLayer(Long productId, Long containerId, String serialNumber,
+                         BigDecimal quantity, CostAmount unitCost,
+                         ReferenceType referenceType, Long referenceId, Long referenceLineId,
+                         Long reversalOfMovementId) {
         ValuationLayer layer = ValuationLayer.createNew(
                 productId, containerId, serialNumber, quantity, unitCost,
-                referenceType, referenceId, referenceLineId);
+                referenceType, referenceId, referenceLineId, reversalOfMovementId);
         layerRepository.save(layer);
     }
 

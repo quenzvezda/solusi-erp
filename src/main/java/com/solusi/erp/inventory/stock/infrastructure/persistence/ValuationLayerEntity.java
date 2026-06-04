@@ -52,4 +52,7 @@ public class ValuationLayerEntity extends BaseModel {
 
     @Column(name = "reference_line_id")
     private Long referenceLineId;
+
+    @Column(name = "reversal_of_movement_id")
+    private Long reversalOfMovementId;
 }

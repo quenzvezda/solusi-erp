@@ -30,4 +30,6 @@ public interface ValuationLayerJpaRepository extends JpaRepository<ValuationLaye
     List<ValuationLayerEntity> findByProductIdAndContainerIdAndSerialNumberAndReferenceTypeAndReferenceIdAndReferenceLineIdAndRemainingQuantityGreaterThanOrderByCreatedDateAsc(
             Long productId, Long containerId, String serialNumber, ReferenceType referenceType,
             Long referenceId, Long referenceLineId, BigDecimal remainingQuantity);
+
+    List<ValuationLayerEntity> findByReversalOfMovementId(Long reversalOfMovementId);
 }

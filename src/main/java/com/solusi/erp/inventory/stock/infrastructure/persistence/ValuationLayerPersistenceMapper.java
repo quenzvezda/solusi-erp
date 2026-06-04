@@ -26,7 +26,8 @@ public interface ValuationLayerPersistenceMapper {
                 toCostAmount(entity.getUnitCost()),
                 entity.getReferenceType(),
                 entity.getReferenceId(),
-                entity.getReferenceLineId()
+                entity.getReferenceLineId(),
+                entity.getReversalOfMovementId()
         );
     }
 

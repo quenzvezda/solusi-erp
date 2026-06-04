@@ -163,6 +163,43 @@ class FifoValuationServiceTest {
     }
 
     @Test
+    @DisplayName("addLayer stores reversal movement link as a new inbound layer")
+    void addLayer_withReversalMovementLink_createsNewLayer() {
+        ValuationLayer consumedGoodsReceiptLayer = new ValuationLayer(
+                new AuditMetadata(1L, 1L, LocalDateTime.now().minusDays(1), null, null, null),
+                1L, 10L, null, BigDecimal.TEN, new BigDecimal("6"),
+                new CostAmount(1L, BigDecimal.ONE, new BigDecimal("7"), new BigDecimal("7")),
+                ReferenceType.GOODS_RECEIPT, 100L, 1001L);
+        CostAmount historicalIssueCost = CostAmount.localOnly(new BigDecimal("7"));
+
+        service.addLayer(
+                1L,
+                10L,
+                null,
+                new BigDecimal("4"),
+                historicalIssueCost,
+                ReferenceType.GOODS_ISSUE,
+                200L,
+                2001L,
+                900L
+        );
+
+        ArgumentCaptor<ValuationLayer> captor = ArgumentCaptor.forClass(ValuationLayer.class);
+        verify(layerRepository).save(captor.capture());
+
+        ValuationLayer saved = captor.getValue();
+        assertThat(saved).isNotSameAs(consumedGoodsReceiptLayer);
+        assertThat(saved.getInitialQuantity()).isEqualByComparingTo("4");
+        assertThat(saved.getRemainingQuantity()).isEqualByComparingTo("4");
+        assertThat(saved.getReferenceType()).isEqualTo(ReferenceType.GOODS_ISSUE);
+        assertThat(saved.getReferenceId()).isEqualTo(200L);
+        assertThat(saved.getReferenceLineId()).isEqualTo(2001L);
+        assertThat(saved.getReversalOfMovementId()).isEqualTo(900L);
+        assertThat(saved.getUnitCost().localAmount()).isEqualByComparingTo("7");
+        assertThat(consumedGoodsReceiptLayer.getRemainingQuantity()).isEqualByComparingTo("6");
+    }
+
+    @Test
     @DisplayName("consumeSpecificLayers consumes only layers matching valuation reference")
     void consumeSpecificLayers_usesReferenceLookupOnly() {
         ValuationLayer specificLayer = new ValuationLayer(

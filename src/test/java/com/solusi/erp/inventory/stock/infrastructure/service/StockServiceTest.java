@@ -351,7 +351,7 @@ public class StockServiceTest {
 
         verify(fifoValuationService).addLayer(eq(1L), eq(1L), isNull(), eq(new BigDecimal("120")),
                 argThat(cost -> cost.originalAmount().compareTo(new BigDecimal("10.000000")) == 0),
-                isNull(), isNull(), isNull());
+                isNull(), isNull(), isNull(), isNull());
     }
 
     @Test
@@ -382,7 +382,44 @@ public class StockServiceTest {
                 any(),
                 eq(ReferenceType.GOODS_RECEIPT),
                 eq(100L),
-                eq(1001L)
+                eq(1001L),
+                isNull()
+        );
+    }
+
+    @Test
+    void reversalReceiptCreatesValuationLayerWithReversalMovementLink() {
+        StockMovementPayload payload = StockMovementPayload.builder()
+                .productId(1L)
+                .containerId(1L)
+                .quantity(new BigDecimal("4"))
+                .movementType(MovementType.RECEIPT)
+                .referenceType(ReferenceType.GOODS_ISSUE)
+                .referenceId(200L)
+                .referenceCode("GI-001")
+                .valuationReferenceType(ReferenceType.GOODS_ISSUE)
+                .valuationReferenceId(200L)
+                .valuationReferenceLineId(2001L)
+                .netPrice(new BigDecimal("7"))
+                .exchangeRate(BigDecimal.ONE)
+                .reversalOfMovementId(900L)
+                .build();
+
+        when(stockBalanceRepository.findByProductContainerSerial(1L, 1L, null)).thenReturn(Optional.empty());
+        when(stockBalanceRepository.save(any(StockBalance.class))).thenAnswer(i -> i.getArgument(0));
+
+        stockService.adjust(payload);
+
+        verify(fifoValuationService).addLayer(
+                eq(1L),
+                eq(1L),
+                isNull(),
+                eq(new BigDecimal("4")),
+                argThat(cost -> cost.localAmount().compareTo(new BigDecimal("7")) == 0),
+                eq(ReferenceType.GOODS_ISSUE),
+                eq(200L),
+                eq(2001L),
+                eq(900L)
         );
     }
 

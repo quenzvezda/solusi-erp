@@ -76,4 +76,12 @@ public class ValuationLayerRepositoryImpl implements ValuationLayerRepository {
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<ValuationLayer> findByReversalOfMovementId(Long reversalOfMovementId) {
+        return jpaRepository.findByReversalOfMovementId(reversalOfMovementId)
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
 }

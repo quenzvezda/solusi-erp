@@ -199,27 +199,27 @@ Add a reusable stock reversal service that mirrors original issue movements with
 - Reversal stock movements point to the same physical document reference (`ReferenceType.GOODS_ISSUE` for GI), with reversal identity represented by `reversalOfMovementId`.
 - One original movement cannot be reversed twice, including under retry.
 
-### Task 4: Valuation Layer Reversal With Historical Issue Cost
+### Task 4: Valuation Layer Reversal With Historical Issue Cost [x]
 
 Ensure stock reversal creates a new inbound valuation layer using the historical issue cost from the original movement.
 
 **Depends on:** Task 3
 **Reference modules:** `inventory.stock`
 
-- [ ] Extend `ValuationLayer` and `ValuationLayerEntity` with nullable `reversalOfMovementId`.
+- [x] Extend `ValuationLayer` and `ValuationLayerEntity` with nullable `reversalOfMovementId`.
       ref: `src/main/java/com/solusi/erp/inventory/stock/domain/model/ValuationLayer.java:L20-L57` - current valuation reference fields and factory
       ref: `src/main/java/com/solusi/erp/inventory/stock/infrastructure/persistence/ValuationLayerEntity.java:L18-L55` - current valuation entity fields
-- [ ] Extend `FifoValuationService.addLayer(...)` to accept optional `reversalOfMovementId`, preserving existing overloads for normal receipt paths.
+- [x] Extend `FifoValuationService.addLayer(...)` to accept optional `reversalOfMovementId`, preserving existing overloads for normal receipt paths.
       ref: `src/main/java/com/solusi/erp/inventory/stock/domain/service/FifoValuationService.java:L24-L41` - current add layer overloads
-- [ ] Modify `StockServiceImpl.handleValuation(...)` so positive reversal movements create inbound layers linked to `reversalOfMovementId`.
+- [x] Modify `StockServiceImpl.handleValuation(...)` so positive reversal movements create inbound layers linked to `reversalOfMovementId`.
       ref: `src/main/java/com/solusi/erp/inventory/stock/infrastructure/service/StockServiceImpl.java:L75-L112` - current positive and negative valuation branches
-- [ ] For reversal receipt cost, use original movement `unitCost.localAmount` and currency metadata. Do not recalculate from current master price or current exchange rate.
+- [x] For reversal receipt cost, use original movement `unitCost.localAmount` and currency metadata. Do not recalculate from current master price or current exchange rate.
       ref: `src/main/java/com/solusi/erp/inventory/stock/infrastructure/persistence/InventoryMovementEntity.java:L52-L63` - stored unit cost snapshot on movement
-- [ ] Add repository lookup for valuation layers by `reversalOfMovementId` if needed for audit checks and tests.
+- [x] Add repository lookup for valuation layers by `reversalOfMovementId` if needed for audit checks and tests.
       ref: `src/main/java/com/solusi/erp/inventory/stock/domain/repository/ValuationLayerRepository.java:L1-L42` - valuation repository port shape
-- [ ] **TEST:** Extend `FifoValuationServiceTest` for add reversal layer and confirm it is a new layer, not mutation of the consumed GR layer.
+- [x] **TEST:** Extend `FifoValuationServiceTest` for add reversal layer and confirm it is a new layer, not mutation of the consumed GR layer.
       ref: `src/test/java/com/solusi/erp/inventory/stock/domain/FifoValuationServiceTest.java` - FIFO valuation domain tests
-- [ ] **TEST:** Extend `StockServiceTest` for reversal receipt creating a layer with `referenceType=GOODS_ISSUE`, `referenceId=gi.id`, and `reversalOfMovementId=originalMovement.id`.
+- [x] **TEST:** Extend `StockServiceTest` for reversal receipt creating a layer with `referenceType=GOODS_ISSUE`, `referenceId=gi.id`, and `reversalOfMovementId=originalMovement.id`.
       ref: `src/main/java/com/solusi/erp/inventory/stock/infrastructure/service/StockServiceImpl.java:L75-L112` - valuation behavior under test
 
 **Validation criteria:**

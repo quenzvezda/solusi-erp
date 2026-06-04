@@ -87,7 +87,8 @@ public class StockServiceImpl implements StockService {
                     cost,
                     payload.getValuationReferenceType(),
                     payload.getValuationReferenceId(),
-                    payload.getValuationReferenceLineId()
+                    payload.getValuationReferenceLineId(),
+                    payload.getReversalOfMovementId()
             );
             return cost;
         } else if (isNegativeAdjustment(payload)) {

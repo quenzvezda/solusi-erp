@@ -22,3 +22,8 @@ This report is populated during plan execution.
 - **Decision:** The stock reversal service uses `msg.error.stock.reversal.*` keys consistently with existing project i18n naming, even though the plan example used `msg.err.stock...`.
 - **Decision:** Reversal payload cost is derived from the original movement `unitCost` snapshot. If original amount is unavailable, the service uses local amount with exchange rate `1` to avoid re-multiplying the historical local unit cost.
 - **Validation:** `mvn test -Dtest="StockServiceTest,StockMovementReversalServiceTest,StockConfigTest"` passed. Focused JaCoCo warnings are deferred to Task 10 full-suite gate.
+
+## Task 4: Valuation Layer Reversal With Historical Issue Cost
+- **Status:** clean
+- **Summary:** Added `reversalOfMovementId` to valuation layers, repository lookup support, FIFO add-layer overloads, and stock-service propagation so reversal receipts create distinct inbound layers linked to the original issue movement.
+- **Validation:** `mvn test -Dtest="FifoValuationServiceTest,StockServiceTest"` passed. Focused JaCoCo warnings are deferred to Task 10 full-suite gate.
