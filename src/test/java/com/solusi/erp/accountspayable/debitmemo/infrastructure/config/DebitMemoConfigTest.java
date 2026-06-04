@@ -1,9 +1,12 @@
 package com.solusi.erp.accountspayable.debitmemo.infrastructure.config;
 
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.command.CreateDebitMemoFromPurchaseReturnUseCase;
+import com.solusi.erp.accountspayable.debitmemo.application.usecase.command.CancelDebitMemoUseCase;
+import com.solusi.erp.accountspayable.debitmemo.application.usecase.command.UpdateDebitMemoMetadataUseCase;
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.FindDebitMemoByPurchaseReturnUseCase;
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.FindDebitMemosUseCase;
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.GetDebitMemoDetailUseCase;
+import com.solusi.erp.accountspayable.debitmemo.domain.port.DebitMemoAllocationConsumptionPort;
 import com.solusi.erp.accountspayable.debitmemo.domain.repository.DebitMemoRepository;
 import com.solusi.erp.accountspayable.debitmemo.infrastructure.persistence.DebitMemoJpaRepository;
 import com.solusi.erp.accountspayable.debitmemo.infrastructure.persistence.DebitMemoPersistenceMapper;
@@ -31,6 +34,15 @@ class DebitMemoConfigTest {
     private CreateDebitMemoFromPurchaseReturnUseCase createDebitMemoFromPurchaseReturnUseCase;
 
     @Autowired
+    private UpdateDebitMemoMetadataUseCase updateDebitMemoMetadataUseCase;
+
+    @Autowired
+    private CancelDebitMemoUseCase cancelDebitMemoUseCase;
+
+    @Autowired
+    private DebitMemoAllocationConsumptionPort debitMemoAllocationConsumptionPort;
+
+    @Autowired
     private FindDebitMemosUseCase findDebitMemosUseCase;
 
     @Autowired
@@ -43,6 +55,9 @@ class DebitMemoConfigTest {
     void should_register_debit_memo_beans() {
         assertThat(debitMemoRepository).isNotNull();
         assertThat(createDebitMemoFromPurchaseReturnUseCase).isNotNull();
+        assertThat(updateDebitMemoMetadataUseCase).isNotNull();
+        assertThat(cancelDebitMemoUseCase).isNotNull();
+        assertThat(debitMemoAllocationConsumptionPort).isNotNull();
         assertThat(findDebitMemosUseCase).isNotNull();
         assertThat(getDebitMemoDetailUseCase).isNotNull();
         assertThat(findDebitMemoByPurchaseReturnUseCase).isNotNull();

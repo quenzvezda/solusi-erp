@@ -1,14 +1,20 @@
 package com.solusi.erp.accountspayable.debitmemo.infrastructure.config;
 
+import com.solusi.erp.accountspayable.debitmemo.application.usecase.command.CancelDebitMemoUseCase;
+import com.solusi.erp.accountspayable.debitmemo.application.usecase.command.CancelDebitMemoUseCaseImpl;
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.command.CreateDebitMemoFromPurchaseReturnUseCase;
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.command.CreateDebitMemoFromPurchaseReturnUseCaseImpl;
+import com.solusi.erp.accountspayable.debitmemo.application.usecase.command.UpdateDebitMemoMetadataUseCase;
+import com.solusi.erp.accountspayable.debitmemo.application.usecase.command.UpdateDebitMemoMetadataUseCaseImpl;
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.FindDebitMemoByPurchaseReturnUseCase;
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.FindDebitMemoByPurchaseReturnUseCaseImpl;
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.FindDebitMemosUseCase;
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.FindDebitMemosUseCaseImpl;
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.GetDebitMemoDetailUseCase;
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.GetDebitMemoDetailUseCaseImpl;
+import com.solusi.erp.accountspayable.debitmemo.domain.port.DebitMemoAllocationConsumptionPort;
 import com.solusi.erp.accountspayable.debitmemo.domain.repository.DebitMemoRepository;
+import com.solusi.erp.accountspayable.debitmemo.infrastructure.adapter.NoopDebitMemoAllocationConsumptionAdapter;
 import com.solusi.erp.accountspayable.debitmemo.infrastructure.adapter.DebitMemoRepositoryImpl;
 import com.solusi.erp.accountspayable.debitmemo.infrastructure.persistence.DebitMemoJpaRepository;
 import com.solusi.erp.accountspayable.debitmemo.infrastructure.persistence.DebitMemoPersistenceMapper;
@@ -28,6 +34,11 @@ public class DebitMemoConfig {
     }
 
     @Bean
+    public DebitMemoAllocationConsumptionPort debitMemoAllocationConsumptionPort() {
+        return new NoopDebitMemoAllocationConsumptionAdapter();
+    }
+
+    @Bean
     public CreateDebitMemoFromPurchaseReturnUseCase createDebitMemoFromPurchaseReturnUseCase(
             DebitMemoRepository repository,
             SequenceGeneratorService sequenceGeneratorService,
@@ -36,6 +47,25 @@ public class DebitMemoConfig {
                 repository, sequenceGeneratorService);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         return source -> tx.execute(status -> pure.execute(source));
+    }
+
+    @Bean
+    public UpdateDebitMemoMetadataUseCase updateDebitMemoMetadataUseCase(DebitMemoRepository repository,
+                                                                         PlatformTransactionManager txManager) {
+        UpdateDebitMemoMetadataUseCase pure = new UpdateDebitMemoMetadataUseCaseImpl(repository);
+        TransactionTemplate tx = new TransactionTemplate(txManager);
+        return (id, supplierMemoNumber, supplierMemoDate, taxDocumentNumber, taxDocumentDate, notes) ->
+                tx.execute(status -> pure.execute(
+                        id, supplierMemoNumber, supplierMemoDate, taxDocumentNumber, taxDocumentDate, notes));
+    }
+
+    @Bean
+    public CancelDebitMemoUseCase cancelDebitMemoUseCase(DebitMemoRepository repository,
+                                                         DebitMemoAllocationConsumptionPort allocationConsumptionPort,
+                                                         PlatformTransactionManager txManager) {
+        CancelDebitMemoUseCase pure = new CancelDebitMemoUseCaseImpl(repository, allocationConsumptionPort);
+        TransactionTemplate tx = new TransactionTemplate(txManager);
+        return id -> tx.execute(status -> pure.execute(id));
     }
 
     @Bean

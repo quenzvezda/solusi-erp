@@ -78,12 +78,35 @@ Source Brainstorm: [docs/brainstorming/2026-06-02-vendor-debit-memo.md](../brain
 - **Action taken:** `CreateDebitMemoFromPurchaseReturnUseCaseImpl` first checks `findByPurchaseReturnId`; if a Debit Memo exists, it returns the existing record without generating a new `DM-*` code.
 - **Ref:** `src/main/java/com/solusi/erp/accountspayable/debitmemo/application/usecase/command/CreateDebitMemoFromPurchaseReturnUseCaseImpl.java`
 
+## Task 5: Implement Debit Memo Commands and Friendly Validation
+
+- **Status:** findings
+- **Summary:** Added metadata update and cancel commands, duplicate metadata validation, a Phase D allocation-consumption port stub, and command/config tests.
+- **Tests:** `mvn test "-Dtest=DebitMemoCommandUseCaseTest,DebitMemoConfigTest"` passed with 8 tests.
+
+### Finding: Allocation consumption check is a replaceable Phase D stub
+
+- **Type:** decision
+- **Severity:** info
+- **Detail:** Phase D owns Debit Memo core only; confirmed Debit Memo Allocation rows do not exist yet.
+- **Action taken:** Added `DebitMemoAllocationConsumptionPort` and wired `NoopDebitMemoAllocationConsumptionAdapter` returning false. Phase E can replace this adapter with the real DMA consumption check without changing `CancelDebitMemoUseCaseImpl`.
+- **Ref:** `src/main/java/com/solusi/erp/accountspayable/debitmemo/domain/port/DebitMemoAllocationConsumptionPort.java`
+
+### Finding: Friendly metadata messages are represented as message keys until UI/i18n task
+
+- **Type:** decision
+- **Severity:** info
+- **Detail:** Existing use cases throw `DomainException` with message keys; message bundle text is owned by the web/i18n task.
+- **Action taken:** Duplicate validations throw `msg.error.debit-memo.supplier-memo-number-duplicate` and `msg.error.debit-memo.tax-document-number-duplicate`; Task 6 should add the exact Indonesian text from the brainstorm to message bundles.
+- **Ref:** `src/main/java/com/solusi/erp/accountspayable/debitmemo/application/usecase/command/UpdateDebitMemoMetadataUseCaseImpl.java`
+
 ## Verification
 
 - Task 1: `mvn test -Dtest=DebitMemoCoreMigrationTest` passed.
 - Task 2: `mvn test -Dtest=DebitMemoTest` passed.
 - Task 3: `mvn test "-Dtest=DebitMemoRepositoryImplTest,DebitMemoQueryUseCaseTest,DebitMemoConfigTest"` passed.
 - Task 4: `mvn test "-Dtest=CreateDebitMemoFromPurchaseReturnUseCaseTest,ConfirmPurchaseReturnUseCaseTest,DebitMemoConfigTest,PurchaseReturnConfigTest"` passed.
+- Task 5: `mvn test "-Dtest=DebitMemoCommandUseCaseTest,DebitMemoConfigTest"` passed.
 
 ## Notes
 

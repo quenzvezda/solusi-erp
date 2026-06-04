@@ -315,7 +315,7 @@ Commit:
 
 - `feat(purchase-return): create debit memo on confirmation`
 
-## Task 5: Implement Debit Memo Commands and Friendly Validation
+## Task 5: Implement Debit Memo Commands and Friendly Validation [x]
 
 Goal: expose Phase D behavior through application commands with business validation before database constraint failures.
 
