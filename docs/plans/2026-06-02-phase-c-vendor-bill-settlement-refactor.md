@@ -113,27 +113,27 @@ This phase keeps the current Vendor Payment flow working, adds pessimistic lock 
 
 ## 5. Tasks
 
-### Task 1: Vendor Bill Settlement Migration [ ]
+### Task 1: Vendor Bill Settlement Migration [x]
 
 Add database columns and migrate old status data into document and settlement statuses.
 
 **Depends on:** none
 **Reference modules:** `accountspayable.vendorbill`, Flyway migrations
 
-- [ ] Create `V72__Refactor_Vendor_Bill_Settlement_Status.sql` in MariaDB migrations.
+- [x] Create `V72__Refactor_Vendor_Bill_Settlement_Status.sql` in MariaDB migrations.
       Add `document_status VARCHAR(30)` and nullable `settlement_status VARCHAR(30)` to `ap_vendor_bills`, populate both from old `status`, then make `document_status` not null.
       ref: `src/main/resources/db/migration/V58__Add_Vendor_Bill_Module.sql:L13-L35` - current `ap_vendor_bills.status` column shape
-- [ ] Drop or stop exposing the legacy `status` column after the data migration is complete. Prefer dropping it if the entity no longer maps it, so `PARTIAL_PAID`/`PAID` cannot keep leaking into new code.
+- [x] Drop or stop exposing the legacy `status` column after the data migration is complete. Prefer dropping it if the entity no longer maps it, so `PARTIAL_PAID`/`PAID` cannot keep leaking into new code.
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorbill/infrastructure/persistence/VendorBillEntity.java:L41-L50` - current single status mapping
-- [ ] Add indexes for list/payable selectors:
+- [x] Add indexes for list/payable selectors:
       `(document_status)`, `(settlement_status)`, and `(vendor_id, currency_id, document_status, settlement_status)`.
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorpayment/infrastructure/adapter/PayableVendorBillQueryAdapter.java:L17-L31` - payable lookup filters by vendor/currency/status/outstanding
-- [ ] Create the H2 mirror `V72__Refactor_Vendor_Bill_Settlement_Status.sql` with H2-compatible `ALTER TABLE` and update syntax.
+- [x] Create the H2 mirror `V72__Refactor_Vendor_Bill_Settlement_Status.sql` with H2-compatible `ALTER TABLE` and update syntax.
       ref: `docs/tests/playwright-e2e-guide.md:L57-L74` - H2 mirror migration rule
-- [ ] Add a migration contract test that migrates H2 and asserts:
+- [x] Add a migration contract test that migrates H2 and asserts:
       columns exist; old `CONFIRMED/PARTIAL_PAID/PAID` map correctly; old `DRAFT/CANCELLED` keep null settlement; indexes or searchable fields are present; MariaDB and H2 migration files both exist.
       ref: `src/test/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/persistence/PurchaseReturnMigrationTest.java` - recent static/H2 migration contract style
-- [ ] Search the repo for `PARTIAL_PAID` and ` PAID` after implementation. Only historical migration assertions or docs about legacy mapping may remain.
+- [x] Search the repo for `PARTIAL_PAID` and ` PAID` after implementation. Only historical migration assertions or docs about legacy mapping may remain. (scan run; active Java/template/doc references are covered by Tasks 2, 4, 5, and 6)
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md:L879-L883` - reason old paid statuses are no longer document statuses
 
 **Validation criteria:**
