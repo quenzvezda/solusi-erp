@@ -228,19 +228,19 @@ Ensure stock reversal creates a new inbound valuation layer using the historical
 - Original GR valuation layer remaining quantity is not silently increased.
 - Reversal layer can be consumed by later FIFO outbound like a normal inbound layer.
 
-### Task 5: Refactor Goods Issue Cancellation Use Case
+### Task 5: Refactor Goods Issue Cancellation Use Case [x]
 
 Replace current GI cancellation with full linked stock and journal reversal, plus source-based guard.
 
 **Depends on:** Tasks 2, 3, and 4
 **Reference modules:** `inventory.goodsissue`, `accounting.journal`, `inventory.stock`
 
-- [ ] Create `GoodsIssueCancelCommand` with `goodsIssueId`, `reversalDate`, `reason`, and line-level target container overrides.
+- [x] Create `GoodsIssueCancelCommand` with `goodsIssueId`, `reversalDate`, `reason`, and line-level target container overrides.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CancelGoodsIssueUseCase.java:L1-L4` - current command is too small for target location flow
-- [ ] Create line command keyed by GI line id or original movement id. Include target container id and enough display-safe metadata for validation.
-- [ ] Extend `GoodsIssue` domain with cancellation metadata if accepted for audit: `cancelledDate` and `cancelReason`. Keep status `CANCELLED`.
+- [x] Create line command keyed by GI line id or original movement id. Include target container id and enough display-safe metadata for validation.
+- [x] Extend `GoodsIssue` domain with cancellation metadata if accepted for audit: `cancelledDate` and `cancelReason`. Keep status `CANCELLED`.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/domain/model/GoodsIssue.java:L70-L90` - current cancel transition
-- [ ] Refactor `CancelGoodsIssueUseCaseImpl` to:
+- [x] Refactor `CancelGoodsIssueUseCaseImpl` to:
       load `COMPLETED` GI;
       require `reversalDate`;
       ensure reversal period open;
@@ -254,17 +254,17 @@ Replace current GI cancellation with full linked stock and journal reversal, plu
       save atomically.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CancelGoodsIssueUseCaseImpl.java:L35-L58` - current cancel sequence
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CancelGoodsIssueUseCaseImpl.java:L62-L80` - current ad-hoc receipt payload
-- [ ] Remove the negative amount journal path from GI cancellation.
+- [x] Remove the negative amount journal path from GI cancellation.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CancelGoodsIssueUseCaseImpl.java:L50-L55` - current negative inventory total posting
-- [ ] Keep `CompleteGoodsIssueUseCaseImpl` unchanged except where necessary for journal lookup/source id compatibility.
+- [x] Keep `CompleteGoodsIssueUseCaseImpl` unchanged except where necessary for journal lookup/source id compatibility.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CompleteGoodsIssueUseCaseImpl.java:L203-L226` - current GI journal command builder
-- [ ] Wire the new dependencies in `GoodsIssueConfig`.
+- [x] Wire the new dependencies in `GoodsIssueConfig`.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/infrastructure/config/GoodsIssueConfig.java:L97-L110` - current cancel use case bean
-- [ ] **TEST:** Rewrite `CancelGoodsIssueUseCaseTest` for linked stock reversal service invocation, linked journal reversal invocation, `reversalDate` period guard, source-based direct cancel rejection, in-use guard, already reversed movement, and rollback on journal reversal failure.
+- [x] **TEST:** Rewrite `CancelGoodsIssueUseCaseTest` for linked stock reversal service invocation, linked journal reversal invocation, `reversalDate` period guard, source-based direct cancel rejection, in-use guard, already reversed movement, and rollback on journal reversal failure.
       ref: `src/test/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CancelGoodsIssueUseCaseTest.java:L33-L84` - current negative posting assertions to replace
-- [ ] **TEST:** Add `GoodsIssueConfigTest` if still absent, proving the refactored cancel use case wires with `ReversePostedJournalUseCase` and stock reversal service.
+- [x] **TEST:** Add `GoodsIssueConfigTest` if still absent, proving the refactored cancel use case wires with `ReversePostedJournalUseCase` and stock reversal service.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/infrastructure/config/GoodsIssueConfig.java:L73-L110` - current complete/cancel bean area
-- [ ] **TEST:** Extend `GoodsIssueTest` for cancellation metadata and illegal cancel from non-completed statuses.
+- [x] **TEST:** Extend `GoodsIssueTest` for cancellation metadata and illegal cancel from non-completed statuses.
       ref: `src/test/java/com/solusi/erp/inventory/goodsissue/domain/model/GoodsIssueTest.java` - aggregate tests
 
 **Validation criteria:**

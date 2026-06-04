@@ -51,6 +51,8 @@ class GoodsIssueMigrationTest {
         assertTableExists("inv_goods_issue_lines");
         assertColumnExists("inv_goods_issues", "reference_type");
         assertColumnExists("inv_goods_issues", "facility_id");
+        assertColumnExists("inv_goods_issues", "cancelled_date");
+        assertColumnExists("inv_goods_issues", "cancel_reason");
         assertColumnExists("inv_goods_issue_lines", "valuation_ref_type");
         assertColumnExists("inv_goods_issue_lines", "valuation_ref_id");
         assertColumnExists("inv_goods_issue_lines", "valuation_ref_line_id");

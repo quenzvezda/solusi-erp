@@ -27,3 +27,9 @@ This report is populated during plan execution.
 - **Status:** clean
 - **Summary:** Added `reversalOfMovementId` to valuation layers, repository lookup support, FIFO add-layer overloads, and stock-service propagation so reversal receipts create distinct inbound layers linked to the original issue movement.
 - **Validation:** `mvn test -Dtest="FifoValuationServiceTest,StockServiceTest"` passed. Focused JaCoCo warnings are deferred to Task 10 full-suite gate.
+
+## Task 5: Refactor Goods Issue Cancellation Use Case
+- **Status:** deviation
+- **Summary:** Refactored GI cancellation to require `GoodsIssueCancelCommand`, reject source-owned GI, reverse linked stock movements, reverse the original posted GI journal, and persist cancellation audit metadata.
+- **Deviation:** Added `V70__Add_Goods_Issue_Cancellation_Metadata.sql` for MariaDB and H2 because accepted `cancelledDate/cancelReason` audit metadata needs persistence, although the task file list did not explicitly call out a migration.
+- **Validation:** `mvn test -Dtest="GoodsIssueTest,CancelGoodsIssueUseCaseTest,CompleteGoodsIssueUseCaseTest,GoodsIssueConfigTest"` passed. `mvn test -Dtest="GoodsIssueMigrationTest"` also passed for V70. Focused JaCoCo warnings are deferred to Task 10 full-suite gate.

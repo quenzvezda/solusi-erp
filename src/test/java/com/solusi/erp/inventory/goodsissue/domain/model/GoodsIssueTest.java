@@ -95,9 +95,15 @@ class GoodsIssueTest {
                 .hasMessageContaining("msg.error.gi.cancel.only.completed");
 
         issue.complete();
-        issue.cancel();
+        issue.cancel(LocalDate.of(2026, 6, 4), "wrong return");
 
         assertThat(issue.getStatus()).isEqualTo(GoodsIssueStatus.CANCELLED);
+        assertThat(issue.getCancelledDate()).isEqualTo(LocalDate.of(2026, 6, 4));
+        assertThat(issue.getCancelReason()).isEqualTo("wrong return");
+
+        assertThatThrownBy(() -> issue.cancel(LocalDate.of(2026, 6, 5), "again"))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.gi.cancelled.immutable");
     }
 
     @Test

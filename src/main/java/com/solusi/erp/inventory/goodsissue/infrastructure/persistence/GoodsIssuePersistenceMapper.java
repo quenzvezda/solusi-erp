@@ -26,6 +26,8 @@ public interface GoodsIssuePersistenceMapper {
                 entity.getCurrencyId(),
                 entity.getExchangeRate(),
                 entity.getStatus(),
+                entity.getCancelledDate(),
+                entity.getCancelReason(),
                 entity.getNote(),
                 toLineDomainList(entity.getLines())
         );

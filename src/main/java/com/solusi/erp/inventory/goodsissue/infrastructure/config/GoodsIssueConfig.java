@@ -1,6 +1,8 @@
 package com.solusi.erp.inventory.goodsissue.infrastructure.config;
 
 import com.solusi.erp.accounting.journal.application.usecase.command.PostJournalForEventUseCase;
+import com.solusi.erp.accounting.journal.application.usecase.command.ReversePostedJournalUseCase;
+import com.solusi.erp.accounting.journal.domain.repository.JournalEntryRepository;
 import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeriodForDateUseCase;
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.inventory.goodsissue.application.usecase.command.CancelGoodsIssueUseCase;
@@ -34,6 +36,8 @@ import com.solusi.erp.inventory.goodsissue.infrastructure.persistence.GoodsIssue
 import com.solusi.erp.inventory.goodsissue.infrastructure.service.GoodsIssueSourceResolverRegistry;
 import com.solusi.erp.inventory.stock.domain.port.StockService;
 import com.solusi.erp.inventory.stock.domain.port.InventoryReservationService;
+import com.solusi.erp.inventory.stock.domain.port.StockMovementReversalService;
+import com.solusi.erp.inventory.stock.infrastructure.persistence.InventoryMovementJpaRepository;
 import com.solusi.erp.inventory.uomconversion.domain.port.UomConversionService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -96,14 +100,22 @@ public class GoodsIssueConfig {
     @Bean
     public CancelGoodsIssueUseCase cancelGoodsIssueUseCase(GoodsIssueRepository repository,
                                                            EnsureOpenPeriodForDateUseCase ensureOpenPeriod,
-                                                           StockService stockService,
-                                                           PostJournalForEventUseCase postJournalForEventUseCase,
+                                                           StockMovementReversalService stockMovementReversalService,
+                                                           InventoryMovementJpaRepository inventoryMovementJpaRepository,
+                                                           JournalEntryRepository journalEntryRepository,
+                                                           ReversePostedJournalUseCase reversePostedJournalUseCase,
                                                            GoodsIssueInUseChecker inUseChecker,
                                                            PlatformTransactionManager txManager) {
         CancelGoodsIssueUseCase pure = new CancelGoodsIssueUseCaseImpl(
-                repository, ensureOpenPeriod, stockService, postJournalForEventUseCase, inUseChecker);
+                repository,
+                ensureOpenPeriod,
+                stockMovementReversalService,
+                inventoryMovementJpaRepository,
+                journalEntryRepository,
+                reversePostedJournalUseCase,
+                inUseChecker);
         TransactionTemplate tx = new TransactionTemplate(txManager);
-        return (id, reason) -> tx.execute(status -> { pure.execute(id, reason); return null; });
+        return command -> tx.execute(status -> { pure.execute(command); return null; });
     }
 
     @Bean

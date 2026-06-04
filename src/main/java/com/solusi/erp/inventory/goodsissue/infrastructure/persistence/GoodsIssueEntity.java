@@ -62,6 +62,12 @@ public class GoodsIssueEntity extends BaseModel {
     @Column(nullable = false, length = 30)
     private GoodsIssueStatus status;
 
+    @Column(name = "cancelled_date")
+    private LocalDate cancelledDate;
+
+    @Column(name = "cancel_reason", columnDefinition = "TEXT")
+    private String cancelReason;
+
     @Column(columnDefinition = "TEXT")
     private String note;
 

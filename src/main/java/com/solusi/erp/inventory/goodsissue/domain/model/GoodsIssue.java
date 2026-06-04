@@ -22,6 +22,8 @@ public class GoodsIssue {
     private final Long currencyId;
     private final BigDecimal exchangeRate;
     private GoodsIssueStatus status;
+    private LocalDate cancelledDate;
+    private String cancelReason;
     private String note;
     private List<GoodsIssueLine> lines;
 
@@ -29,6 +31,17 @@ public class GoodsIssue {
                       GoodsIssueReferenceType referenceType, Long referenceId, String referenceCode,
                       Long partyId, GoodsIssuePartyType partyType, Long facilityId, Long currencyId,
                       BigDecimal exchangeRate, GoodsIssueStatus status, String note,
+                      List<GoodsIssueLine> lines) {
+        this(metadata, code, issueDate, referenceType, referenceId, referenceCode,
+                partyId, partyType, facilityId, currencyId, exchangeRate, status,
+                null, null, note, lines);
+    }
+
+    public GoodsIssue(AuditMetadata metadata, String code, LocalDate issueDate,
+                      GoodsIssueReferenceType referenceType, Long referenceId, String referenceCode,
+                      Long partyId, GoodsIssuePartyType partyType, Long facilityId, Long currencyId,
+                      BigDecimal exchangeRate, GoodsIssueStatus status,
+                      LocalDate cancelledDate, String cancelReason, String note,
                       List<GoodsIssueLine> lines) {
         this.metadata = metadata == null ? AuditMetadata.empty() : metadata;
         this.code = code;
@@ -42,6 +55,8 @@ public class GoodsIssue {
         this.currencyId = currencyId;
         this.exchangeRate = exchangeRate;
         this.status = status;
+        this.cancelledDate = cancelledDate;
+        this.cancelReason = cancelReason;
         this.note = note;
         this.lines = copyLines(lines);
     }
@@ -80,12 +95,18 @@ public class GoodsIssue {
     }
 
     public void cancel() {
+        cancel(null, null);
+    }
+
+    public void cancel(LocalDate cancelledDate, String cancelReason) {
         if (status == GoodsIssueStatus.CANCELLED) {
             throw new DomainException("msg.error.gi.cancelled.immutable");
         }
         if (!status.canCancel()) {
             throw new DomainException("msg.error.gi.cancel.only.completed");
         }
+        this.cancelledDate = cancelledDate;
+        this.cancelReason = cancelReason;
         this.status = GoodsIssueStatus.CANCELLED;
     }
 
@@ -139,6 +160,14 @@ public class GoodsIssue {
 
     public GoodsIssueStatus getStatus() {
         return status;
+    }
+
+    public LocalDate getCancelledDate() {
+        return cancelledDate;
+    }
+
+    public String getCancelReason() {
+        return cancelReason;
     }
 
     public String getNote() {
