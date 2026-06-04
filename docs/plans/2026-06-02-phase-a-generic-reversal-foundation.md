@@ -273,41 +273,41 @@ Replace current GI cancellation with full linked stock and journal reversal, plu
 - Cancelling GI no longer calls `PostJournalForEventUseCase` with negative values.
 - Direct cancellation of `PURCHASE_RETURN` GI fails in backend even if the user has `GOODS-ISSUE_CANCEL`.
 
-### Task 6: Goods Issue Cancellation Web Flow
+### Task 6: Goods Issue Cancellation Web Flow [x]
 
 Replace direct cancel button for eligible GI with a dedicated cancellation form that captures reversal date and target location per line.
 
 **Depends on:** Task 5
 **Reference modules:** `inventory.goodsissue`, UI specs
 
-- [ ] Add `GoodsIssueCancelRequest` and line request DTOs. Add `@DateTimeFormat(pattern = "yyyy-MM-dd")` on `reversalDate` and validation for required reason and target containers.
+- [x] Add `GoodsIssueCancelRequest` and line request DTOs. Add `@DateTimeFormat(pattern = "yyyy-MM-dd")` on `reversalDate` and validation for required reason and target containers.
       ref: `docs/spec/datetime-standards.md:L73-L110` - backend date DTO contract
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/web/dto/GoodsIssueSaveRequest.java:L12-L40` - existing GI date DTO pattern
-- [ ] Add `GET /inventory/goods-issues/{id}/cancel` to render the form only when GI is `COMPLETED` and direct cancel is allowed for the source type.
+- [x] Add `GET /inventory/goods-issues/{id}/cancel` to render the form only when GI is `COMPLETED` and direct cancel is allowed for the source type.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/web/controller/GoodsIssueController.java:L124-L135` - current GI view route
-- [ ] Change `POST /inventory/goods-issues/{id}/cancel` to accept JSON `@RequestBody GoodsIssueCancelRequest`, not only `reason` request param.
+- [x] Change `POST /inventory/goods-issues/{id}/cancel` to accept JSON `@RequestBody GoodsIssueCancelRequest`, not only `reason` request param.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/web/controller/GoodsIssueController.java:L197-L206` - current cancel endpoint contract
       ref: `docs/spec/form-submission.md:L116-L137` - AJAX form controller contract
-- [ ] Hide cancel action for source-based GI in `view.html` and `form.html`. Show source-specific warning or no action instead.
+- [x] Hide cancel action for source-based GI in `view.html` and `form.html`. Show source-specific warning or no action instead.
       ref: `src/main/resources/templates/inventory/goods-issues/view.html:L20-L28` - current unconditional completed cancel button
       ref: `src/main/resources/templates/inventory/goods-issues/form.html:L28-L41` - current completed cancel button on form
-- [ ] Create `templates/inventory/goods-issues/cancel.html` using standard layout, `data-ajax-form="true"`, alert container, `reversalDate` date picker, required reason, and line table.
+- [x] Create `templates/inventory/goods-issues/cancel.html` using standard layout, `data-ajax-form="true"`, alert container, `reversalDate` date picker, required reason, and line table.
       ref: `docs/spec/form-submission.md:L16-L50` - AJAX form contract
       ref: `docs/spec/header-lines-form.md:L7-L15` - header-lines structure
-- [ ] For each line, display original product, serial, issued quantity, historical container, and target container autocomplete with Trinity data. Default target container to historical container.
+- [x] For each line, display original product, serial, issued quantity, historical container, and target container autocomplete with Trinity data. Default target container to historical container.
       ref: `docs/spec/autocomplete-generic.md:L34-L49` - autocomplete fragment and Trinity data requirement
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md` - Generic GI Cancellation Ownership target location rule
-- [ ] Use query-level lookup filtering for target containers so only active containers in the same facility can be selected.
+- [x] Use query-level lookup filtering for target containers so only active containers in the same facility can be selected.
       ref: `docs/spec/modal-selector.md:L67-L76` - query-level filtering principle
-- [ ] Create `static/js/inventory/goods-issue/goods-issue-cancel.js` for target container lookup initialization, capture-phase validation, and summary counts. Keep flow out of shared JS.
+- [x] Create `static/js/inventory/goods-issue/goods-issue-cancel.js` for target container lookup initialization, capture-phase validation, and summary counts. Keep flow out of shared JS.
       ref: `docs/spec/page-specific-scripts.md:L5-L36` - page-specific JS boundary
       ref: `docs/spec/form-submission.md:L52-L67` - capture validation and beforeunload
-- [ ] Action button on GI detail should navigate to cancel form instead of posting immediate cancel.
+- [x] Action button on GI detail should navigate to cancel form instead of posting immediate cancel.
       Use icon/button styling consistent with Tabler and `sec:authorize`.
       ref: `docs/spec/ui-standards.md:L7-L24` - action button list styling
-- [ ] **TEST:** Extend `GoodsIssueControllerTest` for GET cancel form, source-based cancel rejection, JSON POST mapping, permission annotations, and model attrs.
+- [x] **TEST:** Extend `GoodsIssueControllerTest` for GET cancel form, source-based cancel rejection, JSON POST mapping, permission annotations, and model attrs.
       ref: `src/test/java/com/solusi/erp/inventory/goodsissue/web/controller/GoodsIssueControllerTest.java` - controller test pattern
-- [ ] **TEST:** Add `GoodsIssueCancelTemplateIntegrationTest` or extend existing GI template tests for AJAX attrs, date picker, reason field, target container autocomplete Trinity data, source-based cancel button hidden, and no forbidden theme classes.
+- [x] **TEST:** Add `GoodsIssueCancelTemplateIntegrationTest` or extend existing GI template tests for AJAX attrs, date picker, reason field, target container autocomplete Trinity data, source-based cancel button hidden, and no forbidden theme classes.
       ref: `src/test/java/com/solusi/erp/inventory/goodsissue/web/template/integration/GoodsIssueViewIntegrationTest.java` - existing GI view template test location
 
 **Validation criteria:**

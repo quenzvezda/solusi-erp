@@ -33,3 +33,9 @@ This report is populated during plan execution.
 - **Summary:** Refactored GI cancellation to require `GoodsIssueCancelCommand`, reject source-owned GI, reverse linked stock movements, reverse the original posted GI journal, and persist cancellation audit metadata.
 - **Deviation:** Added `V70__Add_Goods_Issue_Cancellation_Metadata.sql` for MariaDB and H2 because accepted `cancelledDate/cancelReason` audit metadata needs persistence, although the task file list did not explicitly call out a migration.
 - **Validation:** `mvn test -Dtest="GoodsIssueTest,CancelGoodsIssueUseCaseTest,CompleteGoodsIssueUseCaseTest,GoodsIssueConfigTest"` passed. `mvn test -Dtest="GoodsIssueMigrationTest"` also passed for V70. Focused JaCoCo warnings are deferred to Task 10 full-suite gate.
+
+## Task 6: Goods Issue Cancellation Web Flow
+- **Status:** deviation
+- **Summary:** Added GI cancellation request DTOs, cancel form route/template/JS, JSON cancel POST mapping, source-owned cancel hiding, target container lookup filtering, and controller/template coverage.
+- **Deviation:** Added `GetGoodsIssueCancelViewUseCase` and cancel view records in this task, although the plan lists cancellation read model work in Task 7, because the Task 6 form cannot submit movement-keyed target containers without original movement ids.
+- **Validation:** `mvn test -Dtest="GoodsIssueControllerTest,GoodsIssueViewIntegrationTest,GoodsIssueCancelTemplateIntegrationTest"` passed. `mvn test -Dtest="GoodsIssueFormIntegrationTest,GoodsIssueConfigTest"` also passed after changing form actions and config wiring. Focused JaCoCo warnings are deferred to Task 10 full-suite gate.

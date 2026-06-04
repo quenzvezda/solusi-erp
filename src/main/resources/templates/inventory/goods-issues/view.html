@@ -18,14 +18,11 @@
                         </h2>
                     </div>
                     <div class="col-auto ms-auto d-print-none">
-                        <button th:if="${gi.status == 'COMPLETED'}" type="button" class="btn btn-warning"
+                        <a th:if="${gi.status == 'COMPLETED' && gi.referenceType == 'MANUAL'}" class="btn btn-warning"
                                 sec:authorize="hasAuthority('GOODS-ISSUE_CANCEL')"
-                                th:data-action-url="@{'/inventory/goods-issues/' + ${gi.id} + '/cancel'}"
-                                th:data-redirect-url="@{'/inventory/goods-issues/' + ${gi.id}}"
-                                th:data-confirm-message="#{msg.confirm.gi.cancel}"
-                                onclick="ErpForm.postAction(this)">
+                                th:href="@{'/inventory/goods-issues/' + ${gi.id} + '/cancel'}">
                             <i class="ti ti-rotate-clockwise me-1"></i><span th:text="#{label.gi.cancel}">Cancel</span>
-                        </button>
+                        </a>
                         <a th:href="@{/inventory/goods-issues}" class="btn btn-secondary">
                             <i class="ti ti-arrow-left me-1"></i><span th:text="#{label.back}">Back</span>
                         </a>

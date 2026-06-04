@@ -31,7 +31,8 @@ class GoodsIssueFormIntegrationTest {
         assertThat(html).contains("th:field=\"*{exchangeRate}\"");
         assertThat(html).contains("ErpForm.postAction(this)");
         assertThat(html).contains("msg.confirm.gi.complete");
-        assertThat(html).contains("msg.confirm.gi.cancel");
+        assertThat(html).contains("giRequest.referenceType.name() == 'MANUAL'");
+        assertThat(html).contains("/cancel");
     }
 
     @Test

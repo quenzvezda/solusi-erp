@@ -19,6 +19,8 @@ class GoodsIssueViewIntegrationTest {
         assertThat(html).contains("label.base.qty");
         assertThat(html).contains("label.unit.cost");
         assertThat(html).contains("ErpForm.postAction(this)");
+        assertThat(html).contains("/cancel");
+        assertThat(html).contains("gi.referenceType == 'MANUAL'");
         assertThat(html).contains("fragments/audit-info :: audit-info");
     }
 

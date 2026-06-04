@@ -9,15 +9,20 @@ import com.solusi.erp.inventory.goodsissue.application.usecase.command.CancelGoo
 import com.solusi.erp.inventory.goodsissue.application.usecase.command.CompleteGoodsIssueUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.command.CreateGoodsIssueUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.command.DeleteGoodsIssueUseCase;
+import com.solusi.erp.inventory.goodsissue.application.usecase.command.GoodsIssueCancelCommand;
+import com.solusi.erp.inventory.goodsissue.application.usecase.command.GoodsIssueCancelLineCommand;
 import com.solusi.erp.inventory.goodsissue.application.usecase.command.GoodsIssueLineCommand;
 import com.solusi.erp.inventory.goodsissue.application.usecase.command.UpdateGoodsIssueUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.FindGoodsIssuesUseCase;
+import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueCancelViewUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueCreateViewUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueEditViewUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueUseCase;
 import com.solusi.erp.inventory.goodsissue.domain.model.GoodsIssue;
 import com.solusi.erp.inventory.goodsissue.domain.model.GoodsIssueReferenceType;
 import com.solusi.erp.inventory.goodsissue.domain.port.GoodsIssueReferenceLookupProvider;
+import com.solusi.erp.inventory.goodsissue.web.dto.GoodsIssueCancelLineRequest;
+import com.solusi.erp.inventory.goodsissue.web.dto.GoodsIssueCancelRequest;
 import com.solusi.erp.inventory.goodsissue.web.dto.GoodsIssueDetailResponse;
 import com.solusi.erp.inventory.goodsissue.web.dto.GoodsIssueSaveRequest;
 import com.solusi.erp.inventory.goodsissue.web.dto.GoodsIssueSummaryResponse;
@@ -61,6 +66,7 @@ public class GoodsIssueController {
     private final GetGoodsIssueUseCase getGoodsIssueUseCase;
     private final GetGoodsIssueEditViewUseCase getGoodsIssueEditViewUseCase;
     private final GetGoodsIssueCreateViewUseCase getGoodsIssueCreateViewUseCase;
+    private final GetGoodsIssueCancelViewUseCase getGoodsIssueCancelViewUseCase;
     private final GoodsIssueReferenceLookupProvider referenceLookupProvider;
     private final GoodsIssueWebMapper webMapper;
     private final MessageSource messageSource;
@@ -153,6 +159,15 @@ public class GoodsIssueController {
         return "inventory/goods-issues/view";
     }
 
+    @GetMapping("/{id}/cancel")
+    @PreAuthorize("hasAuthority('GOODS-ISSUE_CANCEL')")
+    public String cancelForm(@PathVariable Long id, Model model) {
+        var cancelView = getGoodsIssueCancelViewUseCase.execute(id);
+        model.addAttribute("cancelView", cancelView);
+        model.addAttribute("cancelRequest", GoodsIssueCancelRequest.from(cancelView));
+        return "inventory/goods-issues/cancel";
+    }
+
     @PostMapping
     @PreAuthorize("hasAnyAuthority('GOODS-ISSUE_CREATE', 'GOODS-ISSUE_UPDATE')")
     @ResponseBody
@@ -196,8 +211,13 @@ public class GoodsIssueController {
     @PreAuthorize("hasAuthority('GOODS-ISSUE_CANCEL')")
     @ResponseBody
     public ResponseEntity<ApiResponse<GoodsIssueDetailResponse>> cancel(@PathVariable Long id,
-                                                                        @RequestParam(required = false) String reason) {
-        cancelGoodsIssueUseCase.execute(id, reason);
+                                                                        @Valid @RequestBody GoodsIssueCancelRequest request) {
+        cancelGoodsIssueUseCase.execute(new GoodsIssueCancelCommand(
+                id,
+                request.getReversalDate(),
+                request.getReason(),
+                toCancelLineCommands(request.getLines())
+        ));
         GoodsIssue domain = getGoodsIssueUseCase.execute(id)
                 .orElseThrow(() -> new RuntimeException("Goods issue not found"));
         String msg = messageSource.getMessage("msg.success.gi.cancelled", null, LocaleContextHolder.getLocale());
@@ -210,6 +230,21 @@ public class GoodsIssueController {
         deleteGoodsIssueUseCase.execute(id);
         String msg = messageSource.getMessage("msg.success.gi.deleted", null, LocaleContextHolder.getLocale());
         return HtmxResponseUtility.okWithRefreshTableAndSuccess(msg);
+    }
+
+    private List<GoodsIssueCancelLineCommand> toCancelLineCommands(List<GoodsIssueCancelLineRequest> lines) {
+        if (lines == null) {
+            return List.of();
+        }
+        return lines.stream()
+                .map(line -> new GoodsIssueCancelLineCommand(
+                        line.getGoodsIssueLineId(),
+                        line.getOriginalMovementId(),
+                        line.getTargetContainerId(),
+                        line.getProductLabel(),
+                        line.getSerialNumber(),
+                        line.getQuantityIssued()))
+                .toList();
     }
 
     private boolean hasRemainingQuantity(GoodsIssueReferenceLookupProvider.SourceLineSelectorRow row) {

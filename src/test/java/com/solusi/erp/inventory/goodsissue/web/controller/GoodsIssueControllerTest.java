@@ -6,22 +6,29 @@ import com.solusi.erp.inventory.goodsissue.application.usecase.command.CancelGoo
 import com.solusi.erp.inventory.goodsissue.application.usecase.command.CompleteGoodsIssueUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.command.CreateGoodsIssueUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.command.DeleteGoodsIssueUseCase;
+import com.solusi.erp.inventory.goodsissue.application.usecase.command.GoodsIssueCancelCommand;
 import com.solusi.erp.inventory.goodsissue.application.usecase.command.UpdateGoodsIssueUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.FindGoodsIssuesUseCase;
+import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueCancelViewUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueCreateViewUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueEditViewUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueUseCase;
+import com.solusi.erp.inventory.goodsissue.application.usecase.query.GoodsIssueCancelLineView;
+import com.solusi.erp.inventory.goodsissue.application.usecase.query.GoodsIssueCancelView;
 import com.solusi.erp.inventory.goodsissue.domain.model.GoodsIssue;
 import com.solusi.erp.inventory.goodsissue.domain.model.GoodsIssuePartyType;
 import com.solusi.erp.inventory.goodsissue.domain.model.GoodsIssueReferenceType;
 import com.solusi.erp.inventory.goodsissue.domain.model.GoodsIssueStatus;
 import com.solusi.erp.inventory.goodsissue.domain.port.GoodsIssueReferenceLookupProvider;
+import com.solusi.erp.inventory.goodsissue.web.dto.GoodsIssueCancelLineRequest;
+import com.solusi.erp.inventory.goodsissue.web.dto.GoodsIssueCancelRequest;
 import com.solusi.erp.inventory.goodsissue.web.dto.GoodsIssueDetailResponse;
 import com.solusi.erp.inventory.goodsissue.web.dto.GoodsIssueSaveRequest;
 import com.solusi.erp.inventory.goodsissue.web.dto.GoodsIssueSummaryResponse;
 import com.solusi.erp.inventory.goodsissue.web.mapper.GoodsIssueWebMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -40,6 +47,8 @@ import java.util.Locale;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -61,6 +70,7 @@ class GoodsIssueControllerTest {
     private GetGoodsIssueUseCase getUseCase;
     private GetGoodsIssueEditViewUseCase editViewUseCase;
     private GetGoodsIssueCreateViewUseCase createViewUseCase;
+    private GetGoodsIssueCancelViewUseCase cancelViewUseCase;
     private GoodsIssueReferenceLookupProvider referenceLookupProvider;
     private GoodsIssueWebMapper webMapper;
     private MessageSource messageSource;
@@ -77,12 +87,13 @@ class GoodsIssueControllerTest {
         getUseCase = mock(GetGoodsIssueUseCase.class);
         editViewUseCase = mock(GetGoodsIssueEditViewUseCase.class);
         createViewUseCase = mock(GetGoodsIssueCreateViewUseCase.class);
+        cancelViewUseCase = mock(GetGoodsIssueCancelViewUseCase.class);
         referenceLookupProvider = mock(GoodsIssueReferenceLookupProvider.class);
         webMapper = mock(GoodsIssueWebMapper.class);
         messageSource = mock(MessageSource.class);
         controller = new GoodsIssueController(
                 createUseCase, updateUseCase, deleteUseCase, completeUseCase, cancelUseCase,
-                findUseCase, getUseCase, editViewUseCase, createViewUseCase, referenceLookupProvider,
+                findUseCase, getUseCase, editViewUseCase, createViewUseCase, cancelViewUseCase, referenceLookupProvider,
                 webMapper, messageSource);
     }
 
@@ -115,9 +126,11 @@ class GoodsIssueControllerTest {
         GoodsIssue issue = issue();
         GoodsIssueSaveRequest saveRequest = new GoodsIssueSaveRequest();
         GoodsIssueDetailResponse detail = new GoodsIssueDetailResponse();
+        GoodsIssueCancelView cancelView = cancelView();
         when(createViewUseCase.execute(GoodsIssueReferenceType.PURCHASE_RETURN, 70L)).thenReturn(issue);
         when(editViewUseCase.execute(7L)).thenReturn(Optional.of(issue));
         when(getUseCase.execute(7L)).thenReturn(Optional.of(issue));
+        when(cancelViewUseCase.execute(7L)).thenReturn(cancelView);
         when(webMapper.toSaveRequest(issue)).thenReturn(saveRequest);
         when(webMapper.toDetailResponse(issue)).thenReturn(detail);
 
@@ -133,6 +146,11 @@ class GoodsIssueControllerTest {
         model = new ExtendedModelMap();
         assertThat(controller.view(7L, model)).isEqualTo("inventory/goods-issues/view");
         assertThat(model.getAttribute("gi")).isSameAs(detail);
+
+        model = new ExtendedModelMap();
+        assertThat(controller.cancelForm(7L, model)).isEqualTo("inventory/goods-issues/cancel");
+        assertThat(model.getAttribute("cancelView")).isSameAs(cancelView);
+        assertThat(model.getAttribute("cancelRequest")).isInstanceOf(GoodsIssueCancelRequest.class);
     }
 
     @Test
@@ -155,9 +173,31 @@ class GoodsIssueControllerTest {
         assertThat(completeResponse.getStatusCode().is2xxSuccessful()).isTrue();
         verify(completeUseCase).execute(7L);
 
-        ResponseEntity<?> cancelResponse = controller.cancel(7L, "reason");
+        GoodsIssueCancelRequest cancelRequest = new GoodsIssueCancelRequest();
+        cancelRequest.setReversalDate(LocalDate.of(2026, 6, 4));
+        cancelRequest.setReason("reason");
+        cancelRequest.setLines(List.of(new GoodsIssueCancelLineRequest(
+                null, 700L, 8L, "Product", null, new BigDecimal("2.0000"))));
+        ResponseEntity<?> cancelResponse = controller.cancel(7L, cancelRequest);
         assertThat(cancelResponse.getStatusCode().is2xxSuccessful()).isTrue();
-        verify(cancelUseCase).execute(7L, "reason");
+        ArgumentCaptor<GoodsIssueCancelCommand> commandCaptor = forClass(GoodsIssueCancelCommand.class);
+        verify(cancelUseCase).execute(commandCaptor.capture());
+        assertThat(commandCaptor.getValue().goodsIssueId()).isEqualTo(7L);
+        assertThat(commandCaptor.getValue().reversalDate()).isEqualTo(LocalDate.of(2026, 6, 4));
+        assertThat(commandCaptor.getValue().lines()).singleElement().satisfies(line -> {
+            assertThat(line.originalMovementId()).isEqualTo(700L);
+            assertThat(line.targetContainerId()).isEqualTo(8L);
+        });
+    }
+
+    @Test
+    void cancelForm_propagatesSourceBasedCancelRejection() {
+        when(cancelViewUseCase.execute(7L))
+                .thenThrow(new com.solusi.erp.core.exception.DomainException("msg.error.gi.cancel.source.owned"));
+
+        assertThatThrownBy(() -> controller.cancelForm(7L, new ExtendedModelMap()))
+                .isInstanceOf(com.solusi.erp.core.exception.DomainException.class)
+                .hasMessageContaining("msg.error.gi.cancel.source.owned");
     }
 
     @Test
@@ -220,7 +260,8 @@ class GoodsIssueControllerTest {
         assertPreAuthorize("save", "hasAnyAuthority('GOODS-ISSUE_CREATE', 'GOODS-ISSUE_UPDATE')",
                 GoodsIssueSaveRequest.class);
         assertPreAuthorize("complete", "hasAuthority('GOODS-ISSUE_COMPLETE')", Long.class);
-        assertPreAuthorize("cancel", "hasAuthority('GOODS-ISSUE_CANCEL')", Long.class, String.class);
+        assertPreAuthorize("cancelForm", "hasAuthority('GOODS-ISSUE_CANCEL')", Long.class, Model.class);
+        assertPreAuthorize("cancel", "hasAuthority('GOODS-ISSUE_CANCEL')", Long.class, GoodsIssueCancelRequest.class);
         assertPreAuthorize("delete", "hasAuthority('GOODS-ISSUE_DELETE')", Long.class);
     }
 
@@ -247,6 +288,31 @@ class GoodsIssueControllerTest {
                 GoodsIssueStatus.DRAFT,
                 "note",
                 List.of()
+        );
+    }
+
+    private static GoodsIssueCancelView cancelView() {
+        return new GoodsIssueCancelView(
+                7L,
+                "GI-202606-00001",
+                LocalDate.of(2026, 6, 1),
+                GoodsIssueReferenceType.MANUAL,
+                null,
+                3L,
+                "Main Warehouse",
+                List.of(new GoodsIssueCancelLineView(
+                        700L,
+                        201L,
+                        "Product",
+                        "SKU-001",
+                        new BigDecimal("2.0000"),
+                        1L,
+                        "PCS",
+                        5L,
+                        "Bin 01",
+                        "BIN-01",
+                        null
+                ))
         );
     }
 

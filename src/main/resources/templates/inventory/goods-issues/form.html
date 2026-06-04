@@ -27,16 +27,13 @@
                                     onclick="ErpForm.postAction(this)">
                                 <i class="ti ti-check me-1"></i><span th:text="#{label.gi.complete}">Complete</span>
                             </button>
-                            <button type="button" id="btn-cancel-gi"
+                            <a id="btn-cancel-gi"
                                     class="btn btn-outline-warning"
-                                    th:if="${giRequest.status == 'COMPLETED'}"
+                                    th:if="${giRequest.status == 'COMPLETED' && giRequest.referenceType != null && giRequest.referenceType.name() == 'MANUAL'}"
                                     sec:authorize="hasAuthority('GOODS-ISSUE_CANCEL')"
-                                    th:data-action-url="@{'/inventory/goods-issues/' + ${giRequest.id} + '/cancel'}"
-                                    th:data-redirect-url="@{'/inventory/goods-issues/' + ${giRequest.id}}"
-                                    th:data-confirm-message="#{msg.confirm.gi.cancel}"
-                                    onclick="ErpForm.postAction(this)">
+                                    th:href="@{'/inventory/goods-issues/' + ${giRequest.id} + '/cancel'}">
                                 <i class="ti ti-rotate-clockwise me-1"></i><span th:text="#{label.gi.cancel}">Cancel</span>
-                            </button>
+                            </a>
                         </div>
                     </div>
                 </div>

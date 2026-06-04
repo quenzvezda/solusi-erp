@@ -5,16 +5,21 @@ import com.solusi.erp.accounting.journal.application.usecase.command.ReversePost
 import com.solusi.erp.accounting.journal.domain.repository.JournalEntryRepository;
 import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeriodForDateUseCase;
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
+import com.solusi.erp.inventory.container.domain.port.ContainerLookupProvider;
+import com.solusi.erp.inventory.facility.domain.port.FacilityLookupProvider;
 import com.solusi.erp.inventory.goodsissue.application.usecase.command.CancelGoodsIssueUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.command.CompleteGoodsIssueUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.command.CreateGoodsIssueUseCase;
+import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueCancelViewUseCase;
 import com.solusi.erp.inventory.goodsissue.domain.port.PurchaseReturnGoodsIssueSourcePort;
+import com.solusi.erp.inventory.product.domain.port.ProductLookupProvider;
 import com.solusi.erp.inventory.goodsissue.infrastructure.persistence.GoodsIssueJpaRepository;
 import com.solusi.erp.inventory.goodsissue.infrastructure.persistence.GoodsIssuePersistenceMapper;
 import com.solusi.erp.inventory.stock.domain.port.InventoryReservationService;
 import com.solusi.erp.inventory.stock.domain.port.StockMovementReversalService;
 import com.solusi.erp.inventory.stock.domain.port.StockService;
 import com.solusi.erp.inventory.stock.infrastructure.persistence.InventoryMovementJpaRepository;
+import com.solusi.erp.inventory.uom.domain.port.UomLookupProvider;
 import com.solusi.erp.inventory.uomconversion.domain.port.UomConversionService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,11 +46,15 @@ class GoodsIssueConfigTest {
     @Autowired
     private CancelGoodsIssueUseCase cancelGoodsIssueUseCase;
 
+    @Autowired
+    private GetGoodsIssueCancelViewUseCase getGoodsIssueCancelViewUseCase;
+
     @Test
     void wiresGoodsIssueCommandUseCases() {
         assertThat(createGoodsIssueUseCase).isNotNull();
         assertThat(completeGoodsIssueUseCase).isNotNull();
         assertThat(cancelGoodsIssueUseCase).isNotNull();
+        assertThat(getGoodsIssueCancelViewUseCase).isNotNull();
     }
 
     @Configuration
@@ -63,6 +72,10 @@ class GoodsIssueConfigTest {
         @Bean JournalEntryRepository journalEntryRepository() { return mock(JournalEntryRepository.class); }
         @Bean InventoryReservationService inventoryReservationService() { return mock(InventoryReservationService.class); }
         @Bean PurchaseReturnGoodsIssueSourcePort purchaseReturnGoodsIssueSourcePort() { return mock(PurchaseReturnGoodsIssueSourcePort.class); }
+        @Bean ProductLookupProvider productLookupProvider() { return mock(ProductLookupProvider.class); }
+        @Bean UomLookupProvider uomLookupProvider() { return mock(UomLookupProvider.class); }
+        @Bean ContainerLookupProvider containerLookupProvider() { return mock(ContainerLookupProvider.class); }
+        @Bean FacilityLookupProvider facilityLookupProvider() { return mock(FacilityLookupProvider.class); }
         @Bean PlatformTransactionManager platformTransactionManager() { return mock(PlatformTransactionManager.class); }
     }
 }

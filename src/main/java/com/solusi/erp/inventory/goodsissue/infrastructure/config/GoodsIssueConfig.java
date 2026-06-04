@@ -18,6 +18,8 @@ import com.solusi.erp.inventory.goodsissue.application.usecase.command.UpdateGoo
 import com.solusi.erp.inventory.goodsissue.application.usecase.command.UpdateGoodsIssueUseCaseImpl;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.FindGoodsIssuesUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.FindGoodsIssuesUseCaseImpl;
+import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueCancelViewUseCase;
+import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueCancelViewUseCaseImpl;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueCreateViewUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueCreateViewUseCaseImpl;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueEditViewUseCase;
@@ -34,10 +36,14 @@ import com.solusi.erp.inventory.goodsissue.infrastructure.adapter.PurchaseReturn
 import com.solusi.erp.inventory.goodsissue.infrastructure.persistence.GoodsIssueJpaRepository;
 import com.solusi.erp.inventory.goodsissue.infrastructure.persistence.GoodsIssuePersistenceMapper;
 import com.solusi.erp.inventory.goodsissue.infrastructure.service.GoodsIssueSourceResolverRegistry;
+import com.solusi.erp.inventory.container.domain.port.ContainerLookupProvider;
+import com.solusi.erp.inventory.facility.domain.port.FacilityLookupProvider;
+import com.solusi.erp.inventory.product.domain.port.ProductLookupProvider;
 import com.solusi.erp.inventory.stock.domain.port.StockService;
 import com.solusi.erp.inventory.stock.domain.port.InventoryReservationService;
 import com.solusi.erp.inventory.stock.domain.port.StockMovementReversalService;
 import com.solusi.erp.inventory.stock.infrastructure.persistence.InventoryMovementJpaRepository;
+import com.solusi.erp.inventory.uom.domain.port.UomLookupProvider;
 import com.solusi.erp.inventory.uomconversion.domain.port.UomConversionService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -142,6 +148,23 @@ public class GoodsIssueConfig {
     @Bean
     public GetGoodsIssueEditViewUseCase getGoodsIssueEditViewUseCase(GoodsIssueRepository repository) {
         return new GetGoodsIssueEditViewUseCaseImpl(repository);
+    }
+
+    @Bean
+    public GetGoodsIssueCancelViewUseCase getGoodsIssueCancelViewUseCase(
+            GoodsIssueRepository repository,
+            InventoryMovementJpaRepository inventoryMovementJpaRepository,
+            ProductLookupProvider productLookupProvider,
+            UomLookupProvider uomLookupProvider,
+            ContainerLookupProvider containerLookupProvider,
+            FacilityLookupProvider facilityLookupProvider) {
+        return new GetGoodsIssueCancelViewUseCaseImpl(
+                repository,
+                inventoryMovementJpaRepository,
+                productLookupProvider,
+                uomLookupProvider,
+                containerLookupProvider,
+                facilityLookupProvider);
     }
 
     @Bean
