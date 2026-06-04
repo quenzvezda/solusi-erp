@@ -73,3 +73,8 @@
 - **Status:** clean
 - **Summary:** Split Vendor Bill web DTO/template status display into document and settlement status, added debit memo applied and outstanding fields, and updated list/detail filters and labels.
 - **Validation:** `mvn test -Dtest=VendorBillControllerTest,VendorBillWebMapperTest,VendorBillTemplateTest` passed; Vendor Bill template scan for `PARTIAL_PAID`, `PAID`, `bill.status`, and `item.status` returned 0 matches.
+
+## Task 6: Documentation Update
+- **Status:** clean
+- **Summary:** Updated Vendor Bill and Vendor Payment module docs to describe document status, settlement status, projection-based outstanding, zero Debit Memo seam in Phase C, and locked Vendor Payment confirm revalidation.
+- **Validation:** `docs/modules/accountspayable` scan for `PARTIAL_PAID`, `PAID`, and `paymentStatus` returned 0 matches. Vendor Bill template stale-status scan was already clean in Task 5.

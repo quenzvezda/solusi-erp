@@ -300,27 +300,27 @@ Expose document and settlement statuses cleanly in Vendor Bill list/detail witho
 - Vendor Bill UI distinguishes document lifecycle from settlement state.
 - No template checks rely on `PARTIAL_PAID` or `PAID`.
 
-### Task 6: Documentation Update [ ]
+### Task 6: Documentation Update [x]
 
 Update module docs so Phase C behavior becomes the documented current behavior.
 
 **Depends on:** Tasks 3, 4, and 5
 **Reference modules:** project docs
 
-- [ ] Update `docs/modules/accountspayable/vendor-bill.md` to replace the single status lifecycle with:
+- [x] Update `docs/modules/accountspayable/vendor-bill.md` to replace the single status lifecycle with:
       `documentStatus: DRAFT -> CONFIRMED / CANCELLED` and
       `settlementStatus: OPEN -> PARTIALLY_SETTLED -> SETTLED`.
       ref: `docs/modules/accountspayable/vendor-bill.md:L17-L31` - stale status lifecycle text
-- [ ] Update Vendor Bill model docs to include `documentStatus`, `settlementStatus`, `paidAmount`, `debitMemoAppliedAmount`, and `outstandingAmount`.
+- [x] Update Vendor Bill model docs to include `documentStatus`, `settlementStatus`, `paidAmount`, `debitMemoAppliedAmount`, and `outstandingAmount`.
       ref: `docs/modules/accountspayable/vendor-bill.md:L64-L78` - current model data table
-- [ ] Update payment visibility/accounting sections to state settlement is projection-based and currently includes confirmed Vendor Payments plus a zero Debit Memo seam until Phase E.
+- [x] Update payment visibility/accounting sections to state settlement is projection-based and currently includes confirmed Vendor Payments plus a zero Debit Memo seam until Phase E.
       ref: `docs/modules/accountspayable/vendor-bill.md:L160-L168` - current payment-only summary text
-- [ ] Update `docs/modules/accountspayable/vendor-payment.md` so payable bills require confirmed document status and open/partially-settled settlement status, and confirm revalidates under lock before posting journal.
+- [x] Update `docs/modules/accountspayable/vendor-payment.md` so payable bills require confirmed document status and open/partially-settled settlement status, and confirm revalidates under lock before posting journal.
       ref: `docs/modules/accountspayable/vendor-payment.md:L25-L35` - stale update-to-PARTIAL_PAID/PAID text
       ref: `docs/modules/accountspayable/vendor-payment.md:L52-L58` - current payable criteria
-- [ ] Mention that Debit Memo Allocation will later contribute to `debitMemoAppliedAmount` and outstanding calculation in Phase E, but no DMA table or journal exists in Phase C.
+- [x] Mention that Debit Memo Allocation will later contribute to `debitMemoAppliedAmount` and outstanding calculation in Phase E, but no DMA table or journal exists in Phase C.
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md:L863-L879` - target settlement projection and terminology
-- [ ] Run stale-text scans for `PARTIAL_PAID`, `PAID`, and `paymentStatus` in Vendor Bill/Payment docs and templates; update only current docs, not historical brainstorming decisions.
+- [x] Run stale-text scans for `PARTIAL_PAID`, `PAID`, and `paymentStatus` in Vendor Bill/Payment docs and templates; update only current docs, not historical brainstorming decisions.
 
 **Validation criteria:**
 
