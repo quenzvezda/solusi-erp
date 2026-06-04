@@ -1,6 +1,9 @@
 package com.solusi.erp.inventory.stock.infrastructure.config;
 
+import com.solusi.erp.inventory.container.infrastructure.persistence.ContainerJpaRepository;
+import com.solusi.erp.inventory.grid.infrastructure.persistence.GridJpaRepository;
 import com.solusi.erp.inventory.stock.domain.port.InventoryReservationService;
+import com.solusi.erp.inventory.stock.domain.port.StockMovementReversalService;
 import com.solusi.erp.inventory.stock.domain.port.StockService;
 import com.solusi.erp.inventory.stock.domain.repository.InventoryReservationRepository;
 import com.solusi.erp.inventory.stock.infrastructure.persistence.InventoryMovementJpaRepository;
@@ -37,11 +40,15 @@ class StockConfigTest {
     @Autowired
     private InventoryReservationService inventoryReservationService;
 
+    @Autowired
+    private StockMovementReversalService stockMovementReversalService;
+
     @Test
     void wiresStockAndReservationBeans() {
         assertThat(stockService).isNotNull();
         assertThat(inventoryReservationRepository).isNotNull();
         assertThat(inventoryReservationService).isNotNull();
+        assertThat(stockMovementReversalService).isNotNull();
     }
 
     @Configuration
@@ -54,6 +61,8 @@ class StockConfigTest {
         @Bean InventoryReservationJpaRepository inventoryReservationJpaRepository() { return mock(InventoryReservationJpaRepository.class); }
         @Bean InventoryReservationPersistenceMapper inventoryReservationPersistenceMapper() { return mock(InventoryReservationPersistenceMapper.class); }
         @Bean InventoryMovementJpaRepository inventoryMovementJpaRepository() { return mock(InventoryMovementJpaRepository.class); }
+        @Bean ContainerJpaRepository containerJpaRepository() { return mock(ContainerJpaRepository.class); }
+        @Bean GridJpaRepository gridJpaRepository() { return mock(GridJpaRepository.class); }
         @Bean UomConversionService uomConversionService() { return mock(UomConversionService.class); }
         @Bean MessageSource messageSource() { return mock(MessageSource.class); }
         @Bean PlatformTransactionManager platformTransactionManager() { return mock(PlatformTransactionManager.class); }

@@ -53,6 +53,9 @@ public class InventoryMovementEntity extends BaseModel {
     @Column(name = "reference_code", length = 100)
     private String referenceCode;
 
+    @Column(name = "reversal_of_movement_id")
+    private Long reversalOfMovementId;
+
     @Embedded
     @AttributeOverrides({
         @AttributeOverride(name = "currencyId", column = @Column(name = "unit_cost_currency_id")),

@@ -196,6 +196,7 @@ public class StockServiceTest {
                 .referenceType(ReferenceType.STOCK_OPNAME)
                 .referenceId(500L)
                 .referenceCode("OPN-2026-001")
+                .reversalOfMovementId(900L)
                 .transactionDate(now)
                 .build();
 
@@ -210,6 +211,7 @@ public class StockServiceTest {
             mov.getReferenceType() == ReferenceType.STOCK_OPNAME &&
             mov.getReferenceId().equals(500L) &&
             mov.getReferenceCode().equals("OPN-2026-001") &&
+            mov.getReversalOfMovementId().equals(900L) &&
             mov.getTransactionDate().equals(now)
         ));
     }

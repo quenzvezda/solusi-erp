@@ -172,6 +172,7 @@ public class StockServiceImpl implements StockService {
         movement.setReferenceType(payload.getReferenceType());
         movement.setReferenceId(payload.getReferenceId());
         movement.setReferenceCode(payload.getReferenceCode());
+        movement.setReversalOfMovementId(payload.getReversalOfMovementId());
         movement.setUnitCost(unitCost);
         inventoryMovementRepository.save(movement);
     }

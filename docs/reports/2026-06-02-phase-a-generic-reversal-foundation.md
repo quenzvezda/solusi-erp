@@ -15,3 +15,10 @@ This report is populated during plan execution.
 - **Summary:** Added internal `ReversePostedJournalUseCase`, generalized `JournalEntry.createReversal(...)` for auto-journals, kept manual UI reversal manual-only, and wired the new use case through `JournalConfig`.
 - **Decision:** Linked reversal journals keep the original `eventType/sourceType` but use `sourceId/sourceCode = null`; `reversalOfId` is the audit/idempotency link. This preserves manual reversal metadata (`MANUAL/MANUAL`) and avoids the existing unique `(source_type, source_id)` guard for normal auto-posted journals.
 - **Validation:** `mvn test -Dtest="JournalEntryTest,ReverseManualJournalUseCaseTest,ReversePostedJournalUseCaseTest,JournalConfigTest"` passed. Focused JaCoCo warnings are deferred to Task 10 full-suite gate.
+
+## Task 3: Linked Stock Movement Reversal Primitive
+- **Status:** decision
+- **Summary:** Added nullable movement reversal linkage to stock payload/entity logging, repository lookup helpers, a transactional `StockMovementReversalService`, and focused coverage for validation and wiring.
+- **Decision:** The stock reversal service uses `msg.error.stock.reversal.*` keys consistently with existing project i18n naming, even though the plan example used `msg.err.stock...`.
+- **Decision:** Reversal payload cost is derived from the original movement `unitCost` snapshot. If original amount is unavailable, the service uses local amount with exchange rate `1` to avoid re-multiplying the historical local unit cost.
+- **Validation:** `mvn test -Dtest="StockServiceTest,StockMovementReversalServiceTest,StockConfigTest"` passed. Focused JaCoCo warnings are deferred to Task 10 full-suite gate.

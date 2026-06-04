@@ -56,6 +56,8 @@ public class StockMovementPayload {
 
     private Long valuationReferenceLineId;
 
+    private Long reversalOfMovementId;
+
     @Builder.Default
     private LocalDateTime transactionDate = LocalDateTime.now();
 }

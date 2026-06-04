@@ -158,23 +158,23 @@ Generalize journal reversal so auto-journals can be reversed internally without 
 - Manual journal UI behavior remains manual-only.
 - Auto-journal reversal does not call accounting schema and does not use negative amount posting.
 
-### Task 3: Linked Stock Movement Reversal Primitive
+### Task 3: Linked Stock Movement Reversal Primitive [x]
 
 Add a reusable stock reversal service that mirrors original issue movements with inbound movements linked by `reversalOfMovementId`.
 
 **Depends on:** Task 1
 **Reference modules:** `inventory.stock`, `inventory.goodsissue`
 
-- [ ] Extend `StockMovementPayload` with optional `reversalOfMovementId` and keep it null for normal stock movements.
+- [x] Extend `StockMovementPayload` with optional `reversalOfMovementId` and keep it null for normal stock movements.
       ref: `src/main/java/com/solusi/erp/inventory/stock/application/dto/StockMovementPayload.java:L20-L60` - current stock adjustment payload contract
-- [ ] Add `reversalOfMovementId` to `InventoryMovementEntity` and persist it in `StockServiceImpl.logMovement(...)`.
+- [x] Add `reversalOfMovementId` to `InventoryMovementEntity` and persist it in `StockServiceImpl.logMovement(...)`.
       ref: `src/main/java/com/solusi/erp/inventory/stock/infrastructure/persistence/InventoryMovementEntity.java:L18-L63` - current movement columns
       ref: `src/main/java/com/solusi/erp/inventory/stock/infrastructure/service/StockServiceImpl.java:L164-L176` - current movement logging path
-- [ ] Add repository methods to fetch original movements by `referenceType/referenceId`, fetch by ids, and check `existsByReversalOfMovementId`.
+- [x] Add repository methods to fetch original movements by `referenceType/referenceId`, fetch by ids, and check `existsByReversalOfMovementId`.
       Use locked query methods if confirm/cancel orchestration needs pessimistic protection.
       ref: `src/main/java/com/solusi/erp/inventory/stock/infrastructure/persistence/InventoryMovementJpaRepository.java:L19-L39` - current repository search shape
-- [ ] Create a stock reversal command/request containing original movement id, target container id, reversal date, and optional reason/context.
-- [ ] Create `StockMovementReversalService` that validates:
+- [x] Create a stock reversal command/request containing original movement id, target container id, reversal date, and optional reason/context.
+- [x] Create `StockMovementReversalService` that validates:
       original movement exists;
       original movement is outbound for Phase A (`ISSUE`, `ISSUE_RESERVED`, `TRANSFER_OUT`, or negative `ADJUSTMENT` if supported);
       original movement has not been reversed;
@@ -182,15 +182,15 @@ Add a reusable stock reversal service that mirrors original issue movements with
       serialized stock is not already on-hand;
       reversal quantity is full quantity for MVP.
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md` - Generic Stock Movement Reversal Standard
-- [ ] For each valid original issue movement, call `StockService.adjust()` with `MovementType.RECEIPT`, positive full quantity, original `ReferenceType` and source id/code, target container, original serial, original unit cost as net price, `transactionDate = reversalDate.atStartOfDay()`, and `reversalOfMovementId = original.id`.
+- [x] For each valid original issue movement, call `StockService.adjust()` with `MovementType.RECEIPT`, positive full quantity, original `ReferenceType` and source id/code, target container, original serial, original unit cost as net price, `transactionDate = reversalDate.atStartOfDay()`, and `reversalOfMovementId = original.id`.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CancelGoodsIssueUseCaseImpl.java:L62-L80` - current ad-hoc reversal payload to replace
-- [ ] Ensure the service catches unique constraint races on `reversalOfMovementId` and returns a friendly DomainException such as `msg.err.stock.reversal.already.reversed`.
+- [x] Ensure the service catches unique constraint races on `reversalOfMovementId` and returns a friendly DomainException such as `msg.err.stock.reversal.already.reversed`.
       ref: `src/main/java/com/solusi/erp/accounting/journal/application/usecase/command/ReverseManualJournalUseCaseImpl.java:L45-L49` - unique constraint fallback pattern
-- [ ] Wire the service in `StockConfig`.
+- [x] Wire the service in `StockConfig`.
       ref: `src/main/java/com/solusi/erp/inventory/stock/infrastructure/config/StockConfig.java` - stock bean configuration
-- [ ] **TEST:** Add `StockMovementReversalServiceTest` with Mockito/in-memory doubles for happy path, already reversed, target facility mismatch, serial already on hand, non-outbound movement rejection, and duplicate constraint fallback.
+- [x] **TEST:** Add `StockMovementReversalServiceTest` with Mockito/in-memory doubles for happy path, already reversed, target facility mismatch, serial already on hand, non-outbound movement rejection, and duplicate constraint fallback.
       ref: `src/test/java/com/solusi/erp/inventory/stock/infrastructure/service/StockServiceTest.java` - stock service test style
-- [ ] **TEST:** Extend `StockServiceTest` to assert `reversalOfMovementId` is persisted on logged reversal movement payloads.
+- [x] **TEST:** Extend `StockServiceTest` to assert `reversalOfMovementId` is persisted on logged reversal movement payloads.
       ref: `src/test/java/com/solusi/erp/inventory/stock/infrastructure/service/StockServiceTest.java:L102-L228` - movement coverage
 
 **Validation criteria:**

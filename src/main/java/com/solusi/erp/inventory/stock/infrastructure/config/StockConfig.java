@@ -3,9 +3,12 @@ package com.solusi.erp.inventory.stock.infrastructure.config;
 import com.solusi.erp.inventory.container.domain.port.ContainerUsageChecker;
 import com.solusi.erp.inventory.stock.domain.port.StockService;
 import com.solusi.erp.inventory.stock.domain.port.InventoryReservationService;
+import com.solusi.erp.inventory.stock.domain.port.StockMovementReversalService;
 import com.solusi.erp.inventory.stock.domain.repository.InventoryReservationRepository;
 import com.solusi.erp.inventory.stock.domain.repository.StockBalanceRepository;
 import com.solusi.erp.inventory.stock.domain.repository.ValuationLayerRepository;
+import com.solusi.erp.inventory.container.infrastructure.persistence.ContainerJpaRepository;
+import com.solusi.erp.inventory.grid.infrastructure.persistence.GridJpaRepository;
 import com.solusi.erp.inventory.stock.domain.service.FifoValuationService;
 import com.solusi.erp.inventory.stock.infrastructure.adapter.InventoryMovementContainerUsageChecker;
 import com.solusi.erp.inventory.stock.infrastructure.adapter.InventoryReservationRepositoryImpl;
@@ -21,6 +24,7 @@ import com.solusi.erp.inventory.stock.infrastructure.persistence.ValuationLayerJ
 import com.solusi.erp.inventory.stock.infrastructure.persistence.ValuationLayerPersistenceMapper;
 import com.solusi.erp.inventory.stock.infrastructure.service.StockServiceImpl;
 import com.solusi.erp.inventory.stock.infrastructure.service.InventoryReservationServiceImpl;
+import com.solusi.erp.inventory.stock.infrastructure.service.StockMovementReversalServiceImpl;
 import com.solusi.erp.inventory.uomconversion.domain.port.UomConversionService;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
@@ -111,6 +115,24 @@ public class StockConfig {
                 tx.executeWithoutResult(status -> pure.consume(ownerType, ownerId));
             }
         };
+    }
+
+    @Bean
+    public StockMovementReversalService stockMovementReversalService(
+            InventoryMovementJpaRepository inventoryMovementJpaRepository,
+            ContainerJpaRepository containerJpaRepository,
+            GridJpaRepository gridJpaRepository,
+            StockBalanceRepository stockBalanceDomainRepository,
+            StockService stockService,
+            PlatformTransactionManager txManager) {
+        StockMovementReversalServiceImpl pure = new StockMovementReversalServiceImpl(
+                inventoryMovementJpaRepository,
+                containerJpaRepository,
+                gridJpaRepository,
+                stockBalanceDomainRepository,
+                stockService);
+        TransactionTemplate tx = new TransactionTemplate(txManager);
+        return requests -> tx.executeWithoutResult(status -> pure.reverse(requests));
     }
 
     @Bean
