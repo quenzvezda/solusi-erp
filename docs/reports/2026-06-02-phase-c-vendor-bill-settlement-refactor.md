@@ -78,3 +78,8 @@
 - **Status:** clean
 - **Summary:** Updated Vendor Bill and Vendor Payment module docs to describe document status, settlement status, projection-based outstanding, zero Debit Memo seam in Phase C, and locked Vendor Payment confirm revalidation.
 - **Validation:** `docs/modules/accountspayable` scan for `PARTIAL_PAID`, `PAID`, and `paymentStatus` returned 0 matches. Vendor Bill template stale-status scan was already clean in Task 5.
+
+## Task 7: Playwright Settlement Coverage
+- **Status:** clean
+- **Summary:** Added Vendor Bill detail settlement assertions, Vendor Payment confirm cross-checks that the target bill remains `CONFIRMED` and becomes `SETTLED`, a deterministic stale draft payment scenario, and replaced the supplier lookup pre-navigation probe with `page.request.get`.
+- **Validation:** `cd e2e-tests && npx tsc --noEmit` passed; `npx playwright test tests/accountspayable/vendor-bill.spec.ts --list` passed and listed 5 AP Vendor Bill scenarios; `npx playwright test tests/accountspayable/vendor-payment.spec.ts --list` passed and listed 6 AP Vendor Payment scenarios including stale Scenario E. `.\e2e-tests\scripts\run-e2e.ps1 tests/accountspayable/vendor-bill.spec.ts tests/accountspayable/vendor-payment.spec.ts` passed with 15/15 tests. Cold-cache run after removing `e2e-tests\.auth` passed with 15/15 tests.

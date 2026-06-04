@@ -159,12 +159,10 @@ async function createCompletedGr(page: Page): Promise<number> {
 }
 
 async function resolveSupplierPartyId(page: Page): Promise<string> {
-  return page.evaluate(async () => {
-    const res = await fetch('/api/lookup/parties?q=Sumber', { credentials: 'same-origin' });
-    if (!res.ok) return '';
-    const data = await res.json();
-    return String(data?.[0]?.id ?? '');
-  });
+  const res = await page.request.get('/api/lookup/parties?q=Sumber');
+  if (!res.ok()) return '';
+  const data = await res.json();
+  return String(data?.[0]?.id ?? '');
 }
 
 async function createConfirmedVendorBill(page: Page): Promise<ConfirmedVendorBill> {
@@ -249,9 +247,7 @@ async function keepOnlyAllocationForBill(page: Page, vendorBillId: number): Prom
   await expect(page.locator('#allocation-lines tr')).toHaveCount(1, { timeout: 5_000 });
 }
 
-async function createDraftVendorPayment(page: Page): Promise<DraftVendorPayment> {
-  const bill = await createConfirmedVendorBill(page);
-
+async function createDraftVendorPaymentForBill(page: Page, bill: ConfirmedVendorBill): Promise<DraftVendorPayment> {
   await navigateToModule(page, '/accounts-payable/vendor-payments/create');
   await expect(page.locator('#vendor-payment-form')).toBeVisible({ timeout: 10_000 });
 
@@ -291,6 +287,32 @@ async function createDraftVendorPayment(page: Page): Promise<DraftVendorPayment>
   return { id, vendorBillId: bill.id };
 }
 
+async function createDraftVendorPayment(page: Page): Promise<DraftVendorPayment> {
+  const bill = await createConfirmedVendorBill(page);
+  return createDraftVendorPaymentForBill(page, bill);
+}
+
+async function confirmVendorPayment(page: Page, paymentId: number): Promise<void> {
+  await navigateToModule(page, `/accounts-payable/vendor-payments/${paymentId}`);
+  await expect(page.locator('.btn-confirm-payment')).toBeVisible({ timeout: 10_000 });
+  await page.locator('.btn-confirm-payment').click();
+  await page.locator('#confirm-modal-btn-yes').click();
+  await page.waitForURL(new RegExp(`/accounts-payable/vendor-payments/${paymentId}(\\?.*)?$`), {
+    timeout: 20_000,
+    waitUntil: 'domcontentloaded',
+  });
+}
+
+async function expectVendorBillStatus(page: Page, vendorBillId: number, settlementStatus: string): Promise<void> {
+  await navigateToModule(page, `/accounts-payable/vendor-bills/${vendorBillId}`);
+  await expect(page.locator('.page-title .badge', { hasText: 'CONFIRMED' })).toBeVisible({ timeout: 10_000 });
+
+  const settlementStatusField = page
+    .locator('label.form-label', { hasText: /Settlement Status|Status Pelunasan/ })
+    .locator('xpath=..');
+  await expect(settlementStatusField).toContainText(settlementStatus, { timeout: 10_000 });
+}
+
 test.describe('@accountspayable Vendor Payment flow', () => {
   test.describe.configure({ timeout: 180_000 });
   test.use({ storageState: storageStatePath('admin') });
@@ -311,16 +333,10 @@ test.describe('@accountspayable Vendor Payment flow', () => {
   test('Scenario B - confirm DRAFT transitions to CONFIRMED', async ({ page }) => {
     const payment = await createDraftVendorPayment(page);
 
-    await navigateToModule(page, `/accounts-payable/vendor-payments/${payment.id}`);
-    await expect(page.locator('.btn-confirm-payment')).toBeVisible({ timeout: 10_000 });
-    await page.locator('.btn-confirm-payment').click();
-    await page.locator('#confirm-modal-btn-yes').click();
-    await page.waitForURL(new RegExp(`/accounts-payable/vendor-payments/${payment.id}(\\?.*)?$`), {
-      timeout: 20_000,
-      waitUntil: 'domcontentloaded',
-    });
+    await confirmVendorPayment(page, payment.id);
 
     await expect(page.locator('.page-title .badge', { hasText: 'CONFIRMED' })).toBeVisible({ timeout: 10_000 });
+    await expectVendorBillStatus(page, payment.vendorBillId, 'SETTLED');
   });
 
   test('Scenario C - cancel DRAFT transitions to CANCELLED', async ({ page }) => {
@@ -359,5 +375,26 @@ test.describe('@accountspayable Vendor Payment flow', () => {
 
     await page.reload({ waitUntil: 'domcontentloaded' });
     await expect(page.locator(`#row-${payment.id}`)).toHaveCount(0);
+  });
+
+  test('Scenario E - stale draft payment cannot confirm an already settled bill', async ({ page }) => {
+    const bill = await createConfirmedVendorBill(page);
+    const stalePayment = await createDraftVendorPaymentForBill(page, bill);
+    const settlingPayment = await createDraftVendorPaymentForBill(page, bill);
+
+    await confirmVendorPayment(page, settlingPayment.id);
+    await expect(page.locator('.page-title .badge', { hasText: 'CONFIRMED' })).toBeVisible({ timeout: 10_000 });
+
+    await navigateToModule(page, `/accounts-payable/vendor-payments/${stalePayment.id}`);
+    await expect(page.locator('.btn-confirm-payment')).toBeVisible({ timeout: 10_000 });
+    await page.locator('.btn-confirm-payment').click();
+    await page.locator('#confirm-modal-btn-yes').click();
+
+    await expect(page.locator('body')).toContainText(
+      /Selected vendor bill no longer has outstanding amount|Tagihan vendor yang dipilih sudah tidak memiliki sisa tagihan/i,
+      { timeout: 10_000 }
+    );
+    await expect(page.locator('.page-title .badge', { hasText: 'DRAFT' })).toBeVisible({ timeout: 10_000 });
+    await expectVendorBillStatus(page, bill.id, 'SETTLED');
   });
 });

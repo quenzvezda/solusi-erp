@@ -328,39 +328,41 @@ Update module docs so Phase C behavior becomes the documented current behavior.
 - Docs clearly state Debit Memo/DMA are deferred.
 - No current module doc says Vendor Payment writes Vendor Bill `PAID` or `PARTIAL_PAID`.
 
-### Task 7: Playwright Settlement Coverage [ ]
+### Task 7: Playwright Settlement Coverage [x]
 
 Update browser coverage for the separated statuses and stale outstanding revalidation.
 
 **Depends on:** Tasks 4, 5, and 6
 **Reference modules:** Playwright AP specs
 
-- [ ] Before editing specs, re-read Vendor Bill/Vendor Payment controllers, list/detail templates, page-specific JS, and the current AP specs.
+- [x] Before editing specs, re-read Vendor Bill/Vendor Payment controllers, list/detail templates, page-specific JS, and the current AP specs.
       ref: `docs/tests/playwright-pitfalls.md:L1-L293` - mandatory E2E pitfalls
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorbill/web/controller/VendorBillController.java:L37-L286` - actual Vendor Bill routes
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorpayment/web/controller/VendorPaymentController.java:L45-L251` - actual Vendor Payment routes
       ref: `e2e-tests/tests/accountspayable/vendor-bill.spec.ts` - current Vendor Bill E2E flow
       ref: `e2e-tests/tests/accountspayable/vendor-payment.spec.ts` - current Vendor Payment E2E flow
-- [ ] Update Vendor Bill spec assertions so confirmed bills show `Document Status = CONFIRMED` and `Settlement Status = OPEN`, not a payment lifecycle document status.
-- [ ] Update Vendor Payment confirm scenario so after payment confirmation the target Vendor Bill detail shows `Settlement Status = SETTLED` or `PARTIALLY_SETTLED` according to payment amount, while `Document Status` remains `CONFIRMED`.
-- [ ] Add a stale outstanding scenario if feasible with existing UI/API setup:
+- [x] Update Vendor Bill spec assertions so confirmed bills show `Document Status = CONFIRMED` and `Settlement Status = OPEN`, not a payment lifecycle document status.
+- [x] Update Vendor Payment confirm scenario so after payment confirmation the target Vendor Bill detail shows `Settlement Status = SETTLED` or `PARTIALLY_SETTLED` according to payment amount, while `Document Status` remains `CONFIRMED`.
+- [x] Add a stale outstanding scenario if feasible with existing UI/API setup:
       create payment draft for a bill;
       settle the same bill with another payment or direct API contract;
       attempt to confirm the stale draft;
       assert user-visible error and no journal/status mutation.
       Keep this scenario incomplete in the plan/report if the runtime setup cannot create deterministic stale data in the same task.
-- [ ] Use `page.request.get` for pre-navigation probes and click `#confirm-modal-btn-yes` for ERP modal confirmation.
+- [x] Use `page.request.get` for pre-navigation probes and click `#confirm-modal-btn-yes` for ERP modal confirmation.
       ref: `docs/tests/playwright-pitfalls.md:L25-L50` - avoid `page.evaluate(fetch)` from about:blank
       ref: `docs/tests/playwright-pitfalls.md:L115-L143` - Bootstrap modal confirm pattern
-- [ ] Run:
+- [x] Run static/list checks:
       `cd e2e-tests && npx tsc --noEmit`
       `npx playwright test tests/accountspayable/vendor-bill.spec.ts --list`
       `npx playwright test tests/accountspayable/vendor-payment.spec.ts --list`
+- [x] Run live Playwright browser specs:
       `npx playwright test tests/accountspayable/vendor-bill.spec.ts`
       `npx playwright test tests/accountspayable/vendor-payment.spec.ts`
-- [ ] Run cold-cache transactional check:
+- [x] Run cold-cache transactional Playwright check:
       `cd e2e-tests && rm -rf .auth/ && npx playwright test tests/accountspayable/vendor-bill.spec.ts tests/accountspayable/vendor-payment.spec.ts`
-- [ ] On first runtime failure, retain screenshot/video and record diagnosis in `docs/reports/2026-06-02-phase-c-vendor-bill-settlement-refactor.md`.
+- [x] On first runtime failure, retain screenshot/video and record diagnosis in `docs/reports/2026-06-02-phase-c-vendor-bill-settlement-refactor.md`.
+      No runtime failure artifact exists because targeted and cold-cache E2E runs passed.
 
 **Validation criteria:**
 

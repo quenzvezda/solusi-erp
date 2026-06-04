@@ -194,6 +194,14 @@ async function createDraftVendorBill(page: Page): Promise<DraftVendorBill> {
   return { id, invoiceNumber, grId };
 }
 
+async function expectSettlementStatus(page: Page, settlementStatus: string): Promise<void> {
+  const settlementStatusField = page
+    .locator('label.form-label', { hasText: /Settlement Status|Status Pelunasan/ })
+    .locator('xpath=..');
+
+  await expect(settlementStatusField).toContainText(settlementStatus, { timeout: 10_000 });
+}
+
 test.describe('@accountspayable Vendor Bill flow', () => {
   test.describe.configure({ timeout: 120_000 });
   test.use({ storageState: storageStatePath('admin') });
@@ -226,6 +234,7 @@ test.describe('@accountspayable Vendor Bill flow', () => {
     });
 
     await expect(page.locator('.page-title .badge', { hasText: 'CONFIRMED' })).toBeVisible({ timeout: 10_000 });
+    await expectSettlementStatus(page, 'OPEN');
   });
 
   test('Scenario C - cancel DRAFT transitions to CANCELLED and returns to list', async ({ page }) => {
