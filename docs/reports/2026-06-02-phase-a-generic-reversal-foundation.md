@@ -55,3 +55,11 @@ This report is populated during plan execution.
 - **Status:** skipped
 - **Summary:** Playwright GI cancellation spec was not created or run in this execution.
 - **Reason:** User explicitly allowed E2E to be skipped until the related phases are implemented; Task 10 will use Maven regression gates only.
+
+## Task 10: Regression Gate And Handoff
+- **Status:** clean
+- **Summary:** Ran the focused accounting, stock, GI, migration, and full Maven gates; bumped project version from `1.12.0` to `1.13.0` for the Phase A feature foundation.
+- **Validation:** `mvn test -Dtest="JournalEntryTest,ReverseManualJournalUseCaseTest,ReversePostedJournalUseCaseTest,PostJournalForEventUseCaseTest,JournalConfigTest"` passed with 36 tests. `mvn test -Dtest="StockServiceTest,FifoValuationServiceTest,StockMovementReversalServiceTest,StockConfigTest"` passed with 35 tests. `mvn test -Dtest="GoodsIssueTest,CancelGoodsIssueUseCaseTest,CompleteGoodsIssueUseCaseTest,GoodsIssueControllerTest,*GoodsIssue*IntegrationTest"` passed with 54 tests. `mvn test -Dtest="*MigrationTest"` passed with 8 tests. `mvn clean test` passed with 1853 tests, 0 failures, 0 errors, and 0 skipped.
+- **Skipped:** Playwright normal and cold-cache browser gates were not run because Task 9 was explicitly deferred.
+- **Coverage:** Full Maven gate ended with `BUILD SUCCESS`; JaCoCo still reports a non-halting branch coverage warning (`0.78` vs configured `0.80`). No additional Task 10 code changes were needed because the Maven gate itself passes and focused owner tests cover the new reversal behavior.
+- **Remaining dependencies:** Phase B still owns Purchase Return accounting event/schema replacement. Phase D/E still own Debit Memo and allocation. Phase F still owns confirmed Purchase Return reversal orchestration using these primitives.

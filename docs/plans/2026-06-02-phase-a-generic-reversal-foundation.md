@@ -3,7 +3,8 @@
 > Source: `docs/brainstorming/2026-06-02-vendor-debit-memo.md`
 > Created: 2026-06-03
 > Sprint: 6 - Debit Memo Foundation
-> Status: IN_PROGRESS
+> Status: COMPLETED
+> Completed: 2026-06-04
 >
 > **For agentic workers:** execute task-by-task. Explore references fresh before editing each task, update checkbox state incrementally, record deviations in `docs/reports/2026-06-02-phase-a-generic-reversal-foundation.md`, and do not mark a task complete before its validation command passes.
 
@@ -410,27 +411,27 @@ Prove the browser flow for manual/generic GI cancellation after backend and temp
 - Playwright spec passes at least once normally and once after `.auth` removal.
 - If the spec cannot be run in the same task, keep this task incomplete and record the skipped runtime gate in the report.
 
-### Task 10: Regression Gate And Handoff
+### Task 10: Regression Gate And Handoff [x]
 
 Run focused and final verification, then record the exact outcome.
 
 **Depends on:** Tasks 1-9
 
-- [ ] Run accounting focused tests:
+- [x] Run accounting focused tests:
       `mvn test -Dtest="JournalEntryTest,ReverseManualJournalUseCaseTest,ReversePostedJournalUseCaseTest,PostJournalForEventUseCaseTest,JournalConfigTest"`
-- [ ] Run stock focused tests:
+- [x] Run stock focused tests:
       `mvn test -Dtest="StockServiceTest,FifoValuationServiceTest,StockMovementReversalServiceTest,StockConfigTest"`
-- [ ] Run GI focused tests:
+- [x] Run GI focused tests:
       `mvn test -Dtest="GoodsIssueTest,CancelGoodsIssueUseCaseTest,CompleteGoodsIssueUseCaseTest,GoodsIssueControllerTest,*GoodsIssue*IntegrationTest"`
-- [ ] Run migration-sensitive tests:
+- [x] Run migration-sensitive tests:
       `mvn test -Dtest="*MigrationTest"`
-- [ ] Run full Maven gate:
+- [x] Run full Maven gate:
       `mvn clean test`
-- [ ] If Playwright task is in scope and implemented, run the normal and cold-cache browser gates from Task 9.
-- [ ] Inspect JaCoCo if new code lowers coverage. Add focused tests in the owning task before marking complete.
+- [x] If Playwright task is in scope and implemented, run the normal and cold-cache browser gates from Task 9.
+- [x] Inspect JaCoCo if new code lowers coverage. Add focused tests in the owning task before marking complete.
       ref: `pom.xml:L285-L299` - active JaCoCo thresholds and non-halting check
-- [ ] Update `docs/reports/2026-06-02-phase-a-generic-reversal-foundation.md` with commands, outcomes, skipped gates, deviations from plan, and remaining Phase B/F dependencies.
-- [ ] Apply project SemVer protocol after implementation is accepted. Phase A is a feature foundation, so the likely bump is MINOR unless the implementation only changes docs/tests.
+- [x] Update `docs/reports/2026-06-02-phase-a-generic-reversal-foundation.md` with commands, outcomes, skipped gates, deviations from plan, and remaining Phase B/F dependencies.
+- [x] Apply project SemVer protocol after implementation is accepted. Phase A is a feature foundation, so the likely bump is MINOR unless the implementation only changes docs/tests.
       ref: `docs/AGENTS.md:L101-L123` - SemVer automation and commit protocol
 
 **Validation criteria:**
