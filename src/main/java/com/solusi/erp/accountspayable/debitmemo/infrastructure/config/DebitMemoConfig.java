@@ -1,5 +1,7 @@
 package com.solusi.erp.accountspayable.debitmemo.infrastructure.config;
 
+import com.solusi.erp.accountspayable.debitmemo.application.usecase.command.CreateDebitMemoFromPurchaseReturnUseCase;
+import com.solusi.erp.accountspayable.debitmemo.application.usecase.command.CreateDebitMemoFromPurchaseReturnUseCaseImpl;
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.FindDebitMemoByPurchaseReturnUseCase;
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.FindDebitMemoByPurchaseReturnUseCaseImpl;
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.FindDebitMemosUseCase;
@@ -10,6 +12,7 @@ import com.solusi.erp.accountspayable.debitmemo.domain.repository.DebitMemoRepos
 import com.solusi.erp.accountspayable.debitmemo.infrastructure.adapter.DebitMemoRepositoryImpl;
 import com.solusi.erp.accountspayable.debitmemo.infrastructure.persistence.DebitMemoJpaRepository;
 import com.solusi.erp.accountspayable.debitmemo.infrastructure.persistence.DebitMemoPersistenceMapper;
+import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -22,6 +25,17 @@ public class DebitMemoConfig {
     public DebitMemoRepository debitMemoRepository(DebitMemoJpaRepository jpaRepository,
                                                    DebitMemoPersistenceMapper mapper) {
         return new DebitMemoRepositoryImpl(jpaRepository, mapper);
+    }
+
+    @Bean
+    public CreateDebitMemoFromPurchaseReturnUseCase createDebitMemoFromPurchaseReturnUseCase(
+            DebitMemoRepository repository,
+            SequenceGeneratorService sequenceGeneratorService,
+            PlatformTransactionManager txManager) {
+        CreateDebitMemoFromPurchaseReturnUseCase pure = new CreateDebitMemoFromPurchaseReturnUseCaseImpl(
+                repository, sequenceGeneratorService);
+        TransactionTemplate tx = new TransactionTemplate(txManager);
+        return source -> tx.execute(status -> pure.execute(source));
     }
 
     @Bean
@@ -52,4 +66,3 @@ public class DebitMemoConfig {
         return purchaseReturnId -> tx.execute(status -> pure.execute(purchaseReturnId));
     }
 }
-

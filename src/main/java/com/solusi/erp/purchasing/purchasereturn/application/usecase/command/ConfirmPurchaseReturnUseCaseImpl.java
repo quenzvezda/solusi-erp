@@ -1,6 +1,9 @@
 package com.solusi.erp.purchasing.purchasereturn.application.usecase.command;
 
 import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeriodForDateUseCase;
+import com.solusi.erp.accountspayable.debitmemo.application.usecase.command.CreateDebitMemoFromPurchaseReturnUseCase;
+import com.solusi.erp.accountspayable.debitmemo.application.usecase.command.DebitMemoPurchaseReturnLineSource;
+import com.solusi.erp.accountspayable.debitmemo.application.usecase.command.DebitMemoPurchaseReturnSource;
 import com.solusi.erp.core.exception.DomainException;
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import com.solusi.erp.inventory.goodsissue.application.usecase.command.CompleteGoodsIssueUseCase;
@@ -10,7 +13,11 @@ import com.solusi.erp.inventory.goodsissue.domain.port.PurchaseReturnGoodsIssueS
 import com.solusi.erp.inventory.goodsissue.domain.repository.GoodsIssueRepository;
 import com.solusi.erp.inventory.goodsissue.infrastructure.service.GoodsIssueSourceResolverRegistry;
 import com.solusi.erp.purchasing.purchasereturn.domain.model.PurchaseReturn;
+import com.solusi.erp.purchasing.purchasereturn.domain.model.PurchaseReturnLine;
 import com.solusi.erp.purchasing.purchasereturn.domain.repository.PurchaseReturnRepository;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 public class ConfirmPurchaseReturnUseCaseImpl implements ConfirmPurchaseReturnUseCase {
 
@@ -21,6 +28,7 @@ public class ConfirmPurchaseReturnUseCaseImpl implements ConfirmPurchaseReturnUs
     private final GoodsIssueRepository goodsIssueRepository;
     private final CompleteGoodsIssueUseCase completeGoodsIssueUseCase;
     private final EnsureOpenPeriodForDateUseCase ensureOpenPeriodForDateUseCase;
+    private final CreateDebitMemoFromPurchaseReturnUseCase createDebitMemoFromPurchaseReturnUseCase;
 
     public ConfirmPurchaseReturnUseCaseImpl(PurchaseReturnRepository purchaseReturnRepository,
                                             PurchaseReturnGoodsIssueSourcePort sourcePort,
@@ -28,7 +36,8 @@ public class ConfirmPurchaseReturnUseCaseImpl implements ConfirmPurchaseReturnUs
                                             SequenceGeneratorService sequenceGeneratorService,
                                             GoodsIssueRepository goodsIssueRepository,
                                             CompleteGoodsIssueUseCase completeGoodsIssueUseCase,
-                                            EnsureOpenPeriodForDateUseCase ensureOpenPeriodForDateUseCase) {
+                                            EnsureOpenPeriodForDateUseCase ensureOpenPeriodForDateUseCase,
+                                            CreateDebitMemoFromPurchaseReturnUseCase createDebitMemoFromPurchaseReturnUseCase) {
         this.purchaseReturnRepository = purchaseReturnRepository;
         this.sourcePort = sourcePort;
         this.resolverRegistry = resolverRegistry;
@@ -36,6 +45,7 @@ public class ConfirmPurchaseReturnUseCaseImpl implements ConfirmPurchaseReturnUs
         this.goodsIssueRepository = goodsIssueRepository;
         this.completeGoodsIssueUseCase = completeGoodsIssueUseCase;
         this.ensureOpenPeriodForDateUseCase = ensureOpenPeriodForDateUseCase;
+        this.createDebitMemoFromPurchaseReturnUseCase = createDebitMemoFromPurchaseReturnUseCase;
     }
 
     @Override
@@ -66,7 +76,36 @@ public class ConfirmPurchaseReturnUseCaseImpl implements ConfirmPurchaseReturnUs
         GoodsIssue savedGoodsIssue = goodsIssueRepository.save(goodsIssue);
         completeGoodsIssueUseCase.execute(savedGoodsIssue.getId());
 
+        createDebitMemoFromPurchaseReturnUseCase.execute(toDebitMemoSource(purchaseReturn));
         purchaseReturn.confirm(savedGoodsIssue.getId());
         return purchaseReturnRepository.save(purchaseReturn);
+    }
+
+    private DebitMemoPurchaseReturnSource toDebitMemoSource(PurchaseReturn purchaseReturn) {
+        return new DebitMemoPurchaseReturnSource(
+                purchaseReturn.getId(),
+                purchaseReturn.getCode(),
+                purchaseReturn.getSupplierId(),
+                purchaseReturn.getCurrencyId(),
+                purchaseReturn.getReturnDate(),
+                toDebitMemoLines(purchaseReturn.getLines())
+        );
+    }
+
+    private List<DebitMemoPurchaseReturnLineSource> toDebitMemoLines(List<PurchaseReturnLine> lines) {
+        return lines.stream()
+                .map(line -> new DebitMemoPurchaseReturnLineSource(
+                        line.getId(),
+                        line.getProductId(),
+                        line.getQuantity(),
+                        line.getUomId(),
+                        zeroIfNull(line.getClearingAmount()),
+                        zeroIfNull(line.getTaxReversalAmount())
+                ))
+                .toList();
+    }
+
+    private BigDecimal zeroIfNull(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
     }
 }

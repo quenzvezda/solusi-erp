@@ -1,6 +1,7 @@
 package com.solusi.erp.purchasing.purchasereturn.infrastructure.config;
 
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
+import com.solusi.erp.accountspayable.debitmemo.application.usecase.command.CreateDebitMemoFromPurchaseReturnUseCase;
 import com.solusi.erp.inventory.goodsissue.domain.port.PurchaseReturnGoodsIssueSourcePort;
 import com.solusi.erp.inventory.goodsissue.application.usecase.command.CompleteGoodsIssueUseCase;
 import com.solusi.erp.inventory.goodsissue.domain.repository.GoodsIssueRepository;
@@ -183,10 +184,12 @@ public class PurchaseReturnConfig {
             GoodsIssueRepository goodsIssueRepository,
             CompleteGoodsIssueUseCase completeGoodsIssueUseCase,
             EnsureOpenPeriodForDateUseCase ensureOpenPeriodForDateUseCase,
+            CreateDebitMemoFromPurchaseReturnUseCase createDebitMemoFromPurchaseReturnUseCase,
             PlatformTransactionManager txManager) {
         ConfirmPurchaseReturnUseCaseImpl pure = new ConfirmPurchaseReturnUseCaseImpl(
                 purchaseReturnRepository, sourcePort, resolverRegistry, sequenceGeneratorService,
-                goodsIssueRepository, completeGoodsIssueUseCase, ensureOpenPeriodForDateUseCase);
+                goodsIssueRepository, completeGoodsIssueUseCase, ensureOpenPeriodForDateUseCase,
+                createDebitMemoFromPurchaseReturnUseCase);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         return id -> tx.execute(status -> pure.execute(id));
     }

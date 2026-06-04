@@ -1,6 +1,8 @@
 package com.solusi.erp.purchasing.purchasereturn.application.usecase.command;
 
 import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeriodForDateUseCase;
+import com.solusi.erp.accountspayable.debitmemo.application.usecase.command.CreateDebitMemoFromPurchaseReturnUseCase;
+import com.solusi.erp.accountspayable.debitmemo.application.usecase.command.DebitMemoPurchaseReturnSource;
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.exception.DomainException;
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
@@ -31,9 +33,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 
 @ExtendWith(MockitoExtension.class)
 class ConfirmPurchaseReturnUseCaseTest {
@@ -46,6 +51,7 @@ class ConfirmPurchaseReturnUseCaseTest {
     @Mock private GoodsIssueRepository goodsIssueRepository;
     @Mock private CompleteGoodsIssueUseCase completeGoodsIssueUseCase;
     @Mock private EnsureOpenPeriodForDateUseCase ensureOpenPeriodForDateUseCase;
+    @Mock private CreateDebitMemoFromPurchaseReturnUseCase createDebitMemoFromPurchaseReturnUseCase;
 
     @Test
     void execute_approved_createsCompletesAndLinksOneGoodsIssue() {
@@ -58,9 +64,21 @@ class ConfirmPurchaseReturnUseCaseTest {
         verify(ensureOpenPeriodForDateUseCase).execute(LocalDate.of(2026, 6, 1));
         verify(sequenceGeneratorService).generate("GOODS_ISSUE");
         verify(completeGoodsIssueUseCase).execute(9L);
+        ArgumentCaptor<DebitMemoPurchaseReturnSource> debitMemoSourceCaptor =
+                ArgumentCaptor.forClass(DebitMemoPurchaseReturnSource.class);
+        verify(createDebitMemoFromPurchaseReturnUseCase).execute(debitMemoSourceCaptor.capture());
+        assertThat(debitMemoSourceCaptor.getValue().purchaseReturnId()).isEqualTo(1L);
+        assertThat(debitMemoSourceCaptor.getValue().purchaseReturnCode()).isEqualTo("PRT-001");
+        assertThat(debitMemoSourceCaptor.getValue().vendorId()).isEqualTo(3L);
+        assertThat(debitMemoSourceCaptor.getValue().currencyId()).isEqualTo(5L);
+        assertThat(debitMemoSourceCaptor.getValue().lines()).hasSize(1);
         assertThat(result.getStatus()).isEqualTo(PurchaseReturnStatus.CONFIRMED);
         assertThat(result.getGeneratedGoodsIssueId()).isEqualTo(9L);
         verify(purchaseReturnRepository).save(purchaseReturn);
+        InOrder inOrder = inOrder(completeGoodsIssueUseCase, createDebitMemoFromPurchaseReturnUseCase, purchaseReturnRepository);
+        inOrder.verify(completeGoodsIssueUseCase).execute(9L);
+        inOrder.verify(createDebitMemoFromPurchaseReturnUseCase).execute(any());
+        inOrder.verify(purchaseReturnRepository).save(purchaseReturn);
     }
 
     @Test
@@ -118,6 +136,22 @@ class ConfirmPurchaseReturnUseCaseTest {
                 .hasMessageContaining("msg.error.journal.failed");
 
         assertThat(purchaseReturn.getStatus()).isEqualTo(PurchaseReturnStatus.APPROVED);
+        verify(createDebitMemoFromPurchaseReturnUseCase, never()).execute(any());
+        verify(purchaseReturnRepository, never()).save(any());
+    }
+
+    @Test
+    void execute_debitMemoCreationFails_doesNotConfirmPurchaseReturn() {
+        PurchaseReturn purchaseReturn = persisted(PurchaseReturnStatus.APPROVED);
+        stubHappyPath(purchaseReturn);
+        doThrow(new DomainException("msg.error.debit-memo.gross-positive"))
+                .when(createDebitMemoFromPurchaseReturnUseCase).execute(any());
+
+        assertThatThrownBy(() -> useCase().execute(1L))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.debit-memo.gross-positive");
+
+        assertThat(purchaseReturn.getStatus()).isEqualTo(PurchaseReturnStatus.APPROVED);
         verify(purchaseReturnRepository, never()).save(any());
     }
 
@@ -154,6 +188,7 @@ class ConfirmPurchaseReturnUseCaseTest {
     private ConfirmPurchaseReturnUseCaseImpl useCase() {
         return new ConfirmPurchaseReturnUseCaseImpl(
                 purchaseReturnRepository, sourcePort, resolverRegistry, sequenceGeneratorService,
-                goodsIssueRepository, completeGoodsIssueUseCase, ensureOpenPeriodForDateUseCase);
+                goodsIssueRepository, completeGoodsIssueUseCase, ensureOpenPeriodForDateUseCase,
+                createDebitMemoFromPurchaseReturnUseCase);
     }
 }

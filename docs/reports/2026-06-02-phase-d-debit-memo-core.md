@@ -56,11 +56,34 @@ Source Brainstorm: [docs/brainstorming/2026-06-02-vendor-debit-memo.md](../brain
 - **Action taken:** Query use cases return `settledAmount = 0`, `refundedAmount = 0`, and `remainingAmount = grossAmountOriginal` while preserving the stored settlement status for future Phase E integration.
 - **Ref:** `src/main/java/com/solusi/erp/accountspayable/debitmemo/application/usecase/query`
 
+## Task 4: Auto-Create Debit Memo During Purchase Return Confirmation
+
+- **Status:** findings
+- **Summary:** Added `CreateDebitMemoFromPurchaseReturnUseCase`, wired it into Debit Memo config, and invoked it from Purchase Return confirmation after Goods Issue completion and before marking the Purchase Return confirmed.
+- **Tests:** `mvn test "-Dtest=CreateDebitMemoFromPurchaseReturnUseCaseTest,ConfirmPurchaseReturnUseCaseTest,DebitMemoConfigTest,PurchaseReturnConfigTest"` passed with 11 tests.
+
+### Finding: Purchase Return stores one DPP/tax snapshot pair, not separate original/base values
+
+- **Type:** decision
+- **Severity:** info
+- **Detail:** Purchase Return lines expose `clearingAmount` and `taxReversalAmount`, but do not expose separate original/base Debit Memo monetary columns.
+- **Action taken:** Debit Memo creation uses `clearingAmount` as DPP and `taxReversalAmount` as tax, storing the same values to original and base fields for Phase D. This preserves the available PR snapshot and keeps Phase E free to refine allocation/tax consumption if separate currency treatment is introduced.
+- **Ref:** `src/main/java/com/solusi/erp/purchasing/purchasereturn/domain/model/PurchaseReturnLine.java`
+
+### Finding: Debit Memo creation is idempotent before sequence generation
+
+- **Type:** decision
+- **Severity:** info
+- **Detail:** The brainstorm requires exactly one Debit Memo per confirmed Purchase Return and retry safety.
+- **Action taken:** `CreateDebitMemoFromPurchaseReturnUseCaseImpl` first checks `findByPurchaseReturnId`; if a Debit Memo exists, it returns the existing record without generating a new `DM-*` code.
+- **Ref:** `src/main/java/com/solusi/erp/accountspayable/debitmemo/application/usecase/command/CreateDebitMemoFromPurchaseReturnUseCaseImpl.java`
+
 ## Verification
 
 - Task 1: `mvn test -Dtest=DebitMemoCoreMigrationTest` passed.
 - Task 2: `mvn test -Dtest=DebitMemoTest` passed.
 - Task 3: `mvn test "-Dtest=DebitMemoRepositoryImplTest,DebitMemoQueryUseCaseTest,DebitMemoConfigTest"` passed.
+- Task 4: `mvn test "-Dtest=CreateDebitMemoFromPurchaseReturnUseCaseTest,ConfirmPurchaseReturnUseCaseTest,DebitMemoConfigTest,PurchaseReturnConfigTest"` passed.
 
 ## Notes
 

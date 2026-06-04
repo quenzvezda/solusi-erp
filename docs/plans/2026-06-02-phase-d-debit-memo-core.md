@@ -259,7 +259,7 @@ Commit:
 
 - `feat(debit-memo): persist and query core records`
 
-## Task 4: Auto-Create Debit Memo During Purchase Return Confirmation
+## Task 4: Auto-Create Debit Memo During Purchase Return Confirmation [x]
 
 Goal: integrate Debit Memo creation into the Purchase Return confirmation transaction.
 

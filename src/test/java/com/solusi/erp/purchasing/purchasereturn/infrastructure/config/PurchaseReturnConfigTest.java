@@ -1,5 +1,6 @@
 package com.solusi.erp.purchasing.purchasereturn.infrastructure.config;
 
+import com.solusi.erp.accountspayable.debitmemo.application.usecase.command.CreateDebitMemoFromPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.domain.repository.PurchaseReturnRepository;
 import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeriodForDateUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.command.CompleteGoodsIssueUseCase;
@@ -172,6 +173,11 @@ class PurchaseReturnConfigTest {
         @Bean
         EnsureOpenPeriodForDateUseCase ensureOpenPeriodForDateUseCase() {
             return mock(EnsureOpenPeriodForDateUseCase.class);
+        }
+
+        @Bean
+        CreateDebitMemoFromPurchaseReturnUseCase createDebitMemoFromPurchaseReturnUseCase() {
+            return mock(CreateDebitMemoFromPurchaseReturnUseCase.class);
         }
     }
 }

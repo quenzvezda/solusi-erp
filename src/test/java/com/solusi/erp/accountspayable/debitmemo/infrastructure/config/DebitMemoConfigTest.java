@@ -1,11 +1,13 @@
 package com.solusi.erp.accountspayable.debitmemo.infrastructure.config;
 
+import com.solusi.erp.accountspayable.debitmemo.application.usecase.command.CreateDebitMemoFromPurchaseReturnUseCase;
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.FindDebitMemoByPurchaseReturnUseCase;
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.FindDebitMemosUseCase;
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.GetDebitMemoDetailUseCase;
 import com.solusi.erp.accountspayable.debitmemo.domain.repository.DebitMemoRepository;
 import com.solusi.erp.accountspayable.debitmemo.infrastructure.persistence.DebitMemoJpaRepository;
 import com.solusi.erp.accountspayable.debitmemo.infrastructure.persistence.DebitMemoPersistenceMapper;
+import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,9 @@ class DebitMemoConfigTest {
     private DebitMemoRepository debitMemoRepository;
 
     @Autowired
+    private CreateDebitMemoFromPurchaseReturnUseCase createDebitMemoFromPurchaseReturnUseCase;
+
+    @Autowired
     private FindDebitMemosUseCase findDebitMemosUseCase;
 
     @Autowired
@@ -37,6 +42,7 @@ class DebitMemoConfigTest {
     @Test
     void should_register_debit_memo_beans() {
         assertThat(debitMemoRepository).isNotNull();
+        assertThat(createDebitMemoFromPurchaseReturnUseCase).isNotNull();
         assertThat(findDebitMemosUseCase).isNotNull();
         assertThat(getDebitMemoDetailUseCase).isNotNull();
         assertThat(findDebitMemoByPurchaseReturnUseCase).isNotNull();
@@ -58,6 +64,10 @@ class DebitMemoConfigTest {
         PlatformTransactionManager platformTransactionManager() {
             return mock(PlatformTransactionManager.class);
         }
+
+        @Bean
+        SequenceGeneratorService sequenceGeneratorService() {
+            return mock(SequenceGeneratorService.class);
+        }
     }
 }
-
