@@ -86,7 +86,7 @@ public class CompleteGoodsIssueUseCaseImpl implements CompleteGoodsIssueUseCase 
         }
 
         BigDecimal inventoryTotal = inventoryTotal(issue.getLines());
-        postJournalForEventUseCase.execute(goodsIssueJournal(issue, inventoryTotal, inventoryTotal));
+        postJournalForEventUseCase.execute(journalForIssue(issue, inventoryTotal));
 
         if (isPurchaseReturn(issue)) {
             reservationService.consume(ReservationOwnerType.PURCHASE_RETURN, issue.getReferenceId());
@@ -217,6 +217,32 @@ public class CompleteGoodsIssueUseCaseImpl implements CompleteGoodsIssueUseCase 
                         JournalVariable.GI_INVENTORY_AMT, inventoryAmount
                 )
         );
+    }
+
+    static JournalPostingCommand journalForIssue(GoodsIssue issue, BigDecimal inventoryAmount) {
+        if (isPurchaseReturnSource(issue)) {
+            return purchaseReturnJournal(issue, inventoryAmount);
+        }
+        return goodsIssueJournal(issue, inventoryAmount, inventoryAmount);
+    }
+
+    static JournalPostingCommand purchaseReturnJournal(GoodsIssue issue, BigDecimal inventoryAmount) {
+        return new JournalPostingCommand(
+                SchemaEventType.PURCHASE_RETURN,
+                "PURCHASE_RETURN",
+                issue.getReferenceId(),
+                issue.getReferenceCode(),
+                issue.getIssueDate(),
+                "Auto journal for purchase return " + issue.getReferenceCode(),
+                Map.of(
+                        JournalVariable.PR_GRIR_CLEARING_AMT, inventoryAmount,
+                        JournalVariable.PR_INVENTORY_AMT, inventoryAmount
+                )
+        );
+    }
+
+    private static boolean isPurchaseReturnSource(GoodsIssue issue) {
+        return issue.getReferenceType() == GoodsIssueReferenceType.PURCHASE_RETURN;
     }
 
     static BigDecimal inventoryTotal(List<GoodsIssueLine> lines) {

@@ -78,7 +78,7 @@ class GoodsIssueQueryUseCaseTest {
                 uomLookupProvider,
                 containerLookupProvider,
                 facilityLookupProvider);
-        journalLinksUseCase = new GetGoodsIssueJournalLinksUseCaseImpl(journalEntryRepository);
+        journalLinksUseCase = new GetGoodsIssueJournalLinksUseCaseImpl(goodsIssueRepository, journalEntryRepository);
     }
 
     @Test
@@ -223,6 +223,7 @@ class GoodsIssueQueryUseCaseTest {
         JournalEntry reversal = mock(JournalEntry.class);
         when(original.getId()).thenReturn(900L);
         when(reversal.getId()).thenReturn(901L);
+        when(goodsIssueRepository.findById(7L)).thenReturn(Optional.of(issue(GoodsIssueReferenceType.MANUAL)));
         when(journalEntryRepository.findBySource("GOODS_ISSUE", 7L)).thenReturn(Optional.of(original));
         when(journalEntryRepository.findReversalOf(900L)).thenReturn(Optional.of(reversal));
 
@@ -236,6 +237,7 @@ class GoodsIssueQueryUseCaseTest {
 
     @Test
     void journalLinksUseCase_returnsEmptyLinksWhenOriginalOrReversalMissing() {
+        when(goodsIssueRepository.findById(7L)).thenReturn(Optional.of(issue(GoodsIssueReferenceType.MANUAL)));
         when(journalEntryRepository.findBySource("GOODS_ISSUE", 7L)).thenReturn(Optional.empty());
 
         GoodsIssueJournalLinks missingOriginal = journalLinksUseCase.execute(7L);
@@ -247,6 +249,7 @@ class GoodsIssueQueryUseCaseTest {
 
         JournalEntry original = mock(JournalEntry.class);
         when(original.getId()).thenReturn(900L);
+        when(goodsIssueRepository.findById(8L)).thenReturn(Optional.of(issue(8L, GoodsIssueReferenceType.MANUAL, null, null)));
         when(journalEntryRepository.findBySource("GOODS_ISSUE", 8L)).thenReturn(Optional.of(original));
         when(journalEntryRepository.findReversalOf(900L)).thenReturn(Optional.empty());
 
@@ -258,14 +261,38 @@ class GoodsIssueQueryUseCaseTest {
         assertThat(missingReversal.hasReversalJournal()).isFalse();
     }
 
+    @Test
+    void journalLinksUseCase_resolvesPurchaseReturnOwnedJournalFromGoodsIssueReference() {
+        JournalEntry original = mock(JournalEntry.class);
+        JournalEntry reversal = mock(JournalEntry.class);
+        when(original.getId()).thenReturn(902L);
+        when(reversal.getId()).thenReturn(903L);
+        when(goodsIssueRepository.findById(7L))
+                .thenReturn(Optional.of(issue(7L, GoodsIssueReferenceType.PURCHASE_RETURN, 70L, "PRTN-0070")));
+        when(journalEntryRepository.findBySource("PURCHASE_RETURN", 70L)).thenReturn(Optional.of(original));
+        when(journalEntryRepository.findReversalOf(902L)).thenReturn(Optional.of(reversal));
+
+        GoodsIssueJournalLinks links = journalLinksUseCase.execute(7L);
+
+        assertThat(links.originalJournalId()).isEqualTo(902L);
+        assertThat(links.reversalJournalId()).isEqualTo(903L);
+    }
+
     private static GoodsIssue issue(GoodsIssueReferenceType referenceType) {
+        return issue(7L, referenceType, null, null);
+    }
+
+    private static GoodsIssue issue(Long id,
+                                    GoodsIssueReferenceType referenceType,
+                                    Long referenceId,
+                                    String referenceCode) {
         return new GoodsIssue(
-                new com.solusi.erp.core.domain.model.AuditMetadata(7L, 1L, null, null, null, null),
+                new com.solusi.erp.core.domain.model.AuditMetadata(id, 1L, null, null, null, null),
                 "GI-202606-00001",
                 LocalDate.of(2026, 6, 1),
                 referenceType,
-                null,
-                null,
+                referenceId,
+                referenceCode,
                 11L,
                 GoodsIssuePartyType.SUPPLIER,
                 3L,

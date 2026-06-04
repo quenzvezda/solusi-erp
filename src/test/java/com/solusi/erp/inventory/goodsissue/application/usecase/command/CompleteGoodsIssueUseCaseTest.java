@@ -300,10 +300,26 @@ class CompleteGoodsIssueUseCaseTest {
         ArgumentCaptor<StockMovementPayload> stockCaptor = ArgumentCaptor.forClass(StockMovementPayload.class);
         verify(stockService).adjust(stockCaptor.capture());
         assertThat(stockCaptor.getValue().getMovementType()).isEqualTo(MovementType.ISSUE_RESERVED);
+        assertThat(stockCaptor.getValue().getReferenceType()).isEqualTo(ReferenceType.GOODS_ISSUE);
+        assertThat(stockCaptor.getValue().getReferenceId()).isEqualTo(7L);
         verify(reservationService).assertActiveCoverage(
                 org.mockito.ArgumentMatchers.eq(ReservationOwnerType.PURCHASE_RETURN),
                 org.mockito.ArgumentMatchers.eq(70L),
                 org.mockito.ArgumentMatchers.anyList());
+
+        ArgumentCaptor<JournalPostingCommand> journalCaptor = ArgumentCaptor.forClass(JournalPostingCommand.class);
+        verify(postJournalForEventUseCase).execute(journalCaptor.capture());
+        assertThat(journalCaptor.getValue().eventType()).isEqualTo(SchemaEventType.PURCHASE_RETURN);
+        assertThat(journalCaptor.getValue().sourceType()).isEqualTo("PURCHASE_RETURN");
+        assertThat(journalCaptor.getValue().sourceId()).isEqualTo(70L);
+        assertThat(journalCaptor.getValue().sourceCode()).isEqualTo("PRTN-0070");
+        assertThat(journalCaptor.getValue().values()).containsOnlyKeys(
+                JournalVariable.PR_GRIR_CLEARING_AMT,
+                JournalVariable.PR_INVENTORY_AMT);
+        assertThat(journalCaptor.getValue().values().get(JournalVariable.PR_GRIR_CLEARING_AMT))
+                .isEqualByComparingTo("300.0000");
+        assertThat(journalCaptor.getValue().values().get(JournalVariable.PR_INVENTORY_AMT))
+                .isEqualByComparingTo("300.0000");
         verify(reservationService).consume(ReservationOwnerType.PURCHASE_RETURN, 70L);
     }
 
@@ -337,6 +353,10 @@ class CompleteGoodsIssueUseCaseTest {
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("msg.error.journal.failed");
 
+        ArgumentCaptor<JournalPostingCommand> journalCaptor = ArgumentCaptor.forClass(JournalPostingCommand.class);
+        verify(postJournalForEventUseCase).execute(journalCaptor.capture());
+        assertThat(journalCaptor.getValue().sourceType()).isEqualTo("PURCHASE_RETURN");
+        assertThat(journalCaptor.getValue().sourceId()).isEqualTo(70L);
         verify(reservationService, never()).consume(any(), any());
         verify(repository, never()).save(any());
     }

@@ -171,8 +171,9 @@ public class GoodsIssueConfig {
 
     @Bean
     public GetGoodsIssueJournalLinksUseCase getGoodsIssueJournalLinksUseCase(
+            GoodsIssueRepository repository,
             JournalEntryRepository journalEntryRepository) {
-        return new GetGoodsIssueJournalLinksUseCaseImpl(journalEntryRepository);
+        return new GetGoodsIssueJournalLinksUseCaseImpl(repository, journalEntryRepository);
     }
 
     @Bean

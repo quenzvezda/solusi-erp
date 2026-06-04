@@ -15,3 +15,8 @@ Populated during execution.
 - **Summary:** Added MariaDB/H2 V71 seed for active `PURCHASE_RETURN` accounting schema, refreshed dev seeder `D220`, and updated H2 E2E seed to reuse the V71 schema while replacing its lines with E2E COA accounts after those accounts exist.
 - **Deviation:** E2E seed could not insert a hard-coded `PURCHASE_RETURN` schema because V71 already creates the active schema and id `9404` is an E2E Input VAT account. The implementation follows the existing `VENDOR_PAYMENT` refresh pattern with `@prt_schema_id`.
 - **Validation:** `mvn test -Dtest="PurchaseReturnMigrationTest"` passed with 5 tests; `mvn test -Dtest="*MigrationTest"` passed with 9 tests. JaCoCo checks met for both focused runs.
+
+## Task 3: Goods Issue Posting Route For Purchase Return
+- **Status:** clean
+- **Summary:** Routed Purchase Return-sourced Goods Issue completion to a `PURCHASE_RETURN` journal with PR source identity and PR-only inventory/GRIR variables, while keeping stock movements referenced to the physical Goods Issue. Updated GI journal links to resolve source-owned Purchase Return journals from the GI reference metadata.
+- **Validation:** `mvn test -Dtest="CompleteGoodsIssueUseCaseTest,ConfirmPurchaseReturnUseCaseTest,GoodsIssueQueryUseCaseTest"` passed with 35 tests; `mvn test -Dtest="GoodsIssueConfigTest"` passed with 1 test. JaCoCo checks met for both focused runs.

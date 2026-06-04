@@ -154,18 +154,18 @@ Seed the new accounting schema header and lines for MariaDB, H2, dev seeder, and
 - Fresh H2 E2E migration can post Purchase Return journal without missing schema.
 - Dev seeder validation query documents expected line counts including `PURCHASE_RETURN=2`.
 
-### Task 3: Goods Issue Posting Route For Purchase Return [ ]
+### Task 3: Goods Issue Posting Route For Purchase Return [x]
 
 Route only Purchase Return-sourced Goods Issue to the new accounting event, while preserving generic Goods Issue behavior.
 
 **Depends on:** Tasks 1 and 2
 **Reference modules:** `inventory.goodsissue`, `purchasing.purchasereturn`, `accounting.journal`
 
-- [ ] Refactor `CompleteGoodsIssueUseCaseImpl` so the journal command is selected by `GoodsIssue.referenceType`.
+- [x] Refactor `CompleteGoodsIssueUseCaseImpl` so the journal command is selected by `GoodsIssue.referenceType`.
       `MANUAL`/generic sources continue calling the current `GOODS_ISSUE` journal builder.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CompleteGoodsIssueUseCaseImpl.java:L64-L75` - current complete flow around stock and journal side effects
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CompleteGoodsIssueUseCaseImpl.java:L203-L219` - current generic `goodsIssueJournal(...)`
-- [ ] Add a Purchase Return-specific journal builder that returns:
+- [x] Add a Purchase Return-specific journal builder that returns:
       `eventType=SchemaEventType.PURCHASE_RETURN`,
       `sourceType="PURCHASE_RETURN"`,
       `sourceId=issue.getReferenceId()`,
@@ -175,29 +175,29 @@ Route only Purchase Return-sourced Goods Issue to the new accounting event, whil
       `PR_INVENTORY_AMT=inventoryTotal`.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/domain/model/GoodsIssueReferenceType.java:L1-L11` - source reference enum includes `PURCHASE_RETURN`
       ref: `src/main/java/com/solusi/erp/accounting/journal/application/usecase/command/JournalPostingCommand.java:L7-L30` - journal command identity fields
-- [ ] Continue using `ReferenceType.GOODS_ISSUE` for stock movement payloads even when the source is Purchase Return.
+- [x] Continue using `ReferenceType.GOODS_ISSUE` for stock movement payloads even when the source is Purchase Return.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CompleteGoodsIssueUseCaseImpl.java:L177-L190` - physical stock movement reference currently points to GI
-- [ ] Keep `MovementType.ISSUE_RESERVED` and reservation coverage/consume behavior unchanged for Purchase Return.
+- [x] Keep `MovementType.ISSUE_RESERVED` and reservation coverage/consume behavior unchanged for Purchase Return.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CompleteGoodsIssueUseCaseImpl.java:L70-L75` - reservation coverage before stock movement
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CompleteGoodsIssueUseCaseImpl.java:L191-L196` - consume reservation only after journal succeeds
-- [ ] Do not include `taxAmount`, `taxReversalAmount`, or `clearingAmount` in the Purchase Return journal values.
+- [x] Do not include `taxAmount`, `taxReversalAmount`, or `clearingAmount` in the Purchase Return journal values.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/infrastructure/adapter/PurchaseReturnGoodsIssueSourceResolver.java:L52-L65` - PR resolver currently carries tax/clearing snapshot but Phase B should not post tax
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md` - no double-reduction example: PR journal reverses inventory/GRIR only
-- [ ] Ensure idempotency now protects by Purchase Return source. `PostJournalForEventUseCaseImpl` skips when `existsBySource(sourceType, sourceId)` is true.
+- [x] Ensure idempotency now protects by Purchase Return source. `PostJournalForEventUseCaseImpl` skips when `existsBySource(sourceType, sourceId)` is true.
       ref: `src/main/java/com/solusi/erp/accounting/journal/application/usecase/command/PostJournalForEventUseCaseImpl.java:L28-L33` - existing idempotency guard
-- [ ] Update `GetGoodsIssueJournalLinksUseCaseImpl` so generic GI still resolves journals by `sourceType="GOODS_ISSUE", sourceId=goodsIssueId`, while Purchase Return GI resolves the original journal by `sourceType="PURCHASE_RETURN", sourceId=issue.referenceId`.
+- [x] Update `GetGoodsIssueJournalLinksUseCaseImpl` so generic GI still resolves journals by `sourceType="GOODS_ISSUE", sourceId=goodsIssueId`, while Purchase Return GI resolves the original journal by `sourceType="PURCHASE_RETURN", sourceId=issue.referenceId`.
       This may require the query use case to receive enough GI reference metadata instead of only `goodsIssueId`; keep repository access inside application/query, not the web layer.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/query/GetGoodsIssueJournalLinksUseCaseImpl.java:L7-L25` - Phase A direct journal-id link lookup currently assumes `GOODS_ISSUE` source identity
       ref: `docs/reports/2026-06-02-phase-a-generic-reversal-foundation.md:L46-L52` - Phase A decision that GI detail uses direct journal entry id links
-- [ ] **TEST:** Extend `CompleteGoodsIssueUseCaseTest.complete_postsIssueStockPayloadWithSpecificValuationReferenceAndJournal` to prove generic GI still posts `GOODS_ISSUE` with `GI_COGS_AMT` and `GI_INVENTORY_AMT`.
+- [x] **TEST:** Extend `CompleteGoodsIssueUseCaseTest.complete_postsIssueStockPayloadWithSpecificValuationReferenceAndJournal` to prove generic GI still posts `GOODS_ISSUE` with `GI_COGS_AMT` and `GI_INVENTORY_AMT`.
       ref: `src/test/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CompleteGoodsIssueUseCaseTest.java:L69-L108` - current generic GI journal assertions
-- [ ] **TEST:** Extend `CompleteGoodsIssueUseCaseTest.complete_purchaseReturn_usesReservedIssueAndConsumesReservationAfterJournal` to capture the journal command and assert event/source/variables are `PURCHASE_RETURN`, source id is PR id, and amounts are based on inventory total.
+- [x] **TEST:** Extend `CompleteGoodsIssueUseCaseTest.complete_purchaseReturn_usesReservedIssueAndConsumesReservationAfterJournal` to capture the journal command and assert event/source/variables are `PURCHASE_RETURN`, source id is PR id, and amounts are based on inventory total.
       ref: `src/test/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CompleteGoodsIssueUseCaseTest.java:L272-L289` - current PR reserved issue test
-- [ ] **TEST:** Add a Purchase Return-specific journal failure test that verifies reservation is not consumed and Purchase Return source idempotency is preserved.
+- [x] **TEST:** Add a Purchase Return-specific journal failure test that verifies reservation is not consumed and Purchase Return source idempotency is preserved.
       ref: `src/test/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CompleteGoodsIssueUseCaseTest.java:L327-L340` - current journal failure rollback assertion
-- [ ] **TEST:** Keep `ConfirmPurchaseReturnUseCaseTest` green; it should not need to know accounting internals because it delegates to `CompleteGoodsIssueUseCase`.
+- [x] **TEST:** Keep `ConfirmPurchaseReturnUseCaseTest` green; it should not need to know accounting internals because it delegates to `CompleteGoodsIssueUseCase`.
       ref: `src/test/java/com/solusi/erp/purchasing/purchasereturn/application/usecase/command/ConfirmPurchaseReturnUseCaseTest.java:L45-L69` - confirm orchestration delegates GI completion
-- [ ] **TEST:** Extend `GoodsIssueQueryUseCaseTest` for journal links:
+- [x] **TEST:** Extend `GoodsIssueQueryUseCaseTest` for journal links:
       generic GI returns original/reversal journal ids from `GOODS_ISSUE` source;
       Purchase Return GI returns original/reversal journal ids from `PURCHASE_RETURN` source;
       missing journal still returns empty links.
