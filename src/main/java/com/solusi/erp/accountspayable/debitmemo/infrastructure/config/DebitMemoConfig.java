@@ -13,7 +13,9 @@ import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.FindDe
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.GetDebitMemoDetailUseCase;
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.GetDebitMemoDetailUseCaseImpl;
 import com.solusi.erp.accountspayable.debitmemo.domain.port.DebitMemoAllocationConsumptionPort;
+import com.solusi.erp.accountspayable.debitmemo.domain.port.DebitMemoSourceDocumentPort;
 import com.solusi.erp.accountspayable.debitmemo.domain.repository.DebitMemoRepository;
+import com.solusi.erp.accountspayable.debitmemo.infrastructure.adapter.DebitMemoSourceDocumentAdapter;
 import com.solusi.erp.accountspayable.debitmemo.infrastructure.adapter.NoopDebitMemoAllocationConsumptionAdapter;
 import com.solusi.erp.accountspayable.debitmemo.infrastructure.adapter.DebitMemoRepositoryImpl;
 import com.solusi.erp.accountspayable.debitmemo.infrastructure.persistence.DebitMemoJpaRepository;
@@ -21,6 +23,7 @@ import com.solusi.erp.accountspayable.debitmemo.infrastructure.persistence.Debit
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -36,6 +39,11 @@ public class DebitMemoConfig {
     @Bean
     public DebitMemoAllocationConsumptionPort debitMemoAllocationConsumptionPort() {
         return new NoopDebitMemoAllocationConsumptionAdapter();
+    }
+
+    @Bean
+    public DebitMemoSourceDocumentPort debitMemoSourceDocumentPort(NamedParameterJdbcTemplate jdbcTemplate) {
+        return new DebitMemoSourceDocumentAdapter(jdbcTemplate);
     }
 
     @Bean
@@ -80,8 +88,9 @@ public class DebitMemoConfig {
 
     @Bean
     public GetDebitMemoDetailUseCase getDebitMemoDetailUseCase(DebitMemoRepository repository,
+                                                               DebitMemoSourceDocumentPort sourceDocumentPort,
                                                                PlatformTransactionManager txManager) {
-        GetDebitMemoDetailUseCase pure = new GetDebitMemoDetailUseCaseImpl(repository);
+        GetDebitMemoDetailUseCase pure = new GetDebitMemoDetailUseCaseImpl(repository, sourceDocumentPort);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         tx.setReadOnly(true);
         return id -> tx.execute(status -> pure.execute(id));

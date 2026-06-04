@@ -1,6 +1,7 @@
 package com.solusi.erp.purchasing.purchasereturn.web.controller;
 
 import com.solusi.erp.common.approval.application.usecase.query.FindApprovalRequestByReferenceUseCase;
+import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.FindDebitMemoByPurchaseReturnUseCase;
 import com.solusi.erp.common.approval.domain.model.ApprovalRequest;
 import com.solusi.erp.common.approval.domain.model.ApprovalStatus;
 import com.solusi.erp.core.domain.model.AuditMetadata;
@@ -67,6 +68,7 @@ class PurchaseReturnControllerTest {
     private FindPurchaseReturnGrLineSlicesUseCase findSlicesUseCase;
     private FindPurchaseReturnSerialsUseCase findSerialsUseCase;
     private GetEligiblePurchaseReturnPurchaseOrderLookupUseCase poLookupUseCase;
+    private FindDebitMemoByPurchaseReturnUseCase findDebitMemoByPurchaseReturnUseCase;
     private FindApprovalRequestByReferenceUseCase findApprovalUseCase;
     private PartyLookupProvider partyLookupProvider;
     private PurchaseReturnWebMapper webMapper;
@@ -89,6 +91,7 @@ class PurchaseReturnControllerTest {
         findSlicesUseCase = mock(FindPurchaseReturnGrLineSlicesUseCase.class);
         findSerialsUseCase = mock(FindPurchaseReturnSerialsUseCase.class);
         poLookupUseCase = mock(GetEligiblePurchaseReturnPurchaseOrderLookupUseCase.class);
+        findDebitMemoByPurchaseReturnUseCase = mock(FindDebitMemoByPurchaseReturnUseCase.class);
         findApprovalUseCase = mock(FindApprovalRequestByReferenceUseCase.class);
         partyLookupProvider = mock(PartyLookupProvider.class);
         webMapper = mock(PurchaseReturnWebMapper.class);
@@ -97,7 +100,7 @@ class PurchaseReturnControllerTest {
                 createUseCase, updateUseCase, submitUseCase, cancelSubmissionUseCase, confirmUseCase,
                 cancelApprovedUseCase, findUseCase, getUseCase, getCreateViewUseCase, getEditViewUseCase,
                 findEligibleUseCase, findSlicesUseCase, findSerialsUseCase, poLookupUseCase,
-                findApprovalUseCase, partyLookupProvider, webMapper, messageSource);
+                findDebitMemoByPurchaseReturnUseCase, findApprovalUseCase, partyLookupProvider, webMapper, messageSource);
     }
 
     @Test
@@ -174,6 +177,7 @@ class PurchaseReturnControllerTest {
         PurchaseReturn domain = mock(PurchaseReturn.class);
         when(getUseCase.execute(1L)).thenReturn(Optional.of(domain));
         when(webMapper.toDetailResponse(domain)).thenReturn(new PurchaseReturnDetailResponse());
+        when(findDebitMemoByPurchaseReturnUseCase.execute(1L)).thenReturn(Optional.empty());
         ApprovalRequest approval = new ApprovalRequest(
                 new AuditMetadata(10L, 0L, null, null, null, null),
                 "PURCHASE_RETURN", 1L, "PRT-001", ApprovalStatus.PENDING, 77L);

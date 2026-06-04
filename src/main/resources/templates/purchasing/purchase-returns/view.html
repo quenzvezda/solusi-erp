@@ -61,6 +61,11 @@
                                     <div class="form-control-plaintext"><a th:href="@{/inventory/goods-issues/{id}(id=${purchaseReturn.generatedGoodsIssueId})}" class="btn btn-sm btn-outline-primary">
                                         <i class="ti ti-external-link me-1"></i><span th:text="#{label.view}">View</span></a></div>
                                 </div>
+                                <div class="col-md-3" th:if="${debitMemoLink != null}">
+                                    <label class="form-label text-secondary" th:text="#{label.debit-memo.title}">Debit Memo</label>
+                                    <div class="form-control-plaintext"><a th:href="@{/accounts-payable/debit-memos/{id}(id=${debitMemoLink.id()})}" class="btn btn-sm btn-outline-primary">
+                                        <i class="ti ti-external-link me-1"></i><span th:text="${debitMemoLink.code()}">DM-001</span></a></div>
+                                </div>
                                 <div class="col-12" th:if="${purchaseReturn.note != null && !purchaseReturn.note.isBlank()}">
                                     <label class="form-label text-secondary" th:text="#{label.purchase-return.note}">Note</label>
                                     <div class="form-control-plaintext" th:text="${purchaseReturn.note}">-</div>

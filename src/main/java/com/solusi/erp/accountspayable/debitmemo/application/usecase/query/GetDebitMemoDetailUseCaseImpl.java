@@ -2,6 +2,7 @@ package com.solusi.erp.accountspayable.debitmemo.application.usecase.query;
 
 import com.solusi.erp.accountspayable.debitmemo.domain.model.DebitMemo;
 import com.solusi.erp.accountspayable.debitmemo.domain.model.DebitMemoLine;
+import com.solusi.erp.accountspayable.debitmemo.domain.port.DebitMemoSourceDocumentPort;
 import com.solusi.erp.accountspayable.debitmemo.domain.repository.DebitMemoRepository;
 import com.solusi.erp.core.exception.DomainException;
 
@@ -10,9 +11,12 @@ import java.math.BigDecimal;
 public class GetDebitMemoDetailUseCaseImpl implements GetDebitMemoDetailUseCase {
 
     private final DebitMemoRepository debitMemoRepository;
+    private final DebitMemoSourceDocumentPort sourceDocumentPort;
 
-    public GetDebitMemoDetailUseCaseImpl(DebitMemoRepository debitMemoRepository) {
+    public GetDebitMemoDetailUseCaseImpl(DebitMemoRepository debitMemoRepository,
+                                         DebitMemoSourceDocumentPort sourceDocumentPort) {
         this.debitMemoRepository = debitMemoRepository;
+        this.sourceDocumentPort = sourceDocumentPort;
     }
 
     @Override
@@ -31,6 +35,7 @@ public class GetDebitMemoDetailUseCaseImpl implements GetDebitMemoDetailUseCase 
                 debitMemo.getCode(),
                 debitMemo.getPurchaseReturnId(),
                 debitMemo.getPurchaseReturnCode(),
+                sourceDocumentPort.findGeneratedGoodsIssueId(debitMemo.getPurchaseReturnId()).orElse(null),
                 debitMemo.getVendorId(),
                 debitMemo.getCurrencyId(),
                 debitMemo.getMemoDate(),
@@ -67,4 +72,3 @@ public class GetDebitMemoDetailUseCaseImpl implements GetDebitMemoDetailUseCase 
         );
     }
 }
-

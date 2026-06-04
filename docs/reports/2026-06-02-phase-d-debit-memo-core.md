@@ -100,6 +100,36 @@ Source Brainstorm: [docs/brainstorming/2026-06-02-vendor-debit-memo.md](../brain
 - **Action taken:** Duplicate validations throw `msg.error.debit-memo.supplier-memo-number-duplicate` and `msg.error.debit-memo.tax-document-number-duplicate`; Task 6 should add the exact Indonesian text from the brainstorm to message bundles.
 - **Ref:** `src/main/java/com/solusi/erp/accountspayable/debitmemo/application/usecase/command/UpdateDebitMemoMetadataUseCaseImpl.java`
 
+## Task 6: Build Debit Memo Web UI and Purchase Return Cross-Link
+
+- **Status:** findings
+- **Summary:** Added Debit Memo list/detail web UI, JSON metadata/cancel endpoints, message bundle keys, source document links, and Purchase Return detail cross-link.
+- **Tests:** `mvn test "-Dtest=DebitMemoControllerTest,DebitMemoWebMapperTest,DebitMemoTemplateTest,DebitMemoQueryUseCaseTest,DebitMemoConfigTest,PurchaseReturnControllerTest,PurchaseReturnViewIntegrationTest"` passed with 27 tests.
+
+### Finding: Detail template uses the local detail naming convention
+
+- **Type:** deviation
+- **Severity:** info
+- **Detail:** The plan listed `view.html`, while the implemented controller/view path uses `detail.html` to align with the new Debit Memo route and response naming.
+- **Action taken:** Added `src/main/resources/templates/accountspayable/debit-memos/detail.html` and covered the route/template contract in controller and template tests.
+- **Ref:** `src/main/resources/templates/accountspayable/debit-memos/detail.html`
+
+### Finding: Generated Goods Issue link is resolved through a read port
+
+- **Type:** decision
+- **Severity:** info
+- **Detail:** Debit Memo stores Purchase Return identity, but not the generated Goods Issue id. The Purchase Return table already owns that source-document relationship.
+- **Action taken:** Added `DebitMemoSourceDocumentPort` and a JDBC adapter that reads `pur_purchase_returns.generated_gi_id` for detail rendering without mutating the Debit Memo aggregate.
+- **Ref:** `src/main/java/com/solusi/erp/accountspayable/debitmemo/domain/port/DebitMemoSourceDocumentPort.java`
+
+### Finding: Allocation history remains intentionally non-actionable
+
+- **Type:** decision
+- **Severity:** info
+- **Detail:** Phase E owns Debit Memo Allocation, so shipping an Allocate action in Phase D would expose behavior that does not exist yet.
+- **Action taken:** Rendered an empty allocation-history placeholder and added template coverage that no allocation permission/action is exposed.
+- **Ref:** `src/main/resources/templates/accountspayable/debit-memos/detail.html`
+
 ## Verification
 
 - Task 1: `mvn test -Dtest=DebitMemoCoreMigrationTest` passed.
@@ -107,6 +137,7 @@ Source Brainstorm: [docs/brainstorming/2026-06-02-vendor-debit-memo.md](../brain
 - Task 3: `mvn test "-Dtest=DebitMemoRepositoryImplTest,DebitMemoQueryUseCaseTest,DebitMemoConfigTest"` passed.
 - Task 4: `mvn test "-Dtest=CreateDebitMemoFromPurchaseReturnUseCaseTest,ConfirmPurchaseReturnUseCaseTest,DebitMemoConfigTest,PurchaseReturnConfigTest"` passed.
 - Task 5: `mvn test "-Dtest=DebitMemoCommandUseCaseTest,DebitMemoConfigTest"` passed.
+- Task 6: `mvn test "-Dtest=DebitMemoControllerTest,DebitMemoWebMapperTest,DebitMemoTemplateTest,DebitMemoQueryUseCaseTest,DebitMemoConfigTest,PurchaseReturnControllerTest,PurchaseReturnViewIntegrationTest"` passed.
 
 ## Notes
 

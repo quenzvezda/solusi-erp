@@ -361,7 +361,7 @@ Commit:
 
 - `feat(debit-memo): add commands and metadata validation`
 
-## Task 6: Build Debit Memo Web UI and Purchase Return Cross-Link
+## Task 6: Build Debit Memo Web UI and Purchase Return Cross-Link [x]
 
 Goal: make Debit Memo visible and maintainable from the AP UI while keeping Phase E allocation actions inactive.
 

@@ -3,6 +3,7 @@ package com.solusi.erp.accountspayable.debitmemo.application.usecase.query;
 import com.solusi.erp.accountspayable.debitmemo.domain.model.DebitMemo;
 import com.solusi.erp.accountspayable.debitmemo.domain.model.DebitMemoLine;
 import com.solusi.erp.accountspayable.debitmemo.domain.model.DebitMemoSettlementStatus;
+import com.solusi.erp.accountspayable.debitmemo.domain.port.DebitMemoSourceDocumentPort;
 import com.solusi.erp.accountspayable.debitmemo.domain.repository.DebitMemoRepository;
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.domain.model.Page;
@@ -29,6 +30,9 @@ class DebitMemoQueryUseCaseTest {
     @Mock
     private DebitMemoRepository repository;
 
+    @Mock
+    private DebitMemoSourceDocumentPort sourceDocumentPort;
+
     @Test
     void findDebitMemos_should_return_phase_d_zero_settlement_recap() {
         FindDebitMemosUseCase useCase = new FindDebitMemosUseCaseImpl(repository);
@@ -52,14 +56,16 @@ class DebitMemoQueryUseCaseTest {
 
     @Test
     void getDebitMemoDetail_should_return_lines_and_phase_d_zero_settlement_recap() {
-        GetDebitMemoDetailUseCase useCase = new GetDebitMemoDetailUseCaseImpl(repository);
+        GetDebitMemoDetailUseCase useCase = new GetDebitMemoDetailUseCaseImpl(repository, sourceDocumentPort);
         DebitMemo debitMemo = sampleDebitMemo();
 
         when(repository.findById(10L)).thenReturn(Optional.of(debitMemo));
+        when(sourceDocumentPort.findGeneratedGoodsIssueId(100L)).thenReturn(Optional.of(900L));
 
         DebitMemoDetailView detail = useCase.execute(10L);
 
         assertThat(detail.code()).isEqualTo("DM-202606-00001");
+        assertThat(detail.generatedGoodsIssueId()).isEqualTo(900L);
         assertThat(detail.remainingAmount()).isEqualByComparingTo("111.0000");
         assertThat(detail.lines()).hasSize(1);
         assertThat(detail.lines().getFirst().purchaseReturnLineId()).isEqualTo(1001L);
@@ -67,7 +73,7 @@ class DebitMemoQueryUseCaseTest {
 
     @Test
     void getDebitMemoDetail_should_fail_when_not_found() {
-        GetDebitMemoDetailUseCase useCase = new GetDebitMemoDetailUseCaseImpl(repository);
+        GetDebitMemoDetailUseCase useCase = new GetDebitMemoDetailUseCaseImpl(repository, sourceDocumentPort);
         when(repository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> useCase.execute(99L))
@@ -118,4 +124,3 @@ class DebitMemoQueryUseCaseTest {
         );
     }
 }
-

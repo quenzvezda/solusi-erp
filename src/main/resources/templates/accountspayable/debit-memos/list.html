@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout/master :: head(#{label.debit-memo.title})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .debit-memo-list-content}, ~{:: #page-specific-scripts})}">
+<div class="debit-memo-list-content">
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title" th:text="#{label.debit-memo.title}">Debit Memos</h2>
+                    <div class="text-secondary mt-1" th:text="#{label.debit-memo.subtitle}">Manage vendor debit memos.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div th:replace="~{fragments/alerts :: success}"></div>
+            <div th:replace="~{fragments/alerts :: error}"></div>
+
+            <div class="card">
+                <div class="card-body border-bottom py-3">
+                    <form th:action="@{/accounts-payable/debit-memos}" method="get" class="row g-2 align-items-center">
+                        <div class="col-md-3">
+                            <div class="input-icon">
+                                <input type="text" name="keyword" th:value="${keyword}" class="form-control form-control-sm"
+                                       th:placeholder="#{placeholder.debit-memo.search}">
+                                <span class="input-icon-addon"><i class="ti ti-search"></i></span>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="text" name="vendorId" th:value="${vendorId}" class="form-control form-control-sm"
+                                   th:placeholder="#{label.vendor}">
+                        </div>
+                        <div class="col-md-2">
+                            <select name="settlementStatus" class="form-select form-select-sm">
+                                <option value="" th:text="#{label.all}">All</option>
+                                <option th:each="item : ${settlementStatuses}" th:value="${item}" th:text="${item}"
+                                        th:selected="${item == settlementStatus}">OPEN</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="date" name="memoDateFrom" data-picker="date" th:value="${memoDateFrom}"
+                                   class="form-control form-control-sm" th:placeholder="#{label.date.from}">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="date" name="memoDateTo" data-picker="date" th:value="${memoDateTo}"
+                                   class="form-control form-control-sm" th:placeholder="#{label.date.to}">
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="ti ti-filter me-1"></i><span th:text="#{label.filter}">Filter</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="debit-memo-table-container" th:fragment="debit-memo-table-container">
+                    <div class="table-responsive">
+                        <table class="table card-table table-vcenter text-nowrap">
+                            <thead>
+                            <tr>
+                                <th th:text="#{label.debit-memo.code}">Code</th>
+                                <th th:text="#{label.debit-memo.memo-date}">Memo Date</th>
+                                <th th:text="#{label.vendor}">Vendor</th>
+                                <th th:text="#{label.currency}">Currency</th>
+                                <th th:text="#{label.debit-memo.source-purchase-return}">Source Purchase Return</th>
+                                <th class="text-end" th:text="#{label.debit-memo.gross}">Gross</th>
+                                <th class="text-end" th:text="#{label.debit-memo.settled}">Settled</th>
+                                <th class="text-end" th:text="#{label.debit-memo.remaining}">Remaining</th>
+                                <th th:text="#{label.debit-memo.settlement-status}">Settlement Status</th>
+                                <th class="text-end" th:text="#{label.actions}">Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="item : ${page.content}" th:id="'row-' + ${item.id}">
+                                <td><span class="fw-medium" th:text="${item.code}">DM-001</span></td>
+                                <td th:text="${item.memoDate != null ? #temporals.format(item.memoDate, 'dd MMM yyyy') : '-'}">02 Jun 2026</td>
+                                <td th:text="${item.vendorId}">1</td>
+                                <td th:text="${item.currencyId}">1</td>
+                                <td>
+                                    <a th:href="@{/purchasing/purchase-returns/view/{id}(id=${item.purchaseReturnId})}"
+                                       th:text="${item.purchaseReturnCode}">PRT-001</a>
+                                </td>
+                                <td class="text-end" th:text="${item.grossAmountOriginal != null ? #numbers.formatDecimal(item.grossAmountOriginal, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                <td class="text-end" th:text="${item.settledAmount != null ? #numbers.formatDecimal(item.settledAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                <td class="text-end" th:text="${item.remainingAmount != null ? #numbers.formatDecimal(item.remainingAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                <td>
+                                    <span class="badge"
+                                          th:classappend="${item.settlementStatus == 'SETTLED'} ? 'bg-success-lt' : (${item.settlementStatus == 'PARTIALLY_SETTLED'} ? 'bg-info-lt' : (${item.settlementStatus == 'CANCELLED'} ? 'bg-secondary-lt' : 'bg-primary-lt'))"
+                                          th:text="${item.settlementStatus}">OPEN</span>
+                                </td>
+                                <td>
+                                    <div class="btn-list flex-nowrap justify-content-end">
+                                        <a th:href="@{/accounts-payable/debit-memos/{id}(id=${item.id})}" class="btn btn-white btn-sm"
+                                           sec:authorize="hasAuthority('DEBIT-MEMO_READ')">
+                                            <i class="ti ti-eye me-1"></i><span th:text="#{label.view}">View</span>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${page.empty}">
+                                <td colspan="10" class="text-center py-4 text-secondary" th:text="#{label.debit-memo.empty}">
+                                    No debit memos found.
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="page-specific-scripts"></div>
+</body>
+</html>
+

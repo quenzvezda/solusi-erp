@@ -11,6 +11,7 @@ public record DebitMemoDetailView(
         String code,
         Long purchaseReturnId,
         String purchaseReturnCode,
+        Long generatedGoodsIssueId,
         Long vendorId,
         Long currencyId,
         LocalDate memoDate,
@@ -32,4 +33,3 @@ public record DebitMemoDetailView(
         List<DebitMemoLineView> lines
 ) {
 }
-

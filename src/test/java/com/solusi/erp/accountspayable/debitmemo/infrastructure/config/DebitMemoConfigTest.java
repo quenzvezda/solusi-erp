@@ -16,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -83,6 +84,11 @@ class DebitMemoConfigTest {
         @Bean
         SequenceGeneratorService sequenceGeneratorService() {
             return mock(SequenceGeneratorService.class);
+        }
+
+        @Bean
+        NamedParameterJdbcTemplate namedParameterJdbcTemplate() {
+            return mock(NamedParameterJdbcTemplate.class);
         }
     }
 }

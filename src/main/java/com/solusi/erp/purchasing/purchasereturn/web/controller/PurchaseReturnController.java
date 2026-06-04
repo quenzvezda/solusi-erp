@@ -1,6 +1,7 @@
 package com.solusi.erp.purchasing.purchasereturn.web.controller;
 
 import com.solusi.erp.common.approval.application.usecase.query.FindApprovalRequestByReferenceUseCase;
+import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.FindDebitMemoByPurchaseReturnUseCase;
 import com.solusi.erp.common.approval.domain.model.ApprovalRequest;
 import com.solusi.erp.common.approval.domain.model.ApprovalStatus;
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
@@ -77,6 +78,7 @@ public class PurchaseReturnController {
     private final FindPurchaseReturnGrLineSlicesUseCase findGrLineSlicesUseCase;
     private final FindPurchaseReturnSerialsUseCase findSerialsUseCase;
     private final GetEligiblePurchaseReturnPurchaseOrderLookupUseCase purchaseOrderLookupUseCase;
+    private final FindDebitMemoByPurchaseReturnUseCase findDebitMemoByPurchaseReturnUseCase;
     private final FindApprovalRequestByReferenceUseCase findApprovalRequestByReferenceUseCase;
     private final PartyLookupProvider partyLookupProvider;
     private final PurchaseReturnWebMapper webMapper;
@@ -261,6 +263,7 @@ public class PurchaseReturnController {
         PurchaseReturn domain = getUseCase.execute(id)
                 .orElseThrow(() -> new DomainException("msg.error.purchase-return.not-found"));
         model.addAttribute("purchaseReturn", webMapper.toDetailResponse(domain));
+        model.addAttribute("debitMemoLink", findDebitMemoByPurchaseReturnUseCase.execute(id).orElse(null));
         addApprovalAttributes(id, securityUser, model);
         return "purchasing/purchase-returns/view";
     }
