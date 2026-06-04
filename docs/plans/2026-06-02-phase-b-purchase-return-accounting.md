@@ -260,36 +260,36 @@ Update module docs so Phase B behavior is the documented current behavior.
 - Docs still say Debit Memo, AP reduction, VAT reversal, and FX are deferred to later phases.
 - No stale reference to `docs/db/dev-seeder`; use actual `docs/database/dev-seeder` when mentioning seeders.
 
-### Task 6: Playwright Purchase Return Accounting Coverage [ ]
+### Task 6: Playwright Purchase Return Accounting Coverage [x]
 
 Extend E2E coverage to prove the browser Purchase Return confirmation now creates the source-specific journal.
 
 **Depends on:** Tasks 2, 3, and 4
 **Reference modules:** Playwright Purchase Return spec, Journal Entry routes
 
-- [ ] Before editing the spec, re-read `docs/tests/playwright-pitfalls.md`, `PurchaseReturnController @RequestMapping`, the Purchase Return view template, and the current purchase-return Playwright spec.
+- [x] Before editing the spec, re-read `docs/tests/playwright-pitfalls.md`, `PurchaseReturnController @RequestMapping`, the Purchase Return view template, and the current purchase-return Playwright spec.
       ref: `docs/tests/playwright-pitfalls.md:L1-L293` - mandatory E2E pitfalls and runtime gate
       ref: `e2e-tests/tests/procurement/purchase-return.spec.ts:L253-L266` - current confirm flow ends at GI detail
-- [ ] Keep setup probes using `page.request.get`, not `page.evaluate(fetch(...))` before navigation.
+- [x] Keep setup probes using `page.request.get`, not `page.evaluate(fetch(...))` before navigation.
       ref: `docs/tests/playwright-pitfalls.md:L25-L50` - about:blank fetch pitfall
       ref: `e2e-tests/tests/procurement/purchase-return.spec.ts:L105-L111` - existing APIRequestContext selector probe pattern
-- [ ] After confirming Purchase Return, navigate to `/accounting/journal-entries?sourceType=PURCHASE_RETURN&sourceCode={purchaseReturnCode}` and assert one row is visible with event label Purchase Return and the created PR code.
+- [x] After confirming Purchase Return, navigate to `/accounting/journal-entries?sourceType=PURCHASE_RETURN&sourceCode={purchaseReturnCode}` and assert one row is visible with event label Purchase Return and the created PR code.
       ref: `src/main/java/com/solusi/erp/accounting/journal/web/controller/JournalEntryController.java:L46-L76` - actual journal list route and filter params
       ref: `src/main/resources/templates/accounting/journal/journal-entry-list.html:L26-L32` - source type filter markup
-- [ ] Open the journal detail and assert it shows the Purchase Return source code and posted balanced debit/credit totals.
+- [x] Open the journal detail and assert it shows the Purchase Return source code and posted balanced debit/credit totals.
       ref: `src/main/resources/templates/accounting/journal/journal-entry-detail.html:L62-L84` - source and status display
       ref: `src/main/resources/templates/accounting/journal/journal-entry-detail.html:L124-L147` - journal lines and totals display
-- [ ] Assert the generated GI detail still opens and remains `COMPLETED`; the accounting event change must not alter physical GI behavior.
+- [x] Assert the generated GI detail still opens and remains `COMPLETED`; the accounting event change must not alter physical GI behavior.
       ref: `e2e-tests/tests/procurement/purchase-return.spec.ts:L260-L265` - current generated GI assertion
-- [ ] If the spec needs the PR code after creation, read it from the Purchase Return detail page or list, not from guessed sequence values.
+- [x] If the spec needs the PR code after creation, read it from the Purchase Return detail page or list, not from guessed sequence values.
       ref: `docs/tests/playwright-pitfalls.md:L190-L211` - avoid URL/entity assumptions; assert against actual UI
-- [ ] Run:
+- [x] Run:
       `cd e2e-tests && npx tsc --noEmit`
       `npx playwright test tests/procurement/purchase-return.spec.ts --list`
       `npx playwright test tests/procurement/purchase-return.spec.ts`
-- [ ] Run cold-cache transactional check:
+- [x] Run cold-cache transactional check:
       `cd e2e-tests && rm -rf .auth/ && npx playwright test tests/procurement/purchase-return.spec.ts`
-- [ ] On first runtime failure, retain screenshot/video and record diagnosis in `docs/reports/2026-06-02-phase-b-purchase-return-accounting.md`.
+- [x] On first runtime failure, retain screenshot/video and record diagnosis in `docs/reports/2026-06-02-phase-b-purchase-return-accounting.md`.
 
 **Validation criteria:**
 

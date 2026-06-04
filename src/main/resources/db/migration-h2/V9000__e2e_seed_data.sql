@@ -322,12 +322,13 @@ SELECT @role_warehouse_id, id FROM permissions WHERE name IN (
 -- ====== E2E PURCHASE RETURN SEED ======
 -- ROLE_EMPLOYEE owns the requester lifecycle. ROLE_APPROVER needs the detail
 -- page to process the generic approval request. GOODS-ISSUE_READ lets the
--- requester follow the generated GI link after confirm.
+-- requester follow the generated GI link after confirm. JOURNAL-ENTRY_READ
+-- lets the requester verify the generated Purchase Return journal.
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT @role_employee_id, id FROM permissions WHERE name IN (
     'PURCHASE-RETURN_READ', 'PURCHASE-RETURN_CREATE', 'PURCHASE-RETURN_UPDATE',
     'PURCHASE-RETURN_SUBMIT', 'PURCHASE-RETURN_CONFIRM', 'PURCHASE-RETURN_CANCEL',
-    'GOODS-ISSUE_READ'
+    'GOODS-ISSUE_READ', 'JOURNAL-ENTRY_READ'
 );
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT @role_approver_id, id FROM permissions WHERE name IN (

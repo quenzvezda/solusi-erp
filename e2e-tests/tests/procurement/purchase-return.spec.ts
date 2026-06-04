@@ -256,11 +256,37 @@ test.describe('Purchase Return Phase 1 flow', () => {
     await page.locator('#confirm-modal-btn-yes').click();
     await page.waitForURL(new RegExp(`/purchasing/purchase-returns/view/${purchaseReturnId}`));
     await expect(page.locator('.page-header .badge')).toContainText(/confirmed|dikonfirmasi/i);
+    const purchaseReturnCode = (await page.locator('.page-title span').first().innerText()).trim();
+    expect(purchaseReturnCode, 'confirmed purchase return code').toBeTruthy();
 
     const giLink = page.locator('a[href^="/inventory/goods-issues/"]');
     await expect(giLink).toBeVisible();
     const giHref = await giLink.getAttribute('href');
     expect(giHref).toBeTruthy();
+
+    await navigateToModule(
+      page,
+      `/accounting/journal-entries?sourceType=PURCHASE_RETURN&sourceCode=${encodeURIComponent(purchaseReturnCode)}`
+    );
+    const journalRow = page
+      .locator('table tbody tr')
+      .filter({ hasText: purchaseReturnCode })
+      .filter({ hasText: /purchase return|retur pembelian/i })
+      .first();
+    await expect(journalRow).toBeVisible();
+    await expect(journalRow).toContainText(/POSTED/);
+    const journalHref = await journalRow.locator('td').first().locator('a').getAttribute('href');
+    expect(journalHref, 'purchase return journal detail href').toBeTruthy();
+
+    await navigateToModule(page, journalHref!);
+    await expect(page.locator('a[href^="/purchasing/purchase-returns/view/"]')).toContainText(purchaseReturnCode);
+    const journalTotals = page.locator('table tfoot tr th.text-end.fw-bold');
+    await expect(journalTotals).toHaveCount(2);
+    const totalDebit = (await journalTotals.nth(0).innerText()).trim();
+    const totalCredit = (await journalTotals.nth(1).innerText()).trim();
+    expect(totalDebit).toBe(totalCredit);
+    expect(totalDebit).not.toMatch(/^0([,.]0+)?$/);
+
     await navigateToModule(page, giHref!);
     await expect(page.locator('.page-title .badge')).toContainText('COMPLETED');
   });
