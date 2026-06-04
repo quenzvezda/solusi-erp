@@ -428,3 +428,20 @@ INSERT INTO acc_schema_lines (schema_id, variable, account_id, position)
 VALUES
     (9403, 'GI_COGS_AMT', 9408, 'DEBIT'),
     (9403, 'GI_INVENTORY_AMT', 9401, 'CREDIT');
+
+-- V71 runs before E2E-only COA rows exist, so refresh PURCHASE_RETURN schema lines here.
+SET @prt_schema_id = (SELECT id FROM acc_accounting_schemas WHERE event_type = 'PURCHASE_RETURN' AND is_active = TRUE LIMIT 1);
+
+INSERT INTO acc_accounting_schemas
+    (event_type, description, is_active, version, created_by_user_id, created_date)
+SELECT 'PURCHASE_RETURN', 'E2E purchase return posting schema', TRUE, 1, 1, NOW()
+WHERE @prt_schema_id IS NULL;
+
+SET @prt_schema_id = COALESCE(@prt_schema_id, LAST_INSERT_ID());
+
+DELETE FROM acc_schema_lines WHERE schema_id = @prt_schema_id;
+
+INSERT INTO acc_schema_lines (schema_id, variable, account_id, position)
+VALUES
+    (@prt_schema_id, 'PR_GRIR_CLEARING_AMT', 9402, 'DEBIT'),
+    (@prt_schema_id, 'PR_INVENTORY_AMT', 9401, 'CREDIT');

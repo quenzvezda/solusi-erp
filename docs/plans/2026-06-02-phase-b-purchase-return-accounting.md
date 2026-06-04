@@ -115,32 +115,32 @@ Add the Java enum contract for Purchase Return-specific posting.
 - Accounting Schema UI can render the new event type without missing i18n keys.
 - No existing event loses its variables.
 
-### Task 2: Purchase Return Accounting Schema Seeds [ ]
+### Task 2: Purchase Return Accounting Schema Seeds [x]
 
 Seed the new accounting schema header and lines for MariaDB, H2, dev seeder, and E2E.
 
 **Depends on:** Task 1
 **Reference modules:** `accounting.schema`, database migrations
 
-- [ ] Create `V71__Add_Purchase_Return_Accounting_Schema.sql` in MariaDB migrations. Follow the existing idempotent schema-seed pattern: find/create active `PURCHASE_RETURN` schema, delete its seeded lines, then insert two lines.
+- [x] Create `V71__Add_Purchase_Return_Accounting_Schema.sql` in MariaDB migrations. Follow the existing idempotent schema-seed pattern: find/create active `PURCHASE_RETURN` schema, delete its seeded lines, then insert two lines.
       ref: `src/main/resources/db/migration/V62__Vendor_Payment_Accounting_Schema.sql:L4-L28` - active schema upsert and line refresh pattern
-- [ ] Map `PR_GRIR_CLEARING_AMT` to COA code `2120` (`GR/IR Clearing`) as `DEBIT`.
+- [x] Map `PR_GRIR_CLEARING_AMT` to COA code `2120` (`GR/IR Clearing`) as `DEBIT`.
       ref: `docs/database/dev-seeder/D210__accounting_coa.sql:L82-L91` - standard COA code references for inventory, AP, and GR/IR
-- [ ] Map `PR_INVENTORY_AMT` to COA code `1310` (`Merchandise Inventory`) as `CREDIT`.
+- [x] Map `PR_INVENTORY_AMT` to COA code `1310` (`Merchandise Inventory`) as `CREDIT`.
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md` - Phase B conceptual mapping and no double-reduction example
-- [ ] Create the H2 mirror with the same version number. Split syntax where H2 needs it; do not use MariaDB-only constructs that have caused prior H2 migration failures.
+- [x] Create the H2 mirror with the same version number. Split syntax where H2 needs it; do not use MariaDB-only constructs that have caused prior H2 migration failures.
       ref: `docs/tests/playwright-e2e-guide.md:L57-L74` - H2 migration mirror rules
       ref: `src/main/resources/db/migration-h2/V69__Add_Generic_Reversal_Foundation.sql:L1-L20` - H2-compatible migration style
-- [ ] Update `docs/database/dev-seeder/D220__accounting_schema.sql` to include `PURCHASE_RETURN` in header upsert, cleanup target list, schema id variable, line insert, and validation query expected counts.
+- [x] Update `docs/database/dev-seeder/D220__accounting_schema.sql` to include `PURCHASE_RETURN` in header upsert, cleanup target list, schema id variable, line insert, and validation query expected counts.
       ref: `docs/database/dev-seeder/D220__accounting_schema.sql:L1-L97` - current dev seeder accounting schema refresh
-- [ ] Use `acc_schema_lines (schema_id, variable, account_id, position)` everywhere. Do not use `var`.
+- [x] Use `acc_schema_lines (schema_id, variable, account_id, position)` everywhere. Do not use `var`.
       ref: `src/main/resources/db/migration/V56__Refactor_Schema_To_Dynamic_Lines.sql:L4-L12` - actual schema line column name
-- [ ] Update `src/main/resources/db/migration-h2/V9000__e2e_seed_data.sql` to ensure H2 has an active `PURCHASE_RETURN` schema after E2E COA rows exist.
+- [x] Update `src/main/resources/db/migration-h2/V9000__e2e_seed_data.sql` to ensure H2 has an active `PURCHASE_RETURN` schema after E2E COA rows exist.
       Use E2E inventory account `9401` for `PR_INVENTORY_AMT`; use the existing E2E GR accrual/GRIR account used by Vendor Bill for `PR_GRIR_CLEARING_AMT`.
       ref: `src/main/resources/db/migration-h2/V9000__e2e_seed_data.sql:L365-L430` - E2E accounting COA/schema seed area
-- [ ] Preserve the existing `GOODS_ISSUE` schema in migration, dev seeder, and E2E seed for generic/manual GI.
+- [x] Preserve the existing `GOODS_ISSUE` schema in migration, dev seeder, and E2E seed for generic/manual GI.
       ref: `src/main/resources/db/migration-h2/V9000__e2e_seed_data.sql:L423-L430` - current E2E generic GI schema
-- [ ] **TEST:** Add/extend a migration contract test to migrate H2 and assert:
+- [x] **TEST:** Add/extend a migration contract test to migrate H2 and assert:
       `PURCHASE_RETURN` schema exists;
       it has exactly two lines;
       `PR_GRIR_CLEARING_AMT` is `DEBIT`;

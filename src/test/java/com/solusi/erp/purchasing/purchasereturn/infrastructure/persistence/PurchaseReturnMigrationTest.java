@@ -74,6 +74,33 @@ class PurchaseReturnMigrationTest {
     }
 
     @Test
+    void migration_seeds_purchase_return_accounting_schema_without_removing_generic_goods_issue() {
+        Long purchaseReturnSchemaId = jdbcTemplate.queryForObject("""
+                SELECT id
+                FROM acc_accounting_schemas
+                WHERE event_type = 'PURCHASE_RETURN'
+                  AND is_active = TRUE
+                """, Long.class);
+
+        assertThat(purchaseReturnSchemaId).isNotNull();
+        assertSchemaLine(purchaseReturnSchemaId, "PR_GRIR_CLEARING_AMT", "DEBIT");
+        assertSchemaLine(purchaseReturnSchemaId, "PR_INVENTORY_AMT", "CREDIT");
+        assertSchemaLineCount(purchaseReturnSchemaId, 2);
+
+        Long goodsIssueSchemaId = jdbcTemplate.queryForObject("""
+                SELECT id
+                FROM acc_accounting_schemas
+                WHERE event_type = 'GOODS_ISSUE'
+                  AND is_active = TRUE
+                """, Long.class);
+
+        assertThat(goodsIssueSchemaId).isNotNull();
+        assertSchemaLine(goodsIssueSchemaId, "GI_COGS_AMT", "DEBIT");
+        assertSchemaLine(goodsIssueSchemaId, "GI_INVENTORY_AMT", "CREDIT");
+        assertSchemaLineCount(goodsIssueSchemaId, 2);
+    }
+
+    @Test
     void mariadb_and_h2_migrations_keep_required_contracts_in_sync() throws IOException {
         String mariaDb = readResource("db/migration/V67__Add_Purchase_Return_Phase_1.sql");
         String h2 = readResource("db/migration-h2/V67__Add_Purchase_Return_Phase_1.sql");
@@ -110,6 +137,21 @@ class PurchaseReturnMigrationTest {
         String serialH2 = readResource("db/migration-h2/V68__Widen_Goods_Receipt_Line_Serial_Number.sql");
         assertThat(serialMariaDb).contains("pur_goods_receipt_lines", "serial_number", "1000");
         assertThat(serialH2).contains("pur_goods_receipt_lines", "serial_number", "1000");
+
+        String accountingMariaDb = readResource("db/migration/V71__Add_Purchase_Return_Accounting_Schema.sql");
+        String accountingH2 = readResource("db/migration-h2/V71__Add_Purchase_Return_Accounting_Schema.sql");
+        for (String requiredToken : new String[]{
+                "'PURCHASE_RETURN'",
+                "'PR_GRIR_CLEARING_AMT'",
+                "'PR_INVENTORY_AMT'",
+                "'2120'",
+                "'1310'",
+                "acc_schema_lines",
+                "variable"
+        }) {
+            assertThat(accountingMariaDb).contains(requiredToken);
+            assertThat(accountingH2).contains(requiredToken);
+        }
     }
 
     @Test
@@ -175,6 +217,26 @@ class PurchaseReturnMigrationTest {
                 WHERE module_code = 'PURCHASE_RETURN'
                 """, String.class);
         assertThat(pattern).isEqualTo("PRT-{date:yyyyMM}-{seq}");
+    }
+
+    private void assertSchemaLine(Long schemaId, String variable, String position) {
+        Integer count = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*)
+                FROM acc_schema_lines
+                WHERE schema_id = ?
+                  AND variable = ?
+                  AND position = ?
+                """, Integer.class, schemaId, variable, position);
+        assertThat(count).isEqualTo(1);
+    }
+
+    private void assertSchemaLineCount(Long schemaId, int expectedCount) {
+        Integer count = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*)
+                FROM acc_schema_lines
+                WHERE schema_id = ?
+                """, Integer.class, schemaId);
+        assertThat(count).isEqualTo(expectedCount);
     }
 
     private String readResource(String path) throws IOException {
