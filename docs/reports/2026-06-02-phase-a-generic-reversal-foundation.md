@@ -50,3 +50,8 @@ This report is populated during plan execution.
 - **Status:** clean
 - **Summary:** Added bilingual GI cancellation/journal reversal/stock reversal message keys, static bundle coverage, and updated GI and Journal Entry docs for linked reversal behavior and Phase F Purchase Return reversal deferral.
 - **Validation:** `mvn test -Dtest="JournalMessageBundleTest,GoodsIssueMessageBundleTest"` passed. Focused JaCoCo warnings are deferred to Task 10 full-suite gate.
+
+## Task 9: Playwright GI Cancellation Coverage
+- **Status:** skipped
+- **Summary:** Playwright GI cancellation spec was not created or run in this execution.
+- **Reason:** User explicitly allowed E2E to be skipped until the related phases are implemented; Task 10 will use Maven regression gates only.

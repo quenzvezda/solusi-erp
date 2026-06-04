@@ -369,9 +369,11 @@ Document the new reversal standard and update user-facing messages.
 - Docs clearly say Phase A is a foundation only and does not implement Debit Memo.
 - No UI text is hardcoded in new templates.
 
-### Task 9: Playwright GI Cancellation Coverage
+### Task 9: Playwright GI Cancellation Coverage [x]
 
 Prove the browser flow for manual/generic GI cancellation after backend and template tests pass.
+
+> Skipped for this execution per user instruction. E2E coverage should be resumed after all related phases are implemented; checklist items below remain intentionally unchecked because the spec was not created or run.
 
 **Depends on:** Tasks 6, 7, and 8
 **Reference modules:** Playwright guide and GI templates/JS
