@@ -132,9 +132,6 @@ public class JournalEntry {
         if (status != JournalStatus.POSTED) {
             throw new DomainException("msg.error.journal.reversal.posted.required");
         }
-        if (!isManual()) {
-            throw new DomainException("msg.error.journal.reversal.manual.required");
-        }
         if (isReversal()) {
             throw new DomainException("msg.error.journal.reversal.chain.not.allowed");
         }
@@ -148,8 +145,8 @@ public class JournalEntry {
 
         return new JournalEntry(
                 AuditMetadata.empty(),
-                MANUAL_EVENT_TYPE,
-                MANUAL_SOURCE_TYPE,
+                eventType,
+                sourceType,
                 null,
                 null,
                 currencyId,

@@ -300,7 +300,39 @@ class JournalEntryTest {
     }
 
     @Test
-    void createReversal_rejectsDraftAutoPostedAndReversalRows() {
+    void createReversal_supportsPostedAutoJournal() {
+        JournalEntry autoPosted = new JournalEntry(
+                new AuditMetadata(20L, 1L, null, null, null, null),
+                SchemaEventType.GOODS_RECEIPT.name(),
+                "GOODS_RECEIPT",
+                6L,
+                "GR-0006",
+                null,
+                null,
+                null,
+                null,
+                LocalDate.of(2026, 5, 31),
+                "Auto",
+                JournalStatus.POSTED,
+                List.of(
+                        JournalLine.debit(101L, new BigDecimal("10.0000")),
+                        JournalLine.credit(201L, new BigDecimal("10.0000"))
+                )
+        );
+
+        JournalEntry reversal = autoPosted.createReversal(LocalDate.of(2026, 6, 1), "Reverse auto");
+
+        assertThat(reversal.getEventType()).isEqualTo(SchemaEventType.GOODS_RECEIPT.name());
+        assertThat(reversal.getSourceType()).isEqualTo("GOODS_RECEIPT");
+        assertThat(reversal.getSourceId()).isNull();
+        assertThat(reversal.getSourceCode()).isNull();
+        assertThat(reversal.getReversalOfId()).isEqualTo(20L);
+        assertThat(reversal.getLines().getFirst().creditAmount()).isEqualByComparingTo("10.0000");
+        assertThat(reversal.getLines().get(1).debitAmount()).isEqualByComparingTo("10.0000");
+    }
+
+    @Test
+    void createReversal_rejectsDraftAndReversalRows() {
         JournalEntry draft = JournalEntry.createDraft(
                 LocalDate.of(2026, 5, 31),
                 1L,
@@ -310,21 +342,6 @@ class JournalEntryTest {
                 balancedManualLines()
         );
         assertThatThrownBy(() -> draft.createReversal(LocalDate.of(2026, 6, 1), "Reverse"))
-                .isInstanceOf(DomainException.class);
-
-        JournalEntry autoPosted = JournalEntry.createPosted(
-                SchemaEventType.GOODS_RECEIPT,
-                "GOODS_RECEIPT",
-                6L,
-                "GR-0006",
-                LocalDate.of(2026, 5, 31),
-                "Auto",
-                List.of(
-                        JournalLine.debit(101L, new BigDecimal("10.0000")),
-                        JournalLine.credit(201L, new BigDecimal("10.0000"))
-                )
-        );
-        assertThatThrownBy(() -> autoPosted.createReversal(LocalDate.of(2026, 6, 1), "Reverse"))
                 .isInstanceOf(DomainException.class);
 
         JournalEntry reversal = postedManualWithId(10L).createReversal(LocalDate.of(2026, 6, 1), "Reverse");

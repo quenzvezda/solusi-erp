@@ -109,10 +109,19 @@ public class JournalConfig {
     }
 
     @Bean
-    public ReverseManualJournalUseCase reverseManualJournalUseCase(JournalEntryRepository repository,
+    public ReversePostedJournalUseCase reversePostedJournalUseCase(JournalEntryRepository repository,
                                                                    EnsureOpenPeriodForDateUseCase ensureOpenPeriodForDateUseCase,
                                                                    PlatformTransactionManager txManager) {
-        ReverseManualJournalUseCase pure = new ReverseManualJournalUseCaseImpl(repository, ensureOpenPeriodForDateUseCase);
+        ReversePostedJournalUseCase pure = new ReversePostedJournalUseCaseImpl(repository, ensureOpenPeriodForDateUseCase);
+        TransactionTemplate tx = new TransactionTemplate(txManager);
+        return command -> tx.execute(status -> pure.execute(command));
+    }
+
+    @Bean
+    public ReverseManualJournalUseCase reverseManualJournalUseCase(JournalEntryRepository repository,
+                                                                   ReversePostedJournalUseCase reversePostedJournalUseCase,
+                                                                   PlatformTransactionManager txManager) {
+        ReverseManualJournalUseCase pure = new ReverseManualJournalUseCaseImpl(repository, reversePostedJournalUseCase);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         return (Long id, LocalDate reversalDate) -> tx.execute(status -> pure.execute(id, reversalDate));
     }

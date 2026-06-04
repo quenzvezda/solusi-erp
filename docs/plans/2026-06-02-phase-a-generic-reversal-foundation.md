@@ -124,32 +124,32 @@ Add database primitives for linked stock movement reversal and valuation layer r
 - MariaDB and H2 migrations contain equivalent business columns and constraints.
 - No new enum reference type is introduced for stock reversal.
 
-### Task 2: Generic Linked Journal Reversal Use Case
+### Task 2: Generic Linked Journal Reversal Use Case [x]
 
 Generalize journal reversal so auto-journals can be reversed internally without exposing public auto-reversal from Journal Entry UI.
 
 **Depends on:** Task 1
 **Reference modules:** `accounting.journal`
 
-- [ ] Refactor `JournalEntry.createReversal(...)` so it can reverse any `POSTED` non-reversal journal while preserving manual journal behavior.
+- [x] Refactor `JournalEntry.createReversal(...)` so it can reverse any `POSTED` non-reversal journal while preserving manual journal behavior.
       Keep the manual-only public guard in `ReverseManualJournalUseCaseImpl`, not in the domain primitive.
       ref: `src/main/java/com/solusi/erp/accounting/journal/domain/model/JournalEntry.java:L131-L163` - current reversal is posted/manual-only and flips lines
-- [ ] Decide and implement reversal source metadata so `uk_acc_journal_source` is not violated. The existing manual reversal uses `sourceId = null`; if auto reversal also leaves source id null, ensure `reversalOfId` is the primary audit link.
+- [x] Decide and implement reversal source metadata so `uk_acc_journal_source` is not violated. The existing manual reversal uses `sourceId = null`; if auto reversal also leaves source id null, ensure `reversalOfId` is the primary audit link.
       ref: `src/main/resources/db/migration/V55__Add_Journal_Core.sql:L1-L16` - unique source guard for normal auto-journal
       ref: `src/main/java/com/solusi/erp/accounting/journal/domain/model/JournalEntry.java:L149-L159` - current reversal constructor source fields
-- [ ] Create `ReversePostedJournalUseCase` with command fields `originalJournalEntryId`, `reversalDate`, and `description`.
+- [x] Create `ReversePostedJournalUseCase` with command fields `originalJournalEntryId`, `reversalDate`, and `description`.
       ref: `src/main/java/com/solusi/erp/accounting/journal/application/usecase/command/ReverseManualJournalUseCase.java:L1-L8` - current manual reversal interface shape
-- [ ] Implement `ReversePostedJournalUseCaseImpl`: validate non-null date, load original, require `POSTED`, reject reversal chain, reject already reversed via `existsReversalOf`, ensure period open, create linked reversal, save, and translate unique constraint to friendly `DomainException`.
+- [x] Implement `ReversePostedJournalUseCaseImpl`: validate non-null date, load original, require `POSTED`, reject reversal chain, reject already reversed via `existsReversalOf`, ensure period open, create linked reversal, save, and translate unique constraint to friendly `DomainException`.
       ref: `src/main/java/com/solusi/erp/accounting/journal/application/usecase/command/ReverseManualJournalUseCaseImpl.java:L24-L49` - current guard and unique translation pattern
-- [ ] Refactor `ReverseManualJournalUseCaseImpl` to delegate to `ReversePostedJournalUseCase` after it validates `orig.isManual()`, or keep a thin wrapper that shares a private reversal service. Do not duplicate reversal guard logic.
+- [x] Refactor `ReverseManualJournalUseCaseImpl` to delegate to `ReversePostedJournalUseCase` after it validates `orig.isManual()`, or keep a thin wrapper that shares a private reversal service. Do not duplicate reversal guard logic.
       ref: `src/main/java/com/solusi/erp/accounting/journal/application/usecase/command/ReverseManualJournalUseCaseImpl.java:L30-L44` - manual-specific guard currently mixed with generic guard
-- [ ] Wire the new internal use case in `JournalConfig` without adding a new public permission.
+- [x] Wire the new internal use case in `JournalConfig` without adding a new public permission.
       ref: `src/main/java/com/solusi/erp/accounting/journal/infrastructure/config/JournalConfig.java:L96-L118` - current manual reversal bean wiring
-- [ ] **TEST:** Add `ReversePostedJournalUseCaseTest` for auto-journal reversal, manual journal reversal, null date, missing original, draft original, reversal chain, already reversed, closed period, and duplicate constraint fallback.
+- [x] **TEST:** Add `ReversePostedJournalUseCaseTest` for auto-journal reversal, manual journal reversal, null date, missing original, draft original, reversal chain, already reversed, closed period, and duplicate constraint fallback.
       ref: `src/test/java/com/solusi/erp/accounting/journal/application/usecase/command/ReverseManualJournalUseCaseTest.java:L20-L97` - Mockito guard coverage pattern
-- [ ] **TEST:** Extend `JournalEntryTest` for reversing posted auto-journal lines and rejecting reversal chain at domain level.
+- [x] **TEST:** Extend `JournalEntryTest` for reversing posted auto-journal lines and rejecting reversal chain at domain level.
       ref: `src/test/java/com/solusi/erp/accounting/journal/domain/model/JournalEntryTest.java` - domain model test location
-- [ ] **TEST:** Extend `JournalConfigTest` to prove the new bean is available and manual reversal still wires.
+- [x] **TEST:** Extend `JournalConfigTest` to prove the new bean is available and manual reversal still wires.
       ref: `src/test/java/com/solusi/erp/accounting/journal/infrastructure/config/JournalConfigTest.java` - config test pattern
 
 **Validation criteria:**
