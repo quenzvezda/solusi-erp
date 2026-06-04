@@ -13,8 +13,8 @@
                         <h2 class="page-title">
                             <span th:text="${bill.code}">VB-001</span>
                             <span class="badge ms-2"
-                                  th:classappend="${bill.status == 'DRAFT'} ? 'bg-warning-lt' : (${bill.status == 'PAID'} ? 'bg-success-lt' : (${bill.status == 'PARTIAL_PAID'} ? 'bg-info-lt' : (${bill.status == 'CONFIRMED'} ? 'bg-primary-lt' : 'bg-secondary-lt')))"
-                                  th:text="${bill.status}">DRAFT</span>
+                                   th:classappend="${bill.documentStatus == 'DRAFT'} ? 'bg-warning-lt' : (${bill.documentStatus == 'CONFIRMED'} ? 'bg-primary-lt' : 'bg-secondary-lt')"
+                                   th:text="${bill.documentStatus}">DRAFT</span>
                         </h2>
                     </div>
                     <div class="col-auto ms-auto">
@@ -49,11 +49,13 @@
                             </div>
 
                             <div class="col-md-3">
-                                <label class="form-label text-secondary" th:text="#{label.vb.paymentStatus}">Payment Status</label>
+                                <label class="form-label text-secondary" th:text="#{label.vb.settlementStatus}">Settlement Status</label>
                                 <div class="form-control-plaintext">
                                     <span class="badge"
-                                          th:classappend="${bill.status == 'DRAFT'} ? 'bg-warning-lt' : (${bill.status == 'PAID'} ? 'bg-success-lt' : (${bill.status == 'PARTIAL_PAID'} ? 'bg-info-lt' : (${bill.status == 'CONFIRMED'} ? 'bg-primary-lt' : 'bg-secondary-lt')))"
-                                          th:text="${bill.status}">DRAFT</span>
+                                          th:if="${bill.settlementStatus != null}"
+                                          th:classappend="${bill.settlementStatus == 'SETTLED'} ? 'bg-success-lt' : (${bill.settlementStatus == 'PARTIALLY_SETTLED'} ? 'bg-info-lt' : 'bg-secondary-lt')"
+                                          th:text="${bill.settlementStatus}">OPEN</span>
+                                    <span th:if="${bill.settlementStatus == null}">-</span>
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -61,10 +63,14 @@
                                 <div class="form-control-plaintext fw-semibold" th:text="${bill.paidAmount != null ? #numbers.formatDecimal(bill.paidAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</div>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label text-secondary" th:text="#{label.vb.unpaidAmount}">Unpaid</label>
+                                <label class="form-label text-secondary" th:text="#{label.vb.debitMemoAppliedAmount}">Debit Memo Applied</label>
+                                <div class="form-control-plaintext fw-semibold" th:text="${bill.debitMemoAppliedAmount != null ? #numbers.formatDecimal(bill.debitMemoAppliedAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-secondary" th:text="#{label.vb.outstandingAmount}">Outstanding</label>
                                 <div class="form-control-plaintext fw-bold" th:text="${bill.outstandingAmount != null ? #numbers.formatDecimal(bill.outstandingAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</div>
                             </div>
-                            <div class="col-md-3" th:if="${bill.status == 'CONFIRMED' || bill.status == 'PARTIAL_PAID' || bill.status == 'PAID'}">
+                            <div class="col-md-3" th:if="${bill.documentStatus == 'CONFIRMED'}">
                                 <label class="form-label text-secondary" th:text="#{label.journal}">Journal Entry</label>
                                 <div class="form-control-plaintext">
                                     <a th:href="@{/accounting/journal-entries(sourceType='VENDOR_BILL', sourceCode=${bill.code})}" class="btn btn-sm btn-outline-primary">
@@ -127,7 +133,7 @@
                             </tfoot>
                         </table>
                     </div>
-                    <div class="card-footer text-end" th:if="${bill.status == 'DRAFT'}">
+                    <div class="card-footer text-end" th:if="${bill.documentStatus == 'DRAFT'}">
                         <button type="button" class="btn btn-outline-warning" id="btn-cancel-vendor-bill"
                                 sec:authorize="hasAuthority('VENDOR-BILL_CANCEL')"
                                 th:data-post-url="@{'/accounts-payable/vendor-bills/' + ${bill.id} + '/cancel'}"

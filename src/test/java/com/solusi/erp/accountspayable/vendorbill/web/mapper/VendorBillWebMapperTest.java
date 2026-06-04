@@ -104,7 +104,9 @@ class VendorBillWebMapperTest {
 
         assertThat(response.getId()).isEqualTo(1L);
         assertThat(response.getCode()).isEqualTo("VB-202605-00001");
-        assertThat(response.getStatus()).isEqualTo("CONFIRMED");
+        assertThat(response.getDocumentStatus()).isEqualTo("CONFIRMED");
+        assertThat(response.getSettlementStatus()).isEqualTo("PARTIALLY_SETTLED");
+        assertThat(response.getDebitMemoAppliedAmount()).isZero();
         assertThat(response.getLines()).hasSize(1);
         assertThat(response.getLines().getFirst().getGrLineId()).isEqualTo(1001L);
         assertThat(response.getLines().getFirst().getLineTotal()).isEqualByComparingTo("100.0000");
@@ -132,6 +134,8 @@ class VendorBillWebMapperTest {
         assertThat(response.getId()).isEqualTo(1L);
         assertThat(response.getCode()).isEqualTo("VB-202605-00001");
         assertThat(response.getVendorInvoiceNumber()).isEqualTo("INV-001");
-        assertThat(response.getStatus()).isEqualTo("DRAFT");
+        assertThat(response.getDocumentStatus()).isEqualTo("DRAFT");
+        assertThat(response.getSettlementStatus()).isNull();
+        assertThat(response.getDebitMemoAppliedAmount()).isZero();
     }
 }

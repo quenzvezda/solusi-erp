@@ -68,3 +68,8 @@
 - **Status:** findings
 - **Summary:** Updated payable bill selection, added locked outstanding revalidation before journal posting, changed Vendor Bill updates to settlement status only, and added i18n messages for stale/invalid target bill errors.
 - **Validation:** `mvn test -Dtest=ConfirmVendorPaymentUseCaseTest,VendorPaymentConfigTest,*VendorBill*AdapterTest,*Payable*Test` passed; AP Java scan for `PARTIAL_PAID`, `PAID`, and `vb.status` returned 0 matches.
+
+## Task 5: Vendor Bill Web, Labels, And Templates
+- **Status:** clean
+- **Summary:** Split Vendor Bill web DTO/template status display into document and settlement status, added debit memo applied and outstanding fields, and updated list/detail filters and labels.
+- **Validation:** `mvn test -Dtest=VendorBillControllerTest,VendorBillWebMapperTest,VendorBillTemplateTest` passed; Vendor Bill template scan for `PARTIAL_PAID`, `PAID`, `bill.status`, and `item.status` returned 0 matches.

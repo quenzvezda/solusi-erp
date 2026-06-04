@@ -42,10 +42,17 @@
                                        th:placeholder="#{label.vendor}">
                             </div>
                             <div class="col-md-2">
-                                <select name="status" class="form-select form-select-sm">
+                                <select name="documentStatus" class="form-select form-select-sm">
                                     <option value="" th:text="#{label.all}">All</option>
-                                    <option th:each="item : ${statuses}" th:value="${item}" th:text="${item}"
-                                            th:selected="${item == status}">DRAFT</option>
+                                    <option th:each="item : ${documentStatuses}" th:value="${item}" th:text="${item}"
+                                            th:selected="${item == documentStatus}">DRAFT</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select name="settlementStatus" class="form-select form-select-sm">
+                                    <option value="" th:text="#{label.all}">All</option>
+                                    <option th:each="item : ${settlementStatuses}" th:value="${item}" th:text="${item}"
+                                            th:selected="${item == settlementStatus}">OPEN</option>
                                 </select>
                             </div>
                             <div class="col-auto">
@@ -65,9 +72,10 @@
                                         <th th:text="#{label.vb.vendorInvoiceNumber}">Vendor Invoice</th>
                                         <th th:text="#{label.vb.billDate}">Bill Date</th>
                                         <th th:text="#{label.vb.dueDate}">Due Date</th>
-                                        <th th:text="#{label.vb.status}">Status</th>
+                                        <th th:text="#{label.vb.documentStatus}">Document Status</th>
+                                        <th th:text="#{label.vb.settlementStatus}">Settlement Status</th>
                                         <th class="text-end" th:text="#{label.vb.totalAmount}">Total</th>
-                                        <th class="text-end" th:text="#{label.vb.unpaidAmount}">Unpaid</th>
+                                        <th class="text-end" th:text="#{label.vb.outstandingAmount}">Outstanding</th>
                                         <th class="text-end" th:text="#{label.actions}">Actions</th>
                                     </tr>
                                 </thead>
@@ -79,8 +87,15 @@
                                         <td th:text="${item.dueDate != null ? #temporals.format(item.dueDate, 'dd MMM yyyy') : '-'}">20 May 2026</td>
                                         <td>
                                             <span class="badge"
-                                                  th:classappend="${item.status == 'DRAFT'} ? 'bg-warning-lt' : (${item.status == 'CONFIRMED'} ? 'bg-success-lt' : 'bg-secondary-lt')"
-                                                  th:text="${item.status}">DRAFT</span>
+                                                  th:classappend="${item.documentStatus == 'DRAFT'} ? 'bg-warning-lt' : (${item.documentStatus == 'CONFIRMED'} ? 'bg-primary-lt' : 'bg-secondary-lt')"
+                                                  th:text="${item.documentStatus}">DRAFT</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge"
+                                                  th:if="${item.settlementStatus != null}"
+                                                  th:classappend="${item.settlementStatus == 'SETTLED'} ? 'bg-success-lt' : (${item.settlementStatus == 'PARTIALLY_SETTLED'} ? 'bg-info-lt' : 'bg-secondary-lt')"
+                                                  th:text="${item.settlementStatus}">OPEN</span>
+                                            <span th:if="${item.settlementStatus == null}">-</span>
                                         </td>
                                         <td class="text-end" th:text="${item.totalAmount != null ? #numbers.formatDecimal(item.totalAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
                                         <td class="text-end" th:text="${item.outstandingAmount != null ? #numbers.formatDecimal(item.outstandingAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
@@ -91,7 +106,7 @@
                                                     <i class="ti ti-eye me-1"></i><span th:text="#{label.view}">View</span>
                                                 </a>
                                                 <button type="button" class="btn btn-white btn-sm text-danger"
-                                                        th:if="${item.status == 'DRAFT'}"
+                                                        th:if="${item.documentStatus == 'DRAFT'}"
                                                         sec:authorize="hasAuthority('VENDOR-BILL_DELETE')"
                                                         data-bs-toggle="modal"
                                                         th:data-bs-target="'#modal-delete-vendor-bill-' + ${item.id}">
@@ -107,7 +122,7 @@
                                         </td>
                                     </tr>
                                     <tr th:if="${page.empty}">
-                                        <td colspan="8" class="text-center py-4 text-secondary" th:text="#{label.vb.empty}">
+                                        <td colspan="9" class="text-center py-4 text-secondary" th:text="#{label.vb.empty}">
                                             No vendor bills found.
                                         </td>
                                     </tr>

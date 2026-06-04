@@ -3,6 +3,7 @@ package com.solusi.erp.accountspayable.vendorbill.web.controller;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.command.*;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.query.*;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillSettlementStatus;
 import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableApReference;
 import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableGrLineView;
 import com.solusi.erp.accountspayable.vendorbill.web.dto.*;
@@ -51,12 +52,13 @@ public class VendorBillController {
     @PreAuthorize("hasAuthority('VENDOR-BILL_READ')")
     public String list(@RequestParam(required = false) String keyword,
                        @RequestParam(required = false) Long vendorId,
-                       @RequestParam(required = false) VendorBillDocumentStatus status,
+                       @RequestParam(required = false) VendorBillDocumentStatus documentStatus,
+                       @RequestParam(required = false) VendorBillSettlementStatus settlementStatus,
                        org.springframework.data.domain.Pageable springPageable,
                        Model model) {
         Pageable domainPageable = PageableMapper.toDomain(springPageable);
         com.solusi.erp.core.domain.model.Page<VendorBillSummaryView> domainPage =
-                findVendorBillsUseCase.execute(keyword, vendorId, status, null, domainPageable);
+                findVendorBillsUseCase.execute(keyword, vendorId, documentStatus, settlementStatus, domainPageable);
         List<VendorBillSummaryResponse> content = domainPage.content().stream()
                 .map(webMapper::toSummaryResponse)
                 .toList();
@@ -64,8 +66,10 @@ public class VendorBillController {
         model.addAttribute("page", new PageImpl<>(content, springPageable, domainPage.totalElements()));
         model.addAttribute("keyword", keyword);
         model.addAttribute("vendorId", vendorId);
-        model.addAttribute("status", status);
-        model.addAttribute("statuses", VendorBillDocumentStatus.values());
+        model.addAttribute("documentStatus", documentStatus);
+        model.addAttribute("settlementStatus", settlementStatus);
+        model.addAttribute("documentStatuses", VendorBillDocumentStatus.values());
+        model.addAttribute("settlementStatuses", VendorBillSettlementStatus.values());
         return "accountspayable/vendor-bills/list";
     }
 

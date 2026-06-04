@@ -254,20 +254,20 @@ Make Vendor Payment confirmation safe against stale outstanding amounts and futu
 - Confirmed payment cannot over-settle a Vendor Bill when outstanding changed after draft creation.
 - Vendor Payment accounting command stays unchanged except for rejection timing.
 
-### Task 5: Vendor Bill Web, Labels, And Templates [ ]
+### Task 5: Vendor Bill Web, Labels, And Templates [x]
 
 Expose document and settlement statuses cleanly in Vendor Bill list/detail without mixing lifecycle and settlement labels.
 
 **Depends on:** Tasks 2 and 3
 **Reference modules:** `accountspayable.vendorbill`, UI specs
 
-- [ ] Update `VendorBillController.list(...)` to accept separate optional filters for document status and settlement status, populate both enum lists in the model, and pass both filters to the query use case.
+- [x] Update `VendorBillController.list(...)` to accept separate optional filters for document status and settlement status, populate both enum lists in the model, and pass both filters to the query use case.
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorbill/web/controller/VendorBillController.java:L45-L71` - current single `status` filter
-- [ ] Update `VendorBillSummaryResponse`, `VendorBillDetailResponse`, and `VendorBillWebMapper` to expose `documentStatus`, `settlementStatus`, `paidAmount`, `debitMemoAppliedAmount`, and `outstandingAmount`.
+- [x] Update `VendorBillSummaryResponse`, `VendorBillDetailResponse`, and `VendorBillWebMapper` to expose `documentStatus`, `settlementStatus`, `paidAmount`, `debitMemoAppliedAmount`, and `outstandingAmount`.
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorbill/web/dto/VendorBillSummaryResponse.java:L1-L24` - current summary DTO
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorbill/web/dto/VendorBillDetailResponse.java:L1-L32` - current detail DTO
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorbill/web/mapper/VendorBillWebMapper.java:L1-L70` - current mapper copies single status and amounts
-- [ ] Update list template filters and table columns:
+- [x] Update list template filters and table columns:
       document status filter;
       settlement status filter;
       document status badge;
@@ -276,22 +276,22 @@ Expose document and settlement statuses cleanly in Vendor Bill list/detail witho
       Use generic pagination fragment unchanged.
       ref: `src/main/resources/templates/accountspayable/vendor-bills/list.html:L35-L127` - current list filter/table
       ref: `docs/spec/pagination.md:L48-L76` - pagination fragment placement
-- [ ] Update detail template header and payment summary:
+- [x] Update detail template header and payment summary:
       header badge is document status;
       settlement summary shows settlement status, paid amount, debit memo applied amount, and outstanding amount;
       journal link visibility depends on `documentStatus == 'CONFIRMED'`.
       ref: `src/main/resources/templates/accountspayable/vendor-bills/detail.html:L12-L95` - current header/status/payment summary
-- [ ] Update action visibility to use `documentStatus == 'DRAFT'` for confirm/cancel/delete/edit behavior.
+- [x] Update action visibility to use `documentStatus == 'DRAFT'` for confirm/cancel/delete/edit behavior.
       ref: `src/main/resources/templates/accountspayable/vendor-bills/detail.html:L136-L154` - current draft action footer
       ref: `docs/spec/action-buttons.md:L1-L50` - post action button contract
-- [ ] Add English and Indonesian labels for document status, settlement status, debit memo applied amount, outstanding amount, and new stale payment validation messages.
+- [x] Add English and Indonesian labels for document status, settlement status, debit memo applied amount, outstanding amount, and new stale payment validation messages.
       Use targeted replace edits; do not append via shell echo.
       ref: `docs/spec/i18n-guide.md:L70-L90` - i18n update protocol
-- [ ] **TEST:** Update `VendorBillControllerTest` for filter parameters/model attrs and detail response mapping.
+- [x] **TEST:** Update `VendorBillControllerTest` for filter parameters/model attrs and detail response mapping.
       ref: `src/test/java/com/solusi/erp/accountspayable/vendorbill/web/controller/VendorBillControllerTest.java:L1-L282` - controller/reflection test pattern
-- [ ] **TEST:** Update `VendorBillWebMapperTest` for both statuses and DMA seam field.
+- [x] **TEST:** Update `VendorBillWebMapperTest` for both statuses and DMA seam field.
       ref: `src/test/java/com/solusi/erp/accountspayable/vendorbill/web/mapper/VendorBillWebMapperTest.java:L1-L132` - web mapper test pattern
-- [ ] **TEST:** Update `VendorBillTemplateTest` for new labels, filters, badge bindings, action visibility, and no stale `PARTIAL_PAID`/`PAID` template dependency.
+- [x] **TEST:** Update `VendorBillTemplateTest` for new labels, filters, badge bindings, action visibility, and no stale `PARTIAL_PAID`/`PAID` template dependency.
       ref: `src/test/java/com/solusi/erp/accountspayable/vendorbill/web/template/VendorBillTemplateTest.java:L1-L149` - static and render template tests
 
 **Validation criteria:**
