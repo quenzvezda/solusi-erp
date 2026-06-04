@@ -176,30 +176,30 @@ Refactor the Vendor Bill aggregate and persistence model to expose document and 
 - `DRAFT`, `CONFIRMED`, and `CANCELLED` remain the only document lifecycle states.
 - `PARTIAL_PAID` and `PAID` no longer compile as Vendor Bill domain statuses.
 
-### Task 3: Neutral Settlement Projection For Vendor Bill [ ]
+### Task 3: Neutral Settlement Projection For Vendor Bill [x]
 
 Replace payment-only summary naming with a neutral settlement projection that can include future Debit Memo Allocation.
 
 **Depends on:** Task 2
 **Reference modules:** `accountspayable.vendorbill`, `accountspayable.vendorpayment`
 
-- [ ] Replace or extend `VendorBillPaymentSummaryPort` into a neutral settlement summary port returning `paidAmount`, `debitMemoAppliedAmount`, `outstandingAmount`, and computed `settlementStatus`.
+- [x] Replace or extend `VendorBillPaymentSummaryPort` into a neutral settlement summary port returning `paidAmount`, `debitMemoAppliedAmount`, `outstandingAmount`, and computed `settlementStatus`.
       For Phase C, `debitMemoAppliedAmount` is always zero.
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorbill/domain/port/VendorBillPaymentSummaryPort.java:L1-L15` - current payment-only projection port
-- [ ] Update `VendorBillPaymentSummaryAdapter` SQL to calculate confirmed payment total, zero DMA total, outstanding amount, and settlement status using `vb.total_amount`.
+- [x] Update `VendorBillPaymentSummaryAdapter` SQL to calculate confirmed payment total, zero DMA total, outstanding amount, and settlement status using `vb.total_amount`.
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorbill/infrastructure/adapter/VendorBillPaymentSummaryAdapter.java:L18-L41` - current confirmed-payment projection SQL
-- [ ] Clamp outstanding at zero or reject over-settlement upstream. Do not let UI projections show a negative outstanding amount.
+- [x] Clamp outstanding at zero or reject over-settlement upstream. Do not let UI projections show a negative outstanding amount.
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md:L911-L927` - concurrency and over-settlement prevention
-- [ ] Update `FindVendorBillsUseCaseImpl` and `GetVendorBillDetailUseCaseImpl` to use the neutral projection and expose `debitMemoAppliedAmount` and settlement status.
+- [x] Update `FindVendorBillsUseCaseImpl` and `GetVendorBillDetailUseCaseImpl` to use the neutral projection and expose `debitMemoAppliedAmount` and settlement status.
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorbill/application/usecase/query/FindVendorBillsUseCaseImpl.java:L18-L52` - current summary uses payment-only port
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorbill/application/usecase/query/GetVendorBillDetailUseCaseImpl.java:L21-L49` - current detail uses payment-only port
-- [ ] Update `VendorBillSummaryView` and `VendorBillDetailView` with `documentStatus`, `settlementStatus`, `paidAmount`, `debitMemoAppliedAmount`, and `outstandingAmount`.
+- [x] Update `VendorBillSummaryView` and `VendorBillDetailView` with `documentStatus`, `settlementStatus`, `paidAmount`, `debitMemoAppliedAmount`, and `outstandingAmount`.
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorbill/application/usecase/query/VendorBillSummaryView.java:L1-L20` - current single status response model
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorbill/application/usecase/query/VendorBillDetailView.java:L1-L28` - current detail response model
-- [ ] **TEST:** Update query use case tests for open, partially settled, settled, and zero-DMA seam values.
+- [x] **TEST:** Update query use case tests for open, partially settled, settled, and zero-DMA seam values.
       ref: `src/test/java/com/solusi/erp/accountspayable/vendorbill/application/usecase/query/FindVendorBillsUseCaseTest.java` - summary projection test pattern
       ref: `src/test/java/com/solusi/erp/accountspayable/vendorbill/application/usecase/query/GetVendorBillDetailUseCaseTest.java` - detail projection test pattern
-- [ ] **TEST:** Update adapter tests to assert SQL only includes confirmed Vendor Payments now and includes explicit zero Debit Memo seam fields for Phase E.
+- [x] **TEST:** Update adapter tests to assert SQL only includes confirmed Vendor Payments now and includes explicit zero Debit Memo seam fields for Phase E.
       ref: `src/test/java/com/solusi/erp/accountspayable/vendorbill/infrastructure/adapter/VendorBillPaymentSummaryAdapterTest.java:L1-L76` - current SQL projection test style
 
 **Validation criteria:**

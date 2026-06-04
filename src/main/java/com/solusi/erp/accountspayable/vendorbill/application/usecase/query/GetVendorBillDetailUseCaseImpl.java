@@ -3,7 +3,8 @@ package com.solusi.erp.accountspayable.vendorbill.application.usecase.query;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBill;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillGrRef;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillLine;
-import com.solusi.erp.accountspayable.vendorbill.domain.port.VendorBillPaymentSummaryPort;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillSettlementStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.port.VendorBillSettlementSummaryPort;
 import com.solusi.erp.accountspayable.vendorbill.domain.repository.VendorBillRepository;
 import com.solusi.erp.core.exception.DomainException;
 
@@ -12,12 +13,12 @@ import java.math.BigDecimal;
 public class GetVendorBillDetailUseCaseImpl implements GetVendorBillDetailUseCase {
 
     private final VendorBillRepository vendorBillRepository;
-    private final VendorBillPaymentSummaryPort paymentSummaryPort;
+    private final VendorBillSettlementSummaryPort settlementSummaryPort;
 
     public GetVendorBillDetailUseCaseImpl(VendorBillRepository vendorBillRepository,
-                                          VendorBillPaymentSummaryPort paymentSummaryPort) {
+                                          VendorBillSettlementSummaryPort settlementSummaryPort) {
         this.vendorBillRepository = vendorBillRepository;
-        this.paymentSummaryPort = paymentSummaryPort;
+        this.settlementSummaryPort = settlementSummaryPort;
     }
 
     @Override
@@ -28,9 +29,11 @@ public class GetVendorBillDetailUseCaseImpl implements GetVendorBillDetailUseCas
     }
 
     private VendorBillDetailView toDetail(VendorBill bill) {
-        VendorBillPaymentSummaryPort.PaymentSummary summary = paymentSummaryPort.getPaymentSummary(bill.getId());
+        VendorBillSettlementSummaryPort.SettlementSummary summary = settlementSummaryPort.getSettlementSummary(bill.getId());
         BigDecimal paidAmount = summary != null ? summary.paidAmount() : BigDecimal.ZERO;
+        BigDecimal debitMemoAppliedAmount = summary != null ? summary.debitMemoAppliedAmount() : BigDecimal.ZERO;
         BigDecimal outstandingAmount = summary != null ? summary.outstandingAmount() : bill.getTotalAmount();
+        VendorBillSettlementStatus settlementStatus = summary != null ? summary.settlementStatus() : bill.getSettlementStatus();
         return new VendorBillDetailView(
                 bill.getId(),
                 bill.getCode(),
@@ -41,10 +44,12 @@ public class GetVendorBillDetailUseCaseImpl implements GetVendorBillDetailUseCas
                 bill.getCurrencyId(),
                 bill.getExchangeRate(),
                 bill.getDocumentStatus(),
+                settlementStatus,
                 bill.getSubtotal(),
                 bill.getTaxAmount(),
                 bill.getTotalAmount(),
                 paidAmount,
+                debitMemoAppliedAmount,
                 outstandingAmount,
                 bill.getNotes(),
                 bill.getGrRefs().stream().map(VendorBillGrRef::grId).toList(),

@@ -4,6 +4,7 @@ import com.solusi.erp.accountspayable.vendorbill.application.usecase.query.Vendo
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.query.VendorBillLineView;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.query.VendorBillSummaryView;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillSettlementStatus;
 import com.solusi.erp.accountspayable.vendorbill.web.dto.VendorBillDetailResponse;
 import com.solusi.erp.accountspayable.vendorbill.web.dto.VendorBillLineRequest;
 import com.solusi.erp.accountspayable.vendorbill.web.dto.VendorBillSaveCommand;
@@ -74,10 +75,12 @@ class VendorBillWebMapperTest {
                 1L,
                 BigDecimal.ONE,
                 VendorBillDocumentStatus.CONFIRMED,
+                VendorBillSettlementStatus.PARTIALLY_SETTLED,
                 new BigDecimal("100.0000"),
                 BigDecimal.ZERO,
                 new BigDecimal("100.0000"),
                 new BigDecimal("50.0000"),
+                BigDecimal.ZERO,
                 new BigDecimal("50.0000"),
                 "notes",
                 List.of(88L),
@@ -117,6 +120,8 @@ class VendorBillWebMapperTest {
                 LocalDate.of(2026, 5, 10),
                 LocalDate.of(2026, 5, 20),
                 VendorBillDocumentStatus.DRAFT,
+                null,
+                BigDecimal.ZERO,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO

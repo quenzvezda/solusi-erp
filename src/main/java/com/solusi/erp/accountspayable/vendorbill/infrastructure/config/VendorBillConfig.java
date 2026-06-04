@@ -6,11 +6,11 @@ import com.solusi.erp.accountspayable.vendorbill.application.usecase.command.*;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.query.*;
 import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableApReferenceProvider;
 import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableGrQueryPort;
-import com.solusi.erp.accountspayable.vendorbill.domain.port.VendorBillPaymentSummaryPort;
+import com.solusi.erp.accountspayable.vendorbill.domain.port.VendorBillSettlementSummaryPort;
 import com.solusi.erp.accountspayable.vendorbill.domain.repository.VendorBillRepository;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.adapter.BillableGrQueryAdapter;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.adapter.GoodsReceiptBillableReferenceProvider;
-import com.solusi.erp.accountspayable.vendorbill.infrastructure.adapter.VendorBillPaymentSummaryAdapter;
+import com.solusi.erp.accountspayable.vendorbill.infrastructure.adapter.VendorBillSettlementSummaryAdapter;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.adapter.VendorBillRepositoryImpl;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.persistence.VendorBillJpaRepository;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.persistence.VendorBillPersistenceMapper;
@@ -38,8 +38,8 @@ public class VendorBillConfig {
     }
 
     @Bean
-    public VendorBillPaymentSummaryPort vendorBillPaymentSummaryPort(NamedParameterJdbcTemplate jdbcTemplate) {
-        return new VendorBillPaymentSummaryAdapter(jdbcTemplate);
+    public VendorBillSettlementSummaryPort vendorBillSettlementSummaryPort(NamedParameterJdbcTemplate jdbcTemplate) {
+        return new VendorBillSettlementSummaryAdapter(jdbcTemplate);
     }
 
     @Bean
@@ -107,9 +107,9 @@ public class VendorBillConfig {
 
     @Bean
     public FindVendorBillsUseCase findVendorBillsUseCase(VendorBillRepository repository,
-                                                         VendorBillPaymentSummaryPort paymentSummaryPort,
-                                                         PlatformTransactionManager txManager) {
-        FindVendorBillsUseCase pure = new FindVendorBillsUseCaseImpl(repository, paymentSummaryPort);
+                                                          VendorBillSettlementSummaryPort settlementSummaryPort,
+                                                          PlatformTransactionManager txManager) {
+        FindVendorBillsUseCase pure = new FindVendorBillsUseCaseImpl(repository, settlementSummaryPort);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         tx.setReadOnly(true);
         return (keyword, vendorId, documentStatus, settlementStatus, pageable) ->
@@ -118,9 +118,9 @@ public class VendorBillConfig {
 
     @Bean
     public GetVendorBillDetailUseCase getVendorBillDetailUseCase(VendorBillRepository repository,
-                                                                 VendorBillPaymentSummaryPort paymentSummaryPort,
-                                                                 PlatformTransactionManager txManager) {
-        GetVendorBillDetailUseCase pure = new GetVendorBillDetailUseCaseImpl(repository, paymentSummaryPort);
+                                                                  VendorBillSettlementSummaryPort settlementSummaryPort,
+                                                                  PlatformTransactionManager txManager) {
+        GetVendorBillDetailUseCase pure = new GetVendorBillDetailUseCaseImpl(repository, settlementSummaryPort);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         tx.setReadOnly(true);
         return id -> tx.execute(status -> pure.execute(id));

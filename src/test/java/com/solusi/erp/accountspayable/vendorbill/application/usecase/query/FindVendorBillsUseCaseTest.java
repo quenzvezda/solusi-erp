@@ -2,7 +2,8 @@ package com.solusi.erp.accountspayable.vendorbill.application.usecase.query;
 
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBill;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
-import com.solusi.erp.accountspayable.vendorbill.domain.port.VendorBillPaymentSummaryPort;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillSettlementStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.port.VendorBillSettlementSummaryPort;
 import com.solusi.erp.accountspayable.vendorbill.domain.repository.VendorBillRepository;
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.domain.model.Page;
@@ -24,11 +25,17 @@ class FindVendorBillsUseCaseTest {
         InMemoryVendorBillRepository repository = new InMemoryVendorBillRepository();
         Pageable pageable = Pageable.of(1, 10, "billDate", "desc");
         repository.page = new Page<>(List.of(bill()), 1, 10, 1);
-        InMemoryPaymentSummaryPort paymentSummaryPort = new InMemoryPaymentSummaryPort(Map.of(
-                1L, new VendorBillPaymentSummaryPort.PaymentSummary(1L, new BigDecimal("50.0000"), new BigDecimal("50.0000"))
+        InMemorySettlementSummaryPort settlementSummaryPort = new InMemorySettlementSummaryPort(Map.of(
+                1L, new VendorBillSettlementSummaryPort.SettlementSummary(
+                        1L,
+                        new BigDecimal("50.0000"),
+                        BigDecimal.ZERO,
+                        new BigDecimal("50.0000"),
+                        VendorBillSettlementStatus.PARTIALLY_SETTLED
+                )
         ));
 
-        Page<VendorBillSummaryView> result = new FindVendorBillsUseCaseImpl(repository, paymentSummaryPort)
+        Page<VendorBillSummaryView> result = new FindVendorBillsUseCaseImpl(repository, settlementSummaryPort)
                 .execute("INV", 10L, VendorBillDocumentStatus.CONFIRMED, null, pageable);
 
         assertThat(repository.keyword).isEqualTo("INV");
@@ -38,15 +45,50 @@ class FindVendorBillsUseCaseTest {
         assertThat(result.content()).hasSize(1);
         assertThat(result.content().getFirst().code()).isEqualTo("VB-202605-00001");
         assertThat(result.content().getFirst().totalAmount()).isEqualByComparingTo("100.0000");
+        assertThat(result.content().getFirst().settlementStatus()).isEqualTo(VendorBillSettlementStatus.PARTIALLY_SETTLED);
         assertThat(result.content().getFirst().paidAmount()).isEqualByComparingTo("50.0000");
+        assertThat(result.content().getFirst().debitMemoAppliedAmount()).isZero();
         assertThat(result.content().getFirst().outstandingAmount()).isEqualByComparingTo("50.0000");
-        assertThat(paymentSummaryPort.requestedIds).containsExactly(1L);
+        assertThat(settlementSummaryPort.requestedIds).containsExactly(1L);
         assertThat(result.totalElements()).isEqualTo(1);
     }
 
+    @Test
+    void execute_should_expose_open_partial_and_settled_projection_statuses() {
+        InMemoryVendorBillRepository repository = new InMemoryVendorBillRepository();
+        Pageable pageable = Pageable.of(0, 10, "billDate", "desc");
+        repository.page = new Page<>(List.of(bill(1L), bill(2L), bill(3L)), 0, 10, 3);
+        InMemorySettlementSummaryPort settlementSummaryPort = new InMemorySettlementSummaryPort(Map.of(
+                1L, new VendorBillSettlementSummaryPort.SettlementSummary(
+                        1L, BigDecimal.ZERO, BigDecimal.ZERO, new BigDecimal("100.0000"), VendorBillSettlementStatus.OPEN),
+                2L, new VendorBillSettlementSummaryPort.SettlementSummary(
+                        2L, new BigDecimal("25.0000"), BigDecimal.ZERO, new BigDecimal("75.0000"), VendorBillSettlementStatus.PARTIALLY_SETTLED),
+                3L, new VendorBillSettlementSummaryPort.SettlementSummary(
+                        3L, new BigDecimal("100.0000"), BigDecimal.ZERO, BigDecimal.ZERO, VendorBillSettlementStatus.SETTLED)
+        ));
+
+        Page<VendorBillSummaryView> result = new FindVendorBillsUseCaseImpl(repository, settlementSummaryPort)
+                .execute(null, null, null, null, pageable);
+
+        assertThat(result.content())
+                .extracting(VendorBillSummaryView::settlementStatus)
+                .containsExactly(
+                        VendorBillSettlementStatus.OPEN,
+                        VendorBillSettlementStatus.PARTIALLY_SETTLED,
+                        VendorBillSettlementStatus.SETTLED
+                );
+        assertThat(result.content())
+                .extracting(VendorBillSummaryView::debitMemoAppliedAmount)
+                .allSatisfy(amount -> assertThat(amount).isZero());
+    }
+
     private static VendorBill bill() {
+        return bill(1L);
+    }
+
+    private static VendorBill bill(Long id) {
         return new VendorBill(
-                new AuditMetadata(1L, 1L, null, null, null, null),
+                new AuditMetadata(id, 1L, null, null, null, null),
                 "VB-202605-00001",
                 10L,
                 "INV-001",
@@ -55,7 +97,7 @@ class FindVendorBillsUseCaseTest {
                 1L,
                 BigDecimal.ONE,
                 VendorBillDocumentStatus.CONFIRMED,
-                null,
+                VendorBillSettlementStatus.OPEN,
                 new BigDecimal("100.0000"),
                 BigDecimal.ZERO,
                 new BigDecimal("100.0000"),
@@ -65,16 +107,16 @@ class FindVendorBillsUseCaseTest {
         );
     }
 
-    private record InMemoryPaymentSummaryPort(Map<Long, VendorBillPaymentSummaryPort.PaymentSummary> summaries) implements VendorBillPaymentSummaryPort {
+    private record InMemorySettlementSummaryPort(Map<Long, VendorBillSettlementSummaryPort.SettlementSummary> summaries) implements VendorBillSettlementSummaryPort {
         private static List<Long> requestedIds;
 
         @Override
-        public PaymentSummary getPaymentSummary(Long vendorBillId) {
+        public SettlementSummary getSettlementSummary(Long vendorBillId) {
             return summaries.get(vendorBillId);
         }
 
         @Override
-        public Map<Long, PaymentSummary> getPaymentSummaries(List<Long> vendorBillIds) {
+        public Map<Long, SettlementSummary> getSettlementSummaries(List<Long> vendorBillIds) {
             requestedIds = vendorBillIds;
             return summaries;
         }

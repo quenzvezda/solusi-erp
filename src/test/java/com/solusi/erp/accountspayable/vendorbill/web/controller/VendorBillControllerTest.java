@@ -3,6 +3,7 @@ package com.solusi.erp.accountspayable.vendorbill.web.controller;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.command.*;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.query.*;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillSettlementStatus;
 import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableApReference;
 import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableGrLineView;
 import com.solusi.erp.accountspayable.vendorbill.web.dto.VendorBillDetailResponse;
@@ -89,6 +90,8 @@ class VendorBillControllerTest {
                 LocalDate.of(2026, 5, 10),
                 LocalDate.of(2026, 5, 20),
                 VendorBillDocumentStatus.DRAFT,
+                null,
+                BigDecimal.ZERO,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO
@@ -122,10 +125,12 @@ class VendorBillControllerTest {
                 1L,
                 BigDecimal.ONE,
                 VendorBillDocumentStatus.CONFIRMED,
+                VendorBillSettlementStatus.PARTIALLY_SETTLED,
                 new BigDecimal("100.0000"),
                 BigDecimal.ZERO,
                 new BigDecimal("100.0000"),
                 new BigDecimal("50.0000"),
+                BigDecimal.ZERO,
                 new BigDecimal("50.0000"),
                 "notes",
                 List.of(88L),

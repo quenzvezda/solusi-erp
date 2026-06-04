@@ -3,7 +3,7 @@ package com.solusi.erp.accountspayable.vendorbill.application.usecase.query;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBill;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillSettlementStatus;
-import com.solusi.erp.accountspayable.vendorbill.domain.port.VendorBillPaymentSummaryPort;
+import com.solusi.erp.accountspayable.vendorbill.domain.port.VendorBillSettlementSummaryPort;
 import com.solusi.erp.accountspayable.vendorbill.domain.repository.VendorBillRepository;
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
@@ -15,12 +15,12 @@ import java.util.Map;
 public class FindVendorBillsUseCaseImpl implements FindVendorBillsUseCase {
 
     private final VendorBillRepository vendorBillRepository;
-    private final VendorBillPaymentSummaryPort paymentSummaryPort;
+    private final VendorBillSettlementSummaryPort settlementSummaryPort;
 
     public FindVendorBillsUseCaseImpl(VendorBillRepository vendorBillRepository,
-                                      VendorBillPaymentSummaryPort paymentSummaryPort) {
+                                      VendorBillSettlementSummaryPort settlementSummaryPort) {
         this.vendorBillRepository = vendorBillRepository;
-        this.paymentSummaryPort = paymentSummaryPort;
+        this.settlementSummaryPort = settlementSummaryPort;
     }
 
     @Override
@@ -28,7 +28,7 @@ public class FindVendorBillsUseCaseImpl implements FindVendorBillsUseCase {
                                                VendorBillSettlementStatus settlementStatus, Pageable pageable) {
         Page<VendorBill> page = vendorBillRepository.findAll(keyword, vendorId, documentStatus, settlementStatus, pageable);
         List<Long> billIds = page.content().stream().map(VendorBill::getId).toList();
-        Map<Long, VendorBillPaymentSummaryPort.PaymentSummary> summaries = paymentSummaryPort.getPaymentSummaries(billIds);
+        Map<Long, VendorBillSettlementSummaryPort.SettlementSummary> summaries = settlementSummaryPort.getSettlementSummaries(billIds);
         return new Page<>(
                 page.content().stream().map(bill -> toSummary(bill, summaries.get(bill.getId()))).toList(),
                 page.page(),
@@ -37,9 +37,11 @@ public class FindVendorBillsUseCaseImpl implements FindVendorBillsUseCase {
         );
     }
 
-    private VendorBillSummaryView toSummary(VendorBill bill, VendorBillPaymentSummaryPort.PaymentSummary summary) {
+    private VendorBillSummaryView toSummary(VendorBill bill, VendorBillSettlementSummaryPort.SettlementSummary summary) {
         BigDecimal paidAmount = summary != null ? summary.paidAmount() : BigDecimal.ZERO;
+        BigDecimal debitMemoAppliedAmount = summary != null ? summary.debitMemoAppliedAmount() : BigDecimal.ZERO;
         BigDecimal outstandingAmount = summary != null ? summary.outstandingAmount() : bill.getTotalAmount();
+        VendorBillSettlementStatus settlementStatus = summary != null ? summary.settlementStatus() : bill.getSettlementStatus();
         return new VendorBillSummaryView(
                 bill.getId(),
                 bill.getCode(),
@@ -48,8 +50,10 @@ public class FindVendorBillsUseCaseImpl implements FindVendorBillsUseCase {
                 bill.getBillDate(),
                 bill.getDueDate(),
                 bill.getDocumentStatus(),
+                settlementStatus,
                 bill.getTotalAmount(),
                 paidAmount,
+                debitMemoAppliedAmount,
                 outstandingAmount
         );
     }

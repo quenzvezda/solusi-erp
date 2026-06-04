@@ -35,3 +35,16 @@
 - **Status:** findings
 - **Summary:** Replaced the legacy Vendor Bill status enum with document and settlement enums, mapped both fields through domain/entity/repository, updated draft-only guards, and added repository filter coverage.
 - **Validation:** `mvn clean compile -q -pl .` passed; `mvn test -Dtest=VendorBillTest,VendorBillRepositoryImplTest` passed.
+
+## Task 3: Neutral Settlement Projection For Vendor Bill
+
+### Finding: web DTO exposure remains in Task 5
+- **Type:** decision
+- **Severity:** info
+- **Detail:** The application query views now expose `documentStatus`, `settlementStatus`, `paidAmount`, `debitMemoAppliedAmount`, and `outstandingAmount`, but current web DTOs/templates still expose the old `status` string until the dedicated web/template task.
+- **Action taken:** Kept `VendorBillWebMapper` mapping `documentStatus` into the existing `status` response field for compile compatibility. Task 5 will split the web DTO/template contract.
+- **Ref:** `src/main/java/com/solusi/erp/accountspayable/vendorbill/web/mapper/VendorBillWebMapper.java`
+
+- **Status:** findings
+- **Summary:** Replaced the payment-only projection with `VendorBillSettlementSummaryPort`, added zero-DMA seam data, clamped negative outstanding values, and computed settlement status from confirmed Vendor Payments.
+- **Validation:** `mvn test -Dtest=FindVendorBillsUseCaseTest,GetVendorBillDetailUseCaseTest,VendorBillSettlementSummaryAdapterTest` passed.

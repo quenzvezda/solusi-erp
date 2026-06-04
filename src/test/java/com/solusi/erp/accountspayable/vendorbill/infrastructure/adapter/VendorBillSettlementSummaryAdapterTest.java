@@ -1,6 +1,7 @@
 package com.solusi.erp.accountspayable.vendorbill.infrastructure.adapter;
 
-import com.solusi.erp.accountspayable.vendorbill.domain.port.VendorBillPaymentSummaryPort.PaymentSummary;
+import com.solusi.erp.accountspayable.vendorbill.domain.port.VendorBillSettlementSummaryPort.SettlementSummary;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillSettlementStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,28 +23,28 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class VendorBillPaymentSummaryAdapterTest {
+class VendorBillSettlementSummaryAdapterTest {
 
     @Mock
     private NamedParameterJdbcTemplate jdbcTemplate;
 
-    private VendorBillPaymentSummaryAdapter adapter;
+    private VendorBillSettlementSummaryAdapter adapter;
 
     @BeforeEach
     void setUp() {
-        adapter = new VendorBillPaymentSummaryAdapter(jdbcTemplate);
+        adapter = new VendorBillSettlementSummaryAdapter(jdbcTemplate);
     }
 
     @Test
-    void getPaymentSummaries_should_query_confirmed_vendor_payments_without_outstanding_filter() {
-        List<PaymentSummary> expected = List.of(
-                new PaymentSummary(4L, new BigDecimal("50000000.00"), new BigDecimal("25000000.00")),
-                new PaymentSummary(5L, new BigDecimal("10000000.00"), BigDecimal.ZERO)
+    void getSettlementSummaries_should_query_confirmed_vendor_payments_without_outstanding_filter() {
+        List<SettlementSummary> expected = List.of(
+                new SettlementSummary(4L, new BigDecimal("50000000.00"), BigDecimal.ZERO, new BigDecimal("25000000.00"), VendorBillSettlementStatus.PARTIALLY_SETTLED),
+                new SettlementSummary(5L, new BigDecimal("10000000.00"), BigDecimal.ZERO, BigDecimal.ZERO, VendorBillSettlementStatus.SETTLED)
         );
         when(jdbcTemplate.query(any(String.class), any(MapSqlParameterSource.class), any(RowMapper.class)))
                 .thenReturn(expected);
 
-        Map<Long, PaymentSummary> actual = adapter.getPaymentSummaries(List.of(4L, 5L));
+        Map<Long, SettlementSummary> actual = adapter.getSettlementSummaries(List.of(4L, 5L));
 
         assertThat(actual).containsEntry(4L, expected.get(0));
         assertThat(actual).containsEntry(5L, expected.get(1));
@@ -51,25 +52,28 @@ class VendorBillPaymentSummaryAdapterTest {
         ArgumentCaptor<MapSqlParameterSource> paramCaptor = ArgumentCaptor.forClass(MapSqlParameterSource.class);
         verify(jdbcTemplate).query(sqlCaptor.capture(), paramCaptor.capture(), any(RowMapper.class));
         assertThat(sqlCaptor.getValue()).contains("vp.status = 'CONFIRMED'");
+        assertThat(sqlCaptor.getValue()).contains("debit_memo_applied_amount");
+        assertThat(sqlCaptor.getValue()).contains("raw_outstanding_amount < 0 THEN 0");
+        assertThat(sqlCaptor.getValue()).contains("PARTIALLY_SETTLED");
         assertThat(sqlCaptor.getValue()).doesNotContain("HAVING");
         assertThat(paramCaptor.getValue().getValue("vendorBillIds")).isEqualTo(List.of(4L, 5L));
     }
 
     @Test
-    void getPaymentSummaries_should_return_empty_map_for_empty_ids() {
-        Map<Long, PaymentSummary> actual = adapter.getPaymentSummaries(List.of());
+    void getSettlementSummaries_should_return_empty_map_for_empty_ids() {
+        Map<Long, SettlementSummary> actual = adapter.getSettlementSummaries(List.of());
 
         assertThat(actual).isEmpty();
         verifyNoInteractions(jdbcTemplate);
     }
 
     @Test
-    void getPaymentSummary_should_return_single_summary() {
-        PaymentSummary expected = new PaymentSummary(4L, new BigDecimal("50000000.00"), new BigDecimal("25000000.00"));
+    void getSettlementSummary_should_return_single_summary() {
+        SettlementSummary expected = new SettlementSummary(4L, new BigDecimal("50000000.00"), BigDecimal.ZERO, new BigDecimal("25000000.00"), VendorBillSettlementStatus.PARTIALLY_SETTLED);
         when(jdbcTemplate.query(any(String.class), any(MapSqlParameterSource.class), any(RowMapper.class)))
                 .thenReturn(List.of(expected));
 
-        PaymentSummary actual = adapter.getPaymentSummary(4L);
+        SettlementSummary actual = adapter.getSettlementSummary(4L);
 
         assertThat(actual).isEqualTo(expected);
     }
