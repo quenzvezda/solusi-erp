@@ -34,10 +34,33 @@ Source Brainstorm: [docs/brainstorming/2026-06-02-vendor-debit-memo.md](../brain
 - **Summary:** Added Debit Memo aggregate, line value object, settlement status enum, and domain tests for monetary invariants, metadata mutability, settlement transitions, cancellation, and defensive copies.
 - **Tests:** `mvn test -Dtest=DebitMemoTest` passed with 11 tests.
 
+## Task 3: Add Persistence, Query Models, and Configuration
+
+- **Status:** findings
+- **Summary:** Added Debit Memo repository port, JPA entities, MapStruct persistence mapper, repository adapter, filtered query repository, Phase D read models/use cases, and Spring config wiring.
+- **Tests:** `mvn test "-Dtest=DebitMemoRepositoryImplTest,DebitMemoQueryUseCaseTest,DebitMemoConfigTest"` passed with 9 tests.
+
+### Finding: Config package follows existing AP infrastructure convention
+
+- **Type:** deviation
+- **Severity:** info
+- **Detail:** The plan target listed `src/main/java/com/solusi/erp/accountspayable/debitmemo/config/DebitMemoConfig.java`, but existing AP modules keep config under `infrastructure/config`.
+- **Action taken:** Created `DebitMemoConfig` under `src/main/java/com/solusi/erp/accountspayable/debitmemo/infrastructure/config` to match `VendorBillConfig` and `VendorPaymentConfig`.
+- **Ref:** `src/main/java/com/solusi/erp/accountspayable/vendorbill/infrastructure/config/VendorBillConfig.java`
+
+### Finding: Phase D settlement recap is intentionally zero-consumption
+
+- **Type:** decision
+- **Severity:** info
+- **Detail:** Allocation and vendor refund are deferred, so list/detail read models cannot calculate consumed amounts yet.
+- **Action taken:** Query use cases return `settledAmount = 0`, `refundedAmount = 0`, and `remainingAmount = grossAmountOriginal` while preserving the stored settlement status for future Phase E integration.
+- **Ref:** `src/main/java/com/solusi/erp/accountspayable/debitmemo/application/usecase/query`
+
 ## Verification
 
 - Task 1: `mvn test -Dtest=DebitMemoCoreMigrationTest` passed.
 - Task 2: `mvn test -Dtest=DebitMemoTest` passed.
+- Task 3: `mvn test "-Dtest=DebitMemoRepositoryImplTest,DebitMemoQueryUseCaseTest,DebitMemoConfigTest"` passed.
 
 ## Notes
 

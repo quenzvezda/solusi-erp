@@ -212,7 +212,7 @@ Commit:
 
 - `feat(debit-memo): add core aggregate and invariants`
 
-## Task 3: Add Persistence, Query Models, and Configuration
+## Task 3: Add Persistence, Query Models, and Configuration [x]
 
 Goal: make Debit Memo durable and queryable without coupling controllers directly to JPA entities.
 
