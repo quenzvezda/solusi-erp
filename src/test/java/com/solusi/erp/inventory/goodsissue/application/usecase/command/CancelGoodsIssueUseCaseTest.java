@@ -124,6 +124,32 @@ class CancelGoodsIssueUseCaseTest {
     }
 
     @Test
+    void cancel_requiresCommandAndGoodsIssueId() {
+        assertThatThrownBy(() -> useCase.execute(null))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.gi.notfound");
+
+        assertThatThrownBy(() -> useCase.execute(new GoodsIssueCancelCommand(null, LocalDate.of(2026, 6, 4),
+                "wrong return", null)))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.gi.notfound");
+
+        verify(repository, never()).findById(any());
+    }
+
+    @Test
+    void cancel_rejectsMissingGoodsIssue() {
+        when(repository.findById(7L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> useCase.execute(command(List.of())))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.gi.notfound");
+
+        verify(stockMovementReversalService, never()).reverse(any());
+        verify(repository, never()).save(any());
+    }
+
+    @Test
     void cancel_rejectsDraftIssue() {
         GoodsIssue issue = CompleteGoodsIssueUseCaseTest.draftIssue(
                 List.of(CompleteGoodsIssueUseCaseTest.line(false, "2.0000", null)));
@@ -200,6 +226,71 @@ class CancelGoodsIssueUseCaseTest {
     }
 
     @Test
+    void cancel_rejectsWhenNoOutboundMovementsFound() {
+        GoodsIssue issue = completedIssue();
+        InventoryMovementEntity receipt = movement(700L, 5L, MovementType.RECEIPT, new BigDecimal("2.0000"));
+        InventoryMovementEntity positiveAdjustment = movement(701L, 5L, MovementType.ADJUSTMENT, new BigDecimal("1.0000"));
+        when(repository.findById(7L)).thenReturn(Optional.of(issue));
+        when(movementRepository.findByReferenceTypeAndReferenceIdOrderByIdAsc(ReferenceType.GOODS_ISSUE, 7L))
+                .thenReturn(List.of(receipt, positiveAdjustment));
+
+        assertThatThrownBy(() -> useCase.execute(command(List.of())))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.gi.cancel.movements.notfound");
+
+        verify(stockMovementReversalService, never()).reverse(any());
+        verify(reversePostedJournalUseCase, never()).execute(any());
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void cancel_defaultsTargetContainerAndDescriptionWhenLineAndReasonAreBlank() {
+        GoodsIssue issue = completedIssue();
+        InventoryMovementEntity issueMovement = movement(700L, 5L);
+        InventoryMovementEntity reservedIssueMovement = movement(701L, 6L, MovementType.ISSUE_RESERVED, new BigDecimal("3.0000"));
+        InventoryMovementEntity transferOutMovement = movement(702L, 7L, MovementType.TRANSFER_OUT, new BigDecimal("4.0000"));
+        InventoryMovementEntity negativeAdjustment = movement(703L, 8L, MovementType.ADJUSTMENT, new BigDecimal("-1.0000"));
+        JournalEntry journal = postedGoodsIssueJournal(900L);
+        when(repository.findById(7L)).thenReturn(Optional.of(issue));
+        when(movementRepository.findByReferenceTypeAndReferenceIdOrderByIdAsc(ReferenceType.GOODS_ISSUE, 7L))
+                .thenReturn(List.of(issueMovement, reservedIssueMovement, transferOutMovement, negativeAdjustment));
+        when(journalEntryRepository.findBySource("GOODS_ISSUE", 7L)).thenReturn(Optional.of(journal));
+
+        useCase.execute(new GoodsIssueCancelCommand(7L, LocalDate.of(2026, 6, 4), " ",
+                List.of(new GoodsIssueCancelLineCommand(null, null, 99L, "ignored", null, null),
+                        new GoodsIssueCancelLineCommand(null, 700L, null, "Product", null, null))));
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<StockMovementReversalRequest>> stockCaptor = ArgumentCaptor.forClass(List.class);
+        verify(stockMovementReversalService).reverse(stockCaptor.capture());
+        assertThat(stockCaptor.getValue())
+                .extracting(StockMovementReversalRequest::targetContainerId)
+                .containsExactly(5L, 6L, 7L, 8L);
+
+        ArgumentCaptor<ReversePostedJournalCommand> journalCaptor =
+                ArgumentCaptor.forClass(ReversePostedJournalCommand.class);
+        verify(reversePostedJournalUseCase).execute(journalCaptor.capture());
+        assertThat(journalCaptor.getValue().description()).isEqualTo("Cancel goods issue GI-202606-00001");
+    }
+
+    @Test
+    void cancel_rejectsWhenOriginalJournalMissing() {
+        GoodsIssue issue = completedIssue();
+        InventoryMovementEntity movement = movement(700L, 5L);
+        when(repository.findById(7L)).thenReturn(Optional.of(issue));
+        when(movementRepository.findByReferenceTypeAndReferenceIdOrderByIdAsc(ReferenceType.GOODS_ISSUE, 7L))
+                .thenReturn(List.of(movement));
+        when(journalEntryRepository.findBySource("GOODS_ISSUE", 7L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> useCase.execute(command(List.of())))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.gi.cancel.journal.notfound");
+
+        verify(reversePostedJournalUseCase, never()).execute(any());
+        verify(repository, never()).save(any());
+    }
+
+    @Test
     void cancel_whenJournalReversalFails_doesNotSaveCancelledIssue() {
         GoodsIssue issue = completedIssue();
         InventoryMovementEntity movement = movement(700L, 5L);
@@ -231,12 +322,16 @@ class CancelGoodsIssueUseCaseTest {
     }
 
     private static InventoryMovementEntity movement(Long id, Long containerId) {
+        return movement(id, containerId, MovementType.ISSUE, new BigDecimal("2.0000"));
+    }
+
+    private static InventoryMovementEntity movement(Long id, Long containerId, MovementType movementType, BigDecimal quantity) {
         InventoryMovementEntity entity = new InventoryMovementEntity();
         entity.setId(id);
         entity.setProductId(201L);
         entity.setContainerId(containerId);
-        entity.setQuantity(new BigDecimal("2.0000"));
-        entity.setMovementType(MovementType.ISSUE);
+        entity.setQuantity(quantity);
+        entity.setMovementType(movementType);
         entity.setReferenceType(ReferenceType.GOODS_ISSUE);
         entity.setReferenceId(7L);
         entity.setReferenceCode("GI-202606-00001");

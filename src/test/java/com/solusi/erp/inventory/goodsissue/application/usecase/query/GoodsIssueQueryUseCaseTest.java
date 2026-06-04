@@ -153,6 +153,71 @@ class GoodsIssueQueryUseCaseTest {
     }
 
     @Test
+    void cancelViewUseCase_rejectsDraftAndMissingGoodsIssue() {
+        when(goodsIssueRepository.findById(7L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> cancelViewUseCase.execute(7L))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.gi.notfound");
+
+        GoodsIssue draft = new GoodsIssue(
+                new com.solusi.erp.core.domain.model.AuditMetadata(8L, 1L, null, null, null, null),
+                "GI-202606-00002",
+                LocalDate.of(2026, 6, 1),
+                GoodsIssueReferenceType.MANUAL,
+                null,
+                null,
+                11L,
+                GoodsIssuePartyType.SUPPLIER,
+                3L,
+                1L,
+                BigDecimal.ONE,
+                GoodsIssueStatus.DRAFT,
+                null,
+                List.of()
+        );
+        when(goodsIssueRepository.findById(8L)).thenReturn(Optional.of(draft));
+
+        assertThatThrownBy(() -> cancelViewUseCase.execute(8L))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.gi.cancel.only.completed");
+    }
+
+    @Test
+    void cancelViewUseCase_rejectsWhenNoOutboundMovementsExist() {
+        GoodsIssue issue = issue(GoodsIssueReferenceType.MANUAL);
+        InventoryMovementEntity receipt = movement(700L, 5L, MovementType.RECEIPT, new BigDecimal("2.0000"));
+        InventoryMovementEntity positiveAdjustment = movement(701L, 5L, MovementType.ADJUSTMENT, new BigDecimal("1.0000"));
+        when(goodsIssueRepository.findById(7L)).thenReturn(Optional.of(issue));
+        when(movementRepository.findByReferenceTypeAndReferenceIdOrderByIdAsc(ReferenceType.GOODS_ISSUE, 7L))
+                .thenReturn(List.of(receipt, positiveAdjustment));
+
+        assertThatThrownBy(() -> cancelViewUseCase.execute(7L))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.gi.cancel.movements.notfound");
+    }
+
+    @Test
+    void cancelViewUseCase_handlesMissingLookupLabelsAndOutboundMovementTypes() {
+        GoodsIssue issue = issue(GoodsIssueReferenceType.MANUAL);
+        InventoryMovementEntity reservedIssue = movement(700L, 5L, MovementType.ISSUE_RESERVED, new BigDecimal("2.0000"));
+        InventoryMovementEntity transferOut = movement(701L, 6L, MovementType.TRANSFER_OUT, new BigDecimal("3.0000"));
+        InventoryMovementEntity negativeAdjustment = movement(702L, 7L, MovementType.ADJUSTMENT, new BigDecimal("-1.0000"));
+        when(goodsIssueRepository.findById(7L)).thenReturn(Optional.of(issue));
+        when(movementRepository.findByReferenceTypeAndReferenceIdOrderByIdAsc(ReferenceType.GOODS_ISSUE, 7L))
+                .thenReturn(List.of(reservedIssue, transferOut, negativeAdjustment));
+
+        GoodsIssueCancelView view = cancelViewUseCase.execute(7L);
+
+        assertThat(view.facilityName()).isNull();
+        assertThat(view.lines()).hasSize(3);
+        assertThat(view.lines().getFirst().productName()).isNull();
+        assertThat(view.lines().getFirst().productCode()).isNull();
+        assertThat(view.lines().getFirst().historicalContainerName()).isNull();
+        assertThat(view.lines().getFirst().historicalContainerCode()).isNull();
+    }
+
+    @Test
     void journalLinksUseCase_returnsOriginalAndReversalJournalIds() {
         JournalEntry original = mock(JournalEntry.class);
         JournalEntry reversal = mock(JournalEntry.class);
@@ -167,6 +232,30 @@ class GoodsIssueQueryUseCaseTest {
         assertThat(links.reversalJournalId()).isEqualTo(901L);
         assertThat(links.hasOriginalJournal()).isTrue();
         assertThat(links.hasReversalJournal()).isTrue();
+    }
+
+    @Test
+    void journalLinksUseCase_returnsEmptyLinksWhenOriginalOrReversalMissing() {
+        when(journalEntryRepository.findBySource("GOODS_ISSUE", 7L)).thenReturn(Optional.empty());
+
+        GoodsIssueJournalLinks missingOriginal = journalLinksUseCase.execute(7L);
+
+        assertThat(missingOriginal.originalJournalId()).isNull();
+        assertThat(missingOriginal.reversalJournalId()).isNull();
+        assertThat(missingOriginal.hasOriginalJournal()).isFalse();
+        assertThat(missingOriginal.hasReversalJournal()).isFalse();
+
+        JournalEntry original = mock(JournalEntry.class);
+        when(original.getId()).thenReturn(900L);
+        when(journalEntryRepository.findBySource("GOODS_ISSUE", 8L)).thenReturn(Optional.of(original));
+        when(journalEntryRepository.findReversalOf(900L)).thenReturn(Optional.empty());
+
+        GoodsIssueJournalLinks missingReversal = journalLinksUseCase.execute(8L);
+
+        assertThat(missingReversal.originalJournalId()).isEqualTo(900L);
+        assertThat(missingReversal.reversalJournalId()).isNull();
+        assertThat(missingReversal.hasOriginalJournal()).isTrue();
+        assertThat(missingReversal.hasReversalJournal()).isFalse();
     }
 
     private static GoodsIssue issue(GoodsIssueReferenceType referenceType) {
@@ -189,12 +278,16 @@ class GoodsIssueQueryUseCaseTest {
     }
 
     private static InventoryMovementEntity movement(Long id, Long containerId) {
+        return movement(id, containerId, MovementType.ISSUE, new BigDecimal("2.0000"));
+    }
+
+    private static InventoryMovementEntity movement(Long id, Long containerId, MovementType movementType, BigDecimal quantity) {
         InventoryMovementEntity entity = new InventoryMovementEntity();
         entity.setId(id);
         entity.setProductId(201L);
         entity.setContainerId(containerId);
-        entity.setQuantity(new BigDecimal("2.0000"));
-        entity.setMovementType(MovementType.ISSUE);
+        entity.setQuantity(quantity);
+        entity.setMovementType(movementType);
         entity.setReferenceType(ReferenceType.GOODS_ISSUE);
         entity.setReferenceId(7L);
         entity.setReferenceCode("GI-202606-00001");
