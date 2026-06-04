@@ -3,7 +3,8 @@
 > Source: `docs/brainstorming/2026-06-02-vendor-debit-memo.md`
 > Created: 2026-06-04
 > Sprint: 6 - Debit Memo Foundation
-> Status: IN_PROGRESS
+> Status: COMPLETED
+> Completed: 2026-06-04
 >
 > **For agentic workers:** execute task-by-task. Explore references fresh before editing each task, update checkbox state incrementally, record deviations in `docs/reports/2026-06-02-phase-c-vendor-bill-settlement-refactor.md`, and do not mark a task complete before its validation command passes.
 
@@ -371,25 +372,25 @@ Update browser coverage for the separated statuses and stale outstanding revalid
 - Vendor Bill and Vendor Payment specs pass at least once normally and once after `.auth` removal.
 - Any E2E task that modifies specs remains incomplete until the live Playwright runs are green.
 
-### Task 8: Regression Gate And Handoff [ ]
+### Task 8: Regression Gate And Handoff [x]
 
 Run focused and final verification, then record exact results.
 
 **Depends on:** Tasks 1-7
 
-- [ ] Run migration-sensitive tests:
+- [x] Run migration-sensitive tests:
       `mvn test -Dtest="*MigrationTest"`
-- [ ] Run Vendor Bill domain/persistence/query/web focused tests:
+- [x] Run Vendor Bill domain/persistence/query/web focused tests:
       `mvn test -Dtest="VendorBillTest,VendorBillRepositoryImplTest,FindVendorBillsUseCaseTest,GetVendorBillDetailUseCaseTest,VendorBillControllerTest,VendorBillWebMapperTest,VendorBillTemplateTest"`
-- [ ] Run settlement/payment focused tests:
+- [x] Run settlement/payment focused tests:
       `mvn test -Dtest="ConfirmVendorPaymentUseCaseTest,VendorPaymentConfigTest,*VendorBill*AdapterTest,*Payable*Test,VendorPaymentControllerTest,VendorPaymentTemplateTest"`
-- [ ] Run full Maven gate:
+- [x] Run full Maven gate:
       `mvn clean test`
-- [ ] Run Playwright gates from Task 7 if any AP spec changed.
-- [ ] Inspect JaCoCo if new code lowers coverage. Add focused tests in the owning task before marking complete.
+- [x] Run Playwright gates from Task 7 if any AP spec changed.
+- [x] Inspect JaCoCo if new code lowers coverage. Add focused tests in the owning task before marking complete.
       ref: `docs/architecture/jacoco-coverage.md` - project coverage guide
-- [ ] Update `docs/reports/2026-06-02-phase-c-vendor-bill-settlement-refactor.md` with commands, outcomes, skipped gates, deviations from this plan, and remaining Phase D/E dependencies.
-- [ ] Record project SemVer deferral until implementation is accepted. Phase C is a feature/refactor behavior change, so likely MINOR when version bump is intentionally requested.
+- [x] Update `docs/reports/2026-06-02-phase-c-vendor-bill-settlement-refactor.md` with commands, outcomes, skipped gates, deviations from this plan, and remaining Phase D/E dependencies.
+- [x] Record project SemVer deferral until implementation is accepted. Phase C is a feature/refactor behavior change, so likely MINOR when version bump is intentionally requested.
       ref: `docs/AGENTS.md:L101-L123` - SemVer automation and commit protocol
 
 **Validation criteria:**

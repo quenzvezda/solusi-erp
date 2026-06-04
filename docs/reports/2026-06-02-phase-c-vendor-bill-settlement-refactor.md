@@ -83,3 +83,10 @@
 - **Status:** clean
 - **Summary:** Added Vendor Bill detail settlement assertions, Vendor Payment confirm cross-checks that the target bill remains `CONFIRMED` and becomes `SETTLED`, a deterministic stale draft payment scenario, and replaced the supplier lookup pre-navigation probe with `page.request.get`.
 - **Validation:** `cd e2e-tests && npx tsc --noEmit` passed; `npx playwright test tests/accountspayable/vendor-bill.spec.ts --list` passed and listed 5 AP Vendor Bill scenarios; `npx playwright test tests/accountspayable/vendor-payment.spec.ts --list` passed and listed 6 AP Vendor Payment scenarios including stale Scenario E. `.\e2e-tests\scripts\run-e2e.ps1 tests/accountspayable/vendor-bill.spec.ts tests/accountspayable/vendor-payment.spec.ts` passed with 15/15 tests. Cold-cache run after removing `e2e-tests\.auth` passed with 15/15 tests.
+
+## Task 8: Regression Gate And Handoff
+- **Status:** clean
+- **Summary:** Closed Phase C after focused Maven gates, full Maven regression, JaCoCo threshold check, and full Playwright E2E runner passed.
+- **Validation:** `mvn test -Dtest="*MigrationTest"` passed with 11 tests; `mvn test -Dtest="VendorBillTest,VendorBillRepositoryImplTest,FindVendorBillsUseCaseTest,GetVendorBillDetailUseCaseTest,VendorBillControllerTest,VendorBillWebMapperTest,VendorBillTemplateTest"` passed with 33 tests; `mvn test -Dtest="ConfirmVendorPaymentUseCaseTest,VendorPaymentConfigTest,*VendorBill*AdapterTest,*Payable*Test,VendorPaymentControllerTest,VendorPaymentTemplateTest"` passed with 27 tests; `mvn clean test` passed with 1873 tests and JaCoCo reported all coverage checks met; `.\e2e-tests\scripts\run-e2e.ps1` passed with 76/76 tests.
+- **SemVer:** Version bump remains deferred until implementation acceptance, per plan. Phase C is a feature/refactor behavior change and likely MINOR when the project SemVer workflow is intentionally run.
+- **Remaining dependencies:** Phase D still owns Debit Memo core and automatic DM creation from confirmed Purchase Return. Phase E still owns Debit Memo Allocation, AP reduction, VAT reversal, FX gain/loss, and DMA reversal.
