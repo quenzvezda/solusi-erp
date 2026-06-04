@@ -44,6 +44,11 @@ class JournalVariableTest {
                 JournalVariable.GI_INVENTORY_AMT
         );
 
+        assertThat(JournalVariable.getVariablesForEvent(SchemaEventType.PURCHASE_RETURN)).containsExactlyInAnyOrder(
+                JournalVariable.PR_GRIR_CLEARING_AMT,
+                JournalVariable.PR_INVENTORY_AMT
+        );
+
         assertThat(JournalVariable.getVariablesForEvent(SchemaEventType.CUSTOMER_RECEIPT)).containsExactlyInAnyOrder(
                 JournalVariable.CR_BANK_IN_AMT,
                 JournalVariable.CR_AR_AMT

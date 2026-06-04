@@ -22,6 +22,8 @@ public enum JournalVariable {
     CI_TAX_AMT(SchemaEventType.CUSTOMER_INVOICE),
     GI_COGS_AMT(SchemaEventType.GOODS_ISSUE),
     GI_INVENTORY_AMT(SchemaEventType.GOODS_ISSUE),
+    PR_GRIR_CLEARING_AMT(SchemaEventType.PURCHASE_RETURN),
+    PR_INVENTORY_AMT(SchemaEventType.PURCHASE_RETURN),
     CR_BANK_IN_AMT(SchemaEventType.CUSTOMER_RECEIPT),
     CR_AR_AMT(SchemaEventType.CUSTOMER_RECEIPT),
     SAI_INVENTORY_AMT(SchemaEventType.STOCK_ADJUSTMENT_IN),

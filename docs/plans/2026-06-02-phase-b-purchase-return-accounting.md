@@ -88,25 +88,25 @@ This phase is forward-only. It does not create Debit Memo, does not refactor Ven
 
 ## 5. Tasks
 
-### Task 1: Accounting Event And Variable Contract [ ]
+### Task 1: Accounting Event And Variable Contract [x]
 
 Add the Java enum contract for Purchase Return-specific posting.
 
 **Depends on:** none
 **Reference modules:** `accounting.schema`, `accounting.journal`
 
-- [ ] Add `PURCHASE_RETURN` to `SchemaEventType`.
+- [x] Add `PURCHASE_RETURN` to `SchemaEventType`.
       ref: `src/main/java/com/solusi/erp/accounting/schema/domain/model/SchemaEventType.java:L7-L15` - current auto-journal event enum list
-- [ ] Add `PR_GRIR_CLEARING_AMT(SchemaEventType.PURCHASE_RETURN)` and `PR_INVENTORY_AMT(SchemaEventType.PURCHASE_RETURN)` to `JournalVariable`.
+- [x] Add `PR_GRIR_CLEARING_AMT(SchemaEventType.PURCHASE_RETURN)` and `PR_INVENTORY_AMT(SchemaEventType.PURCHASE_RETURN)` to `JournalVariable`.
       ref: `src/main/java/com/solusi/erp/accounting/journal/domain/model/JournalVariable.java:L7-L31` - existing event-owned variable pattern
-- [ ] Keep `GI_COGS_AMT` and `GI_INVENTORY_AMT` mapped to `GOODS_ISSUE`; do not repurpose generic variables for Purchase Return.
+- [x] Keep `GI_COGS_AMT` and `GI_INVENTORY_AMT` mapped to `GOODS_ISSUE`; do not repurpose generic variables for Purchase Return.
       ref: `src/main/java/com/solusi/erp/accounting/journal/domain/model/JournalVariable.java:L23-L24` - current generic GI variables
-- [ ] Add `label.schema.event.PURCHASE_RETURN` to English and Indonesian message bundles.
+- [x] Add `label.schema.event.PURCHASE_RETURN` to English and Indonesian message bundles.
       ref: `src/main/resources/messages.properties:L1037-L1045` - event labels used by schema and journal templates
       ref: `src/main/resources/messages_id.properties:L1037-L1045` - Indonesian event labels
-- [ ] **TEST:** Extend `JournalVariableTest` to assert `getVariablesForEvent(PURCHASE_RETURN)` returns exactly the two PR variables.
+- [x] **TEST:** Extend `JournalVariableTest` to assert `getVariablesForEvent(PURCHASE_RETURN)` returns exactly the two PR variables.
       ref: `src/test/java/com/solusi/erp/accounting/journal/domain/model/JournalVariableTest.java:L10-L60` - event variable contract test
-- [ ] **TEST:** Keep `JournalMessageBundleTest` green after the new enum value by covering `label.schema.event.PURCHASE_RETURN`.
+- [x] **TEST:** Keep `JournalMessageBundleTest` green after the new enum value by covering `label.schema.event.PURCHASE_RETURN`.
       ref: `src/test/java/com/solusi/erp/accounting/journal/web/template/JournalMessageBundleTest.java:L49-L75` - all `SchemaEventType` labels must exist
 
 **Validation criteria:**
