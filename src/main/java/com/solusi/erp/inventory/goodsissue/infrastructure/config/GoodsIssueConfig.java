@@ -24,6 +24,8 @@ import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIss
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueCreateViewUseCaseImpl;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueEditViewUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueEditViewUseCaseImpl;
+import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueJournalLinksUseCase;
+import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueJournalLinksUseCaseImpl;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueUseCaseImpl;
 import com.solusi.erp.inventory.goodsissue.domain.port.GoodsIssueReferenceLookupProvider;
@@ -165,6 +167,12 @@ public class GoodsIssueConfig {
                 uomLookupProvider,
                 containerLookupProvider,
                 facilityLookupProvider);
+    }
+
+    @Bean
+    public GetGoodsIssueJournalLinksUseCase getGoodsIssueJournalLinksUseCase(
+            JournalEntryRepository journalEntryRepository) {
+        return new GetGoodsIssueJournalLinksUseCaseImpl(journalEntryRepository);
     }
 
     @Bean

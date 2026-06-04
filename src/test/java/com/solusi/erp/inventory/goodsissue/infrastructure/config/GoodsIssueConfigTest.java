@@ -11,6 +11,7 @@ import com.solusi.erp.inventory.goodsissue.application.usecase.command.CancelGoo
 import com.solusi.erp.inventory.goodsissue.application.usecase.command.CompleteGoodsIssueUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.command.CreateGoodsIssueUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueCancelViewUseCase;
+import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueJournalLinksUseCase;
 import com.solusi.erp.inventory.goodsissue.domain.port.PurchaseReturnGoodsIssueSourcePort;
 import com.solusi.erp.inventory.product.domain.port.ProductLookupProvider;
 import com.solusi.erp.inventory.goodsissue.infrastructure.persistence.GoodsIssueJpaRepository;
@@ -49,12 +50,16 @@ class GoodsIssueConfigTest {
     @Autowired
     private GetGoodsIssueCancelViewUseCase getGoodsIssueCancelViewUseCase;
 
+    @Autowired
+    private GetGoodsIssueJournalLinksUseCase getGoodsIssueJournalLinksUseCase;
+
     @Test
     void wiresGoodsIssueCommandUseCases() {
         assertThat(createGoodsIssueUseCase).isNotNull();
         assertThat(completeGoodsIssueUseCase).isNotNull();
         assertThat(cancelGoodsIssueUseCase).isNotNull();
         assertThat(getGoodsIssueCancelViewUseCase).isNotNull();
+        assertThat(getGoodsIssueJournalLinksUseCase).isNotNull();
     }
 
     @Configuration

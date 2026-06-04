@@ -228,6 +228,7 @@ class InventoryMovementMapperTest {
         entity.setContainerId(200L);
         entity.setQuantity(BigDecimal.TEN);
         entity.setMovementType(MovementType.RECEIPT);
+        entity.setReversalOfMovementId(700L);
         
         CurrencyAmount unitCost = new CurrencyAmount();
         unitCost.setCurrencyId(1L);
@@ -243,6 +244,7 @@ class InventoryMovementMapperTest {
         assertThat(response.getCurrencyAlias()).isEqualTo("USD");
         assertThat(response.getUnitCostOriginal()).isEqualTo(new BigDecimal("50.00"));
         assertThat(response.getUnitCostLocal()).isEqualTo(new BigDecimal("50.00"));
+        assertThat(response.getReversalOfMovementId()).isEqualTo(700L);
     }
 
     @Test

@@ -13,7 +13,11 @@ class GoodsIssueViewIntegrationTest {
 
     @Test
     void viewTemplate_containsHeaderJournalLinesActionsAndAudit() {
-        assertThat(html).contains("GOODS_ISSUE");
+        assertThat(html).contains("/accounting/journal-entries/{id}");
+        assertThat(html).contains("journalLinks.hasOriginalJournal()");
+        assertThat(html).contains("journalLinks.hasReversalJournal()");
+        assertThat(html).contains("label.gi.journal.original");
+        assertThat(html).contains("label.gi.journal.reversal");
         assertThat(html).contains("id=\"table-lines\"");
         assertThat(html).contains("label.qty.issued");
         assertThat(html).contains("label.base.qty");

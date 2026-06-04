@@ -17,6 +17,7 @@ import com.solusi.erp.inventory.goodsissue.application.usecase.query.FindGoodsIs
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueCancelViewUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueCreateViewUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueEditViewUseCase;
+import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueJournalLinksUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueUseCase;
 import com.solusi.erp.inventory.goodsissue.domain.model.GoodsIssue;
 import com.solusi.erp.inventory.goodsissue.domain.model.GoodsIssueReferenceType;
@@ -67,6 +68,7 @@ public class GoodsIssueController {
     private final GetGoodsIssueEditViewUseCase getGoodsIssueEditViewUseCase;
     private final GetGoodsIssueCreateViewUseCase getGoodsIssueCreateViewUseCase;
     private final GetGoodsIssueCancelViewUseCase getGoodsIssueCancelViewUseCase;
+    private final GetGoodsIssueJournalLinksUseCase getGoodsIssueJournalLinksUseCase;
     private final GoodsIssueReferenceLookupProvider referenceLookupProvider;
     private final GoodsIssueWebMapper webMapper;
     private final MessageSource messageSource;
@@ -156,6 +158,7 @@ public class GoodsIssueController {
         GoodsIssue domain = getGoodsIssueUseCase.execute(id)
                 .orElseThrow(() -> new RuntimeException("Goods issue not found"));
         model.addAttribute("gi", webMapper.toDetailResponse(domain));
+        model.addAttribute("journalLinks", getGoodsIssueJournalLinksUseCase.execute(id));
         return "inventory/goods-issues/view";
     }
 

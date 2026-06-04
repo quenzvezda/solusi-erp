@@ -39,3 +39,9 @@ This report is populated during plan execution.
 - **Summary:** Added GI cancellation request DTOs, cancel form route/template/JS, JSON cancel POST mapping, source-owned cancel hiding, target container lookup filtering, and controller/template coverage.
 - **Deviation:** Added `GetGoodsIssueCancelViewUseCase` and cancel view records in this task, although the plan lists cancellation read model work in Task 7, because the Task 6 form cannot submit movement-keyed target containers without original movement ids.
 - **Validation:** `mvn test -Dtest="GoodsIssueControllerTest,GoodsIssueViewIntegrationTest,GoodsIssueCancelTemplateIntegrationTest"` passed. `mvn test -Dtest="GoodsIssueFormIntegrationTest,GoodsIssueConfigTest"` also passed after changing form actions and config wiring. Focused JaCoCo warnings are deferred to Task 10 full-suite gate.
+
+## Task 7: Persistence, Query, And Navigation Support
+- **Status:** decision
+- **Summary:** Added a GI journal-link query use case for original/reversal journal navigation, exposed `reversalOfMovementId` through inventory movement responses, and extended query/template/mapper/config/controller coverage.
+- **Decision:** GI detail now links directly by journal entry id instead of filtering the journal list by source fields; `sourceType/sourceId/sourceCode` remain the physical document identity for stock card/report rows, while `reversalOfMovementId` carries the reversal audit relationship.
+- **Validation:** `mvn clean test -Dtest="GoodsIssueQueryUseCaseTest,GoodsIssueWebMapperTest,GoodsIssueViewIntegrationTest,InventoryMovementMapperTest,GoodsIssueControllerTest,GoodsIssueConfigTest"` passed. Focused JaCoCo warnings are deferred to Task 10 full-suite gate.

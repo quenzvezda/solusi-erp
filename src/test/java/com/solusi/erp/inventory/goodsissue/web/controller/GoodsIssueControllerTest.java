@@ -12,6 +12,7 @@ import com.solusi.erp.inventory.goodsissue.application.usecase.query.FindGoodsIs
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueCancelViewUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueCreateViewUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueEditViewUseCase;
+import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueJournalLinksUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GetGoodsIssueUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GoodsIssueCancelLineView;
 import com.solusi.erp.inventory.goodsissue.application.usecase.query.GoodsIssueCancelView;
@@ -71,6 +72,7 @@ class GoodsIssueControllerTest {
     private GetGoodsIssueEditViewUseCase editViewUseCase;
     private GetGoodsIssueCreateViewUseCase createViewUseCase;
     private GetGoodsIssueCancelViewUseCase cancelViewUseCase;
+    private GetGoodsIssueJournalLinksUseCase journalLinksUseCase;
     private GoodsIssueReferenceLookupProvider referenceLookupProvider;
     private GoodsIssueWebMapper webMapper;
     private MessageSource messageSource;
@@ -88,12 +90,14 @@ class GoodsIssueControllerTest {
         editViewUseCase = mock(GetGoodsIssueEditViewUseCase.class);
         createViewUseCase = mock(GetGoodsIssueCreateViewUseCase.class);
         cancelViewUseCase = mock(GetGoodsIssueCancelViewUseCase.class);
+        journalLinksUseCase = mock(GetGoodsIssueJournalLinksUseCase.class);
         referenceLookupProvider = mock(GoodsIssueReferenceLookupProvider.class);
         webMapper = mock(GoodsIssueWebMapper.class);
         messageSource = mock(MessageSource.class);
         controller = new GoodsIssueController(
                 createUseCase, updateUseCase, deleteUseCase, completeUseCase, cancelUseCase,
-                findUseCase, getUseCase, editViewUseCase, createViewUseCase, cancelViewUseCase, referenceLookupProvider,
+                findUseCase, getUseCase, editViewUseCase, createViewUseCase, cancelViewUseCase,
+                journalLinksUseCase, referenceLookupProvider,
                 webMapper, messageSource);
     }
 

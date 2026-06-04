@@ -316,26 +316,26 @@ Replace direct cancel button for eligible GI with a dedicated cancellation form 
 - Completed manual/generic GI exposes cancel form entry point.
 - Completed source-based GI does not expose direct GI cancel action and backend rejects direct cancel.
 
-### Task 7: Persistence, Query, And Navigation Support
+### Task 7: Persistence, Query, And Navigation Support [x]
 
 Expose the data needed by cancellation form and journal/stock audit links without violating web-layer boundaries.
 
 **Depends on:** Tasks 3, 5, and 6
 **Reference modules:** `inventory.goodsissue`, `inventory.report`, `accounting.journal`
 
-- [ ] Add query/read model for GI cancellation form containing GI header, line snapshots, original issue movements, default target containers, and whether direct cancel is allowed.
+- [x] Add query/read model for GI cancellation form containing GI header, line snapshots, original issue movements, default target containers, and whether direct cancel is allowed.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/query/GetGoodsIssueUseCase.java` - existing detail query pattern
-- [ ] Do not inject `InventoryMovementJpaRepository` or cross-slice JPA repositories into `GoodsIssueController` or web mapper. Put movement lookup in application/query or infrastructure adapter.
+- [x] Do not inject `InventoryMovementJpaRepository` or cross-slice JPA repositories into `GoodsIssueController` or web mapper. Put movement lookup in application/query or infrastructure adapter.
       ref: `docs/AGENTS.md:L156-L157` - web-layer dependency boundary
-- [ ] Add journal lookup support if needed to find original GI journal by `sourceType/sourceId` before calling `ReversePostedJournalUseCase`.
+- [x] Add journal lookup support if needed to find original GI journal by `sourceType/sourceId` before calling `ReversePostedJournalUseCase`.
       ref: `src/main/java/com/solusi/erp/accounting/journal/domain/repository/JournalEntryRepository.java:L7-L14` - existing source lookup and reversal methods
-- [ ] Add detail links or badges on GI detail for original journal and reversal journal when available.
+- [x] Add detail links or badges on GI detail for original journal and reversal journal when available.
       ref: `src/main/resources/templates/inventory/goods-issues/view.html:L53-L60` - current journal entry link
-- [ ] Add stock card/report visibility of reversal movements by keeping `referenceType/referenceId/referenceCode` as physical document source and adding `reversalOfMovementId` display if the report mapper supports it.
+- [x] Add stock card/report visibility of reversal movements by keeping `referenceType/referenceId/referenceCode` as physical document source and adding `reversalOfMovementId` display if the report mapper supports it.
       ref: `src/main/java/com/solusi/erp/inventory/report/application/usecase/query/GetStockCardUseCaseImpl.java:L18-L33` - stock card query path
-- [ ] **TEST:** Add query/use case tests for cancellation form read model and source-based direct-cancel eligibility.
+- [x] **TEST:** Add query/use case tests for cancellation form read model and source-based direct-cancel eligibility.
       ref: `src/test/java/com/solusi/erp/inventory/goodsissue/application/usecase/query/GoodsIssueQueryUseCaseTest.java` - GI query test package
-- [ ] **TEST:** Add mapper/template test for reversal journal link visibility if implemented.
+- [x] **TEST:** Add mapper/template test for reversal journal link visibility if implemented.
       ref: `src/test/java/com/solusi/erp/inventory/goodsissue/web/mapper/GoodsIssueWebMapperTest.java` - GI web mapper tests
 
 **Validation criteria:**

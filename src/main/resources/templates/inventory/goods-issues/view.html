@@ -46,11 +46,16 @@
                                         <label class="form-label text-secondary" th:text="#{label.gi.issueDate}">Issue Date</label>
                                         <div class="form-control-plaintext" th:text="${#temporals.format(gi.issueDate, 'dd MMM yyyy')}">01 Jun 2026</div>
                                     </div>
-                                    <div class="col-md-4" th:if="${gi.status == 'COMPLETED'}">
+                                    <div class="col-md-4" th:if="${journalLinks != null && journalLinks.hasOriginalJournal()}">
                                         <label class="form-label text-secondary" th:text="#{label.journal}">Journal Entry</label>
-                                        <div class="form-control-plaintext">
-                                            <a th:href="@{/accounting/journal-entries(sourceType='GOODS_ISSUE', sourceCode=${gi.code})}" class="btn btn-sm btn-outline-primary">
-                                                <i class="ti ti-external-link me-1"></i><span th:text="#{label.view}">View</span>
+                                        <div class="form-control-plaintext btn-list">
+                                            <a th:href="@{/accounting/journal-entries/{id}(id=${journalLinks.originalJournalId()})}" class="btn btn-sm btn-outline-primary">
+                                                <i class="ti ti-external-link me-1"></i><span th:text="#{label.gi.journal.original}">Original</span>
+                                            </a>
+                                            <a th:if="${journalLinks.hasReversalJournal()}"
+                                               th:href="@{/accounting/journal-entries/{id}(id=${journalLinks.reversalJournalId()})}"
+                                               class="btn btn-sm btn-outline-warning">
+                                                <i class="ti ti-rotate-clockwise me-1"></i><span th:text="#{label.gi.journal.reversal}">Reversal</span>
                                             </a>
                                         </div>
                                     </div>
