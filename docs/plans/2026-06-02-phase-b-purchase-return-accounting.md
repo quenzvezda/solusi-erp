@@ -211,23 +211,23 @@ Route only Purchase Return-sourced Goods Issue to the new accounting event, whil
 - GI detail journal links still work for generic GI and for Purchase Return-generated GI.
 - Reservation consumption still happens only after successful journal posting.
 
-### Task 4: Accounting UI Labels And Source Visibility [ ]
+### Task 4: Accounting UI Labels And Source Visibility [x]
 
 Make the new event visible in existing Accounting Schema and Journal Entry screens without adding new UI flows.
 
 **Depends on:** Tasks 1 and 3
 **Reference modules:** `accounting.schema`, `accounting.journal`
 
-- [ ] Verify Accounting Schema create/edit form renders `PURCHASE_RETURN` in the event type select through `SchemaEventType.values()`.
+- [x] Verify Accounting Schema create/edit form renders `PURCHASE_RETURN` in the event type select through `SchemaEventType.values()`.
       ref: `src/main/resources/templates/accounting/schema/form.html:L31-L39` - event select uses `label.schema.event.{type}`
-- [ ] Verify Journal Entry list filter and table can display `PURCHASE_RETURN`.
+- [x] Verify Journal Entry list filter and table can display `PURCHASE_RETURN`.
       ref: `src/main/java/com/solusi/erp/accounting/journal/web/controller/JournalEntryController.java:L181-L185` - event filter is built from `SchemaEventType.values()`
       ref: `src/main/resources/templates/accounting/journal/journal-entry-list.html:L26-L32` - filter label usage
       ref: `src/main/resources/templates/accounting/journal/journal-entry-list.html:L68-L71` - table event label usage
-- [ ] Optionally add a Purchase Return source link in Journal Entry detail if the route is stable. If added, link `sourceType == 'PURCHASE_RETURN'` to `/purchasing/purchase-returns/view/{sourceId}`.
+- [x] Optionally add a Purchase Return source link in Journal Entry detail if the route is stable. If added, link `sourceType == 'PURCHASE_RETURN'` to `/purchasing/purchase-returns/view/{sourceId}`.
       ref: `src/main/resources/templates/accounting/journal/journal-entry-detail.html:L62-L77` - existing source links for GR and Vendor Bill
       ref: `src/main/java/com/solusi/erp/purchasing/purchasereturn/web/controller/PurchaseReturnController.java` - verify actual PR `@RequestMapping` before adding a link
-- [ ] **TEST:** Extend schema/journal template tests only if link markup changes. At minimum, `SchemaFormIntegrationTest` and `JournalMessageBundleTest` must remain green after enum addition.
+- [x] **TEST:** Extend schema/journal template tests only if link markup changes. At minimum, `SchemaFormIntegrationTest` and `JournalMessageBundleTest` must remain green after enum addition.
       ref: `src/test/java/com/solusi/erp/accounting/schema/web/template/integration/SchemaFormIntegrationTest.java:L63-L90` - schema form renders all event types
       ref: `src/test/java/com/solusi/erp/accounting/journal/web/template/JournalMessageBundleTest.java:L49-L75` - event label coverage
 

@@ -20,3 +20,9 @@ Populated during execution.
 - **Status:** clean
 - **Summary:** Routed Purchase Return-sourced Goods Issue completion to a `PURCHASE_RETURN` journal with PR source identity and PR-only inventory/GRIR variables, while keeping stock movements referenced to the physical Goods Issue. Updated GI journal links to resolve source-owned Purchase Return journals from the GI reference metadata.
 - **Validation:** `mvn test -Dtest="CompleteGoodsIssueUseCaseTest,ConfirmPurchaseReturnUseCaseTest,GoodsIssueQueryUseCaseTest"` passed with 35 tests; `mvn test -Dtest="GoodsIssueConfigTest"` passed with 1 test. JaCoCo checks met for both focused runs.
+
+## Task 4: Accounting UI Labels And Source Visibility
+- **Status:** clean
+- **Summary:** Added Purchase Return source link support in Journal Entry detail and expanded template coverage so schema forms, journal filters, and journal details expose the `PURCHASE_RETURN` event/source.
+- **Deviation:** Template integration tests render message keys as `??...??` placeholders in this harness, so assertions lock on the stable `PURCHASE_RETURN` event key/value and source route instead of localized display text. `JournalMessageBundleTest` continues to verify the actual bundle keys.
+- **Validation:** `mvn test -Dtest="SchemaFormIntegrationTest,JournalMessageBundleTest,*Journal*Template*Test"` passed with 15 tests after the assertion adjustment. JaCoCo checks met.

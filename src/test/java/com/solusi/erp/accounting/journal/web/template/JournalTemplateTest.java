@@ -17,6 +17,7 @@ class JournalTemplateTest {
 
         assertThat(template).contains("journal.sourceId");
         assertThat(template).contains("/inventory/goods-receipts/{id}");
+        assertThat(template).contains("/purchasing/purchase-returns/view/{id}");
         assertThat(template).contains("line.accountName");
         assertThat(template).contains("line.accountCode");
         assertThat(template).doesNotContain("formatDecimal(line.debitAmount, 1, 'COMMA', 4, 'POINT')");

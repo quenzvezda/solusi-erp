@@ -75,6 +75,8 @@ class SchemaFormIntegrationTest {
                             "journalPositions", List.of()),
                     auth("ACCOUNTING-SCHEMA_CREATE"));
             assertThat(html).isNotBlank();
+            assertThat(html).contains("value=\"PURCHASE_RETURN\"");
+            assertThat(html).contains("label.schema.event.PURCHASE_RETURN");
         });
     }
 
