@@ -2,9 +2,9 @@
 
 ## 1. Ringkasan
 
-Purchase Return mencatat pengembalian barang yang sudah diterima melalui Goods Receipt (GR) kepada supplier. Implementasi Phase 1 mencakup pemilihan GR eligible, draft return, approval, reservasi stok, dan konfirmasi outbound melalui Goods Issue (GI).
+Purchase Return mencatat pengembalian barang yang sudah diterima melalui Goods Receipt (GR) kepada supplier. Implementasi saat ini mencakup pemilihan GR eligible, draft return, approval, reservasi stok, konfirmasi outbound melalui Goods Issue (GI), dan posting journal inventory/GRIR khusus Purchase Return.
 
-Debit Memo dan event accounting khusus Purchase Return belum termasuk Phase 1.
+Debit Memo, pengurangan AP, reversal Input VAT, dan alokasi settlement masih deferred ke phase berikutnya.
 
 ## 2. Alur UI
 
@@ -35,7 +35,7 @@ Query availability mengurangi reservasi aktif setelah valuation layer diagregasi
 
 Reservasi dilepas ketika submission dibatalkan atau approval ditolak. Saat confirm berhasil, GI mengeluarkan stok memakai movement `ISSUE_RESERVED`, lalu ownership reservasi dikonsumsi setelah journal berhasil dipost.
 
-## 5. Goods Issue dan Accounting Phase 1
+## 5. Goods Issue dan Accounting
 
 Konfirmasi Purchase Return membuat GI dengan:
 
@@ -45,17 +45,24 @@ Konfirmasi Purchase Return membuat GI dengan:
 - valuation reference GR asal per line
 - container aktual dan serial aktual
 
-Phase 1 tetap memakai schema event accounting generik `GOODS_ISSUE`. Adapter Purchase Return sengaja mengembalikan placeholder `billPosted=false` dan clearing account kosong karena Debit Memo belum tersedia.
+GI tersebut tetap menjadi dokumen fisik outbound dan stock movement tetap memakai `ReferenceType.GOODS_ISSUE`. Accounting tidak lagi memakai schema generik `GOODS_ISSUE` untuk sumber Purchase Return; confirm flow mem-post journal dengan:
 
-## 6. Batas Wajib Phase 2
+- `eventType=PURCHASE_RETURN`
+- `sourceType=PURCHASE_RETURN`
+- `sourceId` dan `sourceCode` dari Purchase Return
+- `PR_GRIR_CLEARING_AMT = sum(GoodsIssueLine.inventoryAmount)` sebagai debit GR/IR Clearing
+- `PR_INVENTORY_AMT = sum(GoodsIssueLine.inventoryAmount)` sebagai credit Inventory
 
-Phase 2 wajib:
+Journal Purchase Return hanya membalik inventory dan GR/IR sebesar nilai inventory historis. `taxAmount`, `taxReversalAmount`, dan `clearingAmount` tidak diposting di journal ini.
+
+## 6. Batas Berikutnya
+
+Phase berikutnya wajib:
 
 1. menambahkan Debit Memo;
-2. menambahkan event schema accounting khusus `PURCHASE_RETURN`;
-3. memigrasikan confirm flow dari journal generik GI ke journal Purchase Return;
-4. memakai status billing dan clearing account aktual;
-5. menangani reversal pajak, GR/IR, AP, dan FX sesuai kondisi invoice.
+2. memakai status billing dan clearing account aktual;
+3. menangani reversal Input VAT, AP, settlement allocation, dan FX sesuai kondisi invoice;
+4. mengorkestrasi reversal Purchase Return yang sudah `CONFIRMED` lewat primitive reversal stock/journal yang sudah tersedia.
 
 ## 7. Otorisasi
 

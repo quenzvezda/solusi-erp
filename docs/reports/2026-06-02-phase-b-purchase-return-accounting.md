@@ -26,3 +26,8 @@ Populated during execution.
 - **Summary:** Added Purchase Return source link support in Journal Entry detail and expanded template coverage so schema forms, journal filters, and journal details expose the `PURCHASE_RETURN` event/source.
 - **Deviation:** Template integration tests render message keys as `??...??` placeholders in this harness, so assertions lock on the stable `PURCHASE_RETURN` event key/value and source route instead of localized display text. `JournalMessageBundleTest` continues to verify the actual bundle keys.
 - **Validation:** `mvn test -Dtest="SchemaFormIntegrationTest,JournalMessageBundleTest,*Journal*Template*Test"` passed with 15 tests after the assertion adjustment. JaCoCo checks met.
+
+## Task 5: Documentation Update
+- **Status:** clean
+- **Summary:** Updated Purchase Return, Goods Issue, and Accounting Schema docs to describe current Phase B behavior: Purchase Return-sourced GI remains the physical stock document, while accounting posts `PURCHASE_RETURN` inventory/GRIR variables and leaves Debit Memo/AP/Input VAT/FX concerns deferred.
+- **Validation:** Reviewed the affected doc diffs and ran a stale-text scan for old Phase 1/generic GI accounting statements and incorrect seeder paths; no stale matches remained.

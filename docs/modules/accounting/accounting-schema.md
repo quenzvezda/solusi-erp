@@ -169,7 +169,9 @@ Each line represents one row in `acc_schema_lines`. When the schema is persisted
 public enum JournalVariable {
     GR_INVENTORY_AMT(SchemaEventType.GOODS_RECEIPT), // inventory value (qty × unit cost)
     GR_TAX_AMT(SchemaEventType.GOODS_RECEIPT),       // input VAT on the purchase
-    GR_GRAND_TOTAL(SchemaEventType.GOODS_RECEIPT);   // sum of inventory + tax
+    GR_GRAND_TOTAL(SchemaEventType.GOODS_RECEIPT),   // sum of inventory + tax
+    PR_GRIR_CLEARING_AMT(SchemaEventType.PURCHASE_RETURN),
+    PR_INVENTORY_AMT(SchemaEventType.PURCHASE_RETURN);
 
     // Additional variables are added here as new event types gain journal support.
 }
@@ -190,6 +192,7 @@ public enum SchemaEventType {
     VENDOR_PAYMENT,      // DR Accounts Payable  CR Bank Account       (Sprint 5)
     CUSTOMER_INVOICE,    // DR Accounts Rec.     CR Revenue            (Future O2C)
     GOODS_ISSUE,         // DR COGS              CR Inventory          (Future O2C)
+    PURCHASE_RETURN,     // DR GR/IR Clearing    CR Inventory          (Sprint 6)
     CUSTOMER_RECEIPT,    // DR Bank Account      CR Accounts Rec.      (Future O2C)
     STOCK_ADJUSTMENT_IN, // DR Inventory         CR Inventory Adj Gain (Sprint 6)
     STOCK_ADJUSTMENT_OUT // DR Inventory Adj Loss CR Inventory         (Sprint 6)
@@ -312,10 +315,14 @@ The following mappings are the baseline configuration seeded with each Solusi ER
 | `GOODS_RECEIPT` | `GR_INVENTORY_AMT` | 1310 — Merchandise Inventory | DEBIT |
 | `GOODS_RECEIPT` | `GR_TAX_AMT` | 1230 — Tax Receivable (Input VAT) | DEBIT |
 | `GOODS_RECEIPT` | `GR_GRAND_TOTAL` | 2120 — GR/IR Clearing | CREDIT |
+| `PURCHASE_RETURN` | `PR_GRIR_CLEARING_AMT` | 2120 — GR/IR Clearing | DEBIT |
+| `PURCHASE_RETURN` | `PR_INVENTORY_AMT` | 1310 — Merchandise Inventory | CREDIT |
 
 `GR_TAX_AMT` lines with a zero value (no tax on the purchase order) are automatically skipped by `PostJournalForEventUseCaseImpl` — the journal entry remains balanced as DR Inventory = CR GR/IR Clearing.
 
-> All other event types (`VENDOR_BILL`, `VENDOR_PAYMENT`, `CUSTOMER_INVOICE`, `GOODS_ISSUE`, `CUSTOMER_RECEIPT`, `STOCK_ADJUSTMENT_IN`, `STOCK_ADJUSTMENT_OUT`) are registered as schema headers without lines. Their `JournalVariable` entries and schema lines will be added in future sprints as those event types gain journal posting support.
+`PURCHASE_RETURN` lines post only inventory/GRIR reversal. Input VAT reversal, AP reduction, allocation settlement, and FX are intentionally deferred to Debit Memo Allocation and later Purchase Return reversal phases.
+
+> Other event types such as `VENDOR_BILL`, `VENDOR_PAYMENT`, `CUSTOMER_INVOICE`, `GOODS_ISSUE`, `CUSTOMER_RECEIPT`, `STOCK_ADJUSTMENT_IN`, and `STOCK_ADJUSTMENT_OUT` may be seeded or configured separately as their posting flows are enabled. Run the actual dev seeder at `docs/database/dev-seeder/D220__accounting_schema.sql` or the relevant Flyway migration when refreshing local accounting schema data.
 
 ---
 
@@ -432,5 +439,5 @@ No changes are required in `PostJournalForEventUseCaseImpl` — the generic loop
 
 ---
 
-*Last updated: Refactor — Dynamic Schema Lines (V56) + Generic Journal Posting*
+*Last updated: Dynamic Schema Lines (V56) + Generic Journal Posting + Purchase Return Schema (V71)*
 *Owner: Accounting Module Team*

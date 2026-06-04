@@ -88,16 +88,23 @@ Valuation reversal tidak mengembalikan quantity ke layer GR lama secara tersembu
 
 ## 6. Accounting
 
-Core GI memakai event accounting `GOODS_ISSUE` dengan variable:
+Core GI manual/generic memakai event accounting `GOODS_ISSUE` dengan variable:
 
 | Variable | Makna |
 |---|---|
 | `GI_COGS_AMT` | Debit counterpart generic untuk GI. |
 | `GI_INVENTORY_AMT` | Credit inventory amount. |
 
-Accounting schema GI disiapkan sebagai data admin/manual configuration. Tidak ada seed default baru karena pemetaan account bergantung kebijakan tenant dan Purchase Return-specific accounting belum final.
+Accounting schema `GOODS_ISSUE` tetap disiapkan untuk outbound generic/manual dan tidak dipakai untuk Purchase Return-sourced GI.
 
-Purchase Return-specific journal, seperti debit GR/IR atau AP, credit Inventory, dan credit Input VAT, akan ditentukan saat module Purchase Return ada. Core GI tidak mem-post FX variance untuk Purchase Return reversal; rate berasal dari source/original GR.
+Saat `referenceType=PURCHASE_RETURN`, GI completion tetap mem-post stock movement dengan `ReferenceType.GOODS_ISSUE`, GI id, dan GI code, tetapi auto journal diroute ke source-specific event `PURCHASE_RETURN`. Journal tersebut memakai `sourceType=PURCHASE_RETURN`, source id/code Purchase Return, dan variable:
+
+| Variable | Makna |
+|---|---|
+| `PR_GRIR_CLEARING_AMT` | Debit GR/IR Clearing sebesar inventory amount historis dari line GI. |
+| `PR_INVENTORY_AMT` | Credit inventory sebesar inventory amount historis dari line GI. |
+
+Purchase Return journal tidak mem-post `taxAmount`, `taxReversalAmount`, atau `clearingAmount`. Reversal Input VAT, AP reduction, allocation settlement, dan FX tetap deferred ke Debit Memo Allocation/phase berikutnya. Core GI tidak mem-post FX variance untuk Purchase Return reversal; rate berasal dari source/original GR.
 
 Cancellation GI manual membalik journal `GOODS_ISSUE` asal dengan linked reversal journal. Reversal journal menukar debit/kredit dari final `JournalLine` asal, menyimpan `reversalOfId`, dan tidak memanggil accounting schema dengan amount negatif.
 
@@ -109,7 +116,7 @@ Port `PurchaseReturnGoodsIssueSourcePort` mendefinisikan kontrak minimum yang ha
 2. eligible return lines berisi product, qty, UoM, location, serial CSV, original GR/GR line, valuation refs, inventory amount, tax reversal amount, dan clearing amount
 3. `hasCompletedGoodsIssue(purchaseReturnId)` sebagai guard idempotency agar satu Purchase Return tidak membuat GI completed ganda
 
-Adapter `GoodsIssueSourceResolver` untuk Purchase Return sudah aktif. Confirm Purchase Return membuat GI dari snapshot return, menyelesaikan posting reserved issue, lalu mengonsumsi reservation setelah jurnal GI berhasil diposting.
+Adapter `GoodsIssueSourceResolver` untuk Purchase Return sudah aktif. Confirm Purchase Return membuat GI dari snapshot return, menyelesaikan posting reserved issue, lalu mengonsumsi reservation setelah journal `PURCHASE_RETURN` berhasil diposting.
 
 ## 8. UI Behavior
 
@@ -132,7 +139,7 @@ Form memakai pola header-lines:
 
 ## 9. Deferred Items
 
-1. Purchase Return-specific accounting schema/event dan Debit Memo.
+1. Debit Memo, AP reduction, Input VAT reversal, allocation settlement, dan FX untuk Purchase Return.
 2. Confirmed Purchase Return reversal orchestration tetap deferred ke Phase F walaupun primitive linked reversal generic sudah tersedia.
 3. Manual GI business rules yang lengkap.
 4. Sales/Delivery Order, scrap, internal use, production/consumption resolvers.

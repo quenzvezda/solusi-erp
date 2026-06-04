@@ -237,21 +237,21 @@ Make the new event visible in existing Accounting Schema and Journal Entry scree
 - No missing Thymeleaf message key for `PURCHASE_RETURN`.
 - Journal screens can filter/display the new event type.
 
-### Task 5: Documentation Update [ ]
+### Task 5: Documentation Update [x]
 
 Update module docs so Phase B behavior is the documented current behavior.
 
 **Depends on:** Tasks 2 and 3
 **Reference modules:** project docs
 
-- [ ] Update `docs/modules/procurement/purchase-return.md`: replace Phase 1 placeholder statement with Phase B behavior, noting that confirmed Purchase Return posts `PURCHASE_RETURN` journal and Debit Memo remains deferred.
+- [x] Update `docs/modules/procurement/purchase-return.md`: replace Phase 1 placeholder statement with Phase B behavior, noting that confirmed Purchase Return posts `PURCHASE_RETURN` journal and Debit Memo remains deferred.
       ref: `docs/modules/procurement/purchase-return.md:L49-L64` - current Phase 1/Phase 2 boundary text
-- [ ] Update `docs/modules/inventory/goods-issue.md`: clarify that core GI uses `GOODS_ISSUE` only for generic/manual outbound; source-specific GI can route accounting by source while stock movement still references physical GI.
+- [x] Update `docs/modules/inventory/goods-issue.md`: clarify that core GI uses `GOODS_ISSUE` only for generic/manual outbound; source-specific GI can route accounting by source while stock movement still references physical GI.
       ref: `docs/modules/inventory/goods-issue.md:L88-L119` - current accounting and Purchase Return seam sections
-- [ ] Update `docs/modules/accounting/accounting-schema.md`: add `PURCHASE_RETURN` and its variables to the event/variable documentation and standard mappings.
+- [x] Update `docs/modules/accounting/accounting-schema.md`: add `PURCHASE_RETURN` and its variables to the event/variable documentation and standard mappings.
       ref: `docs/modules/accounting/accounting-schema.md:L184-L205` - current event list
       ref: `docs/modules/accounting/accounting-schema.md:L316-L319` - current standard mapping note for remaining events
-- [ ] Mention that tax reversal is still deferred to Debit Memo Allocation and must not be posted in Purchase Return journal.
+- [x] Mention that tax reversal is still deferred to Debit Memo Allocation and must not be posted in Purchase Return journal.
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md` - Accounting Boundary and Why There Is No Double Reduction sections
 
 **Validation criteria:**
