@@ -1,7 +1,7 @@
 package com.solusi.erp.accountspayable.vendorbill.application.usecase.command;
 
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBill;
-import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
 import com.solusi.erp.accountspayable.vendorbill.domain.repository.VendorBillRepository;
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.domain.model.Page;
@@ -41,7 +41,8 @@ class CancelVendorBillUseCaseTest {
                 LocalDate.of(2026, 5, 20),
                 1L,
                 BigDecimal.ONE,
-                VendorBillStatus.CONFIRMED,
+                VendorBillDocumentStatus.CONFIRMED,
+                null,
                 new BigDecimal("100.0000"),
                 new BigDecimal("11.0000"),
                 new BigDecimal("111.0000"),
@@ -59,7 +60,7 @@ class CancelVendorBillUseCaseTest {
         private VendorBill existing;
 
         @Override
-        public Page<VendorBill> findAll(String keyword, Long vendorId, VendorBillStatus status, Pageable pageable) {
+        public Page<VendorBill> findAll(String keyword, Long vendorId, VendorBillDocumentStatus status, com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillSettlementStatus settlementStatus, Pageable pageable) {
             throw new UnsupportedOperationException();
         }
 

@@ -1,7 +1,8 @@
 package com.solusi.erp.accountspayable.vendorbill.application.usecase.query;
 
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBill;
-import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillSettlementStatus;
 import com.solusi.erp.accountspayable.vendorbill.domain.port.VendorBillPaymentSummaryPort;
 import com.solusi.erp.accountspayable.vendorbill.domain.repository.VendorBillRepository;
 import com.solusi.erp.core.domain.model.Page;
@@ -23,8 +24,9 @@ public class FindVendorBillsUseCaseImpl implements FindVendorBillsUseCase {
     }
 
     @Override
-    public Page<VendorBillSummaryView> execute(String keyword, Long vendorId, VendorBillStatus status, Pageable pageable) {
-        Page<VendorBill> page = vendorBillRepository.findAll(keyword, vendorId, status, pageable);
+    public Page<VendorBillSummaryView> execute(String keyword, Long vendorId, VendorBillDocumentStatus documentStatus,
+                                               VendorBillSettlementStatus settlementStatus, Pageable pageable) {
+        Page<VendorBill> page = vendorBillRepository.findAll(keyword, vendorId, documentStatus, settlementStatus, pageable);
         List<Long> billIds = page.content().stream().map(VendorBill::getId).toList();
         Map<Long, VendorBillPaymentSummaryPort.PaymentSummary> summaries = paymentSummaryPort.getPaymentSummaries(billIds);
         return new Page<>(
@@ -45,7 +47,7 @@ public class FindVendorBillsUseCaseImpl implements FindVendorBillsUseCase {
                 bill.getVendorInvoiceNumber(),
                 bill.getBillDate(),
                 bill.getDueDate(),
-                bill.getStatus(),
+                bill.getDocumentStatus(),
                 bill.getTotalAmount(),
                 paidAmount,
                 outstandingAmount

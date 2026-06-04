@@ -112,8 +112,8 @@ public class VendorBillConfig {
         FindVendorBillsUseCase pure = new FindVendorBillsUseCaseImpl(repository, paymentSummaryPort);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         tx.setReadOnly(true);
-        return (keyword, vendorId, status, pageable) ->
-                tx.execute(txStatus -> pure.execute(keyword, vendorId, status, pageable));
+        return (keyword, vendorId, documentStatus, settlementStatus, pageable) ->
+                tx.execute(txStatus -> pure.execute(keyword, vendorId, documentStatus, settlementStatus, pageable));
     }
 
     @Bean

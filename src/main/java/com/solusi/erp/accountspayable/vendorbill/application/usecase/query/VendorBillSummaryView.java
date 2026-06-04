@@ -1,6 +1,6 @@
 package com.solusi.erp.accountspayable.vendorbill.application.usecase.query;
 
-import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -12,7 +12,7 @@ public record VendorBillSummaryView(
         String vendorInvoiceNumber,
         LocalDate billDate,
         LocalDate dueDate,
-        VendorBillStatus status,
+        VendorBillDocumentStatus status,
         BigDecimal totalAmount,
         BigDecimal paidAmount,
         BigDecimal outstandingAmount

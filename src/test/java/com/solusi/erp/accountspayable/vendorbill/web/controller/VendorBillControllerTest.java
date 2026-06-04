@@ -2,7 +2,7 @@ package com.solusi.erp.accountspayable.vendorbill.web.controller;
 
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.command.*;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.query.*;
-import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
 import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableApReference;
 import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableGrLineView;
 import com.solusi.erp.accountspayable.vendorbill.web.dto.VendorBillDetailResponse;
@@ -88,12 +88,12 @@ class VendorBillControllerTest {
                 "INV-001",
                 LocalDate.of(2026, 5, 10),
                 LocalDate.of(2026, 5, 20),
-                VendorBillStatus.DRAFT,
+                VendorBillDocumentStatus.DRAFT,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO
         );
-        when(findUseCase.execute(any(), any(), any(), any()))
+        when(findUseCase.execute(any(), any(), any(), any(), any()))
                 .thenReturn(new Page<>(List.of(summary), 0, 20, 1));
         VendorBillSummaryResponse response = new VendorBillSummaryResponse();
         response.setId(1L);
@@ -101,13 +101,13 @@ class VendorBillControllerTest {
         when(webMapper.toSummaryResponse(summary)).thenReturn(response);
 
         Model model = new ExtendedModelMap();
-        String view = controller.list("INV", 10L, VendorBillStatus.DRAFT, PageRequest.of(0, 20), model);
+        String view = controller.list("INV", 10L, VendorBillDocumentStatus.DRAFT, PageRequest.of(0, 20), model);
 
         assertThat(view).isEqualTo("accountspayable/vendor-bills/list");
         assertThat(model.getAttribute("page")).isInstanceOf(org.springframework.data.domain.Page.class);
         assertThat(model.getAttribute("keyword")).isEqualTo("INV");
         assertThat(model.getAttribute("vendorId")).isEqualTo(10L);
-        assertThat(model.getAttribute("status")).isEqualTo(VendorBillStatus.DRAFT);
+        assertThat(model.getAttribute("status")).isEqualTo(VendorBillDocumentStatus.DRAFT);
     }
 
     @Test
@@ -121,7 +121,7 @@ class VendorBillControllerTest {
                 LocalDate.of(2026, 5, 20),
                 1L,
                 BigDecimal.ONE,
-                VendorBillStatus.CONFIRMED,
+                VendorBillDocumentStatus.CONFIRMED,
                 new BigDecimal("100.0000"),
                 BigDecimal.ZERO,
                 new BigDecimal("100.0000"),

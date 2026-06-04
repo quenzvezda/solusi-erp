@@ -3,7 +3,7 @@ package com.solusi.erp.accountspayable.vendorbill.web.mapper;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.query.VendorBillDetailView;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.query.VendorBillLineView;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.query.VendorBillSummaryView;
-import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
 import com.solusi.erp.accountspayable.vendorbill.web.dto.VendorBillDetailResponse;
 import com.solusi.erp.accountspayable.vendorbill.web.dto.VendorBillLineRequest;
 import com.solusi.erp.accountspayable.vendorbill.web.dto.VendorBillSaveCommand;
@@ -73,7 +73,7 @@ class VendorBillWebMapperTest {
                 LocalDate.of(2026, 5, 20),
                 1L,
                 BigDecimal.ONE,
-                VendorBillStatus.CONFIRMED,
+                VendorBillDocumentStatus.CONFIRMED,
                 new BigDecimal("100.0000"),
                 BigDecimal.ZERO,
                 new BigDecimal("100.0000"),
@@ -116,7 +116,7 @@ class VendorBillWebMapperTest {
                 "INV-001",
                 LocalDate.of(2026, 5, 10),
                 LocalDate.of(2026, 5, 20),
-                VendorBillStatus.DRAFT,
+                VendorBillDocumentStatus.DRAFT,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO

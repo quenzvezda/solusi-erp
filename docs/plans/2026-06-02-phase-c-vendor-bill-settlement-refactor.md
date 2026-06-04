@@ -143,31 +143,31 @@ Add database columns and migrate old status data into document and settlement st
 - Existing rows with old status values are mapped deterministically.
 - No Java enum depends on `PARTIAL_PAID` or `PAID` as Vendor Bill document statuses.
 
-### Task 2: Vendor Bill Domain And Persistence Status Split [ ]
+### Task 2: Vendor Bill Domain And Persistence Status Split [x]
 
 Refactor the Vendor Bill aggregate and persistence model to expose document and settlement statuses.
 
 **Depends on:** Task 1
 **Reference modules:** `accountspayable.vendorbill`
 
-- [ ] Create `VendorBillDocumentStatus` with `DRAFT`, `CONFIRMED`, `CANCELLED`, and `VendorBillSettlementStatus` with `OPEN`, `PARTIALLY_SETTLED`, `SETTLED`.
+- [x] Create `VendorBillDocumentStatus` with `DRAFT`, `CONFIRMED`, `CANCELLED`, and `VendorBillSettlementStatus` with `OPEN`, `PARTIALLY_SETTLED`, `SETTLED`.
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorbill/domain/model/VendorBillStatus.java:L1-L9` - old enum to replace
-- [ ] Update `VendorBill` fields, constructor, factory, getters, `confirm(...)`, and `cancel()` so document transitions stay document-only.
+- [x] Update `VendorBill` fields, constructor, factory, getters, `confirm(...)`, and `cancel()` so document transitions stay document-only.
       Confirm should set `documentStatus=CONFIRMED` and `settlementStatus=OPEN`; cancel should set `documentStatus=CANCELLED` and clear or preserve null settlement for non-confirmed drafts.
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorbill/domain/model/VendorBill.java:L20-L78` - current aggregate status transitions
-- [ ] Keep edit/update/delete/cancel guards keyed on `documentStatus == DRAFT`.
+- [x] Keep edit/update/delete/cancel guards keyed on `documentStatus == DRAFT`.
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorbill/application/usecase/command/UpdateVendorBillUseCaseImpl.java:L50-L65` - draft-only update guard
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorbill/application/usecase/command/DeleteVendorBillUseCaseImpl.java:L18-L24` - draft-only delete guard
-- [ ] Update `VendorBillEntity` to map `document_status` and `settlement_status` with the new enum types.
+- [x] Update `VendorBillEntity` to map `document_status` and `settlement_status` with the new enum types.
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorbill/infrastructure/persistence/VendorBillEntity.java:L41-L50` - old single status entity field
-- [ ] Update `VendorBillPersistenceMapper` so both statuses round-trip in domain and entity mapping.
+- [x] Update `VendorBillPersistenceMapper` so both statuses round-trip in domain and entity mapping.
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorbill/infrastructure/persistence/VendorBillPersistenceMapper.java:L12-L36` - current constructor mapping
-- [ ] Update repository port/JPA filter signatures from single `VendorBillStatus status` to separate `documentStatus` and optional `settlementStatus`.
+- [x] Update repository port/JPA filter signatures from single `VendorBillStatus status` to separate `documentStatus` and optional `settlementStatus`.
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorbill/domain/repository/VendorBillRepository.java:L1-L19` - current repository port filter contract
       ref: `src/main/java/com/solusi/erp/accountspayable/vendorbill/infrastructure/persistence/VendorBillJpaRepository.java:L11-L25` - current JPA filter by `vb.status`
-- [ ] **TEST:** Update `VendorBillTest` for confirm, cancel, non-draft guards, and defensive copies using the new enums.
+- [x] **TEST:** Update `VendorBillTest` for confirm, cancel, non-draft guards, and defensive copies using the new enums.
       ref: `src/test/java/com/solusi/erp/accountspayable/vendorbill/domain/model/VendorBillTest.java:L1-L107` - current aggregate transition tests
-- [ ] **TEST:** Update `VendorBillRepositoryImplTest` and mapper tests to prove both statuses persist and filter correctly.
+- [x] **TEST:** Update `VendorBillRepositoryImplTest` and mapper tests to prove both statuses persist and filter correctly.
       ref: `src/test/java/com/solusi/erp/accountspayable/vendorbill/infrastructure/adapter/VendorBillRepositoryImplTest.java` - repository mapping/filter tests
 
 **Validation criteria:**

@@ -1,7 +1,7 @@
 package com.solusi.erp.accountspayable.vendorbill.application.usecase.query;
 
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBill;
-import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
 import com.solusi.erp.accountspayable.vendorbill.domain.port.VendorBillPaymentSummaryPort;
 import com.solusi.erp.accountspayable.vendorbill.domain.repository.VendorBillRepository;
 import com.solusi.erp.core.domain.model.AuditMetadata;
@@ -29,11 +29,11 @@ class FindVendorBillsUseCaseTest {
         ));
 
         Page<VendorBillSummaryView> result = new FindVendorBillsUseCaseImpl(repository, paymentSummaryPort)
-                .execute("INV", 10L, VendorBillStatus.CONFIRMED, pageable);
+                .execute("INV", 10L, VendorBillDocumentStatus.CONFIRMED, null, pageable);
 
         assertThat(repository.keyword).isEqualTo("INV");
         assertThat(repository.vendorId).isEqualTo(10L);
-        assertThat(repository.status).isEqualTo(VendorBillStatus.CONFIRMED);
+        assertThat(repository.status).isEqualTo(VendorBillDocumentStatus.CONFIRMED);
         assertThat(repository.pageable).isEqualTo(pageable);
         assertThat(result.content()).hasSize(1);
         assertThat(result.content().getFirst().code()).isEqualTo("VB-202605-00001");
@@ -54,7 +54,8 @@ class FindVendorBillsUseCaseTest {
                 LocalDate.of(2026, 5, 20),
                 1L,
                 BigDecimal.ONE,
-                VendorBillStatus.CONFIRMED,
+                VendorBillDocumentStatus.CONFIRMED,
+                null,
                 new BigDecimal("100.0000"),
                 BigDecimal.ZERO,
                 new BigDecimal("100.0000"),
@@ -83,11 +84,11 @@ class FindVendorBillsUseCaseTest {
         private Page<VendorBill> page;
         private String keyword;
         private Long vendorId;
-        private VendorBillStatus status;
+        private VendorBillDocumentStatus status;
         private Pageable pageable;
 
         @Override
-        public Page<VendorBill> findAll(String keyword, Long vendorId, VendorBillStatus status, Pageable pageable) {
+        public Page<VendorBill> findAll(String keyword, Long vendorId, VendorBillDocumentStatus status, com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillSettlementStatus settlementStatus, Pageable pageable) {
             this.keyword = keyword;
             this.vendorId = vendorId;
             this.status = status;
