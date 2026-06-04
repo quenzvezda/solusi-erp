@@ -40,6 +40,34 @@ class DebitMemoTest {
     }
 
     @Test
+    @DisplayName("createNew should fail when required header references are missing")
+    void createNew_shouldFailWhenRequiredHeaderReferencesAreMissing() {
+        List<DebitMemoLine> lines = List.of(line(1L, "100.0000", "0.0000", "100.0000", "0.0000"));
+
+        assertThatThrownBy(() -> DebitMemo.createNew(" ", 100L, "PRT-001", 200L, 300L, LocalDate.now(), lines))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.debit-memo.code-required");
+        assertThatThrownBy(() -> DebitMemo.createNew("DM-001", null, "PRT-001", 200L, 300L, LocalDate.now(), lines))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.debit-memo.purchase-return-required");
+        assertThatThrownBy(() -> DebitMemo.createNew("DM-001", 100L, " ", 200L, 300L, LocalDate.now(), lines))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.debit-memo.purchase-return-required");
+        assertThatThrownBy(() -> DebitMemo.createNew("DM-001", 100L, "PRT-001", null, 300L, LocalDate.now(), lines))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.debit-memo.vendor-currency-required");
+        assertThatThrownBy(() -> DebitMemo.createNew("DM-001", 100L, "PRT-001", 200L, null, LocalDate.now(), lines))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.debit-memo.vendor-currency-required");
+        assertThatThrownBy(() -> DebitMemo.createNew("DM-001", 100L, "PRT-001", 200L, 300L, null, lines))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.debit-memo.memo-date-required");
+        assertThatThrownBy(() -> DebitMemo.createNew("DM-001", 100L, "PRT-001", 200L, 300L, LocalDate.now(), null))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.debit-memo.lines-required");
+    }
+
+    @Test
     @DisplayName("createNew should fail when gross is zero")
     void createNew_shouldFailWhenGrossIsZero() {
         assertThatThrownBy(() -> debitMemo(List.of(line(1L, "0.0000", "0.0000", "0.0000", "0.0000"))))
@@ -54,6 +82,27 @@ class DebitMemoTest {
                 bd("100.0000"), bd("0.0000"), bd("100.0000"), bd("0.0000")))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("msg.error.debit-memo.line.quantity-positive");
+        assertThatThrownBy(() -> new DebitMemoLine(1L, 10L, 20L, null, 30L,
+                bd("100.0000"), bd("0.0000"), bd("100.0000"), bd("0.0000")))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.debit-memo.line.quantity-positive");
+    }
+
+    @Test
+    @DisplayName("line should require source product and uom references")
+    void line_shouldRequireReferences() {
+        assertThatThrownBy(() -> new DebitMemoLine(1L, null, 20L, bd("1.0000"), 30L,
+                bd("100.0000"), bd("0.0000"), bd("100.0000"), bd("0.0000")))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.debit-memo.line.reference-required");
+        assertThatThrownBy(() -> new DebitMemoLine(1L, 10L, null, bd("1.0000"), 30L,
+                bd("100.0000"), bd("0.0000"), bd("100.0000"), bd("0.0000")))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.debit-memo.line.reference-required");
+        assertThatThrownBy(() -> new DebitMemoLine(1L, 10L, 20L, bd("1.0000"), null,
+                bd("100.0000"), bd("0.0000"), bd("100.0000"), bd("0.0000")))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.debit-memo.line.reference-required");
     }
 
     @Test
@@ -62,12 +111,28 @@ class DebitMemoTest {
         assertThatThrownBy(() -> line(1L, "-1.0000", "0.0000", "0.0000", "0.0000"))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("msg.error.debit-memo.line.amount-non-negative");
+        assertThatThrownBy(() -> new DebitMemoLine(1L, 10L, 20L, bd("1.0000"), 30L,
+                null, bd("0.0000"), bd("100.0000"), bd("0.0000")))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.debit-memo.line.amount-non-negative");
+        assertThatThrownBy(() -> line(1L, "1.0000", "-1.0000", "1.0000", "0.0000"))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.debit-memo.line.amount-non-negative");
+        assertThatThrownBy(() -> line(1L, "1.0000", "0.0000", "-1.0000", "0.0000"))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.debit-memo.line.amount-non-negative");
+        assertThatThrownBy(() -> line(1L, "1.0000", "0.0000", "1.0000", "-1.0000"))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.debit-memo.line.amount-non-negative");
     }
 
     @Test
     @DisplayName("line should reject tax without dpp")
     void line_shouldRejectTaxWithoutDpp() {
         assertThatThrownBy(() -> line(1L, "0.0000", "1.0000", "0.0000", "1.0000"))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.debit-memo.line.dpp-required-for-tax");
+        assertThatThrownBy(() -> line(1L, "1.0000", "0.0000", "0.0000", "1.0000"))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("msg.error.debit-memo.line.dpp-required-for-tax");
     }
@@ -94,6 +159,18 @@ class DebitMemoTest {
         debitMemo.updateMetadata("SUP-DM-003", null, "TAX-003", null, "settled");
         assertThat(debitMemo.getSupplierMemoNumber()).isEqualTo("SUP-DM-003");
         assertThat(debitMemo.getTaxDocumentNumber()).isEqualTo("TAX-003");
+    }
+
+    @Test
+    @DisplayName("metadata update should normalize blank external references")
+    void updateMetadata_shouldNormalizeBlankExternalReferences() {
+        DebitMemo debitMemo = debitMemo(List.of(line(1L, "100.0000", "0.0000", "100.0000", "0.0000")));
+
+        debitMemo.updateMetadata(" ", null, " ", null, "notes");
+
+        assertThat(debitMemo.getSupplierMemoNumber()).isNull();
+        assertThat(debitMemo.getTaxDocumentNumber()).isNull();
+        assertThat(debitMemo.getNotes()).isEqualTo("notes");
     }
 
     @Test
@@ -126,6 +203,47 @@ class DebitMemoTest {
         assertThatThrownBy(debitMemo::cancel)
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("msg.error.debit-memo.cancel.only-open");
+    }
+
+    @Test
+    @DisplayName("settlement transitions should reject invalid sources")
+    void settlementTransitions_shouldRejectInvalidSources() {
+        DebitMemo partiallySettled = debitMemo(List.of(line(1L, "100.0000", "0.0000", "100.0000", "0.0000")));
+        partiallySettled.markPartiallySettled();
+
+        assertThatThrownBy(partiallySettled::markPartiallySettled)
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.debit-memo.invalid-settlement-transition");
+
+        DebitMemo cancelled = debitMemo(List.of(line(2L, "100.0000", "0.0000", "100.0000", "0.0000")));
+        cancelled.cancel();
+        assertThatThrownBy(cancelled::markSettled)
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.debit-memo.invalid-settlement-transition");
+    }
+
+    @Test
+    @DisplayName("reconstitute should default null metadata and settlement status")
+    void reconstitute_shouldDefaultNullMetadataAndSettlementStatus() {
+        DebitMemo debitMemo = DebitMemo.reconstitute(
+                null,
+                "DM-202606-00001",
+                100L,
+                "PRT-202606-00001",
+                200L,
+                300L,
+                LocalDate.of(2026, 6, 2),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                List.of(line(1L, "100.0000", "0.0000", "100.0000", "0.0000"))
+        );
+
+        assertThat(debitMemo.getId()).isNull();
+        assertThat(debitMemo.getSettlementStatus()).isEqualTo(DebitMemoSettlementStatus.OPEN);
     }
 
     @Test
@@ -164,4 +282,3 @@ class DebitMemoTest {
         return new BigDecimal(value);
     }
 }
-

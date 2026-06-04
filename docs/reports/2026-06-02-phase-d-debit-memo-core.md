@@ -1,6 +1,6 @@
 # Phase D Report: Vendor Debit Memo Core
 
-Status: IN_PROGRESS
+Status: COMPLETED
 Plan: [docs/plans/2026-06-02-phase-d-debit-memo-core.md](../plans/2026-06-02-phase-d-debit-memo-core.md)
 Source Brainstorm: [docs/brainstorming/2026-06-02-vendor-debit-memo.md](../brainstorming/2026-06-02-vendor-debit-memo.md)
 
@@ -146,6 +146,37 @@ Source Brainstorm: [docs/brainstorming/2026-06-02-vendor-debit-memo.md](../brain
 | Task 4 | `6fd6298` |
 | Task 5 | `d442fc7` |
 | Task 6 | `4d9990c` |
+| Task 7 | `6cc02c3` |
+
+## Task 8: Add E2E Coverage and Full Verification Gates
+
+- **Status:** findings
+- **Summary:** Extended Purchase Return E2E to verify generated Debit Memo detail/source links/metadata update, hardened existing E2E navigation waits, added Debit Memo warmup, and completed full backend/E2E gates.
+- **Tests:** `npx tsc --noEmit` passed; `npx playwright test tests/procurement/purchase-return.spec.ts --list` passed; `mvn clean test` passed with 1925 tests and JaCoCo checks met; final `.\e2e-tests\scripts\run-e2e.ps1` passed with 76/76 tests.
+
+### Finding: JaCoCo branch threshold needed extra Debit Memo guard coverage
+
+- **Type:** test adjustment
+- **Severity:** info
+- **Detail:** The first full backend run passed Maven but emitted a JaCoCo branch coverage warning (`0.79` vs `0.80`) after the new Phase D classes were added.
+- **Action taken:** Added domain guard and source-document adapter tests for Debit Memo, then reran `mvn clean test`; final output reported `All coverage checks have been met`.
+- **Ref:** `src/test/java/com/solusi/erp/accountspayable/debitmemo/domain/model/DebitMemoTest.java`
+
+### Finding: E2E first run had route-load flakes outside Debit Memo flow
+
+- **Type:** bug
+- **Severity:** warning
+- **Detail:** Initial full E2E run exited 0 but reported two flaky tests on `/purchasing/purchase-requisitions` route loading. The likely root cause was waiting on heavy SSR/navigation for deny/sanity checks instead of using the existing best-effort navigation patterns.
+- **Action taken:** Hardened RBAC deny classification with an authenticated request probe before rendering, and changed the PR sanity check to use `navigateToModule`.
+- **Ref:** `e2e-tests/tests/auth/rbac.spec.ts`
+
+### Finding: E2E second run exposed stale auth/navigation wait assumptions
+
+- **Type:** bug
+- **Severity:** warning
+- **Detail:** The unauthenticated login test was already on `/login` before `waitForURL` was registered, so the redirect event could be missed. A Purchase Requisition helper also treated `networkidle` as a hard gate even though the page was already rendered and usable.
+- **Action taken:** Changed the auth test to assert final URL state with `expect(page).toHaveURL(...)`, and made shared `waitForNetworkIdle` best-effort to match `navigateToModule`.
+- **Ref:** `e2e-tests/tests/auth/login.spec.ts`
 
 ## Verification
 
@@ -156,8 +187,12 @@ Source Brainstorm: [docs/brainstorming/2026-06-02-vendor-debit-memo.md](../brain
 - Task 5: `mvn test "-Dtest=DebitMemoCommandUseCaseTest,DebitMemoConfigTest"` passed.
 - Task 6: `mvn test "-Dtest=DebitMemoControllerTest,DebitMemoWebMapperTest,DebitMemoTemplateTest,DebitMemoQueryUseCaseTest,DebitMemoConfigTest,PurchaseReturnControllerTest,PurchaseReturnViewIntegrationTest"` passed.
 - Task 7: Markdown documentation review completed; no automated test required.
+- Task 8: `npx tsc --noEmit` passed.
+- Task 8: `npx playwright test tests/procurement/purchase-return.spec.ts --list` passed.
+- Final backend gate: `mvn clean test` passed with 1925 tests and `All coverage checks have been met`.
+- Final E2E gate: `.\e2e-tests\scripts\run-e2e.ps1` passed with 76 tests.
 
 ## Notes
 
-- Phase D plan only; implementation is intentionally pending.
 - Phase E allocation behavior remains deferred.
+- Debit Memo Allocation UI/action remains intentionally inactive in Phase D.

@@ -2,6 +2,8 @@ import { Page } from '@playwright/test';
 import { test, expect, storageStatePath } from '../../fixtures/base';
 import { navigateToModule } from '../../helpers/navigation';
 import { setAutoNumeric } from '../../helpers/autonumeric';
+import { setFlatpickrDate } from '../../helpers/flatpickr';
+import { submitAjaxForm } from '../../helpers/form';
 import { setTomSelectValue } from '../../helpers/tomselect';
 
 const GOODS_RECEIPT_ID = '9601';
@@ -263,6 +265,40 @@ test.describe('Purchase Return Phase 1 flow', () => {
     await expect(giLink).toBeVisible();
     const giHref = await giLink.getAttribute('href');
     expect(giHref).toBeTruthy();
+
+    const debitMemoLink = page.locator('a[href^="/accounts-payable/debit-memos/"]').first();
+    await expect(debitMemoLink).toBeVisible({ timeout: 10_000 });
+    const debitMemoHref = await debitMemoLink.getAttribute('href');
+    const debitMemoCode = (await debitMemoLink.innerText()).trim();
+    expect(debitMemoHref, 'debit memo detail href').toBeTruthy();
+    expect(debitMemoCode, 'generated debit memo code').toMatch(/^DM-/);
+
+    const adminContext = await browser.newContext({ storageState: storageStatePath('admin') });
+    const adminPage = await adminContext.newPage();
+    await navigateToModule(adminPage, debitMemoHref!);
+    await expect(adminPage.locator('.page-header .badge')).toContainText('OPEN');
+    await expect(adminPage.locator('.page-title')).toContainText(debitMemoCode);
+    await expect(adminPage.locator(`a[href="/purchasing/purchase-returns/view/${purchaseReturnId}"]`))
+      .toContainText(purchaseReturnCode);
+    await expect(adminPage.locator(`a[href="${giHref}"]`)).toBeVisible();
+    await expect(adminPage.locator('body')).toContainText(/Gross/);
+    await expect(adminPage.locator('body')).toContainText(/Remaining|Sisa/);
+    await expect(adminPage.locator('table tbody tr').first()).toBeVisible();
+    await expect(adminPage.locator('table tbody')).not.toContainText(/No debit memo lines|Tidak ada line debit memo/i);
+
+    const supplierMemoNumber = `E2E-DM-SUP-${Date.now()}`;
+    const taxDocumentNumber = `E2E-DM-TAX-${Date.now()}`;
+    await adminPage.locator('input[name="supplierMemoNumber"]').fill(supplierMemoNumber);
+    await setFlatpickrDate(adminPage, 'input[name="supplierMemoDate"]', '2026-06-04');
+    await adminPage.locator('input[name="taxDocumentNumber"]').fill(taxDocumentNumber);
+    await setFlatpickrDate(adminPage, 'input[name="taxDocumentDate"]', '2026-06-05');
+    await adminPage.locator('textarea[name="notes"]').fill('E2E debit memo metadata update');
+    await submitAjaxForm(adminPage);
+    await adminPage.reload({ waitUntil: 'domcontentloaded' });
+    await expect(adminPage.locator('input[name="supplierMemoNumber"]')).toHaveValue(supplierMemoNumber);
+    await expect(adminPage.locator('input[name="taxDocumentNumber"]')).toHaveValue(taxDocumentNumber);
+    await expect(adminPage.locator('textarea[name="notes"]')).toHaveValue('E2E debit memo metadata update');
+    await adminContext.close();
 
     await navigateToModule(
       page,

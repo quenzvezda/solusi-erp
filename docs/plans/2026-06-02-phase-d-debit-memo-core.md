@@ -1,7 +1,8 @@
 # Phase D Plan: Vendor Debit Memo Core
 
-Status: IN_PROGRESS
+Status: COMPLETED
 Created: 2026-06-04
+Completed: 2026-06-04
 Source Brainstorm: [docs/brainstorming/2026-06-02-vendor-debit-memo.md](../brainstorming/2026-06-02-vendor-debit-memo.md)
 Progress Report: [docs/reports/2026-06-02-phase-d-debit-memo-core.md](../reports/2026-06-02-phase-d-debit-memo-core.md)
 
@@ -467,7 +468,7 @@ Commit:
 
 - `docs(debit-memo): document core phase d behavior`
 
-## Task 8: Add E2E Coverage and Full Verification Gates
+## Task 8: Add E2E Coverage and Full Verification Gates [x]
 
 Goal: prove Phase D works through the browser flow and keep the full regression suite green.
 
@@ -519,9 +520,9 @@ Commit:
 
 ## Final Completion Checklist
 
-- [ ] Every task has a commit.
-- [ ] Report file contains commit hashes and verification output summary.
-- [ ] `mvn clean test` passes with JaCoCo threshold.
-- [ ] `.\e2e-tests\scripts\run-e2e.ps1` passes.
-- [ ] Phase E deferrals are explicit in docs and UI.
-- [ ] No active Debit Memo Allocation UI/action is shipped in Phase D.
+- [x] Every task has a commit.
+- [x] Report file contains commit hashes and verification output summary.
+- [x] `mvn clean test` passes with JaCoCo threshold.
+- [x] `.\e2e-tests\scripts\run-e2e.ps1` passes.
+- [x] Phase E deferrals are explicit in docs and UI.
+- [x] No active Debit Memo Allocation UI/action is shipped in Phase D.

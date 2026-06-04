@@ -18,6 +18,7 @@
 
 /accounts-payable/vendor-bills
 /accounts-payable/vendor-bills/select-references
+/accounts-payable/debit-memos
 /accounts-payable/vendor-payments
 /accounts-payable/vendor-payments/create
 
