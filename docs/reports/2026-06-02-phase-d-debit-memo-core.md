@@ -130,6 +130,23 @@ Source Brainstorm: [docs/brainstorming/2026-06-02-vendor-debit-memo.md](../brain
 - **Action taken:** Rendered an empty allocation-history placeholder and added template coverage that no allocation permission/action is exposed.
 - **Ref:** `src/main/resources/templates/accountspayable/debit-memos/detail.html`
 
+## Task 7: Update Documentation and Regression Notes
+
+- **Status:** clean
+- **Summary:** Added Debit Memo module documentation, updated Purchase Return docs and docs index navigation, and recorded Phase E handoff notes.
+- **Tests:** Documentation review only; no automated test was required for markdown-only changes.
+
+### Commit Trace
+
+| Task | Commit |
+|---|---|
+| Task 1 | `a4a6b95` |
+| Task 2 | `24918c5` |
+| Task 3 | `f422756` |
+| Task 4 | `6fd6298` |
+| Task 5 | `d442fc7` |
+| Task 6 | `4d9990c` |
+
 ## Verification
 
 - Task 1: `mvn test -Dtest=DebitMemoCoreMigrationTest` passed.
@@ -138,6 +155,7 @@ Source Brainstorm: [docs/brainstorming/2026-06-02-vendor-debit-memo.md](../brain
 - Task 4: `mvn test "-Dtest=CreateDebitMemoFromPurchaseReturnUseCaseTest,ConfirmPurchaseReturnUseCaseTest,DebitMemoConfigTest,PurchaseReturnConfigTest"` passed.
 - Task 5: `mvn test "-Dtest=DebitMemoCommandUseCaseTest,DebitMemoConfigTest"` passed.
 - Task 6: `mvn test "-Dtest=DebitMemoControllerTest,DebitMemoWebMapperTest,DebitMemoTemplateTest,DebitMemoQueryUseCaseTest,DebitMemoConfigTest,PurchaseReturnControllerTest,PurchaseReturnViewIntegrationTest"` passed.
+- Task 7: Markdown documentation review completed; no automated test required.
 
 ## Notes
 

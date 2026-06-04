@@ -31,6 +31,10 @@ Dokumentasi dikelompokkan ke dalam folder berikut berdasarkan konteksnya:
     - **[/modules/inventory](modules/inventory/)**: Sprint 4+ — Inventory Operations
         - [Goods Receipt (GR)](modules/inventory/goods-receipt.md) — Penerimaan barang dari dokumen sumber (saat ini operasional: Purchase Order)
         - [Goods Issue (GI)](modules/inventory/goods-issue.md) — Pengeluaran barang generik untuk Purchase Return seam dan source outbound masa depan
+    - **[/modules/accountspayable](modules/accountspayable/)**: Accounts Payable
+        - [Vendor Bill](modules/accountspayable/vendor-bill.md) — Invoice vendor dari Goods Receipt dan settlement projection
+        - [Vendor Payment](modules/accountspayable/vendor-payment.md) — Pembayaran vendor dan alokasi ke Vendor Bill
+        - [Debit Memo](modules/accountspayable/debit-memo.md) — Memo retur vendor dari Purchase Return, metadata, dan settlement core
 - **[/spec](spec/)**: **[PENTING]** Spesifikasi teknis horizontal/shared yang digunakan di seluruh aplikasi (line-item form, modal selector, action buttons, submission flow, dsb). Lihat **[Spec Index](spec/index.md)**.
 - **[/roadmap](roadmap/)**: Rencana pengembangan masa depan dan pelacakan standardisasi arsitektur.
 - **[/workflow](workflow/)**: Panduan prosedur kerja agen (seperti tugas repetitif, troubleshooting, dll).

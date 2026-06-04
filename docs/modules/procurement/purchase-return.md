@@ -2,9 +2,9 @@
 
 ## 1. Ringkasan
 
-Purchase Return mencatat pengembalian barang yang sudah diterima melalui Goods Receipt (GR) kepada supplier. Implementasi saat ini mencakup pemilihan GR eligible, draft return, approval, reservasi stok, konfirmasi outbound melalui Goods Issue (GI), dan posting journal inventory/GRIR khusus Purchase Return.
+Purchase Return mencatat pengembalian barang yang sudah diterima melalui Goods Receipt (GR) kepada supplier. Implementasi saat ini mencakup pemilihan GR eligible, draft return, approval, reservasi stok, konfirmasi outbound melalui Goods Issue (GI), posting journal inventory/GRIR khusus Purchase Return, dan pembuatan Vendor Debit Memo core.
 
-Debit Memo, pengurangan AP, reversal Input VAT, dan alokasi settlement masih deferred ke phase berikutnya.
+Pengurangan AP, reversal Input VAT, alokasi Debit Memo ke Vendor Bill, dan settlement lanjutan masih deferred ke Debit Memo Allocation phase berikutnya.
 
 ## 2. Alur UI
 
@@ -15,6 +15,7 @@ Debit Memo, pengurangan AP, reversal Input VAT, dan alokasi settlement masih def
 5. Isi qty positif untuk barang non-serial. Qty tidak boleh melebihi outstanding pada container aktual.
 6. Untuk barang serial, pilih serial dari modal. Sistem mengelompokkan pilihan per container aktual dan menurunkan qty dari jumlah serial.
 7. Simpan draft, submit ke approval, lalu confirm setelah status `APPROVED`.
+8. Setelah confirm berhasil, detail Purchase Return menampilkan link ke generated GI dan Debit Memo.
 
 ## 3. Lifecycle
 
@@ -55,12 +56,14 @@ GI tersebut tetap menjadi dokumen fisik outbound dan stock movement tetap memaka
 
 Journal Purchase Return hanya membalik inventory dan GR/IR sebesar nilai inventory historis. `taxAmount`, `taxReversalAmount`, dan `clearingAmount` tidak diposting di journal ini.
 
+Pada transaksi confirm yang sama, sistem membuat satu Debit Memo `OPEN` dari snapshot Purchase Return. Debit Memo menyimpan source Purchase Return, supplier, currency, return date sebagai memo date, serta DPP/tax/gross snapshot per line. Debit Memo creation tidak mem-post journal.
+
 ## 6. Batas Berikutnya
 
 Phase berikutnya wajib:
 
-1. menambahkan Debit Memo;
-2. memakai status billing dan clearing account aktual;
+1. menambahkan Debit Memo Allocation;
+2. memakai status billing dan clearing account aktual untuk aplikasi ke Vendor Bill;
 3. menangani reversal Input VAT, AP, settlement allocation, dan FX sesuai kondisi invoice;
 4. mengorkestrasi reversal Purchase Return yang sudah `CONFIRMED` lewat primitive reversal stock/journal yang sudah tersedia.
 

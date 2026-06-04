@@ -427,7 +427,7 @@ Commit:
 
 - `feat(debit-memo): add web screens and purchase return link`
 
-## Task 7: Update Documentation and Regression Notes
+## Task 7: Update Documentation and Regression Notes [x]
 
 Goal: document what Phase D adds and what remains deferred.
 
