@@ -45,3 +45,8 @@ This report is populated during plan execution.
 - **Summary:** Added a GI journal-link query use case for original/reversal journal navigation, exposed `reversalOfMovementId` through inventory movement responses, and extended query/template/mapper/config/controller coverage.
 - **Decision:** GI detail now links directly by journal entry id instead of filtering the journal list by source fields; `sourceType/sourceId/sourceCode` remain the physical document identity for stock card/report rows, while `reversalOfMovementId` carries the reversal audit relationship.
 - **Validation:** `mvn clean test -Dtest="GoodsIssueQueryUseCaseTest,GoodsIssueWebMapperTest,GoodsIssueViewIntegrationTest,InventoryMovementMapperTest,GoodsIssueControllerTest,GoodsIssueConfigTest"` passed. Focused JaCoCo warnings are deferred to Task 10 full-suite gate.
+
+## Task 8: i18n And Documentation Update
+- **Status:** clean
+- **Summary:** Added bilingual GI cancellation/journal reversal/stock reversal message keys, static bundle coverage, and updated GI and Journal Entry docs for linked reversal behavior and Phase F Purchase Return reversal deferral.
+- **Validation:** `mvn test -Dtest="JournalMessageBundleTest,GoodsIssueMessageBundleTest"` passed. Focused JaCoCo warnings are deferred to Task 10 full-suite gate.

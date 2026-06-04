@@ -14,7 +14,7 @@ Integrasi konkret Purchase Return aktif melalui resolver dan adapter source GI.
 |---|---|
 | `DRAFT` | Draft bisa dibuat, diubah, dihapus, dan dilengkapi line. |
 | `COMPLETED` | Dokumen sudah mem-post stock issue dan auto journal. Normal edit/delete ditolak. |
-| `CANCELLED` | Dokumen completed yang dibalik. Stock reversal dan journal reversal dipost sebagai nilai negatif melalui API journal yang ada. |
+| `CANCELLED` | Dokumen completed yang dibalik melalui linked stock movement reversal dan linked journal reversal. |
 
 Transisi utama:
 
@@ -22,6 +22,8 @@ Transisi utama:
 2. `COMPLETED -> CANCELLED`
 
 Dokumen `COMPLETED` dan `CANCELLED` diperlakukan immutable untuk update draft.
+
+Pembatalan langsung dari modul GI hanya berlaku untuk GI `MANUAL`. GI yang berasal dari dokumen sumber seperti Purchase Return tidak boleh dibatalkan dari layar GI; reversal harus dijalankan oleh modul sumber agar status dan audit bisnis sumber tetap konsisten.
 
 ## 3. Model Data
 
@@ -80,6 +82,10 @@ Saat `COMPLETE`, GI:
 
 Untuk Purchase Return, valuation wajib memakai GR asal agar nilai inventory keluar sama dengan penerimaan yang dikembalikan.
 
+Saat GI manual `COMPLETED` dibatalkan, sistem membuat movement inbound baru untuk setiap movement outbound asal dan mengisi `reversal_of_movement_id` ke movement asal. `referenceType`, `referenceId`, dan `referenceCode` tetap menunjuk dokumen fisik GI yang sama sehingga stock card tetap bisa ditelusuri dari dokumen asal. Target container reversal wajib berada dalam facility yang sama; UI memberi default container historis issue, tetapi user dapat memilih container aktif lain dalam facility yang sama.
+
+Valuation reversal tidak mengembalikan quantity ke layer GR lama secara tersembunyi. Sistem membuat inbound valuation layer baru dengan `reversalOfMovementId` dan historical issue unit cost dari movement asal. Layer reversal ini dapat dikonsumsi oleh FIFO outbound berikutnya seperti inbound layer normal.
+
 ## 6. Accounting
 
 Core GI memakai event accounting `GOODS_ISSUE` dengan variable:
@@ -92,6 +98,8 @@ Core GI memakai event accounting `GOODS_ISSUE` dengan variable:
 Accounting schema GI disiapkan sebagai data admin/manual configuration. Tidak ada seed default baru karena pemetaan account bergantung kebijakan tenant dan Purchase Return-specific accounting belum final.
 
 Purchase Return-specific journal, seperti debit GR/IR atau AP, credit Inventory, dan credit Input VAT, akan ditentukan saat module Purchase Return ada. Core GI tidak mem-post FX variance untuk Purchase Return reversal; rate berasal dari source/original GR.
+
+Cancellation GI manual membalik journal `GOODS_ISSUE` asal dengan linked reversal journal. Reversal journal menukar debit/kredit dari final `JournalLine` asal, menyimpan `reversalOfId`, dan tidak memanggil accounting schema dengan amount negatif.
 
 ## 7. Purchase Return Seam
 
@@ -119,11 +127,14 @@ Form memakai pola header-lines:
 8. numeric input memakai AutoNumeric class dan page JS memakai `ErpNumeric.get/set`
 9. submit validation berjalan pada capture phase sebelum AJAX handler global
 10. dirty-form guard disuppressed untuk action complete/cancel yang intentional
+11. GI manual `COMPLETED` menampilkan form cancel khusus yang meminta reversal date, alasan, dan target container per movement asal.
+12. Detail GI menampilkan link jurnal asal dan jurnal reversal bila tersedia.
 
 ## 9. Deferred Items
 
 1. Purchase Return-specific accounting schema/event dan Debit Memo.
-2. Manual GI business rules yang lengkap.
-3. Sales/Delivery Order, scrap, internal use, production/consumption resolvers.
-4. Dedicated serial detail table per line.
-5. Playwright E2E flow untuk selector, drawer, save, complete, dan cancel.
+2. Confirmed Purchase Return reversal orchestration tetap deferred ke Phase F walaupun primitive linked reversal generic sudah tersedia.
+3. Manual GI business rules yang lengkap.
+4. Sales/Delivery Order, scrap, internal use, production/consumption resolvers.
+5. Dedicated serial detail table per line.
+6. Playwright E2E flow untuk selector, drawer, save, complete, dan cancel.

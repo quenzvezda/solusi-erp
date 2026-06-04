@@ -344,23 +344,23 @@ Expose the data needed by cancellation form and journal/stock audit links withou
 - Web layer still injects use cases, lookup providers, and web helpers only.
 - GI detail can distinguish original posting from linked reversal without relying on negative journal lines.
 
-### Task 8: i18n And Documentation Update
+### Task 8: i18n And Documentation Update [x]
 
 Document the new reversal standard and update user-facing messages.
 
 **Depends on:** Tasks 5 and 6
 **Reference modules:** project docs, i18n bundles
 
-- [ ] Add Indonesian and English messages for journal reversal, stock reversal, GI cancellation form labels, source-based cancel rejection, target container validation, already reversed movement, and reversal period guard.
+- [x] Add Indonesian and English messages for journal reversal, stock reversal, GI cancellation form labels, source-based cancel rejection, target container validation, already reversed movement, and reversal period guard.
       Use targeted replace edits; do not append with shell echo.
       ref: `docs/spec/i18n-guide.md` - i18n update protocol
-- [ ] Update `docs/modules/inventory/goods-issue.md` with linked reversal cancellation behavior, direct source-based cancel restriction, reversal date rule, target location rule, and valuation reversal layer behavior.
+- [x] Update `docs/modules/inventory/goods-issue.md` with linked reversal cancellation behavior, direct source-based cancel restriction, reversal date rule, target location rule, and valuation reversal layer behavior.
       ref: `docs/modules/inventory/goods-issue.md:L1-L129` - current GI module docs
-- [ ] Add or update accounting journal documentation to explain that auto-journal reversal uses linked reversal journal and does not call accounting schema with negative values.
+- [x] Add or update accounting journal documentation to explain that auto-journal reversal uses linked reversal journal and does not call accounting schema with negative values.
       ref: `docs/modules/accounting/journal-entry.md` - journal module docs referenced by brainstorming
-- [ ] Add a note that Purchase Return confirmed reversal remains deferred to Phase F even though generic primitives now exist.
+- [x] Add a note that Purchase Return confirmed reversal remains deferred to Phase F even though generic primitives now exist.
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md` - Phase F boundary
-- [ ] **TEST:** Add message bundle/static documentation tests if existing test style supports it.
+- [x] **TEST:** Add message bundle/static documentation tests if existing test style supports it.
       ref: `src/test/java/com/solusi/erp/accounting/journal/web/template/JournalMessageBundleTest.java` - message bundle test pattern
 
 **Validation criteria:**
