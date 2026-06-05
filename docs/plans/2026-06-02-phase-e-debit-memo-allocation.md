@@ -97,30 +97,30 @@ Model DMA as its own aggregate with draft snapshots, confirm/reverse immutabilit
 **Validation criteria:**
 - `mvn test -Dtest="DebitMemoAllocationTest,DebitMemoAllocationProrationTest"`
 
-## Task 3: Persistence, Repository, Query Read Models, And Config Wiring
+## Task 3: Persistence, Repository, Query Read Models, And Config Wiring [x]
 
 Persist DMA and provide read models for list/detail/history/selectors without coupling web to JPA.
 
 **Depends on:** Tasks 1-2
 **Ref mod:** `accountspayable.debitmemo`, `accountspayable.vendorpayment`
 
-- [ ] Add JPA entities and MapStruct mapper for DMA header/lines, including audit fields and journal reference ids.
+- [x] Add JPA entities and MapStruct mapper for DMA header/lines, including audit fields and journal reference ids.
       ref: [src/main/java/com/solusi/erp/accountspayable/debitmemo/infrastructure/persistence/DebitMemoEntity.java](../../src/main/java/com/solusi/erp/accountspayable/debitmemo/infrastructure/persistence/DebitMemoEntity.java)
-- [ ] Add `DebitMemoAllocationRepository` with `save`, `findById`, filtered list, `existsActiveConsumptionByDebitMemoId`, `sumConfirmedAppliedByDebitMemoIds`, and history queries for DM/VB details.
+- [x] Add `DebitMemoAllocationRepository` with `save`, `findById`, filtered list, `existsActiveConsumptionByDebitMemoId`, `sumConfirmedAppliedByDebitMemoIds`, and history queries for DM/VB details.
       ref: [src/main/java/com/solusi/erp/accountspayable/debitmemo/domain/repository/DebitMemoRepository.java](../../src/main/java/com/solusi/erp/accountspayable/debitmemo/domain/repository/DebitMemoRepository.java)
-- [ ] Add query use cases/read models: DMA list, DMA detail, allocation history for Debit Memo detail, allocation history for Vendor Bill detail, and eligible selectors.
+- [x] Add query use cases/read models: DMA list, DMA detail, allocation history for Debit Memo detail, allocation history for Vendor Bill detail, and eligible selectors.
       ref: [src/main/java/com/solusi/erp/accountspayable/debitmemo/application/usecase/query/DebitMemoDetailView.java:9](../../src/main/java/com/solusi/erp/accountspayable/debitmemo/application/usecase/query/DebitMemoDetailView.java)
-- [ ] Add `DebitMemoAllocationConfig` under `infrastructure/config`, matching AP convention, and wire transactional command/query beans.
+- [x] Add `DebitMemoAllocationConfig` under `infrastructure/config`, matching AP convention, and wire transactional command/query beans.
       ref: [src/main/java/com/solusi/erp/accountspayable/debitmemo/infrastructure/config/DebitMemoConfig.java:30](../../src/main/java/com/solusi/erp/accountspayable/debitmemo/infrastructure/config/DebitMemoConfig.java)
-- [ ] Replace `NoopDebitMemoAllocationConsumptionAdapter` in `DebitMemoConfig` with a real adapter backed by DMA confirmed/non-reversed records.
+- [x] Replace `NoopDebitMemoAllocationConsumptionAdapter` in `DebitMemoConfig` with a real adapter backed by DMA confirmed/non-reversed records.
       ref: [src/main/java/com/solusi/erp/accountspayable/debitmemo/infrastructure/config/DebitMemoConfig.java:39](../../src/main/java/com/solusi/erp/accountspayable/debitmemo/infrastructure/config/DebitMemoConfig.java)
-- [ ] Extend Debit Memo detail/list summary calculation to include confirmed, non-reversed DMA totals and update remaining/status display.
+- [x] Extend Debit Memo detail/list summary calculation to include confirmed, non-reversed DMA totals and update remaining/status display.
       ref: [src/main/java/com/solusi/erp/accountspayable/debitmemo/application/usecase/query/GetDebitMemoDetailUseCaseImpl.java:29](../../src/main/java/com/solusi/erp/accountspayable/debitmemo/application/usecase/query/GetDebitMemoDetailUseCaseImpl.java)
-- [ ] Add locking/query ports for confirm/reverse: lock Debit Memo header, lock all target Vendor Bills, compute current DM remaining, compute current VB outstanding, and update settlement statuses atomically.
+- [x] Add locking/query ports for confirm/reverse: lock Debit Memo header, lock all target Vendor Bills, compute current DM remaining, compute current VB outstanding, and update settlement statuses atomically.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:566](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] TEST: Add repository tests for persist/reload, line mapping, filtered list, history queries, active-consumption check, and sum consumption query.
+- [x] TEST: Add repository tests for persist/reload, line mapping, filtered list, history queries, active-consumption check, and sum consumption query.
       ref: [src/test/java/com/solusi/erp/accountspayable/debitmemo/infrastructure/persistence/DebitMemoRepositoryImplTest.java](../../src/test/java/com/solusi/erp/accountspayable/debitmemo/infrastructure/persistence/DebitMemoRepositoryImplTest.java)
-- [ ] TEST: Add config test proving DMA repository, adapters, and use cases are wired.
+- [x] TEST: Add config test proving DMA repository, adapters, and use cases are wired.
       ref: [src/test/java/com/solusi/erp/accountspayable/debitmemo/infrastructure/config/DebitMemoConfigTest.java:27](../../src/test/java/com/solusi/erp/accountspayable/debitmemo/infrastructure/config/DebitMemoConfigTest.java)
 
 **Validation criteria:**

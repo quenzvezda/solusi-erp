@@ -4,6 +4,7 @@ import com.solusi.erp.accountspayable.debitmemo.domain.model.DebitMemo;
 import com.solusi.erp.accountspayable.debitmemo.domain.model.DebitMemoLine;
 import com.solusi.erp.accountspayable.debitmemo.domain.port.DebitMemoSourceDocumentPort;
 import com.solusi.erp.accountspayable.debitmemo.domain.repository.DebitMemoRepository;
+import com.solusi.erp.accountspayable.debitmemoallocation.domain.repository.DebitMemoAllocationRepository;
 import com.solusi.erp.core.exception.DomainException;
 
 import java.math.BigDecimal;
@@ -12,11 +13,14 @@ public class GetDebitMemoDetailUseCaseImpl implements GetDebitMemoDetailUseCase 
 
     private final DebitMemoRepository debitMemoRepository;
     private final DebitMemoSourceDocumentPort sourceDocumentPort;
+    private final DebitMemoAllocationRepository allocationRepository;
 
     public GetDebitMemoDetailUseCaseImpl(DebitMemoRepository debitMemoRepository,
-                                         DebitMemoSourceDocumentPort sourceDocumentPort) {
+                                         DebitMemoSourceDocumentPort sourceDocumentPort,
+                                         DebitMemoAllocationRepository allocationRepository) {
         this.debitMemoRepository = debitMemoRepository;
         this.sourceDocumentPort = sourceDocumentPort;
+        this.allocationRepository = allocationRepository;
     }
 
     @Override
@@ -27,9 +31,9 @@ public class GetDebitMemoDetailUseCaseImpl implements GetDebitMemoDetailUseCase 
     }
 
     private DebitMemoDetailView toDetail(DebitMemo debitMemo) {
-        BigDecimal settledAmount = BigDecimal.ZERO;
+        BigDecimal settledAmount = allocationRepository.sumConfirmedAppliedByDebitMemoId(debitMemo.getId());
         BigDecimal refundedAmount = BigDecimal.ZERO;
-        BigDecimal remainingAmount = debitMemo.getGrossAmountOriginal();
+        BigDecimal remainingAmount = debitMemo.getGrossAmountOriginal().subtract(settledAmount).max(BigDecimal.ZERO);
         return new DebitMemoDetailView(
                 debitMemo.getId(),
                 debitMemo.getCode(),

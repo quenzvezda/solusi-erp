@@ -5,6 +5,7 @@ import com.solusi.erp.accountspayable.debitmemo.domain.model.DebitMemoLine;
 import com.solusi.erp.accountspayable.debitmemo.domain.model.DebitMemoSettlementStatus;
 import com.solusi.erp.accountspayable.debitmemo.domain.port.DebitMemoSourceDocumentPort;
 import com.solusi.erp.accountspayable.debitmemo.domain.repository.DebitMemoRepository;
+import com.solusi.erp.accountspayable.debitmemoallocation.domain.repository.DebitMemoAllocationRepository;
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
@@ -18,6 +19,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,9 +35,12 @@ class DebitMemoQueryUseCaseTest {
     @Mock
     private DebitMemoSourceDocumentPort sourceDocumentPort;
 
+    @Mock
+    private DebitMemoAllocationRepository allocationRepository;
+
     @Test
-    void findDebitMemos_should_return_phase_d_zero_settlement_recap() {
-        FindDebitMemosUseCase useCase = new FindDebitMemosUseCaseImpl(repository);
+    void findDebitMemos_should_return_dma_settlement_recap() {
+        FindDebitMemosUseCase useCase = new FindDebitMemosUseCaseImpl(repository, allocationRepository);
         DebitMemo debitMemo = sampleDebitMemo();
         Pageable pageable = Pageable.of(0, 20);
         LocalDate from = LocalDate.of(2026, 6, 1);
@@ -43,37 +48,43 @@ class DebitMemoQueryUseCaseTest {
 
         when(repository.findAll("PRT", 22L, DebitMemoSettlementStatus.OPEN, from, to, pageable))
                 .thenReturn(new Page<>(List.of(debitMemo), 0, 20, 1));
+        when(allocationRepository.sumConfirmedAppliedByDebitMemoIds(List.of(10L)))
+                .thenReturn(Map.of(10L, new BigDecimal("40.0000")));
 
         Page<DebitMemoSummaryView> result = useCase.execute("PRT", 22L, DebitMemoSettlementStatus.OPEN, from, to, pageable);
 
         assertThat(result.content()).hasSize(1);
         DebitMemoSummaryView summary = result.content().getFirst();
         assertThat(summary.grossAmountOriginal()).isEqualByComparingTo("111.0000");
-        assertThat(summary.settledAmount()).isEqualByComparingTo("0.0000");
+        assertThat(summary.settledAmount()).isEqualByComparingTo("40.0000");
         assertThat(summary.refundedAmount()).isEqualByComparingTo("0.0000");
-        assertThat(summary.remainingAmount()).isEqualByComparingTo("111.0000");
+        assertThat(summary.remainingAmount()).isEqualByComparingTo("71.0000");
     }
 
     @Test
-    void getDebitMemoDetail_should_return_lines_and_phase_d_zero_settlement_recap() {
-        GetDebitMemoDetailUseCase useCase = new GetDebitMemoDetailUseCaseImpl(repository, sourceDocumentPort);
+    void getDebitMemoDetail_should_return_lines_and_dma_settlement_recap() {
+        GetDebitMemoDetailUseCase useCase = new GetDebitMemoDetailUseCaseImpl(
+                repository, sourceDocumentPort, allocationRepository);
         DebitMemo debitMemo = sampleDebitMemo();
 
         when(repository.findById(10L)).thenReturn(Optional.of(debitMemo));
         when(sourceDocumentPort.findGeneratedGoodsIssueId(100L)).thenReturn(Optional.of(900L));
+        when(allocationRepository.sumConfirmedAppliedByDebitMemoId(10L)).thenReturn(new BigDecimal("40.0000"));
 
         DebitMemoDetailView detail = useCase.execute(10L);
 
         assertThat(detail.code()).isEqualTo("DM-202606-00001");
         assertThat(detail.generatedGoodsIssueId()).isEqualTo(900L);
-        assertThat(detail.remainingAmount()).isEqualByComparingTo("111.0000");
+        assertThat(detail.settledAmount()).isEqualByComparingTo("40.0000");
+        assertThat(detail.remainingAmount()).isEqualByComparingTo("71.0000");
         assertThat(detail.lines()).hasSize(1);
         assertThat(detail.lines().getFirst().purchaseReturnLineId()).isEqualTo(1001L);
     }
 
     @Test
     void getDebitMemoDetail_should_fail_when_not_found() {
-        GetDebitMemoDetailUseCase useCase = new GetDebitMemoDetailUseCaseImpl(repository, sourceDocumentPort);
+        GetDebitMemoDetailUseCase useCase = new GetDebitMemoDetailUseCaseImpl(
+                repository, sourceDocumentPort, allocationRepository);
         when(repository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> useCase.execute(99L))

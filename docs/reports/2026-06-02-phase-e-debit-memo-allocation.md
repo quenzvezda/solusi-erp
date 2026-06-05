@@ -18,3 +18,10 @@ This report is populated during plan execution.
 - **Summary:** Added the DMA domain aggregate, immutable allocation line snapshot, lifecycle status enum, and proration service for DPP/tax/base/FX allocation math with last-line remainder handling. Added i18n message keys for domain guard failures in English and Indonesian bundles.
 - **Tests:** `mvn test -Dtest="DebitMemoAllocationTest,DebitMemoAllocationProrationTest"` passed with 17 tests.
 - **Notes:** Empty package-info skeletons for future repository/port/usecase/infrastructure/web packages were avoided because the compiler plugin warns when no package-info class is emitted. Those packages will be materialized by concrete classes in the following tasks.
+
+## Task 3: Persistence, Repository, Query Read Models, And Config Wiring
+
+- **Status:** Completed.
+- **Summary:** Added DMA JPA header/line entities, MapStruct persistence mapper, JPA repository, domain repository adapter, history projections, list/detail/history query use cases, `DebitMemoAllocationConfig`, and a real Debit Memo consumption adapter. Debit Memo list/detail recaps now use confirmed DMA applied totals.
+- **Tests:** `mvn test -Dtest="DebitMemoAllocationRepositoryImplTest,DebitMemoAllocationQueryUseCaseTest,DebitMemoAllocationConfigTest,DebitMemoCommandUseCaseTest,DebitMemoQueryUseCaseTest,DebitMemoConfigTest"` passed with 22 tests.
+- **Notes:** Lock-specific confirm/reverse behavior remains implemented in the later confirm/reverse workflow tasks; Task 3 provides the repository and consumption surfaces needed by those flows.

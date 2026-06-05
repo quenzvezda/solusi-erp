@@ -15,8 +15,9 @@ import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.GetDeb
 import com.solusi.erp.accountspayable.debitmemo.domain.port.DebitMemoAllocationConsumptionPort;
 import com.solusi.erp.accountspayable.debitmemo.domain.port.DebitMemoSourceDocumentPort;
 import com.solusi.erp.accountspayable.debitmemo.domain.repository.DebitMemoRepository;
+import com.solusi.erp.accountspayable.debitmemoallocation.domain.repository.DebitMemoAllocationRepository;
+import com.solusi.erp.accountspayable.debitmemoallocation.infrastructure.adapter.DebitMemoAllocationConsumptionAdapter;
 import com.solusi.erp.accountspayable.debitmemo.infrastructure.adapter.DebitMemoSourceDocumentAdapter;
-import com.solusi.erp.accountspayable.debitmemo.infrastructure.adapter.NoopDebitMemoAllocationConsumptionAdapter;
 import com.solusi.erp.accountspayable.debitmemo.infrastructure.adapter.DebitMemoRepositoryImpl;
 import com.solusi.erp.accountspayable.debitmemo.infrastructure.persistence.DebitMemoJpaRepository;
 import com.solusi.erp.accountspayable.debitmemo.infrastructure.persistence.DebitMemoPersistenceMapper;
@@ -37,8 +38,9 @@ public class DebitMemoConfig {
     }
 
     @Bean
-    public DebitMemoAllocationConsumptionPort debitMemoAllocationConsumptionPort() {
-        return new NoopDebitMemoAllocationConsumptionAdapter();
+    public DebitMemoAllocationConsumptionPort debitMemoAllocationConsumptionPort(
+            DebitMemoAllocationRepository debitMemoAllocationRepository) {
+        return new DebitMemoAllocationConsumptionAdapter(debitMemoAllocationRepository);
     }
 
     @Bean
@@ -78,8 +80,9 @@ public class DebitMemoConfig {
 
     @Bean
     public FindDebitMemosUseCase findDebitMemosUseCase(DebitMemoRepository repository,
+                                                       DebitMemoAllocationRepository debitMemoAllocationRepository,
                                                        PlatformTransactionManager txManager) {
-        FindDebitMemosUseCase pure = new FindDebitMemosUseCaseImpl(repository);
+        FindDebitMemosUseCase pure = new FindDebitMemosUseCaseImpl(repository, debitMemoAllocationRepository);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         tx.setReadOnly(true);
         return (keyword, vendorId, settlementStatus, memoDateFrom, memoDateTo, pageable) ->
@@ -89,8 +92,10 @@ public class DebitMemoConfig {
     @Bean
     public GetDebitMemoDetailUseCase getDebitMemoDetailUseCase(DebitMemoRepository repository,
                                                                DebitMemoSourceDocumentPort sourceDocumentPort,
+                                                               DebitMemoAllocationRepository debitMemoAllocationRepository,
                                                                PlatformTransactionManager txManager) {
-        GetDebitMemoDetailUseCase pure = new GetDebitMemoDetailUseCaseImpl(repository, sourceDocumentPort);
+        GetDebitMemoDetailUseCase pure = new GetDebitMemoDetailUseCaseImpl(
+                repository, sourceDocumentPort, debitMemoAllocationRepository);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         tx.setReadOnly(true);
         return id -> tx.execute(status -> pure.execute(id));

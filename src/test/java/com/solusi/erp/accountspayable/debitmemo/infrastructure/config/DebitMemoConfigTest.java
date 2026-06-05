@@ -8,6 +8,7 @@ import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.FindDe
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.GetDebitMemoDetailUseCase;
 import com.solusi.erp.accountspayable.debitmemo.domain.port.DebitMemoAllocationConsumptionPort;
 import com.solusi.erp.accountspayable.debitmemo.domain.repository.DebitMemoRepository;
+import com.solusi.erp.accountspayable.debitmemoallocation.domain.repository.DebitMemoAllocationRepository;
 import com.solusi.erp.accountspayable.debitmemo.infrastructure.persistence.DebitMemoJpaRepository;
 import com.solusi.erp.accountspayable.debitmemo.infrastructure.persistence.DebitMemoPersistenceMapper;
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
@@ -74,6 +75,11 @@ class DebitMemoConfigTest {
         @Bean
         DebitMemoPersistenceMapper debitMemoPersistenceMapper() {
             return mock(DebitMemoPersistenceMapper.class);
+        }
+
+        @Bean
+        DebitMemoAllocationRepository debitMemoAllocationRepository() {
+            return mock(DebitMemoAllocationRepository.class);
         }
 
         @Bean
