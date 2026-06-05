@@ -153,29 +153,29 @@ Make Vendor Bill outstanding and Vendor Payment revalidation aware of confirmed 
 **Validation criteria:**
 - `mvn test -Dtest="VendorBillSettlementSummaryAdapterTest,*Payable*Test,ConfirmVendorPaymentUseCaseTest,VendorPaymentConfigTest"`
 
-## Task 5: Draft DMA Use Cases, Eligible Selectors, And Stale Snapshot Display
+## Task 5: Draft DMA Use Cases, Eligible Selectors, And Stale Snapshot Display [x]
 
 Implement create/update/cancel draft behavior and query-level eligible DM/VB selectors.
 
 **Depends on:** Tasks 2-4
 **Ref mod:** `accountspayable.vendorpayment`, `purchasing.purchaseorder` modal selector pattern
 
-- [ ] Add `CreateDebitMemoAllocationUseCase` supporting two entry points: from Debit Memo detail with DM preselected, and from Vendor Bill detail after user selects eligible DM.
+- [x] Add `CreateDebitMemoAllocationUseCase` supporting two entry points: from Debit Memo detail with DM preselected, and from Vendor Bill detail after user selects eligible DM.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:728](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Add `UpdateDebitMemoAllocationUseCase` for `DRAFT` only; allow changing allocation date, notes, and line amounts, but not swapping the Debit Memo header unless a clear product decision is made during implementation.
+- [x] Add `UpdateDebitMemoAllocationUseCase` for `DRAFT` only; allow changing allocation date, notes, and line amounts, but not swapping the Debit Memo header unless a clear product decision is made during implementation.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:183](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Add `CancelDebitMemoAllocationUseCase` for `DRAFT -> CANCELLED`.
+- [x] Add `CancelDebitMemoAllocationUseCase` for `DRAFT -> CANCELLED`.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:960](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Implement eligible Vendor Bill selector port: confirmed Vendor Bills, settlement `OPEN/PARTIALLY_SETTLED`, current outstanding > 0, same vendor/currency as Debit Memo, query-level search/pagination.
+- [x] Implement eligible Vendor Bill selector port: confirmed Vendor Bills, settlement `OPEN/PARTIALLY_SETTLED`, current outstanding > 0, same vendor/currency as Debit Memo, query-level search/pagination.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:782](../brainstorming/2026-06-02-vendor-debit-memo.md)
       ref: [docs/spec/modal-selector.md:50](../spec/modal-selector.md)
-- [ ] Implement eligible Debit Memo selector port for Vendor Bill shortcut: status `OPEN/PARTIALLY_SETTLED`, current remaining > 0, same vendor/currency as Vendor Bill, query-level search/pagination.
+- [x] Implement eligible Debit Memo selector port for Vendor Bill shortcut: status `OPEN/PARTIALLY_SETTLED`, current remaining > 0, same vendor/currency as Vendor Bill, query-level search/pagination.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:807](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Store draft snapshots but never treat draft as reservation. If current values differ from draft snapshots, expose `stale` flags/messages in form read model.
+- [x] Store draft snapshots but never treat draft as reservation. If current values differ from draft snapshots, expose `stale` flags/messages in form read model.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:1402](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Add command/request validation for allocation date period only at confirm, not draft save, unless existing project pattern proves draft dates are period-guarded elsewhere.
+- [x] Add command/request validation for allocation date period only at confirm, not draft save, unless existing project pattern proves draft dates are period-guarded elsewhere.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:1204](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] TEST: Add use case tests for DM/VB eligibility, draft create from DM, draft create from VB shortcut, update recalculation, duplicate bill guard, stale snapshot display, and cancel draft.
+- [x] TEST: Add use case tests for DM/VB eligibility, draft create from DM, draft create from VB shortcut, update recalculation, duplicate bill guard, stale snapshot display, and cancel draft.
       ref: [src/test/java/com/solusi/erp/accountspayable/vendorpayment/application/usecase/command/ConfirmVendorPaymentUseCaseTest.java:32](../../src/test/java/com/solusi/erp/accountspayable/vendorpayment/application/usecase/command/ConfirmVendorPaymentUseCaseTest.java)
 
 **Validation criteria:**

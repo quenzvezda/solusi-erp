@@ -1,5 +1,9 @@
 package com.solusi.erp.accountspayable.debitmemoallocation.infrastructure.config;
 
+import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.CancelDebitMemoAllocationUseCase;
+import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.CreateDebitMemoAllocationUseCase;
+import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.UpdateDebitMemoAllocationUseCase;
+import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.query.DebitMemoAllocationSelectorUseCase;
 import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.query.FindDebitMemoAllocationHistoryUseCase;
 import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.query.FindDebitMemoAllocationsUseCase;
 import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.query.GetDebitMemoAllocationDetailUseCase;
@@ -7,11 +11,13 @@ import com.solusi.erp.accountspayable.debitmemoallocation.domain.repository.Debi
 import com.solusi.erp.accountspayable.debitmemoallocation.domain.service.DebitMemoAllocationProrationService;
 import com.solusi.erp.accountspayable.debitmemoallocation.infrastructure.persistence.DebitMemoAllocationJpaRepository;
 import com.solusi.erp.accountspayable.debitmemoallocation.infrastructure.persistence.DebitMemoAllocationPersistenceMapper;
+import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -30,6 +36,15 @@ class DebitMemoAllocationConfigTest {
     private DebitMemoAllocationProrationService prorationService;
 
     @Autowired
+    private CreateDebitMemoAllocationUseCase createDebitMemoAllocationUseCase;
+
+    @Autowired
+    private UpdateDebitMemoAllocationUseCase updateDebitMemoAllocationUseCase;
+
+    @Autowired
+    private CancelDebitMemoAllocationUseCase cancelDebitMemoAllocationUseCase;
+
+    @Autowired
     private FindDebitMemoAllocationsUseCase findDebitMemoAllocationsUseCase;
 
     @Autowired
@@ -38,13 +53,20 @@ class DebitMemoAllocationConfigTest {
     @Autowired
     private FindDebitMemoAllocationHistoryUseCase findDebitMemoAllocationHistoryUseCase;
 
+    @Autowired
+    private DebitMemoAllocationSelectorUseCase debitMemoAllocationSelectorUseCase;
+
     @Test
     void should_register_debit_memo_allocation_beans() {
         assertThat(repository).isNotNull();
         assertThat(prorationService).isNotNull();
+        assertThat(createDebitMemoAllocationUseCase).isNotNull();
+        assertThat(updateDebitMemoAllocationUseCase).isNotNull();
+        assertThat(cancelDebitMemoAllocationUseCase).isNotNull();
         assertThat(findDebitMemoAllocationsUseCase).isNotNull();
         assertThat(getDebitMemoAllocationDetailUseCase).isNotNull();
         assertThat(findDebitMemoAllocationHistoryUseCase).isNotNull();
+        assertThat(debitMemoAllocationSelectorUseCase).isNotNull();
     }
 
     @Configuration
@@ -62,6 +84,16 @@ class DebitMemoAllocationConfigTest {
         @Bean
         PlatformTransactionManager platformTransactionManager() {
             return mock(PlatformTransactionManager.class);
+        }
+
+        @Bean
+        NamedParameterJdbcTemplate namedParameterJdbcTemplate() {
+            return mock(NamedParameterJdbcTemplate.class);
+        }
+
+        @Bean
+        SequenceGeneratorService sequenceGeneratorService() {
+            return mock(SequenceGeneratorService.class);
         }
     }
 }

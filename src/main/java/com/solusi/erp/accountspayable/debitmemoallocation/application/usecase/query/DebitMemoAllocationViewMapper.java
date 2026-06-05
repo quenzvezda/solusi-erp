@@ -4,12 +4,12 @@ import com.solusi.erp.accountspayable.debitmemoallocation.domain.model.DebitMemo
 import com.solusi.erp.accountspayable.debitmemoallocation.domain.model.DebitMemoAllocationLine;
 import com.solusi.erp.accountspayable.debitmemoallocation.domain.repository.DebitMemoAllocationHistory;
 
-final class DebitMemoAllocationViewMapper {
+public final class DebitMemoAllocationViewMapper {
 
     private DebitMemoAllocationViewMapper() {
     }
 
-    static DebitMemoAllocationSummaryView toSummary(DebitMemoAllocation allocation) {
+    public static DebitMemoAllocationSummaryView toSummary(DebitMemoAllocation allocation) {
         return new DebitMemoAllocationSummaryView(
                 allocation.getId(),
                 allocation.getCode(),
@@ -24,7 +24,7 @@ final class DebitMemoAllocationViewMapper {
         );
     }
 
-    static DebitMemoAllocationDetailView toDetail(DebitMemoAllocation allocation) {
+    public static DebitMemoAllocationDetailView toDetail(DebitMemoAllocation allocation) {
         return new DebitMemoAllocationDetailView(
                 allocation.getId(),
                 allocation.getCode(),
@@ -49,7 +49,7 @@ final class DebitMemoAllocationViewMapper {
         );
     }
 
-    static DebitMemoAllocationHistoryView toHistory(DebitMemoAllocationHistory history) {
+    public static DebitMemoAllocationHistoryView toHistory(DebitMemoAllocationHistory history) {
         return new DebitMemoAllocationHistoryView(
                 history.id(),
                 history.code(),

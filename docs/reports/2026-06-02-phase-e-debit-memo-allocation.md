@@ -32,3 +32,10 @@ This report is populated during plan execution.
 - **Summary:** Vendor Bill settlement summary, Vendor Payment payable selector, and Vendor Payment stale-confirm guard now subtract confirmed DMA line applications alongside confirmed payments. Settlement status recalculation now considers paid amount plus DMA applied amount, and stale outstanding failures use a specific race-condition message key.
 - **Tests:** `mvn test -Dtest="VendorBillSettlementSummaryAdapterTest,*Payable*Test,ConfirmVendorPaymentUseCaseTest,VendorPaymentConfigTest,VendorBillPaymentUpdateAdapterTest"` passed with 15 tests.
 - **Notes:** The existing `VendorBillPaymentUpdatePort` name is kept for compatibility during Phase E; the implementation is now settlement-source aware and can be generalized later if more AP settlement sources are added.
+
+## Task 5: Draft DMA Use Cases, Eligible Selectors, And Stale Snapshot Display
+
+- **Status:** Completed.
+- **Summary:** Added draft create/update/cancel use cases, command records, source snapshot port, JDBC source adapter for eligible DM/VB selectors, selector use case, and config wiring. Draft creation recalculates DPP/tax/base/FX snapshots but does not reserve DM or VB balance.
+- **Tests:** `mvn test -Dtest="CreateDebitMemoAllocationUseCaseTest,UpdateDebitMemoAllocationUseCaseTest,CancelDebitMemoAllocationUseCaseTest,DebitMemoAllocationSelectorUseCaseTest,DebitMemoAllocationConfigTest"` passed with 7 tests.
+- **Notes:** Allocation date accounting-period validation is intentionally left for confirm, matching the plan. Stale snapshots are represented by source current snapshots and confirm-time guard messages; web-level stale display can consume the same values when templates are added.
