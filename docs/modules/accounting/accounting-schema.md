@@ -317,10 +317,15 @@ The following mappings are the baseline configuration seeded with each Solusi ER
 | `GOODS_RECEIPT` | `GR_GRAND_TOTAL` | 2120 — GR/IR Clearing | CREDIT |
 | `PURCHASE_RETURN` | `PR_GRIR_CLEARING_AMT` | 2120 — GR/IR Clearing | DEBIT |
 | `PURCHASE_RETURN` | `PR_INVENTORY_AMT` | 1310 — Merchandise Inventory | CREDIT |
+| `DEBIT_MEMO_APPLICATION` | `DMA_AP_AMT` | 2110 — Accounts Payable | DEBIT |
+| `DEBIT_MEMO_APPLICATION` | `DMA_GRIR_CLEARING_AMT` | 2120 — GR/IR Clearing | CREDIT |
+| `DEBIT_MEMO_APPLICATION` | `DMA_TAX_AMT` | 1230 — Tax Receivable (Input VAT) | CREDIT |
+| `DEBIT_MEMO_APPLICATION` | `DMA_FX_LOSS_AMT` | 6150 — Foreign Exchange Loss | DEBIT |
+| `DEBIT_MEMO_APPLICATION` | `DMA_FX_GAIN_AMT` | 7150 — Foreign Exchange Gain | CREDIT |
 
 `GR_TAX_AMT` lines with a zero value (no tax on the purchase order) are automatically skipped by `PostJournalForEventUseCaseImpl` — the journal entry remains balanced as DR Inventory = CR GR/IR Clearing.
 
-`PURCHASE_RETURN` lines post only inventory/GRIR reversal. Input VAT reversal, AP reduction, allocation settlement, and FX are intentionally deferred to Debit Memo Allocation and later Purchase Return reversal phases.
+`PURCHASE_RETURN` lines post only inventory/GRIR reversal. Input VAT reversal, AP reduction, allocation settlement, and FX are handled by `DEBIT_MEMO_APPLICATION` when a Debit Memo Allocation is confirmed.
 
 > Other event types such as `VENDOR_BILL`, `VENDOR_PAYMENT`, `CUSTOMER_INVOICE`, `GOODS_ISSUE`, `CUSTOMER_RECEIPT`, `STOCK_ADJUSTMENT_IN`, and `STOCK_ADJUSTMENT_OUT` may be seeded or configured separately as their posting flows are enabled. Run the actual dev seeder at `docs/database/dev-seeder/D220__accounting_schema.sql` or the relevant Flyway migration when refreshing local accounting schema data.
 

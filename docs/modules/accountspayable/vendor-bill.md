@@ -78,7 +78,7 @@ Jika selected GR memiliki exchange rate berbeda, create form menampilkan hint da
 | `taxAmount` | Total pajak invoice |
 | `totalAmount` | Total gross invoice = subtotal + taxAmount |
 | `paidAmount` | Total pembayaran dari Vendor Payment `CONFIRMED` |
-| `debitMemoAppliedAmount` | Total Debit Memo Allocation confirmed; Phase C selalu `0` sampai DMA tersedia di Phase E |
+| `debitMemoAppliedAmount` | Total Debit Memo Allocation berstatus `CONFIRMED` |
 | `outstandingAmount` | Sisa outstanding = totalAmount - paidAmount - debitMemoAppliedAmount |
 | `notes` | Catatan |
 
@@ -172,12 +172,14 @@ Halaman list Vendor Bill menampilkan `documentStatus`, `settlementStatus`, dan `
 Halaman detail Vendor Bill menampilkan ringkasan settlement:
 - `settlementStatus`
 - `paidAmount` dari total line Vendor Payment berstatus `CONFIRMED`
-- `debitMemoAppliedAmount` dari Debit Memo Allocation berstatus confirmed; Phase C masih selalu `0`
+- `debitMemoAppliedAmount` dari Debit Memo Allocation berstatus `CONFIRMED`
 - `outstandingAmount = totalAmount - paidAmount - debitMemoAppliedAmount`
+- shortcut **Apply Debit Memo** jika Vendor Bill confirmed, open/partial, outstanding > 0, dan ada Debit Memo eligible
+- history Debit Memo Allocation confirmed/reversed yang pernah menyentuh bill tersebut
 
 Settlement summary bersifat read-side projection; web layer tetap memakai use case/mapper dan tidak membaca repository Vendor Payment atau future Debit Memo Allocation secara langsung.
 
-Debit Memo Allocation belum ada di Phase C. Phase E akan menambahkan DMA sebagai settlement source kedua yang mengisi `debitMemoAppliedAmount` dan ikut mengurangi outstanding.
+Debit Memo Allocation adalah settlement source kedua selain Vendor Payment. Draft DMA tidak mengurangi outstanding; hanya DMA `CONFIRMED` yang mengisi `debitMemoAppliedAmount`. DMA `REVERSED` dikeluarkan kembali dari projection.
 
 ## 9. Accounting Saat Confirm
 

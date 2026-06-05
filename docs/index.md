@@ -35,6 +35,7 @@ Dokumentasi dikelompokkan ke dalam folder berikut berdasarkan konteksnya:
         - [Vendor Bill](modules/accountspayable/vendor-bill.md) — Invoice vendor dari Goods Receipt dan settlement projection
         - [Vendor Payment](modules/accountspayable/vendor-payment.md) — Pembayaran vendor dan alokasi ke Vendor Bill
         - [Debit Memo](modules/accountspayable/debit-memo.md) — Memo retur vendor dari Purchase Return, metadata, dan settlement core
+        - [Debit Memo Allocation](modules/accountspayable/debit-memo-allocation.md) — Aplikasi Debit Memo ke Vendor Bill, journal AP reduction, dan reversal
 - **[/spec](spec/)**: **[PENTING]** Spesifikasi teknis horizontal/shared yang digunakan di seluruh aplikasi (line-item form, modal selector, action buttons, submission flow, dsb). Lihat **[Spec Index](spec/index.md)**.
 - **[/roadmap](roadmap/)**: Rencana pengembangan masa depan dan pelacakan standardisasi arsitektur.
 - **[/workflow](workflow/)**: Panduan prosedur kerja agen (seperti tugas repetitif, troubleshooting, dll).

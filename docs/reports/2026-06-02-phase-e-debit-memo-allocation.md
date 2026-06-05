@@ -60,3 +60,10 @@ This report is populated during plan execution.
 - **Summary:** Added DMA web DTOs, mapper, controller routes, list/detail/form templates, selector fragments, form JavaScript, Debit Memo detail allocate shortcut/history, and Vendor Bill detail apply shortcut/history.
 - **Tests:** `mvn test -Dtest="DebitMemoAllocationControllerTest,DebitMemoAllocationWebMapperTest,DebitMemoAllocationTemplateTest,DebitMemoTemplateTest,VendorBillTemplateTest"` passed with 22 tests.
 - **Notes:** The list row destructive action uses draft `cancel` rather than `delete` because the Phase E permission contract provides `DEBIT-MEMO-ALLOCATION_CANCEL` and no delete permission. Vendor Bill detail computes `canApplyDebitMemo` through the eligible Debit Memo selector with page size 1 so the shortcut is hidden when no DM candidate exists. Existing Debit Memo template tests were updated because Phase E intentionally replaces the allocation-history placeholder with real `DEBIT-MEMO-ALLOCATION` links.
+
+## Task 9: i18n, Module Documentation, And Accounting Docs
+
+- **Status:** Completed.
+- **Summary:** Updated Debit Memo, Debit Memo Allocation, Vendor Bill, Vendor Payment, Accounting Schema, docs index, and E2E warmup documentation so Phase E allocation behavior is described as shipped.
+- **Tests:** `mvn test -Dtest="*MessageBundleTest"` passed with 4 tests. Manual stale scan for `Phase E deferred`, `allocation-history.empty`, and `debitMemoAppliedAmount = 0` found only the plan validation line and intentional Debit Memo/Vendor Bill allocation-history empty-state template keys.
+- **Notes:** A separate Debit Memo Allocation module page was added because the Phase E lifecycle, accounting event, reversal behavior, and cross-module settlement rules are now large enough to warrant a dedicated operator-facing reference.

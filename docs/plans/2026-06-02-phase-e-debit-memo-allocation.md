@@ -275,29 +275,29 @@ Expose list/detail/form flows, DM/VB shortcuts, selector fragments, action butto
 **Validation criteria:**
 - `mvn test -Dtest="DebitMemoAllocationControllerTest,DebitMemoAllocationWebMapperTest,DebitMemoAllocationTemplateTest,DebitMemoTemplateTest,VendorBillTemplateTest"`
 
-## Task 9: i18n, Module Documentation, And Accounting Docs
+## Task 9: i18n, Module Documentation, And Accounting Docs [x]
 
 Document the final Phase E behavior and update user-facing labels/messages.
 
 **Depends on:** Tasks 1-8
 **Ref mod:** docs and message bundles
 
-- [ ] Add bilingual message keys for DMA labels, statuses, selector headings, stale warnings, confirm/cancel/reverse success messages, and domain validation errors.
+- [x] Add bilingual message keys for DMA labels, statuses, selector headings, stale warnings, confirm/cancel/reverse success messages, and domain validation errors.
       ref: [src/main/resources/messages.properties:1842](../../src/main/resources/messages.properties)
       ref: [src/main/resources/messages_id.properties:1842](../../src/main/resources/messages_id.properties)
-- [ ] Update [docs/modules/accountspayable/debit-memo.md](../modules/accountspayable/debit-memo.md) to replace Phase D deferrals with Phase E allocation behavior, settlement recap, and reversal rules.
+- [x] Update [docs/modules/accountspayable/debit-memo.md](../modules/accountspayable/debit-memo.md) to replace Phase D deferrals with Phase E allocation behavior, settlement recap, and reversal rules.
       ref: [docs/modules/accountspayable/debit-memo.md:53](../modules/accountspayable/debit-memo.md)
-- [ ] Add or update `docs/modules/accountspayable/debit-memo-allocation.md` if the allocation module needs its own page; otherwise keep all DMA detail in debit-memo doc and link from docs index.
+- [x] Add or update `docs/modules/accountspayable/debit-memo-allocation.md` if the allocation module needs its own page; otherwise keep all DMA detail in debit-memo doc and link from docs index.
       ref: [docs/index.md:34](../index.md)
-- [ ] Update Vendor Bill docs to include Debit Memo Applied history, Apply Debit Memo shortcut, and payment/DMA settlement projection.
+- [x] Update Vendor Bill docs to include Debit Memo Applied history, Apply Debit Memo shortcut, and payment/DMA settlement projection.
       ref: [docs/modules/accountspayable/vendor-bill.md](../modules/accountspayable/vendor-bill.md)
-- [ ] Update Vendor Payment docs to note outstanding revalidation now subtracts confirmed DMA lines.
+- [x] Update Vendor Payment docs to note outstanding revalidation now subtracts confirmed DMA lines.
       ref: [docs/modules/accountspayable/vendor-payment.md](../modules/accountspayable/vendor-payment.md)
-- [ ] Update Accounting Schema docs with `DEBIT_MEMO_APPLICATION` variables and standard mapping.
+- [x] Update Accounting Schema docs with `DEBIT_MEMO_APPLICATION` variables and standard mapping.
       ref: [docs/modules/accounting/accounting-schema.md:312](../modules/accounting/accounting-schema.md)
-- [ ] Update E2E warmup routes if new DMA routes are part of full suite and cold first-hit proves slow.
+- [x] Update E2E warmup routes if new DMA routes are part of full suite and cold first-hit proves slow.
       ref: [docs/tests/playwright-pitfalls.md:235](../tests/playwright-pitfalls.md)
-- [ ] TEST: Add message bundle/static doc scan tests if local pattern exists; otherwise record docs review in report.
+- [x] TEST: Add message bundle/static doc scan tests if local pattern exists; otherwise record docs review in report.
 
 **Validation criteria:**
 - `mvn test -Dtest="*MessageBundleTest"`

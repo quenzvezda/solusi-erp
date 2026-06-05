@@ -131,7 +131,7 @@ CR Bank / Cash               xxx
 
 Account override: `VP_BANK_OUT_AMT` dapat di-override dengan COA dari bank account yang dipilih (jika `bankCoaId` tersedia).
 
-Sebelum journal posting, sistem memanggil `VendorBillPaymentUpdatePort.lockAndValidatePayment(payment)` agar stale draft tidak bisa over-settle Vendor Bill yang outstanding-nya sudah berubah. Setelah payment tersimpan sebagai confirmed, sistem memanggil `VendorBillPaymentUpdatePort.updateSettlementStatus(billIds)` untuk menyegarkan settlement status Vendor Bill.
+Sebelum journal posting, sistem memanggil `VendorBillPaymentUpdatePort.lockAndValidatePayment(payment)` agar stale draft tidak bisa over-settle Vendor Bill yang outstanding-nya sudah berubah. Outstanding terbaru dihitung sebagai `totalAmount - confirmed payments - confirmed Debit Memo Allocation`. Setelah payment tersimpan sebagai confirmed, sistem memanggil `VendorBillPaymentUpdatePort.updateSettlementStatus(billIds)` untuk menyegarkan settlement status Vendor Bill.
 
 ## 7. Interaksi Komponen UI
 
@@ -192,7 +192,7 @@ Vendor Payment tidak membaca repository Vendor Bill secara langsung.
 
 Akses data lintas slice dilakukan melalui port/adapter:
 - `PayableVendorBillQueryPort` — query outstanding bills per vendor+currency
-- `VendorBillPaymentUpdatePort` — update payment status pada VB setelah confirm
+- `VendorBillPaymentUpdatePort` — lock/revalidasi dan update settlement status pada VB setelah Vendor Payment atau DMA confirm/reverse
 
 Web layer memakai use case, lookup providers (Party, Currency, BankAccount), dan web mapper. Web tidak menginjeksi repository dari slice lain.
 

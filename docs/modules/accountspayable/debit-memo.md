@@ -1,6 +1,6 @@
 # Debit Memo (Vendor Return Credit)
 
-Dokumen ini merangkum implementasi Phase D untuk Vendor Debit Memo pada modul **Finance & Accounting > Accounts Payable > Debit Memos**.
+Dokumen ini merangkum implementasi Vendor Debit Memo pada modul **Finance & Accounting > Accounts Payable > Debit Memos**.
 
 ## 1. Ringkasan
 
@@ -8,13 +8,13 @@ Debit Memo adalah dokumen AP yang dibuat otomatis dari Purchase Return yang berh
 
 Flow aktif:
 
-1. Purchase Return disubmit dan diapprove.
-2. User mengonfirmasi Purchase Return.
-3. Sistem membuat dan menyelesaikan generated Goods Issue untuk outbound stock.
-4. Sistem membuat Debit Memo berstatus `OPEN`.
-5. Purchase Return ditandai `CONFIRMED`.
+1. User mengonfirmasi Purchase Return.
+2. Sistem membuat dan menyelesaikan generated Goods Issue untuk outbound stock.
+3. Sistem membuat Debit Memo berstatus `OPEN`.
+4. User membuat Debit Memo Allocation untuk menerapkan saldo Debit Memo ke satu atau lebih Vendor Bill.
+5. Konfirmasi Allocation mem-post journal `DEBIT_MEMO_APPLICATION`, mengurangi outstanding Vendor Bill, dan menyegarkan settlement status Debit Memo/Vendor Bill.
 
-Debit Memo tidak mem-post journal saat dibuat. Journal pengurangan AP, reversal Input VAT, dan aplikasi ke Vendor Bill didefer ke Phase E melalui Debit Memo Allocation.
+Debit Memo core tetap tidak mem-post journal saat dibuat. Journal AP reduction dan tax/GRIR reversal terjadi saat Debit Memo Allocation dikonfirmasi.
 
 ## 2. Kontrak Fitur
 
@@ -22,6 +22,8 @@ Debit Memo tidak mem-post journal saat dibuat. Journal pengurangan AP, reversal 
 |---|---|
 | List | `/accounts-payable/debit-memos` dengan filter keyword, vendor, settlement status, dan rentang memo date |
 | Detail | `/accounts-payable/debit-memos/{id}` |
+| Allocate shortcut | Detail menampilkan tombol Allocate untuk status `OPEN/PARTIALLY_SETTLED` dengan remaining > 0 |
+| Allocation history | Detail menampilkan history DMA dan link ke detail allocation |
 | Update metadata | `POST /accounts-payable/debit-memos/{id}/metadata` via AJAX JSON |
 | Cancel | `POST /accounts-payable/debit-memos/{id}/cancel` |
 | Source link | Detail menampilkan link ke Purchase Return dan generated Goods Issue |
@@ -41,21 +43,10 @@ Header Debit Memo menyimpan snapshot:
 | `grossAmountOriginal` | Total DPP + tax dari source return |
 | `dppAmountOriginal` | Total clearing/DPP return |
 | `taxAmountOriginal` | Total tax reversal return |
-| `grossAmountBase`, `dppAmountBase`, `taxAmountBase` | Phase D memakai nilai yang sama dengan original karena Purchase Return belum memisahkan original/base untuk snapshot Debit Memo |
+| `grossAmountBase`, `dppAmountBase`, `taxAmountBase` | Base amount untuk journal allocation |
 | `settlementStatus` | `OPEN`, `PARTIALLY_SETTLED`, `SETTLED`, atau `CANCELLED` |
 
-Line Debit Memo menyimpan snapshot per Purchase Return line:
-
-| Field | Keterangan |
-|---|---|
-| `purchaseReturnLineId` | Source line Purchase Return |
-| `productId` | Produk yang diretur |
-| `quantity` | Qty return |
-| `uomId` | UoM transaksi |
-| `dppAmountOriginal` / `taxAmountOriginal` | Nilai DPP dan tax source |
-| `dppAmountBase` / `taxAmountBase` | Nilai base Phase D |
-
-Source dan monetary snapshot bersifat immutable setelah Debit Memo dibuat.
+Line Debit Memo menyimpan snapshot per Purchase Return line. Source dan monetary snapshot bersifat immutable setelah Debit Memo dibuat.
 
 ## 4. Metadata Eksternal
 
@@ -82,13 +73,13 @@ OPEN -> SETTLED
 OPEN -> CANCELLED
 ```
 
-Phase D belum memiliki Debit Memo Allocation atau Vendor Refund. Karena itu settlement recap pada list/detail masih:
+Confirmed, non-reversed Debit Memo Allocation mengisi:
 
-- `settledAmount = 0`
-- `refundedAmount = 0`
-- `remainingAmount = grossAmountOriginal`
+- `settledAmount`
+- `remainingAmount = grossAmountOriginal - settledAmount - refundedAmount`
+- status `PARTIALLY_SETTLED` atau `SETTLED`
 
-Status `PARTIALLY_SETTLED` dan `SETTLED` disiapkan di domain untuk Phase E, tetapi konsumsi aktual belum aktif.
+Reversal DMA mengeluarkan konsumsi tersebut dari projection dan dapat mengembalikan status Debit Memo ke `OPEN` atau `PARTIALLY_SETTLED`.
 
 ## 6. Cancellation
 
@@ -97,25 +88,25 @@ Cancel hanya tersedia untuk Debit Memo `OPEN`.
 Cancel ditolak jika:
 
 - status bukan `OPEN`;
-- metadata/settlement state sudah tidak memenuhi guard domain;
-- Phase E nanti menemukan confirmed allocation consumption.
+- ada Debit Memo Allocation berstatus `CONFIRMED` untuk Debit Memo tersebut.
 
-Phase D memakai port konsumsi allocation yang selalu mengembalikan false karena tabel Debit Memo Allocation belum ada.
+DMA `CANCELLED` atau `REVERSED` tidak memblokir cancel karena tidak lagi menjadi active consumption.
 
-## 7. Accounting dan Deferred Scope
+## 7. Accounting
 
-Debit Memo Core tidak mem-post journal saat creation. Purchase Return confirm tetap hanya mem-post journal inventory/GRIR melalui generated Goods Issue dan event `PURCHASE_RETURN`.
+Debit Memo creation tidak mem-post journal. Konfirmasi Debit Memo Allocation mem-post event `DEBIT_MEMO_APPLICATION`:
 
-Deferred ke Phase E:
+| Variable | Nilai |
+|---|---|
+| `DMA_AP_AMT` | AP reduction base, debit AP |
+| `DMA_GRIR_CLEARING_AMT` | GR/IR clearing reversal base, credit GR/IR |
+| `DMA_TAX_AMT` | Input VAT reversal base, credit Input VAT |
+| `DMA_FX_LOSS_AMT` | FX loss base, debit FX loss |
+| `DMA_FX_GAIN_AMT` | FX gain base, credit FX gain |
 
-- Debit Memo Allocation document;
-- aplikasi Debit Memo ke Vendor Bill;
-- journal `DEBIT_MEMO_APPLICATION`;
-- update `debitMemoAppliedAmount` Vendor Bill;
-- settlement recap berbasis allocation confirmed;
-- allocation history aktual pada halaman Debit Memo.
+Reversal DMA memakai generic linked journal reversal terhadap journal aplikasi tersebut.
 
-Vendor Refund juga belum aktif pada Phase D.
+Vendor Refund belum aktif.
 
 ## 8. Otorisasi
 
@@ -123,10 +114,12 @@ Vendor Refund juga belum aktif pada Phase D.
 |---|---|
 | `DEBIT-MEMO_READ` | Daftar dan detail Debit Memo |
 | `DEBIT-MEMO_UPDATE-METADATA` | Update metadata eksternal |
-| `DEBIT-MEMO_CANCEL` | Cancel Debit Memo `OPEN` |
+| `DEBIT-MEMO_CANCEL` | Cancel Debit Memo `OPEN` tanpa active DMA consumption |
+| `DEBIT-MEMO-ALLOCATION_CREATE` | Membuat DMA dari shortcut detail Debit Memo |
 
 ## 9. Referensi Terkait
 
+- [Debit Memo Allocation](debit-memo-allocation.md)
 - [Purchase Return](../procurement/purchase-return.md)
 - [Goods Issue](../inventory/goods-issue.md)
 - [Vendor Bill](vendor-bill.md)
