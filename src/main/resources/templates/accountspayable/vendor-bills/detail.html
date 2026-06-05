@@ -18,9 +18,17 @@
                         </h2>
                     </div>
                     <div class="col-auto ms-auto">
-                        <a th:href="@{/accounts-payable/vendor-bills}" class="btn btn-secondary">
-                            <i class="ti ti-arrow-left me-1"></i><span th:text="#{label.back}">Back</span>
-                        </a>
+                        <div class="btn-list">
+                            <a class="btn btn-primary"
+                               th:if="${canApplyDebitMemo}"
+                               sec:authorize="hasAuthority('DEBIT-MEMO-ALLOCATION_CREATE')"
+                               th:href="@{/accounts-payable/debit-memo-allocations/create(vendorBillId=${bill.id})}">
+                                <i class="ti ti-file-plus me-1"></i><span th:text="#{label.debit-memo-allocation.apply-debit-memo}">Apply Debit Memo</span>
+                            </a>
+                            <a th:href="@{/accounts-payable/vendor-bills}" class="btn btn-secondary">
+                                <i class="ti ti-arrow-left me-1"></i><span th:text="#{label.back}">Back</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -149,6 +157,35 @@
                                 onclick="ErpForm.postAction(this)">
                             <i class="ti ti-check me-1"></i><span th:text="#{label.vb.confirm}">Confirm</span>
                         </button>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h3 class="card-title" th:text="#{label.debit-memo.allocation-history}">Debit Memo Allocations</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                            <tr>
+                                <th th:text="#{label.debit-memo-allocation.code}">DMA</th>
+                                <th th:text="#{label.debit-memo.title}">Debit Memo</th>
+                                <th th:text="#{label.status}">Status</th>
+                                <th class="text-end" th:text="#{label.debit-memo-allocation.applied-gross}">Applied</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="history : ${debitMemoAllocationHistory}">
+                                <td><a th:href="@{/accounts-payable/debit-memo-allocations/{id}(id=${history.id})}" th:text="${history.code}">DMA</a></td>
+                                <td><a th:href="@{/accounts-payable/debit-memos/{id}(id=${history.debitMemoId})}" th:text="${history.debitMemoCode}">DM</a></td>
+                                <td><span class="badge" th:text="${history.status}">CONFIRMED</span></td>
+                                <td class="text-end" th:text="${history.appliedGrossOriginal != null ? #numbers.formatDecimal(history.appliedGrossOriginal, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                            </tr>
+                            <tr th:if="${debitMemoAllocationHistory == null || #lists.isEmpty(debitMemoAllocationHistory)}">
+                                <td colspan="4" class="text-center text-secondary py-4" th:text="#{label.debit-memo.allocation-history.empty}">No allocations yet.</td>
+                            </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

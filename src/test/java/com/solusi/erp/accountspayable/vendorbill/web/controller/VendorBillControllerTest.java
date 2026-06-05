@@ -1,5 +1,7 @@
 package com.solusi.erp.accountspayable.vendorbill.web.controller;
 
+import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.query.DebitMemoAllocationSelectorUseCase;
+import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.query.FindDebitMemoAllocationHistoryUseCase;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.command.*;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.query.*;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
@@ -46,6 +48,8 @@ class VendorBillControllerTest {
     private GetVendorBillCreateViewUseCase createViewUseCase;
     private FindBillableGrLinesUseCase findBillableGrLinesUseCase;
     private FindBillableReferencesUseCase findBillableReferencesUseCase;
+    private FindDebitMemoAllocationHistoryUseCase allocationHistoryUseCase;
+    private DebitMemoAllocationSelectorUseCase allocationSelectorUseCase;
     private VendorBillWebMapper webMapper;
     private MessageSource messageSource;
     private VendorBillController controller;
@@ -62,6 +66,8 @@ class VendorBillControllerTest {
         createViewUseCase = mock(GetVendorBillCreateViewUseCase.class);
         findBillableGrLinesUseCase = mock(FindBillableGrLinesUseCase.class);
         findBillableReferencesUseCase = mock(FindBillableReferencesUseCase.class);
+        allocationHistoryUseCase = mock(FindDebitMemoAllocationHistoryUseCase.class);
+        allocationSelectorUseCase = mock(DebitMemoAllocationSelectorUseCase.class);
         webMapper = mock(VendorBillWebMapper.class);
         messageSource = mock(MessageSource.class);
         controller = new VendorBillController(
@@ -75,6 +81,8 @@ class VendorBillControllerTest {
                 createViewUseCase,
                 findBillableGrLinesUseCase,
                 findBillableReferencesUseCase,
+                allocationHistoryUseCase,
+                allocationSelectorUseCase,
                 webMapper,
                 messageSource
         );

@@ -11,6 +11,7 @@ import com.solusi.erp.accountspayable.debitmemo.web.dto.DebitMemoDetailResponse;
 import com.solusi.erp.accountspayable.debitmemo.web.dto.DebitMemoMetadataRequest;
 import com.solusi.erp.accountspayable.debitmemo.web.dto.DebitMemoSummaryResponse;
 import com.solusi.erp.accountspayable.debitmemo.web.mapper.DebitMemoWebMapper;
+import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.query.FindDebitMemoAllocationHistoryUseCase;
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.dto.ApiResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +42,7 @@ class DebitMemoControllerTest {
     private GetDebitMemoDetailUseCase detailUseCase;
     private UpdateDebitMemoMetadataUseCase updateMetadataUseCase;
     private CancelDebitMemoUseCase cancelUseCase;
+    private FindDebitMemoAllocationHistoryUseCase historyUseCase;
     private DebitMemoWebMapper webMapper;
     private MessageSource messageSource;
     private DebitMemoController controller;
@@ -51,10 +53,11 @@ class DebitMemoControllerTest {
         detailUseCase = mock(GetDebitMemoDetailUseCase.class);
         updateMetadataUseCase = mock(UpdateDebitMemoMetadataUseCase.class);
         cancelUseCase = mock(CancelDebitMemoUseCase.class);
+        historyUseCase = mock(FindDebitMemoAllocationHistoryUseCase.class);
         webMapper = mock(DebitMemoWebMapper.class);
         messageSource = mock(MessageSource.class);
         controller = new DebitMemoController(
-                findUseCase, detailUseCase, updateMetadataUseCase, cancelUseCase, webMapper, messageSource);
+                findUseCase, detailUseCase, updateMetadataUseCase, cancelUseCase, historyUseCase, webMapper, messageSource);
     }
 
     @Test
@@ -180,4 +183,3 @@ class DebitMemoControllerTest {
         );
     }
 }
-

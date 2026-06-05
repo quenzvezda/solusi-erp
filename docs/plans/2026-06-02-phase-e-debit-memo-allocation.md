@@ -231,45 +231,45 @@ Reverse a confirmed allocation using the generic linked journal reversal and res
 **Validation criteria:**
 - `mvn test -Dtest="ReverseDebitMemoAllocationUseCaseTest,DebitMemoCommandUseCaseTest,ReversePostedJournalUseCaseTest"`
 
-## Task 8: Web Layer, Templates, JavaScript, And Shortcuts
+## Task 8: Web Layer, Templates, JavaScript, And Shortcuts [x]
 
 Expose list/detail/form flows, DM/VB shortcuts, selector fragments, action buttons, and interactive allocation recap.
 
 **Depends on:** Tasks 5-7
 **Ref mod:** `accountspayable.vendorpayment`, `accountspayable.vendorbill`, `accountspayable.debitmemo`
 
-- [ ] Add `DebitMemoAllocationController` at `/accounts-payable/debit-memo-allocations` with list/detail/create/edit/save/update/confirm/cancel/reverse routes and `@PreAuthorize` guards.
+- [x] Add `DebitMemoAllocationController` at `/accounts-payable/debit-memo-allocations` with list/detail/create/edit/save/update/confirm/cancel/reverse routes and `@PreAuthorize` guards.
       ref: [src/main/java/com/solusi/erp/accountspayable/vendorpayment/web/controller/VendorPaymentController.java:40](../../src/main/java/com/solusi/erp/accountspayable/vendorpayment/web/controller/VendorPaymentController.java)
       ref: [docs/tests/playwright-pitfalls.md:110](../tests/playwright-pitfalls.md)
-- [ ] Add DTOs for save request, line request, summary/detail response, selector rows, reverse request, and form view state. Date fields must use `@DateTimeFormat(pattern = "yyyy-MM-dd")`.
+- [x] Add DTOs for save request, line request, summary/detail response, selector rows, reverse request, and form view state. Date fields must use `@DateTimeFormat(pattern = "yyyy-MM-dd")`.
       ref: [docs/spec/datetime-standards.md:86](../spec/datetime-standards.md)
-- [ ] Add list page with keyword/status filters, pagination/sorting, and actions View/Edit Draft/Delete or Cancel Draft according to local convention.
+- [x] Add list page with keyword/status filters, pagination/sorting, and actions View/Edit Draft/Delete or Cancel Draft according to local convention.
       ref: [docs/AGENTS.md:64](../AGENTS.md)
-- [ ] Add detail page with header, linked Debit Memo/Vendor Bills/journal entries, line snapshots, status badge, confirm/cancel/reverse buttons using `ErpForm.postAction`.
+- [x] Add detail page with header, linked Debit Memo/Vendor Bills/journal entries, line snapshots, status badge, confirm/cancel/reverse buttons using `ErpForm.postAction`.
       ref: [docs/spec/action-buttons.md:14](../spec/action-buttons.md)
       ref: [src/main/resources/templates/accountspayable/vendor-payments/detail.html:27](../../src/main/resources/templates/accountspayable/vendor-payments/detail.html)
-- [ ] Add form page using AJAX JSON (`data-ajax-form="true"`) with stable IDs, allocation date Flatpickr, line table, stale warning, gross input per line using AutoNumeric, and recap Applied/Unapplied/Remaining.
+- [x] Add form page using AJAX JSON (`data-ajax-form="true"`) with stable IDs, allocation date Flatpickr, line table, stale warning, gross input per line using AutoNumeric, and recap Applied/Unapplied/Remaining.
       ref: [docs/spec/form-submission.md:22](../spec/form-submission.md)
       ref: [docs/spec/numeric-standards.md:5](../spec/numeric-standards.md)
       ref: [src/main/resources/templates/accountspayable/vendor-payments/form.html:26](../../src/main/resources/templates/accountspayable/vendor-payments/form.html)
-- [ ] Add modal selector fragments for eligible Vendor Bills and eligible Debit Memos. Root fragment id must match `hx-target`; all filtering must be query-level.
+- [x] Add modal selector fragments for eligible Vendor Bills and eligible Debit Memos. Root fragment id must match `hx-target`; all filtering must be query-level.
       ref: [docs/spec/modal-selector.md:20](../spec/modal-selector.md)
       ref: [src/main/resources/templates/accountspayable/vendor-payments/fragments/bank-account-selector.html:4](../../src/main/resources/templates/accountspayable/vendor-payments/fragments/bank-account-selector.html)
-- [ ] Add page-specific JS under `static/js/accountspayable/debit-memo-allocations/form.js` to open selectors, map `data-*` payload to lines, prevent duplicate bills, reindex after removal, initialize numeric inputs, calculate recap, and validate at submit capture phase.
+- [x] Add page-specific JS under `static/js/accountspayable/debit-memo-allocations/form.js` to open selectors, map `data-*` payload to lines, prevent duplicate bills, reindex after removal, initialize numeric inputs, calculate recap, and validate at submit capture phase.
       ref: [docs/spec/page-specific-scripts.md:13](../spec/page-specific-scripts.md)
       ref: [src/main/resources/static/js/accountspayable/vendor-payments/form.js:67](../../src/main/resources/static/js/accountspayable/vendor-payments/form.js)
-- [ ] Add Debit Memo detail Allocate action when status is `OPEN/PARTIALLY_SETTLED` and remaining > 0; link to DMA create with DM preselected.
+- [x] Add Debit Memo detail Allocate action when status is `OPEN/PARTIALLY_SETTLED` and remaining > 0; link to DMA create with DM preselected.
       ref: [src/main/resources/templates/accountspayable/debit-memos/detail.html:153](../../src/main/resources/templates/accountspayable/debit-memos/detail.html)
-- [ ] Replace Debit Memo allocation-history placeholder with actual DMA history table and links.
+- [x] Replace Debit Memo allocation-history placeholder with actual DMA history table and links.
       ref: [src/main/resources/templates/accountspayable/debit-memos/detail.html:153](../../src/main/resources/templates/accountspayable/debit-memos/detail.html)
-- [ ] Add Vendor Bill detail Apply Debit Memo shortcut only when document status is `CONFIRMED`, settlement is `OPEN/PARTIALLY_SETTLED`, outstanding > 0, and at least one eligible DM exists.
+- [x] Add Vendor Bill detail Apply Debit Memo shortcut only when document status is `CONFIRMED`, settlement is `OPEN/PARTIALLY_SETTLED`, outstanding > 0, and at least one eligible DM exists.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:756](../brainstorming/2026-06-02-vendor-debit-memo.md)
       ref: [src/main/resources/templates/accountspayable/vendor-bills/detail.html:51](../../src/main/resources/templates/accountspayable/vendor-bills/detail.html)
-- [ ] Add allocation history section to Vendor Bill detail showing confirmed/reversed DMA lines.
+- [x] Add allocation history section to Vendor Bill detail showing confirmed/reversed DMA lines.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:766](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] TEST: Add controller tests for routes, model attrs, request mapping, `@PreAuthorize` values, and JSON action responses.
+- [x] TEST: Add controller tests for routes, model attrs, request mapping, `@PreAuthorize` values, and JSON action responses.
       ref: [src/main/java/com/solusi/erp/accountspayable/debitmemo/web/controller/DebitMemoController.java:52](../../src/main/java/com/solusi/erp/accountspayable/debitmemo/web/controller/DebitMemoController.java)
-- [ ] TEST: Add template tests for form attributes, selector shell/fragment ids, action button data attributes, permission visibility, DM detail allocate action, and VB detail shortcut visibility.
+- [x] TEST: Add template tests for form attributes, selector shell/fragment ids, action button data attributes, permission visibility, DM detail allocate action, and VB detail shortcut visibility.
       ref: [src/test/java/com/solusi/erp/accountspayable/vendorpayment/web/template/VendorPaymentTemplateTest.java:55](../../src/test/java/com/solusi/erp/accountspayable/vendorpayment/web/template/VendorPaymentTemplateTest.java)
 
 **Validation criteria:**

@@ -1,5 +1,7 @@
 package com.solusi.erp.accountspayable.vendorbill.web.controller;
 
+import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.query.FindDebitMemoAllocationHistoryUseCase;
+import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.query.DebitMemoAllocationSelectorUseCase;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.command.*;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.query.*;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Set;
 import java.util.List;
 
 @Controller
@@ -45,6 +48,8 @@ public class VendorBillController {
     private final GetVendorBillCreateViewUseCase getVendorBillCreateViewUseCase;
     private final FindBillableGrLinesUseCase findBillableGrLinesUseCase;
     private final FindBillableReferencesUseCase findBillableReferencesUseCase;
+    private final FindDebitMemoAllocationHistoryUseCase findDebitMemoAllocationHistoryUseCase;
+    private final DebitMemoAllocationSelectorUseCase debitMemoAllocationSelectorUseCase;
     private final VendorBillWebMapper webMapper;
     private final MessageSource messageSource;
 
@@ -139,7 +144,10 @@ public class VendorBillController {
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('VENDOR-BILL_READ')")
     public String detail(@PathVariable Long id, Model model) {
-        model.addAttribute("bill", webMapper.toDetailResponse(getVendorBillDetailUseCase.execute(id)));
+        VendorBillDetailResponse bill = webMapper.toDetailResponse(getVendorBillDetailUseCase.execute(id));
+        model.addAttribute("bill", bill);
+        model.addAttribute("debitMemoAllocationHistory", findDebitMemoAllocationHistoryUseCase.byVendorBillId(id));
+        model.addAttribute("canApplyDebitMemo", canApplyDebitMemo(id, bill));
         return "accountspayable/vendor-bills/detail";
     }
 
@@ -217,6 +225,20 @@ public class VendorBillController {
                 .filter(value -> !value.isBlank())
                 .map(Long::valueOf)
                 .toList();
+    }
+
+    private boolean canApplyDebitMemo(Long vendorBillId, VendorBillDetailResponse bill) {
+        boolean payable = "CONFIRMED".equals(bill.getDocumentStatus())
+                && Set.of("OPEN", "PARTIALLY_SETTLED").contains(bill.getSettlementStatus())
+                && bill.getOutstandingAmount() != null
+                && bill.getOutstandingAmount().compareTo(BigDecimal.ZERO) > 0;
+        if (!payable) {
+            return false;
+        }
+        return !debitMemoAllocationSelectorUseCase
+                .eligibleDebitMemos(vendorBillId, null, Pageable.of(0, 1))
+                .content()
+                .isEmpty();
     }
 
     private SelectedReferenceContext resolveSelectedReferenceContext(List<Long> selectedGrIds) {

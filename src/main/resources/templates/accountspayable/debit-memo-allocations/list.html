@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/master :: head(#{label.debit-memo-allocation.title})}"></head>
+<body th:replace="~{layout/master :: layout(~{:: .debit-memo-allocation-list-content}, ~{:: #page-specific-scripts})}">
+<div class="debit-memo-allocation-list-content">
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col"><h2 class="page-title" th:text="#{label.debit-memo-allocation.title}">Debit Memo Allocation</h2></div>
+                <div class="col-auto ms-auto">
+                    <a th:href="@{/accounts-payable/debit-memo-allocations/create}" class="btn btn-primary"
+                       sec:authorize="hasAuthority('DEBIT-MEMO-ALLOCATION_CREATE')">
+                        <i class="ti ti-plus me-1"></i><span th:text="#{label.create}">Create</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="page-body">
+        <div class="container-xl">
+            <form class="card mb-3" method="get" th:action="@{/accounts-payable/debit-memo-allocations}">
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-md-4"><input type="text" class="form-control" name="keyword" th:value="${keyword}" th:placeholder="#{label.search}"></div>
+                        <div class="col-md-3">
+                            <select class="form-select" name="status">
+                                <option value="" th:text="#{label.all}">All</option>
+                                <option th:each="item : ${statuses}" th:value="${item}" th:selected="${item == status}" th:text="${item}">DRAFT</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2"><input type="date" class="form-control" name="allocationDateFrom" data-picker="date" th:value="${allocationDateFrom}"></div>
+                        <div class="col-md-2"><input type="date" class="form-control" name="allocationDateTo" data-picker="date" th:value="${allocationDateTo}"></div>
+                        <div class="col-md-1"><button class="btn btn-secondary w-100" type="submit"><i class="ti ti-filter"></i></button></div>
+                    </div>
+                </div>
+            </form>
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table">
+                        <thead>
+                        <tr>
+                            <th th:text="#{label.debit-memo-allocation.code}">Code</th>
+                            <th th:text="#{label.debit-memo.title}">Debit Memo</th>
+                            <th th:text="#{label.debit-memo-allocation.allocation-date}">Date</th>
+                            <th th:text="#{label.status}">Status</th>
+                            <th class="text-end" th:text="#{label.debit-memo-allocation.applied-gross}">Applied</th>
+                            <th class="text-end" th:text="#{label.actions}">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="item : ${page.content}" th:id="'row-' + ${item.id}">
+                            <td><a th:href="@{/accounts-payable/debit-memo-allocations/{id}(id=${item.id})}" th:text="${item.code}">DMA-001</a></td>
+                            <td><a th:href="@{/accounts-payable/debit-memos/{id}(id=${item.debitMemoId})}" th:text="${item.debitMemoCode}">DM-001</a></td>
+                            <td th:text="${item.allocationDate != null ? #temporals.format(item.allocationDate, 'dd MMM yyyy') : '-'}">05 Jun 2026</td>
+                            <td><span class="badge" th:text="${item.status}">DRAFT</span></td>
+                            <td class="text-end" th:text="${item.totalAppliedGrossOriginal != null ? #numbers.formatDecimal(item.totalAppliedGrossOriginal, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary" th:href="@{/accounts-payable/debit-memo-allocations/{id}(id=${item.id})}"><i class="ti ti-eye"></i></a>
+                                <a class="btn btn-sm btn-outline-secondary" th:if="${item.status == 'DRAFT'}" sec:authorize="hasAuthority('DEBIT-MEMO-ALLOCATION_UPDATE')"
+                                   th:href="@{/accounts-payable/debit-memo-allocations/edit/{id}(id=${item.id})}"><i class="ti ti-edit"></i></a>
+                                <button type="button" class="btn btn-sm btn-outline-warning js-dma-cancel" th:if="${item.status == 'DRAFT'}"
+                                        sec:authorize="hasAuthority('DEBIT-MEMO-ALLOCATION_CANCEL')"
+                                        th:data-action-url="@{/accounts-payable/debit-memo-allocations/{id}/cancel(id=${item.id})}"
+                                        th:data-redirect-url="@{/accounts-payable/debit-memo-allocations}"
+                                        th:data-confirm-message="#{msg.confirm.debit-memo-allocation.cancel}">
+                                    <i class="ti ti-x"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr th:if="${page == null || #lists.isEmpty(page.content)}">
+                            <td colspan="6" class="text-center text-secondary py-4" th:text="#{label.no.data}">No data.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="page-specific-scripts">
+    <script th:inline="javascript">
+        document.addEventListener('click', function (event) {
+            var button = event.target.closest('.js-dma-cancel');
+            if (button) ErpForm.postAction(button);
+        });
+    </script>
+</div>
+</body>
+</html>

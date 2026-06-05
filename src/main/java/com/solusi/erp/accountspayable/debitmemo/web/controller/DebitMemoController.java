@@ -7,6 +7,7 @@ import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.DebitM
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.FindDebitMemosUseCase;
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.query.GetDebitMemoDetailUseCase;
 import com.solusi.erp.accountspayable.debitmemo.domain.model.DebitMemoSettlementStatus;
+import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.query.FindDebitMemoAllocationHistoryUseCase;
 import com.solusi.erp.accountspayable.debitmemo.web.dto.DebitMemoDetailResponse;
 import com.solusi.erp.accountspayable.debitmemo.web.dto.DebitMemoMetadataRequest;
 import com.solusi.erp.accountspayable.debitmemo.web.dto.DebitMemoSummaryResponse;
@@ -46,6 +47,7 @@ public class DebitMemoController {
     private final GetDebitMemoDetailUseCase getDebitMemoDetailUseCase;
     private final UpdateDebitMemoMetadataUseCase updateDebitMemoMetadataUseCase;
     private final CancelDebitMemoUseCase cancelDebitMemoUseCase;
+    private final FindDebitMemoAllocationHistoryUseCase findDebitMemoAllocationHistoryUseCase;
     private final DebitMemoWebMapper webMapper;
     private final MessageSource messageSource;
 
@@ -81,6 +83,7 @@ public class DebitMemoController {
         DebitMemoDetailResponse response = webMapper.toDetailResponse(getDebitMemoDetailUseCase.execute(id));
         model.addAttribute("debitMemo", response);
         model.addAttribute("metadataRequest", toMetadataRequest(response));
+        model.addAttribute("debitMemoAllocationHistory", findDebitMemoAllocationHistoryUseCase.byDebitMemoId(id));
         return "accountspayable/debit-memos/detail";
     }
 
@@ -131,4 +134,3 @@ public class DebitMemoController {
         return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
     }
 }
-

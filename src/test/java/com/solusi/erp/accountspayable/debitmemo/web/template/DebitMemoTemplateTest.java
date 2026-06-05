@@ -37,7 +37,9 @@ class DebitMemoTemplateTest {
         assertThat(template).contains("/purchasing/purchase-returns/view/{id}");
         assertThat(template).contains("/inventory/goods-issues/{id}");
         assertThat(template).contains("label.debit-memo.allocation-history.empty");
-        assertThat(template).doesNotContain("DEBIT-MEMO-ALLOCATION");
+        assertThat(template).contains("DEBIT-MEMO-ALLOCATION_CREATE");
+        assertThat(template).contains("/accounts-payable/debit-memo-allocations/create");
+        assertThat(template).contains("/accounts-payable/debit-memo-allocations/{id}");
     }
 
     @Test
@@ -74,4 +76,3 @@ class DebitMemoTemplateTest {
         }
     }
 }
-

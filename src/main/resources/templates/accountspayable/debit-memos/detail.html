@@ -19,6 +19,12 @@
                 </div>
                 <div class="col-auto ms-auto">
                     <div class="btn-list">
+                        <a class="btn btn-primary"
+                           th:if="${(debitMemo.settlementStatus == 'OPEN' || debitMemo.settlementStatus == 'PARTIALLY_SETTLED') && debitMemo.remainingAmount != null && debitMemo.remainingAmount.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
+                           sec:authorize="hasAuthority('DEBIT-MEMO-ALLOCATION_CREATE')"
+                           th:href="@{/accounts-payable/debit-memo-allocations/create(debitMemoId=${debitMemo.id},debitMemoCode=${debitMemo.code})}">
+                            <i class="ti ti-file-plus me-1"></i><span th:text="#{label.debit-memo-allocation.allocate}">Allocate</span>
+                        </a>
                         <button type="button" class="btn btn-warning"
                                 th:if="${debitMemo.settlementStatus == 'OPEN'}"
                                 sec:authorize="hasAuthority('DEBIT-MEMO_CANCEL')"
@@ -152,8 +158,28 @@
 
                     <div class="card">
                         <div class="card-header"><h3 class="card-title" th:text="#{label.debit-memo.allocation-history}">Allocation History</h3></div>
-                        <div class="card-body text-secondary" th:text="#{label.debit-memo.allocation-history.empty}">
-                            No allocations yet.
+                        <div class="table-responsive">
+                            <table class="table table-vcenter card-table">
+                                <thead>
+                                <tr>
+                                    <th th:text="#{label.debit-memo-allocation.code}">DMA</th>
+                                    <th th:text="#{label.debit-memo-allocation.allocation-date}">Date</th>
+                                    <th th:text="#{label.status}">Status</th>
+                                    <th class="text-end" th:text="#{label.debit-memo-allocation.applied-gross}">Applied</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="history : ${debitMemoAllocationHistory}">
+                                    <td><a th:href="@{/accounts-payable/debit-memo-allocations/{id}(id=${history.id})}" th:text="${history.code}">DMA</a></td>
+                                    <td th:text="${history.allocationDate != null ? #temporals.format(history.allocationDate, 'dd MMM yyyy') : '-'}">05 Jun 2026</td>
+                                    <td><span class="badge" th:text="${history.status}">CONFIRMED</span></td>
+                                    <td class="text-end" th:text="${history.appliedGrossOriginal != null ? #numbers.formatDecimal(history.appliedGrossOriginal, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                                </tr>
+                                <tr th:if="${debitMemoAllocationHistory == null || #lists.isEmpty(debitMemoAllocationHistory)}">
+                                    <td colspan="4" class="text-center text-secondary py-4" th:text="#{label.debit-memo.allocation-history.empty}">No allocations yet.</td>
+                                </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -165,4 +191,3 @@
 <div id="page-specific-scripts"></div>
 </body>
 </html>
-
