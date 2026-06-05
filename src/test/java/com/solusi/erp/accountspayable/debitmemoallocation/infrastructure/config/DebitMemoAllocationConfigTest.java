@@ -1,11 +1,14 @@
 package com.solusi.erp.accountspayable.debitmemoallocation.infrastructure.config;
 
 import com.solusi.erp.accounting.journal.application.usecase.command.PostJournalForEventUseCase;
+import com.solusi.erp.accounting.journal.application.usecase.command.ReversePostedJournalUseCase;
+import com.solusi.erp.accounting.journal.domain.repository.JournalEntryRepository;
 import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeriodForDateUseCase;
 import com.solusi.erp.accountspayable.debitmemo.domain.repository.DebitMemoRepository;
 import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.CancelDebitMemoAllocationUseCase;
 import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.ConfirmDebitMemoAllocationUseCase;
 import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.CreateDebitMemoAllocationUseCase;
+import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.ReverseDebitMemoAllocationUseCase;
 import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.UpdateDebitMemoAllocationUseCase;
 import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.query.DebitMemoAllocationSelectorUseCase;
 import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.query.FindDebitMemoAllocationHistoryUseCase;
@@ -53,6 +56,9 @@ class DebitMemoAllocationConfigTest {
     private ConfirmDebitMemoAllocationUseCase confirmDebitMemoAllocationUseCase;
 
     @Autowired
+    private ReverseDebitMemoAllocationUseCase reverseDebitMemoAllocationUseCase;
+
+    @Autowired
     private FindDebitMemoAllocationsUseCase findDebitMemoAllocationsUseCase;
 
     @Autowired
@@ -72,6 +78,7 @@ class DebitMemoAllocationConfigTest {
         assertThat(updateDebitMemoAllocationUseCase).isNotNull();
         assertThat(cancelDebitMemoAllocationUseCase).isNotNull();
         assertThat(confirmDebitMemoAllocationUseCase).isNotNull();
+        assertThat(reverseDebitMemoAllocationUseCase).isNotNull();
         assertThat(findDebitMemoAllocationsUseCase).isNotNull();
         assertThat(getDebitMemoAllocationDetailUseCase).isNotNull();
         assertThat(findDebitMemoAllocationHistoryUseCase).isNotNull();
@@ -113,6 +120,16 @@ class DebitMemoAllocationConfigTest {
         @Bean
         PostJournalForEventUseCase postJournalForEventUseCase() {
             return mock(PostJournalForEventUseCase.class);
+        }
+
+        @Bean
+        JournalEntryRepository journalEntryRepository() {
+            return mock(JournalEntryRepository.class);
+        }
+
+        @Bean
+        ReversePostedJournalUseCase reversePostedJournalUseCase() {
+            return mock(ReversePostedJournalUseCase.class);
         }
 
         @Bean

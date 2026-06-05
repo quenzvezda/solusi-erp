@@ -2,7 +2,9 @@ package com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.c
 
 import com.solusi.erp.accounting.journal.application.usecase.command.JournalPostingCommand;
 import com.solusi.erp.accounting.journal.application.usecase.command.PostJournalForEventUseCase;
+import com.solusi.erp.accounting.journal.domain.model.JournalEntry;
 import com.solusi.erp.accounting.journal.domain.model.JournalVariable;
+import com.solusi.erp.accounting.journal.domain.repository.JournalEntryRepository;
 import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeriodForDateUseCase;
 import com.solusi.erp.accounting.schema.domain.model.SchemaEventType;
 import com.solusi.erp.accountspayable.debitmemo.domain.model.DebitMemo;
@@ -35,6 +37,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -47,6 +50,7 @@ class ConfirmDebitMemoAllocationUseCaseTest {
     @Mock private DebitMemoRepository debitMemoRepository;
     @Mock private DebitMemoAllocationSourcePort sourcePort;
     @Mock private PostJournalForEventUseCase postJournalForEventUseCase;
+    @Mock private JournalEntryRepository journalEntryRepository;
     @Mock private VendorBillPaymentUpdatePort vendorBillPaymentUpdatePort;
     @Mock private EnsureOpenPeriodForDateUseCase ensureOpenPeriodForDateUseCase;
 
@@ -59,6 +63,7 @@ class ConfirmDebitMemoAllocationUseCaseTest {
                 debitMemoRepository,
                 sourcePort,
                 postJournalForEventUseCase,
+                journalEntryRepository,
                 vendorBillPaymentUpdatePort,
                 ensureOpenPeriodForDateUseCase);
     }
@@ -67,10 +72,13 @@ class ConfirmDebitMemoAllocationUseCaseTest {
     void execute_should_confirm_post_journal_and_update_settlement_statuses() {
         DebitMemoAllocation allocation = draftAllocation();
         DebitMemo debitMemo = debitMemo(DebitMemoSettlementStatus.OPEN);
+        JournalEntry applyJournal = journalEntry(900L);
         when(repository.findById(700L)).thenReturn(Optional.of(allocation));
         when(sourcePort.findDebitMemoSnapshot(100L)).thenReturn(Optional.of(debitMemoSnapshot("100.0000", 10L, 1L)));
         when(sourcePort.findVendorBillSnapshot(501L)).thenReturn(Optional.of(vendorBillSnapshot("100.0000", 10L, 1L)));
         when(repository.sumConfirmedAppliedByDebitMemoId(100L)).thenReturn(bd("0.0000"));
+        when(journalEntryRepository.findBySource("DEBIT_MEMO_ALLOCATION", 700L))
+                .thenReturn(Optional.of(applyJournal));
         when(repository.save(any(DebitMemoAllocation.class))).thenAnswer(inv -> inv.getArgument(0));
         when(debitMemoRepository.findById(100L)).thenReturn(Optional.of(debitMemo));
         when(debitMemoRepository.save(any(DebitMemo.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -78,7 +86,7 @@ class ConfirmDebitMemoAllocationUseCaseTest {
         useCase.execute(700L);
 
         assertThat(allocation.getStatus()).isEqualTo(DebitMemoAllocationStatus.CONFIRMED);
-        assertThat(allocation.getApplyJournalEntryId()).isNull();
+        assertThat(allocation.getApplyJournalEntryId()).isEqualTo(900L);
         assertThat(debitMemo.getSettlementStatus()).isEqualTo(DebitMemoSettlementStatus.PARTIALLY_SETTLED);
         verify(vendorBillPaymentUpdatePort).updateSettlementStatus(List.of(501L));
 
@@ -96,12 +104,14 @@ class ConfirmDebitMemoAllocationUseCaseTest {
         assertThat(command.values().get(JournalVariable.DMA_FX_LOSS_AMT)).isEqualByComparingTo("10.0000");
         assertThat(command.values().get(JournalVariable.DMA_FX_GAIN_AMT)).isEqualByComparingTo("0.0000");
 
-        InOrder inOrder = inOrder(sourcePort, postJournalForEventUseCase, repository, debitMemoRepository, vendorBillPaymentUpdatePort);
+        InOrder inOrder = inOrder(sourcePort, postJournalForEventUseCase, journalEntryRepository, repository,
+                debitMemoRepository, vendorBillPaymentUpdatePort);
         inOrder.verify(sourcePort).lockDebitMemo(100L);
         inOrder.verify(sourcePort).lockVendorBills(List.of(501L));
         inOrder.verify(sourcePort).findDebitMemoSnapshot(100L);
         inOrder.verify(sourcePort).findVendorBillSnapshot(501L);
         inOrder.verify(postJournalForEventUseCase).execute(any(JournalPostingCommand.class));
+        inOrder.verify(journalEntryRepository).findBySource("DEBIT_MEMO_ALLOCATION", 700L);
         inOrder.verify(repository).save(allocation);
         inOrder.verify(debitMemoRepository).save(debitMemo);
         inOrder.verify(vendorBillPaymentUpdatePort).updateSettlementStatus(List.of(501L));
@@ -111,10 +121,13 @@ class ConfirmDebitMemoAllocationUseCaseTest {
     void execute_should_mark_debit_memo_settled_when_confirmed_consumption_reaches_gross_amount() {
         DebitMemoAllocation allocation = draftAllocation();
         DebitMemo debitMemo = debitMemo(DebitMemoSettlementStatus.OPEN);
+        JournalEntry applyJournal = journalEntry(900L);
         when(repository.findById(700L)).thenReturn(Optional.of(allocation));
         when(sourcePort.findDebitMemoSnapshot(100L)).thenReturn(Optional.of(debitMemoSnapshot("40.0000", 10L, 1L)));
         when(sourcePort.findVendorBillSnapshot(501L)).thenReturn(Optional.of(vendorBillSnapshot("100.0000", 10L, 1L)));
         when(repository.sumConfirmedAppliedByDebitMemoId(100L)).thenReturn(bd("60.0000"));
+        when(journalEntryRepository.findBySource("DEBIT_MEMO_ALLOCATION", 700L))
+                .thenReturn(Optional.of(applyJournal));
         when(repository.save(any(DebitMemoAllocation.class))).thenAnswer(inv -> inv.getArgument(0));
         when(debitMemoRepository.findById(100L)).thenReturn(Optional.of(debitMemo));
         when(debitMemoRepository.save(any(DebitMemo.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -135,7 +148,8 @@ class ConfirmDebitMemoAllocationUseCaseTest {
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("msg.error.accounting-period.closed");
 
-        verifyNoInteractions(sourcePort, postJournalForEventUseCase, debitMemoRepository, vendorBillPaymentUpdatePort);
+        verifyNoInteractions(sourcePort, postJournalForEventUseCase, journalEntryRepository, debitMemoRepository,
+                vendorBillPaymentUpdatePort);
         verify(repository, never()).save(any());
     }
 
@@ -198,9 +212,6 @@ class ConfirmDebitMemoAllocationUseCaseTest {
     void execute_should_not_post_journal_when_allocation_is_not_draft() {
         DebitMemoAllocation allocation = confirmedAllocation();
         when(repository.findById(700L)).thenReturn(Optional.of(allocation));
-        when(sourcePort.findDebitMemoSnapshot(100L)).thenReturn(Optional.of(debitMemoSnapshot("100.0000", 10L, 1L)));
-        when(sourcePort.findVendorBillSnapshot(501L)).thenReturn(Optional.of(vendorBillSnapshot("100.0000", 10L, 1L)));
-        when(repository.sumConfirmedAppliedByDebitMemoId(100L)).thenReturn(bd("40.0000"));
 
         assertThatThrownBy(() -> useCase.execute(700L))
                 .isInstanceOf(DomainException.class)
@@ -210,8 +221,15 @@ class ConfirmDebitMemoAllocationUseCaseTest {
     }
 
     private void verifyNoJournalOrSave() {
-        verifyNoInteractions(postJournalForEventUseCase, debitMemoRepository, vendorBillPaymentUpdatePort);
+        verifyNoInteractions(postJournalForEventUseCase, journalEntryRepository, debitMemoRepository,
+                vendorBillPaymentUpdatePort);
         verify(repository, never()).save(any());
+    }
+
+    private static JournalEntry journalEntry(Long id) {
+        JournalEntry journalEntry = mock(JournalEntry.class);
+        when(journalEntry.getId()).thenReturn(id);
+        return journalEntry;
     }
 
     private static DebitMemoAllocation draftAllocation() {

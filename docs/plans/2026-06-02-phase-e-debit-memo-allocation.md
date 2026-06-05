@@ -208,24 +208,24 @@ Confirm a draft DMA atomically: lock current records, revalidate latest balances
 **Validation criteria:**
 - `mvn test -Dtest="ConfirmDebitMemoAllocationUseCaseTest,DebitMemoAllocationConfigTest,VendorBillSettlementSummaryAdapterTest"`
 
-## Task 7: Reverse Confirmed DMA
+## Task 7: Reverse Confirmed DMA [x]
 
 Reverse a confirmed allocation using the generic linked journal reversal and restore settlement projections.
 
 **Depends on:** Task 6
 **Ref mod:** `accounting.journal`, `inventory.goodsissue` cancellation reversal
 
-- [ ] Add `ReverseDebitMemoAllocationUseCase` for `CONFIRMED -> REVERSED` with required `reversalDate` and `reversalReason`.
+- [x] Add `ReverseDebitMemoAllocationUseCase` for `CONFIRMED -> REVERSED` with required `reversalDate` and `reversalReason`.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:960](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Validate `applyJournalEntryId` exists, DMA is not already reversed, and reversal date accounting period is open through `ReversePostedJournalUseCase`.
+- [x] Validate `applyJournalEntryId` exists, DMA is not already reversed, and reversal date accounting period is open through `ReversePostedJournalUseCase`.
       ref: [src/main/java/com/solusi/erp/accounting/journal/application/usecase/command/ReversePostedJournalUseCaseImpl.java:23](../../src/main/java/com/solusi/erp/accounting/journal/application/usecase/command/ReversePostedJournalUseCaseImpl.java)
-- [ ] Call `ReversePostedJournalUseCase` using the DMA apply journal id; persist `reversalJournalEntryId`, `reversalDate`, and `reversalReason`.
+- [x] Call `ReversePostedJournalUseCase` using the DMA apply journal id; persist `reversalJournalEntryId`, `reversalDate`, and `reversalReason`.
       ref: [src/main/java/com/solusi/erp/accounting/journal/application/usecase/command/ReversePostedJournalCommand.java:5](../../src/main/java/com/solusi/erp/accounting/journal/application/usecase/command/ReversePostedJournalCommand.java)
-- [ ] Recompute Debit Memo settlement status and target Vendor Bill settlement statuses after marking DMA reversed.
+- [x] Recompute Debit Memo settlement status and target Vendor Bill settlement statuses after marking DMA reversed.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:969](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Ensure Debit Memo cancel guard sees any active confirmed DMA as consumption, while reversed/cancelled DMA no longer blocks cancel.
+- [x] Ensure Debit Memo cancel guard sees any active confirmed DMA as consumption, while reversed/cancelled DMA no longer blocks cancel.
       ref: [src/main/java/com/solusi/erp/accountspayable/debitmemo/application/usecase/command/CancelDebitMemoUseCaseImpl.java](../../src/main/java/com/solusi/erp/accountspayable/debitmemo/application/usecase/command/CancelDebitMemoUseCaseImpl.java)
-- [ ] TEST: Add reverse use case tests for happy path, required reason, closed period, already reversed, missing apply journal, settlement restoration, and Debit Memo cancel blocker behavior.
+- [x] TEST: Add reverse use case tests for happy path, required reason, closed period, already reversed, missing apply journal, settlement restoration, and Debit Memo cancel blocker behavior.
       ref: [docs/reports/2026-06-02-phase-a-generic-reversal-foundation.md:13](../reports/2026-06-02-phase-a-generic-reversal-foundation.md)
 
 **Validation criteria:**

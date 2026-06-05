@@ -2,14 +2,16 @@ package com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.c
 
 import com.solusi.erp.accounting.journal.application.usecase.command.JournalPostingCommand;
 import com.solusi.erp.accounting.journal.application.usecase.command.PostJournalForEventUseCase;
+import com.solusi.erp.accounting.journal.domain.model.JournalEntry;
 import com.solusi.erp.accounting.journal.domain.model.JournalVariable;
+import com.solusi.erp.accounting.journal.domain.repository.JournalEntryRepository;
 import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeriodForDateUseCase;
 import com.solusi.erp.accounting.schema.domain.model.SchemaEventType;
 import com.solusi.erp.accountspayable.debitmemo.domain.model.DebitMemo;
-import com.solusi.erp.accountspayable.debitmemo.domain.model.DebitMemoSettlementStatus;
 import com.solusi.erp.accountspayable.debitmemo.domain.repository.DebitMemoRepository;
 import com.solusi.erp.accountspayable.debitmemoallocation.domain.model.DebitMemoAllocation;
 import com.solusi.erp.accountspayable.debitmemoallocation.domain.model.DebitMemoAllocationLine;
+import com.solusi.erp.accountspayable.debitmemoallocation.domain.model.DebitMemoAllocationStatus;
 import com.solusi.erp.accountspayable.debitmemoallocation.domain.port.DebitMemoAllocationSourcePort;
 import com.solusi.erp.accountspayable.debitmemoallocation.domain.repository.DebitMemoAllocationRepository;
 import com.solusi.erp.accountspayable.vendorpayment.domain.port.VendorBillPaymentUpdatePort;
@@ -22,10 +24,13 @@ import java.util.Map;
 
 public class ConfirmDebitMemoAllocationUseCaseImpl implements ConfirmDebitMemoAllocationUseCase {
 
+    private static final String SOURCE_TYPE = "DEBIT_MEMO_ALLOCATION";
+
     private final DebitMemoAllocationRepository repository;
     private final DebitMemoRepository debitMemoRepository;
     private final DebitMemoAllocationSourcePort sourcePort;
     private final PostJournalForEventUseCase postJournalForEventUseCase;
+    private final JournalEntryRepository journalEntryRepository;
     private final VendorBillPaymentUpdatePort vendorBillPaymentUpdatePort;
     private final EnsureOpenPeriodForDateUseCase ensureOpenPeriodForDateUseCase;
 
@@ -33,12 +38,14 @@ public class ConfirmDebitMemoAllocationUseCaseImpl implements ConfirmDebitMemoAl
                                                  DebitMemoRepository debitMemoRepository,
                                                  DebitMemoAllocationSourcePort sourcePort,
                                                  PostJournalForEventUseCase postJournalForEventUseCase,
+                                                 JournalEntryRepository journalEntryRepository,
                                                  VendorBillPaymentUpdatePort vendorBillPaymentUpdatePort,
                                                  EnsureOpenPeriodForDateUseCase ensureOpenPeriodForDateUseCase) {
         this.repository = repository;
         this.debitMemoRepository = debitMemoRepository;
         this.sourcePort = sourcePort;
         this.postJournalForEventUseCase = postJournalForEventUseCase;
+        this.journalEntryRepository = journalEntryRepository;
         this.vendorBillPaymentUpdatePort = vendorBillPaymentUpdatePort;
         this.ensureOpenPeriodForDateUseCase = ensureOpenPeriodForDateUseCase;
     }
@@ -47,6 +54,7 @@ public class ConfirmDebitMemoAllocationUseCaseImpl implements ConfirmDebitMemoAl
     public void execute(Long id) {
         DebitMemoAllocation allocation = repository.findById(id)
                 .orElseThrow(() -> new DomainException("msg.error.debit-memo-allocation.not-found"));
+        ensureDraft(allocation);
         ensureOpenPeriodForDateUseCase.execute(allocation.getAllocationDate());
         List<Long> vendorBillIds = vendorBillIds(allocation);
         sourcePort.lockDebitMemo(allocation.getDebitMemoId());
@@ -56,19 +64,28 @@ public class ConfirmDebitMemoAllocationUseCaseImpl implements ConfirmDebitMemoAl
         BigDecimal confirmedAppliedAfter = repository.sumConfirmedAppliedByDebitMemoId(allocation.getDebitMemoId())
                 .add(allocation.getTotalAppliedGrossOriginal());
 
-        allocation.confirm(null);
         postJournalForEventUseCase.execute(new JournalPostingCommand(
                 SchemaEventType.DEBIT_MEMO_APPLICATION,
-                "DEBIT_MEMO_ALLOCATION",
+                SOURCE_TYPE,
                 allocation.getId(),
                 allocation.getCode(),
                 allocation.getAllocationDate(),
                 "Auto journal for debit memo allocation " + allocation.getCode(),
                 journalValues(allocation)
         ));
+        Long applyJournalEntryId = journalEntryRepository.findBySource(SOURCE_TYPE, allocation.getId())
+                .map(JournalEntry::getId)
+                .orElseThrow(() -> new DomainException("msg.error.debit-memo-allocation.apply-journal-not-found"));
+        allocation.confirm(applyJournalEntryId);
         repository.save(allocation);
         updateDebitMemoSettlement(allocation.getDebitMemoId(), confirmedAppliedAfter);
         vendorBillPaymentUpdatePort.updateSettlementStatus(vendorBillIds);
+    }
+
+    private void ensureDraft(DebitMemoAllocation allocation) {
+        if (allocation.getStatus() != DebitMemoAllocationStatus.DRAFT) {
+            throw new DomainException("msg.error.debit-memo-allocation.confirm.only-draft");
+        }
     }
 
     private DebitMemoAllocationSourcePort.DebitMemoSnapshot revalidateDebitMemo(DebitMemoAllocation allocation) {
@@ -110,11 +127,7 @@ public class ConfirmDebitMemoAllocationUseCaseImpl implements ConfirmDebitMemoAl
     private void updateDebitMemoSettlement(Long debitMemoId, BigDecimal confirmedAppliedAfter) {
         DebitMemo debitMemo = debitMemoRepository.findById(debitMemoId)
                 .orElseThrow(() -> new DomainException("msg.error.debit-memo.not-found"));
-        if (confirmedAppliedAfter.compareTo(debitMemo.getGrossAmountOriginal()) >= 0) {
-            debitMemo.markSettled();
-        } else if (debitMemo.getSettlementStatus() == DebitMemoSettlementStatus.OPEN) {
-            debitMemo.markPartiallySettled();
-        }
+        debitMemo.refreshSettlementStatus(confirmedAppliedAfter);
         debitMemoRepository.save(debitMemo);
     }
 

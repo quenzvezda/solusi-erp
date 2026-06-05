@@ -130,6 +130,22 @@ public class DebitMemo {
         settlementStatus = DebitMemoSettlementStatus.SETTLED;
     }
 
+    public void refreshSettlementStatus(BigDecimal confirmedAppliedAmount) {
+        if (confirmedAppliedAmount == null || confirmedAppliedAmount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new DomainException("msg.error.debit-memo.invalid-settlement-transition");
+        }
+        if (settlementStatus == DebitMemoSettlementStatus.CANCELLED) {
+            throw new DomainException("msg.error.debit-memo.invalid-settlement-transition");
+        }
+        if (confirmedAppliedAmount.compareTo(BigDecimal.ZERO) == 0) {
+            settlementStatus = DebitMemoSettlementStatus.OPEN;
+        } else if (confirmedAppliedAmount.compareTo(grossAmountOriginal) >= 0) {
+            settlementStatus = DebitMemoSettlementStatus.SETTLED;
+        } else {
+            settlementStatus = DebitMemoSettlementStatus.PARTIALLY_SETTLED;
+        }
+    }
+
     public void cancel() {
         if (settlementStatus != DebitMemoSettlementStatus.OPEN) {
             throw new DomainException("msg.error.debit-memo.cancel.only-open");
@@ -273,4 +289,3 @@ public class DebitMemo {
         return Collections.unmodifiableList(lines);
     }
 }
-

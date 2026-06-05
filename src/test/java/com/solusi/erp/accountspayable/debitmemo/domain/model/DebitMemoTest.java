@@ -223,6 +223,35 @@ class DebitMemoTest {
     }
 
     @Test
+    @DisplayName("refresh settlement status should restore status from confirmed applied amount")
+    void refreshSettlementStatus_shouldRestoreStatusFromConfirmedAppliedAmount() {
+        DebitMemo debitMemo = debitMemo(List.of(line(1L, "100.0000", "0.0000", "100.0000", "0.0000")));
+
+        debitMemo.refreshSettlementStatus(new BigDecimal("40.0000"));
+        assertThat(debitMemo.getSettlementStatus()).isEqualTo(DebitMemoSettlementStatus.PARTIALLY_SETTLED);
+
+        debitMemo.refreshSettlementStatus(new BigDecimal("100.0000"));
+        assertThat(debitMemo.getSettlementStatus()).isEqualTo(DebitMemoSettlementStatus.SETTLED);
+
+        debitMemo.refreshSettlementStatus(BigDecimal.ZERO);
+        assertThat(debitMemo.getSettlementStatus()).isEqualTo(DebitMemoSettlementStatus.OPEN);
+    }
+
+    @Test
+    @DisplayName("refresh settlement status should reject cancelled memo and negative applied amount")
+    void refreshSettlementStatus_shouldRejectCancelledMemoAndNegativeAppliedAmount() {
+        DebitMemo debitMemo = debitMemo(List.of(line(1L, "100.0000", "0.0000", "100.0000", "0.0000")));
+        assertThatThrownBy(() -> debitMemo.refreshSettlementStatus(new BigDecimal("-0.0001")))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.debit-memo.invalid-settlement-transition");
+
+        debitMemo.cancel();
+        assertThatThrownBy(() -> debitMemo.refreshSettlementStatus(BigDecimal.ZERO))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("msg.error.debit-memo.invalid-settlement-transition");
+    }
+
+    @Test
     @DisplayName("reconstitute should default null metadata and settlement status")
     void reconstitute_shouldDefaultNullMetadataAndSettlementStatus() {
         DebitMemo debitMemo = DebitMemo.reconstitute(

@@ -1,6 +1,8 @@
 package com.solusi.erp.accountspayable.debitmemoallocation.infrastructure.config;
 
 import com.solusi.erp.accounting.journal.application.usecase.command.PostJournalForEventUseCase;
+import com.solusi.erp.accounting.journal.application.usecase.command.ReversePostedJournalUseCase;
+import com.solusi.erp.accounting.journal.domain.repository.JournalEntryRepository;
 import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeriodForDateUseCase;
 import com.solusi.erp.accountspayable.debitmemo.domain.repository.DebitMemoRepository;
 import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.CancelDebitMemoAllocationUseCase;
@@ -9,6 +11,8 @@ import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.co
 import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.ConfirmDebitMemoAllocationUseCaseImpl;
 import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.CreateDebitMemoAllocationUseCase;
 import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.CreateDebitMemoAllocationUseCaseImpl;
+import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.ReverseDebitMemoAllocationUseCase;
+import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.ReverseDebitMemoAllocationUseCaseImpl;
 import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.UpdateDebitMemoAllocationUseCase;
 import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.UpdateDebitMemoAllocationUseCaseImpl;
 import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.query.DebitMemoAllocationSelectorUseCase;
@@ -92,6 +96,7 @@ public class DebitMemoAllocationConfig {
             DebitMemoRepository debitMemoRepository,
             DebitMemoAllocationSourcePort sourcePort,
             PostJournalForEventUseCase postJournalForEventUseCase,
+            JournalEntryRepository journalEntryRepository,
             VendorBillPaymentUpdatePort vendorBillPaymentUpdatePort,
             EnsureOpenPeriodForDateUseCase ensureOpenPeriodForDateUseCase,
             PlatformTransactionManager txManager) {
@@ -100,10 +105,29 @@ public class DebitMemoAllocationConfig {
                 debitMemoRepository,
                 sourcePort,
                 postJournalForEventUseCase,
+                journalEntryRepository,
                 vendorBillPaymentUpdatePort,
                 ensureOpenPeriodForDateUseCase);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         return id -> tx.executeWithoutResult(txStatus -> pure.execute(id));
+    }
+
+    @Bean
+    public ReverseDebitMemoAllocationUseCase reverseDebitMemoAllocationUseCase(
+            DebitMemoAllocationRepository repository,
+            DebitMemoRepository debitMemoRepository,
+            DebitMemoAllocationSourcePort sourcePort,
+            ReversePostedJournalUseCase reversePostedJournalUseCase,
+            VendorBillPaymentUpdatePort vendorBillPaymentUpdatePort,
+            PlatformTransactionManager txManager) {
+        ReverseDebitMemoAllocationUseCase pure = new ReverseDebitMemoAllocationUseCaseImpl(
+                repository,
+                debitMemoRepository,
+                sourcePort,
+                reversePostedJournalUseCase,
+                vendorBillPaymentUpdatePort);
+        TransactionTemplate tx = new TransactionTemplate(txManager);
+        return command -> tx.executeWithoutResult(txStatus -> pure.execute(command));
     }
 
     @Bean
