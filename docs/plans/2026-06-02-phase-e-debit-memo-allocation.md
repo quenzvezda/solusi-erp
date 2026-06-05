@@ -66,32 +66,32 @@ Create the persistent DMA contract and journal schema event before app code depe
 - `mvn test -Dtest="DebitMemoAllocationMigrationTest,JournalVariableTest,JournalMessageBundleTest"`
 - `mvn test -Dtest="*MigrationTest"`
 
-## Task 2: DMA Domain Model, Lifecycle, And Allocation Math
+## Task 2: DMA Domain Model, Lifecycle, And Allocation Math [x]
 
 Model DMA as its own aggregate with draft snapshots, confirm/reverse immutability, line validation, proration, and FX snapshot fields.
 
 **Depends on:** Task 1
 **Ref mod:** `accountspayable.vendorpayment`, `accountspayable.debitmemo`
 
-- [ ] Create `accountspayable.debitmemoallocation` package with `domain/model`, `domain/repository`, `domain/port`, `application/usecase`, `infrastructure`, and `web`.
+- [x] Create `accountspayable.debitmemoallocation` package with `domain/model`, `domain/repository`, `domain/port`, `application/usecase`, `infrastructure`, and `web`.
       ref: [docs/AGENTS.md:40](../AGENTS.md)
-- [ ] Add `DebitMemoAllocationStatus` enum: `DRAFT`, `CONFIRMED`, `CANCELLED`, `REVERSED`.
+- [x] Add `DebitMemoAllocationStatus` enum: `DRAFT`, `CONFIRMED`, `CANCELLED`, `REVERSED`.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:183](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Add `DebitMemoAllocation` aggregate with one Debit Memo header identity, allocation date, status, journal ids, reversal metadata, and line collection.
+- [x] Add `DebitMemoAllocation` aggregate with one Debit Memo header identity, allocation date, status, journal ids, reversal metadata, and line collection.
       ref: [src/main/java/com/solusi/erp/accountspayable/vendorpayment/domain/model/VendorPayment.java:12](../../src/main/java/com/solusi/erp/accountspayable/vendorpayment/domain/model/VendorPayment.java)
-- [ ] Add `DebitMemoAllocationLine` value object with Vendor Bill identity, draft snapshots, applied gross original, prorated DPP/tax, base amounts, exchange-rate snapshot, AP reduction base, and FX gain/loss base.
+- [x] Add `DebitMemoAllocationLine` value object with Vendor Bill identity, draft snapshots, applied gross original, prorated DPP/tax, base amounts, exchange-rate snapshot, AP reduction base, and FX gain/loss base.
       ref: [src/main/java/com/solusi/erp/accountspayable/vendorpayment/domain/model/VendorPaymentLine.java:5](../../src/main/java/com/solusi/erp/accountspayable/vendorpayment/domain/model/VendorPaymentLine.java)
-- [ ] Enforce domain invariants: one DMA references exactly one DM, at least one line, no duplicate Vendor Bill in one DMA, applied gross > 0, total applied <= draft/current DM remaining when command supplies current values, line applied <= current VB outstanding when command supplies current values.
+- [x] Enforce domain invariants: one DMA references exactly one DM, at least one line, no duplicate Vendor Bill in one DMA, applied gross > 0, total applied <= draft/current DM remaining when command supplies current values, line applied <= current VB outstanding when command supplies current values.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:1423](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Implement lifecycle methods: update only while `DRAFT`, cancel only while `DRAFT`, confirm only from `DRAFT`, reverse only from `CONFIRMED`, no edit/delete once confirmed.
+- [x] Implement lifecycle methods: update only while `DRAFT`, cancel only while `DRAFT`, confirm only from `DRAFT`, reverse only from `CONFIRMED`, no edit/delete once confirmed.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:183](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Add allocation math service/policy that prorates gross into DPP/tax using Debit Memo totals and uses remainder on the last line/last confirmed consumption so cumulative original/base amounts equal DM snapshots.
+- [x] Add allocation math service/policy that prorates gross into DPP/tax using Debit Memo totals and uses remainder on the last line/last confirmed consumption so cumulative original/base amounts equal DM snapshots.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:484](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Add FX calculation: AP reduction base = applied gross original * Vendor Bill exchange rate; GRIR/tax base use DM historical base ratio; difference becomes FX gain/loss.
+- [x] Add FX calculation: AP reduction base = applied gross original * Vendor Bill exchange rate; GRIR/tax base use DM historical base ratio; difference becomes FX gain/loss.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:521](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Add message keys for every domain guard; do not hardcode Indonesian/English in use cases.
+- [x] Add message keys for every domain guard; do not hardcode Indonesian/English in use cases.
       ref: [docs/AGENTS.md:91](../AGENTS.md)
-- [ ] TEST: Add pure JUnit domain tests for create/update/cancel/confirm/reverse lifecycle, duplicate bill guard, non-positive amount guard, over-remaining guard, over-outstanding guard, proration remainder, zero tax, and FX gain/loss.
+- [x] TEST: Add pure JUnit domain tests for create/update/cancel/confirm/reverse lifecycle, duplicate bill guard, non-positive amount guard, over-remaining guard, over-outstanding guard, proration remainder, zero tax, and FX gain/loss.
       ref: [src/test/java/com/solusi/erp/accountspayable/debitmemo/domain/model/DebitMemoTest.java:17](../../src/test/java/com/solusi/erp/accountspayable/debitmemo/domain/model/DebitMemoTest.java)
 
 **Validation criteria:**
