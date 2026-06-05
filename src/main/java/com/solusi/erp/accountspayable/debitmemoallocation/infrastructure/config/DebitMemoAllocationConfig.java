@@ -1,7 +1,12 @@
 package com.solusi.erp.accountspayable.debitmemoallocation.infrastructure.config;
 
+import com.solusi.erp.accounting.journal.application.usecase.command.PostJournalForEventUseCase;
+import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeriodForDateUseCase;
+import com.solusi.erp.accountspayable.debitmemo.domain.repository.DebitMemoRepository;
 import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.CancelDebitMemoAllocationUseCase;
 import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.CancelDebitMemoAllocationUseCaseImpl;
+import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.ConfirmDebitMemoAllocationUseCase;
+import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.ConfirmDebitMemoAllocationUseCaseImpl;
 import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.CreateDebitMemoAllocationUseCase;
 import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.CreateDebitMemoAllocationUseCaseImpl;
 import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.command.UpdateDebitMemoAllocationUseCase;
@@ -21,6 +26,7 @@ import com.solusi.erp.accountspayable.debitmemoallocation.infrastructure.adapter
 import com.solusi.erp.accountspayable.debitmemoallocation.infrastructure.adapter.DebitMemoAllocationSourceAdapter;
 import com.solusi.erp.accountspayable.debitmemoallocation.infrastructure.persistence.DebitMemoAllocationJpaRepository;
 import com.solusi.erp.accountspayable.debitmemoallocation.infrastructure.persistence.DebitMemoAllocationPersistenceMapper;
+import com.solusi.erp.accountspayable.vendorpayment.domain.port.VendorBillPaymentUpdatePort;
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -76,6 +82,26 @@ public class DebitMemoAllocationConfig {
             DebitMemoAllocationRepository repository,
             PlatformTransactionManager txManager) {
         CancelDebitMemoAllocationUseCase pure = new CancelDebitMemoAllocationUseCaseImpl(repository);
+        TransactionTemplate tx = new TransactionTemplate(txManager);
+        return id -> tx.executeWithoutResult(txStatus -> pure.execute(id));
+    }
+
+    @Bean
+    public ConfirmDebitMemoAllocationUseCase confirmDebitMemoAllocationUseCase(
+            DebitMemoAllocationRepository repository,
+            DebitMemoRepository debitMemoRepository,
+            DebitMemoAllocationSourcePort sourcePort,
+            PostJournalForEventUseCase postJournalForEventUseCase,
+            VendorBillPaymentUpdatePort vendorBillPaymentUpdatePort,
+            EnsureOpenPeriodForDateUseCase ensureOpenPeriodForDateUseCase,
+            PlatformTransactionManager txManager) {
+        ConfirmDebitMemoAllocationUseCase pure = new ConfirmDebitMemoAllocationUseCaseImpl(
+                repository,
+                debitMemoRepository,
+                sourcePort,
+                postJournalForEventUseCase,
+                vendorBillPaymentUpdatePort,
+                ensureOpenPeriodForDateUseCase);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         return id -> tx.executeWithoutResult(txStatus -> pure.execute(id));
     }

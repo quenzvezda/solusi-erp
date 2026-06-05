@@ -181,28 +181,28 @@ Implement create/update/cancel draft behavior and query-level eligible DM/VB sel
 **Validation criteria:**
 - `mvn test -Dtest="CreateDebitMemoAllocationUseCaseTest,UpdateDebitMemoAllocationUseCaseTest,CancelDebitMemoAllocationUseCaseTest,DebitMemoAllocationSelectorUseCaseTest"`
 
-## Task 6: Confirm DMA Use Case And Journal Posting
+## Task 6: Confirm DMA Use Case And Journal Posting [x]
 
 Confirm a draft DMA atomically: lock current records, revalidate latest balances, post journal, persist snapshots, and update settlement statuses.
 
 **Depends on:** Tasks 1-5
 **Ref mod:** `accountspayable.vendorpayment`, `accounting.journal`
 
-- [ ] Add `ConfirmDebitMemoAllocationUseCase` that loads the draft, calls `confirm()`, locks Debit Memo + all target Vendor Bills, recalculates current remaining/outstanding, and rejects stale/overapplied drafts before posting.
+- [x] Add `ConfirmDebitMemoAllocationUseCase` that loads the draft, calls `confirm()`, locks Debit Memo + all target Vendor Bills, recalculates current remaining/outstanding, and rejects stale/overapplied drafts before posting.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:566](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Use `PostJournalForEventUseCase` with `SchemaEventType.DEBIT_MEMO_APPLICATION`, source type `DEBIT_MEMO_ALLOCATION`, source id/code, `allocationDate`, and DMA variables.
+- [x] Use `PostJournalForEventUseCase` with `SchemaEventType.DEBIT_MEMO_APPLICATION`, source type `DEBIT_MEMO_ALLOCATION`, source id/code, `allocationDate`, and DMA variables.
       ref: [src/main/java/com/solusi/erp/accountspayable/vendorpayment/application/usecase/command/ConfirmVendorPaymentUseCaseImpl.java:72](../../src/main/java/com/solusi/erp/accountspayable/vendorpayment/application/usecase/command/ConfirmVendorPaymentUseCaseImpl.java)
-- [ ] Use original/base maps only if the existing journal posting engine requires original-currency audit for this event; otherwise store immutable original/base snapshots on DMA lines and pass base `values` to journal.
+- [x] Use original/base maps only if the existing journal posting engine requires original-currency audit for this event; otherwise store immutable original/base snapshots on DMA lines and pass base `values` to journal.
       ref: [src/main/java/com/solusi/erp/accounting/journal/application/usecase/command/JournalPostingCommand.java:10](../../src/main/java/com/solusi/erp/accounting/journal/application/usecase/command/JournalPostingCommand.java)
-- [ ] Persist `applyJournalEntryId` if `PostJournalForEventUseCase` currently returns or can expose the posted id; if it remains void, add a focused query-by-source adapter or update the journal use case contract in a separate, tested step.
+- [x] Persist `applyJournalEntryId` if `PostJournalForEventUseCase` currently returns or can expose the posted id; if it remains void, add a focused query-by-source adapter or update the journal use case contract in a separate, tested step.
       ref: [src/main/java/com/solusi/erp/accounting/journal/application/usecase/command/PostJournalForEventUseCase.java:3](../../src/main/java/com/solusi/erp/accounting/journal/application/usecase/command/PostJournalForEventUseCase.java)
-- [ ] Update Debit Memo settlement status to `OPEN/PARTIALLY_SETTLED/SETTLED` based on confirmed, non-reversed DMA consumption.
+- [x] Update Debit Memo settlement status to `OPEN/PARTIALLY_SETTLED/SETTLED` based on confirmed, non-reversed DMA consumption.
       ref: [src/main/java/com/solusi/erp/accountspayable/debitmemo/domain/model/DebitMemo.java:118](../../src/main/java/com/solusi/erp/accountspayable/debitmemo/domain/model/DebitMemo.java)
-- [ ] Update Vendor Bill settlement statuses for target bills after journal posting and save.
+- [x] Update Vendor Bill settlement statuses for target bills after journal posting and save.
       ref: [src/main/java/com/solusi/erp/accountspayable/vendorpayment/application/usecase/command/ConfirmVendorPaymentUseCaseImpl.java:86](../../src/main/java/com/solusi/erp/accountspayable/vendorpayment/application/usecase/command/ConfirmVendorPaymentUseCaseImpl.java)
-- [ ] Ensure transaction order prevents side effects on rejected stale drafts: validate locks before journal posting, save only after journal succeeds, then settlement projection update.
+- [x] Ensure transaction order prevents side effects on rejected stale drafts: validate locks before journal posting, save only after journal succeeds, then settlement projection update.
       ref: [src/test/java/com/solusi/erp/accountspayable/vendorpayment/application/usecase/command/ConfirmVendorPaymentUseCaseTest.java:58](../../src/test/java/com/solusi/erp/accountspayable/vendorpayment/application/usecase/command/ConfirmVendorPaymentUseCaseTest.java)
-- [ ] TEST: Add confirm use case tests for happy path, AP/GRIR/tax/FX variable values, period closed rejection, stale DM remaining, stale VB outstanding, vendor/currency mismatch, tax mismatch policy, duplicate bill, and no journal on guard failure.
+- [x] TEST: Add confirm use case tests for happy path, AP/GRIR/tax/FX variable values, period closed rejection, stale DM remaining, stale VB outstanding, vendor/currency mismatch, duplicate bill/domain status guard, and no journal on guard failure. Tax mismatch policy is noted in the report because the current source snapshots expose no separate tax policy flag to compare at confirm.
       ref: [src/test/java/com/solusi/erp/accountspayable/vendorpayment/application/usecase/command/ConfirmVendorPaymentUseCaseTest.java:84](../../src/test/java/com/solusi/erp/accountspayable/vendorpayment/application/usecase/command/ConfirmVendorPaymentUseCaseTest.java)
 
 **Validation criteria:**

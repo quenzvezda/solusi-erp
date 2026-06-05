@@ -39,3 +39,10 @@ This report is populated during plan execution.
 - **Summary:** Added draft create/update/cancel use cases, command records, source snapshot port, JDBC source adapter for eligible DM/VB selectors, selector use case, and config wiring. Draft creation recalculates DPP/tax/base/FX snapshots but does not reserve DM or VB balance.
 - **Tests:** `mvn test -Dtest="CreateDebitMemoAllocationUseCaseTest,UpdateDebitMemoAllocationUseCaseTest,CancelDebitMemoAllocationUseCaseTest,DebitMemoAllocationSelectorUseCaseTest,DebitMemoAllocationConfigTest"` passed with 7 tests.
 - **Notes:** Allocation date accounting-period validation is intentionally left for confirm, matching the plan. Stale snapshots are represented by source current snapshots and confirm-time guard messages; web-level stale display can consume the same values when templates are added.
+
+## Task 6: Confirm DMA Use Case And Journal Posting
+
+- **Status:** Completed with notes.
+- **Summary:** Added confirm use case and config wiring. Confirm now locks the Debit Memo and target Vendor Bills, validates the accounting period, current Debit Memo remaining balance, target Vendor Bill outstanding, and vendor/currency consistency before posting `DEBIT_MEMO_APPLICATION`, saving the confirmed DMA, and refreshing Debit Memo/Vendor Bill settlement statuses.
+- **Tests:** `mvn test -Dtest="ConfirmDebitMemoAllocationUseCaseTest,DebitMemoAllocationConfigTest,VendorBillSettlementSummaryAdapterTest"` passed with 12 tests.
+- **Notes:** `PostJournalForEventUseCase` still returns `void`, so `applyJournalEntryId` cannot be populated by this task without changing the journal contract or adding a query-by-source adapter. Task 7 reverse will need one of those focused journal-linking changes before linked reversal can be fully implemented. Confirm uses base `values` only because original/base immutable snapshots already live on DMA lines and the current posting engine does not require original-currency audit maps for this event. No separate tax-mismatch confirm guard was added because the current source snapshots expose gross/DPP/tax amounts but no independent tax policy flag for Vendor Bills to compare.

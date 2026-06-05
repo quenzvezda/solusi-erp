@@ -4,9 +4,14 @@ import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.Optional;
 
 public interface DebitMemoAllocationSourcePort {
+
+    void lockDebitMemo(Long debitMemoId);
+
+    void lockVendorBills(Collection<Long> vendorBillIds);
 
     Optional<DebitMemoSnapshot> findDebitMemoSnapshot(Long debitMemoId);
 

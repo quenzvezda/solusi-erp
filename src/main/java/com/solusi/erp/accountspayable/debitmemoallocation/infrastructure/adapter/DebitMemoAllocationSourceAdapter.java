@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +17,35 @@ public class DebitMemoAllocationSourceAdapter implements DebitMemoAllocationSour
 
     public DebitMemoAllocationSourceAdapter(NamedParameterJdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+    }
+
+    @Override
+    public void lockDebitMemo(Long debitMemoId) {
+        String sql = """
+                SELECT dm.id
+                FROM ap_debit_memos dm
+                WHERE dm.id = :debitMemoId
+                FOR UPDATE
+                """;
+        jdbcTemplate.query(sql,
+                new MapSqlParameterSource().addValue("debitMemoId", debitMemoId),
+                (rs, rowNum) -> rs.getLong("id"));
+    }
+
+    @Override
+    public void lockVendorBills(Collection<Long> vendorBillIds) {
+        if (vendorBillIds == null || vendorBillIds.isEmpty()) {
+            return;
+        }
+        String sql = """
+                SELECT vb.id
+                FROM ap_vendor_bills vb
+                WHERE vb.id IN (:vendorBillIds)
+                FOR UPDATE
+                """;
+        jdbcTemplate.query(sql,
+                new MapSqlParameterSource().addValue("vendorBillIds", vendorBillIds),
+                (rs, rowNum) -> rs.getLong("id"));
     }
 
     @Override
