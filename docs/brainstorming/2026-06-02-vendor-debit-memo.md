@@ -1634,7 +1634,7 @@ Scope:
 Suggested plan:
 
 ```text
-docs/plans/2026-06-02-debit-memo-allocation.md
+docs/plans/2026-06-02-phase-e-debit-memo-allocation.md
 ```
 
 Depends on: Phase C and Phase D.
