@@ -446,3 +446,23 @@ INSERT INTO acc_schema_lines (schema_id, variable, account_id, position)
 VALUES
     (@prt_schema_id, 'PR_GRIR_CLEARING_AMT', 9402, 'DEBIT'),
     (@prt_schema_id, 'PR_INVENTORY_AMT', 9401, 'CREDIT');
+
+-- V74 runs before E2E-only COA rows exist, so refresh DEBIT_MEMO_APPLICATION schema lines here.
+SET @dma_schema_id = (SELECT id FROM acc_accounting_schemas WHERE event_type = 'DEBIT_MEMO_APPLICATION' AND is_active = TRUE LIMIT 1);
+
+INSERT INTO acc_accounting_schemas
+    (event_type, description, is_active, version, created_by_user_id, created_date)
+SELECT 'DEBIT_MEMO_APPLICATION', 'E2E debit memo application posting schema', TRUE, 1, 1, NOW()
+WHERE @dma_schema_id IS NULL;
+
+SET @dma_schema_id = COALESCE(@dma_schema_id, LAST_INSERT_ID());
+
+DELETE FROM acc_schema_lines WHERE schema_id = @dma_schema_id;
+
+INSERT INTO acc_schema_lines (schema_id, variable, account_id, position)
+VALUES
+    (@dma_schema_id, 'DMA_AP_AMT', 9403, 'DEBIT'),
+    (@dma_schema_id, 'DMA_GRIR_CLEARING_AMT', 9402, 'CREDIT'),
+    (@dma_schema_id, 'DMA_TAX_AMT', 9404, 'CREDIT'),
+    (@dma_schema_id, 'DMA_FX_LOSS_AMT', 9406, 'DEBIT'),
+    (@dma_schema_id, 'DMA_FX_GAIN_AMT', 9407, 'CREDIT');

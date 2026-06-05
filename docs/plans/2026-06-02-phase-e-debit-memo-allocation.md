@@ -25,41 +25,41 @@ Phase E implements Debit Memo Allocation (DMA): a draftable AP settlement docume
 - Scope deferred from Phase E: Vendor Refund, Purchase Return confirmed reversal, tax override on DMA, partial Purchase Return reversal, and legacy corrective journals.
   ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:1697](../brainstorming/2026-06-02-vendor-debit-memo.md)
 
-## Task 1: Database, Sequence, Permissions, And Accounting Contract
+## Task 1: Database, Sequence, Permissions, And Accounting Contract [x]
 
 Create the persistent DMA contract and journal schema event before app code depends on it.
 
 **Depends on:** none
 **Ref mod:** `accountspayable.vendorpayment`, `accountspayable.debitmemo`, `accounting.schema`
 
-- [ ] Add `SchemaEventType.DEBIT_MEMO_APPLICATION`.
+- [x] Add `SchemaEventType.DEBIT_MEMO_APPLICATION`.
       ref: [src/main/java/com/solusi/erp/accounting/schema/domain/model/SchemaEventType.java:7](../../src/main/java/com/solusi/erp/accounting/schema/domain/model/SchemaEventType.java)
-- [ ] Add `JournalVariable` values for `DMA_AP_AMT`, `DMA_GRIR_CLEARING_AMT`, `DMA_TAX_AMT`, `DMA_FX_LOSS_AMT`, and `DMA_FX_GAIN_AMT`, all bound to `DEBIT_MEMO_APPLICATION`.
+- [x] Add `JournalVariable` values for `DMA_AP_AMT`, `DMA_GRIR_CLEARING_AMT`, `DMA_TAX_AMT`, `DMA_FX_LOSS_AMT`, and `DMA_FX_GAIN_AMT`, all bound to `DEBIT_MEMO_APPLICATION`.
       ref: [src/main/java/com/solusi/erp/accounting/journal/domain/model/JournalVariable.java:7](../../src/main/java/com/solusi/erp/accounting/journal/domain/model/JournalVariable.java)
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:628](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Create `V74__Add_Debit_Memo_Allocation.sql` in `src/main/resources/db/migration` and `src/main/resources/db/migration-h2`.
+- [x] Create `V74__Add_Debit_Memo_Allocation.sql` in `src/main/resources/db/migration` and `src/main/resources/db/migration-h2`.
       ref: [src/main/resources/db/migration/V63__Add_Vendor_Payment_Module.sql:4](../../src/main/resources/db/migration/V63__Add_Vendor_Payment_Module.sql)
       ref: [docs/reports/2026-06-02-phase-d-debit-memo-core.md:11](../reports/2026-06-02-phase-d-debit-memo-core.md)
-- [ ] Add `ap_debit_memo_allocations` header table with `code`, `debit_memo_id`, `debit_memo_code`, `allocation_date`, `status`, total gross/original/base/FX snapshots, `apply_journal_entry_id`, `reversal_journal_entry_id`, `reversal_date`, `reversal_reason`, audit columns, and optimistic `version`.
+- [x] Add `ap_debit_memo_allocations` header table with `code`, `debit_memo_id`, `debit_memo_code`, `allocation_date`, `status`, total gross/original/base/FX snapshots, `apply_journal_entry_id`, `reversal_journal_entry_id`, `reversal_date`, `reversal_reason`, audit columns, and optimistic `version`.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:1353](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Add `ap_debit_memo_allocation_lines` with one row per Vendor Bill header: `vendor_bill_id`, `vendor_bill_code`, draft remaining/outstanding snapshots, `applied_gross_original`, prorated DPP/tax original, GRIR/tax base reversal, Vendor Bill exchange rate, AP reduction base, FX gain/loss base.
+- [x] Add `ap_debit_memo_allocation_lines` with one row per Vendor Bill header: `vendor_bill_id`, `vendor_bill_code`, draft remaining/outstanding snapshots, `applied_gross_original`, prorated DPP/tax original, GRIR/tax base reversal, Vendor Bill exchange rate, AP reduction base, FX gain/loss base.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:1374](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Add db guards and indexes: unique DMA code, FK to Debit Memo/Vendor Bill/journal entries, index by Debit Memo/status, index by Vendor Bill/status, list keyword index, and a unique `(debit_memo_allocation_id, vendor_bill_id)` line guard.
+- [x] Add db guards and indexes: unique DMA code, FK to Debit Memo/Vendor Bill/journal entries, index by Debit Memo/status, index by Vendor Bill/status, list keyword index, and a unique `(debit_memo_allocation_id, vendor_bill_id)` line guard.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:208](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Add `system_sequences` row `DEBIT_MEMO_ALLOCATION` with `DMA-{date:yyyyMM}-{seq}`.
+- [x] Add `system_sequences` row `DEBIT_MEMO_ALLOCATION` with `DMA-{date:yyyyMM}-{seq}`.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:183](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Add permission group/menu entry under Accounts Payable, probably `AP-04`, URL `/accounts-payable/debit-memo-allocations`, icon `ti-file-check`, sort after Debit Memo.
+- [x] Add permission group/menu entry under Accounts Payable, probably `AP-04`, URL `/accounts-payable/debit-memo-allocations`, icon `ti-file-check`, sort after Debit Memo.
       ref: [src/main/resources/db/migration/V73__Add_Debit_Memo_Core.sql:86](../../src/main/resources/db/migration/V73__Add_Debit_Memo_Core.sql)
-- [ ] Add permissions: `DEBIT-MEMO-ALLOCATION_READ`, `CREATE`, `UPDATE`, `CONFIRM`, `CANCEL`, `REVERSE`, and grant them to `ROLE_ADMIN`.
+- [x] Add permissions: `DEBIT-MEMO-ALLOCATION_READ`, `CREATE`, `UPDATE`, `CONFIRM`, `CANCEL`, `REVERSE`, and grant them to `ROLE_ADMIN`.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:937](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Seed active accounting schema for `DEBIT_MEMO_APPLICATION`: AP debit, GRIR credit, Input VAT credit, FX loss debit, FX gain credit.
+- [x] Seed active accounting schema for `DEBIT_MEMO_APPLICATION`: AP debit, GRIR credit, Input VAT credit, FX loss debit, FX gain credit.
       ref: [src/main/resources/db/migration/V62__Vendor_Payment_Accounting_Schema.sql:4](../../src/main/resources/db/migration/V62__Vendor_Payment_Accounting_Schema.sql)
       ref: [docs/database/dev-seeder/D220__accounting_schema.sql:74](../database/dev-seeder/D220__accounting_schema.sql)
-- [ ] Update `docs/database/dev-seeder/D220__accounting_schema.sql` and H2 E2E seed refresh block for the new event and variables.
+- [x] Update `docs/database/dev-seeder/D220__accounting_schema.sql` and H2 E2E seed refresh block for the new event and variables.
       ref: [src/main/resources/db/migration-h2/V9000__e2e_seed_data.sql:259](../../src/main/resources/db/migration-h2/V9000__e2e_seed_data.sql)
-- [ ] TEST: Add migration contract test similar to `DebitMemoCoreMigrationTest` for V74 tables, sequence, permissions, schema event, MariaDB/H2 token parity, and E2E seed tokens.
+- [x] TEST: Add migration contract test similar to `DebitMemoCoreMigrationTest` for V74 tables, sequence, permissions, schema event, MariaDB/H2 token parity, and E2E seed tokens.
       ref: [src/test/java/com/solusi/erp/accountspayable/debitmemo/infrastructure/persistence/DebitMemoCoreMigrationTest.java:18](../../src/test/java/com/solusi/erp/accountspayable/debitmemo/infrastructure/persistence/DebitMemoCoreMigrationTest.java)
-- [ ] TEST: Extend journal variable/message tests to cover `DEBIT_MEMO_APPLICATION`.
+- [x] TEST: Extend journal variable/message tests to cover `DEBIT_MEMO_APPLICATION`.
       ref: [docs/plans/2026-06-02-phase-b-purchase-return-accounting.md](2026-06-02-phase-b-purchase-return-accounting.md)
 
 **Validation criteria:**

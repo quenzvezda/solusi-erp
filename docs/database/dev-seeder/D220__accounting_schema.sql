@@ -37,6 +37,7 @@ VALUES
 ('CUSTOMER_INVOICE',     'Issue customer invoice for inventory sales.',                      1, 1, 1, NOW(), @seeded_updated_by, NOW()),
 ('GOODS_ISSUE',          'Relieve inventory and recognize material cost of sales.',          1, 1, 1, NOW(), @seeded_updated_by, NOW()),
 ('PURCHASE_RETURN',      'Reverse inventory and goods receipt clearing for supplier returns.', 1, 1, 1, NOW(), @seeded_updated_by, NOW()),
+('DEBIT_MEMO_APPLICATION', 'Apply vendor debit memo against vendor bill liability.',          1, 1, 1, NOW(), @seeded_updated_by, NOW()),
 ('CUSTOMER_RECEIPT',     'Receive customer payment to the main bank account.',               1, 1, 1, NOW(), @seeded_updated_by, NOW()),
 ('STOCK_ADJUSTMENT_IN',  'Increase stock from a positive inventory adjustment.',             1, 1, 1, NOW(), @seeded_updated_by, NOW()),
 ('STOCK_ADJUSTMENT_OUT', 'Decrease stock from a negative inventory adjustment.',             1, 1, 1, NOW(), @seeded_updated_by, NOW())
@@ -56,6 +57,7 @@ WHERE schema_header.event_type IN (
     'CUSTOMER_INVOICE',
     'GOODS_ISSUE',
     'PURCHASE_RETURN',
+    'DEBIT_MEMO_APPLICATION',
     'CUSTOMER_RECEIPT',
     'STOCK_ADJUSTMENT_IN',
     'STOCK_ADJUSTMENT_OUT'
@@ -67,6 +69,7 @@ SET @schema_vp  = (SELECT id FROM acc_accounting_schemas WHERE event_type = 'VEN
 SET @schema_ci  = (SELECT id FROM acc_accounting_schemas WHERE event_type = 'CUSTOMER_INVOICE');
 SET @schema_gi  = (SELECT id FROM acc_accounting_schemas WHERE event_type = 'GOODS_ISSUE');
 SET @schema_prt = (SELECT id FROM acc_accounting_schemas WHERE event_type = 'PURCHASE_RETURN');
+SET @schema_dma = (SELECT id FROM acc_accounting_schemas WHERE event_type = 'DEBIT_MEMO_APPLICATION');
 SET @schema_cr  = (SELECT id FROM acc_accounting_schemas WHERE event_type = 'CUSTOMER_RECEIPT');
 SET @schema_sai = (SELECT id FROM acc_accounting_schemas WHERE event_type = 'STOCK_ADJUSTMENT_IN');
 SET @schema_sao = (SELECT id FROM acc_accounting_schemas WHERE event_type = 'STOCK_ADJUSTMENT_OUT');
@@ -90,6 +93,11 @@ VALUES
 (@schema_gi,  'GI_INVENTORY_AMT',      @coa_merchandise_inventory, 'CREDIT'),
 (@schema_prt, 'PR_GRIR_CLEARING_AMT',  @coa_grir_clearing,         'DEBIT'),
 (@schema_prt, 'PR_INVENTORY_AMT',      @coa_merchandise_inventory, 'CREDIT'),
+(@schema_dma, 'DMA_AP_AMT',            @coa_accounts_payable,      'DEBIT'),
+(@schema_dma, 'DMA_GRIR_CLEARING_AMT', @coa_grir_clearing,         'CREDIT'),
+(@schema_dma, 'DMA_TAX_AMT',           @coa_input_vat,             'CREDIT'),
+(@schema_dma, 'DMA_FX_LOSS_AMT',       @coa_fx_loss,               'DEBIT'),
+(@schema_dma, 'DMA_FX_GAIN_AMT',       @coa_fx_gain,               'CREDIT'),
 (@schema_cr,  'CR_BANK_IN_AMT',        @coa_main_bank,             'DEBIT'),
 (@schema_cr,  'CR_AR_AMT',             @coa_trade_receivable,      'CREDIT'),
 (@schema_sai, 'SAI_INVENTORY_AMT',     @coa_merchandise_inventory, 'DEBIT'),
@@ -98,5 +106,5 @@ VALUES
 (@schema_sao, 'SAO_INVENTORY_AMT',     @coa_merchandise_inventory, 'CREDIT');
 
 -- Validation queries for manual checks.
--- SELECT event_type, COUNT(*) AS header_count FROM acc_accounting_schemas WHERE event_type IN ('GOODS_RECEIPT','VENDOR_BILL','VENDOR_PAYMENT','CUSTOMER_INVOICE','GOODS_ISSUE','PURCHASE_RETURN','CUSTOMER_RECEIPT','STOCK_ADJUSTMENT_IN','STOCK_ADJUSTMENT_OUT') GROUP BY event_type;
--- SELECT s.event_type, COUNT(l.id) AS line_count FROM acc_accounting_schemas s LEFT JOIN acc_schema_lines l ON l.schema_id = s.id WHERE s.event_type IN ('GOODS_RECEIPT','VENDOR_BILL','VENDOR_PAYMENT','CUSTOMER_INVOICE','GOODS_ISSUE','PURCHASE_RETURN','CUSTOMER_RECEIPT','STOCK_ADJUSTMENT_IN','STOCK_ADJUSTMENT_OUT') GROUP BY s.event_type ORDER BY s.event_type; -- Expected: 3,5,2,3,2,2,2,2,2
+-- SELECT event_type, COUNT(*) AS header_count FROM acc_accounting_schemas WHERE event_type IN ('GOODS_RECEIPT','VENDOR_BILL','VENDOR_PAYMENT','CUSTOMER_INVOICE','GOODS_ISSUE','PURCHASE_RETURN','DEBIT_MEMO_APPLICATION','CUSTOMER_RECEIPT','STOCK_ADJUSTMENT_IN','STOCK_ADJUSTMENT_OUT') GROUP BY event_type;
+-- SELECT s.event_type, COUNT(l.id) AS line_count FROM acc_accounting_schemas s LEFT JOIN acc_schema_lines l ON l.schema_id = s.id WHERE s.event_type IN ('GOODS_RECEIPT','VENDOR_BILL','VENDOR_PAYMENT','CUSTOMER_INVOICE','GOODS_ISSUE','PURCHASE_RETURN','DEBIT_MEMO_APPLICATION','CUSTOMER_RECEIPT','STOCK_ADJUSTMENT_IN','STOCK_ADJUSTMENT_OUT') GROUP BY s.event_type ORDER BY s.event_type; -- Expected counts include DEBIT_MEMO_APPLICATION=5
