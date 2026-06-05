@@ -45,6 +45,9 @@ class PayableVendorBillQueryAdapterTest {
         assertThat(sqlCaptor.getValue()).contains("vb.document_status = 'CONFIRMED'");
         assertThat(sqlCaptor.getValue()).contains("vb.settlement_status IN ('OPEN', 'PARTIALLY_SETTLED')");
         assertThat(sqlCaptor.getValue()).contains("vp.status = 'CONFIRMED'");
+        assertThat(sqlCaptor.getValue()).contains("ap_debit_memo_allocation_lines");
+        assertThat(sqlCaptor.getValue()).contains("dma.status = 'CONFIRMED'");
+        assertThat(sqlCaptor.getValue()).contains("- COALESCE(dma.debit_memo_applied_amount, 0)");
         assertThat(sqlCaptor.getValue()).contains("s.outstanding_amount > 0");
         assertThat(sqlCaptor.getValue()).doesNotContain("vb.status");
         assertThat(paramsCaptor.getValue().getValue("vendorId")).isEqualTo(10L);

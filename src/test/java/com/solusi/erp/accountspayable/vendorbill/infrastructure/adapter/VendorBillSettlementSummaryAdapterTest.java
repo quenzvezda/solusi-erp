@@ -36,10 +36,10 @@ class VendorBillSettlementSummaryAdapterTest {
     }
 
     @Test
-    void getSettlementSummaries_should_query_confirmed_vendor_payments_without_outstanding_filter() {
+    void getSettlementSummaries_should_query_confirmed_payments_and_dma_without_outstanding_filter() {
         List<SettlementSummary> expected = List.of(
-                new SettlementSummary(4L, new BigDecimal("50000000.00"), BigDecimal.ZERO, new BigDecimal("25000000.00"), VendorBillSettlementStatus.PARTIALLY_SETTLED),
-                new SettlementSummary(5L, new BigDecimal("10000000.00"), BigDecimal.ZERO, BigDecimal.ZERO, VendorBillSettlementStatus.SETTLED)
+                new SettlementSummary(4L, new BigDecimal("50000000.00"), new BigDecimal("5000000.00"), new BigDecimal("20000000.00"), VendorBillSettlementStatus.PARTIALLY_SETTLED),
+                new SettlementSummary(5L, BigDecimal.ZERO, new BigDecimal("10000000.00"), BigDecimal.ZERO, VendorBillSettlementStatus.SETTLED)
         );
         when(jdbcTemplate.query(any(String.class), any(MapSqlParameterSource.class), any(RowMapper.class)))
                 .thenReturn(expected);
@@ -52,7 +52,10 @@ class VendorBillSettlementSummaryAdapterTest {
         ArgumentCaptor<MapSqlParameterSource> paramCaptor = ArgumentCaptor.forClass(MapSqlParameterSource.class);
         verify(jdbcTemplate).query(sqlCaptor.capture(), paramCaptor.capture(), any(RowMapper.class));
         assertThat(sqlCaptor.getValue()).contains("vp.status = 'CONFIRMED'");
+        assertThat(sqlCaptor.getValue()).contains("ap_debit_memo_allocation_lines");
+        assertThat(sqlCaptor.getValue()).contains("dma.status = 'CONFIRMED'");
         assertThat(sqlCaptor.getValue()).contains("debit_memo_applied_amount");
+        assertThat(sqlCaptor.getValue()).contains("- COALESCE(dma.debit_memo_applied_amount, 0)");
         assertThat(sqlCaptor.getValue()).contains("raw_outstanding_amount < 0 THEN 0");
         assertThat(sqlCaptor.getValue()).contains("PARTIALLY_SETTLED");
         assertThat(sqlCaptor.getValue()).doesNotContain("HAVING");
@@ -69,7 +72,7 @@ class VendorBillSettlementSummaryAdapterTest {
 
     @Test
     void getSettlementSummary_should_return_single_summary() {
-        SettlementSummary expected = new SettlementSummary(4L, new BigDecimal("50000000.00"), BigDecimal.ZERO, new BigDecimal("25000000.00"), VendorBillSettlementStatus.PARTIALLY_SETTLED);
+        SettlementSummary expected = new SettlementSummary(4L, new BigDecimal("50000000.00"), new BigDecimal("5000000.00"), new BigDecimal("20000000.00"), VendorBillSettlementStatus.PARTIALLY_SETTLED);
         when(jdbcTemplate.query(any(String.class), any(MapSqlParameterSource.class), any(RowMapper.class)))
                 .thenReturn(List.of(expected));
 

@@ -25,3 +25,10 @@ This report is populated during plan execution.
 - **Summary:** Added DMA JPA header/line entities, MapStruct persistence mapper, JPA repository, domain repository adapter, history projections, list/detail/history query use cases, `DebitMemoAllocationConfig`, and a real Debit Memo consumption adapter. Debit Memo list/detail recaps now use confirmed DMA applied totals.
 - **Tests:** `mvn test -Dtest="DebitMemoAllocationRepositoryImplTest,DebitMemoAllocationQueryUseCaseTest,DebitMemoAllocationConfigTest,DebitMemoCommandUseCaseTest,DebitMemoQueryUseCaseTest,DebitMemoConfigTest"` passed with 22 tests.
 - **Notes:** Lock-specific confirm/reverse behavior remains implemented in the later confirm/reverse workflow tasks; Task 3 provides the repository and consumption surfaces needed by those flows.
+
+## Task 4: Cross-Slice Vendor Bill Settlement Integration
+
+- **Status:** Completed.
+- **Summary:** Vendor Bill settlement summary, Vendor Payment payable selector, and Vendor Payment stale-confirm guard now subtract confirmed DMA line applications alongside confirmed payments. Settlement status recalculation now considers paid amount plus DMA applied amount, and stale outstanding failures use a specific race-condition message key.
+- **Tests:** `mvn test -Dtest="VendorBillSettlementSummaryAdapterTest,*Payable*Test,ConfirmVendorPaymentUseCaseTest,VendorPaymentConfigTest,VendorBillPaymentUpdateAdapterTest"` passed with 15 tests.
+- **Notes:** The existing `VendorBillPaymentUpdatePort` name is kept for compatibility during Phase E; the implementation is now settlement-source aware and can be generalized later if more AP settlement sources are added.

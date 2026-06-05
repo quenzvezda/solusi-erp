@@ -44,16 +44,27 @@ public class VendorBillSettlementSummaryAdapter implements VendorBillSettlementS
                 FROM (
                     SELECT vb.id AS vendor_bill_id,
                            vb.document_status,
-                           COALESCE(SUM(vpl.paid_amount), 0) AS paid_amount,
-                           CAST(0 AS DECIMAL(19,4)) AS debit_memo_applied_amount,
-                           vb.total_amount - COALESCE(SUM(vpl.paid_amount), 0) AS raw_outstanding_amount
+                           COALESCE(payment.paid_amount, 0) AS paid_amount,
+                           COALESCE(dma.debit_memo_applied_amount, 0) AS debit_memo_applied_amount,
+                           vb.total_amount
+                               - COALESCE(payment.paid_amount, 0)
+                               - COALESCE(dma.debit_memo_applied_amount, 0) AS raw_outstanding_amount
                     FROM ap_vendor_bills vb
-                    LEFT JOIN ap_vendor_payment_lines vpl ON vpl.vendor_bill_id = vb.id
-                        AND vpl.vendor_payment_id IN (
-                            SELECT vp.id FROM ap_vendor_payments vp WHERE vp.status = 'CONFIRMED'
-                        )
+                    LEFT JOIN (
+                        SELECT vpl.vendor_bill_id, SUM(vpl.paid_amount) AS paid_amount
+                        FROM ap_vendor_payment_lines vpl
+                        JOIN ap_vendor_payments vp ON vp.id = vpl.vendor_payment_id
+                        WHERE vp.status = 'CONFIRMED'
+                        GROUP BY vpl.vendor_bill_id
+                    ) payment ON payment.vendor_bill_id = vb.id
+                    LEFT JOIN (
+                        SELECT dmal.vendor_bill_id, SUM(dmal.applied_gross_original) AS debit_memo_applied_amount
+                        FROM ap_debit_memo_allocation_lines dmal
+                        JOIN ap_debit_memo_allocations dma ON dma.id = dmal.debit_memo_allocation_id
+                        WHERE dma.status = 'CONFIRMED'
+                        GROUP BY dmal.vendor_bill_id
+                    ) dma ON dma.vendor_bill_id = vb.id
                     WHERE vb.id IN (:vendorBillIds)
-                    GROUP BY vb.id, vb.document_status, vb.total_amount
                 ) s
                 """;
 

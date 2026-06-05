@@ -68,12 +68,12 @@ class ConfirmVendorPaymentUseCaseTest {
     void execute_doesNotPostJournalWhenGuardRejects() {
         VendorPayment payment = draftPaymentWithId(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(payment));
-        doThrow(new DomainException("msg.err.vp.vendor.bill.overapplied"))
+        doThrow(new DomainException("msg.error.vendor-bill.outstanding.changed"))
                 .when(vendorBillPaymentUpdatePort).lockAndValidatePayment(payment);
 
         assertThatThrownBy(() -> useCase.execute(1L))
                 .isInstanceOf(DomainException.class)
-                .hasMessageContaining("msg.err.vp.vendor.bill.overapplied");
+                .hasMessageContaining("msg.error.vendor-bill.outstanding.changed");
 
         verify(vendorBillPaymentUpdatePort).lockAndValidatePayment(payment);
         verifyNoInteractions(postJournalForEventUseCase);

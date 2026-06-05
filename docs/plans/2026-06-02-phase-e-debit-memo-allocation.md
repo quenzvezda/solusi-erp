@@ -126,28 +126,28 @@ Persist DMA and provide read models for list/detail/history/selectors without co
 **Validation criteria:**
 - `mvn test -Dtest="DebitMemoAllocationRepositoryImplTest,DebitMemoAllocationQueryUseCaseTest,DebitMemoAllocationConfigTest,DebitMemoCommandUseCaseTest"`
 
-## Task 4: Cross-Slice Vendor Bill Settlement Integration
+## Task 4: Cross-Slice Vendor Bill Settlement Integration [x]
 
 Make Vendor Bill outstanding and Vendor Payment revalidation aware of confirmed DMA consumption before DMA confirmation is exposed.
 
 **Depends on:** Task 3
 **Ref mod:** `accountspayable.vendorbill`, `accountspayable.vendorpayment`
 
-- [ ] Update `VendorBillSettlementSummaryAdapter` SQL to subtract confirmed, non-reversed DMA lines in `debitMemoAppliedAmount` and `outstandingAmount`.
+- [x] Update `VendorBillSettlementSummaryAdapter` SQL to subtract confirmed, non-reversed DMA lines in `debitMemoAppliedAmount` and `outstandingAmount`.
       ref: [src/main/java/com/solusi/erp/accountspayable/vendorbill/infrastructure/adapter/VendorBillSettlementSummaryAdapter.java:30](../../src/main/java/com/solusi/erp/accountspayable/vendorbill/infrastructure/adapter/VendorBillSettlementSummaryAdapter.java)
-- [ ] Update `PayableVendorBillQueryAdapter` so Vendor Payment selectors exclude DMA-applied amounts and show accurate outstanding after DMA confirmation/reversal.
+- [x] Update `PayableVendorBillQueryAdapter` so Vendor Payment selectors exclude DMA-applied amounts and show accurate outstanding after DMA confirmation/reversal.
       ref: [src/main/java/com/solusi/erp/accountspayable/vendorpayment/infrastructure/adapter/PayableVendorBillQueryAdapter.java:20](../../src/main/java/com/solusi/erp/accountspayable/vendorpayment/infrastructure/adapter/PayableVendorBillQueryAdapter.java)
-- [ ] Update `VendorBillPaymentUpdateAdapter.lockAndValidatePayment(...)` to lock and recalc outstanding including confirmed DMA lines.
+- [x] Update `VendorBillPaymentUpdateAdapter.lockAndValidatePayment(...)` to lock and recalc outstanding including confirmed DMA lines.
       ref: [src/main/java/com/solusi/erp/accountspayable/vendorpayment/infrastructure/adapter/VendorBillPaymentUpdateAdapter.java:92](../../src/main/java/com/solusi/erp/accountspayable/vendorpayment/infrastructure/adapter/VendorBillPaymentUpdateAdapter.java)
-- [ ] Update `VendorBillPaymentUpdateAdapter.updateSettlementStatus(...)` so settlement status considers paid amount + DMA applied amount.
+- [x] Update `VendorBillPaymentUpdateAdapter.updateSettlementStatus(...)` so settlement status considers paid amount + DMA applied amount.
       ref: [src/main/java/com/solusi/erp/accountspayable/vendorpayment/infrastructure/adapter/VendorBillPaymentUpdateAdapter.java:53](../../src/main/java/com/solusi/erp/accountspayable/vendorpayment/infrastructure/adapter/VendorBillPaymentUpdateAdapter.java)
-- [ ] Add or rename a neutral port if the existing `VendorBillPaymentUpdatePort` name becomes misleading after DMA owns the same logic; keep web/controllers dependent only on use cases/ports.
+- [x] Add or rename a neutral port if the existing `VendorBillPaymentUpdatePort` name becomes misleading after DMA owns the same logic; keep web/controllers dependent only on use cases/ports.
       ref: [docs/AGENTS.md:184](../AGENTS.md)
-- [ ] Add specific stale messages for payment/DMA races: Vendor Bill outstanding changed, Debit Memo remaining changed.
+- [x] Add specific stale messages for payment/DMA races: Vendor Bill outstanding changed, Debit Memo remaining changed.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:591](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] TEST: Extend settlement summary adapter tests to cover paid-only, DMA-only, mixed paid+DMA, over-applied clamp, and reversal restored outstanding.
+- [x] TEST: Extend settlement summary adapter tests to cover paid-only, DMA-only, mixed paid+DMA, over-applied clamp, and reversal restored outstanding.
       ref: [docs/reports/2026-06-02-phase-c-vendor-bill-settlement-refactor.md:31](../reports/2026-06-02-phase-c-vendor-bill-settlement-refactor.md)
-- [ ] TEST: Extend Vendor Payment confirm tests so a stale payment draft fails when a confirmed DMA already consumed the outstanding.
+- [x] TEST: Extend Vendor Payment confirm tests so a stale payment draft fails when a confirmed DMA already consumed the outstanding.
       ref: [src/test/java/com/solusi/erp/accountspayable/vendorpayment/application/usecase/command/ConfirmVendorPaymentUseCaseTest.java:66](../../src/test/java/com/solusi/erp/accountspayable/vendorpayment/application/usecase/command/ConfirmVendorPaymentUseCaseTest.java)
 
 **Validation criteria:**

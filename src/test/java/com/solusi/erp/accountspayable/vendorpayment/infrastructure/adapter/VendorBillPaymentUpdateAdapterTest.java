@@ -57,6 +57,8 @@ class VendorBillPaymentUpdateAdapterTest {
                 .query(sqlCaptor.capture(), any(MapSqlParameterSource.class), any(RowMapper.class));
         assertThat(sqlCaptor.getAllValues().get(0)).contains("FOR UPDATE");
         assertThat(sqlCaptor.getAllValues().get(1)).contains("vb.document_status", "vb.settlement_status", "outstanding_amount");
+        assertThat(sqlCaptor.getAllValues().get(1)).contains("ap_debit_memo_allocation_lines");
+        assertThat(sqlCaptor.getAllValues().get(1)).contains("dma.status = 'CONFIRMED'");
     }
 
     @Test
@@ -71,6 +73,8 @@ class VendorBillPaymentUpdateAdapterTest {
         assertThat(sqlCaptor.getValue()).contains("THEN 'PARTIALLY_SETTLED'");
         assertThat(sqlCaptor.getValue()).contains("ELSE 'OPEN'");
         assertThat(sqlCaptor.getValue()).contains("vb.document_status = 'CONFIRMED'");
+        assertThat(sqlCaptor.getValue()).contains("ap_debit_memo_allocation_lines");
+        assertThat(sqlCaptor.getValue()).contains("dma.status = 'CONFIRMED'");
         assertThat(sqlCaptor.getValue()).doesNotContain("vb.status");
         assertThat(paramsCaptor.getValue().getValue("billIds")).isEqualTo(List.of(10L, 11L));
     }
