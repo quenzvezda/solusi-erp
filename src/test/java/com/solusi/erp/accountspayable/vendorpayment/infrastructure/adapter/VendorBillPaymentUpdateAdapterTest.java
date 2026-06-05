@@ -68,11 +68,11 @@ class VendorBillPaymentUpdateAdapterTest {
         ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<MapSqlParameterSource> paramsCaptor = ArgumentCaptor.forClass(MapSqlParameterSource.class);
         verify(jdbcTemplate).update(sqlCaptor.capture(), paramsCaptor.capture());
-        assertThat(sqlCaptor.getValue()).contains("SET vb.settlement_status = CASE");
+        assertThat(sqlCaptor.getValue()).contains("SET settlement_status = CASE");
         assertThat(sqlCaptor.getValue()).contains("THEN 'SETTLED'");
         assertThat(sqlCaptor.getValue()).contains("THEN 'PARTIALLY_SETTLED'");
         assertThat(sqlCaptor.getValue()).contains("ELSE 'OPEN'");
-        assertThat(sqlCaptor.getValue()).contains("vb.document_status = 'CONFIRMED'");
+        assertThat(sqlCaptor.getValue()).contains("document_status = 'CONFIRMED'");
         assertThat(sqlCaptor.getValue()).contains("ap_debit_memo_allocation_lines");
         assertThat(sqlCaptor.getValue()).contains("dma.status = 'CONFIRMED'");
         assertThat(sqlCaptor.getValue()).doesNotContain("vb.status");

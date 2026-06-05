@@ -14,8 +14,8 @@
     <div class="page-body">
         <div class="container-xl">
             <form id="debit-memo-allocation-form"
-                  th:object="${form.request()}"
-                  th:action="${form.editMode()} ? @{/accounts-payable/debit-memo-allocations/{id}(id=${form.request().id})} : @{/accounts-payable/debit-memo-allocations}"
+                  th:object="${request}"
+                  th:action="${form.editMode()} ? @{/accounts-payable/debit-memo-allocations/{id}(id=${request.id})} : @{/accounts-payable/debit-memo-allocations}"
                   method="post"
                   data-ajax-form="true"
                   data-redirect-on-success="/accounts-payable/debit-memo-allocations">
@@ -63,7 +63,7 @@
                                     <span class="dma-line-code" th:text="${line.vendorBillCode ?: line.vendorBillId}">VB</span>
                                 </td>
                                 <td class="text-end"><span class="dma-line-outstanding" th:text="${line.vendorBillOutstandingAtDraft != null ? #numbers.formatDecimal(line.vendorBillOutstandingAtDraft, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</span></td>
-                                <td><input type="text" class="form-control form-control-sm text-end dma-applied-input erp-num-decimal" data-autonumeric="currency" th:name="'lines[' + ${stat.index} + '].appliedGrossOriginal'" th:value="${line.appliedGrossOriginal}"></td>
+                                <td><input type="text" class="form-control form-control-sm text-end dma-applied-input erp-number-decimal" th:name="'lines[' + ${stat.index} + '].appliedGrossOriginal'" th:value="${line.appliedGrossOriginal}"></td>
                                 <td class="text-center"><button type="button" class="btn btn-sm btn-ghost-danger js-dma-remove-line"><i class="ti ti-trash"></i></button></td>
                             </tr>
                             </tbody>

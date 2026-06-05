@@ -55,6 +55,11 @@ public class DebitMemoRepositoryImpl implements DebitMemoRepository {
     }
 
     @Override
+    public void updateSettlementStatus(Long id, DebitMemoSettlementStatus settlementStatus) {
+        jpaRepository.updateSettlementStatus(id, settlementStatus);
+    }
+
+    @Override
     public Optional<DebitMemo> findById(Long id) {
         return jpaRepository.findById(id).map(mapper::toDomain);
     }
@@ -79,4 +84,3 @@ public class DebitMemoRepositoryImpl implements DebitMemoRepository {
         return jpaRepository.existsTaxDocumentNumber(taxDocumentNumber, excludedId);
     }
 }
-

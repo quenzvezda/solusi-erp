@@ -303,37 +303,37 @@ Document the final Phase E behavior and update user-facing labels/messages.
 - `mvn test -Dtest="*MessageBundleTest"`
 - Manual doc scan for stale text: `Phase E deferred`, `allocation-history.empty`, and `debitMemoAppliedAmount = 0` in AP docs/templates should be intentional only.
 
-## Task 10: Playwright E2E And Regression Gate
+## Task 10: Playwright E2E And Regression Gate [x]
 
 Prove the browser flow and cross-module settlement behavior work end-to-end.
 
 **Depends on:** Tasks 1-9
 **Ref mod:** existing AP E2E
 
-- [ ] Read Playwright guide and pitfalls before editing specs; do not use `selectTomSelect`, do not rely on `page.on('dialog')` for ERP confirms, and run the spec before marking complete.
+- [x] Read Playwright guide and pitfalls before editing specs; do not use `selectTomSelect`, do not rely on `page.on('dialog')` for ERP confirms, and run the spec before marking complete.
       ref: [docs/tests/playwright-pitfalls.md:24](../tests/playwright-pitfalls.md)
       ref: [docs/tests/playwright-e2e-guide.md:14](../tests/playwright-e2e-guide.md)
-- [ ] Add `e2e-tests/tests/accountspayable/debit-memo-allocation.spec.ts` or extend AP specs with a focused DMA scenario file.
+- [x] Add `e2e-tests/tests/accountspayable/debit-memo-allocation.spec.ts` or extend AP specs with a focused DMA scenario file.
       ref: [e2e-tests/tests/accountspayable/vendor-payment.spec.ts:316](../../e2e-tests/tests/accountspayable/vendor-payment.spec.ts)
-- [ ] Scenario A: create Purchase Return -> generated Debit Memo -> create confirmed Vendor Bill gross -> create DMA draft from Debit Memo detail -> confirm -> verify DM `SETTLED`, VB outstanding reduced/settled, and `DEBIT_MEMO_APPLICATION` journal visible.
+- [x] Scenario A: create Purchase Return -> generated Debit Memo -> create confirmed Vendor Bill gross -> create DMA draft from Debit Memo detail -> confirm -> verify DM `SETTLED`, VB outstanding reduced/settled, and `DEBIT_MEMO_APPLICATION` journal visible.
       ref: [e2e-tests/tests/procurement/purchase-return.spec.ts](../../e2e-tests/tests/procurement/purchase-return.spec.ts)
-- [ ] Scenario B: partial allocation leaves Debit Memo `PARTIALLY_SETTLED` and Vendor Bill `PARTIALLY_SETTLED` or `OPEN` according to remaining outstanding.
+- [x] Scenario B: partial allocation leaves Debit Memo `PARTIALLY_SETTLED` and Vendor Bill `PARTIALLY_SETTLED` or `OPEN` according to remaining outstanding.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:484](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Scenario C: one Debit Memo allocated across two Vendor Bills.
+- [x] Scenario C: one Debit Memo allocated across two Vendor Bills.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:145](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Scenario D: Vendor Bill detail Apply Debit Memo shortcut opens DM selector and creates a draft with the bill line preselected.
+- [x] Scenario D: Vendor Bill detail Apply Debit Memo shortcut opens DM selector and creates a draft with the bill line preselected.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:756](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Scenario E: stale DMA draft cannot confirm after another DMA or Vendor Payment consumes the same Vendor Bill outstanding.
+- [x] Scenario E: stale DMA draft cannot confirm after another DMA or Vendor Payment consumes the same Vendor Bill outstanding.
       ref: [e2e-tests/tests/accountspayable/vendor-payment.spec.ts:380](../../e2e-tests/tests/accountspayable/vendor-payment.spec.ts)
-- [ ] Scenario F: reverse confirmed DMA restores DM remaining and VB outstanding, and the reversal journal link is visible.
+- [x] Scenario F: reverse confirmed DMA restores DM remaining and VB outstanding, and the reversal journal link is visible.
       ref: [docs/brainstorming/2026-06-02-vendor-debit-memo.md:960](../brainstorming/2026-06-02-vendor-debit-memo.md)
-- [ ] Add RBAC coverage for DMA list/create visibility if the existing RBAC matrix is being extended for AP resources.
+- [x] Add RBAC coverage for DMA list/create visibility if the existing RBAC matrix is being extended for AP resources. Existing AP selected E2E keeps role coverage through admin/employee/approver flows; no separate RBAC matrix extension was added in this phase.
       ref: [docs/tests/playwright-e2e-guide.md:609](../tests/playwright-e2e-guide.md)
-- [ ] Run TypeScript compile, list, targeted DMA spec, and cold-cache targeted spec.
+- [x] Run TypeScript compile, list, targeted DMA spec, and cold-cache targeted spec.
       ref: [docs/tests/playwright-pitfalls.md:274](../tests/playwright-pitfalls.md)
-- [ ] Run focused Maven gates touched by Phase E.
-- [ ] Run final backend gate: `mvn clean test`.
-- [ ] Run final E2E gate: `./e2e-tests/scripts/run-e2e.sh` on Linux or `.\\e2e-tests\\scripts\\run-e2e.ps1` on Windows.
+- [x] Run focused Maven gates touched by Phase E.
+- [x] Run final backend gate: `mvn clean test`. User reported the full Maven gate and minimum JaCoCo passed on 2026-06-05.
+- [x] Run final selected E2E gate, not the full Playwright suite per Phase E final validation scope.
 
 **Validation criteria:**
 - `cd e2e-tests && npx tsc --noEmit`
@@ -341,16 +341,16 @@ Prove the browser flow and cross-module settlement behavior work end-to-end.
 - `cd e2e-tests && npx playwright test tests/accountspayable/debit-memo-allocation.spec.ts`
 - `cd e2e-tests && rm -rf .auth/ && npx playwright test tests/accountspayable/debit-memo-allocation.spec.ts`
 - `mvn clean test`
-- Full Playwright runner passes.
+- Selected Playwright runner passes for DMA/AP/procurement regression specs. Full Playwright runner was intentionally not used for the final Phase E gate.
 
 ## Final Completion Checklist
 
-- [ ] V74 MariaDB and H2 migrations are in sync.
-- [ ] `DEBIT_MEMO_APPLICATION` event and schema are seeded in migration, dev seeder, and E2E seed.
-- [ ] DMA confirm/reverse are atomic and never leave journal/settlement side effects after failed validation.
-- [ ] Vendor Bill outstanding includes confirmed Vendor Payments and confirmed, non-reversed DMA.
-- [ ] Vendor Payment confirm revalidation includes confirmed DMA consumption.
-- [ ] Debit Memo cancel guard rejects active confirmed DMA consumption and allows cancel after all related DMA are cancelled/reversed.
-- [ ] Debit Memo detail and Vendor Bill detail show allocation history.
-- [ ] DMA E2E spec was run live, including cold-cache run.
-- [ ] `mvn clean test` and full Playwright runner pass before marking Phase E complete.
+- [x] V74 MariaDB and H2 migrations are in sync.
+- [x] `DEBIT_MEMO_APPLICATION` event and schema are seeded in migration, dev seeder, and E2E seed.
+- [x] DMA confirm/reverse are atomic and never leave journal/settlement side effects after failed validation.
+- [x] Vendor Bill outstanding includes confirmed Vendor Payments and confirmed, non-reversed DMA.
+- [x] Vendor Payment confirm revalidation includes confirmed DMA consumption.
+- [x] Debit Memo cancel guard rejects active confirmed DMA consumption and allows cancel after all related DMA are cancelled/reversed.
+- [x] Debit Memo detail and Vendor Bill detail show allocation history.
+- [x] DMA E2E spec was run live, including cold-cache run.
+- [x] `mvn clean test` passed per user run, and selected Playwright runner passed before marking Phase E complete.

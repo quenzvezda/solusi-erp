@@ -55,11 +55,14 @@
       '<input type="hidden" name="lines[' + index + '].vendorBillCode" value="' + (row.dataset.code || "") + '">' +
       '<span class="dma-line-code"></span></td>' +
       '<td class="text-end"><span class="dma-line-outstanding"></span></td>' +
-      '<td><input type="text" class="form-control form-control-sm text-end dma-applied-input erp-num-decimal" data-autonumeric="currency" name="lines[' + index + '].appliedGrossOriginal"></td>' +
+      '<td><input type="text" class="form-control form-control-sm text-end dma-applied-input erp-number-decimal" name="lines[' + index + '].appliedGrossOriginal"></td>' +
       '<td class="text-center"><button type="button" class="btn btn-sm btn-ghost-danger js-dma-remove-line"><i class="ti ti-trash"></i></button></td>';
     tr.querySelector(".dma-line-code").textContent = row.dataset.code || id;
     tr.querySelector(".dma-line-outstanding").textContent = Number(row.dataset.outstanding || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     document.getElementById("dma-lines-body").appendChild(tr);
+    if (typeof window.initNumericInputs === "function") {
+      window.initNumericInputs(tr);
+    }
     setNumeric(tr.querySelector(".dma-applied-input"), row.dataset.outstanding || "0");
     reindex();
   }
@@ -105,7 +108,8 @@
         window.ERP.ModalSelector.open({
           modalId: "debit-memo-selector-modal",
           resultsId: "debit-memo-selector-body",
-          url: "/accounts-payable/debit-memo-allocations/selectors/debit-memos?vendorBillId=" + encodeURIComponent(vendorBillId)
+          url: "/accounts-payable/debit-memo-allocations/selectors/debit-memos?vendorBillId=" + encodeURIComponent(vendorBillId) +
+            "&_=" + Date.now()
         });
       });
     }
@@ -116,7 +120,8 @@
         window.ERP.ModalSelector.open({
           modalId: "vendor-bill-selector-modal",
           resultsId: "vendor-bill-selector-body",
-          url: "/accounts-payable/debit-memo-allocations/selectors/vendor-bills?debitMemoId=" + encodeURIComponent(debitMemoId)
+          url: "/accounts-payable/debit-memo-allocations/selectors/vendor-bills?debitMemoId=" + encodeURIComponent(debitMemoId) +
+            "&_=" + Date.now()
         });
       });
     }
@@ -126,6 +131,9 @@
         event.stopPropagation();
       }
     }, true);
+    if (typeof window.initNumericInputs === "function") {
+      window.initNumericInputs(document.getElementById("dma-lines-body"));
+    }
     recalc();
   });
 })();

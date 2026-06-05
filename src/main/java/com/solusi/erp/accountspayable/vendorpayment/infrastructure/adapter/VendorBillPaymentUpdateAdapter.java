@@ -55,34 +55,34 @@ public class VendorBillPaymentUpdateAdapter implements VendorBillPaymentUpdatePo
         if (vendorBillIds == null || vendorBillIds.isEmpty()) return;
 
         String sql = """
-                UPDATE ap_vendor_bills vb
-                SET vb.settlement_status = CASE
+                UPDATE ap_vendor_bills
+                SET settlement_status = CASE
                     WHEN ((
                           SELECT COALESCE(SUM(vpl.paid_amount), 0)
                           FROM ap_vendor_payment_lines vpl
                           JOIN ap_vendor_payments vp ON vp.id = vpl.vendor_payment_id
-                          WHERE vpl.vendor_bill_id = vb.id AND vp.status = 'CONFIRMED'
+                          WHERE vpl.vendor_bill_id = ap_vendor_bills.id AND vp.status = 'CONFIRMED'
                          ) + (
                           SELECT COALESCE(SUM(dmal.applied_gross_original), 0)
                           FROM ap_debit_memo_allocation_lines dmal
                           JOIN ap_debit_memo_allocations dma ON dma.id = dmal.debit_memo_allocation_id
-                          WHERE dmal.vendor_bill_id = vb.id AND dma.status = 'CONFIRMED'
-                         ) >= vb.total_amount THEN 'SETTLED'
+                          WHERE dmal.vendor_bill_id = ap_vendor_bills.id AND dma.status = 'CONFIRMED'
+                         )) >= total_amount THEN 'SETTLED'
                     WHEN ((
                           SELECT COALESCE(SUM(vpl.paid_amount), 0)
                           FROM ap_vendor_payment_lines vpl
                           JOIN ap_vendor_payments vp ON vp.id = vpl.vendor_payment_id
-                          WHERE vpl.vendor_bill_id = vb.id AND vp.status = 'CONFIRMED'
+                          WHERE vpl.vendor_bill_id = ap_vendor_bills.id AND vp.status = 'CONFIRMED'
                          ) + (
                           SELECT COALESCE(SUM(dmal.applied_gross_original), 0)
                           FROM ap_debit_memo_allocation_lines dmal
                           JOIN ap_debit_memo_allocations dma ON dma.id = dmal.debit_memo_allocation_id
-                          WHERE dmal.vendor_bill_id = vb.id AND dma.status = 'CONFIRMED'
-                         ) > 0 THEN 'PARTIALLY_SETTLED'
+                          WHERE dmal.vendor_bill_id = ap_vendor_bills.id AND dma.status = 'CONFIRMED'
+                         )) > 0 THEN 'PARTIALLY_SETTLED'
                     ELSE 'OPEN'
                 END
-                WHERE vb.id IN (:billIds)
-                  AND vb.document_status = 'CONFIRMED'
+                WHERE id IN (:billIds)
+                  AND document_status = 'CONFIRMED'
                 """;
 
         MapSqlParameterSource params = new MapSqlParameterSource()

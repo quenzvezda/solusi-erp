@@ -70,7 +70,6 @@ class ReverseDebitMemoAllocationUseCaseTest {
         when(reversePostedJournalUseCase.execute(any())).thenReturn(reversalJournal);
         when(repository.save(any(DebitMemoAllocation.class))).thenAnswer(inv -> inv.getArgument(0));
         when(debitMemoRepository.findById(100L)).thenReturn(Optional.of(debitMemo));
-        when(debitMemoRepository.save(any(DebitMemo.class))).thenAnswer(inv -> inv.getArgument(0));
 
         useCase.execute(new ReverseDebitMemoAllocationCommand(
                 700L,
@@ -97,7 +96,7 @@ class ReverseDebitMemoAllocationUseCaseTest {
         inOrder.verify(sourcePort).lockVendorBills(List.of(501L));
         inOrder.verify(reversePostedJournalUseCase).execute(any(ReversePostedJournalCommand.class));
         inOrder.verify(repository).save(allocation);
-        inOrder.verify(debitMemoRepository).save(debitMemo);
+        inOrder.verify(debitMemoRepository).updateSettlementStatus(100L, DebitMemoSettlementStatus.PARTIALLY_SETTLED);
         inOrder.verify(vendorBillPaymentUpdatePort).updateSettlementStatus(List.of(501L));
     }
 
@@ -111,11 +110,11 @@ class ReverseDebitMemoAllocationUseCaseTest {
         when(reversePostedJournalUseCase.execute(any())).thenReturn(reversalJournal);
         when(repository.save(any(DebitMemoAllocation.class))).thenAnswer(inv -> inv.getArgument(0));
         when(debitMemoRepository.findById(100L)).thenReturn(Optional.of(debitMemo));
-        when(debitMemoRepository.save(any(DebitMemo.class))).thenAnswer(inv -> inv.getArgument(0));
 
         useCase.execute(new ReverseDebitMemoAllocationCommand(700L, LocalDate.of(2026, 6, 6), "wrong allocation"));
 
         assertThat(debitMemo.getSettlementStatus()).isEqualTo(DebitMemoSettlementStatus.OPEN);
+        verify(debitMemoRepository).updateSettlementStatus(100L, DebitMemoSettlementStatus.OPEN);
     }
 
     @Test

@@ -4,6 +4,7 @@ import com.solusi.erp.accountspayable.debitmemo.domain.model.DebitMemoSettlement
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -34,6 +35,15 @@ public interface DebitMemoJpaRepository extends JpaRepository<DebitMemoEntity, L
 
     Optional<DebitMemoEntity> findByPurchaseReturnId(Long purchaseReturnId);
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            update DebitMemoEntity dm
+            set dm.settlementStatus = :settlementStatus
+            where dm.id = :id
+            """)
+    void updateSettlementStatus(@Param("id") Long id,
+                                @Param("settlementStatus") DebitMemoSettlementStatus settlementStatus);
+
     boolean existsByPurchaseReturnId(Long purchaseReturnId);
 
     @Query("""
@@ -56,4 +66,3 @@ public interface DebitMemoJpaRepository extends JpaRepository<DebitMemoEntity, L
     boolean existsTaxDocumentNumber(@Param("taxDocumentNumber") String taxDocumentNumber,
                                     @Param("excludedId") Long excludedId);
 }
-

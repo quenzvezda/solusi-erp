@@ -19,11 +19,13 @@ class DebitMemoAllocationTemplateTest {
         String script = readResource("static/js/accountspayable/debit-memo-allocations/form.js");
 
         assertThat(list).contains("DEBIT-MEMO-ALLOCATION_CREATE", "DEBIT-MEMO-ALLOCATION_UPDATE", "DEBIT-MEMO-ALLOCATION_CANCEL");
-        assertThat(detail).contains("DEBIT-MEMO-ALLOCATION_CONFIRM", "DEBIT-MEMO-ALLOCATION_REVERSE", "ErpForm.postAction", "dma-reverse-form");
-        assertThat(form).contains("data-ajax-form=\"true\"", "data-picker=\"date\"", "debit-memo-selector-body", "vendor-bill-selector-body", "dma-lines-body");
+        assertThat(detail).contains("DEBIT-MEMO-ALLOCATION_CONFIRM", "DEBIT-MEMO-ALLOCATION_REVERSE", "ErpForm.postAction",
+                "dma-reverse-form", "data-bs-target=\"#dma-reverse-modal\"");
+        assertThat(form).contains("data-ajax-form=\"true\"", "data-picker=\"date\"", "debit-memo-selector-body",
+                "vendor-bill-selector-body", "dma-lines-body", "erp-number-decimal");
         assertThat(vendorBillSelector).contains("id=\"vendor-bill-selector-body\"", "js-dma-vendor-bill-option", "data-outstanding");
         assertThat(debitMemoSelector).contains("id=\"debit-memo-selector-body\"", "js-dma-debit-memo-option", "data-remaining");
-        assertThat(script).contains("ERP.ModalSelector.open", "js-dma-remove-line", "data-autonumeric", "lines[");
+        assertThat(script).contains("ERP.ModalSelector.open", "js-dma-remove-line", "initNumericInputs", "erp-number-decimal", "lines[");
     }
 
     private String readResource(String path) throws Exception {

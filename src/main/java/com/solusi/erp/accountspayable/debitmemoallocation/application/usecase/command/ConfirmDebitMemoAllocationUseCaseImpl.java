@@ -128,7 +128,7 @@ public class ConfirmDebitMemoAllocationUseCaseImpl implements ConfirmDebitMemoAl
         DebitMemo debitMemo = debitMemoRepository.findById(debitMemoId)
                 .orElseThrow(() -> new DomainException("msg.error.debit-memo.not-found"));
         debitMemo.refreshSettlementStatus(confirmedAppliedAfter);
-        debitMemoRepository.save(debitMemo);
+        debitMemoRepository.updateSettlementStatus(debitMemoId, debitMemo.getSettlementStatus());
     }
 
     private List<Long> vendorBillIds(DebitMemoAllocation allocation) {

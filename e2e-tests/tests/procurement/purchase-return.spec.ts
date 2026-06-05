@@ -3,7 +3,7 @@ import { test, expect, storageStatePath } from '../../fixtures/base';
 import { navigateToModule } from '../../helpers/navigation';
 import { setAutoNumeric } from '../../helpers/autonumeric';
 import { setFlatpickrDate } from '../../helpers/flatpickr';
-import { submitAjaxForm } from '../../helpers/form';
+import { submitAjaxForm, waitForAjaxFormReady } from '../../helpers/form';
 import { setTomSelectValue } from '../../helpers/tomselect';
 
 const GOODS_RECEIPT_ID = '9601';
@@ -110,6 +110,23 @@ async function selectorHtml(page: Page): Promise<string> {
   return await response.text();
 }
 
+async function submitPurchaseReturnCreate(page: Page): Promise<number> {
+  await waitForAjaxFormReady(page);
+  await Promise.all([
+    page.waitForURL(/\/purchasing\/purchase-returns(\?.*)?$/, { timeout: 20_000, waitUntil: 'domcontentloaded' }),
+    page.locator('#purchase-return-form button[type="submit"]').click(),
+  ]);
+
+  await navigateToModule(page, '/purchasing/purchase-returns?sort=id,desc');
+  const id = await page.evaluate(() => {
+    const link = document.querySelector('table tbody a[href^="/purchasing/purchase-returns/view/"]') as HTMLAnchorElement | null;
+    const match = link?.getAttribute('href')?.match(/\/view\/(\d+)/);
+    return match ? Number(match[1]) : 0;
+  });
+  expect(id, 'created purchase return id from latest list row').toBeGreaterThan(0);
+  return id;
+}
+
 test.describe('Purchase Return Phase 1 flow', () => {
   test.use({ storageState: storageStatePath('employee1') });
 
@@ -169,15 +186,9 @@ test.describe('Purchase Return Phase 1 flow', () => {
       await note.fill('E2E OTHER reason note');
     }
 
-    await Promise.all([
-      page.waitForURL(/\/purchasing\/purchase-returns(\?.*)?$/, { waitUntil: 'domcontentloaded' }),
-      page.locator('#purchase-return-form button[type="submit"]').click(),
-    ]);
-    const detailLink = page.locator('a[href*="/purchasing/purchase-returns/view/"]').first();
+    let purchaseReturnId = String(await submitPurchaseReturnCreate(page));
+    const detailLink = page.locator(`a[href="/purchasing/purchase-returns/view/${purchaseReturnId}"]`).first();
     await expect(detailLink).toBeVisible();
-    const detailHref = await detailLink.getAttribute('href');
-    let purchaseReturnId = detailHref?.match(/\/view\/(\d+)/)?.[1] ?? '';
-    expect(purchaseReturnId, 'created purchase return id').toBeTruthy();
 
     // List exposes View only, including for DRAFT rows.
     const actionCell = detailLink.locator('xpath=ancestor::td[1]');
@@ -223,17 +234,10 @@ test.describe('Purchase Return Phase 1 flow', () => {
       1
     );
     await selectMovedSerial(page);
-    await Promise.all([
-      page.waitForURL(/\/purchasing\/purchase-returns(\?.*)?$/, { waitUntil: 'domcontentloaded' }),
-      page.locator('#purchase-return-form button[type="submit"]').click(),
-    ]);
-    const confirmationDetailLink = page
-      .locator(`a[href*="/purchasing/purchase-returns/view/"]:not([href$="/${cancelledPurchaseReturnId}"])`)
-      .first();
+    purchaseReturnId = String(await submitPurchaseReturnCreate(page));
+    expect(purchaseReturnId, 'confirmation purchase return id').not.toBe(cancelledPurchaseReturnId);
+    const confirmationDetailLink = page.locator(`a[href="/purchasing/purchase-returns/view/${purchaseReturnId}"]`).first();
     await expect(confirmationDetailLink).toBeVisible();
-    const confirmationDetailHref = await confirmationDetailLink.getAttribute('href');
-    purchaseReturnId = confirmationDetailHref?.match(/\/view\/(\d+)/)?.[1] ?? '';
-    expect(purchaseReturnId, 'confirmation purchase return id').toBeTruthy();
 
     await navigateToModule(page, `/purchasing/purchase-returns/view/${purchaseReturnId}`);
     await setTomSelectValue(page, '#purchase-return-approver', approverId, 'Budi Santoso');
@@ -283,8 +287,11 @@ test.describe('Purchase Return Phase 1 flow', () => {
     await expect(adminPage.locator(`a[href="${giHref}"]`)).toBeVisible();
     await expect(adminPage.locator('body')).toContainText(/Gross/);
     await expect(adminPage.locator('body')).toContainText(/Remaining|Sisa/);
-    await expect(adminPage.locator('table tbody tr').first()).toBeVisible();
-    await expect(adminPage.locator('table tbody')).not.toContainText(/No debit memo lines|Tidak ada line debit memo/i);
+    const debitMemoLineTable = adminPage.locator('table')
+      .filter({ has: adminPage.locator('th', { hasText: /DPP/ }) })
+      .first();
+    await expect(debitMemoLineTable.locator('tbody tr').first()).toBeVisible();
+    await expect(debitMemoLineTable.locator('tbody')).not.toContainText(/No debit memo lines|Tidak ada line debit memo/i);
 
     const supplierMemoNumber = `E2E-DM-SUP-${Date.now()}`;
     const taxDocumentNumber = `E2E-DM-TAX-${Date.now()}`;

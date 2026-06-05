@@ -20,7 +20,9 @@
                             th:data-action-url="@{/accounts-payable/debit-memo-allocations/{id}/cancel(id=${allocation.id})}"
                             th:data-redirect-url="@{/accounts-payable/debit-memo-allocations/{id}(id=${allocation.id})}"
                             th:data-confirm-message="#{msg.confirm.debit-memo-allocation.cancel}"><i class="ti ti-x me-1"></i><span th:text="#{label.cancel}">Cancel</span></button>
-                    <button type="button" class="btn btn-danger" id="btn-open-dma-reverse" th:if="${allocation.status == 'CONFIRMED'}" sec:authorize="hasAuthority('DEBIT-MEMO-ALLOCATION_REVERSE')">
+                    <button type="button" class="btn btn-danger" id="btn-open-dma-reverse"
+                            data-bs-toggle="modal" data-bs-target="#dma-reverse-modal"
+                            th:if="${allocation.status == 'CONFIRMED'}" sec:authorize="hasAuthority('DEBIT-MEMO-ALLOCATION_REVERSE')">
                         <i class="ti ti-arrow-back-up me-1"></i><span th:text="#{label.reverse}">Reverse</span>
                     </button>
                     <a th:href="@{/accounts-payable/debit-memo-allocations}" class="btn btn-secondary"><i class="ti ti-arrow-left me-1"></i><span th:text="#{label.back}">Back</span></a>

@@ -81,7 +81,6 @@ class ConfirmDebitMemoAllocationUseCaseTest {
                 .thenReturn(Optional.of(applyJournal));
         when(repository.save(any(DebitMemoAllocation.class))).thenAnswer(inv -> inv.getArgument(0));
         when(debitMemoRepository.findById(100L)).thenReturn(Optional.of(debitMemo));
-        when(debitMemoRepository.save(any(DebitMemo.class))).thenAnswer(inv -> inv.getArgument(0));
 
         useCase.execute(700L);
 
@@ -113,7 +112,7 @@ class ConfirmDebitMemoAllocationUseCaseTest {
         inOrder.verify(postJournalForEventUseCase).execute(any(JournalPostingCommand.class));
         inOrder.verify(journalEntryRepository).findBySource("DEBIT_MEMO_ALLOCATION", 700L);
         inOrder.verify(repository).save(allocation);
-        inOrder.verify(debitMemoRepository).save(debitMemo);
+        inOrder.verify(debitMemoRepository).updateSettlementStatus(100L, DebitMemoSettlementStatus.PARTIALLY_SETTLED);
         inOrder.verify(vendorBillPaymentUpdatePort).updateSettlementStatus(List.of(501L));
     }
 
@@ -130,11 +129,11 @@ class ConfirmDebitMemoAllocationUseCaseTest {
                 .thenReturn(Optional.of(applyJournal));
         when(repository.save(any(DebitMemoAllocation.class))).thenAnswer(inv -> inv.getArgument(0));
         when(debitMemoRepository.findById(100L)).thenReturn(Optional.of(debitMemo));
-        when(debitMemoRepository.save(any(DebitMemo.class))).thenAnswer(inv -> inv.getArgument(0));
 
         useCase.execute(700L);
 
         assertThat(debitMemo.getSettlementStatus()).isEqualTo(DebitMemoSettlementStatus.SETTLED);
+        verify(debitMemoRepository).updateSettlementStatus(100L, DebitMemoSettlementStatus.SETTLED);
     }
 
     @Test

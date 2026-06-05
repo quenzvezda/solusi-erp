@@ -19,6 +19,8 @@ public interface DebitMemoRepository {
 
     DebitMemo save(DebitMemo debitMemo);
 
+    void updateSettlementStatus(Long id, DebitMemoSettlementStatus settlementStatus);
+
     Optional<DebitMemo> findById(Long id);
 
     Optional<DebitMemo> findByPurchaseReturnId(Long purchaseReturnId);
@@ -29,4 +31,3 @@ public interface DebitMemoRepository {
 
     boolean existsTaxDocumentNumber(String taxDocumentNumber, Long excludedId);
 }
-

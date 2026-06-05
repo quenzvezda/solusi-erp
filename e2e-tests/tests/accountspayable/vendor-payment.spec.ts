@@ -2,6 +2,7 @@ import { Page } from '@playwright/test';
 import { test, expect, storageStatePath } from '../../fixtures/base';
 import { setAutoNumeric } from '../../helpers/autonumeric';
 import { setFlatpickrDate } from '../../helpers/flatpickr';
+import { waitForAjaxFormReady } from '../../helpers/form';
 import { navigateToModule } from '../../helpers/navigation';
 import { setTomSelectValue } from '../../helpers/tomselect';
 import { waitForNetworkIdle } from '../../helpers/waits';
@@ -122,22 +123,22 @@ async function createSampleDraftGr(page: Page): Promise<number> {
   );
   await setQuantityViaDrawer(page, rowIndex, 1);
 
+  await waitForAjaxFormReady(page);
   await Promise.all([
     page.waitForURL(/\/inventory\/goods-receipts(\?.*)?$/, { timeout: 15_000, waitUntil: 'domcontentloaded' }),
     page.locator('#gr-form button[type="submit"]').first().click(),
   ]);
 
   await waitForNetworkIdle(page);
+  await navigateToModule(page, `/inventory/goods-receipts?referenceType=PURCHASE_ORDER&referenceId=${PO_ID}&sort=id,desc`);
   const newId = await page.evaluate(() => {
-    const links = Array.from(document.querySelectorAll('a[href*="/inventory/goods-receipts/edit/"]'));
-    let max = 0;
-    for (const link of links) {
-      const m = (link as HTMLAnchorElement).href.match(/\/edit\/(\d+)/);
-      if (m) max = Math.max(max, Number(m[1]));
-    }
-    return max;
+    const row = Array.from(document.querySelectorAll('#table-gr-list tbody tr'))
+      .find((candidate) => candidate.textContent?.includes('DRAFT'));
+    const link = row?.querySelector('a[href*="/inventory/goods-receipts/edit/"]') as HTMLAnchorElement | null;
+    const match = link?.href.match(/\/edit\/(\d+)/);
+    return match ? Number(match[1]) : 0;
   });
-  if (!newId) throw new Error('createSampleDraftGr: could not determine new GR id from list');
+  if (!newId) throw new Error('createSampleDraftGr: could not determine latest draft GR id');
   return newId;
 }
 
@@ -188,12 +189,14 @@ async function createConfirmedVendorBill(page: Page): Promise<ConfirmedVendorBil
   await setFlatpickrDate(page, 'input[name="billDate"]', '2026-05-20');
   await setFlatpickrDate(page, 'input[name="dueDate"]', '2026-05-30');
 
+  await waitForAjaxFormReady(page);
   await Promise.all([
     page.waitForURL(/\/accounts-payable\/vendor-bills(\?.*)?$/, { timeout: 15_000, waitUntil: 'domcontentloaded' }),
     page.locator('#vendor-bill-form button[type="submit"]').first().click(),
   ]);
 
   await waitForNetworkIdle(page);
+  await navigateToModule(page, `/accounts-payable/vendor-bills?keyword=${encodeURIComponent(invoiceNumber)}`);
   const id = await page.evaluate((invoice) => {
     const rows = Array.from(document.querySelectorAll('#vendor-bill-table-container tbody tr'));
     const row = rows.find((candidate) => candidate.textContent?.includes(invoice));
@@ -264,26 +267,24 @@ async function createDraftVendorPaymentForBill(page: Page, bill: ConfirmedVendor
   await setFlatpickrDate(page, 'input[name="paymentDate"]', '2026-05-20');
   await setAutoNumeric(page, 'input[name="paymentAmount"]', PAYMENT_AMOUNT);
   await setAutoNumeric(page, '#allocation-lines tr:first-child .paid-amount-input', PAYMENT_AMOUNT);
-  await page.locator('input[name="reference"]').fill(`E2E-VP-${Date.now()}`);
+  const paymentReference = `E2E-VP-${Date.now()}`;
+  await page.locator('input[name="reference"]').fill(paymentReference);
 
+  await waitForAjaxFormReady(page);
   await Promise.all([
     page.waitForURL(/\/accounts-payable\/vendor-payments(\?.*)?$/, { timeout: 15_000, waitUntil: 'domcontentloaded' }),
     page.locator('#vendor-payment-form button[type="submit"]').first().click(),
   ]);
 
   await waitForNetworkIdle(page);
+  await navigateToModule(page, '/accounts-payable/vendor-payments?sort=id,desc');
   const id = await page.evaluate(() => {
-    const links = Array.from(document.querySelectorAll('a[href*="/accounts-payable/vendor-payments/"]'));
-    let max = 0;
-    for (const link of links) {
-      const href = (link as HTMLAnchorElement).href;
-      const match = href.match(/\/accounts-payable\/vendor-payments\/(\d+)/);
-      if (match) max = Math.max(max, Number(match[1]));
-    }
-    return max;
+    const links = Array.from(document.querySelectorAll('#vendor-payment-table-container tbody a[href^="/accounts-payable/vendor-payments/"]')) as HTMLAnchorElement[];
+    const link = links.find((candidate) => !candidate.getAttribute('href')?.includes('/edit/'));
+    const match = link?.getAttribute('href')?.match(/\/accounts-payable\/vendor-payments\/(\d+)/);
+    return match ? Number(match[1]) : 0;
   });
-  if (!id) throw new Error('createDraftVendorPayment: could not determine new payment id from list');
-
+  if (!id) throw new Error(`createDraftVendorPayment: could not determine latest payment id for ${paymentReference}`);
   return { id, vendorBillId: bill.id };
 }
 
@@ -391,7 +392,7 @@ test.describe('@accountspayable Vendor Payment flow', () => {
     await page.locator('#confirm-modal-btn-yes').click();
 
     await expect(page.locator('body')).toContainText(
-      /Selected vendor bill no longer has outstanding amount|Tagihan vendor yang dipilih sudah tidak memiliki sisa tagihan/i,
+      /Selected vendor bill no longer has outstanding amount|Tagihan vendor yang dipilih sudah tidak memiliki sisa tagihan|Outstanding tagihan vendor berubah/i,
       { timeout: 10_000 }
     );
     await expect(page.locator('.page-title .badge', { hasText: 'DRAFT' })).toBeVisible({ timeout: 10_000 });

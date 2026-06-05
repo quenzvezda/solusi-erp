@@ -76,6 +76,7 @@ public class DebitMemoAllocationController {
                              @RequestParam(required = false) Long vendorBillId,
                              Model model) {
         DebitMemoAllocationSaveRequest request = webMapper.newSaveRequest(debitMemoId, debitMemoCode, vendorBillId);
+        model.addAttribute("request", request);
         model.addAttribute("form", new DebitMemoAllocationFormView(request, null, false));
         return "accountspayable/debit-memo-allocations/form";
     }
@@ -84,8 +85,10 @@ public class DebitMemoAllocationController {
     @PreAuthorize("hasAuthority('DEBIT-MEMO-ALLOCATION_UPDATE')")
     public String editForm(@PathVariable Long id, Model model) {
         DebitMemoAllocationDetailView detail = getDebitMemoAllocationDetailUseCase.execute(id);
+        DebitMemoAllocationSaveRequest request = webMapper.toSaveRequest(detail);
+        model.addAttribute("request", request);
         model.addAttribute("form", new DebitMemoAllocationFormView(
-                webMapper.toSaveRequest(detail),
+                request,
                 webMapper.toDetailResponse(detail),
                 true
         ));
