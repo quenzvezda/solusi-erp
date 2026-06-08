@@ -163,26 +163,26 @@ Implement the atomic orchestration for reversing a confirmed Purchase Return.
 **Reference module:** `inventory.goodsissue`, `accounting.journal`, `accountspayable.debitmemo`, `accountspayable.debitmemoallocation`
 
 Steps:
-- [ ] Create `PurchaseReturnReverseCommand` with `purchaseReturnId`, `reversalDate`, `reversalReason`, `reversedByUserId`, and line commands keyed by original movement id plus target container id.
+- [x] Create `PurchaseReturnReverseCommand` with `purchaseReturnId`, `reversalDate`, `reversalReason`, `reversedByUserId`, and line commands keyed by original movement id plus target container id.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/GoodsIssueCancelCommand.java:L1-L15` - reversal date/reason/line command shape
-- [ ] Create a Purchase Return reversal view/use-case that loads the generated GI outbound movements and default target containers from historical issue containers.
+- [x] Create a Purchase Return reversal view/use-case that loads the generated GI outbound movements and default target containers from historical issue containers.
       This must not reuse `GetGoodsIssueCancelViewUseCaseImpl` directly because it rejects source-owned GI.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/query/GetGoodsIssueCancelViewUseCaseImpl.java:L35-L62` - useful movement-to-line mapping plus source-owned guard to avoid
-- [ ] Add a source-owned inventory/GI adapter port that can:
+- [x] Add a source-owned inventory/GI adapter port that can:
       validate the generated GI belongs to the Purchase Return;
       fetch outbound movements by `ReferenceType.GOODS_ISSUE` and generated GI id;
       call `StockMovementReversalService.reverse(...)`;
       mark the generated GI `CANCELLED` with reversal metadata.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/command/CancelGoodsIssueUseCaseImpl.java:L56-L92` - manual GI reversal sequence that Phase F mirrors selectively
       ref: `src/main/java/com/solusi/erp/inventory/stock/infrastructure/service/StockMovementReversalServiceImpl.java:L23-L170` - target container, serial, facility, and linked movement guards
-- [ ] Add a journal adapter/port to find the original `PURCHASE_RETURN` journal by source and call `ReversePostedJournalUseCase`.
+- [x] Add a journal adapter/port to find the original `PURCHASE_RETURN` journal by source and call `ReversePostedJournalUseCase`.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/query/GetGoodsIssueJournalLinksUseCaseImpl.java:L31-L44` - source-owned GI journal lookup uses `PURCHASE_RETURN` + Purchase Return id
       ref: `src/main/java/com/solusi/erp/accounting/journal/application/usecase/command/ReversePostedJournalUseCase.java:L1-L7` - generic linked reversal API
-- [ ] Add a Debit Memo reversal guard port that resolves and locks the Debit Memo by Purchase Return id, rejects any active confirmed DMA consumption, verifies confirmed applied total is zero, and cancels the Debit Memo.
+- [x] Add a Debit Memo reversal guard port that resolves and locks the Debit Memo by Purchase Return id, rejects any active confirmed DMA consumption, verifies confirmed applied total is zero, and cancels the Debit Memo.
       ref: `src/main/java/com/solusi/erp/accountspayable/debitmemo/application/usecase/command/CancelDebitMemoUseCaseImpl.java:L13-L26` - existing cancel guard for active DMA consumption
       ref: `src/main/java/com/solusi/erp/accountspayable/debitmemoallocation/application/usecase/command/ReverseDebitMemoAllocationUseCaseImpl.java:L62-L85` - reversed DMA restores DM remaining and VB statuses
       ref: `docs/reports/2026-06-02-phase-e-debit-memo-allocation.md:L53-L57` - Phase E behavior: reversed/cancelled DMA no longer blocks cancel
-- [ ] Implement `ReverseConfirmedPurchaseReturnUseCaseImpl` in one transaction:
+- [x] Implement `ReverseConfirmedPurchaseReturnUseCaseImpl` in one transaction:
       lock Purchase Return;
       validate `CONFIRMED`, generated GI id, date/reason/actor;
       lock Debit Memo and validate DMA guard/full remaining;
@@ -195,13 +195,13 @@ Steps:
       mark Purchase Return `REVERSED`.
       ref: `src/main/java/com/solusi/erp/purchasing/purchasereturn/application/usecase/command/ConfirmPurchaseReturnUseCaseImpl.java:L54-L84` - confirm transaction order and side-effect sequencing
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md:L1000-L1036` - required confirmed Purchase Return reversal flow
-- [ ] Ensure failure ordering prevents side effects after failed guards: no stock reversal or journal reversal before DMA/full-balance/period validation passes.
+- [x] Ensure failure ordering prevents side effects after failed guards: no stock reversal or journal reversal before DMA/full-balance/period validation passes.
       ref: `src/test/java/com/solusi/erp/purchasing/purchasereturn/application/usecase/command/ConfirmPurchaseReturnUseCaseTest.java:L98-L111` - guard-before-side-effect assertion pattern
-- [ ] Wire the new use case and ports in `PurchaseReturnConfig` with `TransactionTemplate`, following existing command use cases.
+- [x] Wire the new use case and ports in `PurchaseReturnConfig` with `TransactionTemplate`, following existing command use cases.
       ref: `src/main/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/config/PurchaseReturnConfig.java:L145-L166` - confirm use case wiring with transaction template
-- [ ] **TEST:** Add `ReverseConfirmedPurchaseReturnUseCaseTest` for happy path, invalid status, missing GI, active confirmed DMA blocker, full remaining guard failure, closed period, missing original journal, already reversed stock movement, serial already on-hand, and rollback/no downstream calls on guard failure.
+- [x] **TEST:** Add `ReverseConfirmedPurchaseReturnUseCaseTest` for happy path, invalid status, missing GI, active confirmed DMA blocker, full remaining guard failure, closed period, missing original journal, already reversed stock movement, serial already on-hand, and rollback/no downstream calls on guard failure.
       ref: `src/test/java/com/solusi/erp/purchasing/purchasereturn/application/usecase/command/ConfirmPurchaseReturnUseCaseTest.java:L43-L194` - Mockito use case test pattern
-- [ ] **TEST:** Extend `PurchaseReturnConfigTest` to prove reversal use case and view use case wire with the new dependencies.
+- [x] **TEST:** Extend `PurchaseReturnConfigTest` to prove reversal use case and view use case wire with the new dependencies.
       ref: `src/test/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/config/PurchaseReturnConfigTest.java:L1-L183` - config integration test pattern
 
 **Validation criteria:**

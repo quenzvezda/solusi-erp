@@ -1,13 +1,21 @@
 package com.solusi.erp.purchasing.purchasereturn.infrastructure.config;
 
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.command.CreateDebitMemoFromPurchaseReturnUseCase;
+import com.solusi.erp.accounting.journal.application.usecase.command.ReversePostedJournalUseCase;
+import com.solusi.erp.accounting.journal.domain.repository.JournalEntryRepository;
+import com.solusi.erp.accountspayable.debitmemo.domain.repository.DebitMemoRepository;
+import com.solusi.erp.accountspayable.debitmemoallocation.domain.repository.DebitMemoAllocationRepository;
+import com.solusi.erp.inventory.container.domain.port.ContainerLookupProvider;
 import com.solusi.erp.purchasing.purchasereturn.domain.repository.PurchaseReturnRepository;
 import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeriodForDateUseCase;
 import com.solusi.erp.inventory.goodsissue.application.usecase.command.CompleteGoodsIssueUseCase;
 import com.solusi.erp.inventory.goodsissue.domain.port.PurchaseReturnGoodsIssueSourcePort;
 import com.solusi.erp.inventory.goodsissue.domain.repository.GoodsIssueRepository;
 import com.solusi.erp.inventory.goodsissue.infrastructure.service.GoodsIssueSourceResolverRegistry;
+import com.solusi.erp.inventory.product.domain.port.ProductLookupProvider;
 import com.solusi.erp.inventory.stock.domain.port.InventoryReservationService;
+import com.solusi.erp.inventory.stock.domain.port.StockMovementReversalService;
+import com.solusi.erp.inventory.stock.infrastructure.persistence.InventoryMovementJpaRepository;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindEligiblePurchaseReturnGoodsReceiptsUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindPurchaseReturnGrLineSlicesUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindPurchaseReturnSerialsUseCase;
@@ -18,12 +26,14 @@ import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.Canc
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CancelPurchaseReturnSubmissionUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CreatePurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.ConfirmPurchaseReturnUseCase;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.ReverseConfirmedPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.SubmitPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.UpdatePurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.domain.port.PurchaseReturnApprovalCancellationPort;
 import com.solusi.erp.purchasing.purchasereturn.domain.port.PurchaseReturnEventPublisher;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindPurchaseReturnsUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnEditViewUseCase;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnReverseViewUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.infrastructure.persistence.PurchaseReturnJpaRepository;
 import com.solusi.erp.purchasing.purchasereturn.infrastructure.persistence.PurchaseReturnPersistenceMapper;
@@ -81,6 +91,9 @@ class PurchaseReturnConfigTest {
     private ConfirmPurchaseReturnUseCase confirmPurchaseReturnUseCase;
 
     @Autowired
+    private ReverseConfirmedPurchaseReturnUseCase reverseConfirmedPurchaseReturnUseCase;
+
+    @Autowired
     private PurchaseReturnGoodsIssueSourcePort purchaseReturnGoodsIssueSourcePort;
 
     @Autowired
@@ -91,6 +104,9 @@ class PurchaseReturnConfigTest {
 
     @Autowired
     private GetPurchaseReturnEditViewUseCase getPurchaseReturnEditViewUseCase;
+
+    @Autowired
+    private GetPurchaseReturnReverseViewUseCase getPurchaseReturnReverseViewUseCase;
 
     @Test
     void wiresPurchaseReturnRepository() {
@@ -106,10 +122,12 @@ class PurchaseReturnConfigTest {
         assertThat(cancelPurchaseReturnSubmissionUseCase).isNotNull();
         assertThat(cancelApprovedPurchaseReturnUseCase).isNotNull();
         assertThat(confirmPurchaseReturnUseCase).isNotNull();
+        assertThat(reverseConfirmedPurchaseReturnUseCase).isNotNull();
         assertThat(purchaseReturnGoodsIssueSourcePort).isNotNull();
         assertThat(findPurchaseReturnsUseCase).isNotNull();
         assertThat(getPurchaseReturnUseCase).isNotNull();
         assertThat(getPurchaseReturnEditViewUseCase).isNotNull();
+        assertThat(getPurchaseReturnReverseViewUseCase).isNotNull();
     }
 
     @Configuration
@@ -178,6 +196,46 @@ class PurchaseReturnConfigTest {
         @Bean
         CreateDebitMemoFromPurchaseReturnUseCase createDebitMemoFromPurchaseReturnUseCase() {
             return mock(CreateDebitMemoFromPurchaseReturnUseCase.class);
+        }
+
+        @Bean
+        InventoryMovementJpaRepository inventoryMovementJpaRepository() {
+            return mock(InventoryMovementJpaRepository.class);
+        }
+
+        @Bean
+        StockMovementReversalService stockMovementReversalService() {
+            return mock(StockMovementReversalService.class);
+        }
+
+        @Bean
+        ProductLookupProvider productLookupProvider() {
+            return mock(ProductLookupProvider.class);
+        }
+
+        @Bean
+        ContainerLookupProvider containerLookupProvider() {
+            return mock(ContainerLookupProvider.class);
+        }
+
+        @Bean
+        JournalEntryRepository journalEntryRepository() {
+            return mock(JournalEntryRepository.class);
+        }
+
+        @Bean
+        ReversePostedJournalUseCase reversePostedJournalUseCase() {
+            return mock(ReversePostedJournalUseCase.class);
+        }
+
+        @Bean
+        DebitMemoRepository debitMemoRepository() {
+            return mock(DebitMemoRepository.class);
+        }
+
+        @Bean
+        DebitMemoAllocationRepository debitMemoAllocationRepository() {
+            return mock(DebitMemoAllocationRepository.class);
         }
     }
 }

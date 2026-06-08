@@ -70,6 +70,11 @@ public class DebitMemoRepositoryImpl implements DebitMemoRepository {
     }
 
     @Override
+    public Optional<DebitMemo> findByPurchaseReturnIdForUpdate(Long purchaseReturnId) {
+        return jpaRepository.findByPurchaseReturnIdForUpdate(purchaseReturnId).map(mapper::toDomain);
+    }
+
+    @Override
     public boolean existsByPurchaseReturnId(Long purchaseReturnId) {
         return jpaRepository.existsByPurchaseReturnId(purchaseReturnId);
     }

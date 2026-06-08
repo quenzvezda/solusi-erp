@@ -274,6 +274,18 @@ public class PurchaseReturn {
                                  Long reversedByUserId,
                                  Long reversalJournalEntryId,
                                  List<PurchaseReturnReversalLine> reversalLines) {
+        validateReversalHeader(reversalDate, reversalReason, reversedByUserId);
+        if (reversalJournalEntryId == null) {
+            throw new DomainException("msg.error.purchase-return.reverse.journal-required");
+        }
+        if (reversalLines == null || reversalLines.isEmpty()) {
+            throw new DomainException("msg.error.purchase-return.reverse.lines-required");
+        }
+    }
+
+    public void validateReversalHeader(LocalDate reversalDate,
+                                       String reversalReason,
+                                       Long reversedByUserId) {
         if (!status.canReverse()) {
             throw new DomainException("msg.error.purchase-return.reverse.invalid-status");
         }
@@ -288,12 +300,6 @@ public class PurchaseReturn {
         }
         if (reversedByUserId == null) {
             throw new DomainException("msg.error.purchase-return.reverse.user-required");
-        }
-        if (reversalJournalEntryId == null) {
-            throw new DomainException("msg.error.purchase-return.reverse.journal-required");
-        }
-        if (reversalLines == null || reversalLines.isEmpty()) {
-            throw new DomainException("msg.error.purchase-return.reverse.lines-required");
         }
     }
 

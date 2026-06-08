@@ -1,13 +1,21 @@
 package com.solusi.erp.purchasing.purchasereturn.infrastructure.config;
 
 import com.solusi.erp.core.infrastructure.sequence.SequenceGeneratorService;
+import com.solusi.erp.accounting.journal.application.usecase.command.ReversePostedJournalUseCase;
+import com.solusi.erp.accounting.journal.domain.repository.JournalEntryRepository;
 import com.solusi.erp.accountspayable.debitmemo.application.usecase.command.CreateDebitMemoFromPurchaseReturnUseCase;
+import com.solusi.erp.accountspayable.debitmemo.domain.repository.DebitMemoRepository;
+import com.solusi.erp.accountspayable.debitmemoallocation.domain.repository.DebitMemoAllocationRepository;
+import com.solusi.erp.inventory.container.domain.port.ContainerLookupProvider;
 import com.solusi.erp.inventory.goodsissue.domain.port.PurchaseReturnGoodsIssueSourcePort;
 import com.solusi.erp.inventory.goodsissue.application.usecase.command.CompleteGoodsIssueUseCase;
 import com.solusi.erp.inventory.goodsissue.domain.repository.GoodsIssueRepository;
 import com.solusi.erp.inventory.goodsissue.infrastructure.service.GoodsIssueSourceResolverRegistry;
 import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeriodForDateUseCase;
 import com.solusi.erp.inventory.stock.domain.port.InventoryReservationService;
+import com.solusi.erp.inventory.product.domain.port.ProductLookupProvider;
+import com.solusi.erp.inventory.stock.domain.port.StockMovementReversalService;
+import com.solusi.erp.inventory.stock.infrastructure.persistence.InventoryMovementJpaRepository;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CancelApprovedPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CancelApprovedPurchaseReturnUseCaseImpl;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CancelDraftPurchaseReturnUseCase;
@@ -18,12 +26,17 @@ import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.Crea
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CreatePurchaseReturnUseCaseImpl;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.ConfirmPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.ConfirmPurchaseReturnUseCaseImpl;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.ReverseConfirmedPurchaseReturnUseCase;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.ReverseConfirmedPurchaseReturnUseCaseImpl;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.SubmitPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.SubmitPurchaseReturnUseCaseImpl;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.UpdatePurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.UpdatePurchaseReturnUseCaseImpl;
 import com.solusi.erp.purchasing.purchasereturn.domain.port.PurchaseReturnApprovalCancellationPort;
+import com.solusi.erp.purchasing.purchasereturn.domain.port.PurchaseReturnDebitMemoReversalPort;
 import com.solusi.erp.purchasing.purchasereturn.domain.port.PurchaseReturnEventPublisher;
+import com.solusi.erp.purchasing.purchasereturn.domain.port.PurchaseReturnInventoryReversalPort;
+import com.solusi.erp.purchasing.purchasereturn.domain.port.PurchaseReturnJournalReversalPort;
 import com.solusi.erp.purchasing.purchasereturn.domain.repository.PurchaseReturnRepository;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindEligiblePurchaseReturnGoodsReceiptsUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindEligiblePurchaseReturnGoodsReceiptsUseCaseImpl;
@@ -39,12 +52,17 @@ import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindPu
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindPurchaseReturnsUseCaseImpl;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnEditViewUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnEditViewUseCaseImpl;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnReverseViewUseCase;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnReverseViewUseCaseImpl;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnUseCaseImpl;
 import com.solusi.erp.purchasing.purchasereturn.domain.port.PurchaseReturnSourceQueryPort;
 import com.solusi.erp.purchasing.purchasereturn.infrastructure.adapter.PurchaseReturnSourceQueryAdapter;
 import com.solusi.erp.purchasing.purchasereturn.infrastructure.adapter.PurchaseReturnRepositoryImpl;
 import com.solusi.erp.purchasing.purchasereturn.infrastructure.adapter.PurchaseReturnGoodsIssueSourceAdapter;
+import com.solusi.erp.purchasing.purchasereturn.infrastructure.adapter.PurchaseReturnDebitMemoReversalAdapter;
+import com.solusi.erp.purchasing.purchasereturn.infrastructure.adapter.PurchaseReturnInventoryReversalAdapter;
+import com.solusi.erp.purchasing.purchasereturn.infrastructure.adapter.PurchaseReturnJournalReversalAdapter;
 import com.solusi.erp.purchasing.purchasereturn.infrastructure.persistence.PurchaseReturnJpaRepository;
 import com.solusi.erp.purchasing.purchasereturn.infrastructure.persistence.PurchaseReturnPersistenceMapper;
 import org.springframework.context.annotation.Bean;
@@ -73,6 +91,32 @@ public class PurchaseReturnConfig {
     public PurchaseReturnGoodsIssueSourcePort purchaseReturnGoodsIssueSourcePort(
             NamedParameterJdbcTemplate jdbcTemplate) {
         return new PurchaseReturnGoodsIssueSourceAdapter(jdbcTemplate);
+    }
+
+    @Bean
+    public PurchaseReturnInventoryReversalPort purchaseReturnInventoryReversalPort(
+            GoodsIssueRepository goodsIssueRepository,
+            InventoryMovementJpaRepository movementRepository,
+            StockMovementReversalService stockMovementReversalService,
+            ProductLookupProvider productLookupProvider,
+            ContainerLookupProvider containerLookupProvider) {
+        return new PurchaseReturnInventoryReversalAdapter(
+                goodsIssueRepository, movementRepository, stockMovementReversalService,
+                productLookupProvider, containerLookupProvider);
+    }
+
+    @Bean
+    public PurchaseReturnJournalReversalPort purchaseReturnJournalReversalPort(
+            JournalEntryRepository journalEntryRepository,
+            ReversePostedJournalUseCase reversePostedJournalUseCase) {
+        return new PurchaseReturnJournalReversalAdapter(journalEntryRepository, reversePostedJournalUseCase);
+    }
+
+    @Bean
+    public PurchaseReturnDebitMemoReversalPort purchaseReturnDebitMemoReversalPort(
+            DebitMemoRepository debitMemoRepository,
+            DebitMemoAllocationRepository debitMemoAllocationRepository) {
+        return new PurchaseReturnDebitMemoReversalAdapter(debitMemoRepository, debitMemoAllocationRepository);
     }
 
     @Bean
@@ -195,6 +239,21 @@ public class PurchaseReturnConfig {
     }
 
     @Bean
+    public ReverseConfirmedPurchaseReturnUseCase reverseConfirmedPurchaseReturnUseCase(
+            PurchaseReturnRepository purchaseReturnRepository,
+            PurchaseReturnDebitMemoReversalPort debitMemoReversalPort,
+            PurchaseReturnInventoryReversalPort inventoryReversalPort,
+            PurchaseReturnJournalReversalPort journalReversalPort,
+            EnsureOpenPeriodForDateUseCase ensureOpenPeriodForDateUseCase,
+            PlatformTransactionManager txManager) {
+        ReverseConfirmedPurchaseReturnUseCaseImpl pure = new ReverseConfirmedPurchaseReturnUseCaseImpl(
+                purchaseReturnRepository, debitMemoReversalPort, inventoryReversalPort,
+                journalReversalPort, ensureOpenPeriodForDateUseCase);
+        TransactionTemplate tx = new TransactionTemplate(txManager);
+        return command -> tx.execute(status -> pure.execute(command));
+    }
+
+    @Bean
     public FindPurchaseReturnsUseCase findPurchaseReturnsUseCase(PurchaseReturnRepository repository) {
         return new FindPurchaseReturnsUseCaseImpl(repository);
     }
@@ -209,5 +268,12 @@ public class PurchaseReturnConfig {
             PurchaseReturnRepository repository,
             PurchaseReturnSourceQueryPort queryPort) {
         return new GetPurchaseReturnEditViewUseCaseImpl(repository, queryPort);
+    }
+
+    @Bean
+    public GetPurchaseReturnReverseViewUseCase getPurchaseReturnReverseViewUseCase(
+            PurchaseReturnRepository repository,
+            PurchaseReturnInventoryReversalPort inventoryReversalPort) {
+        return new GetPurchaseReturnReverseViewUseCaseImpl(repository, inventoryReversalPort);
     }
 }

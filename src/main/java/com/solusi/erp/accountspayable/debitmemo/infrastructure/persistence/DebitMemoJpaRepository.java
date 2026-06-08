@@ -1,9 +1,11 @@
 package com.solusi.erp.accountspayable.debitmemo.infrastructure.persistence;
 
 import com.solusi.erp.accountspayable.debitmemo.domain.model.DebitMemoSettlementStatus;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -34,6 +36,15 @@ public interface DebitMemoJpaRepository extends JpaRepository<DebitMemoEntity, L
                                           Pageable pageable);
 
     Optional<DebitMemoEntity> findByPurchaseReturnId(Long purchaseReturnId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            select distinct dm
+            from DebitMemoEntity dm
+            left join fetch dm.lines
+            where dm.purchaseReturnId = :purchaseReturnId
+            """)
+    Optional<DebitMemoEntity> findByPurchaseReturnIdForUpdate(@Param("purchaseReturnId") Long purchaseReturnId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""

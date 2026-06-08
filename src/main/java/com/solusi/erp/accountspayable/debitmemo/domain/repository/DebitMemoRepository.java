@@ -25,6 +25,8 @@ public interface DebitMemoRepository {
 
     Optional<DebitMemo> findByPurchaseReturnId(Long purchaseReturnId);
 
+    Optional<DebitMemo> findByPurchaseReturnIdForUpdate(Long purchaseReturnId);
+
     boolean existsByPurchaseReturnId(Long purchaseReturnId);
 
     boolean existsSupplierMemoNumber(Long vendorId, String supplierMemoNumber, Long excludedId);

@@ -31,3 +31,30 @@
 - **Detail:** The plan validation names `PurchaseReturnRepositoryImplTest`, but the project did not have that test class yet.
 - **Action taken:** Added a narrow adapter test for `save` child attachment and `findByIdForUpdate` delegation to the locked JPA query.
 - **Ref:** `src/test/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/adapter/PurchaseReturnRepositoryImplTest.java`
+
+## Task 3: Source-Owned Reversal Ports And Reverse Use Case
+
+- **Status:** findings
+- **Summary:** Added Purchase Return reverse command/view contracts, source-owned inventory reversal, journal reversal, Debit Memo guard/cancel ports, transactional reverse orchestration, and focused use-case/config coverage.
+- **Validation:** `mvn test -Dtest="ReverseConfirmedPurchaseReturnUseCaseTest,PurchaseReturnConfigTest,StockMovementReversalServiceTest,ReversePostedJournalUseCaseTest,DebitMemoCommandUseCaseTest"` passed with 29 tests. Focused run emitted expected low-coverage JaCoCo warnings but Maven exited success.
+
+### Finding: Debit Memo validation and cancellation are split
+- **Type:** decision
+- **Severity:** info
+- **Detail:** The brainstorming flow requires DMA/full-balance/period guards to pass before stock and journal side effects, but Debit Memo cancellation should happen after stock reversal, journal reversal, and GI cancellation.
+- **Action taken:** Added `PurchaseReturnDebitMemoReversalPort.validateReversibleAndLock(...)` and `cancelDebitMemo(...)` as separate calls. The use case validates and locks first, then cancels the Debit Memo only after downstream reversals succeed.
+- **Ref:** `src/main/java/com/solusi/erp/purchasing/purchasereturn/application/usecase/command/ReverseConfirmedPurchaseReturnUseCaseImpl.java`
+
+### Finding: Source-owned GI reversal avoids generic GI cancel use case
+- **Type:** decision
+- **Severity:** info
+- **Detail:** Generic `CancelGoodsIssueUseCaseImpl` intentionally rejects non-manual source-owned Goods Issues. Purchase Return reversal must keep that guard intact.
+- **Action taken:** Added a Purchase Return-owned inventory reversal adapter that validates the generated GI belongs to the Purchase Return, reverses outbound movements through `StockMovementReversalService`, then marks the generated GI `CANCELLED` directly through the GI aggregate/repository.
+- **Ref:** `src/main/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/adapter/PurchaseReturnInventoryReversalAdapter.java`
+
+### Finding: Purchase Return line id on movement snapshots is resolved best-effort
+- **Type:** decision
+- **Severity:** info
+- **Detail:** Inventory movement rows do not store the Goods Issue line id or Purchase Return line id directly. The generated GI lines keep `referenceLineId`, but movement rows only expose product/container/serial/quantity.
+- **Action taken:** The inventory reversal adapter resolves `purchaseReturnLineId` by matching each outbound movement back to the generated GI line. The V75 `purchase_return_line_id` column remains nullable for cases where a movement cannot be matched unambiguously.
+- **Ref:** `src/main/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/adapter/PurchaseReturnInventoryReversalAdapter.java`
