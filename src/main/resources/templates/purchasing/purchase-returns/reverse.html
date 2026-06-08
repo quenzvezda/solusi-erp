@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout/master :: head(#{label.purchase-return.reverse})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .purchase-return-reverse-content}, ~{:: #page-specific-scripts})}">
+<div class="purchase-return-reverse-content">
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title">
+                        <span th:text="#{label.purchase-return.reverse}">Reverse Purchase Return</span>
+                        <span class="text-secondary ms-2" th:text="${reverseView.purchaseReturn().code}">PRT-001</span>
+                    </h2>
+                </div>
+                <div class="col-auto ms-auto">
+                    <a th:href="@{'/purchasing/purchase-returns/view/' + ${reverseView.purchaseReturn().id}}" class="btn btn-secondary">
+                        <i class="ti ti-arrow-left me-1"></i><span th:text="#{label.back}">Back</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <form id="purchase-return-reverse-form"
+                  th:object="${reverseRequest}"
+                  th:action="@{'/purchasing/purchase-returns/' + ${reverseView.purchaseReturn().id} + '/reverse'}"
+                  method="post"
+                  data-ajax-form="true"
+                  th:data-redirect-on-success="@{'/purchasing/purchase-returns/view/' + ${reverseView.purchaseReturn().id}}">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                <div class="alert-container">
+                    <div th:replace="~{fragments/alerts :: success}"></div>
+                    <div th:replace="~{fragments/alerts :: error}"></div>
+                </div>
+
+                <div class="row row-cards">
+                    <div class="col-lg-8">
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h3 class="card-title" th:text="#{label.purchase-return.header}">Header</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.purchase-return.code}">Code</label>
+                                        <div class="form-control-plaintext fw-bold" th:text="${reverseView.purchaseReturn().code}">PRT-001</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.purchase-return.return-date}">Return Date</label>
+                                        <div class="form-control-plaintext" th:text="${#temporals.format(reverseView.purchaseReturn().returnDate, 'dd MMM yyyy')}">01 Jun 2026</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-secondary" th:text="#{label.purchase-return.facility}">Facility</label>
+                                        <div class="form-control-plaintext" th:text="${reverseView.purchaseReturn().facilityId}">1</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label required" for="reversal-date" th:text="#{label.purchase-return.reversal-date}">Reversal Date</label>
+                                        <input type="date"
+                                               id="reversal-date"
+                                               name="reversalDate"
+                                               class="form-control"
+                                               data-picker="date"
+                                               required
+                                               th:value="${reverseRequest.reversalDate != null ? #temporals.format(reverseRequest.reversalDate, 'yyyy-MM-dd') : ''}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label required" for="reversal-reason" th:text="#{label.purchase-return.reversal-reason}">Reversal Reason</label>
+                                        <textarea id="reversal-reason"
+                                                  name="reversalReason"
+                                                  class="form-control"
+                                                  rows="2"
+                                                  required
+                                                  th:placeholder="#{label.purchase-return.reversal-reason}"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title" th:text="#{label.purchase-return.reverse-lines}">Reverse Lines</h3>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-vcenter card-table" id="purchase-return-reverse-lines">
+                                    <thead>
+                                    <tr>
+                                        <th th:text="#{label.product}">Product</th>
+                                        <th class="text-end" th:text="#{label.qty}">Qty</th>
+                                        <th th:text="#{label.serial}">Serial</th>
+                                        <th th:text="#{label.purchase-return.issued-from}">Issued From</th>
+                                        <th class="w-25" th:text="#{label.purchase-return.target-container}">Target Container</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="line, stat : ${reverseView.lines()}">
+                                        <td>
+                                            <input type="hidden" th:name="|lines[${stat.index}].originalMovementId|" th:value="${line.originalMovementId()}">
+                                            <div class="fw-semibold" th:text="${line.productName() ?: '-'}">Product</div>
+                                            <div class="text-secondary small" th:text="${line.productCode() ?: '-'}">SKU</div>
+                                        </td>
+                                        <td class="text-end" th:text="${line.quantity() != null ? #numbers.formatDecimal(line.quantity(), 1, 'COMMA', 4, 'POINT') : '-'}">1.0000</td>
+                                        <td th:text="${line.serialNumber() ?: '-'}">-</td>
+                                        <td>
+                                            <div th:text="${line.targetContainerName() ?: '-'}">Container</div>
+                                            <div class="text-secondary small" th:text="${line.targetContainerCode() ?: '-'}">BIN</div>
+                                        </td>
+                                        <td>
+                                            <select class="form-select form-select-sm erp-input-ts-sm"
+                                                    required
+                                                    data-pr-reverse-target-container-select="true"
+                                                    th:name="|lines[${stat.index}].targetContainerId|"
+                                                    th:id="|target-container-${stat.index}|"
+                                                    th:attr="data-lookup-path=|inventory/containers?facilityId=${reverseView.purchaseReturn().facilityId}|">
+                                                <option value=""></option>
+                                                <option th:value="${line.targetContainerId()}"
+                                                        th:text="${line.targetContainerName()}"
+                                                        th:attr="data-subtext=${line.targetContainerCode()}"
+                                                        selected></option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title" th:text="#{label.summary}">Summary</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-secondary" th:text="#{label.purchase-return.reverse-line-count}">Lines</span>
+                                    <span id="purchase-return-reverse-line-count" class="fw-bold" th:text="${#lists.size(reverseView.lines())}">0</span>
+                                </div>
+                                <div class="d-flex justify-content-between mt-2">
+                                    <span class="text-secondary" th:text="#{label.purchase-return.reverse-target-count}">Targets</span>
+                                    <span id="purchase-return-reverse-target-count" class="fw-bold">0</span>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <button type="submit" class="btn btn-danger w-100">
+                                    <i class="ti ti-rotate-clockwise me-1"></i><span th:text="#{label.purchase-return.reverse}">Reverse</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="page-specific-scripts" th:fragment="pageScripts">
+    <script th:inline="javascript">
+        window.PurchaseReturnReverseI18n = {
+            targetRequired: /*[[#{msg.error.purchase-return.reverse.target-container-required}]]*/ 'Target container is required.'
+        };
+    </script>
+    <script th:src="@{/js/purchasing/purchase-return/reverse.js}" defer></script>
+</div>
+</body>
+
+</html>

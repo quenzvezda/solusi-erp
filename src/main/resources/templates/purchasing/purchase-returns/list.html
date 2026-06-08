@@ -79,7 +79,8 @@
                                               (${item.status.name() == 'SUBMITTED'} ? 'bg-info-lt' :
                                               (${item.status.name() == 'APPROVED'} ? 'bg-success-lt' :
                                               (${item.status.name() == 'CONFIRMED'} ? 'bg-primary-lt' :
-                                              (${item.status.name() == 'REJECTED'} ? 'bg-danger-lt' : 'bg-warning-lt'))))"
+                                              (${item.status.name() == 'REVERSED'} ? 'bg-dark-lt' :
+                                              (${item.status.name() == 'REJECTED'} ? 'bg-danger-lt' : 'bg-warning-lt')))))"
                                           th:text="${#messages.msg('label.purchase-return.status.' + item.status.name().toLowerCase())}">Draft</span></td>
                                 <td class="text-end" th:text="${#numbers.formatDecimal(item.totalQuantity, 1, 'COMMA', 2, 'POINT')}">0.00</td>
                                 <td class="text-end" th:text="${#numbers.formatDecimal(item.totalAmount, 1, 'COMMA', 2, 'POINT')}">0.00</td>

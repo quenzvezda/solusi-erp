@@ -218,31 +218,31 @@ Expose a dedicated Purchase Return reversal form that captures reversal date, re
 **Reference module:** `inventory.goodsissue` cancellation form
 
 Steps:
-- [ ] Add `PurchaseReturnReverseRequest` and line request DTOs with `@DateTimeFormat(pattern = "yyyy-MM-dd")`, `@NotNull` reversal date, `@NotBlank` reason, and non-empty target lines.
+- [x] Add `PurchaseReturnReverseRequest` and line request DTOs with `@DateTimeFormat(pattern = "yyyy-MM-dd")`, `@NotNull` reversal date, `@NotBlank` reason, and non-empty target lines.
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/web/dto/GoodsIssueCancelRequest.java:L14-L44` - date/reason/line DTO pattern
       ref: `docs/spec/datetime-standards.md:L73-L110` - backend date DTO contract
-- [ ] Add `GET /purchasing/purchase-returns/{id}/reverse` to render the reversal form only for `CONFIRMED` Purchase Return with `PURCHASE-RETURN_REVERSE`.
+- [x] Add `GET /purchasing/purchase-returns/{id}/reverse` to render the reversal form only for `CONFIRMED` Purchase Return with `PURCHASE-RETURN_REVERSE`.
       ref: `src/main/java/com/solusi/erp/purchasing/purchasereturn/web/controller/PurchaseReturnController.java:L231-L248` - existing status action routes
-- [ ] Add `POST /purchasing/purchase-returns/{id}/reverse` accepting AJAX JSON `@RequestBody PurchaseReturnReverseRequest`, mapping to the use case command, and returning `ApiResponse`.
+- [x] Add `POST /purchasing/purchase-returns/{id}/reverse` accepting AJAX JSON `@RequestBody PurchaseReturnReverseRequest`, mapping to the use case command, and returning `ApiResponse`.
       ref: `docs/spec/form-submission.md:L116-L137` - AJAX JSON controller contract
-- [ ] Build `templates/purchasing/purchase-returns/reverse.html` using `data-ajax-form="true"`, `data-redirect-on-success` back to `/purchasing/purchase-returns/view/{id}`, `data-picker="date"`, historical issue container display, and target container TomSelect lookups filtered by facility.
+- [x] Build `templates/purchasing/purchase-returns/reverse.html` using `data-ajax-form="true"`, `data-redirect-on-success` back to `/purchasing/purchase-returns/view/{id}`, `data-picker="date"`, historical issue container display, and target container TomSelect lookups filtered by facility.
       ref: `src/main/resources/templates/inventory/goods-issues/cancel.html:L24-L169` - source template for reversal location form
       ref: `docs/spec/form-submission.md:L22-L69` - AJAX form attributes and alert container
-- [ ] Add `static/js/purchasing/purchase-return/reverse.js` to initialize target container lookups with `initLookup()`, update line/target summary, and validate all target containers at submit capture phase.
+- [x] Add `static/js/purchasing/purchase-return/reverse.js` to initialize target container lookups with `initLookup()`, update line/target summary, and validate all target containers at submit capture phase.
       ref: `src/main/resources/static/js/inventory/goods-issue/goods-issue-cancel.js:L1-L54` - lookup init and capture-phase validation pattern
       ref: `docs/spec/form-submission.md:L54-L63` - custom validation must run before global AJAX handler
-- [ ] Add a Reverse action to Purchase Return detail for `CONFIRMED` only, guarded by `PURCHASE-RETURN_REVERSE`, linking to the reversal form rather than using `ErpForm.postAction` because the action needs payload lines.
+- [x] Add a Reverse action to Purchase Return detail for `CONFIRMED` only, guarded by `PURCHASE-RETURN_REVERSE`, linking to the reversal form rather than using `ErpForm.postAction` because the action needs payload lines.
       ref: `src/main/resources/templates/purchasing/purchase-returns/view.html:L131-L163` - existing sidebar status action placement
       ref: `docs/spec/action-buttons.md:L1-L49` - status-changing actions require backend permission and clear UX
-- [ ] Update list/detail status badge styling for `REVERSED` and avoid treating it as generic warning by falling through the existing final else.
+- [x] Update list/detail status badge styling for `REVERSED` and avoid treating it as generic warning by falling through the existing final else.
       ref: `src/main/resources/templates/purchasing/purchase-returns/list.html:L70-L82` - current badge mapping
       ref: `src/main/resources/templates/purchasing/purchase-returns/view.html:L12-L22` - current detail badge mapping
-- [ ] Show reversal metadata and reversal journal link on detail when present.
+- [x] Show reversal metadata and reversal journal link on detail when present.
       ref: `src/main/resources/templates/purchasing/purchase-returns/view.html:L54-L87` - header/source link area
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/application/usecase/query/GetGoodsIssueJournalLinksUseCaseImpl.java:L45-L49` - reversal journal link lookup pattern
-- [ ] **TEST:** Extend `PurchaseReturnControllerTest` for GET/POST reverse routes, `@PreAuthorize("hasAuthority('PURCHASE-RETURN_REVERSE')")`, model attributes, DTO mapping, and JSON success response.
+- [x] **TEST:** Extend `PurchaseReturnControllerTest` for GET/POST reverse routes, `@PreAuthorize("hasAuthority('PURCHASE-RETURN_REVERSE')")`, model attributes, DTO mapping, and JSON success response.
       ref: `src/test/java/com/solusi/erp/purchasing/purchasereturn/web/controller/PurchaseReturnControllerTest.java:L55-L244` - controller unit test pattern
-- [ ] **TEST:** Extend `PurchaseReturnViewIntegrationTest` and add a reverse template integration test for reverse button visibility, AJAX form attributes, `data-picker`, target container lookup attributes, status badge `REVERSED`, and security guards.
+- [x] **TEST:** Extend `PurchaseReturnViewIntegrationTest` and add a reverse template integration test for reverse button visibility, AJAX form attributes, `data-picker`, target container lookup attributes, status badge `REVERSED`, and security guards.
       ref: `src/test/java/com/solusi/erp/purchasing/purchasereturn/web/template/integration/PurchaseReturnViewIntegrationTest.java:L1-L39` - current template contract test location
 
 **Validation criteria:**

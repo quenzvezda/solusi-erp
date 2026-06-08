@@ -19,6 +19,8 @@ import com.solusi.erp.purchasing.purchasereturn.domain.model.PurchaseReturnLine;
 import com.solusi.erp.purchasing.purchasereturn.domain.model.PurchaseReturnReason;
 import com.solusi.erp.purchasing.purchasereturn.domain.model.PurchaseReturnStatus;
 import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnDetailResponse;
+import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnReverseLineRequest;
+import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnReverseRequest;
 import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnSaveLineRequest;
 import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnSaveRequest;
 import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnSummaryResponse;
@@ -118,6 +120,25 @@ class PurchaseReturnWebMapperTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).containerId()).isEqualTo(40L);
         assertThat(result.get(0).quantity()).isEqualByComparingTo("2");
+    }
+
+    @Test
+    void toReverseCommand_mapsHeaderActorAndTargetLines() {
+        PurchaseReturnReverseRequest request = new PurchaseReturnReverseRequest();
+        request.setReversalDate(LocalDate.of(2026, 6, 2));
+        request.setReversalReason("reason");
+        request.setLines(List.of(new PurchaseReturnReverseLineRequest(900L, 40L)));
+
+        var result = mapper.toReverseCommand(1L, request, 77L);
+
+        assertThat(result.purchaseReturnId()).isEqualTo(1L);
+        assertThat(result.reversalDate()).isEqualTo(LocalDate.of(2026, 6, 2));
+        assertThat(result.reversalReason()).isEqualTo("reason");
+        assertThat(result.reversedByUserId()).isEqualTo(77L);
+        assertThat(result.lines()).singleElement().satisfies(line -> {
+            assertThat(line.originalMovementId()).isEqualTo(900L);
+            assertThat(line.targetContainerId()).isEqualTo(40L);
+        });
     }
 
     private void stubLookups() {

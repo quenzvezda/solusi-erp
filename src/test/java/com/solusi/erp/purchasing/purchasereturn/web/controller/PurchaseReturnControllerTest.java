@@ -12,6 +12,8 @@ import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.Canc
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CancelPurchaseReturnSubmissionUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.ConfirmPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CreatePurchaseReturnUseCase;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.PurchaseReturnReverseCommand;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.ReverseConfirmedPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.SubmitPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.UpdatePurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindEligiblePurchaseReturnGoodsReceiptsUseCase;
@@ -21,10 +23,14 @@ import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindPu
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetEligiblePurchaseReturnPurchaseOrderLookupUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnCreateViewUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnEditViewUseCase;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnReverseViewUseCase;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.PurchaseReturnReverseLineView;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.domain.model.PurchaseReturn;
 import com.solusi.erp.purchasing.purchasereturn.domain.model.PurchaseReturnStatus;
 import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnDetailResponse;
+import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnReverseLineRequest;
+import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnReverseRequest;
 import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnSaveRequest;
 import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnSummaryResponse;
 import com.solusi.erp.purchasing.purchasereturn.web.mapper.PurchaseReturnWebMapper;
@@ -60,10 +66,12 @@ class PurchaseReturnControllerTest {
     private CancelPurchaseReturnSubmissionUseCase cancelSubmissionUseCase;
     private ConfirmPurchaseReturnUseCase confirmUseCase;
     private CancelApprovedPurchaseReturnUseCase cancelApprovedUseCase;
+    private ReverseConfirmedPurchaseReturnUseCase reverseUseCase;
     private FindPurchaseReturnsUseCase findUseCase;
     private GetPurchaseReturnUseCase getUseCase;
     private GetPurchaseReturnCreateViewUseCase getCreateViewUseCase;
     private GetPurchaseReturnEditViewUseCase getEditViewUseCase;
+    private GetPurchaseReturnReverseViewUseCase getReverseViewUseCase;
     private FindEligiblePurchaseReturnGoodsReceiptsUseCase findEligibleUseCase;
     private FindPurchaseReturnGrLineSlicesUseCase findSlicesUseCase;
     private FindPurchaseReturnSerialsUseCase findSerialsUseCase;
@@ -83,10 +91,12 @@ class PurchaseReturnControllerTest {
         cancelSubmissionUseCase = mock(CancelPurchaseReturnSubmissionUseCase.class);
         confirmUseCase = mock(ConfirmPurchaseReturnUseCase.class);
         cancelApprovedUseCase = mock(CancelApprovedPurchaseReturnUseCase.class);
+        reverseUseCase = mock(ReverseConfirmedPurchaseReturnUseCase.class);
         findUseCase = mock(FindPurchaseReturnsUseCase.class);
         getUseCase = mock(GetPurchaseReturnUseCase.class);
         getCreateViewUseCase = mock(GetPurchaseReturnCreateViewUseCase.class);
         getEditViewUseCase = mock(GetPurchaseReturnEditViewUseCase.class);
+        getReverseViewUseCase = mock(GetPurchaseReturnReverseViewUseCase.class);
         findEligibleUseCase = mock(FindEligiblePurchaseReturnGoodsReceiptsUseCase.class);
         findSlicesUseCase = mock(FindPurchaseReturnGrLineSlicesUseCase.class);
         findSerialsUseCase = mock(FindPurchaseReturnSerialsUseCase.class);
@@ -98,7 +108,8 @@ class PurchaseReturnControllerTest {
         messageSource = mock(MessageSource.class);
         controller = new PurchaseReturnController(
                 createUseCase, updateUseCase, submitUseCase, cancelSubmissionUseCase, confirmUseCase,
-                cancelApprovedUseCase, findUseCase, getUseCase, getCreateViewUseCase, getEditViewUseCase,
+                cancelApprovedUseCase, reverseUseCase, findUseCase, getUseCase, getCreateViewUseCase, getEditViewUseCase,
+                getReverseViewUseCase,
                 findEligibleUseCase, findSlicesUseCase, findSerialsUseCase, poLookupUseCase,
                 findDebitMemoByPurchaseReturnUseCase, findApprovalUseCase, partyLookupProvider, webMapper, messageSource);
     }
@@ -192,6 +203,46 @@ class PurchaseReturnControllerTest {
     }
 
     @Test
+    void reverseForm_addsViewAndDefaultRequest() {
+        PurchaseReturn domain = mock(PurchaseReturn.class);
+        when(domain.getId()).thenReturn(1L);
+        GetPurchaseReturnReverseViewUseCase.PurchaseReturnReverseView reverseView =
+                new GetPurchaseReturnReverseViewUseCase.PurchaseReturnReverseView(
+                        domain,
+                        List.of(new PurchaseReturnReverseLineView(
+                                900L, 11L, 10L, "Product", "P-001", java.math.BigDecimal.ONE,
+                                40L, "Bin", "BIN", null)));
+        when(getReverseViewUseCase.execute(1L)).thenReturn(reverseView);
+        Model model = new ExtendedModelMap();
+
+        String view = controller.reverseForm(1L, model);
+
+        assertThat(view).isEqualTo("purchasing/purchase-returns/reverse");
+        assertThat(model.getAttribute("reverseView")).isEqualTo(reverseView);
+        assertThat(model.getAttribute("reverseRequest")).isInstanceOf(PurchaseReturnReverseRequest.class);
+    }
+
+    @Test
+    void reverse_postsJsonCommandWithAuthenticatedActor() {
+        PurchaseReturnReverseRequest request = new PurchaseReturnReverseRequest();
+        request.setReversalDate(LocalDate.of(2026, 6, 2));
+        request.setReversalReason("reason");
+        request.setLines(List.of(new PurchaseReturnReverseLineRequest(900L, 40L)));
+        PurchaseReturnReverseCommand command = new PurchaseReturnReverseCommand(1L, request.getReversalDate(), "reason", 99L, List.of());
+        PurchaseReturn domain = mock(PurchaseReturn.class);
+        PurchaseReturnDetailResponse response = new PurchaseReturnDetailResponse();
+        when(webMapper.toReverseCommand(1L, request, 99L)).thenReturn(command);
+        when(reverseUseCase.execute(command)).thenReturn(domain);
+        when(webMapper.toDetailResponse(domain)).thenReturn(response);
+        when(messageSource.getMessage(any(), any(), any())).thenReturn("ok");
+
+        controller.reverse(1L, request, securityUser(99L, 77L));
+
+        verify(webMapper).toReverseCommand(1L, request, 99L);
+        verify(reverseUseCase).execute(command);
+    }
+
+    @Test
     void lookupController_delegatesWithoutRepositoryDependency() {
         when(poLookupUseCase.execute("PO", 10)).thenReturn(List.of(new LookupDto(2L, "PO-001", "PO-001")));
 
@@ -227,6 +278,9 @@ class PurchaseReturnControllerTest {
                 Long.class, String.class, SecurityUser.class);
         assertPermission("confirm", "hasAuthority('PURCHASE-RETURN_CONFIRM')", Long.class);
         assertPermission("cancelApproved", "hasAuthority('PURCHASE-RETURN_CANCEL')", Long.class);
+        assertPermission("reverseForm", "hasAuthority('PURCHASE-RETURN_REVERSE')", Long.class, Model.class);
+        assertPermission("reverse", "hasAuthority('PURCHASE-RETURN_REVERSE')",
+                Long.class, PurchaseReturnReverseRequest.class, SecurityUser.class);
         assertPermission("view", "hasAuthority('PURCHASE-RETURN_READ')", Long.class, Model.class, SecurityUser.class);
     }
 

@@ -10,6 +10,8 @@ import com.solusi.erp.inventory.uom.domain.port.UomLookupProvider;
 import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
 import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.PurchaseReturnLineCommand;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.PurchaseReturnReverseCommand;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.PurchaseReturnReverseLineCommand;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.EligibleGoodsReceiptRow;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnCreateViewUseCase.PurchaseReturnCreateView;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.ReturnableGrLineSlice;
@@ -17,6 +19,7 @@ import com.solusi.erp.purchasing.purchasereturn.domain.model.PurchaseReturn;
 import com.solusi.erp.purchasing.purchasereturn.domain.model.PurchaseReturnLine;
 import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnDetailResponse;
 import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnLineDetailResponse;
+import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnReverseRequest;
 import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnSaveLineRequest;
 import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnSaveRequest;
 import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnSummaryResponse;
@@ -136,6 +139,22 @@ public class PurchaseReturnWebMapper {
                         line.getNote()
                 ))
                 .toList();
+    }
+
+    public PurchaseReturnReverseCommand toReverseCommand(Long purchaseReturnId,
+                                                         PurchaseReturnReverseRequest request,
+                                                         Long reversedByUserId) {
+        return new PurchaseReturnReverseCommand(
+                purchaseReturnId,
+                request.getReversalDate(),
+                request.getReversalReason(),
+                reversedByUserId,
+                request.getLines() == null ? List.of() : request.getLines().stream()
+                        .map(line -> new PurchaseReturnReverseLineCommand(
+                                line.getOriginalMovementId(),
+                                line.getTargetContainerId()))
+                        .toList()
+        );
     }
 
     private PurchaseReturnSaveLineRequest toPrefillLine(ReturnableGrLineSlice slice) {

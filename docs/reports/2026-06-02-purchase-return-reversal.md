@@ -58,3 +58,9 @@
 - **Detail:** Inventory movement rows do not store the Goods Issue line id or Purchase Return line id directly. The generated GI lines keep `referenceLineId`, but movement rows only expose product/container/serial/quantity.
 - **Action taken:** The inventory reversal adapter resolves `purchaseReturnLineId` by matching each outbound movement back to the generated GI line. The V75 `purchase_return_line_id` column remains nullable for cases where a movement cannot be matched unambiguously.
 - **Ref:** `src/main/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/adapter/PurchaseReturnInventoryReversalAdapter.java`
+
+## Task 4: Reversal Location Form, Controller Routes, And Page JavaScript
+
+- **Status:** clean
+- **Summary:** Added Purchase Return reverse request DTOs, reverse GET/POST routes, AJAX reversal form, target-container lookup JavaScript, detail reverse action, `REVERSED` badge styling, reversal metadata/journal display, and controller/template/mapper tests.
+- **Validation:** `mvn test -Dtest="PurchaseReturnControllerTest,PurchaseReturnViewIntegrationTest,PurchaseReturnReverseTemplateIntegrationTest,PurchaseReturnWebMapperTest"` passed with 22 tests. Additional `mvn test -Dtest="PurchaseReturnListIntegrationTest"` passed with 2 tests because list badge styling changed. Focused runs emitted expected low-coverage JaCoCo warnings but Maven exited success.

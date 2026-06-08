@@ -16,6 +16,7 @@ import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.Canc
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.ConfirmPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.CreatePurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.PurchaseReturnLineCommand;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.ReverseConfirmedPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.SubmitPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.command.UpdatePurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindEligiblePurchaseReturnGoodsReceiptsUseCase;
@@ -25,11 +26,13 @@ import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.FindPu
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetEligiblePurchaseReturnPurchaseOrderLookupUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnCreateViewUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnEditViewUseCase;
+import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnReverseViewUseCase;
 import com.solusi.erp.purchasing.purchasereturn.application.usecase.query.GetPurchaseReturnUseCase;
 import com.solusi.erp.purchasing.purchasereturn.domain.model.PurchaseReturn;
 import com.solusi.erp.purchasing.purchasereturn.domain.model.PurchaseReturnReason;
 import com.solusi.erp.purchasing.purchasereturn.domain.model.PurchaseReturnStatus;
 import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnDetailResponse;
+import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnReverseRequest;
 import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnSaveRequest;
 import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnSummaryResponse;
 import com.solusi.erp.purchasing.purchasereturn.web.mapper.PurchaseReturnWebMapper;
@@ -70,10 +73,12 @@ public class PurchaseReturnController {
     private final CancelPurchaseReturnSubmissionUseCase cancelSubmissionUseCase;
     private final ConfirmPurchaseReturnUseCase confirmUseCase;
     private final CancelApprovedPurchaseReturnUseCase cancelApprovedUseCase;
+    private final ReverseConfirmedPurchaseReturnUseCase reverseUseCase;
     private final FindPurchaseReturnsUseCase findUseCase;
     private final GetPurchaseReturnUseCase getUseCase;
     private final GetPurchaseReturnCreateViewUseCase getCreateViewUseCase;
     private final GetPurchaseReturnEditViewUseCase getEditViewUseCase;
+    private final GetPurchaseReturnReverseViewUseCase getReverseViewUseCase;
     private final FindEligiblePurchaseReturnGoodsReceiptsUseCase findEligibleGoodsReceiptsUseCase;
     private final FindPurchaseReturnGrLineSlicesUseCase findGrLineSlicesUseCase;
     private final FindPurchaseReturnSerialsUseCase findSerialsUseCase;
@@ -253,6 +258,28 @@ public class PurchaseReturnController {
         PurchaseReturn domain = cancelApprovedUseCase.execute(id);
         return ResponseEntity.ok(ApiResponse.success(
                 message("msg.success.purchase-return.cancelled"), webMapper.toDetailResponse(domain)));
+    }
+
+    @GetMapping("/{id}/reverse")
+    @PreAuthorize("hasAuthority('PURCHASE-RETURN_REVERSE')")
+    public String reverseForm(@PathVariable Long id, Model model) {
+        GetPurchaseReturnReverseViewUseCase.PurchaseReturnReverseView view = getReverseViewUseCase.execute(id);
+        model.addAttribute("reverseView", view);
+        model.addAttribute("reverseRequest", PurchaseReturnReverseRequest.from(view));
+        return "purchasing/purchase-returns/reverse";
+    }
+
+    @PostMapping("/{id}/reverse")
+    @ResponseBody
+    @PreAuthorize("hasAuthority('PURCHASE-RETURN_REVERSE')")
+    public ResponseEntity<ApiResponse<PurchaseReturnDetailResponse>> reverse(
+            @PathVariable Long id,
+            @Valid @RequestBody PurchaseReturnReverseRequest request,
+            @AuthenticationPrincipal SecurityUser securityUser) {
+        PurchaseReturn domain = reverseUseCase.execute(
+                webMapper.toReverseCommand(id, request, userId(securityUser)));
+        return ResponseEntity.ok(ApiResponse.success(
+                message("msg.success.purchase-return.reversed"), webMapper.toDetailResponse(domain)));
     }
 
     @GetMapping("/view/{id}")

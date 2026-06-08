@@ -32,8 +32,21 @@ class PurchaseReturnViewIntegrationTest {
         assertThat(html).contains("hasAuthority('PURCHASE-RETURN_SUBMIT')");
         assertThat(html).contains("hasAuthority('PURCHASE-RETURN_CONFIRM')");
         assertThat(html).contains("hasAuthority('PURCHASE-RETURN_CANCEL')");
+        assertThat(html).contains("hasAuthority('PURCHASE-RETURN_REVERSE')");
+        assertThat(html).contains("/reverse");
         assertThat(html).doesNotContain("window.confirm");
         assertThat(html).doesNotContain("new bootstrap.Modal");
         PurchaseReturnListIntegrationTest.assertThemeSafe(html);
+    }
+
+    @Test
+    void view_showsReversalMetadataJournalLinkAndReversedBadgeStyle() {
+        assertThat(html).contains("purchaseReturn.status.name() == 'REVERSED'");
+        assertThat(html).contains("bg-dark-lt");
+        assertThat(html).contains("purchaseReturn.reversalDate");
+        assertThat(html).contains("purchaseReturn.reversalReason");
+        assertThat(html).contains("purchaseReturn.reversedByUserId");
+        assertThat(html).contains("purchaseReturn.reversalJournalEntryId");
+        assertThat(html).contains("/accounting/journal-entries/{id}");
     }
 }

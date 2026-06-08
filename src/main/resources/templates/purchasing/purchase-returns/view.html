@@ -14,7 +14,8 @@
                                   (${purchaseReturn.status.name() == 'SUBMITTED'} ? 'bg-info-lt' :
                                   (${purchaseReturn.status.name() == 'APPROVED'} ? 'bg-success-lt' :
                                   (${purchaseReturn.status.name() == 'CONFIRMED'} ? 'bg-primary-lt' :
-                                  (${purchaseReturn.status.name() == 'REJECTED'} ? 'bg-danger-lt' : 'bg-warning-lt'))))"
+                                  (${purchaseReturn.status.name() == 'REVERSED'} ? 'bg-dark-lt' :
+                                  (${purchaseReturn.status.name() == 'REJECTED'} ? 'bg-danger-lt' : 'bg-warning-lt')))))"
                               th:text="${#messages.msg('label.purchase-return.status.' + purchaseReturn.status.name().toLowerCase())}">Draft</span>
                     </h2>
                 </div>
@@ -65,6 +66,23 @@
                                     <label class="form-label text-secondary" th:text="#{label.debit-memo.title}">Debit Memo</label>
                                     <div class="form-control-plaintext"><a th:href="@{/accounts-payable/debit-memos/{id}(id=${debitMemoLink.id()})}" class="btn btn-sm btn-outline-primary">
                                         <i class="ti ti-external-link me-1"></i><span th:text="${debitMemoLink.code()}">DM-001</span></a></div>
+                                </div>
+                                <div class="col-md-3" th:if="${purchaseReturn.reversalDate != null}">
+                                    <label class="form-label text-secondary" th:text="#{label.purchase-return.reversal-date}">Reversal Date</label>
+                                    <div class="form-control-plaintext" th:text="${#temporals.format(purchaseReturn.reversalDate, 'dd MMM yyyy')}">02 Jun 2026</div>
+                                </div>
+                                <div class="col-md-3" th:if="${purchaseReturn.reversedByUserId != null}">
+                                    <label class="form-label text-secondary" th:text="#{label.purchase-return.reversed-by}">Reversed By</label>
+                                    <div class="form-control-plaintext" th:text="${purchaseReturn.reversedByUserId}">77</div>
+                                </div>
+                                <div class="col-md-3" th:if="${purchaseReturn.reversalJournalEntryId != null}">
+                                    <label class="form-label text-secondary" th:text="#{label.purchase-return.reversal-journal}">Reversal Journal</label>
+                                    <div class="form-control-plaintext"><a th:href="@{/accounting/journal-entries/{id}(id=${purchaseReturn.reversalJournalEntryId})}" class="btn btn-sm btn-outline-danger">
+                                        <i class="ti ti-external-link me-1"></i><span th:text="#{label.view}">View</span></a></div>
+                                </div>
+                                <div class="col-12" th:if="${purchaseReturn.reversalReason != null && !purchaseReturn.reversalReason.isBlank()}">
+                                    <label class="form-label text-secondary" th:text="#{label.purchase-return.reversal-reason}">Reversal Reason</label>
+                                    <div class="form-control-plaintext" th:text="${purchaseReturn.reversalReason}">Full reversal</div>
                                 </div>
                                 <div class="col-12" th:if="${purchaseReturn.note != null && !purchaseReturn.note.isBlank()}">
                                     <label class="form-label text-secondary" th:text="#{label.purchase-return.note}">Note</label>
@@ -143,6 +161,14 @@
                                     th:data-confirm-message="#{msg.confirm.purchase-return.cancel}" onclick="ErpForm.postAction(this)">
                                 <i class="ti ti-x me-1"></i><span th:text="#{label.purchase-return.cancel}">Cancel</span>
                             </button>
+                        </div>
+                    </div>
+                    <div class="card" th:if="${purchaseReturn.status.name() == 'CONFIRMED'}" sec:authorize="hasAuthority('PURCHASE-RETURN_REVERSE')">
+                        <div class="card-body">
+                            <a class="btn btn-danger w-100"
+                               th:href="@{'/purchasing/purchase-returns/' + ${purchaseReturn.id} + '/reverse'}">
+                                <i class="ti ti-rotate-clockwise me-1"></i><span th:text="#{label.purchase-return.reverse}">Reverse</span>
+                            </a>
                         </div>
                     </div>
                     <th:block th:if="${approvalRequestId != null && !isCurrentApprover}">

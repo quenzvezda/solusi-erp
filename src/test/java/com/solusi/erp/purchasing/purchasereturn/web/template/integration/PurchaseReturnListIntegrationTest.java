@@ -23,6 +23,8 @@ class PurchaseReturnListIntegrationTest {
     void list_exposesExactlyViewRowActionAndUsesAdaptiveThemeClasses() {
         assertThat(html).contains("btn btn-white btn-sm");
         assertThat(html).contains("#{label.view}");
+        assertThat(html).contains("item.status.name() == 'REVERSED'");
+        assertThat(html).contains("bg-dark-lt");
         assertThat(html).doesNotContain("#{label.edit}");
         assertThat(html).doesNotContain("#{label.delete}");
         assertThemeSafe(html);
