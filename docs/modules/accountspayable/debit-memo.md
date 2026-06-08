@@ -13,6 +13,7 @@ Flow aktif:
 3. Sistem membuat Debit Memo berstatus `OPEN`.
 4. User membuat Debit Memo Allocation untuk menerapkan saldo Debit Memo ke satu atau lebih Vendor Bill.
 5. Konfirmasi Allocation mem-post journal `DEBIT_MEMO_APPLICATION`, mengurangi outstanding Vendor Bill, dan menyegarkan settlement status Debit Memo/Vendor Bill.
+6. Bila Purchase Return `CONFIRMED` direversal saat Debit Memo belum dikonsumsi aktif, sistem membatalkan Debit Memo otomatis dalam transaksi reversal Purchase Return.
 
 Debit Memo core tetap tidak mem-post journal saat dibuat. Journal AP reduction dan tax/GRIR reversal terjadi saat Debit Memo Allocation dikonfirmasi.
 
@@ -26,6 +27,7 @@ Debit Memo core tetap tidak mem-post journal saat dibuat. Journal AP reduction d
 | Allocation history | Detail menampilkan history DMA dan link ke detail allocation |
 | Update metadata | `POST /accounts-payable/debit-memos/{id}/metadata` via AJAX JSON |
 | Cancel | `POST /accounts-payable/debit-memos/{id}/cancel` |
+| Purchase Return reversal cancel | Otomatis dari reversal Purchase Return ketika Debit Memo fully open dan tanpa active DMA |
 | Source link | Detail menampilkan link ke Purchase Return dan generated Goods Issue |
 | Purchase Return link | Detail Purchase Return menampilkan link ke Debit Memo jika sudah dibuat |
 
@@ -91,6 +93,8 @@ Cancel ditolak jika:
 - ada Debit Memo Allocation berstatus `CONFIRMED` untuk Debit Memo tersebut.
 
 DMA `CANCELLED` atau `REVERSED` tidak memblokir cancel karena tidak lagi menjadi active consumption.
+
+Purchase Return reversal memakai guard yang sama tetapi dipanggil dari modul Purchase Return: Debit Memo dikunci berdasarkan `purchaseReturnId`, active confirmed DMA harus tidak ada, confirmed applied total harus `0`, dan status harus `OPEN`. Setelah stock reversal, journal reversal, dan generated GI cancellation berhasil, Debit Memo dicancel otomatis.
 
 ## 7. Accounting
 

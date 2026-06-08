@@ -64,3 +64,9 @@
 - **Status:** clean
 - **Summary:** Added Purchase Return reverse request DTOs, reverse GET/POST routes, AJAX reversal form, target-container lookup JavaScript, detail reverse action, `REVERSED` badge styling, reversal metadata/journal display, and controller/template/mapper tests.
 - **Validation:** `mvn test -Dtest="PurchaseReturnControllerTest,PurchaseReturnViewIntegrationTest,PurchaseReturnReverseTemplateIntegrationTest,PurchaseReturnWebMapperTest"` passed with 22 tests. Additional `mvn test -Dtest="PurchaseReturnListIntegrationTest"` passed with 2 tests because list badge styling changed. Focused runs emitted expected low-coverage JaCoCo warnings but Maven exited success.
+
+## Task 5: i18n, Documentation, And Stale Deferral Cleanup
+
+- **Status:** clean
+- **Summary:** Added bilingual Purchase Return reversal labels/errors/validation/success messages, updated Purchase Return/Goods Issue/Debit Memo module docs, and removed stale confirmed-reversal deferral wording from shipped module docs.
+- **Validation:** `mvn test -Dtest="PurchaseReturnMessagesTest,*MessageBundleTest"` passed with 6 tests. Stale scans for `Phase F`, `Confirmed Purchase Return reversal deferred`, confirmed reversal deferral/cannot-reverse wording, and `deferred|ditunda` in updated module docs/messages found no stale deferral text. Focused run emitted expected low-coverage JaCoCo warnings but Maven exited success.

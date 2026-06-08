@@ -259,19 +259,19 @@ Update user-facing text and module documentation so Phase F behavior is document
 **Reference module:** `docs/modules/procurement/purchase-return.md`
 
 Steps:
-- [ ] Add bilingual message keys for `REVERSED` status, reverse action labels, form headings, target container validation, success message, and domain errors.
+- [x] Add bilingual message keys for `REVERSED` status, reverse action labels, form headings, target container validation, success message, and domain errors.
       ref: `src/main/resources/messages.properties` - English message bundle
       ref: `src/main/resources/messages_id.properties` - Indonesian message bundle
-- [ ] Update `docs/modules/procurement/purchase-return.md` to describe `CONFIRMED -> REVERSED`, full-only behavior, target location per movement, DMA blocker, DM cancel, generated GI cancellation, and linked journal/stock reversal.
+- [x] Update `docs/modules/procurement/purchase-return.md` to describe `CONFIRMED -> REVERSED`, full-only behavior, target location per movement, DMA blocker, DM cancel, generated GI cancellation, and linked journal/stock reversal.
       ref: `docs/modules/procurement/purchase-return.md:L18-L72` - current lifecycle/accounting docs still mark reversal as next phase
-- [ ] Update `docs/modules/inventory/goods-issue.md` to state Purchase Return source-owned GI is cancelled by Purchase Return reversal, not direct GI cancel, and stock reversal remains linked via `reversalOfMovementId`.
+- [x] Update `docs/modules/inventory/goods-issue.md` to state Purchase Return source-owned GI is cancelled by Purchase Return reversal, not direct GI cancel, and stock reversal remains linked via `reversalOfMovementId`.
       ref: `docs/modules/inventory/goods-issue.md:L12-L20` - source-owned GI cancellation boundary
       ref: `docs/modules/inventory/goods-issue.md:L54-L63` - stock reversal/valuation behavior
-- [ ] Update `docs/modules/accountspayable/debit-memo.md` to describe that Purchase Return reversal cancels an unapplied Debit Memo and is blocked by active confirmed DMA.
+- [x] Update `docs/modules/accountspayable/debit-memo.md` to describe that Purchase Return reversal cancels an unapplied Debit Memo and is blocked by active confirmed DMA.
       ref: `docs/modules/accountspayable/debit-memo.md:L57-L64` - existing Debit Memo cancel guard
-- [ ] Run stale-text scans for `Phase F`, `Confirmed Purchase Return reversal deferred`, and any message implying confirmed Purchase Return cannot be reversed.
+- [x] Run stale-text scans for `Phase F`, `Confirmed Purchase Return reversal deferred`, and any message implying confirmed Purchase Return cannot be reversed.
       ref: `docs/modules/procurement/purchase-return.md:L66-L72` - known stale deferral section after implementation
-- [ ] **TEST:** Extend `PurchaseReturnMessagesTest` or add message bundle coverage for new keys.
+- [x] **TEST:** Extend `PurchaseReturnMessagesTest` or add message bundle coverage for new keys.
       ref: `src/test/java/com/solusi/erp/purchasing/purchasereturn/web/template/PurchaseReturnMessagesTest.java` - Purchase Return message test location
 
 **Validation criteria:**

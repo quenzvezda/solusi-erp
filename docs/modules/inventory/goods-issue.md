@@ -104,9 +104,11 @@ Saat `referenceType=PURCHASE_RETURN`, GI completion tetap mem-post stock movemen
 | `PR_GRIR_CLEARING_AMT` | Debit GR/IR Clearing sebesar inventory amount historis dari line GI. |
 | `PR_INVENTORY_AMT` | Credit inventory sebesar inventory amount historis dari line GI. |
 
-Purchase Return journal tidak mem-post `taxAmount`, `taxReversalAmount`, atau `clearingAmount`. Reversal Input VAT, AP reduction, allocation settlement, dan FX tetap deferred ke Debit Memo Allocation/phase berikutnya. Core GI tidak mem-post FX variance untuk Purchase Return reversal; rate berasal dari source/original GR.
+Purchase Return journal tidak mem-post `taxAmount`, `taxReversalAmount`, atau `clearingAmount`. Reversal Input VAT, AP reduction, allocation settlement, dan FX berjalan melalui Debit Memo Allocation. Core GI tidak mem-post FX variance untuk Purchase Return reversal; rate berasal dari source/original GR.
 
 Cancellation GI manual membalik journal `GOODS_ISSUE` asal dengan linked reversal journal. Reversal journal menukar debit/kredit dari final `JournalLine` asal, menyimpan `reversalOfId`, dan tidak memanggil accounting schema dengan amount negatif.
+
+Purchase Return-sourced GI tetap tidak boleh dicancel langsung dari modul GI. Saat Purchase Return `CONFIRMED` direversal, modul Purchase Return memvalidasi generated GI, membuat linked inbound stock movements dengan `reversalOfMovementId`, lalu menandai generated GI `CANCELLED` sebagai bagian dari transaksi reversal sumber.
 
 ## 7. Purchase Return Seam
 
@@ -117,6 +119,8 @@ Port `PurchaseReturnGoodsIssueSourcePort` mendefinisikan kontrak minimum yang ha
 3. `hasCompletedGoodsIssue(purchaseReturnId)` sebagai guard idempotency agar satu Purchase Return tidak membuat GI completed ganda
 
 Adapter `GoodsIssueSourceResolver` untuk Purchase Return sudah aktif. Confirm Purchase Return membuat GI dari snapshot return, menyelesaikan posting reserved issue, lalu mengonsumsi reservation setelah journal `PURCHASE_RETURN` berhasil diposting.
+
+Confirmed Purchase Return reversal memakai adapter source-owned khusus di modul Purchase Return. Adapter tersebut memuat movement outbound generated GI, meminta target container reversal per movement, memanggil `StockMovementReversalService`, dan baru menandai GI `CANCELLED` setelah guard downstream Purchase Return lolos.
 
 ## 8. UI Behavior
 
@@ -139,9 +143,8 @@ Form memakai pola header-lines:
 
 ## 9. Deferred Items
 
-1. Debit Memo, AP reduction, Input VAT reversal, allocation settlement, dan FX untuk Purchase Return.
-2. Confirmed Purchase Return reversal orchestration tetap deferred ke Phase F walaupun primitive linked reversal generic sudah tersedia.
-3. Manual GI business rules yang lengkap.
-4. Sales/Delivery Order, scrap, internal use, production/consumption resolvers.
-5. Dedicated serial detail table per line.
-6. Playwright E2E flow untuk selector, drawer, save, complete, dan cancel.
+1. Vendor Refund untuk settlement lanjutan Purchase Return/Debit Memo.
+2. Manual GI business rules yang lengkap.
+3. Sales/Delivery Order, scrap, internal use, production/consumption resolvers.
+4. Dedicated serial detail table per line.
+5. Playwright E2E flow untuk selector, drawer, save, complete, dan cancel manual GI.

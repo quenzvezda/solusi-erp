@@ -22,6 +22,7 @@ class PurchaseReturnMessagesTest {
             "label.purchase-return.exchange-rate", "label.purchase-return.goods-receipt",
             "label.purchase-return.purchase-order", "label.purchase-return.goods-issue",
             "label.purchase-return.reason", "label.purchase-return.note", "label.purchase-return.status",
+            "label.purchase-return.header",
             "label.purchase-return.lines", "label.purchase-return.line.add", "label.purchase-return.line.empty",
             "label.purchase-return.empty", "label.purchase-return.select-source",
             "label.purchase-return.select-source.subtitle", "label.purchase-return.select-source.empty",
@@ -32,9 +33,15 @@ class PurchaseReturnMessagesTest {
             "label.purchase-return.reservation-summary", "label.purchase-return.approver",
             "label.purchase-return.submit", "label.purchase-return.confirm", "label.purchase-return.cancel",
             "label.purchase-return.cancel-submission", "label.purchase-return.continue",
+            "label.purchase-return.reverse", "label.purchase-return.reversal-date",
+            "label.purchase-return.reversal-reason", "label.purchase-return.reversed-by",
+            "label.purchase-return.reversal-journal", "label.purchase-return.reverse-lines",
+            "label.purchase-return.issued-from", "label.purchase-return.target-container",
+            "label.purchase-return.reverse-line-count", "label.purchase-return.reverse-target-count",
             "msg.success.purchase-return.created", "msg.success.purchase-return.updated",
             "msg.success.purchase-return.submitted", "msg.success.purchase-return.confirmed",
-            "msg.success.purchase-return.cancelled", "msg.confirm.purchase-return.submit",
+            "msg.success.purchase-return.cancelled", "msg.success.purchase-return.reversed",
+            "msg.confirm.purchase-return.submit",
             "msg.confirm.purchase-return.confirm", "msg.confirm.purchase-return.cancel",
             "msg.confirm.purchase-return.cancel-submission", "msg.purchase-return.cancel-submission.notes",
             "msg.warning.purchase-return.phase-one-accounting", "msg.error.purchase-return.not-found",
@@ -61,7 +68,22 @@ class PurchaseReturnMessagesTest {
             "msg.error.purchase-return.confirm.invalid-status",
             "msg.error.purchase-return.confirm.goods-issue-exists",
             "msg.error.purchase-return.confirm.gi-required", "msg.error.purchase-return.reservation.failed",
-            "msg.error.purchase-return.reservation.serial-failed"
+            "msg.error.purchase-return.reservation.serial-failed",
+            "msg.error.purchase-return.reverse.invalid-status", "msg.error.purchase-return.reverse.gi-required",
+            "msg.error.purchase-return.reverse.date-required", "msg.error.purchase-return.reverse.reason-required",
+            "msg.error.purchase-return.reverse.user-required", "msg.error.purchase-return.reverse.journal-required",
+            "msg.error.purchase-return.reverse.lines-required", "msg.error.purchase-return.reverse.original-movement-required",
+            "msg.error.purchase-return.reverse.target-container-required", "msg.error.purchase-return.reverse.product-required",
+            "msg.error.purchase-return.reverse.quantity-positive", "msg.error.purchase-return.reverse.gi-not-found",
+            "msg.error.purchase-return.reverse.gi-source-mismatch", "msg.error.purchase-return.reverse.gi-not-completed",
+            "msg.error.purchase-return.reverse.movements-not-found", "msg.error.purchase-return.reverse.journal-not-found",
+            "msg.error.purchase-return.reverse.debit-memo-not-found",
+            "msg.error.purchase-return.reverse.debit-memo-has-consumption",
+            "msg.error.purchase-return.reverse.debit-memo-not-fully-open",
+            "validation.purchase-return.reverse.reversal-date-required",
+            "validation.purchase-return.reverse.reason-required", "validation.purchase-return.reverse.lines-required",
+            "validation.purchase-return.reverse.original-movement-required",
+            "validation.purchase-return.reverse.target-container-required"
     );
 
     @Test
@@ -78,7 +100,7 @@ class PurchaseReturnMessagesTest {
         for (String key : KEYS) {
             assertThat(properties.getProperty(key)).as("missing message key %s", key).isNotBlank();
         }
-        for (String status : List.of("draft", "submitted", "approved", "rejected", "cancelled", "confirmed")) {
+        for (String status : List.of("draft", "submitted", "approved", "rejected", "cancelled", "confirmed", "reversed")) {
             assertThat(properties.getProperty("label.purchase-return.status." + status))
                     .as("missing status message %s", status).isNotBlank();
         }

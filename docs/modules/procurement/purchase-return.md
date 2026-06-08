@@ -2,9 +2,9 @@
 
 ## 1. Ringkasan
 
-Purchase Return mencatat pengembalian barang yang sudah diterima melalui Goods Receipt (GR) kepada supplier. Implementasi saat ini mencakup pemilihan GR eligible, draft return, approval, reservasi stok, konfirmasi outbound melalui Goods Issue (GI), posting journal inventory/GRIR khusus Purchase Return, dan pembuatan Vendor Debit Memo core.
+Purchase Return mencatat pengembalian barang yang sudah diterima melalui Goods Receipt (GR) kepada supplier. Implementasi saat ini mencakup pemilihan GR eligible, draft return, approval, reservasi stok, konfirmasi outbound melalui Goods Issue (GI), posting journal inventory/GRIR khusus Purchase Return, pembuatan Vendor Debit Memo, dan full reversal untuk Purchase Return yang sudah `CONFIRMED`.
 
-Pengurangan AP, reversal Input VAT, alokasi Debit Memo ke Vendor Bill, dan settlement lanjutan masih deferred ke Debit Memo Allocation phase berikutnya.
+Pengurangan AP, reversal Input VAT, alokasi Debit Memo ke Vendor Bill, dan settlement lanjutan berjalan melalui Debit Memo Allocation.
 
 ## 2. Alur UI
 
@@ -16,6 +16,7 @@ Pengurangan AP, reversal Input VAT, alokasi Debit Memo ke Vendor Bill, dan settl
 6. Untuk barang serial, pilih serial dari modal. Sistem mengelompokkan pilihan per container aktual dan menurunkan qty dari jumlah serial.
 7. Simpan draft, submit ke approval, lalu confirm setelah status `APPROVED`.
 8. Setelah confirm berhasil, detail Purchase Return menampilkan link ke generated GI dan Debit Memo.
+9. Untuk Purchase Return `CONFIRMED`, pilih **Reverse Purchase Return**, isi tanggal/alasan reversal, pilih target container inbound per movement, lalu submit. Detail akan menampilkan status `REVERSED`, metadata reversal, dan link jurnal reversal.
 
 ## 3. Lifecycle
 
@@ -27,6 +28,7 @@ Pengurangan AP, reversal Input VAT, alokasi Debit Memo ke Vendor Bill, dan settl
 | `REJECTED` | Approval ditolak; reservasi dilepas. |
 | `CANCELLED` | Draft, submission, atau retur approved dibatalkan sesuai guard use case. |
 | `CONFIRMED` | GI outbound sudah selesai dan reservasi sudah dikonsumsi. |
+| `REVERSED` | Final state untuk Purchase Return confirmed yang sudah dibalik penuh melalui stock reversal, journal reversal, GI cancellation, dan Debit Memo cancellation. |
 
 ## 4. Reservasi Stok
 
@@ -58,16 +60,43 @@ Journal Purchase Return hanya membalik inventory dan GR/IR sebesar nilai invento
 
 Pada transaksi confirm yang sama, sistem membuat satu Debit Memo `OPEN` dari snapshot Purchase Return. Debit Memo menyimpan source Purchase Return, supplier, currency, return date sebagai memo date, serta DPP/tax/gross snapshot per line. Debit Memo creation tidak mem-post journal.
 
-## 6. Batas Berikutnya
+## 6. Confirmed Reversal
+
+Purchase Return `CONFIRMED` tidak memakai cancel biasa. Reversal memakai status final `REVERSED` agar audit membedakan dokumen yang batal sebelum posting fisik dari dokumen yang pernah mem-post stock/accounting lalu dibalik.
+
+Guard sebelum reversal:
+
+1. Purchase Return harus `CONFIRMED` dan memiliki generated GI.
+2. Debit Memo hasil Purchase Return harus ditemukan dan dikunci.
+3. Tidak boleh ada Debit Memo Allocation berstatus `CONFIRMED`.
+4. Confirmed applied amount Debit Memo harus `0`, sehingga remaining balance kembali full dan status Debit Memo `OPEN`.
+5. Accounting period untuk `reversalDate` harus `OPEN`.
+6. Semua outbound movement generated GI direverse penuh; target container wajib aktif dan berada dalam facility yang sama.
+
+Urutan transaksi:
+
+1. validasi dan lock Purchase Return;
+2. validasi/lock Debit Memo dan guard DMA/full remaining;
+3. validasi period reversal;
+4. buat inbound stock movement reversal yang terhubung ke movement outbound asal melalui `reversalOfMovementId`;
+5. reverse journal `PURCHASE_RETURN` asal memakai linked journal reversal;
+6. mark generated GI menjadi `CANCELLED`;
+7. cancel Debit Memo;
+8. simpan snapshot `PurchaseReturnReversalLine`;
+9. mark Purchase Return menjadi `REVERSED`.
+
+Partial Purchase Return reversal, cross-facility reversal, Vendor Refund, dan reversal otomatis DMA dari layar Purchase Return belum termasuk MVP ini.
+
+## 7. Batas Berikutnya
 
 Phase berikutnya wajib:
 
-1. menambahkan Debit Memo Allocation;
-2. memakai status billing dan clearing account aktual untuk aplikasi ke Vendor Bill;
-3. menangani reversal Input VAT, AP, settlement allocation, dan FX sesuai kondisi invoice;
-4. mengorkestrasi reversal Purchase Return yang sudah `CONFIRMED` lewat primitive reversal stock/journal yang sudah tersedia.
+1. menambahkan Vendor Refund;
+2. menangani partial Purchase Return reversal;
+3. menangani cross-facility reversal dengan transfer terpisah;
+4. memperluas integrasi DMA blocker lintas modul bila dibutuhkan untuk skenario end-to-end yang lebih besar.
 
-## 7. Otorisasi
+## 8. Otorisasi
 
 | Permission | Akses |
 |---|---|
@@ -77,3 +106,4 @@ Phase berikutnya wajib:
 | `PURCHASE-RETURN_SUBMIT` | Submit ke approval |
 | `PURCHASE-RETURN_CONFIRM` | Konfirmasi approved return |
 | `PURCHASE-RETURN_CANCEL` | Pembatalan submission atau approved return |
+| `PURCHASE-RETURN_REVERSE` | Reversal Purchase Return yang sudah confirmed |
