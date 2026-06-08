@@ -6,7 +6,8 @@ public enum PurchaseReturnStatus {
     APPROVED,
     REJECTED,
     CANCELLED,
-    CONFIRMED;
+    CONFIRMED,
+    REVERSED;
 
     public boolean canEdit() {
         return this == DRAFT;
@@ -38,5 +39,9 @@ public enum PurchaseReturnStatus {
 
     public boolean canConfirm() {
         return this == APPROVED;
+    }
+
+    public boolean canReverse() {
+        return this == CONFIRMED;
     }
 }

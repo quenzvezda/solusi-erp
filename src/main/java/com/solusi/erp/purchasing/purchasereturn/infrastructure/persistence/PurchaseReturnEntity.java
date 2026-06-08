@@ -17,7 +17,9 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "pur_purchase_returns")
@@ -76,6 +78,21 @@ public class PurchaseReturnEntity extends BaseModel {
     @Column(name = "generated_gi_id", unique = true)
     private Long generatedGoodsIssueId;
 
+    @Column(name = "reversal_date")
+    private LocalDate reversalDate;
+
+    @Column(name = "reversal_reason", length = 500)
+    private String reversalReason;
+
+    @Column(name = "reversed_by_user_id")
+    private Long reversedByUserId;
+
+    @Column(name = "reversal_journal_entry_id")
+    private Long reversalJournalEntryId;
+
     @OneToMany(mappedBy = "header", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PurchaseReturnLineEntity> lines = new ArrayList<>();
+
+    @OneToMany(mappedBy = "purchaseReturn", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<PurchaseReturnReversalLineEntity> reversalLines = new LinkedHashSet<>();
 }

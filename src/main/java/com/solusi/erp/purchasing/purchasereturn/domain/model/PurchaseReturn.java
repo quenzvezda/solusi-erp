@@ -29,7 +29,12 @@ public class PurchaseReturn {
     private String note;
     private Long submittedByUserId;
     private Long generatedGoodsIssueId;
+    private LocalDate reversalDate;
+    private String reversalReason;
+    private Long reversedByUserId;
+    private Long reversalJournalEntryId;
     private List<PurchaseReturnLine> lines;
+    private List<PurchaseReturnReversalLine> reversalLines;
 
     private PurchaseReturn(AuditMetadata metadata,
                            String code,
@@ -48,7 +53,12 @@ public class PurchaseReturn {
                            String note,
                            Long submittedByUserId,
                            Long generatedGoodsIssueId,
-                           List<PurchaseReturnLine> lines) {
+                           LocalDate reversalDate,
+                           String reversalReason,
+                           Long reversedByUserId,
+                           Long reversalJournalEntryId,
+                           List<PurchaseReturnLine> lines,
+                           List<PurchaseReturnReversalLine> reversalLines) {
         this.metadata = metadata == null ? AuditMetadata.empty() : metadata;
         this.code = code;
         this.returnDate = returnDate;
@@ -66,7 +76,12 @@ public class PurchaseReturn {
         this.note = note;
         this.submittedByUserId = submittedByUserId;
         this.generatedGoodsIssueId = generatedGoodsIssueId;
+        this.reversalDate = reversalDate;
+        this.reversalReason = reversalReason;
+        this.reversedByUserId = reversedByUserId;
+        this.reversalJournalEntryId = reversalJournalEntryId;
         this.lines = copyLines(lines);
+        this.reversalLines = copyReversalLines(reversalLines);
     }
 
     public static PurchaseReturn createNew(String code,
@@ -87,7 +102,8 @@ public class PurchaseReturn {
         return new PurchaseReturn(
                 AuditMetadata.empty(), code, returnDate, referenceType, referenceId, referenceCode,
                 purchaseOrderId, purchaseOrderCode, supplierId, facilityId, currencyId, exchangeRate,
-                PurchaseReturnStatus.DRAFT, reason, note, null, null, lines
+                PurchaseReturnStatus.DRAFT, reason, note, null, null, null, null, null, null,
+                lines, List.of()
         );
     }
 
@@ -109,10 +125,41 @@ public class PurchaseReturn {
                                               Long submittedByUserId,
                                               Long generatedGoodsIssueId,
                                               List<PurchaseReturnLine> lines) {
+        return reconstitute(
+                metadata, code, returnDate, referenceType, referenceId, referenceCode, purchaseOrderId,
+                purchaseOrderCode, supplierId, facilityId, currencyId, exchangeRate, status, reason,
+                note, submittedByUserId, generatedGoodsIssueId, null, null, null, null, lines, List.of()
+        );
+    }
+
+    public static PurchaseReturn reconstitute(AuditMetadata metadata,
+                                              String code,
+                                              LocalDate returnDate,
+                                              String referenceType,
+                                              Long referenceId,
+                                              String referenceCode,
+                                              Long purchaseOrderId,
+                                              String purchaseOrderCode,
+                                              Long supplierId,
+                                              Long facilityId,
+                                              Long currencyId,
+                                              BigDecimal exchangeRate,
+                                              PurchaseReturnStatus status,
+                                              PurchaseReturnReason reason,
+                                              String note,
+                                              Long submittedByUserId,
+                                              Long generatedGoodsIssueId,
+                                              LocalDate reversalDate,
+                                              String reversalReason,
+                                              Long reversedByUserId,
+                                              Long reversalJournalEntryId,
+                                              List<PurchaseReturnLine> lines,
+                                              List<PurchaseReturnReversalLine> reversalLines) {
         return new PurchaseReturn(
                 metadata, code, returnDate, referenceType, referenceId, referenceCode, purchaseOrderId,
                 purchaseOrderCode, supplierId, facilityId, currencyId, exchangeRate, status, reason,
-                note, submittedByUserId, generatedGoodsIssueId, lines
+                note, submittedByUserId, generatedGoodsIssueId, reversalDate, reversalReason,
+                reversedByUserId, reversalJournalEntryId, lines, reversalLines
         );
     }
 
@@ -201,6 +248,55 @@ public class PurchaseReturn {
         }
     }
 
+    public void reverse(LocalDate reversalDate,
+                        String reversalReason,
+                        Long reversedByUserId,
+                        Long reversalJournalEntryId,
+                        List<PurchaseReturnReversalLine> reversalLines) {
+        validateReversal(reversalDate, reversalReason, reversedByUserId, reversalJournalEntryId, reversalLines);
+        this.reversalDate = reversalDate;
+        this.reversalReason = reversalReason.trim();
+        this.reversedByUserId = reversedByUserId;
+        this.reversalJournalEntryId = reversalJournalEntryId;
+        this.reversalLines = copyReversalLines(reversalLines);
+        status = PurchaseReturnStatus.REVERSED;
+    }
+
+    public void reverse(LocalDate reversalDate,
+                        String reversalReason,
+                        Long reversedByUserId,
+                        Long reversalJournalEntryId) {
+        reverse(reversalDate, reversalReason, reversedByUserId, reversalJournalEntryId, List.of());
+    }
+
+    public void validateReversal(LocalDate reversalDate,
+                                 String reversalReason,
+                                 Long reversedByUserId,
+                                 Long reversalJournalEntryId,
+                                 List<PurchaseReturnReversalLine> reversalLines) {
+        if (!status.canReverse()) {
+            throw new DomainException("msg.error.purchase-return.reverse.invalid-status");
+        }
+        if (generatedGoodsIssueId == null) {
+            throw new DomainException("msg.error.purchase-return.reverse.gi-required");
+        }
+        if (reversalDate == null) {
+            throw new DomainException("msg.error.purchase-return.reverse.date-required");
+        }
+        if (isBlank(reversalReason)) {
+            throw new DomainException("msg.error.purchase-return.reverse.reason-required");
+        }
+        if (reversedByUserId == null) {
+            throw new DomainException("msg.error.purchase-return.reverse.user-required");
+        }
+        if (reversalJournalEntryId == null) {
+            throw new DomainException("msg.error.purchase-return.reverse.journal-required");
+        }
+        if (reversalLines == null || reversalLines.isEmpty()) {
+            throw new DomainException("msg.error.purchase-return.reverse.lines-required");
+        }
+    }
+
     private static void validateHeader(String referenceType,
                                        Long referenceId,
                                        PurchaseReturnReason reason,
@@ -228,6 +324,10 @@ public class PurchaseReturn {
         return lines == null ? List.of() : List.copyOf(lines);
     }
 
+    private static List<PurchaseReturnReversalLine> copyReversalLines(List<PurchaseReturnReversalLine> lines) {
+        return lines == null ? List.of() : List.copyOf(lines);
+    }
+
     public Long getId() { return metadata.id(); }
     public AuditMetadata getMetadata() { return metadata; }
     public String getCode() { return code; }
@@ -246,5 +346,10 @@ public class PurchaseReturn {
     public String getNote() { return note; }
     public Long getSubmittedByUserId() { return submittedByUserId; }
     public Long getGeneratedGoodsIssueId() { return generatedGoodsIssueId; }
+    public LocalDate getReversalDate() { return reversalDate; }
+    public String getReversalReason() { return reversalReason; }
+    public Long getReversedByUserId() { return reversedByUserId; }
+    public Long getReversalJournalEntryId() { return reversalJournalEntryId; }
     public List<PurchaseReturnLine> getLines() { return Collections.unmodifiableList(lines); }
+    public List<PurchaseReturnReversalLine> getReversalLines() { return Collections.unmodifiableList(reversalLines); }
 }

@@ -34,6 +34,10 @@ public class PurchaseReturnDetailResponse extends BaseAuditResponse {
     private String note;
     private Long submittedByUserId;
     private Long generatedGoodsIssueId;
+    private LocalDate reversalDate;
+    private String reversalReason;
+    private Long reversedByUserId;
+    private Long reversalJournalEntryId;
     private BigDecimal totalQuantity;
     private BigDecimal totalAmount;
     private List<PurchaseReturnLineDetailResponse> lines;

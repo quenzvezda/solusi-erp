@@ -203,9 +203,112 @@ class PurchaseReturnTest {
                 .hasMessage("msg.error.purchase-return.cancel-approved.invalid-status");
     }
 
+    @Test
+    void reverse_confirmed_recordsAuditAndLineSnapshots() {
+        PurchaseReturn purchaseReturn = confirmed();
+
+        purchaseReturn.reverse(
+                LocalDate.of(2026, 6, 2),
+                "  Full reversal  ",
+                77L,
+                88L,
+                List.of(reversalLine()));
+
+        assertThat(purchaseReturn.getStatus()).isEqualTo(PurchaseReturnStatus.REVERSED);
+        assertThat(purchaseReturn.getReversalDate()).isEqualTo(LocalDate.of(2026, 6, 2));
+        assertThat(purchaseReturn.getReversalReason()).isEqualTo("Full reversal");
+        assertThat(purchaseReturn.getReversedByUserId()).isEqualTo(77L);
+        assertThat(purchaseReturn.getReversalJournalEntryId()).isEqualTo(88L);
+        assertThat(purchaseReturn.getReversalLines()).singleElement().satisfies(line -> {
+            assertThat(line.getPurchaseReturnLineId()).isEqualTo(11L);
+            assertThat(line.getOriginalMovementId()).isEqualTo(900L);
+            assertThat(line.getTargetContainerId()).isEqualTo(40L);
+            assertThat(line.getQuantity()).isEqualByComparingTo("1");
+        });
+    }
+
+    @Test
+    void reverse_draft_rejects() {
+        assertThatThrownBy(() -> draft().reverse(
+                LocalDate.of(2026, 6, 2), "reason", 77L, 88L, List.of(reversalLine())))
+                .isInstanceOf(DomainException.class)
+                .hasMessage("msg.error.purchase-return.reverse.invalid-status");
+    }
+
+    @Test
+    void reverse_confirmedWithoutGeneratedGoodsIssue_rejects() {
+        PurchaseReturn purchaseReturn = PurchaseReturn.reconstitute(
+                null, "PRT-001", LocalDate.now(), "GOODS_RECEIPT", 1L, "GR-001",
+                2L, "PO-001", 3L, 4L, 5L, BigDecimal.ONE, PurchaseReturnStatus.CONFIRMED,
+                PurchaseReturnReason.DAMAGED, null, 99L, null, List.of(defaultLine()));
+
+        assertThatThrownBy(() -> purchaseReturn.reverse(
+                LocalDate.of(2026, 6, 2), "reason", 77L, 88L, List.of(reversalLine())))
+                .isInstanceOf(DomainException.class)
+                .hasMessage("msg.error.purchase-return.reverse.gi-required");
+    }
+
+    @Test
+    void reverse_withoutRequiredAuditFields_rejects() {
+        PurchaseReturn purchaseReturn = confirmed();
+
+        assertThatThrownBy(() -> purchaseReturn.reverse(null, "reason", 77L, 88L, List.of(reversalLine())))
+                .isInstanceOf(DomainException.class)
+                .hasMessage("msg.error.purchase-return.reverse.date-required");
+        assertThatThrownBy(() -> purchaseReturn.reverse(LocalDate.of(2026, 6, 2), " ", 77L, 88L, List.of(reversalLine())))
+                .isInstanceOf(DomainException.class)
+                .hasMessage("msg.error.purchase-return.reverse.reason-required");
+        assertThatThrownBy(() -> purchaseReturn.reverse(LocalDate.of(2026, 6, 2), "reason", null, 88L, List.of(reversalLine())))
+                .isInstanceOf(DomainException.class)
+                .hasMessage("msg.error.purchase-return.reverse.user-required");
+        assertThatThrownBy(() -> purchaseReturn.reverse(LocalDate.of(2026, 6, 2), "reason", 77L, null, List.of(reversalLine())))
+                .isInstanceOf(DomainException.class)
+                .hasMessage("msg.error.purchase-return.reverse.journal-required");
+    }
+
+    @Test
+    void reverse_withoutLineSnapshots_rejects() {
+        assertThatThrownBy(() -> confirmed().reverse(
+                LocalDate.of(2026, 6, 2), "reason", 77L, 88L, List.of()))
+                .isInstanceOf(DomainException.class)
+                .hasMessage("msg.error.purchase-return.reverse.lines-required");
+    }
+
+    @Test
+    void reverseLine_withoutRequiredSnapshotFields_rejects() {
+        assertThatThrownBy(() -> PurchaseReturnReversalLine.create(null, null, 40L, 10L, null, BigDecimal.ONE))
+                .isInstanceOf(DomainException.class)
+                .hasMessage("msg.error.purchase-return.reverse.original-movement-required");
+        assertThatThrownBy(() -> PurchaseReturnReversalLine.create(null, 900L, null, 10L, null, BigDecimal.ONE))
+                .isInstanceOf(DomainException.class)
+                .hasMessage("msg.error.purchase-return.reverse.target-container-required");
+        assertThatThrownBy(() -> PurchaseReturnReversalLine.create(null, 900L, 40L, null, null, BigDecimal.ONE))
+                .isInstanceOf(DomainException.class)
+                .hasMessage("msg.error.purchase-return.reverse.product-required");
+        assertThatThrownBy(() -> PurchaseReturnReversalLine.create(null, 900L, 40L, 10L, null, BigDecimal.ZERO))
+                .isInstanceOf(DomainException.class)
+                .hasMessage("msg.error.purchase-return.reverse.quantity-positive");
+    }
+
+    @Test
+    void cancelApproved_reversed_rejects() {
+        PurchaseReturn purchaseReturn = confirmed();
+        purchaseReturn.reverse(LocalDate.of(2026, 6, 2), "reason", 77L, 88L, List.of(reversalLine()));
+
+        assertThatThrownBy(purchaseReturn::cancelApproved)
+                .isInstanceOf(DomainException.class)
+                .hasMessage("msg.error.purchase-return.cancel-approved.invalid-status");
+    }
+
     private PurchaseReturn approved() {
         PurchaseReturn purchaseReturn = submitted();
         purchaseReturn.approve();
+        return purchaseReturn;
+    }
+
+    private PurchaseReturn confirmed() {
+        PurchaseReturn purchaseReturn = approved();
+        purchaseReturn.confirm(123L);
         return purchaseReturn;
     }
 
@@ -228,5 +331,9 @@ class PurchaseReturnTest {
 
     private PurchaseReturnLine defaultLine() {
         return line(false, BigDecimal.ONE, BigDecimal.ONE, null, PurchaseReturnReason.DAMAGED, null);
+    }
+
+    private PurchaseReturnReversalLine reversalLine() {
+        return PurchaseReturnReversalLine.create(11L, 900L, 40L, 10L, "SER-001", BigDecimal.ONE);
     }
 }

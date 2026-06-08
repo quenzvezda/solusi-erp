@@ -131,22 +131,22 @@ Teach Purchase Return that confirmed reversal is a final lifecycle state with im
 **Reference module:** `purchasing.purchasereturn`
 
 Steps:
-- [ ] Add `REVERSED` to `PurchaseReturnStatus` and add `canReverse()` returning true only for `CONFIRMED`.
+- [x] Add `REVERSED` to `PurchaseReturnStatus` and add `canReverse()` returning true only for `CONFIRMED`.
       ref: `src/main/java/com/solusi/erp/purchasing/purchasereturn/domain/model/PurchaseReturnStatus.java:L3-L42` - current lifecycle helper methods
-- [ ] Add `PurchaseReturn.reverse(reversalDate, reversalReason, reversedByUserId, reversalJournalEntryId)` with guards for status, non-null date, non-blank reason, actor, and journal id.
+- [x] Add `PurchaseReturn.reverse(reversalDate, reversalReason, reversedByUserId, reversalJournalEntryId)` with guards for status, non-null date, non-blank reason, actor, and journal id.
       ref: `src/main/java/com/solusi/erp/purchasing/purchasereturn/domain/model/PurchaseReturn.java:L173-L191` - confirm transition records generated GI and status
-- [ ] Ensure `cancelApproved()` still rejects `CONFIRMED` and `REVERSED`; do not repurpose existing cancel methods for confirmed reversal.
+- [x] Ensure `cancelApproved()` still rejects `CONFIRMED` and `REVERSED`; do not repurpose existing cancel methods for confirmed reversal.
       ref: `src/main/java/com/solusi/erp/purchasing/purchasereturn/domain/model/PurchaseReturn.java:L159-L166` - pre-confirm cancel transition
-- [ ] Map new audit fields through entity, persistence mapper, repository save/load, web summary/detail DTOs, and list/detail mapper.
+- [x] Map new audit fields through entity, persistence mapper, repository save/load, web summary/detail DTOs, and list/detail mapper.
       ref: `src/main/java/com/solusi/erp/purchasing/purchasereturn/web/dto/PurchaseReturnDetailResponse.java:L17-L39` - current detail DTO fields
       ref: `src/main/java/com/solusi/erp/purchasing/purchasereturn/web/mapper/PurchaseReturnWebMapper.java:L75-L124` - summary/detail mapping path
-- [ ] Add repository locking support for reversal if not already present, e.g. `findByIdForUpdate`, so two reverse requests cannot both pass status checks.
+- [x] Add repository locking support for reversal if not already present, e.g. `findByIdForUpdate`, so two reverse requests cannot both pass status checks.
       ref: `src/main/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/persistence/PurchaseReturnJpaRepository.java:L10-L55` - current repository queries
-- [ ] Persist and query reversal line snapshots without changing original Purchase Return lines.
+- [x] Persist and query reversal line snapshots without changing original Purchase Return lines.
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md:L1082-L1096` - full reversal line snapshot direction
-- [ ] **TEST:** Extend `PurchaseReturnTest` for `CONFIRMED -> REVERSED`, required reversal date/reason/actor/journal, invalid statuses, and immutability of pre-confirm cancel.
+- [x] **TEST:** Extend `PurchaseReturnTest` for `CONFIRMED -> REVERSED`, required reversal date/reason/actor/journal, invalid statuses, and immutability of pre-confirm cancel.
       ref: `src/test/java/com/solusi/erp/purchasing/purchasereturn/domain/model/PurchaseReturnTest.java:L1-L232` - aggregate lifecycle test pattern
-- [ ] **TEST:** Extend persistence mapper/repository tests for round-tripping `REVERSED` and reversal audit fields.
+- [x] **TEST:** Extend persistence mapper/repository tests for round-tripping `REVERSED` and reversal audit fields.
       ref: `src/test/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/persistence/PurchaseReturnPersistenceMapperTest.java` - mapper persistence contract location
 
 **Validation criteria:**

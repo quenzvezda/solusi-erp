@@ -21,6 +21,7 @@ import com.solusi.erp.purchasing.purchasereturn.domain.model.PurchaseReturnStatu
 import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnDetailResponse;
 import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnSaveLineRequest;
 import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnSaveRequest;
+import com.solusi.erp.purchasing.purchasereturn.web.dto.PurchaseReturnSummaryResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -76,11 +77,28 @@ class PurchaseReturnWebMapperTest {
 
         assertThat(result.getReason()).isEqualTo(PurchaseReturnReason.DAMAGED);
         assertThat(result.getGeneratedGoodsIssueId()).isEqualTo(500L);
+        assertThat(result.getReversalDate()).isEqualTo(LocalDate.of(2026, 6, 2));
+        assertThat(result.getReversalReason()).isEqualTo("Full reversal");
+        assertThat(result.getReversedByUserId()).isEqualTo(77L);
+        assertThat(result.getReversalJournalEntryId()).isEqualTo(88L);
         assertThat(result.getTotalQuantity()).isEqualByComparingTo("2");
         assertThat(result.getTotalAmount()).isEqualByComparingTo("200");
         assertThat(result.getLines().get(0).getContainerCode()).isEqualTo("BIN");
         assertThat(result.getLines().get(0).getSerialNumbers()).isEqualTo("SER-001,SER-002");
         assertThat(result.getLines().get(0).getValuationReferenceLineId()).isEqualTo(11L);
+    }
+
+    @Test
+    void toSummaryResponse_mapsReversalAuditFields() {
+        when(partyLookupProvider.resolve(3L)).thenReturn(new LookupDto(3L, "Supplier", "SUP"));
+
+        PurchaseReturnSummaryResponse result = mapper.toSummaryResponse(purchaseReturn());
+
+        assertThat(result.getStatus()).isEqualTo(PurchaseReturnStatus.CONFIRMED);
+        assertThat(result.getReversalDate()).isEqualTo(LocalDate.of(2026, 6, 2));
+        assertThat(result.getReversalReason()).isEqualTo("Full reversal");
+        assertThat(result.getReversedByUserId()).isEqualTo(77L);
+        assertThat(result.getReversalJournalEntryId()).isEqualTo(88L);
     }
 
     @Test
@@ -130,7 +148,8 @@ class PurchaseReturnWebMapperTest {
                 new AuditMetadata(1L, 0L, null, null, null, null),
                 "PRT-001", LocalDate.of(2026, 6, 1), "GOODS_RECEIPT", 1L, "GR-001",
                 2L, "PO-001", 3L, 30L, 5L, BigDecimal.ONE, PurchaseReturnStatus.CONFIRMED,
-                PurchaseReturnReason.DAMAGED, null, 99L, 500L, List.of(line()));
+                PurchaseReturnReason.DAMAGED, null, 99L, 500L,
+                LocalDate.of(2026, 6, 2), "Full reversal", 77L, 88L, List.of(line()), List.of());
     }
 
     private PurchaseReturnLine line() {

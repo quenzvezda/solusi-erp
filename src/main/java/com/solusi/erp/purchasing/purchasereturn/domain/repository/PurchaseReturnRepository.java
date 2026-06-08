@@ -13,6 +13,8 @@ public interface PurchaseReturnRepository {
 
     Optional<PurchaseReturn> findById(Long id);
 
+    Optional<PurchaseReturn> findByIdForUpdate(Long id);
+
     Page<PurchaseReturn> findAll(String keyword, PurchaseReturnStatus status, Pageable pageable);
 
     boolean existsByCode(String code);

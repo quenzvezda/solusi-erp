@@ -22,6 +22,10 @@ public class PurchaseReturnSummaryResponse extends BaseAuditResponse {
     private Long purchaseOrderId;
     private String purchaseOrderCode;
     private PurchaseReturnStatus status;
+    private LocalDate reversalDate;
+    private String reversalReason;
+    private Long reversedByUserId;
+    private Long reversalJournalEntryId;
     private BigDecimal totalQuantity;
     private BigDecimal totalAmount;
 }

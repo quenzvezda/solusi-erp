@@ -79,6 +79,10 @@ public class PurchaseReturnWebMapper {
         response.setPurchaseOrderId(domain.getPurchaseOrderId());
         response.setPurchaseOrderCode(domain.getPurchaseOrderCode());
         response.setStatus(domain.getStatus());
+        response.setReversalDate(domain.getReversalDate());
+        response.setReversalReason(domain.getReversalReason());
+        response.setReversedByUserId(domain.getReversedByUserId());
+        response.setReversalJournalEntryId(domain.getReversalJournalEntryId());
         response.setTotalQuantity(totalQuantity(domain.getLines()));
         response.setTotalAmount(totalAmount(domain.getLines()));
         return response;
@@ -105,6 +109,10 @@ public class PurchaseReturnWebMapper {
         response.setNote(domain.getNote());
         response.setSubmittedByUserId(domain.getSubmittedByUserId());
         response.setGeneratedGoodsIssueId(domain.getGeneratedGoodsIssueId());
+        response.setReversalDate(domain.getReversalDate());
+        response.setReversalReason(domain.getReversalReason());
+        response.setReversedByUserId(domain.getReversedByUserId());
+        response.setReversalJournalEntryId(domain.getReversalJournalEntryId());
         response.setTotalQuantity(totalQuantity(domain.getLines()));
         response.setTotalAmount(totalAmount(domain.getLines()));
         response.setLines(domain.getLines().stream().map(this::toLineDetailResponse).toList());

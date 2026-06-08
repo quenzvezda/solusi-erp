@@ -10,6 +10,7 @@ import com.solusi.erp.purchasing.purchasereturn.infrastructure.persistence.Purch
 import com.solusi.erp.purchasing.purchasereturn.infrastructure.persistence.PurchaseReturnJpaRepository;
 import com.solusi.erp.purchasing.purchasereturn.infrastructure.persistence.PurchaseReturnLineEntity;
 import com.solusi.erp.purchasing.purchasereturn.infrastructure.persistence.PurchaseReturnPersistenceMapper;
+import com.solusi.erp.purchasing.purchasereturn.infrastructure.persistence.PurchaseReturnReversalLineEntity;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,14 +30,23 @@ public class PurchaseReturnRepositoryImpl implements PurchaseReturnRepository {
     public PurchaseReturn save(PurchaseReturn purchaseReturn) {
         PurchaseReturnEntity entity = mapper.toEntity(purchaseReturn);
         List<PurchaseReturnLineEntity> lines = mapper.toLineEntityList(purchaseReturn.getLines(), entity);
+        List<PurchaseReturnReversalLineEntity> reversalLines =
+                mapper.toReversalLineEntityList(purchaseReturn.getReversalLines(), entity);
         entity.getLines().clear();
         entity.getLines().addAll(lines);
+        entity.getReversalLines().clear();
+        entity.getReversalLines().addAll(reversalLines);
         return mapper.toDomain(jpaRepository.save(entity));
     }
 
     @Override
     public Optional<PurchaseReturn> findById(Long id) {
         return jpaRepository.findByIdWithLines(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public Optional<PurchaseReturn> findByIdForUpdate(Long id) {
+        return jpaRepository.findByIdWithLinesForUpdate(id).map(mapper::toDomain);
     }
 
     @Override
