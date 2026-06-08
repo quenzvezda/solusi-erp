@@ -101,20 +101,20 @@ Add schema support for confirmed Purchase Return reversal and seed the public pe
 **Reference module:** `purchasing.purchasereturn`, `inventory.goodsissue`, `accountspayable.debitmemoallocation`
 
 Steps:
-- [ ] Create MariaDB and H2 `V75__Add_Purchase_Return_Reversal.sql` migrations.
+- [x] Create MariaDB and H2 `V75__Add_Purchase_Return_Reversal.sql` migrations.
       ref: `src/main/resources/db/migration/V67__Add_Purchase_Return_Phase_1.sql:L124` - Purchase Return sequence/menu/permission seed baseline
       ref: `src/main/resources/db/migration/V74__Add_Debit_Memo_Allocation.sql:L85-L98` - permission insertion and admin grant pattern
-- [ ] Add Purchase Return reversal audit columns: `reversal_date`, `reversal_reason`, `reversed_by_user_id`, and `reversal_journal_entry_id`.
+- [x] Add Purchase Return reversal audit columns: `reversal_date`, `reversal_reason`, `reversed_by_user_id`, and `reversal_journal_entry_id`.
       ref: `src/main/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/persistence/PurchaseReturnEntity.java:L41-L58` - current header persistence fields
       ref: `src/main/java/com/solusi/erp/inventory/goodsissue/infrastructure/persistence/GoodsIssueEntity.java` - GI cancellation metadata pattern from Phase A
-- [ ] Add `pur_purchase_return_reversal_lines` for immutable target-location snapshots keyed by Purchase Return and original movement id.
+- [x] Add `pur_purchase_return_reversal_lines` for immutable target-location snapshots keyed by Purchase Return and original movement id.
       Include at least `purchase_return_id`, `purchase_return_line_id`, `original_movement_id`, `target_container_id`, product/serial/quantity snapshots, and audit fields.
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md:L1043-L1096` - location, serial, and full reversal rules
-- [ ] Seed `PURCHASE-RETURN_REVERSE` under the same PermissionGroup used by Purchase Return and grant it to admin.
+- [x] Seed `PURCHASE-RETURN_REVERSE` under the same PermissionGroup used by Purchase Return and grant it to admin.
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md:L958-L979` - permission boundary for cancel vs reverse
-- [ ] Update H2 mirror migration with equivalent business columns/constraints and update E2E seed grants only if the non-admin E2E flow needs to click Reverse.
+- [x] Update H2 mirror migration with equivalent business columns/constraints and update E2E seed grants only if the non-admin E2E flow needs to click Reverse.
       ref: `docs/tests/playwright-e2e-guide.md:L45-L74` - H2 migration mirror must be version-aligned
-- [ ] **TEST:** Extend `PurchaseReturnMigrationTest` to assert V75 MariaDB/H2 contract parity, permission seed, admin grant, and reversal line table shape.
+- [x] **TEST:** Extend `PurchaseReturnMigrationTest` to assert V75 MariaDB/H2 contract parity, permission seed, admin grant, and reversal line table shape.
       ref: `src/test/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/persistence/PurchaseReturnMigrationTest.java:L1-L248` - current migration contract test style
 
 **Validation criteria:**

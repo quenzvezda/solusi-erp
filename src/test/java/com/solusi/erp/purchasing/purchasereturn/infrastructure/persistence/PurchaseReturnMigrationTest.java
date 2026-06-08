@@ -47,17 +47,37 @@ class PurchaseReturnMigrationTest {
         assertTableExists("inv_stock_reservations");
         assertTableExists("pur_purchase_returns");
         assertTableExists("pur_purchase_return_lines");
+        assertTableExists("pur_purchase_return_reversal_lines");
         assertColumnExists("inv_stock_reservations", "owner_ref_type");
         assertColumnExists("inv_stock_reservations", "valuation_ref_line_id");
         assertColumnExists("pur_purchase_returns", "generated_gi_id");
+        assertColumnExists("pur_purchase_returns", "reversal_date");
+        assertColumnExists("pur_purchase_returns", "reversal_reason");
+        assertColumnExists("pur_purchase_returns", "reversed_by_user_id");
+        assertColumnExists("pur_purchase_returns", "reversal_journal_entry_id");
         assertColumnExists("pur_purchase_return_lines", "tax_reversal_amount");
+        assertColumnExists("pur_purchase_return_reversal_lines", "purchase_return_id");
+        assertColumnExists("pur_purchase_return_reversal_lines", "purchase_return_line_id");
+        assertColumnExists("pur_purchase_return_reversal_lines", "original_movement_id");
+        assertColumnExists("pur_purchase_return_reversal_lines", "target_container_id");
+        assertColumnExists("pur_purchase_return_reversal_lines", "product_id");
+        assertColumnExists("pur_purchase_return_reversal_lines", "serial_number");
+        assertColumnExists("pur_purchase_return_reversal_lines", "quantity");
         assertIndexExists("inv_stock_reservations", "idx_stock_res_owner_status");
         assertIndexExists("inv_stock_reservations", "idx_stock_res_active_container");
         assertIndexExists("inv_stock_reservations", "idx_stock_res_valuation");
         assertIndexExists("inv_stock_reservations", "idx_stock_res_serial");
         assertIndexExists("pur_purchase_returns", "idx_purchase_return_source_gr");
         assertIndexExists("pur_purchase_returns", "idx_purchase_return_source_po");
+        assertIndexExists("pur_purchase_returns", "idx_purchase_return_reversal_date");
+        assertIndexExists("pur_purchase_returns", "idx_purchase_return_reversal_journal");
+        assertIndexExists("pur_purchase_return_reversal_lines", "idx_pr_reversal_line_header");
+        assertIndexExists("pur_purchase_return_reversal_lines", "idx_pr_reversal_line_pr_line");
+        assertIndexExists("pur_purchase_return_reversal_lines", "idx_pr_reversal_line_target_container");
+        assertUniqueConstraintExists("pur_purchase_return_reversal_lines", "uk_pr_reversal_line_movement");
         assertSequenceRegistrationExists();
+        assertPermissionSeeded("PURCHASE-RETURN_REVERSE");
+        assertAdminGranted("PURCHASE-RETURN_REVERSE");
     }
 
     @Test
@@ -152,6 +172,25 @@ class PurchaseReturnMigrationTest {
             assertThat(accountingMariaDb).contains(requiredToken);
             assertThat(accountingH2).contains(requiredToken);
         }
+
+        String reversalMariaDb = readResource("db/migration/V75__Add_Purchase_Return_Reversal.sql");
+        String reversalH2 = readResource("db/migration-h2/V75__Add_Purchase_Return_Reversal.sql");
+        for (String requiredToken : new String[]{
+                "reversal_date",
+                "reversal_reason",
+                "reversed_by_user_id",
+                "reversal_journal_entry_id",
+                "pur_purchase_return_reversal_lines",
+                "original_movement_id",
+                "target_container_id",
+                "uk_pr_reversal_line_movement",
+                "fk_pr_reversal_line_movement",
+                "'PURCHASE-RETURN_REVERSE'",
+                "r.name = 'ROLE_ADMIN'"
+        }) {
+            assertThat(reversalMariaDb).contains(requiredToken);
+            assertThat(reversalH2).contains(requiredToken);
+        }
     }
 
     @Test
@@ -208,6 +247,40 @@ class PurchaseReturnMigrationTest {
                   AND LOWER(index_name) = ?
                 """, Integer.class, tableName, indexName);
         assertThat(count).isGreaterThanOrEqualTo(1);
+    }
+
+    private void assertUniqueConstraintExists(String tableName, String constraintName) {
+        Integer count = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE LOWER(table_name) = ?
+                  AND LOWER(constraint_name) = ?
+                  AND constraint_type = 'UNIQUE'
+                """, Integer.class, tableName, constraintName);
+        assertThat(count).isEqualTo(1);
+    }
+
+    private void assertPermissionSeeded(String permissionName) {
+        Integer count = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*)
+                FROM permissions p
+                JOIN permission_groups pg ON pg.id = p.permission_group_id
+                WHERE p.name = ?
+                  AND pg.code = 'PUR-04'
+                """, Integer.class, permissionName);
+        assertThat(count).isEqualTo(1);
+    }
+
+    private void assertAdminGranted(String permissionName) {
+        Integer count = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*)
+                FROM role_permissions rp
+                JOIN roles r ON r.id = rp.role_id
+                JOIN permissions p ON p.id = rp.permission_id
+                WHERE r.name = 'ROLE_ADMIN'
+                  AND p.name = ?
+                """, Integer.class, permissionName);
+        assertThat(count).isEqualTo(1);
     }
 
     private void assertSequenceRegistrationExists() {
