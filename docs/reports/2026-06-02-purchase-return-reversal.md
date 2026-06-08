@@ -70,3 +70,16 @@
 - **Status:** clean
 - **Summary:** Added bilingual Purchase Return reversal labels/errors/validation/success messages, updated Purchase Return/Goods Issue/Debit Memo module docs, and removed stale confirmed-reversal deferral wording from shipped module docs.
 - **Validation:** `mvn test -Dtest="PurchaseReturnMessagesTest,*MessageBundleTest"` passed with 6 tests. Stale scans for `Phase F`, `Confirmed Purchase Return reversal deferred`, confirmed reversal deferral/cannot-reverse wording, and `deferred|ditunda` in updated module docs/messages found no stale deferral text. Focused run emitted expected low-coverage JaCoCo warnings but Maven exited success.
+
+## Task 6: Playwright E2E For Confirmed Purchase Return Reversal
+
+- **Status:** findings
+- **Summary:** Extended the Purchase Return Playwright spec with a focused confirmed-reversal scenario that creates and confirms a Purchase Return, reverses it through the browser form, and verifies generated Goods Issue, Debit Memo, and Purchase Return journal side effects.
+- **Validation:** `cd e2e-tests && npx tsc --noEmit` passed. `cd e2e-tests && npx playwright test tests/procurement/purchase-return.spec.ts --list` listed `reverses confirmed purchase return and cancels generated documents`. Initial direct Playwright run failed before scenario execution because no e2e server was running on `localhost:18080`. Retried through `.\e2e-tests\scripts\run-e2e.ps1 tests/procurement/purchase-return.spec.ts -g "reverses confirmed purchase return"` and it passed with 5 tests. Cold-cache rerun after removing `e2e-tests\.auth` passed with 5 tests.
+
+### Finding: DMA blocker flow left for Phase G integration
+- **Type:** deviation
+- **Severity:** info
+- **Detail:** The plan allowed skipping the combined blocker scenario if it was too broad for a stable Phase F spec. Creating a confirmed DMA, asserting Purchase Return reversal failure, reversing the DMA, and then asserting Purchase Return reversal success would duplicate the existing DMA E2E flow and add another long cross-module transaction to a Purchase Return scenario.
+- **Action taken:** Kept Task 6 focused on the no-DMA-consumption reversal path and verified the generated Debit Memo allocation history is empty/inactive. The DMA blocker/reverse integration remains covered by backend guard tests and should be added as a Phase G integration scenario if a broader cross-module E2E gate is desired.
+- **Ref:** `e2e-tests/tests/procurement/purchase-return.spec.ts`

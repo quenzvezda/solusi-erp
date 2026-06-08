@@ -288,27 +288,27 @@ Prove the browser flow and cross-module side effects work against the real Sprin
 **Reference module:** existing Purchase Return and Debit Memo Allocation specs
 
 Steps:
-- [ ] Before editing the spec, re-read the target templates and JS: `purchase-returns/view.html`, `purchase-returns/reverse.html`, `purchase-return/reverse.js`, and generated GI/Debit Memo detail templates for status badge selectors.
+- [x] Before editing the spec, re-read the target templates and JS: `purchase-returns/view.html`, `purchase-returns/reverse.html`, `purchase-return/reverse.js`, and generated GI/Debit Memo detail templates for status badge selectors.
       ref: `docs/tests/playwright-pitfalls.md:L214-L229` - authoring checklist and badge selector pitfalls
-- [ ] Extend `e2e-tests/tests/procurement/purchase-return.spec.ts` with a focused scenario for confirmed Purchase Return reversal without DMA consumption.
+- [x] Extend `e2e-tests/tests/procurement/purchase-return.spec.ts` with a focused scenario for confirmed Purchase Return reversal without DMA consumption.
       ref: `e2e-tests/tests/procurement/purchase-return.spec.ts:L129-L336` - current confirmed Purchase Return flow and generated DM assertions
-- [ ] Scenario A: create and confirm a Purchase Return, open `/purchasing/purchase-returns/{id}/reverse`, keep historical containers selected, set reversal date/reason, submit AJAX form, and assert redirect to detail with status `REVERSED`.
+- [x] Scenario A: create and confirm a Purchase Return, open `/purchasing/purchase-returns/{id}/reverse`, keep historical containers selected, set reversal date/reason, submit AJAX form, and assert redirect to detail with status `REVERSED`.
       ref: `docs/tests/playwright-e2e-guide.md:L520-L536` - Flatpickr helper guidance
       ref: `docs/spec/form-submission.md:L22-L69` - AJAX form behavior
-- [ ] Assert generated GI detail now shows `CANCELLED` and original GI outbound stock has a reversal journal/link visible where the UI exposes it.
+- [x] Assert generated GI detail now shows `CANCELLED` and original GI outbound stock has a reversal journal/link visible where the UI exposes it.
       ref: `e2e-tests/tests/procurement/purchase-return.spec.ts:L268-L335` - current GI and journal assertions
-- [ ] Assert generated Debit Memo detail now shows `CANCELLED` and its allocation history remains empty/inactive.
+- [x] Assert generated Debit Memo detail now shows `CANCELLED` and its allocation history remains empty/inactive.
       ref: `e2e-tests/tests/procurement/purchase-return.spec.ts:L273-L308` - current generated Debit Memo detail assertions
-- [ ] Assert the original `PURCHASE_RETURN` journal has a linked reversal journal and both original/reversal totals are balanced.
+- [x] Assert the original `PURCHASE_RETURN` journal has a linked reversal journal and both original/reversal totals are balanced.
       ref: `e2e-tests/tests/procurement/purchase-return.spec.ts:L310-L331` - existing Purchase Return journal verification
-- [ ] Add a blocker scenario if feasible within the same spec: create confirmed DMA for the generated DM, verify Purchase Return reverse fails, reverse the DMA, then verify Purchase Return reverse succeeds.
+- [x] Add a blocker scenario if feasible within the same spec: create confirmed DMA for the generated DM, verify Purchase Return reverse fails, reverse the DMA, then verify Purchase Return reverse succeeds.
       If this is too broad for a stable Phase F spec, record the reason in the report and leave the combined DMA blocker flow for Phase G integration.
       ref: `docs/reports/2026-06-02-phase-e-debit-memo-allocation.md:L43-L57` - DMA confirm/reverse behavior to integrate
-- [ ] Do not use `selectTomSelect`; use `setTomSelectValue` or payload-aware local option injection only when needed.
+- [x] Do not use `selectTomSelect`; use `setTomSelectValue` or payload-aware local option injection only when needed.
       ref: `docs/tests/playwright-pitfalls.md:L31-L46` - TomSelect helper limitations
-- [ ] For modal confirms, click `#confirm-modal-btn-yes`; do not use `page.on('dialog')`.
+- [x] For modal confirms, click `#confirm-modal-btn-yes`; do not use `page.on('dialog')`.
       ref: `docs/tests/playwright-pitfalls.md:L59-L70` - Bootstrap modal confirm pattern
-- [ ] Run the required E2E commands and keep failure screenshots/videos for diagnosis on first failure.
+- [x] Run the required E2E commands and keep failure screenshots/videos for diagnosis on first failure.
       ref: `docs/tests/playwright-e2e-guide.md:L85-L127` - one-shot runner and Playwright-only commands
 
 **Validation criteria:**
