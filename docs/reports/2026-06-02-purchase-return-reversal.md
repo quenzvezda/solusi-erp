@@ -83,3 +83,16 @@
 - **Detail:** The plan allowed skipping the combined blocker scenario if it was too broad for a stable Phase F spec. Creating a confirmed DMA, asserting Purchase Return reversal failure, reversing the DMA, and then asserting Purchase Return reversal success would duplicate the existing DMA E2E flow and add another long cross-module transaction to a Purchase Return scenario.
 - **Action taken:** Kept Task 6 focused on the no-DMA-consumption reversal path and verified the generated Debit Memo allocation history is empty/inactive. The DMA blocker/reverse integration remains covered by backend guard tests and should be added as a Phase G integration scenario if a broader cross-module E2E gate is desired.
 - **Ref:** `e2e-tests/tests/procurement/purchase-return.spec.ts`
+
+## Task 7: Regression Gate And Handoff
+
+- **Status:** clean
+- **Summary:** Closed Phase F with focused Purchase Return, reversal primitive, Debit Memo/DMA guard, migration, full Maven, and targeted Playwright normal/cold-cache gates.
+- **Focused backend gates:**
+  - `mvn test -Dtest="PurchaseReturnTest,ReverseConfirmedPurchaseReturnUseCaseTest,PurchaseReturnControllerTest,PurchaseReturn*IntegrationTest,PurchaseReturnConfigTest"` passed with 65 tests.
+  - `mvn test -Dtest="StockMovementReversalServiceTest,ReversePostedJournalUseCaseTest,DebitMemoCommandUseCaseTest,ReverseDebitMemoAllocationUseCaseTest"` passed with 25 tests.
+  - `mvn test -Dtest="DebitMemoCommandUseCaseTest,ConfirmDebitMemoAllocationUseCaseTest,ReverseDebitMemoAllocationUseCaseTest,DebitMemoTest"` passed with 39 tests.
+  - `mvn test -Dtest="*MigrationTest"` passed with 15 tests.
+- **Full backend gate:** `mvn clean test` passed with 2011 tests, 0 failures, 0 errors, 0 skipped, and `All coverage checks have been met`.
+- **Selected E2E gate:** `cd e2e-tests && npx tsc --noEmit` passed. `cd e2e-tests && npx playwright test tests/procurement/purchase-return.spec.ts --list` listed the reversal scenario. `.\e2e-tests\scripts\run-e2e.ps1 tests/procurement/purchase-return.spec.ts -g "reverses confirmed purchase return"` passed with 5 tests. Cold-cache rerun after removing `e2e-tests\.auth` passed with 5 tests.
+- **Remaining Phase G note:** The combined browser scenario for confirmed DMA blocking Purchase Return reversal, DMA reversal, and subsequent Purchase Return reversal is intentionally left as the next cross-module integration expansion. Phase F verifies that rule in backend guard coverage and verifies the no-consumption reversal browser path end to end.

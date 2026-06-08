@@ -3,7 +3,8 @@
 > Source: `docs/brainstorming/2026-06-02-vendor-debit-memo.md`
 > Created: 2026-06-09
 > Sprint: 6 - Debit Memo Reversal
-> Status: IN_PROGRESS
+> Status: COMPLETED
+> Completed: 2026-06-09
 >
 > **For agentic workers:** execute task-by-task. Explore referenced files fresh before editing each task, update checkbox state incrementally, record deviations in `docs/reports/2026-06-02-purchase-return-reversal.md`, and do not mark a task complete before its validation command passes.
 
@@ -327,19 +328,19 @@ Close Phase F with focused backend gates, E2E targeted gates, and a handoff repo
 **Reference module:** Phase A-E reports
 
 Steps:
-- [ ] Run focused Purchase Return domain/application/web tests.
+- [x] Run focused Purchase Return domain/application/web tests.
       ref: `docs/reports/2026-06-02-phase-d-debit-memo-core.md:L176-L196` - Phase D final gate format
-- [ ] Run focused reversal primitive regression tests for stock movement reversal and journal reversal.
+- [x] Run focused reversal primitive regression tests for stock movement reversal and journal reversal.
       ref: `docs/reports/2026-06-02-phase-a-generic-reversal-foundation.md:L62-L65` - Phase A final primitive gates
-- [ ] Run focused Debit Memo/DMA guard regression tests to ensure confirmed DMA still blocks DM cancel and reversed DMA does not.
+- [x] Run focused Debit Memo/DMA guard regression tests to ensure confirmed DMA still blocks DM cancel and reversed DMA does not.
       ref: `docs/reports/2026-06-02-phase-e-debit-memo-allocation.md:L53-L57` - Phase E cancel/reverse guard result
-- [ ] Run all migration tests.
+- [x] Run all migration tests.
       ref: `src/test/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/persistence/PurchaseReturnMigrationTest.java:L1-L248` - migration gate location
-- [ ] Run `mvn clean test` and record total tests plus JaCoCo result in the report.
+- [x] Run `mvn clean test` and record total tests plus JaCoCo result in the report.
       ref: `docs/reports/2026-06-02-phase-e-debit-memo-allocation.md:L73-L77` - backend gate reporting style
-- [ ] Run the targeted Playwright commands from Task 6 and record normal/cold-cache outcomes.
+- [x] Run the targeted Playwright commands from Task 6 and record normal/cold-cache outcomes.
       ref: `docs/tests/playwright-pitfalls.md:L287-L293` - E2E completion checklist
-- [ ] Update `docs/reports/2026-06-02-purchase-return-reversal.md` with decisions, deviations, skipped checks, and remaining Phase G integration notes.
+- [x] Update `docs/reports/2026-06-02-purchase-return-reversal.md` with decisions, deviations, skipped checks, and remaining Phase G integration notes.
 
 **Validation criteria:**
 - `mvn test -Dtest="PurchaseReturnTest,ReverseConfirmedPurchaseReturnUseCaseTest,PurchaseReturnControllerTest,PurchaseReturn*IntegrationTest,PurchaseReturnConfigTest"` passes.
@@ -350,13 +351,13 @@ Steps:
 
 ## Final Completion Checklist
 
-- [ ] V75 MariaDB and H2 migrations are in sync.
-- [ ] `PURCHASE-RETURN_REVERSE` is seeded and granted to admin.
-- [ ] Purchase Return status includes `REVERSED` and detail/list badges render it correctly.
-- [ ] Confirmed Purchase Return reversal is rejected while any DMA is still `CONFIRMED`.
-- [ ] Reversed/cancelled DMA no longer blocks Purchase Return reversal once Debit Memo remaining is full.
-- [ ] Source-owned GI is still not directly cancellable from the GI module.
-- [ ] Stock reversal uses linked inbound movements and new valuation layers with historical cost.
-- [ ] Purchase Return journal reversal uses `ReversePostedJournalUseCase`, not negative schema posting.
-- [ ] Generated Debit Memo is cancelled during successful reversal.
-- [ ] Playwright targeted normal and cold-cache runs validate the browser flow.
+- [x] V75 MariaDB and H2 migrations are in sync.
+- [x] `PURCHASE-RETURN_REVERSE` is seeded and granted to admin.
+- [x] Purchase Return status includes `REVERSED` and detail/list badges render it correctly.
+- [x] Confirmed Purchase Return reversal is rejected while any DMA is still `CONFIRMED`.
+- [x] Reversed/cancelled DMA no longer blocks Purchase Return reversal once Debit Memo remaining is full.
+- [x] Source-owned GI is still not directly cancellable from the GI module.
+- [x] Stock reversal uses linked inbound movements and new valuation layers with historical cost.
+- [x] Purchase Return journal reversal uses `ReversePostedJournalUseCase`, not negative schema posting.
+- [x] Generated Debit Memo is cancelled during successful reversal.
+- [x] Playwright targeted normal and cold-cache runs validate the browser flow.
