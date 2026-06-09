@@ -176,26 +176,26 @@ Add the final high-value browser scenario that spans confirmed Purchase Return, 
 **Reference module:** existing Purchase Return and DMA Playwright specs
 
 Steps:
-- [ ] Re-read target templates and page JS before editing the spec: Purchase Return view/reverse, Debit Memo detail, DMA form/detail, and DMA form JS.
+- [x] Re-read target templates and page JS before editing the spec: Purchase Return view/reverse, Debit Memo detail, DMA form/detail, and DMA form JS.
       ref: `docs/tests/playwright-pitfalls.md:L280-L293` - E2E authoring checklist
       ref: `src/main/resources/templates/purchasing/purchase-returns/view.html` - Purchase Return status/action source of truth
       ref: `src/main/resources/templates/purchasing/purchase-returns/reverse.html` - Purchase Return reverse form source of truth
       ref: `src/main/resources/templates/accountspayable/debit-memo-allocations/form.html:L16-L95` - DMA form modal selector and AJAX surface
       ref: `src/main/resources/static/js/accountspayable/debit-memo-allocations/form.js:L78-L133` - DMA selector/action JS
-- [ ] Extract or share helpers carefully between `purchase-return.spec.ts` and `debit-memo-allocation.spec.ts` only if it reduces duplication without hiding page-specific behavior.
+- [x] Extract or share helpers carefully between `purchase-return.spec.ts` and `debit-memo-allocation.spec.ts` only if it reduces duplication without hiding page-specific behavior.
       ref: `e2e-tests/tests/procurement/purchase-return.spec.ts:L454-L511` - current confirmed PR reversal scenario
       ref: `e2e-tests/tests/accountspayable/debit-memo-allocation.spec.ts:L393-L509` - current DMA create/confirm/reverse helpers
-- [ ] Add scenario: create and confirm a Purchase Return, capture generated Debit Memo/GI, create or reuse a confirmed Vendor Bill, create and confirm DMA consuming the generated Debit Memo, then attempt Purchase Return reversal and assert it is rejected because active confirmed DMA exists.
+- [x] Add scenario: create and confirm a Purchase Return, capture generated Debit Memo/GI, create or reuse a confirmed Vendor Bill, create and confirm DMA consuming the generated Debit Memo, then attempt Purchase Return reversal and assert it is rejected because active confirmed DMA exists.
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md:L996-L1048` - active DMA blocks PR reversal/cancel
       ref: `docs/reports/2026-06-02-purchase-return-reversal.md:L97-L98` - Phase F remaining Phase G note
-- [ ] Continue the same scenario by reversing the DMA, verifying Debit Memo settlement returns to open/full remaining, then retrying Purchase Return reversal and asserting PR `REVERSED`, generated GI `CANCELLED`, generated DM `CANCELLED`, and original/reversal journals balanced.
+- [x] Continue the same scenario by reversing the DMA, verifying Debit Memo settlement returns to open/full remaining, then retrying Purchase Return reversal and asserting PR `REVERSED`, generated GI `CANCELLED`, generated DM `CANCELLED`, and original/reversal journals balanced.
       ref: `e2e-tests/tests/accountspayable/debit-memo-allocation.spec.ts:L627-L638` - DMA reversal E2E assertions
       ref: `e2e-tests/tests/procurement/purchase-return.spec.ts:L484-L508` - PR reversal side-effect assertions
-- [ ] Do not use `selectTomSelect`; use page-specific selectors, `setTomSelectValue` only where payload is irrelevant, and `page.request.get` for pre-navigation API lookups.
+- [x] Do not use `selectTomSelect`; use page-specific selectors, `setTomSelectValue` only where payload is irrelevant, and `page.request.get` for pre-navigation API lookups.
       ref: `docs/tests/playwright-pitfalls.md:L271-L289` - helper limitations and page.request rule
-- [ ] For modal confirms, click `#confirm-modal-btn-yes`; do not use `page.on('dialog')`.
+- [x] For modal confirms, click `#confirm-modal-btn-yes`; do not use `page.on('dialog')`.
       ref: `docs/tests/playwright-pitfalls.md:L290-L290` - ERP confirm modal checklist
-- [ ] TEST: Run TypeScript compile, Playwright list, targeted scenario normal run, and cold-cache run through the Windows runner. Keep first-failure screenshots/videos for diagnosis.
+- [x] TEST: Run TypeScript compile, Playwright list, targeted scenario normal run, and cold-cache run through the Windows runner. Keep first-failure screenshots/videos for diagnosis.
 
 **Validation criteria:**
 - `cd e2e-tests && npx tsc --noEmit` clean.

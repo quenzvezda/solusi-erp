@@ -21,6 +21,10 @@ type DebitMemo = {
   id: number;
   code: string;
   href: string;
+  purchaseReturnId: number;
+  purchaseReturnCode: string;
+  purchaseReturnHref: string;
+  goodsIssueHref: string;
 };
 
 type DebitMemoAllocation = {
@@ -332,6 +336,9 @@ async function createDebitMemoFromGoodsReceipt(browser: Browser, goodsReceiptId:
     });
     await expect(employeePage.locator('.page-header .badge')).toContainText(/confirmed|dikonfirmasi/i);
 
+    const purchaseReturnCode = (await employeePage.locator('.page-title span').first().innerText()).trim();
+    const goodsIssueHref = await employeePage.locator('a[href^="/inventory/goods-issues/"]').first().getAttribute('href');
+    expect(goodsIssueHref, 'generated goods issue href').toBeTruthy();
     const debitMemoLink = employeePage.locator('a[href^="/accounts-payable/debit-memos/"]').first();
     await expect(debitMemoLink).toBeVisible({ timeout: 15_000 });
     const href = await debitMemoLink.getAttribute('href');
@@ -339,7 +346,15 @@ async function createDebitMemoFromGoodsReceipt(browser: Browser, goodsReceiptId:
     const id = Number(href?.match(/\/debit-memos\/(\d+)/)?.[1] ?? 0);
     expect(id, 'generated debit memo id').toBeGreaterThan(0);
     expect(code, 'generated debit memo code').toMatch(/^DM-/);
-    return { id, code, href: href! };
+    return {
+      id,
+      code,
+      href: href!,
+      purchaseReturnId: created.id,
+      purchaseReturnCode,
+      purchaseReturnHref: `/purchasing/purchase-returns/view/${created.id}`,
+      goodsIssueHref: goodsIssueHref!,
+    };
   } finally {
     await employeeContext.close();
   }
@@ -508,6 +523,56 @@ async function reverseDma(page: Page, allocation: DebitMemoAllocation): Promise<
   await expect(page.locator('.page-title .badge', { hasText: 'REVERSED' })).toBeVisible({ timeout: 10_000 });
 }
 
+async function readJournalTotals(page: Page): Promise<{ debit: string; credit: string }> {
+  const totals = page.locator('table tfoot tr th.text-end.fw-bold');
+  await expect(totals).toHaveCount(2);
+  return {
+    debit: (await totals.nth(0).innerText()).trim(),
+    credit: (await totals.nth(1).innerText()).trim(),
+  };
+}
+
+async function findPurchaseReturnJournalHref(page: Page, purchaseReturnCode: string): Promise<string> {
+  await navigateToModule(
+    page,
+    `/accounting/journal-entries?sourceType=PURCHASE_RETURN&sourceCode=${encodeURIComponent(purchaseReturnCode)}`
+  );
+  const journalRow = page
+    .locator('table tbody tr')
+    .filter({ hasText: purchaseReturnCode })
+    .filter({ hasText: /purchase return|retur pembelian/i })
+    .first();
+  await expect(journalRow).toBeVisible({ timeout: 10_000 });
+  const href = await journalRow.locator('td').first().locator('a').getAttribute('href');
+  expect(href, 'purchase return journal href').toBeTruthy();
+  return href!;
+}
+
+async function tryReversePurchaseReturn(
+  page: Page,
+  debitMemo: DebitMemo,
+  reason: string
+): Promise<{ ok: boolean; body: string }> {
+  await navigateToModule(page, `/purchasing/purchase-returns/${debitMemo.purchaseReturnId}/reverse`);
+  await expect(page.locator('#purchase-return-reverse-form')).toBeVisible({ timeout: 10_000 });
+  await setFlatpickrDate(page, '#reversal-date', '2026-06-06');
+  await page.locator('#reversal-reason').fill(reason);
+  await page.waitForFunction(() => {
+    const selects = Array.from(document.querySelectorAll('[data-pr-reverse-target-container-select]')) as HTMLSelectElement[];
+    return selects.length > 0 && selects.every((select: any) => {
+      return select.tomselect ? Boolean(select.tomselect.getValue()) : Boolean(select.value);
+    });
+  });
+
+  const responsePromise = page.waitForResponse((response) =>
+    response.url().includes(`/purchasing/purchase-returns/${debitMemo.purchaseReturnId}/reverse`) &&
+    response.request().method() === 'POST'
+  );
+  await page.locator('#purchase-return-reverse-form button[type="submit"]').click();
+  const response = await responsePromise;
+  return { ok: response.ok(), body: await response.text() };
+}
+
 async function expectVendorBillSettlement(
   page: Page,
   bill: ConfirmedVendorBill,
@@ -635,5 +700,64 @@ test.describe('@accountspayable Debit Memo Allocation flow', () => {
     await expectVendorBillSettlement(page, vendorBill!, 'OPEN', /0\.00/);
     await navigateToModule(page, `/accounts-payable/debit-memo-allocations/${allocation.id}`);
     await expect(page.locator('a[href^="/accounting/journal-entries/"]')).toHaveCount(2, { timeout: 10_000 });
+  });
+
+  test('Scenario G - blocks purchase return reversal while DMA is confirmed, then allows it after DMA reversal', async ({ page, browser }) => {
+    const { debitMemo, vendorBill } = await createDebitMemoWithOptionalBill(browser, page);
+    const allocation = await createDraftDmaFromDebitMemo(page, debitMemo, [vendorBill!]);
+    await confirmDma(page, allocation);
+
+    const originalJournalHref = await findPurchaseReturnJournalHref(page, debitMemo.purchaseReturnCode);
+    await navigateToModule(page, originalJournalHref);
+    const originalTotals = await readJournalTotals(page);
+    expect(originalTotals.debit).toBe(originalTotals.credit);
+    expect(originalTotals.debit).not.toMatch(/^0([,.]0+)?$/);
+
+    const blocked = await tryReversePurchaseReturn(
+      page,
+      debitMemo,
+      'E2E blocked while DMA is confirmed'
+    );
+    expect(blocked.ok, blocked.body).toBeFalsy();
+    await expect(page.locator('body')).toContainText(
+      /Reverse or cancel all confirmed debit memo allocations|Batalkan|reverse/i,
+      { timeout: 10_000 }
+    );
+
+    await reverseDma(page, allocation);
+    await expectDebitMemoSettlement(page, debitMemo, 'OPEN');
+    await expectVendorBillSettlement(page, vendorBill!, 'OPEN', /0\.00/);
+
+    const reversed = await tryReversePurchaseReturn(
+      page,
+      debitMemo,
+      'E2E reverse purchase return after DMA reversal'
+    );
+    expect(reversed.ok, reversed.body).toBeTruthy();
+    await page.waitForURL(new RegExp(`/purchasing/purchase-returns/view/${debitMemo.purchaseReturnId}(\\?.*)?$`), {
+      timeout: 20_000,
+      waitUntil: 'domcontentloaded',
+    });
+    await expect(page.locator('.page-header .badge')).toContainText(/reversed|direversal/i);
+
+    const reversalJournalHref = await page.locator('a[href^="/accounting/journal-entries/"]').first().getAttribute('href');
+    expect(reversalJournalHref, 'purchase return reversal journal href').toBeTruthy();
+
+    await navigateToModule(page, debitMemo.goodsIssueHref);
+    await expect(page.locator('.page-title .badge')).toContainText('CANCELLED');
+
+    await navigateToModule(page, debitMemo.href);
+    await expect(page.locator('.page-header .badge')).toContainText('CANCELLED');
+    await expect(page.locator('a[href*="/accounts-payable/debit-memo-allocations/create"]')).toHaveCount(0);
+
+    await navigateToModule(page, originalJournalHref);
+    const originalAfterReversalTotals = await readJournalTotals(page);
+    expect(originalAfterReversalTotals.debit).toBe(originalAfterReversalTotals.credit);
+    expect(originalAfterReversalTotals.debit).toBe(originalTotals.debit);
+
+    await navigateToModule(page, reversalJournalHref!);
+    const reversalTotals = await readJournalTotals(page);
+    expect(reversalTotals.debit).toBe(reversalTotals.credit);
+    expect(reversalTotals.debit).toBe(originalTotals.debit);
   });
 });

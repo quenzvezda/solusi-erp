@@ -92,3 +92,40 @@ Validation:
   - Failures: 0
   - Errors: 0
   - JaCoCo check: all coverage checks met for this run.
+
+### Task 4 - Combined Cross-Module Playwright Scenario
+
+Implemented:
+
+- Added the Phase G browser scenario to `e2e-tests/tests/accountspayable/debit-memo-allocation.spec.ts` because the Debit Memo Allocation helpers already own the DM/DMA/VB lifecycle setup.
+- Extended the generated Debit Memo fixture to capture Purchase Return id/code/link and generated Goods Issue link from the confirmed Purchase Return detail page.
+- Added page-specific helpers for Purchase Return reversal attempts and journal debit/credit total checks.
+- Covered the final integration chain in one browser scenario:
+  - Confirm Purchase Return and capture generated Debit Memo/Goods Issue.
+  - Create and confirm DMA against a confirmed Vendor Bill.
+  - Assert Purchase Return reversal is rejected while confirmed DMA actively consumes the generated Debit Memo.
+  - Reverse the DMA and assert Debit Memo and Vendor Bill availability return to open/outstanding.
+  - Retry Purchase Return reversal and assert Purchase Return `REVERSED`, generated Goods Issue `CANCELLED`, generated Debit Memo `CANCELLED`, no further allocation action is visible, and original/reversal journals are balanced.
+- Kept modal confirmation on `#confirm-modal-btn-yes`; no browser dialog hook is used.
+- Avoided `selectTomSelect`; the scenario uses page-specific selectors and existing DMA helper behavior.
+
+Unexpected validation/tooling issues:
+
+- `lean-ctx` shell allowlist initially blocked the Windows runner path and `powershell`; resolved additively with `lean-ctx allow powershell`.
+- A direct Playwright cold-cache attempt failed with `ERR_CONNECTION_REFUSED` because the previous runner server had already stopped. The scenario was rerun through `e2e-tests\scripts\run-e2e.ps1` as the E2E guide recommends.
+- A temporary background wrapper first wrote redirect logs under `target`, which conflicted with the runner's Maven `clean`. The wrapper/logs were moved outside `target`; no application code change was required.
+- The background wrapper changed working directory through the runner before writing its exit marker, but the runner log still captured the authoritative Playwright result and server shutdown.
+
+Validation:
+
+- PASS: `cd e2e-tests && npx tsc --noEmit`
+- PASS: `cd e2e-tests && npx playwright test tests/accountspayable/debit-memo-allocation.spec.ts --list`
+  - Combined scenario listed as `Scenario G - blocks purchase return reversal while DMA is confirmed, then allows it after DMA reversal`.
+- PASS: `.\e2e-tests\scripts\run-e2e.ps1 tests/accountspayable/debit-memo-allocation.spec.ts -g "blocks purchase return reversal while DMA is confirmed"`
+  - Tests run: 5
+  - Failures: 0
+  - Playwright summary: `5 passed (53.6s)`
+- PASS: cold-cache targeted rerun after removing `e2e-tests\.auth`, through `.\e2e-tests\scripts\run-e2e.ps1 tests/accountspayable/debit-memo-allocation.spec.ts -g "blocks purchase return reversal while DMA is confirmed"`
+  - Tests run: 5
+  - Failures: 0
+  - Playwright summary: `5 passed (56.3s)`
