@@ -24,9 +24,10 @@ public class DebitMemoAllocationWebMapperTest {
     @Test
     void should_map_summary_detail_and_commands() {
         DebitMemoAllocationSummaryView summary = new DebitMemoAllocationSummaryView(
-                1L, "DMA-001", 10L, "DM-001", LocalDate.of(2026, 6, 5),
+                1L, "DMA-001", 10L, "DM-001", 22L, 1L, LocalDate.of(2026, 6, 5),
                 DebitMemoAllocationStatus.DRAFT, bd("40.0000"), bd("50.0000"), bd("10.0000"), BigDecimal.ZERO);
         assertThat(mapper.toSummaryResponse(summary).getStatus()).isEqualTo("DRAFT");
+        assertThat(mapper.toSummaryResponse(summary).getVendorId()).isEqualTo(22L);
 
         DebitMemoAllocationDetailView detail = detailView();
         assertThat(mapper.toDetailResponse(detail).getLines()).hasSize(1);

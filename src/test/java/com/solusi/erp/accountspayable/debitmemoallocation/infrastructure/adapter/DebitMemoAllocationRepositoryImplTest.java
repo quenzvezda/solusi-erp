@@ -75,6 +75,7 @@ class DebitMemoAllocationRepositoryImplTest {
         when(jpaRepository.findAllFiltered(
                 eq("DM"),
                 eq(100L),
+                eq(22L),
                 eq(DebitMemoAllocationStatus.DRAFT),
                 eq(from),
                 eq(to),
@@ -82,7 +83,8 @@ class DebitMemoAllocationRepositoryImplTest {
         )).thenReturn(new PageImpl<>(List.of(entity)));
         when(mapper.toDomain(entity)).thenReturn(domain);
 
-        Page<DebitMemoAllocation> result = repository.findAll(" DM ", 100L, DebitMemoAllocationStatus.DRAFT, from, to, pageable);
+        Page<DebitMemoAllocation> result = repository.findAll(
+                " DM ", 100L, 22L, DebitMemoAllocationStatus.DRAFT, from, to, pageable);
 
         assertThat(result.content()).containsExactly(domain);
         assertThat(result.totalElements()).isEqualTo(1);

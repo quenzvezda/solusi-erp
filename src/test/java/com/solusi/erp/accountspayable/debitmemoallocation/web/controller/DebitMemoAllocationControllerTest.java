@@ -11,6 +11,9 @@ import com.solusi.erp.accountspayable.debitmemoallocation.web.mapper.DebitMemoAl
 import com.solusi.erp.accountspayable.debitmemoallocation.web.mapper.DebitMemoAllocationWebMapperTest;
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.core.dto.LookupDto;
+import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
+import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.MessageSource;
@@ -40,6 +43,8 @@ class DebitMemoAllocationControllerTest {
     private ConfirmDebitMemoAllocationUseCase confirmUseCase;
     private ReverseDebitMemoAllocationUseCase reverseUseCase;
     private DebitMemoAllocationSelectorUseCase selectorUseCase;
+    private PartyLookupProvider partyLookupProvider;
+    private CurrencyLookupProvider currencyLookupProvider;
     private DebitMemoAllocationController controller;
 
     @BeforeEach
@@ -52,27 +57,33 @@ class DebitMemoAllocationControllerTest {
         confirmUseCase = mock(ConfirmDebitMemoAllocationUseCase.class);
         reverseUseCase = mock(ReverseDebitMemoAllocationUseCase.class);
         selectorUseCase = mock(DebitMemoAllocationSelectorUseCase.class);
+        partyLookupProvider = mock(PartyLookupProvider.class);
+        currencyLookupProvider = mock(CurrencyLookupProvider.class);
         MessageSource messageSource = mock(MessageSource.class);
         when(messageSource.getMessage(anyString(), any(), any())).thenReturn("ok");
         controller = new DebitMemoAllocationController(findUseCase, detailUseCase, createUseCase, updateUseCase,
                 cancelUseCase, confirmUseCase, reverseUseCase, selectorUseCase,
-                new DebitMemoAllocationWebMapper(), messageSource);
+                new DebitMemoAllocationWebMapper(), partyLookupProvider, currencyLookupProvider, messageSource);
     }
 
     @Test
     void list_should_render_list_view_and_model() {
         DebitMemoAllocationSummaryView summary = new DebitMemoAllocationSummaryView(
-                1L, "DMA-001", 10L, "DM-001", LocalDate.of(2026, 6, 5),
+                1L, "DMA-001", 10L, "DM-001", 22L, 1L, LocalDate.of(2026, 6, 5),
                 DebitMemoAllocationStatus.DRAFT, bd("40.0000"), bd("50.0000"), BigDecimal.ZERO, BigDecimal.ZERO);
-        when(findUseCase.execute(any(), any(), any(), any(), any(), any()))
+        when(findUseCase.execute(any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(new Page<>(List.of(summary), 0, 20, 1));
+        when(partyLookupProvider.resolve(22L)).thenReturn(new LookupDto(22L, "Vendor A", "VEN-001"));
+        when(currencyLookupProvider.resolve(1L)).thenReturn(new LookupDto(1L, "US Dollar", "$ - USD"));
 
         Model model = new ExtendedModelMap();
-        String view = controller.list("DMA", 10L, DebitMemoAllocationStatus.DRAFT,
+        String view = controller.list("DMA", 10L, 22L, DebitMemoAllocationStatus.DRAFT,
                 null, null, PageRequest.of(0, 20), model);
 
         assertThat(view).isEqualTo("accountspayable/debit-memo-allocations/list");
         assertThat(model.getAttribute("page")).isInstanceOf(org.springframework.data.domain.Page.class);
+        assertThat(model.getAttribute("vendorId")).isEqualTo(22L);
+        assertThat(model.getAttribute("vendorText")).isEqualTo("Vendor A");
         assertThat(model.getAttribute("statuses")).isNotNull();
     }
 
@@ -139,7 +150,7 @@ class DebitMemoAllocationControllerTest {
 
     @Test
     void routes_should_have_expected_authorities() throws Exception {
-        assertAuth("list", "DEBIT-MEMO-ALLOCATION_READ", String.class, Long.class,
+        assertAuth("list", "DEBIT-MEMO-ALLOCATION_READ", String.class, Long.class, Long.class,
                 DebitMemoAllocationStatus.class, LocalDate.class, LocalDate.class,
                 org.springframework.data.domain.Pageable.class, Model.class);
         assertAuth("createForm", "DEBIT-MEMO-ALLOCATION_CREATE", Long.class, String.class, Long.class, Model.class);

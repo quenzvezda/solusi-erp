@@ -20,6 +20,7 @@ public interface DebitMemoAllocationRepository {
 
     Page<DebitMemoAllocation> findAll(String keyword,
                                       Long debitMemoId,
+                                      Long vendorId,
                                       DebitMemoAllocationStatus status,
                                       LocalDate allocationDateFrom,
                                       LocalDate allocationDateTo,

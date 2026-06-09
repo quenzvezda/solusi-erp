@@ -10,6 +10,8 @@ public record DebitMemoAllocationSummaryView(
         String code,
         Long debitMemoId,
         String debitMemoCode,
+        Long vendorId,
+        Long currencyId,
         LocalDate allocationDate,
         DebitMemoAllocationStatus status,
         BigDecimal totalAppliedGrossOriginal,

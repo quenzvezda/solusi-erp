@@ -3,6 +3,7 @@ package com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.q
 import com.solusi.erp.accountspayable.debitmemoallocation.domain.model.DebitMemoAllocation;
 import com.solusi.erp.accountspayable.debitmemoallocation.domain.model.DebitMemoAllocationLine;
 import com.solusi.erp.accountspayable.debitmemoallocation.domain.model.DebitMemoAllocationStatus;
+import com.solusi.erp.accountspayable.debitmemoallocation.domain.port.DebitMemoAllocationSourcePort;
 import com.solusi.erp.accountspayable.debitmemoallocation.domain.repository.DebitMemoAllocationHistory;
 import com.solusi.erp.accountspayable.debitmemoallocation.domain.repository.DebitMemoAllocationRepository;
 import com.solusi.erp.core.domain.model.AuditMetadata;
@@ -30,22 +31,31 @@ class DebitMemoAllocationQueryUseCaseTest {
     @Mock
     private DebitMemoAllocationRepository repository;
 
+    @Mock
+    private DebitMemoAllocationSourcePort sourcePort;
+
     @Test
     void findAllocations_should_map_domain_page_to_summary_page() {
-        FindDebitMemoAllocationsUseCase useCase = new FindDebitMemoAllocationsUseCaseImpl(repository);
+        FindDebitMemoAllocationsUseCase useCase = new FindDebitMemoAllocationsUseCaseImpl(repository, sourcePort);
         DebitMemoAllocation allocation = sampleAllocation();
         Pageable pageable = Pageable.of(0, 20);
         LocalDate from = LocalDate.of(2026, 6, 1);
         LocalDate to = LocalDate.of(2026, 6, 30);
-        when(repository.findAll("DMA", 100L, DebitMemoAllocationStatus.DRAFT, from, to, pageable))
+        when(repository.findAll("DMA", 100L, 22L, DebitMemoAllocationStatus.DRAFT, from, to, pageable))
                 .thenReturn(new Page<>(List.of(allocation), 0, 20, 1));
+        when(sourcePort.findDebitMemoSnapshot(100L)).thenReturn(Optional.of(new DebitMemoAllocationSourcePort.DebitMemoSnapshot(
+                100L, "DM-202606-00001", 22L, 1L, bd("100.0000"), bd("90.0000"), bd("10.0000"),
+                bd("90.0000"), bd("10.0000"), bd("100.0000"), BigDecimal.ZERO, BigDecimal.ZERO,
+                BigDecimal.ZERO, bd("90.0000"), bd("10.0000"))));
 
         Page<DebitMemoAllocationSummaryView> result = useCase.execute(
-                "DMA", 100L, DebitMemoAllocationStatus.DRAFT, from, to, pageable);
+                "DMA", 100L, 22L, DebitMemoAllocationStatus.DRAFT, from, to, pageable);
 
         assertThat(result.content()).hasSize(1);
         DebitMemoAllocationSummaryView summary = result.content().getFirst();
         assertThat(summary.code()).isEqualTo("DMA-202606-00001");
+        assertThat(summary.vendorId()).isEqualTo(22L);
+        assertThat(summary.currencyId()).isEqualTo(1L);
         assertThat(summary.totalAppliedGrossOriginal()).isEqualByComparingTo("100.0000");
     }
 
@@ -132,5 +142,9 @@ class DebitMemoAllocationQueryUseCaseTest {
                 BigDecimal.ZERO,
                 BigDecimal.ZERO
         );
+    }
+
+    private static BigDecimal bd(String value) {
+        return new BigDecimal(value);
     }
 }

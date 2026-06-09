@@ -20,6 +20,9 @@ class DebitMemoAllocationTemplateTest {
 
         assertThat(list).contains("DEBIT-MEMO-ALLOCATION_CREATE", "DEBIT-MEMO-ALLOCATION_UPDATE", "DEBIT-MEMO-ALLOCATION_CANCEL",
                 "name=\"keyword\"", "name=\"status\"", "name=\"allocationDateFrom\"", "name=\"allocationDateTo\"",
+                "name=\"vendorId\"", "data-lookup-path=\"parties\"",
+                "sortable('code'", "sortable('allocationDate'", "sortable('debitMemoCode'", "sortable('status'",
+                "item.vendorName", "item.currencyCode", "fragments/table :: pagination(${page})",
                 "/accounts-payable/debit-memo-allocations/{id}", "/accounts-payable/debit-memos/{id}");
         assertThat(detail).contains("DEBIT-MEMO-ALLOCATION_CONFIRM", "DEBIT-MEMO-ALLOCATION_REVERSE", "ErpForm.postAction",
                 "DEBIT-MEMO-ALLOCATION_UPDATE", "DEBIT-MEMO-ALLOCATION_CANCEL",

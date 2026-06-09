@@ -133,12 +133,13 @@ public class DebitMemoAllocationConfig {
     @Bean
     public FindDebitMemoAllocationsUseCase findDebitMemoAllocationsUseCase(
             DebitMemoAllocationRepository repository,
+            DebitMemoAllocationSourcePort sourcePort,
             PlatformTransactionManager txManager) {
-        FindDebitMemoAllocationsUseCase pure = new FindDebitMemoAllocationsUseCaseImpl(repository);
+        FindDebitMemoAllocationsUseCase pure = new FindDebitMemoAllocationsUseCaseImpl(repository, sourcePort);
         TransactionTemplate tx = new TransactionTemplate(txManager);
         tx.setReadOnly(true);
-        return (keyword, debitMemoId, status, allocationDateFrom, allocationDateTo, pageable) ->
-                tx.execute(txStatus -> pure.execute(keyword, debitMemoId, status, allocationDateFrom, allocationDateTo, pageable));
+        return (keyword, debitMemoId, vendorId, status, allocationDateFrom, allocationDateTo, pageable) ->
+                tx.execute(txStatus -> pure.execute(keyword, debitMemoId, vendorId, status, allocationDateFrom, allocationDateTo, pageable));
     }
 
     @Bean

@@ -23,6 +23,8 @@ public class DebitMemoAllocationWebMapper {
         response.setCode(view.code());
         response.setDebitMemoId(view.debitMemoId());
         response.setDebitMemoCode(view.debitMemoCode());
+        response.setVendorId(view.vendorId());
+        response.setCurrencyId(view.currencyId());
         response.setAllocationDate(view.allocationDate());
         response.setStatus(view.status() != null ? view.status().name() : null);
         response.setTotalAppliedGrossOriginal(view.totalAppliedGrossOriginal());

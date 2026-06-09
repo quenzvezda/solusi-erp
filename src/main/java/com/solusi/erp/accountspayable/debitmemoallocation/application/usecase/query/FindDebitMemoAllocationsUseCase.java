@@ -9,6 +9,7 @@ import java.time.LocalDate;
 public interface FindDebitMemoAllocationsUseCase {
     Page<DebitMemoAllocationSummaryView> execute(String keyword,
                                                  Long debitMemoId,
+                                                 Long vendorId,
                                                  DebitMemoAllocationStatus status,
                                                  LocalDate allocationDateFrom,
                                                  LocalDate allocationDateTo,

@@ -21,8 +21,16 @@
             <form class="card mb-3" method="get" th:action="@{/accounts-payable/debit-memo-allocations}">
                 <div class="card-body">
                     <div class="row g-2">
-                        <div class="col-md-4"><input type="text" class="form-control" name="keyword" th:value="${keyword}" th:placeholder="#{label.search}"></div>
-                        <div class="col-md-3">
+                        <div class="col-md-3"><input type="text" class="form-control" name="keyword" th:value="${keyword}" th:placeholder="#{label.search}"></div>
+                        <div class="col-md-2">
+                            <select name="vendorId" class="form-select erp-input-ts" data-lookup-path="parties"
+                                    th:attr="placeholder=#{label.vendor}">
+                                <option value=""></option>
+                                <option th:if="${vendorId != null}" th:value="${vendorId}" th:text="${vendorText ?: vendorId}"
+                                        th:attr="data-subtext=${vendorSubtext}" selected></option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
                             <select class="form-select" name="status">
                                 <option value="" th:text="#{label.all}">All</option>
                                 <option th:each="item : ${statuses}" th:value="${item}" th:selected="${item == status}" th:text="${item}">DRAFT</option>
@@ -39,21 +47,28 @@
                     <table class="table table-vcenter card-table">
                         <thead>
                         <tr>
-                            <th th:text="#{label.debit-memo-allocation.code}">Code</th>
-                            <th th:text="#{label.debit-memo.title}">Debit Memo</th>
-                            <th th:text="#{label.debit-memo-allocation.allocation-date}">Date</th>
-                            <th th:text="#{label.status}">Status</th>
-                            <th class="text-end" th:text="#{label.debit-memo-allocation.applied-gross}">Applied</th>
+                            <th th:replace="~{fragments/table :: sortable('code', #{label.debit-memo-allocation.code})}">Code</th>
+                            <th th:replace="~{fragments/table :: sortable('allocationDate', #{label.debit-memo-allocation.allocation-date})}">Date</th>
+                            <th th:replace="~{fragments/table :: sortable('debitMemoCode', #{label.debit-memo.title})}">Debit Memo</th>
+                            <th th:text="#{label.vendor}">Vendor</th>
+                            <th th:text="#{label.currency}">Currency</th>
+                            <th class="text-end" th:replace="~{fragments/table :: sortable('totalAppliedGrossOriginal', #{label.debit-memo-allocation.applied-gross})}">Applied</th>
+                            <th th:replace="~{fragments/table :: sortable('status', #{label.status})}">Status</th>
                             <th class="text-end" th:text="#{label.actions}">Actions</th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr th:each="item : ${page.content}" th:id="'row-' + ${item.id}">
                             <td><a th:href="@{/accounts-payable/debit-memo-allocations/{id}(id=${item.id})}" th:text="${item.code}">DMA-001</a></td>
-                            <td><a th:href="@{/accounts-payable/debit-memos/{id}(id=${item.debitMemoId})}" th:text="${item.debitMemoCode}">DM-001</a></td>
                             <td th:text="${item.allocationDate != null ? #temporals.format(item.allocationDate, 'dd MMM yyyy') : '-'}">05 Jun 2026</td>
-                            <td><span class="badge" th:text="${item.status}">DRAFT</span></td>
+                            <td><a th:href="@{/accounts-payable/debit-memos/{id}(id=${item.debitMemoId})}" th:text="${item.debitMemoCode}">DM-001</a></td>
+                            <td>
+                                <span th:text="${item.vendorName ?: item.vendorId ?: '-'}">Vendor</span>
+                                <div class="small text-secondary" th:if="${item.vendorCode != null}" th:text="${item.vendorCode}">VEN-001</div>
+                            </td>
+                            <td th:text="${item.currencyCode ?: item.currencyId ?: '-'}">USD</td>
                             <td class="text-end" th:text="${item.totalAppliedGrossOriginal != null ? #numbers.formatDecimal(item.totalAppliedGrossOriginal, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                            <td><span class="badge" th:text="${item.status}">DRAFT</span></td>
                             <td class="text-end">
                                 <a class="btn btn-sm btn-outline-primary" th:href="@{/accounts-payable/debit-memo-allocations/{id}(id=${item.id})}"><i class="ti ti-eye"></i></a>
                                 <a class="btn btn-sm btn-outline-secondary" th:if="${item.status == 'DRAFT'}" sec:authorize="hasAuthority('DEBIT-MEMO-ALLOCATION_UPDATE')"
@@ -68,11 +83,12 @@
                             </td>
                         </tr>
                         <tr th:if="${page == null || #lists.isEmpty(page.content)}">
-                            <td colspan="6" class="text-center text-secondary py-4" th:text="#{label.no.data}">No data.</td>
+                            <td colspan="8" class="text-center text-secondary py-4" th:text="#{label.no.data}">No data.</td>
                         </tr>
                         </tbody>
                     </table>
                 </div>
+                <div th:replace="~{fragments/table :: pagination(${page})}"></div>
             </div>
         </div>
     </div>

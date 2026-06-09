@@ -15,7 +15,10 @@ public class DebitMemoSummaryResponse extends BaseAuditResponse {
     private String code;
     private LocalDate memoDate;
     private Long vendorId;
+    private String vendorName;
+    private String vendorCode;
     private Long currencyId;
+    private String currencyCode;
     private Long purchaseReturnId;
     private String purchaseReturnCode;
     private BigDecimal grossAmountOriginal;
@@ -24,4 +27,3 @@ public class DebitMemoSummaryResponse extends BaseAuditResponse {
     private BigDecimal remainingAmount;
     private String settlementStatus;
 }
-

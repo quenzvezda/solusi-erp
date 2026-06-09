@@ -8,7 +8,10 @@ import com.solusi.erp.accountspayable.debitmemoallocation.web.mapper.DebitMemoAl
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
+import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
+import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -40,12 +43,15 @@ public class DebitMemoAllocationController {
     private final ReverseDebitMemoAllocationUseCase reverseDebitMemoAllocationUseCase;
     private final DebitMemoAllocationSelectorUseCase selectorUseCase;
     private final DebitMemoAllocationWebMapper webMapper;
+    private final PartyLookupProvider partyLookupProvider;
+    private final CurrencyLookupProvider currencyLookupProvider;
     private final MessageSource messageSource;
 
     @GetMapping
     @PreAuthorize("hasAuthority('DEBIT-MEMO-ALLOCATION_READ')")
     public String list(@RequestParam(required = false) String keyword,
                        @RequestParam(required = false) Long debitMemoId,
+                       @RequestParam(required = false) Long vendorId,
                        @RequestParam(required = false) DebitMemoAllocationStatus status,
                        @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate allocationDateFrom,
                        @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate allocationDateTo,
@@ -53,15 +59,18 @@ public class DebitMemoAllocationController {
                        Model model) {
         Pageable domainPageable = PageableMapper.toDomain(springPageable);
         com.solusi.erp.core.domain.model.Page<DebitMemoAllocationSummaryView> domainPage =
-                findDebitMemoAllocationsUseCase.execute(keyword, debitMemoId, status,
+                findDebitMemoAllocationsUseCase.execute(keyword, debitMemoId, vendorId, status,
                         allocationDateFrom, allocationDateTo, domainPageable);
         List<DebitMemoAllocationSummaryResponse> content = domainPage.content().stream()
                 .map(webMapper::toSummaryResponse)
+                .peek(this::enrichSummaryDisplay)
                 .toList();
 
         model.addAttribute("page", new PageImpl<>(content, springPageable, domainPage.totalElements()));
         model.addAttribute("keyword", keyword);
         model.addAttribute("debitMemoId", debitMemoId);
+        model.addAttribute("vendorId", vendorId);
+        addVendorFilterDisplay(model, vendorId);
         model.addAttribute("status", status);
         model.addAttribute("allocationDateFrom", allocationDateFrom);
         model.addAttribute("allocationDateTo", allocationDateTo);
@@ -193,5 +202,25 @@ public class DebitMemoAllocationController {
 
     private String message(String key) {
         return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
+    }
+
+    private void enrichSummaryDisplay(DebitMemoAllocationSummaryResponse response) {
+        LookupDto vendor = partyLookupProvider.resolve(response.getVendorId());
+        if (vendor != null) {
+            response.setVendorName(vendor.name());
+            response.setVendorCode(vendor.subText());
+        }
+        LookupDto currency = currencyLookupProvider.resolve(response.getCurrencyId());
+        if (currency != null) {
+            response.setCurrencyCode(currency.subText());
+        }
+    }
+
+    private void addVendorFilterDisplay(Model model, Long vendorId) {
+        LookupDto vendor = partyLookupProvider.resolve(vendorId);
+        if (vendor != null) {
+            model.addAttribute("vendorText", vendor.name());
+            model.addAttribute("vendorSubtext", vendor.subText());
+        }
     }
 }

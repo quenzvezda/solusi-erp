@@ -33,8 +33,12 @@
                             </div>
                         </div>
                         <div class="col-md-2">
-                            <input type="text" name="vendorId" th:value="${vendorId}" class="form-control form-control-sm"
-                                   th:placeholder="#{label.vendor}">
+                            <select name="vendorId" class="form-select form-select-sm erp-input-ts-sm" data-lookup-path="parties"
+                                    th:attr="placeholder=#{label.vendor}">
+                                <option value=""></option>
+                                <option th:if="${vendorId != null}" th:value="${vendorId}" th:text="${vendorText ?: vendorId}"
+                                        th:attr="data-subtext=${vendorSubtext}" selected></option>
+                            </select>
                         </div>
                         <div class="col-md-2">
                             <select name="settlementStatus" class="form-select form-select-sm">
@@ -64,15 +68,15 @@
                         <table class="table card-table table-vcenter text-nowrap">
                             <thead>
                             <tr>
-                                <th th:text="#{label.debit-memo.code}">Code</th>
-                                <th th:text="#{label.debit-memo.memo-date}">Memo Date</th>
-                                <th th:text="#{label.vendor}">Vendor</th>
-                                <th th:text="#{label.currency}">Currency</th>
-                                <th th:text="#{label.debit-memo.source-purchase-return}">Source Purchase Return</th>
-                                <th class="text-end" th:text="#{label.debit-memo.gross}">Gross</th>
+                                <th th:replace="~{fragments/table :: sortable('code', #{label.debit-memo.code})}">Code</th>
+                                <th th:replace="~{fragments/table :: sortable('memoDate', #{label.debit-memo.memo-date})}">Memo Date</th>
+                                <th th:replace="~{fragments/table :: sortable('vendorId', #{label.vendor})}">Vendor</th>
+                                <th th:replace="~{fragments/table :: sortable('currencyId', #{label.currency})}">Currency</th>
+                                <th th:replace="~{fragments/table :: sortable('purchaseReturnCode', #{label.debit-memo.source-purchase-return})}">Source Purchase Return</th>
+                                <th class="text-end" th:replace="~{fragments/table :: sortable('grossAmountOriginal', #{label.debit-memo.gross})}">Gross</th>
                                 <th class="text-end" th:text="#{label.debit-memo.settled}">Settled</th>
                                 <th class="text-end" th:text="#{label.debit-memo.remaining}">Remaining</th>
-                                <th th:text="#{label.debit-memo.settlement-status}">Settlement Status</th>
+                                <th th:replace="~{fragments/table :: sortable('settlementStatus', #{label.debit-memo.settlement-status})}">Settlement Status</th>
                                 <th class="text-end" th:text="#{label.actions}">Actions</th>
                             </tr>
                             </thead>
@@ -80,8 +84,11 @@
                             <tr th:each="item : ${page.content}" th:id="'row-' + ${item.id}">
                                 <td><span class="fw-medium" th:text="${item.code}">DM-001</span></td>
                                 <td th:text="${item.memoDate != null ? #temporals.format(item.memoDate, 'dd MMM yyyy') : '-'}">02 Jun 2026</td>
-                                <td th:text="${item.vendorId}">1</td>
-                                <td th:text="${item.currencyId}">1</td>
+                                <td>
+                                    <span th:text="${item.vendorName ?: item.vendorId}">Vendor</span>
+                                    <div class="small text-secondary" th:if="${item.vendorCode != null}" th:text="${item.vendorCode}">VEN-001</div>
+                                </td>
+                                <td th:text="${item.currencyCode ?: item.currencyId}">USD</td>
                                 <td>
                                     <a th:href="@{/purchasing/purchase-returns/view/{id}(id=${item.purchaseReturnId})}"
                                        th:text="${item.purchaseReturnCode}">PRT-001</a>
@@ -121,4 +128,3 @@
 <div id="page-specific-scripts"></div>
 </body>
 </html>
-

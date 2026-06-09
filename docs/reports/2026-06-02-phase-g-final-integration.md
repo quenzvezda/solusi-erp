@@ -43,3 +43,23 @@ Validation:
   - Failures: 0
   - Errors: 0
   - JaCoCo check: all coverage checks met for this run.
+
+### Task 2 - List, Filter, Sorting, And Selector Hardening
+
+Implemented:
+
+- Replaced the raw Debit Memo `vendorId` list filter with the project lookup/TomSelect pattern (`data-lookup-path="parties"`) while preserving query-level `vendorId` filtering.
+- Added sortable headers to supported Debit Memo list fields: code, memo date, vendor id, currency id, Purchase Return code, gross amount, and settlement status. Settled/remaining stay unsorted because they are computed recap values, not direct JPA fields.
+- Added display enrichment for Debit Memo list rows via `PartyLookupProvider` and `CurrencyLookupProvider`, so operators see vendor name/code and currency display instead of raw ids when lookup data is available.
+- Added query-level DMA vendor filtering through controller, use case, repository, and JPA query. Filtering joins `DebitMemoEntity` in JPQL, so it remains database-side.
+- Added DMA list vendor lookup filter, vendor/currency columns, sortable headers for supported allocation fields, and the standard pagination fragment.
+- Enriched DMA list rows with Debit Memo snapshot vendor/currency ids in the query use case, then resolved display labels in the controller via lookup providers.
+- Kept eligible Vendor Bill and Debit Memo selectors query-level and paginated; controller/template tests lock both selector fragments, and selector use case tests lock outstanding/remaining amount propagation.
+
+Validation:
+
+- PASS: `mvn test -Dtest="DebitMemoQueryUseCaseTest,DebitMemoAllocationQueryUseCaseTest,DebitMemoAllocationSelectorUseCaseTest,DebitMemoControllerTest,DebitMemoAllocationControllerTest,DebitMemoTemplateTest,DebitMemoAllocationTemplateTest"`
+  - Tests run: 27
+  - Failures: 0
+  - Errors: 0
+  - JaCoCo check: all coverage checks met for this run.

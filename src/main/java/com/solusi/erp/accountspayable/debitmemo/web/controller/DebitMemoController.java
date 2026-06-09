@@ -15,7 +15,10 @@ import com.solusi.erp.accountspayable.debitmemo.web.mapper.DebitMemoWebMapper;
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
+import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
+import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -49,6 +52,8 @@ public class DebitMemoController {
     private final CancelDebitMemoUseCase cancelDebitMemoUseCase;
     private final FindDebitMemoAllocationHistoryUseCase findDebitMemoAllocationHistoryUseCase;
     private final DebitMemoWebMapper webMapper;
+    private final PartyLookupProvider partyLookupProvider;
+    private final CurrencyLookupProvider currencyLookupProvider;
     private final MessageSource messageSource;
 
     @GetMapping
@@ -65,11 +70,13 @@ public class DebitMemoController {
                 findDebitMemosUseCase.execute(keyword, vendorId, settlementStatus, memoDateFrom, memoDateTo, domainPageable);
         List<DebitMemoSummaryResponse> content = domainPage.content().stream()
                 .map(webMapper::toSummaryResponse)
+                .peek(this::enrichSummaryDisplay)
                 .toList();
 
         model.addAttribute("page", new PageImpl<>(content, springPageable, domainPage.totalElements()));
         model.addAttribute("keyword", keyword);
         model.addAttribute("vendorId", vendorId);
+        addVendorFilterDisplay(model, vendorId);
         model.addAttribute("settlementStatus", settlementStatus);
         model.addAttribute("memoDateFrom", memoDateFrom);
         model.addAttribute("memoDateTo", memoDateTo);
@@ -128,6 +135,26 @@ public class DebitMemoController {
         request.setTaxDocumentDate(response.getTaxDocumentDate());
         request.setNotes(response.getNotes());
         return request;
+    }
+
+    private void enrichSummaryDisplay(DebitMemoSummaryResponse response) {
+        LookupDto vendor = partyLookupProvider.resolve(response.getVendorId());
+        if (vendor != null) {
+            response.setVendorName(vendor.name());
+            response.setVendorCode(vendor.subText());
+        }
+        LookupDto currency = currencyLookupProvider.resolve(response.getCurrencyId());
+        if (currency != null) {
+            response.setCurrencyCode(currency.subText());
+        }
+    }
+
+    private void addVendorFilterDisplay(Model model, Long vendorId) {
+        LookupDto vendor = partyLookupProvider.resolve(vendorId);
+        if (vendor != null) {
+            model.addAttribute("vendorText", vendor.name());
+            model.addAttribute("vendorSubtext", vendor.subText());
+        }
     }
 
     private String message(String key) {

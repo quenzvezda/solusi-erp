@@ -2,6 +2,7 @@ package com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.q
 
 import com.solusi.erp.accountspayable.debitmemoallocation.domain.model.DebitMemoAllocation;
 import com.solusi.erp.accountspayable.debitmemoallocation.domain.model.DebitMemoAllocationLine;
+import com.solusi.erp.accountspayable.debitmemoallocation.domain.port.DebitMemoAllocationSourcePort;
 import com.solusi.erp.accountspayable.debitmemoallocation.domain.repository.DebitMemoAllocationHistory;
 
 public final class DebitMemoAllocationViewMapper {
@@ -10,11 +11,19 @@ public final class DebitMemoAllocationViewMapper {
     }
 
     public static DebitMemoAllocationSummaryView toSummary(DebitMemoAllocation allocation) {
+        return toSummary(allocation, null);
+    }
+
+    public static DebitMemoAllocationSummaryView toSummary(
+            DebitMemoAllocation allocation,
+            DebitMemoAllocationSourcePort.DebitMemoSnapshot debitMemoSnapshot) {
         return new DebitMemoAllocationSummaryView(
                 allocation.getId(),
                 allocation.getCode(),
                 allocation.getDebitMemoId(),
                 allocation.getDebitMemoCode(),
+                debitMemoSnapshot != null ? debitMemoSnapshot.vendorId() : null,
+                debitMemoSnapshot != null ? debitMemoSnapshot.currencyId() : null,
                 allocation.getAllocationDate(),
                 allocation.getStatus(),
                 allocation.getTotalAppliedGrossOriginal(),

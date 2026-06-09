@@ -109,27 +109,27 @@ Bring Debit Memo and DMA list/filter/selector pages to the final UI contract: qu
 **Reference module:** existing AP lists plus table specs
 
 Steps:
-- [ ] Harden Debit Memo list filters so keyword, vendor, settlement status, and memo date range are query-level and operator-friendly. Replace raw vendor id input with the project lookup/autocomplete pattern if audit confirms the current field is still raw.
+- [x] Harden Debit Memo list filters so keyword, vendor, settlement status, and memo date range are query-level and operator-friendly. Replace raw vendor id input with the project lookup/autocomplete pattern if audit confirms the current field is still raw.
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md:L775-L784` - Debit Memo list filters
       ref: `src/main/resources/templates/accountspayable/debit-memos/list.html:L27-L59` - current Debit Memo filter form
       ref: `docs/spec/autocomplete-generic.md` - lookup/autocomplete standards
-- [ ] Harden DMA list filters so keyword, vendor, status, and allocation date range are query-level. Add vendor filter support if still missing from the controller/use case/query adapter.
+- [x] Harden DMA list filters so keyword, vendor, status, and allocation date range are query-level. Add vendor filter support if still missing from the controller/use case/query adapter.
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md:L786-L793` - DMA list filters
       ref: `src/main/java/com/solusi/erp/accountspayable/debitmemoallocation/web/controller/DebitMemoAllocationController.java:L45-L69` - current DMA list controller filter contract
       ref: `src/main/resources/templates/accountspayable/debit-memo-allocations/list.html:L21-L36` - current DMA filter form
-- [ ] Ensure Debit Memo list columns match the brainstorming contract and use sortable table headers where supported by query fields.
+- [x] Ensure Debit Memo list columns match the brainstorming contract and use sortable table headers where supported by query fields.
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md:L702-L717` - Debit Memo list columns
       ref: `docs/spec/sorting.md:L1-L44` - sortable table fragment and query param pattern
       ref: `src/main/resources/templates/accountspayable/debit-memos/list.html:L62-L115` - current Debit Memo table
-- [ ] Ensure DMA list columns include code, allocation date, Debit Memo, vendor, currency, applied gross, status, and actions; add pagination fragment if still missing.
+- [x] Ensure DMA list columns include code, allocation date, Debit Memo, vendor, currency, applied gross, status, and actions; add pagination fragment if still missing.
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md:L736-L749` - DMA list columns
       ref: `docs/spec/pagination.md` - pagination fragment standard
       ref: `src/main/resources/templates/accountspayable/debit-memo-allocations/list.html:L37-L76` - current DMA table without final column/pagination coverage
-- [ ] Verify selectors remain query-level and paginated for eligible Vendor Bills and Debit Memos; add tests for vendor/currency/remaining/outstanding eligibility if missing.
+- [x] Verify selectors remain query-level and paginated for eligible Vendor Bills and Debit Memos; add tests for vendor/currency/remaining/outstanding eligibility if missing.
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md:L795-L843` - selector eligibility and columns
       ref: `src/main/java/com/solusi/erp/accountspayable/debitmemoallocation/web/controller/DebitMemoAllocationController.java:L160-L191` - selector routes
       ref: `src/test/java/com/solusi/erp/accountspayable/debitmemoallocation/application/usecase/query/DebitMemoAllocationSelectorUseCaseTest.java` - selector test location
-- [ ] TEST: Extend query/controller/template tests for new filters, sortable headers, pagination, list columns, and selector eligibility.
+- [x] TEST: Extend query/controller/template tests for new filters, sortable headers, pagination, list columns, and selector eligibility.
 
 **Validation criteria:**
 - `mvn test -Dtest="DebitMemoQueryUseCaseTest,DebitMemoAllocationQueryUseCaseTest,DebitMemoAllocationSelectorUseCaseTest,DebitMemoControllerTest,DebitMemoAllocationControllerTest,DebitMemoTemplateTest,DebitMemoAllocationTemplateTest"` passes.

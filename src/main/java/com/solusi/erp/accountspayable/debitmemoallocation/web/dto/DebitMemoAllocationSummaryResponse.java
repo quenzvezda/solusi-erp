@@ -13,6 +13,11 @@ public class DebitMemoAllocationSummaryResponse {
     private String code;
     private Long debitMemoId;
     private String debitMemoCode;
+    private Long vendorId;
+    private String vendorName;
+    private String vendorCode;
+    private Long currencyId;
+    private String currencyCode;
     private LocalDate allocationDate;
     private String status;
     private BigDecimal totalAppliedGrossOriginal;

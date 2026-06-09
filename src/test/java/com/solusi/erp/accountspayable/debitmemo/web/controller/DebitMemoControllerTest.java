@@ -14,6 +14,9 @@ import com.solusi.erp.accountspayable.debitmemo.web.mapper.DebitMemoWebMapper;
 import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.query.FindDebitMemoAllocationHistoryUseCase;
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.core.dto.LookupDto;
+import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
+import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.MessageSource;
@@ -44,6 +47,8 @@ class DebitMemoControllerTest {
     private CancelDebitMemoUseCase cancelUseCase;
     private FindDebitMemoAllocationHistoryUseCase historyUseCase;
     private DebitMemoWebMapper webMapper;
+    private PartyLookupProvider partyLookupProvider;
+    private CurrencyLookupProvider currencyLookupProvider;
     private MessageSource messageSource;
     private DebitMemoController controller;
 
@@ -55,9 +60,12 @@ class DebitMemoControllerTest {
         cancelUseCase = mock(CancelDebitMemoUseCase.class);
         historyUseCase = mock(FindDebitMemoAllocationHistoryUseCase.class);
         webMapper = mock(DebitMemoWebMapper.class);
+        partyLookupProvider = mock(PartyLookupProvider.class);
+        currencyLookupProvider = mock(CurrencyLookupProvider.class);
         messageSource = mock(MessageSource.class);
         controller = new DebitMemoController(
-                findUseCase, detailUseCase, updateMetadataUseCase, cancelUseCase, historyUseCase, webMapper, messageSource);
+                findUseCase, detailUseCase, updateMetadataUseCase, cancelUseCase, historyUseCase, webMapper,
+                partyLookupProvider, currencyLookupProvider, messageSource);
     }
 
     @Test
@@ -79,9 +87,13 @@ class DebitMemoControllerTest {
         DebitMemoSummaryResponse response = new DebitMemoSummaryResponse();
         response.setId(10L);
         response.setCode("DM-202606-00001");
+        response.setVendorId(22L);
+        response.setCurrencyId(1L);
         when(findUseCase.execute(any(), any(), any(), any(), any(), any()))
                 .thenReturn(new Page<>(List.of(summary), 0, 20, 1));
         when(webMapper.toSummaryResponse(summary)).thenReturn(response);
+        when(partyLookupProvider.resolve(22L)).thenReturn(new LookupDto(22L, "Vendor A", "VEN-001"));
+        when(currencyLookupProvider.resolve(1L)).thenReturn(new LookupDto(1L, "US Dollar", "$ - USD"));
 
         Model model = new ExtendedModelMap();
         String view = controller.list("DM", 22L, DebitMemoSettlementStatus.OPEN,
@@ -91,6 +103,7 @@ class DebitMemoControllerTest {
         assertThat(model.getAttribute("page")).isInstanceOf(org.springframework.data.domain.Page.class);
         assertThat(model.getAttribute("keyword")).isEqualTo("DM");
         assertThat(model.getAttribute("vendorId")).isEqualTo(22L);
+        assertThat(model.getAttribute("vendorText")).isEqualTo("Vendor A");
         assertThat(model.getAttribute("settlementStatus")).isEqualTo(DebitMemoSettlementStatus.OPEN);
         assertThat(model.getAttribute("settlementStatuses")).isNotNull();
     }

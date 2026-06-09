@@ -50,6 +50,7 @@ public class DebitMemoAllocationRepositoryImpl implements DebitMemoAllocationRep
     @Override
     public Page<DebitMemoAllocation> findAll(String keyword,
                                              Long debitMemoId,
+                                             Long vendorId,
                                              DebitMemoAllocationStatus status,
                                              LocalDate allocationDateFrom,
                                              LocalDate allocationDateTo,
@@ -57,7 +58,7 @@ public class DebitMemoAllocationRepositoryImpl implements DebitMemoAllocationRep
         org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
         String normalizedKeyword = keyword == null ? null : keyword.trim();
         org.springframework.data.domain.Page<DebitMemoAllocationEntity> springPage = jpaRepository.findAllFiltered(
-                normalizedKeyword, debitMemoId, status, allocationDateFrom, allocationDateTo, springPageable);
+                normalizedKeyword, debitMemoId, vendorId, status, allocationDateFrom, allocationDateTo, springPageable);
         return new Page<>(
                 springPage.getContent().stream().map(mapper::toDomain).toList(),
                 springPage.getNumber(),

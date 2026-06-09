@@ -15,8 +15,12 @@ import java.util.List;
 public interface DebitMemoAllocationJpaRepository extends JpaRepository<DebitMemoAllocationEntity, Long> {
 
     @Query("""
-            select allocation from DebitMemoAllocationEntity allocation
-            where (:keyword is null or :keyword = ''
+            select allocation
+            from DebitMemoAllocationEntity allocation,
+                 com.solusi.erp.accountspayable.debitmemo.infrastructure.persistence.DebitMemoEntity dm
+            where dm.id = allocation.debitMemoId
+              and (:vendorId is null or dm.vendorId = :vendorId)
+              and (:keyword is null or :keyword = ''
                or lower(allocation.code) like lower(concat('%', :keyword, '%'))
                or lower(allocation.debitMemoCode) like lower(concat('%', :keyword, '%')))
               and (:debitMemoId is null or allocation.debitMemoId = :debitMemoId)
@@ -26,6 +30,7 @@ public interface DebitMemoAllocationJpaRepository extends JpaRepository<DebitMem
             """)
     Page<DebitMemoAllocationEntity> findAllFiltered(@Param("keyword") String keyword,
                                                     @Param("debitMemoId") Long debitMemoId,
+                                                    @Param("vendorId") Long vendorId,
                                                     @Param("status") DebitMemoAllocationStatus status,
                                                     @Param("allocationDateFrom") LocalDate allocationDateFrom,
                                                     @Param("allocationDateTo") LocalDate allocationDateTo,
