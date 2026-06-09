@@ -118,12 +118,23 @@ class DebitMemoAllocationControllerTest {
         when(selectorUseCase.eligibleVendorBills(eq(10L), any(), any())).thenReturn(new Page<>(List.of(
                 new DebitMemoAllocationSourcePort.EligibleVendorBill(20L, "VB-001", bd("100.0000"), bd("80.0000"), bd("1.000000"))
         ), 0, 20, 1));
+        when(selectorUseCase.eligibleDebitMemos(eq(20L), any(), any())).thenReturn(new Page<>(List.of(
+                new DebitMemoAllocationSourcePort.EligibleDebitMemo(10L, "DM-001", bd("100.0000"), bd("80.0000"))
+        ), 0, 20, 1));
         Model model = new ExtendedModelMap();
 
         String view = controller.eligibleVendorBills(10L, null, PageRequest.of(0, 20), model);
 
         assertThat(view).isEqualTo("accountspayable/debit-memo-allocations/fragments/vendor-bill-selector");
         assertThat(model.getAttribute("page")).isInstanceOf(org.springframework.data.domain.Page.class);
+
+        Model debitMemoModel = new ExtendedModelMap();
+        String debitMemoView = controller.eligibleDebitMemos(20L, "DM", PageRequest.of(0, 20), debitMemoModel);
+
+        assertThat(debitMemoView).isEqualTo("accountspayable/debit-memo-allocations/fragments/debit-memo-selector");
+        assertThat(debitMemoModel.getAttribute("page")).isInstanceOf(org.springframework.data.domain.Page.class);
+        assertThat(debitMemoModel.getAttribute("vendorBillId")).isEqualTo(20L);
+        assertThat(debitMemoModel.getAttribute("q")).isEqualTo("DM");
     }
 
     @Test
@@ -131,9 +142,18 @@ class DebitMemoAllocationControllerTest {
         assertAuth("list", "DEBIT-MEMO-ALLOCATION_READ", String.class, Long.class,
                 DebitMemoAllocationStatus.class, LocalDate.class, LocalDate.class,
                 org.springframework.data.domain.Pageable.class, Model.class);
+        assertAuth("createForm", "DEBIT-MEMO-ALLOCATION_CREATE", Long.class, String.class, Long.class, Model.class);
+        assertAuth("editForm", "DEBIT-MEMO-ALLOCATION_UPDATE", Long.class, Model.class);
+        assertAuth("detail", "DEBIT-MEMO-ALLOCATION_READ", Long.class, Model.class);
         assertAuth("create", "DEBIT-MEMO-ALLOCATION_CREATE", DebitMemoAllocationSaveRequest.class);
+        assertAuth("update", "DEBIT-MEMO-ALLOCATION_UPDATE", Long.class, DebitMemoAllocationSaveRequest.class);
         assertAuth("confirm", "DEBIT-MEMO-ALLOCATION_CONFIRM", Long.class);
+        assertAuth("cancel", "DEBIT-MEMO-ALLOCATION_CANCEL", Long.class);
         assertAuth("reverse", "DEBIT-MEMO-ALLOCATION_REVERSE", Long.class, DebitMemoAllocationReverseRequest.class);
+        assertAuth("eligibleVendorBills", "DEBIT-MEMO-ALLOCATION_CREATE", Long.class, String.class,
+                org.springframework.data.domain.Pageable.class, Model.class);
+        assertAuth("eligibleDebitMemos", "DEBIT-MEMO-ALLOCATION_CREATE", Long.class, String.class,
+                org.springframework.data.domain.Pageable.class, Model.class);
     }
 
     private void assertAuth(String method, String authority, Class<?>... parameterTypes) throws Exception {

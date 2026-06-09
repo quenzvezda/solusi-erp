@@ -135,6 +135,16 @@ class DebitMemoControllerTest {
     }
 
     @Test
+    void routes_should_have_expected_authorities() throws Exception {
+        assertAuth("list", "DEBIT-MEMO_READ", String.class, Long.class,
+                DebitMemoSettlementStatus.class, LocalDate.class, LocalDate.class,
+                org.springframework.data.domain.Pageable.class, Model.class);
+        assertAuth("detail", "DEBIT-MEMO_READ", Long.class, Model.class);
+        assertAuth("updateMetadata", "DEBIT-MEMO_UPDATE-METADATA", Long.class, DebitMemoMetadataRequest.class);
+        assertAuth("cancel", "DEBIT-MEMO_CANCEL", Long.class);
+    }
+
+    @Test
     void cancel_should_require_cancel_authority() throws Exception {
         Method method = DebitMemoController.class.getMethod("cancel", Long.class);
 
@@ -152,6 +162,13 @@ class DebitMemoControllerTest {
 
         assertThat(annotation).isNotNull();
         assertThat(annotation.value()).contains("DEBIT-MEMO_UPDATE-METADATA");
+    }
+
+    private void assertAuth(String method, String authority, Class<?>... parameterTypes) throws Exception {
+        Method reflected = DebitMemoController.class.getMethod(method, parameterTypes);
+        PreAuthorize annotation = reflected.getAnnotation(PreAuthorize.class);
+        assertThat(annotation).isNotNull();
+        assertThat(annotation.value()).contains(authority);
     }
 
     private DebitMemoDetailView detailView() {

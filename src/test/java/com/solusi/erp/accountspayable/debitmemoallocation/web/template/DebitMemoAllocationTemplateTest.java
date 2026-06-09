@@ -18,11 +18,17 @@ class DebitMemoAllocationTemplateTest {
         String debitMemoSelector = readResource("templates/accountspayable/debit-memo-allocations/fragments/debit-memo-selector.html");
         String script = readResource("static/js/accountspayable/debit-memo-allocations/form.js");
 
-        assertThat(list).contains("DEBIT-MEMO-ALLOCATION_CREATE", "DEBIT-MEMO-ALLOCATION_UPDATE", "DEBIT-MEMO-ALLOCATION_CANCEL");
+        assertThat(list).contains("DEBIT-MEMO-ALLOCATION_CREATE", "DEBIT-MEMO-ALLOCATION_UPDATE", "DEBIT-MEMO-ALLOCATION_CANCEL",
+                "name=\"keyword\"", "name=\"status\"", "name=\"allocationDateFrom\"", "name=\"allocationDateTo\"",
+                "/accounts-payable/debit-memo-allocations/{id}", "/accounts-payable/debit-memos/{id}");
         assertThat(detail).contains("DEBIT-MEMO-ALLOCATION_CONFIRM", "DEBIT-MEMO-ALLOCATION_REVERSE", "ErpForm.postAction",
-                "dma-reverse-form", "data-bs-target=\"#dma-reverse-modal\"");
+                "DEBIT-MEMO-ALLOCATION_UPDATE", "DEBIT-MEMO-ALLOCATION_CANCEL",
+                "dma-reverse-form", "data-bs-target=\"#dma-reverse-modal\"",
+                "applyJournalEntryId", "reversalJournalEntryId", "reversalDate", "reversalReason",
+                "/accounts-payable/debit-memos/{id}", "/accounts-payable/vendor-bills/{id}");
         assertThat(form).contains("data-ajax-form=\"true\"", "data-picker=\"date\"", "debit-memo-selector-body",
-                "vendor-bill-selector-body", "dma-lines-body", "erp-number-decimal");
+                "vendor-bill-selector-body", "dma-lines-body", "erp-number-decimal", "data-redirect-on-success",
+                "btn-select-debit-memo", "btn-select-vendor-bill");
         assertThat(vendorBillSelector).contains("id=\"vendor-bill-selector-body\"", "js-dma-vendor-bill-option", "data-outstanding");
         assertThat(debitMemoSelector).contains("id=\"debit-memo-selector-body\"", "js-dma-debit-memo-option", "data-remaining");
         assertThat(script).contains("ERP.ModalSelector.open", "js-dma-remove-line", "initNumericInputs", "erp-number-decimal", "lines[");

@@ -81,21 +81,21 @@ Create a concise, test-backed audit of the shipped Debit Memo, DMA, and Purchase
 **Reference module:** `accountspayable.debitmemo`, `accountspayable.debitmemoallocation`, `purchasing.purchasereturn`
 
 Steps:
-- [ ] Compare Phase G scope against current menu, routes, permissions, controllers, templates, and E2E specs; record only actionable gaps in the report.
+- [x] Compare Phase G scope against current menu, routes, permissions, controllers, templates, and E2E specs; record only actionable gaps in the report.
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md:L1678-L1697` - Phase G scope
       ref: `src/main/resources/db/migration/V73__Add_Debit_Memo_Core.sql:L90-L112` - AP-03 menu and Debit Memo permissions
       ref: `src/main/resources/db/migration/V74__Add_Debit_Memo_Allocation.sql:L77-L100` - AP-04 menu and DMA permissions
-- [ ] Extend controller tests to lock final route and permission contracts for Debit Memo list/detail/metadata/cancel and DMA list/create/edit/detail/confirm/cancel/reverse/selectors.
+- [x] Extend controller tests to lock final route and permission contracts for Debit Memo list/detail/metadata/cancel and DMA list/create/edit/detail/confirm/cancel/reverse/selectors.
       ref: `src/main/java/com/solusi/erp/accountspayable/debitmemo/web/controller/DebitMemoController.java:L40-L121` - current Debit Memo route and permission surface
       ref: `src/main/java/com/solusi/erp/accountspayable/debitmemoallocation/web/controller/DebitMemoAllocationController.java:L28-L191` - current DMA route, action, and selector surface
       ref: `src/test/java/com/solusi/erp/accountspayable/debitmemo/web/controller/DebitMemoControllerTest.java:L39` - Debit Memo controller test location
       ref: `src/test/java/com/solusi/erp/accountspayable/debitmemoallocation/web/controller/DebitMemoAllocationControllerTest.java:L33` - DMA controller test location
-- [ ] Extend template tests to assert final required page regions exist: list filters, detail summaries, cross-links, action buttons, allocation history, journal links, and permission-gated actions.
+- [x] Extend template tests to assert final required page regions exist: list filters, detail summaries, cross-links, action buttons, allocation history, journal links, and permission-gated actions.
       ref: `src/main/resources/templates/accountspayable/debit-memos/detail.html:L21-L180` - Debit Memo detail action/cross-link/history surface
       ref: `src/main/resources/templates/accountspayable/debit-memo-allocations/detail.html:L12-L88` - DMA detail actions, journal links, and reversal modal
       ref: `src/test/java/com/solusi/erp/accountspayable/debitmemo/web/template/DebitMemoTemplateTest.java:L12` - Debit Memo template test location
       ref: `src/test/java/com/solusi/erp/accountspayable/debitmemoallocation/web/template/DebitMemoAllocationTemplateTest.java:L10` - DMA template test location
-- [ ] TEST: Run the surface contract tests and write the audit summary to `docs/reports/2026-06-02-phase-g-final-integration.md`.
+- [x] TEST: Run the surface contract tests and write the audit summary to `docs/reports/2026-06-02-phase-g-final-integration.md`.
 
 **Validation criteria:**
 - `mvn test -Dtest="DebitMemoControllerTest,DebitMemoAllocationControllerTest,DebitMemoTemplateTest,DebitMemoAllocationTemplateTest,DebitMemoCoreMigrationTest,DebitMemoAllocationMigrationTest"` passes.

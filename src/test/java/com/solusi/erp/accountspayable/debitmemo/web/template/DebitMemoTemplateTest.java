@@ -19,8 +19,13 @@ class DebitMemoTemplateTest {
         assertThat(template).contains("name=\"keyword\"");
         assertThat(template).contains("name=\"vendorId\"");
         assertThat(template).contains("name=\"settlementStatus\"");
+        assertThat(template).contains("name=\"memoDateFrom\"");
+        assertThat(template).contains("name=\"memoDateTo\"");
         assertThat(template).contains("data-picker=\"date\"");
+        assertThat(template).contains("label.debit-memo.gross");
+        assertThat(template).contains("label.debit-memo.remaining");
         assertThat(template).contains("/accounts-payable/debit-memos/{id}");
+        assertThat(template).contains("fragments/table :: pagination(${page})");
         assertThat(template).contains("colspan=\"10\"");
     }
 
@@ -37,6 +42,12 @@ class DebitMemoTemplateTest {
         assertThat(template).contains("/purchasing/purchase-returns/view/{id}");
         assertThat(template).contains("/inventory/goods-issues/{id}");
         assertThat(template).contains("label.debit-memo.allocation-history.empty");
+        assertThat(template).contains("label.debit-memo.settlement-recap");
+        assertThat(template).contains("supplierMemoNumber");
+        assertThat(template).contains("supplierMemoDate");
+        assertThat(template).contains("taxDocumentNumber");
+        assertThat(template).contains("taxDocumentDate");
+        assertThat(template).contains("data-redirect-on-success");
         assertThat(template).contains("DEBIT-MEMO-ALLOCATION_CREATE");
         assertThat(template).contains("/accounts-payable/debit-memo-allocations/create");
         assertThat(template).contains("/accounts-payable/debit-memo-allocations/{id}");
