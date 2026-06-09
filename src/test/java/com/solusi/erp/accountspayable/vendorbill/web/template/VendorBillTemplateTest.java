@@ -110,6 +110,21 @@ class VendorBillTemplateTest {
     }
 
     @Test
+    void detail_template_should_show_debit_memo_allocation_links_and_badges() throws Exception {
+        String template = readResource("templates/accountspayable/vendor-bills/detail.html");
+
+        assertThat(template).contains("DEBIT-MEMO-ALLOCATION_CREATE");
+        assertThat(template).contains("/accounts-payable/debit-memo-allocations/create");
+        assertThat(template).contains("debitMemoAllocationHistory");
+        assertThat(template).contains("/accounts-payable/debit-memo-allocations/{id}");
+        assertThat(template).contains("/accounts-payable/debit-memos/{id}");
+        assertThat(template).contains("bg-success-lt");
+        assertThat(template).contains("bg-danger-lt");
+        assertThat(template).contains("bg-secondary-lt");
+        assertThat(template).contains("bg-warning-lt");
+    }
+
+    @Test
     void shared_message_bundle_should_include_vendor_bill_filter_keys() {
         ResourceBundle english = ResourceBundle.getBundle("messages", Locale.ENGLISH);
         ResourceBundle indonesian = ResourceBundle.getBundle("messages", Locale.forLanguageTag("id"));

@@ -7,7 +7,12 @@
         <div class="container-xl">
             <div class="row g-2 align-items-center">
                 <div class="col">
-                    <h2 class="page-title"><span th:text="${allocation.code}">DMA-001</span><span class="badge ms-2" th:text="${allocation.status}">DRAFT</span></h2>
+                    <h2 class="page-title">
+                        <span th:text="${allocation.code}">DMA-001</span>
+                        <span class="badge ms-2"
+                              th:classappend="${allocation.status == 'CONFIRMED'} ? 'bg-success-lt' : (${allocation.status == 'REVERSED'} ? 'bg-danger-lt' : (${allocation.status == 'CANCELLED'} ? 'bg-secondary-lt' : 'bg-warning-lt'))"
+                              th:text="${allocation.status}">DRAFT</span>
+                    </h2>
                 </div>
                 <div class="col-auto ms-auto btn-list">
                     <a class="btn btn-primary" th:if="${allocation.status == 'DRAFT'}" sec:authorize="hasAuthority('DEBIT-MEMO-ALLOCATION_UPDATE')"
@@ -42,6 +47,32 @@
                             <a th:if="${allocation.applyJournalEntryId != null}" th:href="@{/accounting/journal-entries/{id}(id=${allocation.applyJournalEntryId})}" class="btn btn-sm btn-outline-primary"><i class="ti ti-external-link me-1"></i><span th:text="#{label.view}">View</span></a>
                             <a th:if="${allocation.reversalJournalEntryId != null}" th:href="@{/accounting/journal-entries/{id}(id=${allocation.reversalJournalEntryId})}" class="btn btn-sm btn-outline-danger"><i class="ti ti-external-link me-1"></i><span th:text="#{label.reverse}">Reverse</span></a>
                         </div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="card mb-3" th:if="${allocation.reversalDate != null || allocation.reversalJournalEntryId != null || allocation.reversalReason != null}">
+                <div class="card-header"><h3 class="card-title" th:text="#{label.reverse}">Reversal</h3></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label text-secondary" th:text="#{label.reversal.date}">Reversal Date</label>
+                            <div class="form-control-plaintext" th:text="${allocation.reversalDate != null ? #temporals.format(allocation.reversalDate, 'dd MMM yyyy') : '-'}">06 Jun 2026</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-secondary" th:text="#{label.journal.reversedBy}">Reversal Journal</label>
+                            <div class="form-control-plaintext">
+                                <a th:if="${allocation.reversalJournalEntryId != null}"
+                                   th:href="@{/accounting/journal-entries/{id}(id=${allocation.reversalJournalEntryId})}"
+                                   class="btn btn-sm btn-outline-danger">
+                                    <i class="ti ti-external-link me-1"></i><span th:text="#{label.view}">View</span>
+                                </a>
+                                <span th:if="${allocation.reversalJournalEntryId == null}">-</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary" th:text="#{label.reason}">Reason</label>
+                            <div class="form-control-plaintext" th:text="${allocation.reversalReason ?: '-'}">wrong allocation</div>
+                        </div>
                     </div>
                 </div>
             </div>

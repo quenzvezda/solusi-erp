@@ -63,3 +63,32 @@ Validation:
   - Failures: 0
   - Errors: 0
   - JaCoCo check: all coverage checks met for this run.
+
+### Task 3 - Cross-Link, Action, Badge, And Metadata Polish
+
+Implemented:
+
+- Hardened Debit Memo detail display so vendor and currency resolve through lookup providers; raw ids remain only as fallback when lookup data is unavailable.
+- Kept Debit Memo cross-links to Purchase Return, generated Goods Issue, and DMA allocation history intact.
+- Hid Debit Memo metadata save action when the Debit Memo is `CANCELLED`; allocate/cancel visibility already matched lifecycle rules.
+- Added consistent DMA lifecycle badge styling on DMA list, DMA detail, Debit Memo allocation history, and Vendor Bill allocation history.
+- Added a read-only DMA reversal summary region that appears when reversal metadata exists, showing reversal date, reversal reason, and reversal journal link.
+- Verified cross-link chain remains present:
+  - Purchase Return detail to Debit Memo.
+  - Debit Memo detail to Purchase Return, generated Goods Issue, and DMA history.
+  - Vendor Bill detail to DMA history and apply shortcut.
+  - DMA detail to Debit Memo, Vendor Bills, original journal, and reversal journal.
+- Verified source-owned Goods Issue direct cancel guard remains limited to `gi.referenceType == 'MANUAL'`.
+
+Static scan:
+
+- Raw id references on final AP surfaces are now fallback-only for vendor/currency display when lookup data is unavailable.
+- Source-owned Goods Issue cancel guard still contains `gi.status == 'COMPLETED' && gi.referenceType == 'MANUAL'`.
+
+Validation:
+
+- PASS: `mvn test -Dtest="DebitMemoTemplateTest,DebitMemoAllocationTemplateTest,VendorBillTemplateTest,PurchaseReturnViewIntegrationTest,PurchaseReturnReverseTemplateIntegrationTest,GoodsIssueViewIntegrationTest"`
+  - Tests run: 25
+  - Failures: 0
+  - Errors: 0
+  - JaCoCo check: all coverage checks met for this run.

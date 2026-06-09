@@ -55,6 +55,12 @@ class DebitMemoTemplateTest {
         assertThat(template).contains("taxDocumentNumber");
         assertThat(template).contains("taxDocumentDate");
         assertThat(template).contains("data-redirect-on-success");
+        assertThat(template).contains("debitMemo.vendorName");
+        assertThat(template).contains("debitMemo.vendorCode");
+        assertThat(template).contains("debitMemo.currencyCode");
+        assertThat(template).contains("debitMemo.settlementStatus != 'CANCELLED'");
+        assertThat(template).contains("bg-success-lt");
+        assertThat(template).contains("bg-danger-lt");
         assertThat(template).contains("DEBIT-MEMO-ALLOCATION_CREATE");
         assertThat(template).contains("/accounts-payable/debit-memo-allocations/create");
         assertThat(template).contains("/accounts-payable/debit-memo-allocations/{id}");

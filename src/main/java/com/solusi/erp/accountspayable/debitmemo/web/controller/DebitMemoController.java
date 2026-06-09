@@ -88,6 +88,7 @@ public class DebitMemoController {
     @PreAuthorize("hasAuthority('DEBIT-MEMO_READ')")
     public String detail(@PathVariable Long id, Model model) {
         DebitMemoDetailResponse response = webMapper.toDetailResponse(getDebitMemoDetailUseCase.execute(id));
+        enrichDetailDisplay(response);
         model.addAttribute("debitMemo", response);
         model.addAttribute("metadataRequest", toMetadataRequest(response));
         model.addAttribute("debitMemoAllocationHistory", findDebitMemoAllocationHistoryUseCase.byDebitMemoId(id));
@@ -138,6 +139,18 @@ public class DebitMemoController {
     }
 
     private void enrichSummaryDisplay(DebitMemoSummaryResponse response) {
+        LookupDto vendor = partyLookupProvider.resolve(response.getVendorId());
+        if (vendor != null) {
+            response.setVendorName(vendor.name());
+            response.setVendorCode(vendor.subText());
+        }
+        LookupDto currency = currencyLookupProvider.resolve(response.getCurrencyId());
+        if (currency != null) {
+            response.setCurrencyCode(currency.subText());
+        }
+    }
+
+    private void enrichDetailDisplay(DebitMemoDetailResponse response) {
         LookupDto vendor = partyLookupProvider.resolve(response.getVendorId());
         if (vendor != null) {
             response.setVendorName(vendor.name());

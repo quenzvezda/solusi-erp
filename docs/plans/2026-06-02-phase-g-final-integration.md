@@ -144,24 +144,24 @@ Close final UI gaps on detail pages and action surfaces so operators can navigat
 **Reference module:** Debit Memo, DMA, Vendor Bill, Purchase Return, journal detail pages
 
 Steps:
-- [ ] Verify and harden all cross-links listed in the brainstorming: Purchase Return detail to Debit Memo, Debit Memo detail to Purchase Return/generated GI/DMA history, Vendor Bill detail to DMA history/apply shortcut, and DMA detail to Debit Memo/Vendor Bills/journals.
+- [x] Verify and harden all cross-links listed in the brainstorming: Purchase Return detail to Debit Memo, Debit Memo detail to Purchase Return/generated GI/DMA history, Vendor Bill detail to DMA history/apply shortcut, and DMA detail to Debit Memo/Vendor Bills/journals.
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md:L766-L773` - required cross-links
       ref: `src/main/resources/templates/accountspayable/debit-memos/detail.html:L65-L68` - Debit Memo to Purchase Return/GI links
       ref: `src/main/resources/templates/accountspayable/debit-memo-allocations/detail.html:L38-L43` - DMA to Debit Memo/journal links
       ref: `src/main/resources/templates/accountspayable/debit-memo-allocations/detail.html:L53-L55` - DMA to Vendor Bill line links
-- [ ] Improve status badge styling for DMA statuses and ensure Debit Memo settlement badges remain visually distinct for `OPEN`, `PARTIALLY_SETTLED`, `SETTLED`, and `CANCELLED`.
+- [x] Improve status badge styling for DMA statuses and ensure Debit Memo settlement badges remain visually distinct for `OPEN`, `PARTIALLY_SETTLED`, `SETTLED`, and `CANCELLED`.
       ref: `src/main/resources/templates/accountspayable/debit-memos/detail.html:L13-L18` - Debit Memo detail badge
       ref: `src/main/resources/templates/accountspayable/debit-memo-allocations/detail.html:L9-L10` - current DMA detail badge
       ref: `src/main/resources/templates/accountspayable/debit-memo-allocations/list.html:L55-L56` - current DMA list badge
-- [ ] Show final DMA reversal metadata when present: reversal date, reversal reason, reversal journal, and final view-only state.
+- [x] Show final DMA reversal metadata when present: reversal date, reversal reason, reversal journal, and final view-only state.
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md:L1368-L1390` - DMA reversal shape
       ref: `src/main/resources/templates/accountspayable/debit-memo-allocations/detail.html:L41-L75` - current journal and reversal modal area
-- [ ] Ensure action visibility matches lifecycle rules: no Allocate on cancelled/settled DM, no metadata save on cancelled DM, no edit/cancel on confirmed/reversed DMA, reverse only for confirmed DMA, and source-owned GI still has no direct cancel button.
+- [x] Ensure action visibility matches lifecycle rules: no Allocate on cancelled/settled DM, no metadata save on cancelled DM, no edit/cancel on confirmed/reversed DMA, reverse only for confirmed DMA, and source-owned GI still has no direct cancel button.
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md:L989-L1024` - cancellation and reversal policy
       ref: `src/main/resources/templates/accountspayable/debit-memos/detail.html:L21-L36` - Debit Memo allocate/cancel action visibility
       ref: `src/main/resources/templates/accountspayable/debit-memo-allocations/detail.html:L12-L28` - DMA detail action visibility
       ref: `src/main/resources/templates/inventory/goods-issues/view.html:L20-L27` - source-owned GI direct cancel guard
-- [ ] TEST: Extend template/security render tests for cross-links, action visibility, badge classes, and reversal metadata.
+- [x] TEST: Extend template/security render tests for cross-links, action visibility, badge classes, and reversal metadata.
 
 **Validation criteria:**
 - `mvn test -Dtest="DebitMemoTemplateTest,DebitMemoAllocationTemplateTest,VendorBillTemplateTest,PurchaseReturnViewIntegrationTest,PurchaseReturnReverseTemplateIntegrationTest"` passes.

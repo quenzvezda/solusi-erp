@@ -18,7 +18,10 @@ public class DebitMemoDetailResponse extends BaseAuditResponse {
     private String purchaseReturnCode;
     private Long generatedGoodsIssueId;
     private Long vendorId;
+    private String vendorName;
+    private String vendorCode;
     private Long currencyId;
+    private String currencyCode;
     private LocalDate memoDate;
     private BigDecimal grossAmountOriginal;
     private BigDecimal dppAmountOriginal;

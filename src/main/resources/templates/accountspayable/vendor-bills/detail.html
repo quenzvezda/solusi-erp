@@ -178,7 +178,9 @@
                             <tr th:each="history : ${debitMemoAllocationHistory}">
                                 <td><a th:href="@{/accounts-payable/debit-memo-allocations/{id}(id=${history.id})}" th:text="${history.code}">DMA</a></td>
                                 <td><a th:href="@{/accounts-payable/debit-memos/{id}(id=${history.debitMemoId})}" th:text="${history.debitMemoCode}">DM</a></td>
-                                <td><span class="badge" th:text="${history.status}">CONFIRMED</span></td>
+                                <td><span class="badge"
+                                          th:classappend="${history.status == 'CONFIRMED'} ? 'bg-success-lt' : (${history.status == 'REVERSED'} ? 'bg-danger-lt' : (${history.status == 'CANCELLED'} ? 'bg-secondary-lt' : 'bg-warning-lt'))"
+                                          th:text="${history.status}">CONFIRMED</span></td>
                                 <td class="text-end" th:text="${history.appliedGrossOriginal != null ? #numbers.formatDecimal(history.appliedGrossOriginal, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
                             </tr>
                             <tr th:if="${debitMemoAllocationHistory == null || #lists.isEmpty(debitMemoAllocationHistory)}">

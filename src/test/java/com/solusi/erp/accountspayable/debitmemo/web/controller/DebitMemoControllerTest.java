@@ -114,16 +114,22 @@ class DebitMemoControllerTest {
         DebitMemoDetailResponse response = new DebitMemoDetailResponse();
         response.setId(10L);
         response.setCode("DM-202606-00001");
+        response.setVendorId(22L);
+        response.setCurrencyId(1L);
         response.setSupplierMemoNumber("SUP-DM-001");
         response.setSupplierMemoDate(LocalDate.of(2026, 6, 3));
         when(detailUseCase.execute(10L)).thenReturn(view);
         when(webMapper.toDetailResponse(view)).thenReturn(response);
+        when(partyLookupProvider.resolve(22L)).thenReturn(new LookupDto(22L, "Vendor A", "VEN-001"));
+        when(currencyLookupProvider.resolve(1L)).thenReturn(new LookupDto(1L, "US Dollar", "$ - USD"));
 
         Model model = new ExtendedModelMap();
         String result = controller.detail(10L, model);
 
         assertThat(result).isEqualTo("accountspayable/debit-memos/detail");
         assertThat(model.getAttribute("debitMemo")).isSameAs(response);
+        assertThat(response.getVendorName()).isEqualTo("Vendor A");
+        assertThat(response.getCurrencyCode()).isEqualTo("$ - USD");
         assertThat(model.getAttribute("metadataRequest")).isInstanceOf(DebitMemoMetadataRequest.class);
     }
 

@@ -28,6 +28,8 @@ class DebitMemoAllocationTemplateTest {
                 "DEBIT-MEMO-ALLOCATION_UPDATE", "DEBIT-MEMO-ALLOCATION_CANCEL",
                 "dma-reverse-form", "data-bs-target=\"#dma-reverse-modal\"",
                 "applyJournalEntryId", "reversalJournalEntryId", "reversalDate", "reversalReason",
+                "bg-success-lt", "bg-danger-lt", "bg-secondary-lt", "bg-warning-lt",
+                "label.journal.reversedBy", "allocation.reversalDate", "allocation.reversalReason",
                 "/accounts-payable/debit-memos/{id}", "/accounts-payable/vendor-bills/{id}");
         assertThat(form).contains("data-ajax-form=\"true\"", "data-picker=\"date\"", "debit-memo-selector-body",
                 "vendor-bill-selector-body", "dma-lines-body", "erp-number-decimal", "data-redirect-on-success",
