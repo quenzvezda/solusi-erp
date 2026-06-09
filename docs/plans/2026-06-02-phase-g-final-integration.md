@@ -3,7 +3,8 @@
 > Source: `docs/brainstorming/2026-06-02-vendor-debit-memo.md`
 > Created: 2026-06-09
 > Sprint: 6 - Debit Memo Final Integration
-> Status: READY
+> Status: COMPLETED
+> Completed: 2026-06-09
 >
 > **For agentic workers:** execute task-by-task. Explore referenced files fresh before editing each task, update checkbox state incrementally, record deviations in `docs/reports/2026-06-02-phase-g-final-integration.md`, and do not mark a task complete before its validation command passes.
 
@@ -242,19 +243,19 @@ Close the Vendor Debit Memo MVP with backend, browser, documentation, and git hy
 **Reference module:** Phase A-F reports
 
 Steps:
-- [ ] Run focused Debit Memo, DMA, Purchase Return reversal, Vendor Bill settlement, stock reversal, and journal reversal backend gates.
+- [x] Run focused Debit Memo, DMA, Purchase Return reversal, Vendor Bill settlement, stock reversal, and journal reversal backend gates.
       ref: `docs/reports/2026-06-02-phase-e-debit-memo-allocation.md:L73-L77` - Phase E final selected gate format
       ref: `docs/reports/2026-06-02-purchase-return-reversal.md:L90-L98` - Phase F final gate format
-- [ ] Run all migration tests.
+- [x] Run all migration tests.
       ref: `src/test/java/com/solusi/erp/accountspayable/debitmemo/infrastructure/persistence/DebitMemoCoreMigrationTest.java` - Debit Memo migration test location
       ref: `src/test/java/com/solusi/erp/accountspayable/debitmemoallocation/infrastructure/persistence/DebitMemoAllocationMigrationTest.java` - DMA migration test location
       ref: `src/test/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/persistence/PurchaseReturnMigrationTest.java` - Purchase Return migration test location
-- [ ] Run `mvn clean test` and record total tests plus JaCoCo result.
-- [ ] Run selected Phase G Playwright gates: DMA spec, Purchase Return spec with combined scenario, and any AP/procurement regression spec touched by Task 2/3.
+- [x] Run `mvn clean test` and record total tests plus JaCoCo result.
+- [x] Run selected Phase G Playwright gates: DMA spec, Purchase Return spec with combined scenario, and any AP/procurement regression spec touched by Task 2/3.
       ref: `docs/tests/playwright-pitfalls.md:L241-L253` - runtime validation cannot be deferred
-- [ ] Run cold-cache targeted browser gates for storage-state-dependent specs by removing `e2e-tests\.auth` before rerun.
-- [ ] Update `docs/reports/2026-06-02-phase-g-final-integration.md` with decisions, skipped checks, remaining beyond-MVP scope, and final command outcomes.
-- [ ] Commit the final plan/report/test/docs changes task-by-task, then leave `git status --short` clean.
+- [x] Run cold-cache targeted browser gates for storage-state-dependent specs by removing `e2e-tests\.auth` before rerun.
+- [x] Update `docs/reports/2026-06-02-phase-g-final-integration.md` with decisions, skipped checks, remaining beyond-MVP scope, and final command outcomes.
+- [x] Commit the final plan/report/test/docs changes task-by-task, then leave `git status --short` clean.
 
 **Validation criteria:**
 - `mvn test -Dtest="DebitMemo*Test,DebitMemoAllocation*Test,VendorBillSettlementSummaryAdapterTest,VendorBillPaymentUpdateAdapterTest,ReverseConfirmedPurchaseReturnUseCaseTest,PurchaseReturnControllerTest,PurchaseReturn*IntegrationTest,StockMovementReversalServiceTest,ReversePostedJournalUseCaseTest"` passes.
@@ -266,15 +267,15 @@ Steps:
 
 ## 6. Final Completion Checklist
 
-- [ ] AP menu and permissions expose Debit Memo and DMA correctly.
-- [ ] Debit Memo list supports final filters, pagination, sorting, and columns.
-- [ ] DMA list supports final filters, pagination, sorting, and columns.
-- [ ] Eligible Vendor Bill and Debit Memo selectors are query-level, paginated, and eligibility-correct.
-- [ ] All cross-links in the PR/GI/DM/DMA/VB/journal chain are present and permission-safe.
-- [ ] Status badges and action visibility match lifecycle rules.
-- [ ] Confirmed DMA blocks Purchase Return reversal in browser E2E.
-- [ ] Reversed DMA restores Debit Memo availability and no longer blocks Purchase Return reversal.
-- [ ] Purchase Return reversal after DMA reversal cancels generated GI and Debit Memo and links reversal journals.
-- [ ] Docs and i18n no longer contain stale shipped-feature deferral wording.
-- [ ] `mvn clean test` passes.
-- [ ] Selected normal and cold-cache Playwright gates pass.
+- [x] AP menu and permissions expose Debit Memo and DMA correctly.
+- [x] Debit Memo list supports final filters, pagination, sorting, and columns.
+- [x] DMA list supports final filters, pagination, sorting, and columns.
+- [x] Eligible Vendor Bill and Debit Memo selectors are query-level, paginated, and eligibility-correct.
+- [x] All cross-links in the PR/GI/DM/DMA/VB/journal chain are present and permission-safe.
+- [x] Status badges and action visibility match lifecycle rules.
+- [x] Confirmed DMA blocks Purchase Return reversal in browser E2E.
+- [x] Reversed DMA restores Debit Memo availability and no longer blocks Purchase Return reversal.
+- [x] Purchase Return reversal after DMA reversal cancels generated GI and Debit Memo and links reversal journals.
+- [x] Docs and i18n no longer contain stale shipped-feature deferral wording.
+- [x] `mvn clean test` passes.
+- [x] Selected normal and cold-cache Playwright gates pass.

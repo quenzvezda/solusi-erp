@@ -699,7 +699,16 @@ test.describe('@accountspayable Debit Memo Allocation flow', () => {
     await expectDebitMemoSettlement(page, debitMemo, 'OPEN');
     await expectVendorBillSettlement(page, vendorBill!, 'OPEN', /0\.00/);
     await navigateToModule(page, `/accounts-payable/debit-memo-allocations/${allocation.id}`);
-    await expect(page.locator('a[href^="/accounting/journal-entries/"]')).toHaveCount(2, { timeout: 10_000 });
+    const journalHrefs = await page.locator('main a[href^="/accounting/journal-entries/"]').evaluateAll((links) =>
+      Array.from(
+        new Set(
+          links
+            .map((link) => (link as HTMLAnchorElement).getAttribute('href'))
+            .filter((href): href is string => Boolean(href))
+        )
+      )
+    );
+    expect(journalHrefs).toHaveLength(2);
   });
 
   test('Scenario G - blocks purchase return reversal while DMA is confirmed, then allows it after DMA reversal', async ({ page, browser }) => {

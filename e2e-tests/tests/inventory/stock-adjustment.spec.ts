@@ -135,12 +135,14 @@ async function setQuantityViaDrawer(page: Page, rowIndex: number, qty: number): 
  * Shared across Scenarios B-E so each scenario starts from a known DRAFT.
  */
 async function createSampleDraftSa(page: Page): Promise<number> {
+  const note = `E2E-SA-${Date.now()}-${Math.floor(Math.random() * 10_000)}`;
   await navigateToModule(page, '/inventory/adjustments/create');
   await expect(page.locator('#adjustment-form')).toBeVisible();
 
   await setFlatpickrDate(page, 'input[name="transactionDate"]', '2026-05-20');
   await pickIdrCurrency(page);
   await setTomSelectValue(page, '#header-facility', FACILITY_ID);
+  await page.locator('textarea[name="note"]').fill(note);
 
   const rowIndex = await addLine(page);
   await waitForRowSettled(page, rowIndex);
@@ -172,19 +174,12 @@ async function createSampleDraftSa(page: Page): Promise<number> {
   ]);
 
   await waitForNetworkIdle(page);
-  const newId = await page.evaluate(() => {
-    const links = Array.from(document.querySelectorAll('a[href*="/inventory/adjustments/edit/"]'));
-    let max = 0;
-    for (const link of links) {
-      const m = (link as HTMLAnchorElement).href.match(/\/edit\/(\d+)/);
-      if (m) {
-        const n = Number(m[1]);
-        if (n > max) max = n;
-      }
-    }
-    return max;
-  });
-  if (!newId) throw new Error('createSampleDraftSa: could not determine new SA id from list');
+  await navigateToModule(page, `/inventory/adjustments?search=${encodeURIComponent(note)}`);
+  const row = page.locator('#adjustment-table-container tbody tr').filter({ hasText: note }).first();
+  await expect(row).toBeVisible({ timeout: 10_000 });
+  const href = await row.locator('a[href*="/inventory/adjustments/edit/"]').first().getAttribute('href');
+  const newId = Number(href?.match(/\/edit\/(\d+)/)?.[1] ?? 0);
+  if (!newId) throw new Error(`createSampleDraftSa: could not determine new SA id for note ${note}`);
   return newId;
 }
 

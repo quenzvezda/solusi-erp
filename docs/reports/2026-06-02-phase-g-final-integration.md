@@ -159,3 +159,57 @@ Validation:
   - Errors: 0
   - Maven result: `BUILD SUCCESS`
   - Note: this narrow message-only run still logs expected low-coverage JaCoCo warnings; the final Phase G gate remains `mvn clean test` for threshold enforcement.
+
+### Task 6 - Final Regression Gate And Handoff
+
+Implemented:
+
+- Closed the Phase G plan as completed and checked the final completion checklist after all backend and browser gates passed.
+- Ran the focused backend regression gates for Debit Memo, DMA, Vendor Bill settlement adapters, Purchase Return reversal, stock movement reversal, and journal reversal.
+- Ran all migration tests.
+- Ran the full backend suite with `mvn clean test`; the suite passed and JaCoCo reported all coverage checks met.
+- Ran TypeScript compile for Playwright specs.
+- Ran selected Phase G browser gates through `e2e-tests\scripts\run-e2e.ps1` for the changed AP and inventory/procurement regression specs.
+- Ran the final full Playwright suite through `e2e-tests\scripts\run-e2e.ps1` after removing `e2e-tests\.auth`; all browser tests passed.
+
+Unexpected validation issues fixed:
+
+- The Phase G DMA E2E scenario originally asserted exactly two raw journal links. The final UI intentionally renders the reversal journal in both the journal summary and reversal metadata region, so the assertion now checks two unique journal hrefs instead of raw link count.
+- Vendor Bill Scenario C asserted `CANCELLED` from the unfiltered first list page. Full-suite data can push that bill off page 1, so the spec now filters by its unique invoice number before asserting status.
+- Stock Adjustment Scenario B/D used brittle list id discovery for newly created draft adjustments. The helper now writes a unique note, filters the list by that note, and extracts the id from the matching edit link.
+
+Validation:
+
+- PASS: `mvn test -Dtest="DebitMemo*Test,DebitMemoAllocation*Test,VendorBillSettlementSummaryAdapterTest,VendorBillPaymentUpdateAdapterTest,ReverseConfirmedPurchaseReturnUseCaseTest,PurchaseReturnControllerTest,PurchaseReturn*IntegrationTest,StockMovementReversalServiceTest,ReversePostedJournalUseCaseTest"`
+  - Tests run: 141
+  - Failures: 0
+  - Errors: 0
+  - Maven result: `BUILD SUCCESS`
+  - Note: this focused subset logs expected low-coverage warnings because it is not the full JaCoCo gate.
+- PASS: `mvn test -Dtest="*MigrationTest"`
+  - Tests run: 15
+  - Failures: 0
+  - Errors: 0
+  - Maven result: `BUILD SUCCESS`
+  - Note: this migration subset logs expected low-coverage warnings because it is not the full JaCoCo gate.
+- PASS: `mvn clean test`
+  - Tests run: 2013
+  - Failures: 0
+  - Errors: 0
+  - Skipped: 0
+  - JaCoCo: `All coverage checks have been met.`
+  - Maven result: `BUILD SUCCESS`
+- PASS: `cd e2e-tests && npx tsc --noEmit`
+- PASS: `.\\e2e-tests\\scripts\\run-e2e.ps1 tests/accountspayable/debit-memo-allocation.spec.ts -g "Scenario F"`
+  - Playwright summary: `5 passed (1.1m)`
+- PASS: `.\\e2e-tests\\scripts\\run-e2e.ps1 tests/accountspayable/vendor-bill.spec.ts -g "Scenario C"`
+  - Playwright summary: `5 passed (30.1s)`
+- PASS: `.\\e2e-tests\\scripts\\run-e2e.ps1 tests/inventory/stock-adjustment.spec.ts -g "Scenario B|Scenario D"`
+  - Playwright summary: `6 passed (44.5s)`
+- PASS: full cold-cache Playwright run after removing `e2e-tests\.auth`, through `.\\e2e-tests\\scripts\\run-e2e.ps1`
+  - Playwright summary: `85 passed (15.7m)`
+
+Handoff:
+
+- No beyond-MVP work was implemented in Phase G. Vendor Refund, tax override, partial Purchase Return reversal, cross-facility reversal, and legacy corrective journal automation remain outside the shipped MVP boundary.
+- Temporary `.lean-ctx-run` wrapper logs were used only to work around long-running command output limits and were removed before final commit.

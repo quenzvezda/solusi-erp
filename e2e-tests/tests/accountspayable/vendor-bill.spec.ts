@@ -253,7 +253,10 @@ test.describe('@accountspayable Vendor Bill flow', () => {
       waitUntil: 'domcontentloaded',
     });
 
-    await expect(page.locator('#vendor-bill-table-container')).toContainText('CANCELLED', { timeout: 10_000 });
+    await navigateToModule(page, `/accounts-payable/vendor-bills?keyword=${encodeURIComponent(bill.invoiceNumber)}`);
+    const row = page.locator('#vendor-bill-table-container tbody tr').filter({ hasText: bill.invoiceNumber }).first();
+    await expect(row).toBeVisible({ timeout: 10_000 });
+    await expect(row).toContainText('CANCELLED', { timeout: 10_000 });
   });
 
   test('Scenario D - delete DRAFT via API endpoint', async ({ page }) => {
