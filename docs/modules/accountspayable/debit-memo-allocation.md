@@ -62,6 +62,12 @@ Original/base snapshots disimpan pada line DMA. Journal memakai base values.
 | `POST /{id}/cancel` | Cancel draft |
 | `POST /{id}/reverse` | Reverse confirmed |
 
+List DMA memakai filter query-level keyword, vendor lookup, status, dan rentang allocation date. Kolom utama adalah code, allocation date, Debit Memo, vendor, currency, applied gross, status, dan actions. Pagination memakai fragment standar, dan sortable header hanya dipakai untuk field yang didukung query.
+
+Form DMA memakai selector query-level dan paginated untuk Debit Memo serta Vendor Bill eligible. Selector tidak mengambil semua data untuk difilter di browser. Draft stale direvalidasi saat confirm agar outstanding Vendor Bill dan remaining Debit Memo terbaru tetap aman dari over-allocation.
+
+Detail DMA menampilkan link ke Debit Memo, Vendor Bill lines, original application journal, dan reversal journal bila ada. Status `CONFIRMED`, `REVERSED`, `CANCELLED`, dan `DRAFT` memakai badge lifecycle yang berbeda. Setelah reversal, detail menampilkan reversal date, reason, reversal journal, dan state view-only.
+
 ## 6. Permissions
 
 | Permission | Akses |

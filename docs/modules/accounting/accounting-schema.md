@@ -444,5 +444,5 @@ No changes are required in `PostJournalForEventUseCaseImpl` — the generic loop
 
 ---
 
-*Last updated: Dynamic Schema Lines (V56) + Generic Journal Posting + Purchase Return Schema (V71)*
+*Last updated: Dynamic Schema Lines (V56) + Generic Journal Posting + Purchase Return Schema (V71) + Debit Memo Application Schema (V74)*
 *Owner: Accounting Module Team*

@@ -211,23 +211,23 @@ Finalize operator-facing and developer-facing documentation so it describes ship
 **Reference module:** final docs from Phases D-F
 
 Steps:
-- [ ] Update Debit Memo docs for final list/detail/filter/actions, DMA history, cancellation guard, Purchase Return reversal interaction, and Vendor Refund as explicitly future scope.
+- [x] Update Debit Memo docs for final list/detail/filter/actions, DMA history, cancellation guard, Purchase Return reversal interaction, and Vendor Refund as explicitly future scope.
       ref: `docs/modules/accountspayable/debit-memo.md:L1-L126` - current Debit Memo docs
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md:L719-L734` - Debit Memo detail contract
-- [ ] Update DMA docs for final list/detail/filter/selectors, multi-VB allocation, stale draft guard, reverse flow, journal links, and Phase G combined integration behavior.
+- [x] Update DMA docs for final list/detail/filter/selectors, multi-VB allocation, stale draft guard, reverse flow, journal links, and Phase G combined integration behavior.
       ref: `docs/modules/accountspayable/debit-memo-allocation.md:L1-L120` - current DMA docs
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md:L736-L843` - DMA list/detail/selector contract
-- [ ] Update Vendor Bill, Vendor Payment, Purchase Return, Goods Issue, and Accounting Schema docs where Phase G hardening changed wording or cross-module behavior.
+- [x] Update Vendor Bill, Vendor Payment, Purchase Return, Goods Issue, and Accounting Schema docs where Phase G hardening changed wording or cross-module behavior.
       ref: `docs/modules/accountspayable/vendor-bill.md:L175-L182` - Vendor Bill DMA settlement summary docs
       ref: `docs/modules/procurement/purchase-return.md:L71-L95` - Purchase Return reversal and deferred scope docs
       ref: `docs/modules/inventory/goods-issue.md:L123-L146` - source-owned GI reversal docs
       ref: `docs/modules/accounting/accounting-schema.md:L328` - accounting boundary docs
-- [ ] Clean stale i18n text that still implies DMA is future work, especially empty-state or helper labels that now render in shipped pages.
+- [x] Clean stale i18n text that still implies DMA is future work, especially empty-state or helper labels that now render in shipped pages.
       ref: `src/main/resources/messages.properties:L1906` - current English allocation-history empty state wording
       ref: `src/main/resources/messages_id.properties:L1906` - current Indonesian allocation-history empty state wording
-- [ ] Run stale scans for `next phase`, `phase berikutnya`, `deferred`, `ditunda`, `Phase G`, and old no-allocation placeholders; keep only intentional beyond-MVP references.
+- [x] Run stale scans for `next phase`, `phase berikutnya`, `deferred`, `ditunda`, `Phase G`, and old no-allocation placeholders; keep only intentional beyond-MVP references.
       ref: `docs/brainstorming/2026-06-02-vendor-debit-memo.md:L1729-L1735` - legitimate beyond-MVP deferred list
-- [ ] TEST: Extend message/doc tests where present and record stale-scan results in the report.
+- [x] TEST: Extend message/doc tests where present and record stale-scan results in the report.
 
 **Validation criteria:**
 - `mvn test -Dtest="*MessageBundleTest,PurchaseReturnMessagesTest"` passes.

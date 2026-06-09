@@ -129,3 +129,33 @@ Validation:
   - Tests run: 5
   - Failures: 0
   - Playwright summary: `5 passed (56.3s)`
+
+### Task 5 - Documentation, i18n, And Stale Deferred Cleanup
+
+Implemented:
+
+- Updated Debit Memo docs for final list/detail behavior: query-level filters, vendor lookup, sortable direct fields, pagination, display labels, Purchase Return/GI links, DMA history, metadata action rules, cancellation guard, and Vendor Refund as future scope.
+- Updated DMA docs for final list filters, columns, pagination, query-level selectors, stale draft revalidation, lifecycle badges, reverse metadata, original/reversal journal links, and multi-Vendor Bill allocation behavior.
+- Updated Vendor Bill docs so settlement projection references shipped Debit Memo Allocation directly, not a future placeholder.
+- Updated Purchase Return docs so confirmed reversal describes the active DMA blocker and moves only actual beyond-MVP items to the future section.
+- Updated Accounting Schema docs to include the Debit Memo Application schema milestone.
+- Reviewed Vendor Payment and Goods Issue docs; their current wording already matches the Phase G behavior and source-owned GI cancellation boundary.
+- Cleaned stale empty-state i18n:
+  - `label.debit-memo.allocation-history.empty` in English now reads `No debit memo allocations yet.`
+  - `label.debit-memo.allocation-history.empty` in Indonesian now reads `Belum ada alokasi debit memo.`
+
+Stale scan:
+
+- PASS: `src/main/resources` has no matches for shipped-feature wording that says DMA is `next phase`, `phase berikutnya`, `deferred`, `ditunda`, or `Phase G`.
+- PASS: `docs/modules` and `docs/index.md` have no stale matches for those shipped-feature placeholders.
+- PASS: AP/procurement/inventory/accounting module docs have no stale matches for `future Debit Memo`, future DMA blocker wording, or confirmed Purchase Return reversal deferred wording.
+- PASS: `docs/index.md` still links both final module docs: Debit Memo and Debit Memo Allocation.
+
+Validation:
+
+- PASS: `mvn test -Dtest="*MessageBundleTest,PurchaseReturnMessagesTest"`
+  - Tests run: 6
+  - Failures: 0
+  - Errors: 0
+  - Maven result: `BUILD SUCCESS`
+  - Note: this narrow message-only run still logs expected low-coverage JaCoCo warnings; the final Phase G gate remains `mvn clean test` for threshold enforcement.

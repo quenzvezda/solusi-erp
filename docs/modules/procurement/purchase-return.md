@@ -87,14 +87,16 @@ Urutan transaksi:
 
 Partial Purchase Return reversal, cross-facility reversal, Vendor Refund, dan reversal otomatis DMA dari layar Purchase Return belum termasuk MVP ini.
 
-## 7. Batas Berikutnya
+DMA blocker lintas modul sudah aktif: Purchase Return reversal ditolak selama Debit Memo hasil Purchase Return masih dikonsumsi oleh DMA `CONFIRMED`. Setelah DMA direverse atau dicancel dan Debit Memo kembali fully open, Purchase Return reversal dapat dilanjutkan.
 
-Phase berikutnya wajib:
+## 7. Beyond MVP
 
-1. menambahkan Vendor Refund;
-2. menangani partial Purchase Return reversal;
-3. menangani cross-facility reversal dengan transfer terpisah;
-4. memperluas integrasi DMA blocker lintas modul bila dibutuhkan untuk skenario end-to-end yang lebih besar.
+Yang sengaja belum termasuk MVP:
+
+1. Vendor Refund;
+2. partial Purchase Return reversal;
+3. cross-facility reversal dengan transfer terpisah;
+4. reversal otomatis DMA dari layar Purchase Return.
 
 ## 8. Otorisasi
 

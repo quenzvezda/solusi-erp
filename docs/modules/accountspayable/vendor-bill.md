@@ -177,7 +177,7 @@ Halaman detail Vendor Bill menampilkan ringkasan settlement:
 - shortcut **Apply Debit Memo** jika Vendor Bill confirmed, open/partial, outstanding > 0, dan ada Debit Memo eligible
 - history Debit Memo Allocation confirmed/reversed yang pernah menyentuh bill tersebut
 
-Settlement summary bersifat read-side projection; web layer tetap memakai use case/mapper dan tidak membaca repository Vendor Payment atau future Debit Memo Allocation secara langsung.
+Settlement summary bersifat read-side projection; web layer tetap memakai use case/mapper dan tidak membaca repository Vendor Payment atau Debit Memo Allocation secara langsung.
 
 Debit Memo Allocation adalah settlement source kedua selain Vendor Payment. Draft DMA tidak mengurangi outstanding; hanya DMA `CONFIRMED` yang mengisi `debitMemoAppliedAmount`. DMA `REVERSED` dikeluarkan kembali dari projection.
 

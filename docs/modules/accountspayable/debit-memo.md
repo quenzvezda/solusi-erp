@@ -21,8 +21,8 @@ Debit Memo core tetap tidak mem-post journal saat dibuat. Journal AP reduction d
 
 | Area | Kondisi saat ini |
 |---|---|
-| List | `/accounts-payable/debit-memos` dengan filter keyword, vendor, settlement status, dan rentang memo date |
-| Detail | `/accounts-payable/debit-memos/{id}` |
+| List | `/accounts-payable/debit-memos` dengan filter query-level keyword, vendor lookup, settlement status, rentang memo date, pagination, dan sortable header untuk field langsung |
+| Detail | `/accounts-payable/debit-memos/{id}` dengan vendor/currency display, Purchase Return link, generated GI link, settlement recap, line snapshot, metadata, dan history DMA |
 | Allocate shortcut | Detail menampilkan tombol Allocate untuk status `OPEN/PARTIALLY_SETTLED` dengan remaining > 0 |
 | Allocation history | Detail menampilkan history DMA dan link ke detail allocation |
 | Update metadata | `POST /accounts-payable/debit-memos/{id}/metadata` via AJAX JSON |
@@ -30,6 +30,8 @@ Debit Memo core tetap tidak mem-post journal saat dibuat. Journal AP reduction d
 | Purchase Return reversal cancel | Otomatis dari reversal Purchase Return ketika Debit Memo fully open dan tanpa active DMA |
 | Source link | Detail menampilkan link ke Purchase Return dan generated Goods Issue |
 | Purchase Return link | Detail Purchase Return menampilkan link ke Debit Memo jika sudah dibuat |
+
+List dan detail memakai display operator-friendly untuk vendor/currency ketika lookup tersedia. Raw id hanya menjadi fallback bila lookup display tidak ditemukan.
 
 ## 3. Data Snapshot
 
@@ -110,7 +112,7 @@ Debit Memo creation tidak mem-post journal. Konfirmasi Debit Memo Allocation mem
 
 Reversal DMA memakai generic linked journal reversal terhadap journal aplikasi tersebut.
 
-Vendor Refund belum aktif.
+Vendor Refund belum aktif dan tetap future scope untuk saldo Debit Memo yang tidak dialokasikan ke Vendor Bill.
 
 ## 8. Otorisasi
 
