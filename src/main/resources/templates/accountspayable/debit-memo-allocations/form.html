@@ -31,7 +31,7 @@
                             <div class="col-md-5">
                                 <label class="form-label required" th:text="#{label.debit-memo.title}">Debit Memo</label>
                                 <div class="input-group">
-                                    <input type="text" id="debitMemoDisplay" class="form-control" readonly th:value="*{debitMemoCode}" th:placeholder="#{label.debit-memo.select}">
+                                    <input type="text" id="debitMemoDisplay" class="form-control" readonly th:value="*{debitMemoCode}" th:attr="data-remaining=*{debitMemoRemainingAmount}" th:placeholder="#{label.debit-memo.select}">
                                     <button type="button" id="btn-select-debit-memo" class="btn btn-icon btn-outline-primary" th:attr="title=#{label.debit-memo.select}"><i class="ti ti-search"></i></button>
                                 </div>
                             </div>

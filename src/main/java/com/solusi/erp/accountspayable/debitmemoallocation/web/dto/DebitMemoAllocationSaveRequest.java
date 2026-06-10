@@ -8,6 +8,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +22,8 @@ public class DebitMemoAllocationSaveRequest extends BaseAuditResponse {
     private Long debitMemoId;
 
     private String debitMemoCode;
+
+    private BigDecimal debitMemoRemainingAmount;
 
     @NotNull
     @DateTimeFormat(pattern = "yyyy-MM-dd")

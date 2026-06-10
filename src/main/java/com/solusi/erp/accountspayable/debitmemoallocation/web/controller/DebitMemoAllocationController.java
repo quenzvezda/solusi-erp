@@ -25,6 +25,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -82,9 +83,11 @@ public class DebitMemoAllocationController {
     @PreAuthorize("hasAuthority('DEBIT-MEMO-ALLOCATION_CREATE')")
     public String createForm(@RequestParam(required = false) Long debitMemoId,
                              @RequestParam(required = false) String debitMemoCode,
+                             @RequestParam(required = false) BigDecimal debitMemoRemainingAmount,
                              @RequestParam(required = false) Long vendorBillId,
                              Model model) {
         DebitMemoAllocationSaveRequest request = webMapper.newSaveRequest(debitMemoId, debitMemoCode, vendorBillId);
+        request.setDebitMemoRemainingAmount(debitMemoRemainingAmount);
         model.addAttribute("request", request);
         model.addAttribute("form", new DebitMemoAllocationFormView(request, null, false));
         return "accountspayable/debit-memo-allocations/form";

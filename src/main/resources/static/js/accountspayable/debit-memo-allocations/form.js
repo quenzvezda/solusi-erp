@@ -58,12 +58,18 @@
       '<td><input type="text" class="form-control form-control-sm text-end dma-applied-input erp-number-decimal" name="lines[' + index + '].appliedGrossOriginal"></td>' +
       '<td class="text-center"><button type="button" class="btn btn-sm btn-ghost-danger js-dma-remove-line"><i class="ti ti-trash"></i></button></td>';
     tr.querySelector(".dma-line-code").textContent = row.dataset.code || id;
-    tr.querySelector(".dma-line-outstanding").textContent = Number(row.dataset.outstanding || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    var outstanding = Number(row.dataset.outstanding || 0);
+    var debitMemoRemaining = Number(document.querySelector("#debitMemoDisplay")?.dataset.remaining || 0);
+    var currentApplied = rows().reduce(function (sum, existingRow) {
+      return sum + numericValue(existingRow.querySelector(".dma-applied-input"));
+    }, 0);
+    var defaultApplied = Math.min(outstanding, Math.max(debitMemoRemaining - currentApplied, 0));
+    tr.querySelector(".dma-line-outstanding").textContent = outstanding.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     document.getElementById("dma-lines-body").appendChild(tr);
     if (typeof window.initNumericInputs === "function") {
       window.initNumericInputs(tr);
     }
-    setNumeric(tr.querySelector(".dma-applied-input"), row.dataset.outstanding || "0");
+    setNumeric(tr.querySelector(".dma-applied-input"), defaultApplied);
     reindex();
   }
 

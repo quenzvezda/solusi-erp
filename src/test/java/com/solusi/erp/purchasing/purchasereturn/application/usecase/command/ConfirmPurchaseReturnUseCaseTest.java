@@ -72,6 +72,8 @@ class ConfirmPurchaseReturnUseCaseTest {
         assertThat(debitMemoSourceCaptor.getValue().vendorId()).isEqualTo(3L);
         assertThat(debitMemoSourceCaptor.getValue().currencyId()).isEqualTo(5L);
         assertThat(debitMemoSourceCaptor.getValue().lines()).hasSize(1);
+        assertThat(debitMemoSourceCaptor.getValue().lines().getFirst().dppAmount()).isEqualByComparingTo("100");
+        assertThat(debitMemoSourceCaptor.getValue().lines().getFirst().taxAmount()).isEqualByComparingTo("0");
         assertThat(result.getStatus()).isEqualTo(PurchaseReturnStatus.CONFIRMED);
         assertThat(result.getGeneratedGoodsIssueId()).isEqualTo(9L);
         verify(purchaseReturnRepository).save(purchaseReturn);

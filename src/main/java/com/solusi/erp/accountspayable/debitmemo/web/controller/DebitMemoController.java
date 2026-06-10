@@ -17,6 +17,8 @@ import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
+import com.solusi.erp.inventory.product.domain.port.ProductLookupProvider;
+import com.solusi.erp.inventory.uom.domain.port.UomLookupProvider;
 import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
 import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import jakarta.validation.Valid;
@@ -54,6 +56,8 @@ public class DebitMemoController {
     private final DebitMemoWebMapper webMapper;
     private final PartyLookupProvider partyLookupProvider;
     private final CurrencyLookupProvider currencyLookupProvider;
+    private final ProductLookupProvider productLookupProvider;
+    private final UomLookupProvider uomLookupProvider;
     private final MessageSource messageSource;
 
     @GetMapping
@@ -159,6 +163,20 @@ public class DebitMemoController {
         LookupDto currency = currencyLookupProvider.resolve(response.getCurrencyId());
         if (currency != null) {
             response.setCurrencyCode(currency.subText());
+        }
+        if (response.getLines() != null) {
+            response.getLines().forEach(line -> {
+                LookupDto product = productLookupProvider.resolve(line.getProductId());
+                if (product != null) {
+                    line.setProductName(product.name());
+                    line.setProductCode(product.subText());
+                }
+                LookupDto uom = uomLookupProvider.resolve(line.getUomId());
+                if (uom != null) {
+                    line.setUomName(uom.name());
+                    line.setUomCode(uom.subText());
+                }
+            });
         }
     }
 

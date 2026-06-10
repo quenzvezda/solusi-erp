@@ -153,7 +153,7 @@ class DebitMemoAllocationControllerTest {
         assertAuth("list", "DEBIT-MEMO-ALLOCATION_READ", String.class, Long.class, Long.class,
                 DebitMemoAllocationStatus.class, LocalDate.class, LocalDate.class,
                 org.springframework.data.domain.Pageable.class, Model.class);
-        assertAuth("createForm", "DEBIT-MEMO-ALLOCATION_CREATE", Long.class, String.class, Long.class, Model.class);
+        assertAuth("createForm", "DEBIT-MEMO-ALLOCATION_CREATE", Long.class, String.class, BigDecimal.class, Long.class, Model.class);
         assertAuth("editForm", "DEBIT-MEMO-ALLOCATION_UPDATE", Long.class, Model.class);
         assertAuth("detail", "DEBIT-MEMO-ALLOCATION_READ", Long.class, Model.class);
         assertAuth("create", "DEBIT-MEMO-ALLOCATION_CREATE", DebitMemoAllocationSaveRequest.class);

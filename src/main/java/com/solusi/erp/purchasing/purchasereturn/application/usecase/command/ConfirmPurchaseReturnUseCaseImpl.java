@@ -99,7 +99,7 @@ public class ConfirmPurchaseReturnUseCaseImpl implements ConfirmPurchaseReturnUs
                         line.getProductId(),
                         line.getQuantity(),
                         line.getUomId(),
-                        zeroIfNull(line.getClearingAmount()),
+                        zeroIfNull(line.getInventoryAmount()),
                         zeroIfNull(line.getTaxReversalAmount())
                 ))
                 .toList();

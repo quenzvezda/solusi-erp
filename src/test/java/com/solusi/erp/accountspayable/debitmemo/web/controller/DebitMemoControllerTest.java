@@ -15,6 +15,8 @@ import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.qu
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.dto.ApiResponse;
 import com.solusi.erp.core.dto.LookupDto;
+import com.solusi.erp.inventory.product.domain.port.ProductLookupProvider;
+import com.solusi.erp.inventory.uom.domain.port.UomLookupProvider;
 import com.solusi.erp.master.currency.domain.port.CurrencyLookupProvider;
 import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,6 +51,8 @@ class DebitMemoControllerTest {
     private DebitMemoWebMapper webMapper;
     private PartyLookupProvider partyLookupProvider;
     private CurrencyLookupProvider currencyLookupProvider;
+    private ProductLookupProvider productLookupProvider;
+    private UomLookupProvider uomLookupProvider;
     private MessageSource messageSource;
     private DebitMemoController controller;
 
@@ -62,10 +66,12 @@ class DebitMemoControllerTest {
         webMapper = mock(DebitMemoWebMapper.class);
         partyLookupProvider = mock(PartyLookupProvider.class);
         currencyLookupProvider = mock(CurrencyLookupProvider.class);
+        productLookupProvider = mock(ProductLookupProvider.class);
+        uomLookupProvider = mock(UomLookupProvider.class);
         messageSource = mock(MessageSource.class);
         controller = new DebitMemoController(
                 findUseCase, detailUseCase, updateMetadataUseCase, cancelUseCase, historyUseCase, webMapper,
-                partyLookupProvider, currencyLookupProvider, messageSource);
+                partyLookupProvider, currencyLookupProvider, productLookupProvider, uomLookupProvider, messageSource);
     }
 
     @Test
