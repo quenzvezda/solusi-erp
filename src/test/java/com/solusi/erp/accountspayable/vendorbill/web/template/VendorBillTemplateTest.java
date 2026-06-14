@@ -56,7 +56,7 @@ class VendorBillTemplateTest {
         assertThat(template).contains("item.documentStatus");
         assertThat(template).contains("item.settlementStatus");
         assertThat(template).contains("item.outstandingAmount");
-        assertThat(template).contains("colspan=\"9\"");
+        assertThat(template).contains("colspan=\"5\"");
     }
 
     @Test

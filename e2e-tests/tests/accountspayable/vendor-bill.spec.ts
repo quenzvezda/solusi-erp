@@ -202,7 +202,22 @@ async function expectSettlementStatus(page: Page, settlementStatus: string): Pro
     .locator('label.form-label', { hasText: /Settlement Status|Status Pelunasan/ })
     .locator('xpath=..');
 
-  await expect(settlementStatusField).toContainText(settlementStatus, { timeout: 10_000 });
+  await expect(settlementStatusField).toContainText(statusLabelPattern(settlementStatus), { timeout: 10_000 });
+}
+
+function statusLabelPattern(status: string): RegExp {
+  switch (status) {
+    case 'OPEN':
+      return /OPEN|Open/i;
+    case 'DRAFT':
+      return /DRAFT|Draft/i;
+    case 'CONFIRMED':
+      return /CONFIRMED|Confirmed|Dikonfirmasi/i;
+    case 'CANCELLED':
+      return /CANCELLED|Cancelled|Dibatalkan/i;
+    default:
+      return new RegExp(status.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+  }
 }
 
 test.describe('@accountspayable Vendor Bill flow', () => {
@@ -219,7 +234,7 @@ test.describe('@accountspayable Vendor Bill flow', () => {
     const bill = await createDraftVendorBill(page);
 
     await navigateToModule(page, `/accounts-payable/vendor-bills/${bill.id}`);
-    await expect(page.locator('.page-title .badge', { hasText: 'DRAFT' })).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('.page-title .badge', { hasText: statusLabelPattern('DRAFT') })).toBeVisible({ timeout: 10_000 });
     await expect(page.locator('body')).toContainText(bill.invoiceNumber);
   });
 
@@ -236,7 +251,7 @@ test.describe('@accountspayable Vendor Bill flow', () => {
       waitUntil: 'domcontentloaded',
     });
 
-    await expect(page.locator('.page-title .badge', { hasText: 'CONFIRMED' })).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('.page-title .badge', { hasText: statusLabelPattern('CONFIRMED') })).toBeVisible({ timeout: 10_000 });
     await expectSettlementStatus(page, 'OPEN');
   });
 
@@ -256,7 +271,7 @@ test.describe('@accountspayable Vendor Bill flow', () => {
     await navigateToModule(page, `/accounts-payable/vendor-bills?keyword=${encodeURIComponent(bill.invoiceNumber)}`);
     const row = page.locator('#vendor-bill-table-container tbody tr').filter({ hasText: bill.invoiceNumber }).first();
     await expect(row).toBeVisible({ timeout: 10_000 });
-    await expect(row).toContainText('CANCELLED', { timeout: 10_000 });
+    await expect(row).toContainText(statusLabelPattern('CANCELLED'), { timeout: 10_000 });
   });
 
   test('Scenario D - delete DRAFT via API endpoint', async ({ page }) => {

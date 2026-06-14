@@ -21,6 +21,43 @@
                 </div>
                 <div class="col-auto ms-auto">
                     <div class="btn-list">
+                        <div th:if="${purchaseReturn.status.name() == 'DRAFT'}" sec:authorize="hasAuthority('PURCHASE-RETURN_SUBMIT')" class="d-flex gap-2">
+                            <select id="purchase-return-approver" class="form-select form-select-sm erp-input-ts" data-lookup-path="parties/by-role-type?roleTypeCode=APPROVER" th:attr="placeholder=#{label.purchase-return.approver}" style="min-width: 220px;">
+                                <option value=""></option>
+                            </select>
+                            <button type="button" class="btn btn-success"
+                                    th:data-submit-url="@{'/purchasing/purchase-returns/' + ${purchaseReturn.id} + '/submit'}"
+                                    th:data-redirect-url="@{'/purchasing/purchase-returns/view/' + ${purchaseReturn.id}}"
+                                    th:data-confirm-message="#{msg.confirm.purchase-return.submit}"
+                                    onclick="PurchaseReturnActions.submit(this)">
+                                <i class="ti ti-send me-1"></i><span th:text="#{label.purchase-return.submit}">Submit</span>
+                            </button>
+                        </div>
+                        <button th:if="${purchaseReturn.status.name() == 'SUBMITTED'}" type="button" class="btn btn-warning"
+                                sec:authorize="hasAuthority('PURCHASE-RETURN_CANCEL')"
+                                th:data-action-url="@{'/purchasing/purchase-returns/' + ${purchaseReturn.id} + '/cancel-submission'(notes=#{msg.purchase-return.cancel-submission.notes})}"
+                                th:data-redirect-url="@{'/purchasing/purchase-returns/view/' + ${purchaseReturn.id}}"
+                                th:data-confirm-message="#{msg.confirm.purchase-return.cancel-submission}" onclick="ErpForm.postAction(this)">
+                            <i class="ti ti-rotate-clockwise me-1"></i><span th:text="#{label.purchase-return.cancel-submission}">Cancel Submission</span>
+                        </button>
+                        <button th:if="${purchaseReturn.status.name() == 'APPROVED'}" type="button" class="btn btn-primary"
+                                sec:authorize="hasAuthority('PURCHASE-RETURN_CONFIRM')"
+                                th:data-action-url="@{'/purchasing/purchase-returns/' + ${purchaseReturn.id} + '/confirm'}"
+                                th:data-redirect-url="@{'/purchasing/purchase-returns/view/' + ${purchaseReturn.id}}"
+                                th:data-confirm-message="#{msg.confirm.purchase-return.confirm}" onclick="ErpForm.postAction(this)">
+                            <i class="ti ti-check me-1"></i><span th:text="#{label.purchase-return.confirm}">Confirm</span>
+                        </button>
+                        <button th:if="${purchaseReturn.status.name() == 'APPROVED'}" type="button" class="btn btn-warning"
+                                sec:authorize="hasAuthority('PURCHASE-RETURN_CANCEL')"
+                                th:data-action-url="@{'/purchasing/purchase-returns/' + ${purchaseReturn.id} + '/cancel'}"
+                                th:data-redirect-url="@{'/purchasing/purchase-returns/view/' + ${purchaseReturn.id}}"
+                                th:data-confirm-message="#{msg.confirm.purchase-return.cancel}" onclick="ErpForm.postAction(this)">
+                            <i class="ti ti-x me-1"></i><span th:text="#{label.purchase-return.cancel}">Cancel</span>
+                        </button>
+                        <a th:if="${purchaseReturn.status.name() == 'CONFIRMED'}" sec:authorize="hasAuthority('PURCHASE-RETURN_REVERSE')" class="btn btn-danger"
+                           th:href="@{'/purchasing/purchase-returns/' + ${purchaseReturn.id} + '/reverse'}">
+                            <i class="ti ti-rotate-clockwise me-1"></i><span th:text="#{label.purchase-return.reverse}">Reverse</span>
+                        </a>
                         <button th:if="${approvalRequestId != null}" type="button" class="btn btn-white"
                                 onclick="ErpDrawer.open('drawer-approval-history')">
                             <i class="ti ti-history me-1"></i><span th:text="#{label.approval.history}">Approval History</span>
@@ -39,7 +76,7 @@
                 <div th:replace="~{fragments/approval :: approve-action-banner(${approvalRequestId}, ${currentPartyId})}"></div>
             </th:block>
             <div class="row row-cards">
-                <div class="col-lg-9">
+                <div class="col-12">
                     <div class="card mb-3">
                         <div class="card-body">
                             <div class="row g-3">
@@ -91,6 +128,24 @@
                             </div>
                         </div>
                     </div>
+                    <div class="card mb-3">
+                        <div class="card-header"><h3 class="card-title" th:text="#{label.purchase-return.reservation-summary}">Reservation Summary</h3></div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label text-secondary" th:text="#{label.qty}">Qty</label>
+                                    <div class="form-control-plaintext fw-bold" th:text="${#numbers.formatDecimal(purchaseReturn.totalQuantity, 1, 'COMMA', 2, 'POINT')}">0.00</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-secondary" th:text="#{label.inventory.amount}">Amount</label>
+                                    <div class="form-control-plaintext fw-bold" th:text="${#numbers.formatDecimal(purchaseReturn.totalAmount, 1, 'COMMA', 2, 'POINT')}">0.00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <th:block th:if="${approvalRequestId != null && !isCurrentApprover}">
+                        <div th:replace="~{fragments/approval :: approve-reject-panel(${approvalRequestId}, ${isCurrentApprover}, ${approvalStatus})}"></div>
+                    </th:block>
                     <div class="card">
                         <div class="card-header"><h3 class="card-title" th:text="#{label.purchase-return.lines}">Lines</h3></div>
                         <div class="table-responsive">
@@ -115,65 +170,6 @@
                         </div>
                         <div class="card-footer"><div th:replace="~{fragments/audit-info :: audit-info(${purchaseReturn})}"></div></div>
                     </div>
-                </div>
-                <div class="col-lg-3">
-                    <div class="card bg-secondary-lt mb-3">
-                        <div class="card-body">
-                            <div class="text-secondary" th:text="#{label.purchase-return.reservation-summary}">Reservation Summary</div>
-                            <div class="h3 mb-3" th:text="${#numbers.formatDecimal(purchaseReturn.totalQuantity, 1, 'COMMA', 2, 'POINT')}">0.00</div>
-                            <div class="text-secondary" th:text="#{label.inventory.amount}">Amount</div>
-                            <div class="h3 mb-0" th:text="${#numbers.formatDecimal(purchaseReturn.totalAmount, 1, 'COMMA', 2, 'POINT')}">0.00</div>
-                        </div>
-                    </div>
-                    <div class="card mb-3" th:if="${purchaseReturn.status.name() == 'DRAFT'}" sec:authorize="hasAuthority('PURCHASE-RETURN_SUBMIT')">
-                        <div class="card-body">
-                            <label class="form-label required" th:text="#{label.purchase-return.approver}">Approver</label>
-                            <select id="purchase-return-approver" class="form-select erp-input-ts" data-lookup-path="parties/by-role-type?roleTypeCode=APPROVER"><option value=""></option></select>
-                            <button type="button" class="btn btn-success w-100 mt-3"
-                                    th:data-submit-url="@{'/purchasing/purchase-returns/' + ${purchaseReturn.id} + '/submit'}"
-                                    th:data-redirect-url="@{'/purchasing/purchase-returns/view/' + ${purchaseReturn.id}}"
-                                    th:data-confirm-message="#{msg.confirm.purchase-return.submit}"
-                                    onclick="PurchaseReturnActions.submit(this)">
-                                <i class="ti ti-send me-1"></i><span th:text="#{label.purchase-return.submit}">Submit</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card" th:if="${purchaseReturn.status.name() == 'SUBMITTED' || purchaseReturn.status.name() == 'APPROVED'}">
-                        <div class="card-body">
-                            <button th:if="${purchaseReturn.status.name() == 'SUBMITTED'}" type="button" class="btn btn-warning w-100"
-                                    sec:authorize="hasAuthority('PURCHASE-RETURN_CANCEL')"
-                                    th:data-action-url="@{'/purchasing/purchase-returns/' + ${purchaseReturn.id} + '/cancel-submission'(notes=#{msg.purchase-return.cancel-submission.notes})}"
-                                    th:data-redirect-url="@{'/purchasing/purchase-returns/view/' + ${purchaseReturn.id}}"
-                                    th:data-confirm-message="#{msg.confirm.purchase-return.cancel-submission}" onclick="ErpForm.postAction(this)">
-                                <i class="ti ti-rotate-clockwise me-1"></i><span th:text="#{label.purchase-return.cancel-submission}">Cancel Submission</span>
-                            </button>
-                            <button th:if="${purchaseReturn.status.name() == 'APPROVED'}" type="button" class="btn btn-primary w-100 mb-2"
-                                    sec:authorize="hasAuthority('PURCHASE-RETURN_CONFIRM')"
-                                    th:data-action-url="@{'/purchasing/purchase-returns/' + ${purchaseReturn.id} + '/confirm'}"
-                                    th:data-redirect-url="@{'/purchasing/purchase-returns/view/' + ${purchaseReturn.id}}"
-                                    th:data-confirm-message="#{msg.confirm.purchase-return.confirm}" onclick="ErpForm.postAction(this)">
-                                <i class="ti ti-check me-1"></i><span th:text="#{label.purchase-return.confirm}">Confirm</span>
-                            </button>
-                            <button th:if="${purchaseReturn.status.name() == 'APPROVED'}" type="button" class="btn btn-warning w-100"
-                                    sec:authorize="hasAuthority('PURCHASE-RETURN_CANCEL')"
-                                    th:data-action-url="@{'/purchasing/purchase-returns/' + ${purchaseReturn.id} + '/cancel'}"
-                                    th:data-redirect-url="@{'/purchasing/purchase-returns/view/' + ${purchaseReturn.id}}"
-                                    th:data-confirm-message="#{msg.confirm.purchase-return.cancel}" onclick="ErpForm.postAction(this)">
-                                <i class="ti ti-x me-1"></i><span th:text="#{label.purchase-return.cancel}">Cancel</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card" th:if="${purchaseReturn.status.name() == 'CONFIRMED'}" sec:authorize="hasAuthority('PURCHASE-RETURN_REVERSE')">
-                        <div class="card-body">
-                            <a class="btn btn-danger w-100"
-                               th:href="@{'/purchasing/purchase-returns/' + ${purchaseReturn.id} + '/reverse'}">
-                                <i class="ti ti-rotate-clockwise me-1"></i><span th:text="#{label.purchase-return.reverse}">Reverse</span>
-                            </a>
-                        </div>
-                    </div>
-                    <th:block th:if="${approvalRequestId != null && !isCurrentApprover}">
-                        <div th:replace="~{fragments/approval :: approve-reject-panel(${approvalRequestId}, ${isCurrentApprover}, ${approvalStatus})}"></div>
-                    </th:block>
                 </div>
             </div>
         </div>

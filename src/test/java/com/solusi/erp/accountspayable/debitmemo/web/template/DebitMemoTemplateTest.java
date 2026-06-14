@@ -33,7 +33,7 @@ class DebitMemoTemplateTest {
         assertThat(template).contains("item.currencyCode");
         assertThat(template).contains("/accounts-payable/debit-memos/{id}");
         assertThat(template).contains("fragments/table :: pagination(${page})");
-        assertThat(template).contains("colspan=\"10\"");
+        assertThat(template).contains("colspan=\"7\"");
     }
 
     @Test

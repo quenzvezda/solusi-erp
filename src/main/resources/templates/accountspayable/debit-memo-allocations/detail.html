@@ -11,7 +11,7 @@
                         <span th:text="${allocation.code}">DMA-001</span>
                         <span class="badge ms-2"
                               th:classappend="${allocation.status == 'CONFIRMED'} ? 'bg-success-lt' : (${allocation.status == 'REVERSED'} ? 'bg-danger-lt' : (${allocation.status == 'CANCELLED'} ? 'bg-secondary-lt' : 'bg-warning-lt'))"
-                              th:text="${allocation.status}">DRAFT</span>
+                              th:text="${#messages.msg('label.debit-memo-allocation.status.' + #strings.toLowerCase(allocation.status))}">DRAFT</span>
                     </h2>
                 </div>
                 <div class="col-auto ms-auto btn-list">
@@ -20,7 +20,7 @@
                     <button type="button" class="btn btn-success js-dma-action" th:if="${allocation.status == 'DRAFT'}" sec:authorize="hasAuthority('DEBIT-MEMO-ALLOCATION_CONFIRM')"
                             th:data-action-url="@{/accounts-payable/debit-memo-allocations/{id}/confirm(id=${allocation.id})}"
                             th:data-redirect-url="@{/accounts-payable/debit-memo-allocations/{id}(id=${allocation.id})}"
-                            th:data-confirm-message="#{msg.confirm.debit-memo-allocation.confirm}"><i class="ti ti-check me-1"></i><span th:text="#{label.confirm}">Confirm</span></button>
+                            th:data-confirm-message="#{msg.confirm.debit-memo-allocation.confirm}"><i class="ti ti-check me-1"></i><span th:text="#{label.debit-memo-allocation.confirm}">Confirm</span></button>
                     <button type="button" class="btn btn-warning js-dma-action" th:if="${allocation.status == 'DRAFT'}" sec:authorize="hasAuthority('DEBIT-MEMO-ALLOCATION_CANCEL')"
                             th:data-action-url="@{/accounts-payable/debit-memo-allocations/{id}/cancel(id=${allocation.id})}"
                             th:data-redirect-url="@{/accounts-payable/debit-memo-allocations/{id}(id=${allocation.id})}"

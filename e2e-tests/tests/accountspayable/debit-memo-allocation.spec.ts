@@ -228,7 +228,7 @@ async function createConfirmedVendorBillFromGoodsReceipt(page: Page, grId: numbe
     timeout: 20_000,
     waitUntil: 'domcontentloaded',
   });
-  await expect(page.locator('.page-title .badge', { hasText: 'CONFIRMED' })).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('.page-title .badge', { hasText: statusLabelPattern('CONFIRMED') })).toBeVisible({ timeout: 10_000 });
   const code = (await page.locator('.page-title span').first().innerText()).trim();
   return { id, code, invoiceNumber };
 }
@@ -369,8 +369,29 @@ async function createDebitMemoWithOptionalBill(
   const vendorBill = createBill ? await createConfirmedVendorBillFromGoodsReceipt(adminPage, grId) : undefined;
   const debitMemo = await createDebitMemoFromGoodsReceipt(browser, grId);
   await navigateToModule(adminPage, debitMemo.href);
-  await expect(adminPage.locator('.page-header .badge')).toContainText('OPEN', { timeout: 10_000 });
+  await expect(adminPage.locator('.page-header .badge')).toContainText(statusLabelPattern('OPEN'), { timeout: 10_000 });
   return { debitMemo, vendorBill };
+}
+
+function statusLabelPattern(status: string): RegExp {
+  switch (status) {
+    case 'OPEN':
+      return /OPEN|Open/i;
+    case 'DRAFT':
+      return /DRAFT|Draft/i;
+    case 'CONFIRMED':
+      return /CONFIRMED|Confirmed|Dikonfirmasi/i;
+    case 'CANCELLED':
+      return /CANCELLED|Cancelled|Dibatalkan/i;
+    case 'SETTLED':
+      return /(^|[^A-Z])(SETTLED|Settled|Tersettle|Lunas)([^A-Z]|$)/i;
+    case 'PARTIALLY_SETTLED':
+      return /PARTIALLY[_ ]SETTLED|Partially Settled|Tersettle Sebagian|Lunas Sebagian/i;
+    case 'REVERSED':
+      return /REVERSED|Reversed|Direversal/i;
+    default:
+      return new RegExp(status.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+  }
 }
 
 async function chooseVendorBill(page: Page, bill: ConfirmedVendorBill): Promise<void> {
@@ -473,7 +494,7 @@ async function createDraftDmaFromVendorBillShortcut(
 
 async function confirmDma(page: Page, allocation: DebitMemoAllocation): Promise<void> {
   await navigateToModule(page, `/accounts-payable/debit-memo-allocations/${allocation.id}`);
-  await expect(page.locator('.page-title .badge', { hasText: 'DRAFT' })).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('.page-title .badge', { hasText: statusLabelPattern('DRAFT') })).toBeVisible({ timeout: 10_000 });
   await page.locator('.js-dma-action', { hasText: /Confirm|Konfirmasi/i }).click();
   const responsePromise = page.waitForResponse((response) =>
     response.url().includes(`/accounts-payable/debit-memo-allocations/${allocation.id}/confirm`) &&
@@ -488,12 +509,12 @@ async function confirmDma(page: Page, allocation: DebitMemoAllocation): Promise<
     timeout: 20_000,
     waitUntil: 'domcontentloaded',
   });
-  await expect(page.locator('.page-title .badge', { hasText: 'CONFIRMED' })).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('.page-title .badge', { hasText: statusLabelPattern('CONFIRMED') })).toBeVisible({ timeout: 10_000 });
 }
 
 async function expectDmaConfirmFailure(page: Page, allocation: DebitMemoAllocation, message: RegExp): Promise<void> {
   await navigateToModule(page, `/accounts-payable/debit-memo-allocations/${allocation.id}`);
-  await expect(page.locator('.page-title .badge', { hasText: 'DRAFT' })).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('.page-title .badge', { hasText: statusLabelPattern('DRAFT') })).toBeVisible({ timeout: 10_000 });
   await page.locator('.js-dma-action', { hasText: /Confirm|Konfirmasi/i }).click();
   const responsePromise = page.waitForResponse((response) =>
     response.url().includes(`/accounts-payable/debit-memo-allocations/${allocation.id}/confirm`) &&
@@ -503,7 +524,7 @@ async function expectDmaConfirmFailure(page: Page, allocation: DebitMemoAllocati
   const response = await responsePromise;
   expect(response.ok()).toBeFalsy();
   await expect(page.locator('body')).toContainText(message, { timeout: 10_000 });
-  await expect(page.locator('.page-title .badge', { hasText: 'DRAFT' })).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('.page-title .badge', { hasText: statusLabelPattern('DRAFT') })).toBeVisible({ timeout: 10_000 });
 }
 
 async function reverseDma(page: Page, allocation: DebitMemoAllocation): Promise<void> {
@@ -520,7 +541,7 @@ async function reverseDma(page: Page, allocation: DebitMemoAllocation): Promise<
     waitUntil: 'domcontentloaded',
   });
   await dataPromise;
-  await expect(page.locator('.page-title .badge', { hasText: 'REVERSED' })).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('.page-title .badge', { hasText: statusLabelPattern('REVERSED') })).toBeVisible({ timeout: 10_000 });
 }
 
 async function readJournalTotals(page: Page): Promise<{ debit: string; credit: string }> {
@@ -580,11 +601,11 @@ async function expectVendorBillSettlement(
   debitMemoApplied?: RegExp
 ): Promise<void> {
   await navigateToModule(page, `/accounts-payable/vendor-bills/${bill.id}`);
-  await expect(page.locator('.page-title .badge', { hasText: 'CONFIRMED' })).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('.page-title .badge', { hasText: statusLabelPattern('CONFIRMED') })).toBeVisible({ timeout: 10_000 });
   const settlementStatusField = page
     .locator('label.form-label', { hasText: /Settlement Status|Status Pelunasan/ })
     .locator('xpath=..');
-  await expect(settlementStatusField).toContainText(settlementStatus, { timeout: 10_000 });
+  await expect(settlementStatusField).toContainText(statusLabelPattern(settlementStatus), { timeout: 10_000 });
   if (debitMemoApplied) {
     const debitMemoAppliedField = page
       .locator('label.form-label', { hasText: /Debit Memo Applied|Debit Memo Terpakai/ })
@@ -596,7 +617,7 @@ async function expectVendorBillSettlement(
 
 async function expectDebitMemoSettlement(page: Page, debitMemo: DebitMemo, settlementStatus: string): Promise<void> {
   await navigateToModule(page, debitMemo.href);
-  await expect(page.locator('.page-header .badge', { hasText: settlementStatus })).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('.page-header .badge', { hasText: statusLabelPattern(settlementStatus) })).toBeVisible({ timeout: 10_000 });
   await expect(page.locator('body')).toContainText(/Allocation History|Riwayat Alokasi/i);
 }
 
@@ -670,7 +691,7 @@ test.describe('@accountspayable Debit Memo Allocation flow', () => {
     const allocation = await createDraftDmaFromVendorBillShortcut(page, debitMemo, vendorBill!, 1_000_000);
 
     await navigateToModule(page, `/accounts-payable/debit-memo-allocations/${allocation.id}`);
-    await expect(page.locator('.page-title .badge', { hasText: 'DRAFT' })).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('.page-title .badge', { hasText: statusLabelPattern('DRAFT') })).toBeVisible({ timeout: 10_000 });
     await expect(page.locator('body')).toContainText(vendorBill!.code);
     await expect(page.locator('body')).toContainText(debitMemo.code);
   });
@@ -753,10 +774,10 @@ test.describe('@accountspayable Debit Memo Allocation flow', () => {
     expect(reversalJournalHref, 'purchase return reversal journal href').toBeTruthy();
 
     await navigateToModule(page, debitMemo.goodsIssueHref);
-    await expect(page.locator('.page-title .badge')).toContainText('CANCELLED');
+    await expect(page.locator('.page-title .badge')).toContainText(statusLabelPattern('CANCELLED'));
 
     await navigateToModule(page, debitMemo.href);
-    await expect(page.locator('.page-header .badge')).toContainText('CANCELLED');
+    await expect(page.locator('.page-header .badge')).toContainText(statusLabelPattern('CANCELLED'));
     await expect(page.locator('a[href*="/accounts-payable/debit-memo-allocations/create"]')).toHaveCount(0);
 
     await navigateToModule(page, originalJournalHref);

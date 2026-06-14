@@ -33,7 +33,8 @@
                         <div class="col-md-2">
                             <select class="form-select" name="status">
                                 <option value="" th:text="#{label.all}">All</option>
-                                <option th:each="item : ${statuses}" th:value="${item}" th:selected="${item == status}" th:text="${item}">DRAFT</option>
+                                <option th:each="item : ${statuses}" th:value="${item}" th:selected="${item == status}"
+                                        th:text="${#messages.msg('label.debit-memo-allocation.status.' + #strings.toLowerCase(item.name()))}">DRAFT</option>
                             </select>
                         </div>
                         <div class="col-md-2"><input type="date" class="form-control" name="allocationDateFrom" data-picker="date" th:value="${allocationDateFrom}"></div>
@@ -70,7 +71,7 @@
                             <td class="text-end" th:text="${item.totalAppliedGrossOriginal != null ? #numbers.formatDecimal(item.totalAppliedGrossOriginal, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
                             <td><span class="badge"
                                       th:classappend="${item.status == 'CONFIRMED'} ? 'bg-success-lt' : (${item.status == 'REVERSED'} ? 'bg-danger-lt' : (${item.status == 'CANCELLED'} ? 'bg-secondary-lt' : 'bg-warning-lt'))"
-                                      th:text="${item.status}">DRAFT</span></td>
+                                      th:text="${#messages.msg('label.debit-memo-allocation.status.' + #strings.toLowerCase(item.status))}">DRAFT</span></td>
                             <td class="text-end">
                                 <a class="btn btn-sm btn-outline-primary" th:href="@{/accounts-payable/debit-memo-allocations/{id}(id=${item.id})}"><i class="ti ti-eye"></i></a>
                                 <a class="btn btn-sm btn-outline-secondary" th:if="${item.status == 'DRAFT'}" sec:authorize="hasAuthority('DEBIT-MEMO-ALLOCATION_UPDATE')"

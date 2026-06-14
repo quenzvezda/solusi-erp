@@ -140,7 +140,20 @@ async function submitPurchaseReturnCreate(page: Page): Promise<number> {
 async function removeLineIfPresent(page: Page, productCode: string, containerId: string): Promise<void> {
   const row = formRow(page, productCode, containerId);
   if (await row.count()) {
-    await row.locator('.btn-remove-line').click();
+    await row.locator('.btn-remove-line').click({ force: true });
+  }
+}
+
+function statusLabelPattern(status: string): RegExp {
+  switch (status) {
+    case 'OPEN':
+      return /OPEN|Open/i;
+    case 'COMPLETED':
+      return /COMPLETED|Completed|Selesai/i;
+    case 'CANCELLED':
+      return /CANCELLED|Cancelled|Dibatalkan/i;
+    default:
+      return new RegExp(status.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
   }
 }
 
@@ -397,7 +410,7 @@ test.describe('Purchase Return Phase 1 flow', () => {
     const adminContext = await browser.newContext({ storageState: storageStatePath('admin') });
     const adminPage = await adminContext.newPage();
     await navigateToModule(adminPage, debitMemoHref!);
-    await expect(adminPage.locator('.page-header .badge')).toContainText('OPEN');
+    await expect(adminPage.locator('.page-header .badge')).toContainText(statusLabelPattern('OPEN'));
     await expect(adminPage.locator('.page-title')).toContainText(debitMemoCode);
     await expect(adminPage.locator(`a[href="/purchasing/purchase-returns/view/${purchaseReturnId}"]`))
       .toContainText(purchaseReturnCode);
@@ -448,7 +461,7 @@ test.describe('Purchase Return Phase 1 flow', () => {
     expect(totalDebit).not.toMatch(/^0([,.]0+)?$/);
 
     await navigateToModule(page, giHref!);
-    await expect(page.locator('.page-title .badge')).toContainText('COMPLETED');
+    await expect(page.locator('.page-title .badge')).toContainText(statusLabelPattern('COMPLETED'));
   });
 
   test('reverses confirmed purchase return and cancels generated documents', async ({ page, browser }) => {
@@ -482,12 +495,12 @@ test.describe('Purchase Return Phase 1 flow', () => {
     expect(reversalJournalHref, 'purchase return reversal journal href').toBeTruthy();
 
     await navigateToModule(adminPage, confirmed.goodsIssueHref);
-    await expect(adminPage.locator('.page-title .badge')).toContainText('CANCELLED');
+    await expect(adminPage.locator('.page-title .badge')).toContainText(statusLabelPattern('CANCELLED'));
     await expect(adminPage.getByRole('link', { name: /Reversal Journal|Jurnal Reversal/i })).toBeVisible();
     await expect(adminPage.locator(`a[href="${reversalJournalHref}"]`)).toBeVisible();
 
     await navigateToModule(adminPage, confirmed.debitMemoHref);
-    await expect(adminPage.locator('.page-header .badge')).toContainText('CANCELLED');
+    await expect(adminPage.locator('.page-header .badge')).toContainText(statusLabelPattern('CANCELLED'));
     await expect(adminPage.locator('.page-title')).toContainText(confirmed.debitMemoCode);
     await expect(adminPage.locator('a[href*="/accounts-payable/debit-memo-allocations/create"]')).toHaveCount(0);
     await expect(adminPage.locator('a[href^="/accounts-payable/debit-memo-allocations/"]')).toHaveCount(0);
