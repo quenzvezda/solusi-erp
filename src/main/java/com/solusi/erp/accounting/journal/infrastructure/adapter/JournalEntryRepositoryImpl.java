@@ -40,6 +40,11 @@ public class JournalEntryRepositoryImpl implements JournalEntryRepository {
     }
 
     @Override
+    public Optional<JournalEntry> findBySource(String sourceType, Long sourceId) {
+        return jpaRepository.findBySourceTypeAndSourceId(sourceType, sourceId).map(mapper::toDomain);
+    }
+
+    @Override
     public Optional<JournalEntry> findById(Long id) {
         return jpaRepository.findById(id).map(mapper::toDomain);
     }

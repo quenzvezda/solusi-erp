@@ -10,6 +10,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Repository for Inventory Movement.
@@ -36,4 +38,10 @@ public interface InventoryMovementJpaRepository extends JpaRepository<InventoryM
                                          Pageable pageable);
 
     boolean existsByContainerId(Long containerId);
+
+    List<InventoryMovementEntity> findByReferenceTypeAndReferenceIdOrderByIdAsc(ReferenceType referenceType, Long referenceId);
+
+    List<InventoryMovementEntity> findByIdIn(Collection<Long> ids);
+
+    boolean existsByReversalOfMovementId(Long reversalOfMovementId);
 }

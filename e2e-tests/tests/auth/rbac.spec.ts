@@ -120,6 +120,9 @@ async function classify(
   page: import('@playwright/test').Page,
   listUrl: string
 ): Promise<'allow' | 'deny'> {
+  const probe = await page.request.get(listUrl, { maxRedirects: 0, timeout: 30_000 });
+  if (probe.status() >= 300) return 'deny';
+
   const res = await page.goto(listUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
   const status = res?.status() ?? 0;
   const finalPath = new URL(page.url()).pathname;

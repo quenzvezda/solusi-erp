@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div id="gi-source-line-selector-results" th:fragment="gi-source-line-selector-results">
+    <div class="card-header border-0 pb-0">
+        <form class="row g-2"
+              hx-get="/inventory/goods-issues/selectors/source-lines"
+              hx-target="#gi-source-line-selector-results"
+              hx-swap="outerHTML">
+            <input type="hidden" name="referenceType" th:value="${referenceType}">
+            <input type="hidden" name="referenceId" th:value="${referenceId}">
+            <th:block th:each="excludeReferenceLineId : ${excludeReferenceLineIds}">
+                <input type="hidden" name="excludeReferenceLineIds" th:value="${excludeReferenceLineId}">
+            </th:block>
+            <div class="col">
+                <input type="search"
+                       class="form-control"
+                       name="keyword"
+                       th:value="${keyword}"
+                       th:placeholder="#{label.gi.selector.sourceLine.search.placeholder}">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-search"></i>
+                    <span class="ms-1" th:text="#{label.search}">Search</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div th:if="${unsupportedReferenceType}" class="alert alert-warning mx-3 mt-3 mb-0"
+         th:text="#{msg.warning.gi.selector.sourceLine.unsupported}">
+        This source type is not yet supported for source-line selection.
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+            <tr>
+                <th class="w-1"></th>
+                <th th:text="#{label.product}">Product</th>
+                <th th:text="#{label.uom}">UoM</th>
+                <th th:text="#{label.gi.facility}">Facility</th>
+                <th th:text="#{label.grid}">Grid</th>
+                <th th:text="#{label.container}">Container</th>
+                <th class="text-end" th:text="#{label.gi.selector.sourceLine.column.remainingQty}">Remaining Qty</th>
+                <th class="text-end" th:text="#{label.unit.cost}">Unit Cost</th>
+                <th class="text-end" th:text="#{label.inventory.amount}">Inventory Amt</th>
+                <th th:text="#{label.gi.line.valuationRef}">Valuation Ref</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${page.isEmpty()}">
+                <td colspan="10" class="text-center text-secondary py-4" th:text="#{label.gi.selector.sourceLine.empty}">
+                    No eligible source lines found.
+                </td>
+            </tr>
+            <tr th:each="row : ${page.content}"
+                th:attr="data-reference-line-id=${row.referenceLineId},
+                         data-product-id=${row.productId},
+                         data-product-name=${row.productName},
+                         data-product-subtext=${row.productCode},
+                         data-uom-id=${row.uomId},
+                         data-uom-name=${row.uomName},
+                         data-uom-subtext=${row.uomCode},
+                         data-facility-id=${row.facilityId},
+                         data-facility-name=${row.facilityName},
+                         data-grid-id=${row.gridId},
+                         data-grid-name=${row.gridName},
+                         data-grid-subtext=${row.gridCode},
+                         data-container-id=${row.containerId},
+                         data-container-name=${row.containerName},
+                         data-container-subtext=${row.containerCode},
+                         data-valuation-ref-type=${row.valuationRefType},
+                         data-valuation-ref-id=${row.valuationRefId},
+                         data-valuation-ref-line-id=${row.valuationRefLineId},
+                         data-serialized=${row.serialized},
+                         data-remaining-quantity=${row.remainingQuantity},
+                         data-base-quantity=${row.remainingQuantity},
+                         data-unit-cost=${row.unitCost},
+                         data-inventory-amount=${row.inventoryAmount},
+                         data-tax-amount=${row.taxAmount}">
+                <td>
+                    <label class="form-check m-0">
+                        <input class="form-check-input js-gi-source-line-selector-item" type="checkbox">
+                    </label>
+                </td>
+                <td>
+                    <div class="fw-semibold" th:text="${row.productName}">Product</div>
+                    <div class="text-secondary small" th:text="${row.productCode}">PRD-001</div>
+                    <span class="badge mt-1"
+                          th:classappend="${row.serialized} ? 'bg-azure-lt text-azure' : 'bg-secondary-lt text-secondary'"
+                          th:text="${row.serialized} ? #{label.serialized} : #{label.standard}">Standard</span>
+                </td>
+                <td>
+                    <div th:text="${row.uomName}">PCS</div>
+                    <div class="text-secondary small" th:text="${row.uomCode}">PCS</div>
+                </td>
+                <td>
+                    <div th:text="${row.facilityName}">Main WH</div>
+                    <div class="text-secondary small" th:text="${row.facilityCode}">WH-01</div>
+                </td>
+                <td>
+                    <div th:text="${row.gridName}">Grid</div>
+                    <div class="text-secondary small" th:text="${row.gridCode}">GRD-01</div>
+                </td>
+                <td>
+                    <div th:text="${row.containerName}">Container</div>
+                    <div class="text-secondary small" th:text="${row.containerCode}">BIN-01</div>
+                </td>
+                <td class="text-end" th:text="${row.remainingQuantity != null ? #numbers.formatDecimal(row.remainingQuantity, 1, 'COMMA', 4, 'POINT') : '-'}">0.0000</td>
+                <td class="text-end" th:text="${row.unitCost != null ? #numbers.formatDecimal(row.unitCost, 1, 'COMMA', 4, 'POINT') : '-'}">0.0000</td>
+                <td class="text-end" th:text="${row.inventoryAmount != null ? #numbers.formatDecimal(row.inventoryAmount, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</td>
+                <td>
+                    <div th:text="${row.valuationRefType}">GR</div>
+                    <div class="text-secondary small">
+                        <span th:text="${row.valuationRefId}">1</span>
+                        <span>/</span>
+                        <span th:text="${row.valuationRefLineId}">1</span>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+    <div class="card-footer d-flex justify-content-end">
+        <button type="button" class="btn btn-primary js-gi-source-line-selector-apply">
+            <i class="ti ti-check me-1"></i>
+            <span th:text="#{label.apply}">Apply</span>
+        </button>
+    </div>
+</div>
+</body>
+</html>

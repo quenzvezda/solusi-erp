@@ -35,7 +35,7 @@ public class GoodsReceiptBillableReferenceProvider implements BillableApReferenc
                 SELECT vbl.gr_line_id, COALESCE(SUM(vbl.qty_billed), 0) AS billed_qty
                 FROM ap_vendor_bill_lines vbl
                 JOIN ap_vendor_bills vb ON vb.id = vbl.bill_id
-                WHERE vb.status = :confirmedStatus
+                WHERE vb.document_status = :confirmedStatus
                 GROUP BY vbl.gr_line_id
             ) billed ON billed.gr_line_id = grl.id
             WHERE (:vendorId IS NULL OR gr.supplier_id = :vendorId)

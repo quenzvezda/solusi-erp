@@ -1,7 +1,7 @@
 package com.solusi.erp.accountspayable.vendorbill.application.usecase.command;
 
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBill;
-import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
 import com.solusi.erp.accountspayable.vendorbill.domain.repository.VendorBillRepository;
 import com.solusi.erp.core.exception.DomainException;
 
@@ -18,7 +18,7 @@ public class DeleteVendorBillUseCaseImpl implements DeleteVendorBillUseCase {
         VendorBill bill = vendorBillRepository.findById(id)
                 .orElseThrow(() -> new DomainException("msg.error.vb.not.found"));
 
-        if (bill.getStatus() != VendorBillStatus.DRAFT) {
+        if (bill.getDocumentStatus() != VendorBillDocumentStatus.DRAFT) {
             throw new DomainException("msg.error.vb.only.draft.editable");
         }
 

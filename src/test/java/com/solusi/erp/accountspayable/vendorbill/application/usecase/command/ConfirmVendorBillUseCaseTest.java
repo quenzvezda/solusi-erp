@@ -8,7 +8,7 @@ import com.solusi.erp.accounting.schema.domain.model.SchemaEventType;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBill;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillGrRef;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillLine;
-import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
 import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableGrQueryPort;
 import com.solusi.erp.accountspayable.vendorbill.domain.repository.VendorBillRepository;
 import com.solusi.erp.core.domain.model.AuditMetadata;
@@ -94,7 +94,7 @@ class ConfirmVendorBillUseCaseTest {
         useCase.execute(1L);
 
         VendorBill saved = vendorBillRepository.saved;
-        assertThat(saved.getStatus()).isEqualTo(VendorBillStatus.CONFIRMED);
+        assertThat(saved.getDocumentStatus()).isEqualTo(VendorBillDocumentStatus.CONFIRMED);
         assertThat(saved.getSubtotal()).isEqualByComparingTo("31.0000");
         assertThat(saved.getTaxAmount()).isEqualByComparingTo("3.4100");
         assertThat(saved.getTotalAmount()).isEqualByComparingTo("34.4100");
@@ -135,7 +135,8 @@ class ConfirmVendorBillUseCaseTest {
                 LocalDate.of(2026, 5, 20),
                 1L,
                 BigDecimal.ONE,
-                VendorBillStatus.DRAFT,
+                VendorBillDocumentStatus.DRAFT,
+                null,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,
@@ -180,7 +181,7 @@ class ConfirmVendorBillUseCaseTest {
         private VendorBill saved;
 
         @Override
-        public Page<VendorBill> findAll(String keyword, Long vendorId, VendorBillStatus status, Pageable pageable) {
+        public Page<VendorBill> findAll(String keyword, Long vendorId, VendorBillDocumentStatus status, com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillSettlementStatus settlementStatus, Pageable pageable) {
             throw new UnsupportedOperationException();
         }
 

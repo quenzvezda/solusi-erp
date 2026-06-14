@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/master :: head(#{label.debit-memo-allocation.form})}"></head>
+<body th:replace="~{layout/master :: layout(~{:: .debit-memo-allocation-form-content}, ~{:: #page-specific-scripts})}">
+<div class="debit-memo-allocation-form-content">
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col"><h2 class="page-title" th:text="${form.editMode()} ? #{label.debit-memo-allocation.edit} : #{label.debit-memo-allocation.create}">DMA</h2></div>
+                <div class="col-auto ms-auto"><a th:href="@{/accounts-payable/debit-memo-allocations}" class="btn btn-secondary"><i class="ti ti-arrow-left me-1"></i><span th:text="#{label.back}">Back</span></a></div>
+            </div>
+        </div>
+    </div>
+    <div class="page-body">
+        <div class="container-xl">
+            <form id="debit-memo-allocation-form"
+                  th:object="${request}"
+                  th:action="${form.editMode()} ? @{/accounts-payable/debit-memo-allocations/{id}(id=${request.id})} : @{/accounts-payable/debit-memo-allocations}"
+                  method="post"
+                  data-ajax-form="true"
+                  data-redirect-on-success="/accounts-payable/debit-memo-allocations">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <input type="hidden" name="id" th:value="*{id}">
+                <input type="hidden" id="debitMemoId" name="debitMemoId" th:value="*{debitMemoId}">
+                <input type="hidden" id="debitMemoCode" name="debitMemoCode" th:value="*{debitMemoCode}">
+                <div class="card mb-3">
+                    <div class="card-header"><h3 class="card-title" th:text="#{label.debit-memo-allocation.header}">Header</h3></div>
+                    <div class="card-body">
+                        <div class="alert-container"></div>
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <label class="form-label required" th:text="#{label.debit-memo.title}">Debit Memo</label>
+                                <div class="input-group">
+                                    <input type="text" id="debitMemoDisplay" class="form-control" readonly th:value="*{debitMemoCode}" th:attr="data-remaining=*{debitMemoRemainingAmount}" th:placeholder="#{label.debit-memo.select}">
+                                    <button type="button" id="btn-select-debit-memo" class="btn btn-icon btn-outline-primary" th:attr="title=#{label.debit-memo.select}"><i class="ti ti-search"></i></button>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label required" th:text="#{label.debit-memo-allocation.allocation-date}">Allocation Date</label>
+                                <input type="date" th:field="*{allocationDate}" data-picker="date" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" th:text="#{label.notes}">Notes</label>
+                                <input type="text" th:field="*{notes}" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-warning d-none" id="dma-stale-warning" th:text="#{label.debit-memo-allocation.stale-warning}">Snapshots may be stale.</div>
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h3 class="card-title" th:text="#{label.debit-memo-allocation.lines}">Lines</h3>
+                        <div class="card-actions"><button type="button" id="btn-select-vendor-bill" class="btn btn-outline-primary"><i class="ti ti-search me-1"></i><span th:text="#{label.vb.select}">Select Bill</span></button></div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table" id="dma-lines-table">
+                            <thead><tr><th th:text="#{label.vb.title}">Vendor Bill</th><th class="text-end" th:text="#{label.vb.outstandingAmount}">Outstanding</th><th class="text-end" th:text="#{label.debit-memo-allocation.applied-gross}">Applied</th><th class="text-center" th:text="#{label.actions}">Actions</th></tr></thead>
+                            <tbody id="dma-lines-body">
+                            <tr class="dma-line-row" th:each="line, stat : *{lines}" th:data-vendor-bill-id="${line.vendorBillId}">
+                                <td>
+                                    <input type="hidden" th:name="'lines[' + ${stat.index} + '].vendorBillId'" th:value="${line.vendorBillId}">
+                                    <input type="hidden" th:name="'lines[' + ${stat.index} + '].vendorBillCode'" th:value="${line.vendorBillCode}">
+                                    <span class="dma-line-code" th:text="${line.vendorBillCode ?: line.vendorBillId}">VB</span>
+                                </td>
+                                <td class="text-end"><span class="dma-line-outstanding" th:text="${line.vendorBillOutstandingAtDraft != null ? #numbers.formatDecimal(line.vendorBillOutstandingAtDraft, 1, 'COMMA', 2, 'POINT') : '-'}">0.00</span></td>
+                                <td><input type="text" class="form-control form-control-sm text-end dma-applied-input erp-number-decimal" th:name="'lines[' + ${stat.index} + '].appliedGrossOriginal'" th:value="${line.appliedGrossOriginal}"></td>
+                                <td class="text-center"><button type="button" class="btn btn-sm btn-ghost-danger js-dma-remove-line"><i class="ti ti-trash"></i></button></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4"><label class="form-label" th:text="#{label.debit-memo-allocation.recap.applied}">Applied</label><div id="dma-recap-applied" class="fw-bold">0.00</div></div>
+                            <div class="col-md-4"><label class="form-label" th:text="#{label.debit-memo-allocation.recap.remaining}">Remaining</label><div id="dma-recap-remaining" class="fw-bold">0.00</div></div>
+                            <div class="col-md-4"><label class="form-label" th:text="#{label.debit-memo-allocation.recap.lines}">Lines</label><div id="dma-recap-lines" class="fw-bold">0</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <a th:href="@{/accounts-payable/debit-memo-allocations}" class="btn btn-secondary" th:text="#{label.cancel}">Cancel</a>
+                    <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy me-1"></i><span th:text="#{label.save}">Save</span></button>
+                </div>
+            </form>
+        </div>
+        <div th:replace="~{fragments/modal-selector :: shell('debit-memo-selector-modal', #{label.debit-memo.select}, 'debit-memo-selector-body', 'modal-xl')}"></div>
+        <div th:replace="~{fragments/modal-selector :: shell('vendor-bill-selector-modal', #{label.vb.select}, 'vendor-bill-selector-body', 'modal-xl')}"></div>
+    </div>
+</div>
+<div id="page-specific-scripts">
+    <script th:src="@{/js/shared/erp-modal-selector.js}" defer></script>
+    <script th:src="@{/js/accountspayable/debit-memo-allocations/form.js}" defer></script>
+</div>
+</body>
+</html>

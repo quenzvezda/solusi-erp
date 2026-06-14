@@ -18,6 +18,9 @@
 
 /accounts-payable/vendor-bills
 /accounts-payable/vendor-bills/select-references
+/accounts-payable/debit-memos
+/accounts-payable/debit-memo-allocations
+/accounts-payable/debit-memo-allocations/create
 /accounts-payable/vendor-payments
 /accounts-payable/vendor-payments/create
 
@@ -29,5 +32,9 @@
 /purchasing/purchase-orders
 /purchasing/purchase-orders/create
 /purchasing/supplier-price-lists
+/purchasing/purchase-returns
+/purchasing/purchase-returns/select-source
+/purchasing/purchase-returns/create?goodsReceiptId=9601
+/purchasing/purchase-returns/selectors/goods-receipt-lines?goodsReceiptId=9601
 
 /security/menu-groups

@@ -191,6 +191,8 @@ Manual journal memiliki lifecycle:
 3. Koreksi `POSTED` dilakukan dengan reversal journal yang menukar debit/kredit dan terhubung ke jurnal asal.
 4. Reversal journal tidak dapat di-reverse lagi.
 
+Primitive internal `ReversePostedJournalUseCase` dapat membalik manual journal dan auto-journal yang sudah `POSTED`. Reversal ini membuat journal baru yang menukar debit/kredit dari final `JournalLine` asal dan menyimpan `reversalOfId`; ia tidak menjalankan Accounting Schema ulang dengan amount negatif. Aksi UI `/accounting/journal-entries/{id}/reverse` tetap dibatasi untuk manual journal melalui permission `JOURNAL-ENTRY_REVERSE`.
+
 ### 5.5 Manual Journal Period Guard
 Posting manual dan reversal hanya boleh dilakukan pada accounting period yang terbuka. Draft masih bisa disiapkan, tetapi posting/reversal gagal jika tanggal posting berada di periode tertutup atau tidak tersedia.
 

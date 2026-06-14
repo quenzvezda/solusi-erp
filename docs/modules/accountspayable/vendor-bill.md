@@ -15,27 +15,31 @@ Flow yang aktif saat ini:
 5. Vendor Bill dikonfirmasi.
 6. Sistem mem-post journal `VENDOR_BILL` secara sinkron dalam transaksi confirm.
 
-Lifecycle:
+Document lifecycle:
 
 ```text
 DRAFT -> CONFIRMED
-CONFIRMED -> PARTIAL_PAID
-PARTIAL_PAID -> PAID
-CONFIRMED -> PAID
 DRAFT -> CANCELLED
 ```
 
+Settlement lifecycle untuk Vendor Bill yang sudah `CONFIRMED`:
+
+```text
+OPEN -> PARTIALLY_SETTLED -> SETTLED
+OPEN -> SETTLED
+```
+
 Catatan:
-- `CONFIRMED`, `PARTIAL_PAID`, dan `PAID` tidak bisa diedit, dihapus, atau di-cancel.
+- `CONFIRMED` dan `CANCELLED` adalah status dokumen final untuk kebutuhan edit/delete/cancel.
 - Delete hanya tersedia dari halaman list untuk status `DRAFT`.
 - Cancel hanya tersedia dari halaman detail untuk status `DRAFT`.
-- Status pembayaran dan amount unpaid pada list/detail dihitung dari Vendor Payment berstatus `CONFIRMED`.
+- Status settlement dan outstanding pada list/detail dihitung sebagai projection dari settlement document yang sudah confirmed.
 
 ## 2. Kontrak Fitur yang Aktif
 
 | Area | Kondisi saat ini |
 |---|---|
-| List | `/accounts-payable/vendor-bills` dengan filter keyword, vendor, status |
+| List | `/accounts-payable/vendor-bills` dengan filter keyword, vendor, document status, settlement status |
 | Select references | `/accounts-payable/vendor-bills/select-references` |
 | Create form | `/accounts-payable/vendor-bills/create?selectedGrIds=...` |
 | Save draft | `POST /accounts-payable/vendor-bills` via AJAX form |
@@ -68,12 +72,14 @@ Jika selected GR memiliki exchange rate berbeda, create form menampilkan hint da
 | `dueDate` | Tanggal jatuh tempo |
 | `currencyId` | Currency invoice |
 | `exchangeRate` | Kurs invoice ke base currency |
-| `status` | `DRAFT`, `CONFIRMED`, `PARTIAL_PAID`, `PAID`, atau `CANCELLED` |
+| `documentStatus` | `DRAFT`, `CONFIRMED`, atau `CANCELLED` |
+| `settlementStatus` | `OPEN`, `PARTIALLY_SETTLED`, `SETTLED`, atau `NULL` untuk dokumen yang belum confirmed / cancelled |
 | `subtotal` | Total DPP/net invoice |
 | `taxAmount` | Total pajak invoice |
 | `totalAmount` | Total gross invoice = subtotal + taxAmount |
 | `paidAmount` | Total pembayaran dari Vendor Payment `CONFIRMED` |
-| `outstandingAmount` | Sisa unpaid = totalAmount - paidAmount |
+| `debitMemoAppliedAmount` | Total Debit Memo Allocation berstatus `CONFIRMED` |
+| `outstandingAmount` | Sisa outstanding = totalAmount - paidAmount - debitMemoAppliedAmount |
 | `notes` | Catatan |
 
 ### B. Line Vendor Bill
@@ -159,16 +165,21 @@ Qty line mengikuti numeric standard:
 - display 2 angka desimal
 
 
-## 8. Payment Visibility
+## 8. Settlement Visibility
 
-Halaman list Vendor Bill menampilkan kolom `Unpaid` dari `outstandingAmount`.
+Halaman list Vendor Bill menampilkan `documentStatus`, `settlementStatus`, dan `outstandingAmount`.
 
-Halaman detail Vendor Bill menampilkan ringkasan pembayaran:
-- payment status dari field `status`
-- paid amount dari total line Vendor Payment berstatus `CONFIRMED`
-- unpaid amount dari `totalAmount - paidAmount`
+Halaman detail Vendor Bill menampilkan ringkasan settlement:
+- `settlementStatus`
+- `paidAmount` dari total line Vendor Payment berstatus `CONFIRMED`
+- `debitMemoAppliedAmount` dari Debit Memo Allocation berstatus `CONFIRMED`
+- `outstandingAmount = totalAmount - paidAmount - debitMemoAppliedAmount`
+- shortcut **Apply Debit Memo** jika Vendor Bill confirmed, open/partial, outstanding > 0, dan ada Debit Memo eligible
+- history Debit Memo Allocation confirmed/reversed yang pernah menyentuh bill tersebut
 
-Payment summary bersifat read-side projection; web layer tetap memakai use case/mapper dan tidak membaca repository Vendor Payment secara langsung.
+Settlement summary bersifat read-side projection; web layer tetap memakai use case/mapper dan tidak membaca repository Vendor Payment atau Debit Memo Allocation secara langsung.
+
+Debit Memo Allocation adalah settlement source kedua selain Vendor Payment. Draft DMA tidak mengurangi outstanding; hanya DMA `CONFIRMED` yang mengisi `debitMemoAppliedAmount`. DMA `REVERSED` dikeluarkan kembali dari projection.
 
 ## 9. Accounting Saat Confirm
 

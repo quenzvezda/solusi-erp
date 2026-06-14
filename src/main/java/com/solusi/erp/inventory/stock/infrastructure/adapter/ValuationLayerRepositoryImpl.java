@@ -1,5 +1,6 @@
 package com.solusi.erp.inventory.stock.infrastructure.adapter;
 
+import com.solusi.erp.inventory.stock.domain.model.ReferenceType;
 import com.solusi.erp.inventory.stock.domain.model.ValuationLayer;
 import com.solusi.erp.inventory.stock.domain.repository.ValuationLayerRepository;
 import com.solusi.erp.inventory.stock.infrastructure.persistence.ValuationLayerEntity;
@@ -42,10 +43,43 @@ public class ValuationLayerRepositoryImpl implements ValuationLayerRepository {
 
     @Override
     public List<ValuationLayer> findAvailableLayersBySerial(Long productId, Long containerId,
-                                                            String serialNumber, BigDecimal minQuantity) {
+                                                             String serialNumber, BigDecimal minQuantity) {
         return jpaRepository
                 .findByProductIdAndContainerIdAndSerialNumberAndRemainingQuantityGreaterThan(
                         productId, containerId, serialNumber, minQuantity)
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ValuationLayer> findAvailableLayersByReference(Long productId, Long containerId,
+                                                               ReferenceType referenceType, Long referenceId,
+                                                               Long referenceLineId, BigDecimal minQuantity) {
+        return jpaRepository
+                .findByProductIdAndContainerIdAndReferenceTypeAndReferenceIdAndReferenceLineIdAndRemainingQuantityGreaterThanOrderByCreatedDateAsc(
+                        productId, containerId, referenceType, referenceId, referenceLineId, minQuantity)
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ValuationLayer> findAvailableLayersByReferenceAndSerial(Long productId, Long containerId,
+                                                                        String serialNumber,
+                                                                        ReferenceType referenceType, Long referenceId,
+                                                                        Long referenceLineId, BigDecimal minQuantity) {
+        return jpaRepository
+                .findByProductIdAndContainerIdAndSerialNumberAndReferenceTypeAndReferenceIdAndReferenceLineIdAndRemainingQuantityGreaterThanOrderByCreatedDateAsc(
+                        productId, containerId, serialNumber, referenceType, referenceId, referenceLineId, minQuantity)
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ValuationLayer> findByReversalOfMovementId(Long reversalOfMovementId) {
+        return jpaRepository.findByReversalOfMovementId(reversalOfMovementId)
                 .stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());

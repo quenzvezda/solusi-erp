@@ -318,3 +318,151 @@ SELECT @role_warehouse_id, id FROM permissions WHERE name IN (
     'GOODS-RECEIPT_READ', 'GOODS-RECEIPT_CREATE', 'GOODS-RECEIPT_UPDATE',
     'GOODS-RECEIPT_DELETE', 'GOODS-RECEIPT_COMPLETE'
 );
+
+-- ====== E2E PURCHASE RETURN SEED ======
+-- ROLE_EMPLOYEE owns the requester lifecycle. ROLE_APPROVER needs the detail
+-- page to process the generic approval request. GOODS-ISSUE_READ lets the
+-- requester follow the generated GI link after confirm. JOURNAL-ENTRY_READ
+-- lets the requester verify the generated Purchase Return journal.
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT @role_employee_id, id FROM permissions WHERE name IN (
+    'PURCHASE-RETURN_READ', 'PURCHASE-RETURN_CREATE', 'PURCHASE-RETURN_UPDATE',
+    'PURCHASE-RETURN_SUBMIT', 'PURCHASE-RETURN_CONFIRM', 'PURCHASE-RETURN_CANCEL',
+    'GOODS-ISSUE_READ', 'JOURNAL-ENTRY_READ'
+);
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT @role_approver_id, id FROM permissions WHERE name IN (
+    'PURCHASE-RETURN_READ'
+);
+
+-- Second container represents stock moved after its original receipt.
+INSERT INTO inv_containers (id, grid_id, code, name, is_active, version, created_by_user_id, created_date) VALUES
+(9102, 9101, 'E2E-CTN-A2', 'E2E Container A2 Moved', 1, 1, 1, NOW());
+
+INSERT INTO products
+    (code, name, category_id, uom_id, brand_id, is_active, is_serialized,
+     created_by_user_id, created_date, version)
+VALUES
+    ('E2E-PRD-SERIAL', 'E2E Serialized Scanner', 9001, 9001, 9001, TRUE, TRUE, 1, NOW(), 1);
+SET @prd_serial = (SELECT id FROM products WHERE code = 'E2E-PRD-SERIAL');
+
+-- Separate sent PO and completed GR keep the Purchase Return flow independent
+-- from Goods Receipt scenarios that create their own transactional rows.
+INSERT INTO pur_purchase_orders
+    (id, code, order_date, expected_date, supplier_id, facility_id, currency_id, exchange_rate,
+     subtotal, tax_amount, total_amount, status, payment_term_days, pr_id, po_type, note,
+     is_active, version, created_by_user_id, created_date,
+     tax_id, tax_code, tax_name, tax_rate, tax_calculation_mode)
+VALUES
+    (9202, 'E2E-PO-RETURN-9202', '2026-05-20', '2026-05-25', @p_sup1, 9101, @cur_idr, 1.000000,
+     43700000.0000, 0.0000, 43700000.0000, 'SENT', 30, NULL, 'DIRECT',
+     'E2E seed for Purchase Return flow', TRUE, 1, 1, NOW(),
+     9001, 'E2E-TAX-0', 'E2E PPN 0% Non Tax', 0.0000, 'EXCLUSIVE');
+INSERT INTO pur_purchase_order_lines
+    (id, header_id, product_id, quantity, received_quantity, uom_id, unit_price,
+     tax_rate, line_subtotal, line_tax, line_total, pr_line_id, note,
+     version, created_by_user_id, created_date)
+VALUES
+    (9211, 9202, @prd_laptop, 5.0000, 5.0000, 9001, 8500000.0000,
+     0.0000, 42500000.0000, 0.0000, 42500000.0000, NULL, 'E2E return laptop', 1, 1, NOW()),
+    (9212, 9202, @prd_serial, 1.0000, 1.0000, 9001, 1200000.0000,
+     0.0000, 1200000.0000, 0.0000, 1200000.0000, NULL, 'E2E return serialized scanner', 1, 1, NOW());
+
+INSERT INTO pur_goods_receipts
+    (id, code, receipt_date, reference_type, reference_id, supplier_id, facility_id, currency_id, exchange_rate,
+     status, note, version, created_by_user_id, created_date)
+VALUES
+    (9601, 'E2E-GR-RETURN-9601', '2026-05-25', 'PURCHASE_ORDER', 9202, @p_sup1, 9101, @cur_idr, 1.000000,
+     'COMPLETED', 'E2E completed GR for Purchase Return', 1, 1, NOW());
+INSERT INTO pur_goods_receipt_lines
+    (id, header_id, reference_line_id, product_id, quantity_received, uom_id, container_id,
+     base_quantity, inventory_amount, tax_base_amount, tax_amount, gr_ir_amount, serial_number,
+     is_serialized, version, created_by_user_id, created_date)
+VALUES
+    (9601, 9601, 9211, @prd_laptop, 5.0000, 9001, 9101,
+     5.0000, 42500000.0000, 42500000.0000, 0.0000, 42500000.0000, NULL,
+     FALSE, 1, 1, NOW()),
+    (9602, 9601, 9212, @prd_serial, 1.0000, 9001, 9101,
+     1.0000, 1200000.0000, 1200000.0000, 0.0000, 1200000.0000, 'E2E-SER-MOVED-001',
+     TRUE, 1, 1, NOW());
+
+-- The non-serialized GR line is currently split between two containers.
+-- The serial was received in A1 but its current layer and balance live in A2.
+INSERT INTO inv_stock_balances
+    (product_id, container_id, serial_number, quantity, reserved_quantity, in_transit_quantity,
+     version, created_by_user_id, created_date)
+VALUES
+    (@prd_laptop, 9101, NULL, 3.0000, 0.0000, 0.0000, 1, 1, NOW()),
+    (@prd_laptop, 9102, NULL, 2.0000, 0.0000, 0.0000, 1, 1, NOW()),
+    (@prd_serial, 9102, 'E2E-SER-MOVED-001', 1.0000, 0.0000, 0.0000, 1, 1, NOW());
+INSERT INTO inv_valuation_layers
+    (product_id, container_id, serial_number, initial_quantity, remaining_quantity,
+     unit_cost_currency_id, unit_cost_exchange_rate, unit_cost_amount_original, unit_cost_amount_local,
+     version, created_by_user_id, created_date, reference_type, reference_id, reference_line_id)
+VALUES
+    (@prd_laptop, 9101, NULL, 3.0000, 3.0000, @cur_idr, 1.000000, 8500000.0000, 8500000.0000,
+     1, 1, NOW(), 'GOODS_RECEIPT', 9601, 9601),
+    (@prd_laptop, 9102, NULL, 2.0000, 2.0000, @cur_idr, 1.000000, 8500000.0000, 8500000.0000,
+     1, 1, NOW(), 'GOODS_RECEIPT', 9601, 9601),
+    (@prd_serial, 9102, 'E2E-SER-MOVED-001', 1.0000, 1.0000, @cur_idr, 1.000000, 1200000.0000, 1200000.0000,
+     1, 1, NOW(), 'GOODS_RECEIPT', 9601, 9602);
+
+-- The create page defaults returnDate to the current date, so keep June open
+-- in addition to the May period used by older inventory specs.
+INSERT INTO acc_accounting_periods
+    (id, code, name, fiscal_year_id, period_number, start_date, end_date, status,
+     version, created_by_user_id, created_date)
+VALUES
+    (9402, 'E2E-2026-06', 'E2E June 2026', 9401, 6, '2026-06-01', '2026-06-30', 'OPEN',
+     1, 1, NOW());
+INSERT INTO acc_chart_of_accounts
+    (id, code, name, account_type, normal_balance, parent_id, level, is_header, note,
+     is_active, version, created_by_user_id, created_date)
+VALUES
+    (9408, '5150', 'E2E Goods Issue Expense', 'EXPENSE', 'DEBIT', NULL, 1, FALSE,
+     'E2E generic GI counterpart account', TRUE, 1, 1, NOW());
+INSERT INTO acc_accounting_schemas
+    (id, event_type, description, is_active, version, created_by_user_id, created_date)
+VALUES
+    (9403, 'GOODS_ISSUE', 'E2E generic goods issue posting schema', TRUE, 1, 1, NOW());
+INSERT INTO acc_schema_lines (schema_id, variable, account_id, position)
+VALUES
+    (9403, 'GI_COGS_AMT', 9408, 'DEBIT'),
+    (9403, 'GI_INVENTORY_AMT', 9401, 'CREDIT');
+
+-- V71 runs before E2E-only COA rows exist, so refresh PURCHASE_RETURN schema lines here.
+SET @prt_schema_id = (SELECT id FROM acc_accounting_schemas WHERE event_type = 'PURCHASE_RETURN' AND is_active = TRUE LIMIT 1);
+
+INSERT INTO acc_accounting_schemas
+    (event_type, description, is_active, version, created_by_user_id, created_date)
+SELECT 'PURCHASE_RETURN', 'E2E purchase return posting schema', TRUE, 1, 1, NOW()
+WHERE @prt_schema_id IS NULL;
+
+SET @prt_schema_id = COALESCE(@prt_schema_id, LAST_INSERT_ID());
+
+DELETE FROM acc_schema_lines WHERE schema_id = @prt_schema_id;
+
+INSERT INTO acc_schema_lines (schema_id, variable, account_id, position)
+VALUES
+    (@prt_schema_id, 'PR_GRIR_CLEARING_AMT', 9402, 'DEBIT'),
+    (@prt_schema_id, 'PR_INVENTORY_AMT', 9401, 'CREDIT');
+
+-- V74 runs before E2E-only COA rows exist, so refresh DEBIT_MEMO_APPLICATION schema lines here.
+SET @dma_schema_id = (SELECT id FROM acc_accounting_schemas WHERE event_type = 'DEBIT_MEMO_APPLICATION' AND is_active = TRUE LIMIT 1);
+
+INSERT INTO acc_accounting_schemas
+    (event_type, description, is_active, version, created_by_user_id, created_date)
+SELECT 'DEBIT_MEMO_APPLICATION', 'E2E debit memo application posting schema', TRUE, 1, 1, NOW()
+WHERE @dma_schema_id IS NULL;
+
+SET @dma_schema_id = COALESCE(@dma_schema_id, LAST_INSERT_ID());
+
+DELETE FROM acc_schema_lines WHERE schema_id = @dma_schema_id;
+
+INSERT INTO acc_schema_lines (schema_id, variable, account_id, position)
+VALUES
+    (@dma_schema_id, 'DMA_AP_AMT', 9403, 'DEBIT'),
+    (@dma_schema_id, 'DMA_GRIR_CLEARING_AMT', 9402, 'CREDIT'),
+    (@dma_schema_id, 'DMA_TAX_AMT', 9404, 'CREDIT'),
+    (@dma_schema_id, 'DMA_FX_LOSS_AMT', 9406, 'DEBIT'),
+    (@dma_schema_id, 'DMA_FX_GAIN_AMT', 9407, 'CREDIT');

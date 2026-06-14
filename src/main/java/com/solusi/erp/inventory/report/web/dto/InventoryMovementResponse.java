@@ -34,6 +34,7 @@ public class InventoryMovementResponse extends BaseAuditResponse {
     private ReferenceType referenceType;
     private Long referenceId;
     private String referenceCode;
+    private Long reversalOfMovementId;
 
     private BigDecimal unitCostOriginal;
     private BigDecimal unitCostLocal;

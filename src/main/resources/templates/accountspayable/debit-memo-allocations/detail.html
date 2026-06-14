@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/master :: head(#{label.debit-memo-allocation.detail})}"></head>
+<body th:replace="~{layout/master :: layout(~{:: .debit-memo-allocation-detail-content}, ~{:: #page-specific-scripts})}">
+<div class="debit-memo-allocation-detail-content">
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title">
+                        <span th:text="${allocation.code}">DMA-001</span>
+                        <span class="badge ms-2"
+                              th:classappend="${allocation.status == 'CONFIRMED'} ? 'bg-success-lt' : (${allocation.status == 'REVERSED'} ? 'bg-danger-lt' : (${allocation.status == 'CANCELLED'} ? 'bg-secondary-lt' : 'bg-warning-lt'))"
+                              th:text="${#messages.msg('label.debit-memo-allocation.status.' + #strings.toLowerCase(allocation.status))}">DRAFT</span>
+                    </h2>
+                </div>
+                <div class="col-auto ms-auto btn-list">
+                    <a class="btn btn-primary" th:if="${allocation.status == 'DRAFT'}" sec:authorize="hasAuthority('DEBIT-MEMO-ALLOCATION_UPDATE')"
+                       th:href="@{/accounts-payable/debit-memo-allocations/edit/{id}(id=${allocation.id})}"><i class="ti ti-edit me-1"></i><span th:text="#{label.edit}">Edit</span></a>
+                    <button type="button" class="btn btn-success js-dma-action" th:if="${allocation.status == 'DRAFT'}" sec:authorize="hasAuthority('DEBIT-MEMO-ALLOCATION_CONFIRM')"
+                            th:data-action-url="@{/accounts-payable/debit-memo-allocations/{id}/confirm(id=${allocation.id})}"
+                            th:data-redirect-url="@{/accounts-payable/debit-memo-allocations/{id}(id=${allocation.id})}"
+                            th:data-confirm-message="#{msg.confirm.debit-memo-allocation.confirm}"><i class="ti ti-check me-1"></i><span th:text="#{label.debit-memo-allocation.confirm}">Confirm</span></button>
+                    <button type="button" class="btn btn-warning js-dma-action" th:if="${allocation.status == 'DRAFT'}" sec:authorize="hasAuthority('DEBIT-MEMO-ALLOCATION_CANCEL')"
+                            th:data-action-url="@{/accounts-payable/debit-memo-allocations/{id}/cancel(id=${allocation.id})}"
+                            th:data-redirect-url="@{/accounts-payable/debit-memo-allocations/{id}(id=${allocation.id})}"
+                            th:data-confirm-message="#{msg.confirm.debit-memo-allocation.cancel}"><i class="ti ti-x me-1"></i><span th:text="#{label.cancel}">Cancel</span></button>
+                    <button type="button" class="btn btn-danger" id="btn-open-dma-reverse"
+                            data-bs-toggle="modal" data-bs-target="#dma-reverse-modal"
+                            th:if="${allocation.status == 'CONFIRMED'}" sec:authorize="hasAuthority('DEBIT-MEMO-ALLOCATION_REVERSE')">
+                        <i class="ti ti-arrow-back-up me-1"></i><span th:text="#{label.reverse}">Reverse</span>
+                    </button>
+                    <a th:href="@{/accounts-payable/debit-memo-allocations}" class="btn btn-secondary"><i class="ti ti-arrow-left me-1"></i><span th:text="#{label.back}">Back</span></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3"><label class="form-label text-secondary" th:text="#{label.debit-memo.title}">Debit Memo</label><div><a th:href="@{/accounts-payable/debit-memos/{id}(id=${allocation.debitMemoId})}" th:text="${allocation.debitMemoCode}">DM</a></div></div>
+                        <div class="col-md-3"><label class="form-label text-secondary" th:text="#{label.debit-memo-allocation.allocation-date}">Date</label><div th:text="${#temporals.format(allocation.allocationDate, 'dd MMM yyyy')}">05 Jun 2026</div></div>
+                        <div class="col-md-3"><label class="form-label text-secondary" th:text="#{label.debit-memo-allocation.applied-gross}">Applied</label><div class="fw-bold" th:text="${#numbers.formatDecimal(allocation.totalAppliedGrossOriginal, 1, 'COMMA', 2, 'POINT')}">0.00</div></div>
+                        <div class="col-md-3"><label class="form-label text-secondary" th:text="#{label.journal}">Journal</label><div>
+                            <a th:if="${allocation.applyJournalEntryId != null}" th:href="@{/accounting/journal-entries/{id}(id=${allocation.applyJournalEntryId})}" class="btn btn-sm btn-outline-primary"><i class="ti ti-external-link me-1"></i><span th:text="#{label.view}">View</span></a>
+                            <a th:if="${allocation.reversalJournalEntryId != null}" th:href="@{/accounting/journal-entries/{id}(id=${allocation.reversalJournalEntryId})}" class="btn btn-sm btn-outline-danger"><i class="ti ti-external-link me-1"></i><span th:text="#{label.reverse}">Reverse</span></a>
+                        </div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="card mb-3" th:if="${allocation.reversalDate != null || allocation.reversalJournalEntryId != null || allocation.reversalReason != null}">
+                <div class="card-header"><h3 class="card-title" th:text="#{label.reverse}">Reversal</h3></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label text-secondary" th:text="#{label.reversal.date}">Reversal Date</label>
+                            <div class="form-control-plaintext" th:text="${allocation.reversalDate != null ? #temporals.format(allocation.reversalDate, 'dd MMM yyyy') : '-'}">06 Jun 2026</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-secondary" th:text="#{label.journal.reversedBy}">Reversal Journal</label>
+                            <div class="form-control-plaintext">
+                                <a th:if="${allocation.reversalJournalEntryId != null}"
+                                   th:href="@{/accounting/journal-entries/{id}(id=${allocation.reversalJournalEntryId})}"
+                                   class="btn btn-sm btn-outline-danger">
+                                    <i class="ti ti-external-link me-1"></i><span th:text="#{label.view}">View</span>
+                                </a>
+                                <span th:if="${allocation.reversalJournalEntryId == null}">-</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary" th:text="#{label.reason}">Reason</label>
+                            <div class="form-control-plaintext" th:text="${allocation.reversalReason ?: '-'}">wrong allocation</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table">
+                        <thead><tr><th th:text="#{label.vb.title}">Vendor Bill</th><th class="text-end" th:text="#{label.debit-memo-allocation.applied-gross}">Applied</th><th class="text-end">DPP</th><th class="text-end">Tax</th><th class="text-end">AP Base</th><th class="text-end">FX</th></tr></thead>
+                        <tbody>
+                        <tr th:each="line : ${allocation.lines}">
+                            <td><a th:href="@{/accounts-payable/vendor-bills/{id}(id=${line.vendorBillId})}" th:text="${line.vendorBillCode}">VB</a></td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(line.appliedGrossOriginal, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(line.appliedDppOriginal, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(line.appliedTaxOriginal, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(line.apReductionBase, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(line.fxLossBase.subtract(line.fxGainBase), 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal modal-blur fade" id="dma-reverse-modal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <form class="modal-content" id="dma-reverse-form" th:action="@{/accounts-payable/debit-memo-allocations/{id}/reverse(id=${allocation.id})}" data-ajax-form="true" th:data-redirect-on-success="@{/accounts-payable/debit-memo-allocations/{id}(id=${allocation.id})}">
+                        <div class="modal-header"><h5 class="modal-title" th:text="#{label.reverse}">Reverse</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                        <div class="modal-body">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <div class="mb-3"><label class="form-label required" th:text="#{label.reversal.date}">Date</label><input type="date" name="reversalDate" data-picker="date" class="form-control" required></div>
+                            <div><label class="form-label required" th:text="#{label.reason}">Reason</label><textarea name="reversalReason" class="form-control" rows="3" required></textarea></div>
+                        </div>
+                        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{label.cancel}">Cancel</button><button type="submit" class="btn btn-danger" th:text="#{label.reverse}">Reverse</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="page-specific-scripts">
+    <script th:inline="javascript">
+        document.addEventListener('click', function (event) {
+            var action = event.target.closest('.js-dma-action');
+            if (action) ErpForm.postAction(action);
+            var reverse = event.target.closest('#btn-open-dma-reverse');
+            if (reverse) bootstrap.Modal.getOrCreateInstance(document.getElementById('dma-reverse-modal')).show();
+        });
+    </script>
+</div>
+</body>
+</html>

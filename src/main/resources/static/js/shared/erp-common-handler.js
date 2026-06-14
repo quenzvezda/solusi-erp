@@ -96,12 +96,14 @@ const ErpForm = {
     postAction: function(buttonEl) {
         if (!buttonEl) return;
         
-        // Extract URL from any data-*-url attribute
-        let url = null;
-        for (let attr of buttonEl.attributes) {
-            if (attr.name.match(/^data-.*-url$/) && attr.value) {
-                url = attr.value;
-                break;
+        // Prefer an explicit action URL; data-redirect-url is navigation metadata, not the POST target.
+        let url = buttonEl.getAttribute('data-action-url');
+        if (!url) {
+            for (let attr of buttonEl.attributes) {
+                if (attr.name.match(/^data-.*-url$/) && attr.name !== 'data-redirect-url' && attr.value) {
+                    url = attr.value;
+                    break;
+                }
             }
         }
         

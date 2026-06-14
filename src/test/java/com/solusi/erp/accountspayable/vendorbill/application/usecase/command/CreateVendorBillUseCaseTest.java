@@ -1,7 +1,7 @@
 package com.solusi.erp.accountspayable.vendorbill.application.usecase.command;
 
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBill;
-import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
 import com.solusi.erp.accountspayable.vendorbill.domain.repository.VendorBillRepository;
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.domain.model.Pageable;
@@ -140,7 +140,7 @@ class CreateVendorBillUseCaseTest {
         );
 
         assertThat(result.getCode()).isEqualTo("VB-202605-00001");
-        assertThat(result.getStatus()).isEqualTo(VendorBillStatus.DRAFT);
+        assertThat(result.getDocumentStatus()).isEqualTo(VendorBillDocumentStatus.DRAFT);
         assertThat(result.getSubtotal()).isEqualByComparingTo("20.0000");
         assertThat(result.getTaxAmount()).isEqualByComparingTo("2.2000");
         assertThat(result.getTotalAmount()).isEqualByComparingTo("22.2000");
@@ -166,7 +166,7 @@ class CreateVendorBillUseCaseTest {
         private VendorBill saved;
 
         @Override
-        public Page<VendorBill> findAll(String keyword, Long vendorId, VendorBillStatus status, Pageable pageable) {
+        public Page<VendorBill> findAll(String keyword, Long vendorId, VendorBillDocumentStatus status, com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillSettlementStatus settlementStatus, Pageable pageable) {
             throw new UnsupportedOperationException();
         }
 

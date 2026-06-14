@@ -7,7 +7,7 @@ import com.solusi.erp.accounting.period.application.usecase.query.EnsureOpenPeri
 import com.solusi.erp.accounting.schema.domain.model.SchemaEventType;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBill;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillLine;
-import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
 import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableGrQueryPort;
 import com.solusi.erp.accountspayable.vendorbill.domain.repository.VendorBillRepository;
 import com.solusi.erp.core.exception.DomainException;
@@ -76,7 +76,8 @@ public class ConfirmVendorBillUseCaseImpl implements ConfirmVendorBillUseCase {
                 bill.getDueDate(),
                 bill.getCurrencyId(),
                 bill.getExchangeRate(),
-                VendorBillStatus.DRAFT,
+                VendorBillDocumentStatus.DRAFT,
+                null,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,

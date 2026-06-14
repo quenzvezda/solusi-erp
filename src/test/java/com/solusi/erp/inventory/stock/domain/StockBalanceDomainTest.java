@@ -157,6 +157,71 @@ class StockBalanceDomainTest {
         }
 
         @Test
+        @DisplayName("throws when reserve exceeds available quantity")
+        void throws_whenReservedExceedsOnHand() {
+            StockBalance sb = StockBalance.createNew(1L, 1L, null);
+            sb.applyMovement(MovementType.RECEIPT, BigDecimal.TEN);
+            sb.applyMovement(MovementType.RESERVE, BigDecimal.valueOf(11));
+
+            assertThatThrownBy(sb::validate)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("insufficient_available");
+        }
+
+        @Test
+        @DisplayName("normal issue cannot consume quantity held by reservation")
+        void throws_whenNormalIssueTouchesReservedQuantity() {
+            StockBalance sb = StockBalance.createNew(1L, 1L, null);
+            sb.applyMovement(MovementType.RECEIPT, BigDecimal.TEN);
+            sb.applyMovement(MovementType.RESERVE, BigDecimal.valueOf(7));
+            sb.applyMovement(MovementType.ISSUE, BigDecimal.valueOf(4));
+
+            assertThatThrownBy(sb::validate)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("insufficient_available");
+        }
+
+        @Test
+        @DisplayName("transfer out cannot move quantity held by reservation")
+        void throws_whenTransferOutTouchesReservedQuantity() {
+            StockBalance sb = StockBalance.createNew(1L, 1L, null);
+            sb.applyMovement(MovementType.RECEIPT, BigDecimal.TEN);
+            sb.applyMovement(MovementType.RESERVE, BigDecimal.valueOf(7));
+            sb.applyMovement(MovementType.TRANSFER_OUT, BigDecimal.valueOf(4));
+
+            assertThatThrownBy(sb::validate)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("insufficient_available");
+        }
+
+        @Test
+        @DisplayName("valid release restores available quantity")
+        void validRelease_restoresAvailableQuantity() {
+            StockBalance sb = StockBalance.createNew(1L, 1L, null);
+            sb.applyMovement(MovementType.RECEIPT, BigDecimal.TEN);
+            sb.applyMovement(MovementType.RESERVE, BigDecimal.valueOf(7));
+            sb.applyMovement(MovementType.RELEASE, BigDecimal.valueOf(3));
+
+            sb.validate();
+
+            assertThat(sb.getAvailableQuantity()).isEqualByComparingTo(BigDecimal.valueOf(6));
+        }
+
+        @Test
+        @DisplayName("issue reserved consumes on-hand and its matching hold")
+        void validIssueReserved_consumesOnHandAndHold() {
+            StockBalance sb = StockBalance.createNew(1L, 1L, null);
+            sb.applyMovement(MovementType.RECEIPT, BigDecimal.TEN);
+            sb.applyMovement(MovementType.RESERVE, BigDecimal.valueOf(7));
+            sb.applyMovement(MovementType.ISSUE_RESERVED, BigDecimal.valueOf(4));
+
+            sb.validate();
+
+            assertThat(sb.getQuantity()).isEqualByComparingTo(BigDecimal.valueOf(6));
+            assertThat(sb.getReservedQuantity()).isEqualByComparingTo(BigDecimal.valueOf(3));
+        }
+
+        @Test
         @DisplayName("passes when quantities are exactly zero")
         void passes_whenExactlyZero() {
             StockBalance sb = StockBalance.createNew(1L, 1L, null);

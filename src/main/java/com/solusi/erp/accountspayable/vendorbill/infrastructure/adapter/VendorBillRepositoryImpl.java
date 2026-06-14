@@ -1,7 +1,8 @@
 package com.solusi.erp.accountspayable.vendorbill.infrastructure.adapter;
 
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBill;
-import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillSettlementStatus;
 import com.solusi.erp.accountspayable.vendorbill.domain.repository.VendorBillRepository;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.persistence.VendorBillEntity;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.persistence.VendorBillJpaRepository;
@@ -25,11 +26,12 @@ public class VendorBillRepositoryImpl implements VendorBillRepository {
     }
 
     @Override
-    public Page<VendorBill> findAll(String keyword, Long vendorId, VendorBillStatus status, Pageable pageable) {
+    public Page<VendorBill> findAll(String keyword, Long vendorId, VendorBillDocumentStatus documentStatus,
+                                    VendorBillSettlementStatus settlementStatus, Pageable pageable) {
         org.springframework.data.domain.Pageable springPageable = PageableMapper.toSpring(pageable);
         String normalizedKeyword = keyword == null ? null : keyword.trim();
         org.springframework.data.domain.Page<VendorBillEntity> springPage =
-                jpaRepository.findAllFiltered(normalizedKeyword, vendorId, status, springPageable);
+                jpaRepository.findAllFiltered(normalizedKeyword, vendorId, documentStatus, settlementStatus, springPageable);
 
         return new Page<>(
                 springPage.getContent().stream().map(mapper::toDomain).toList(),

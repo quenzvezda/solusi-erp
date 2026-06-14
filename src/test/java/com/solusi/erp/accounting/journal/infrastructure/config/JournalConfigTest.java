@@ -33,6 +33,7 @@ class JournalConfigTest {
     @Autowired private UpdateManualJournalUseCase updateManualJournalUseCase;
     @Autowired private DeleteManualJournalUseCase deleteManualJournalUseCase;
     @Autowired private PostManualJournalUseCase postManualJournalUseCase;
+    @Autowired private ReversePostedJournalUseCase reversePostedJournalUseCase;
     @Autowired private ReverseManualJournalUseCase reverseManualJournalUseCase;
     @Autowired private FindJournalEntriesUseCase findJournalEntriesUseCase;
     @Autowired private GetJournalEntryDetailUseCase getJournalEntryDetailUseCase;
@@ -46,6 +47,7 @@ class JournalConfigTest {
         assertThat(updateManualJournalUseCase).isNotNull();
         assertThat(deleteManualJournalUseCase).isNotNull();
         assertThat(postManualJournalUseCase).isNotNull();
+        assertThat(reversePostedJournalUseCase).isNotNull();
         assertThat(reverseManualJournalUseCase).isNotNull();
         assertThat(findJournalEntriesUseCase).isNotNull();
         assertThat(getJournalEntryDetailUseCase).isNotNull();

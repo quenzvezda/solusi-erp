@@ -3,8 +3,9 @@ package com.solusi.erp.accountspayable.vendorbill.application.usecase.query;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBill;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillGrRef;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillLine;
-import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus;
-import com.solusi.erp.accountspayable.vendorbill.domain.port.VendorBillPaymentSummaryPort;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillSettlementStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.port.VendorBillSettlementSummaryPort;
 import com.solusi.erp.accountspayable.vendorbill.domain.repository.VendorBillRepository;
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.core.domain.model.Page;
@@ -27,11 +28,17 @@ class GetVendorBillDetailUseCaseTest {
     void execute_should_map_header_refs_and_lines() {
         InMemoryVendorBillRepository repository = new InMemoryVendorBillRepository();
         repository.existing = bill();
-        InMemoryPaymentSummaryPort paymentSummaryPort = new InMemoryPaymentSummaryPort(Map.of(
-                1L, new VendorBillPaymentSummaryPort.PaymentSummary(1L, new BigDecimal("50.0000"), new BigDecimal("50.0000"))
+        InMemorySettlementSummaryPort settlementSummaryPort = new InMemorySettlementSummaryPort(Map.of(
+                1L, new VendorBillSettlementSummaryPort.SettlementSummary(
+                        1L,
+                        new BigDecimal("50.0000"),
+                        BigDecimal.ZERO,
+                        new BigDecimal("50.0000"),
+                        VendorBillSettlementStatus.PARTIALLY_SETTLED
+                )
         ));
 
-        VendorBillDetailView result = new GetVendorBillDetailUseCaseImpl(repository, paymentSummaryPort).execute(1L);
+        VendorBillDetailView result = new GetVendorBillDetailUseCaseImpl(repository, settlementSummaryPort).execute(1L);
 
         assertThat(result.id()).isEqualTo(1L);
         assertThat(result.code()).isEqualTo("VB-202605-00001");
@@ -39,31 +46,33 @@ class GetVendorBillDetailUseCaseTest {
         assertThat(result.lines()).hasSize(1);
         assertThat(result.lines().getFirst().grLineId()).isEqualTo(1001L);
         assertThat(result.lines().getFirst().lineTotal()).isEqualByComparingTo("100.0000");
+        assertThat(result.settlementStatus()).isEqualTo(VendorBillSettlementStatus.PARTIALLY_SETTLED);
         assertThat(result.paidAmount()).isEqualByComparingTo("50.0000");
+        assertThat(result.debitMemoAppliedAmount()).isZero();
         assertThat(result.outstandingAmount()).isEqualByComparingTo("50.0000");
-        assertThat(paymentSummaryPort.requestedId).isEqualTo(1L);
+        assertThat(settlementSummaryPort.requestedId).isEqualTo(1L);
     }
 
     @Test
     void execute_should_fail_when_vendor_bill_not_found() {
         InMemoryVendorBillRepository repository = new InMemoryVendorBillRepository();
 
-        assertThatThrownBy(() -> new GetVendorBillDetailUseCaseImpl(repository, new InMemoryPaymentSummaryPort(Map.of())).execute(99L))
+        assertThatThrownBy(() -> new GetVendorBillDetailUseCaseImpl(repository, new InMemorySettlementSummaryPort(Map.of())).execute(99L))
                 .isInstanceOf(DomainException.class)
                 .hasMessage("msg.err.vb.notfound");
     }
 
-    private record InMemoryPaymentSummaryPort(Map<Long, VendorBillPaymentSummaryPort.PaymentSummary> summaries) implements VendorBillPaymentSummaryPort {
+    private record InMemorySettlementSummaryPort(Map<Long, VendorBillSettlementSummaryPort.SettlementSummary> summaries) implements VendorBillSettlementSummaryPort {
         private static Long requestedId;
 
         @Override
-        public PaymentSummary getPaymentSummary(Long vendorBillId) {
+        public SettlementSummary getSettlementSummary(Long vendorBillId) {
             requestedId = vendorBillId;
             return summaries.get(vendorBillId);
         }
 
         @Override
-        public Map<Long, PaymentSummary> getPaymentSummaries(List<Long> vendorBillIds) {
+        public Map<Long, SettlementSummary> getSettlementSummaries(List<Long> vendorBillIds) {
             throw new UnsupportedOperationException();
         }
     }
@@ -78,7 +87,8 @@ class GetVendorBillDetailUseCaseTest {
                 LocalDate.of(2026, 5, 20),
                 1L,
                 BigDecimal.ONE,
-                VendorBillStatus.CONFIRMED,
+                VendorBillDocumentStatus.CONFIRMED,
+                VendorBillSettlementStatus.OPEN,
                 new BigDecimal("100.0000"),
                 BigDecimal.ZERO,
                 new BigDecimal("100.0000"),
@@ -105,7 +115,7 @@ class GetVendorBillDetailUseCaseTest {
         private VendorBill existing;
 
         @Override
-        public Page<VendorBill> findAll(String keyword, Long vendorId, VendorBillStatus status, Pageable pageable) {
+        public Page<VendorBill> findAll(String keyword, Long vendorId, VendorBillDocumentStatus status, com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillSettlementStatus settlementStatus, Pageable pageable) {
             throw new UnsupportedOperationException();
         }
 

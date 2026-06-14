@@ -27,8 +27,15 @@ Dokumentasi dikelompokkan ke dalam folder berikut berdasarkan konteksnya:
         - [Supplier Price List (SPL)](modules/procurement/spl.md) — Master harga supplier, soft delete, date range validity
         - [Purchase Requisition (PR)](modules/procurement/purchase-requisition.md) — Permintaan pembelian internal, approval flow, priority
         - [Purchase Order (PO)](modules/procurement/purchase-order.md) — Pesanan pembelian resmi, tipe DIRECT/STANDARD, line drawer, approval integration
+        - [Purchase Return](modules/procurement/purchase-return.md) — Retur barang ke supplier berbasis GR, reservasi stok, approval, dan konfirmasi GI
     - **[/modules/inventory](modules/inventory/)**: Sprint 4+ — Inventory Operations
         - [Goods Receipt (GR)](modules/inventory/goods-receipt.md) — Penerimaan barang dari dokumen sumber (saat ini operasional: Purchase Order)
+        - [Goods Issue (GI)](modules/inventory/goods-issue.md) — Pengeluaran barang generik untuk Purchase Return seam dan source outbound masa depan
+    - **[/modules/accountspayable](modules/accountspayable/)**: Accounts Payable
+        - [Vendor Bill](modules/accountspayable/vendor-bill.md) — Invoice vendor dari Goods Receipt dan settlement projection
+        - [Vendor Payment](modules/accountspayable/vendor-payment.md) — Pembayaran vendor dan alokasi ke Vendor Bill
+        - [Debit Memo](modules/accountspayable/debit-memo.md) — Memo retur vendor dari Purchase Return, metadata, dan settlement core
+        - [Debit Memo Allocation](modules/accountspayable/debit-memo-allocation.md) — Aplikasi Debit Memo ke Vendor Bill, journal AP reduction, dan reversal
 - **[/spec](spec/)**: **[PENTING]** Spesifikasi teknis horizontal/shared yang digunakan di seluruh aplikasi (line-item form, modal selector, action buttons, submission flow, dsb). Lihat **[Spec Index](spec/index.md)**.
 - **[/roadmap](roadmap/)**: Rencana pengembangan masa depan dan pelacakan standardisasi arsitektur.
 - **[/workflow](workflow/)**: Panduan prosedur kerja agen (seperti tugas repetitif, troubleshooting, dll).

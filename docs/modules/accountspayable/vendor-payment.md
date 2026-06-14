@@ -4,18 +4,18 @@ Dokumen ini merangkum implementasi aktual Vendor Payment pada modul **Finance & 
 
 ## 1. Ringkasan Implementasi Saat Ini
 
-Vendor Payment adalah dokumen pembayaran ke vendor yang mengalokasikan dana ke satu atau lebih Vendor Bill yang berstatus `CONFIRMED` (memiliki outstanding amount > 0).
+Vendor Payment adalah dokumen pembayaran ke vendor yang mengalokasikan dana ke satu atau lebih Vendor Bill dengan `documentStatus=CONFIRMED`, `settlementStatus=OPEN` atau `PARTIALLY_SETTLED`, dan `outstandingAmount > 0`.
 
 Flow yang aktif saat ini:
 
 1. User membuat payment baru, memilih vendor dan currency.
-2. Sistem otomatis memuat daftar Vendor Bill yang payable (CONFIRMED, outstanding > 0) berdasarkan vendor + currency.
+2. Sistem otomatis memuat daftar Vendor Bill yang payable berdasarkan vendor + currency, confirmed document status, open/partial settlement status, dan outstanding > 0.
 3. User memilih bank account melalui modal selector (difilter berdasarkan currency).
 4. User mengisi payment amount, payment date, exchange rate, dan mengalokasikan paid amount ke masing-masing bill line.
 5. Validasi: total applied harus sama dengan payment amount (unapplied = 0).
 6. Draft Vendor Payment disimpan.
 7. Vendor Payment dikonfirmasi.
-8. Sistem mem-post journal `VENDOR_PAYMENT` dan mengupdate status pembayaran pada Vendor Bill terkait.
+8. Sistem mengunci dan revalidasi Vendor Bill target, mem-post journal `VENDOR_PAYMENT`, lalu mengupdate `settlementStatus` pada Vendor Bill terkait.
 
 Lifecycle:
 
@@ -29,7 +29,7 @@ Catatan:
 - Edit dan delete hanya tersedia untuk status `DRAFT`.
 - Cancel hanya tersedia dari halaman detail untuk status `DRAFT`.
 - Saat confirm, sistem memvalidasi total paid amount == payment amount.
-- Saat confirm, sistem mengupdate `paidAmount` dan `outstandingAmount` pada Vendor Bill terkait, serta mengubah status VB ke `PARTIAL_PAID` atau `PAID` sesuai kondisi.
+- Saat confirm, sistem mengupdate settlement projection Vendor Bill terkait; `documentStatus` tetap `CONFIRMED`, sedangkan `settlementStatus` menjadi `PARTIALLY_SETTLED` atau `SETTLED` sesuai outstanding terbaru.
 
 ## 2. Kontrak Fitur yang Aktif
 
@@ -52,7 +52,8 @@ Catatan:
 Vendor Payment mengalokasikan pembayaran ke Vendor Bill.
 
 Syarat Vendor Bill bisa dialokasikan:
-- Status VB `CONFIRMED` (atau `PARTIAL_PAID`)
+- `documentStatus=CONFIRMED`
+- `settlementStatus=OPEN` atau `PARTIALLY_SETTLED`
 - `outstandingAmount > 0`
 - Vendor dan currency VB sama dengan yang dipilih di payment header
 
@@ -92,6 +93,7 @@ Saat vendor atau currency berubah di form, allocation lines di-clear dan dimuat 
 - Edit hanya boleh pada status DRAFT (`msg.err.vp.edit.only.draft`)
 - Confirm hanya boleh pada status DRAFT (`msg.err.vp.confirm.only.draft`)
 - Saat confirm: total `paidAmount` semua lines harus == `paymentAmount` (`msg.err.vp.amount.mismatch`)
+- Saat confirm: sistem melakukan lock Vendor Bill target dan revalidasi vendor, currency, duplicate line, document status, settlement status, outstanding terbaru, dan over-application sebelum jurnal diposting.
 - Cancel hanya boleh pada status DRAFT (`msg.err.vp.cancel.only.draft`)
 
 ### Client-side (form.js):
@@ -129,7 +131,7 @@ CR Bank / Cash               xxx
 
 Account override: `VP_BANK_OUT_AMT` dapat di-override dengan COA dari bank account yang dipilih (jika `bankCoaId` tersedia).
 
-Setelah journal posting, sistem memanggil `VendorBillPaymentUpdatePort.updatePaymentStatus(billIds)` untuk mengupdate status pembayaran pada Vendor Bill terkait.
+Sebelum journal posting, sistem memanggil `VendorBillPaymentUpdatePort.lockAndValidatePayment(payment)` agar stale draft tidak bisa over-settle Vendor Bill yang outstanding-nya sudah berubah. Outstanding terbaru dihitung sebagai `totalAmount - confirmed payments - confirmed Debit Memo Allocation`. Setelah payment tersimpan sebagai confirmed, sistem memanggil `VendorBillPaymentUpdatePort.updateSettlementStatus(billIds)` untuk menyegarkan settlement status Vendor Bill.
 
 ## 7. Interaksi Komponen UI
 
@@ -190,7 +192,7 @@ Vendor Payment tidak membaca repository Vendor Bill secara langsung.
 
 Akses data lintas slice dilakukan melalui port/adapter:
 - `PayableVendorBillQueryPort` — query outstanding bills per vendor+currency
-- `VendorBillPaymentUpdatePort` — update payment status pada VB setelah confirm
+- `VendorBillPaymentUpdatePort` — lock/revalidasi dan update settlement status pada VB setelah Vendor Payment atau DMA confirm/reverse
 
 Web layer memakai use case, lookup providers (Party, Currency, BankAccount), dan web mapper. Web tidak menginjeksi repository dari slice lain.
 

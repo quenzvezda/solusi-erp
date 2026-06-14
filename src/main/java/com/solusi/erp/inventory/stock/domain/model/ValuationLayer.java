@@ -18,9 +18,28 @@ public class ValuationLayer {
     private final BigDecimal initialQuantity;
     private BigDecimal remainingQuantity;
     private final CostAmount unitCost;
+    private final ReferenceType referenceType;
+    private final Long referenceId;
+    private final Long referenceLineId;
+    private final Long reversalOfMovementId;
 
     public ValuationLayer(AuditMetadata metadata, Long productId, Long containerId, String serialNumber,
                           BigDecimal initialQuantity, BigDecimal remainingQuantity, CostAmount unitCost) {
+        this(metadata, productId, containerId, serialNumber, initialQuantity, remainingQuantity, unitCost,
+                null, null, null, null);
+    }
+
+    public ValuationLayer(AuditMetadata metadata, Long productId, Long containerId, String serialNumber,
+                          BigDecimal initialQuantity, BigDecimal remainingQuantity, CostAmount unitCost,
+                          ReferenceType referenceType, Long referenceId, Long referenceLineId) {
+        this(metadata, productId, containerId, serialNumber, initialQuantity, remainingQuantity, unitCost,
+                referenceType, referenceId, referenceLineId, null);
+    }
+
+    public ValuationLayer(AuditMetadata metadata, Long productId, Long containerId, String serialNumber,
+                          BigDecimal initialQuantity, BigDecimal remainingQuantity, CostAmount unitCost,
+                          ReferenceType referenceType, Long referenceId, Long referenceLineId,
+                          Long reversalOfMovementId) {
         this.metadata = metadata;
         this.productId = productId;
         this.containerId = containerId;
@@ -28,12 +47,30 @@ public class ValuationLayer {
         this.initialQuantity = initialQuantity;
         this.remainingQuantity = remainingQuantity;
         this.unitCost = unitCost;
+        this.referenceType = referenceType;
+        this.referenceId = referenceId;
+        this.referenceLineId = referenceLineId;
+        this.reversalOfMovementId = reversalOfMovementId;
     }
 
     public static ValuationLayer createNew(Long productId, Long containerId, String serialNumber,
                                            BigDecimal quantity, CostAmount unitCost) {
+        return createNew(productId, containerId, serialNumber, quantity, unitCost, null, null, null);
+    }
+
+    public static ValuationLayer createNew(Long productId, Long containerId, String serialNumber,
+                                           BigDecimal quantity, CostAmount unitCost,
+                                           ReferenceType referenceType, Long referenceId, Long referenceLineId) {
+        return createNew(productId, containerId, serialNumber, quantity, unitCost,
+                referenceType, referenceId, referenceLineId, null);
+    }
+
+    public static ValuationLayer createNew(Long productId, Long containerId, String serialNumber,
+                                           BigDecimal quantity, CostAmount unitCost,
+                                           ReferenceType referenceType, Long referenceId, Long referenceLineId,
+                                           Long reversalOfMovementId) {
         return new ValuationLayer(AuditMetadata.empty(), productId, containerId, serialNumber,
-                quantity, quantity, unitCost);
+                quantity, quantity, unitCost, referenceType, referenceId, referenceLineId, reversalOfMovementId);
     }
 
     /**
@@ -65,4 +102,8 @@ public class ValuationLayer {
     public BigDecimal getInitialQuantity() { return initialQuantity; }
     public BigDecimal getRemainingQuantity() { return remainingQuantity; }
     public CostAmount getUnitCost() { return unitCost; }
+    public ReferenceType getReferenceType() { return referenceType; }
+    public Long getReferenceId() { return referenceId; }
+    public Long getReferenceLineId() { return referenceLineId; }
+    public Long getReversalOfMovementId() { return reversalOfMovementId; }
 }

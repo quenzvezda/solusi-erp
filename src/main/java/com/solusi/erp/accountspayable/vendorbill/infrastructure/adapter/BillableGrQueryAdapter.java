@@ -31,7 +31,7 @@ public class BillableGrQueryAdapter implements BillableGrQueryPort {
                 SELECT vbl.gr_line_id, COALESCE(SUM(vbl.qty_billed), 0) AS billed_qty
                 FROM ap_vendor_bill_lines vbl
                 JOIN ap_vendor_bills vb ON vb.id = vbl.bill_id
-                WHERE vb.status = :confirmedStatus
+                WHERE vb.document_status = :confirmedStatus
                 GROUP BY vbl.gr_line_id
             ) billed ON billed.gr_line_id = grl.id
             WHERE gr.supplier_id = :vendorId
@@ -62,7 +62,7 @@ public class BillableGrQueryAdapter implements BillableGrQueryPort {
                 SELECT vbl.gr_line_id, COALESCE(SUM(vbl.qty_billed), 0) AS billed_qty
                 FROM ap_vendor_bill_lines vbl
                 JOIN ap_vendor_bills vb ON vb.id = vbl.bill_id
-                WHERE vb.status = :confirmedStatus
+                WHERE vb.document_status = :confirmedStatus
                 GROUP BY vbl.gr_line_id
             ) billed ON billed.gr_line_id = grl.id
             WHERE grl.header_id = :grId
@@ -75,7 +75,7 @@ public class BillableGrQueryAdapter implements BillableGrQueryPort {
             FROM ap_vendor_bill_lines vbl
             JOIN ap_vendor_bills vb ON vb.id = vbl.bill_id
             JOIN pur_goods_receipt_lines grl ON grl.id = vbl.gr_line_id
-            WHERE vb.status = :confirmedStatus
+            WHERE vb.document_status = :confirmedStatus
               AND grl.header_id = :grId
             GROUP BY vbl.gr_line_id
             """;
@@ -90,7 +90,7 @@ public class BillableGrQueryAdapter implements BillableGrQueryPort {
             SELECT COALESCE(SUM(vbl.line_total), 0)
             FROM ap_vendor_bill_lines vbl
             JOIN ap_vendor_bills vb ON vb.id = vbl.bill_id
-            WHERE vb.status = :confirmedStatus
+            WHERE vb.document_status = :confirmedStatus
               AND vbl.gr_line_id = :grLineId
               AND (:excludeBillId IS NULL OR vb.id <> :excludeBillId)
             """;
@@ -99,7 +99,7 @@ public class BillableGrQueryAdapter implements BillableGrQueryPort {
             SELECT COALESCE(SUM(vbl.tax_amount), 0)
             FROM ap_vendor_bill_lines vbl
             JOIN ap_vendor_bills vb ON vb.id = vbl.bill_id
-            WHERE vb.status = :confirmedStatus
+            WHERE vb.document_status = :confirmedStatus
               AND vbl.gr_line_id = :grLineId
               AND (:excludeBillId IS NULL OR vb.id <> :excludeBillId)
             """;
@@ -108,7 +108,7 @@ public class BillableGrQueryAdapter implements BillableGrQueryPort {
             SELECT COALESCE(SUM(vbl.qty_billed), 0)
             FROM ap_vendor_bill_lines vbl
             JOIN ap_vendor_bills vb ON vb.id = vbl.bill_id
-            WHERE vb.status = :confirmedStatus
+            WHERE vb.document_status = :confirmedStatus
               AND vbl.gr_line_id = :grLineId
               AND (:excludeBillId IS NULL OR vb.id <> :excludeBillId)
             """;

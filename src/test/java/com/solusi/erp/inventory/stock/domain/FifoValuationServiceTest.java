@@ -2,6 +2,7 @@ package com.solusi.erp.inventory.stock.domain;
 
 import com.solusi.erp.core.domain.model.AuditMetadata;
 import com.solusi.erp.inventory.stock.domain.model.CostAmount;
+import com.solusi.erp.inventory.stock.domain.model.ReferenceType;
 import com.solusi.erp.inventory.stock.domain.model.ValuationLayer;
 import com.solusi.erp.inventory.stock.domain.repository.ValuationLayerRepository;
 import com.solusi.erp.inventory.stock.domain.service.FifoValuationService;
@@ -134,5 +135,131 @@ class FifoValuationServiceTest {
 
         assertThat(result.localAmount()).isEqualByComparingTo(new BigDecimal("5.0000"));
         assertThat(layer.getRemainingQuantity()).isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    @DisplayName("addLayer stores valuation source reference metadata")
+    void addLayer_withReferenceMetadata_persistsReference() {
+        CostAmount cost = CostAmount.of(1L, new BigDecimal("15000"), new BigDecimal("10"));
+
+        service.addLayer(
+                1L,
+                10L,
+                null,
+                BigDecimal.TEN,
+                cost,
+                ReferenceType.GOODS_RECEIPT,
+                100L,
+                1001L
+        );
+
+        ArgumentCaptor<ValuationLayer> captor = ArgumentCaptor.forClass(ValuationLayer.class);
+        verify(layerRepository).save(captor.capture());
+
+        ValuationLayer saved = captor.getValue();
+        assertThat(saved.getReferenceType()).isEqualTo(ReferenceType.GOODS_RECEIPT);
+        assertThat(saved.getReferenceId()).isEqualTo(100L);
+        assertThat(saved.getReferenceLineId()).isEqualTo(1001L);
+    }
+
+    @Test
+    @DisplayName("addLayer stores reversal movement link as a new inbound layer")
+    void addLayer_withReversalMovementLink_createsNewLayer() {
+        ValuationLayer consumedGoodsReceiptLayer = new ValuationLayer(
+                new AuditMetadata(1L, 1L, LocalDateTime.now().minusDays(1), null, null, null),
+                1L, 10L, null, BigDecimal.TEN, new BigDecimal("6"),
+                new CostAmount(1L, BigDecimal.ONE, new BigDecimal("7"), new BigDecimal("7")),
+                ReferenceType.GOODS_RECEIPT, 100L, 1001L);
+        CostAmount historicalIssueCost = CostAmount.localOnly(new BigDecimal("7"));
+
+        service.addLayer(
+                1L,
+                10L,
+                null,
+                new BigDecimal("4"),
+                historicalIssueCost,
+                ReferenceType.GOODS_ISSUE,
+                200L,
+                2001L,
+                900L
+        );
+
+        ArgumentCaptor<ValuationLayer> captor = ArgumentCaptor.forClass(ValuationLayer.class);
+        verify(layerRepository).save(captor.capture());
+
+        ValuationLayer saved = captor.getValue();
+        assertThat(saved).isNotSameAs(consumedGoodsReceiptLayer);
+        assertThat(saved.getInitialQuantity()).isEqualByComparingTo("4");
+        assertThat(saved.getRemainingQuantity()).isEqualByComparingTo("4");
+        assertThat(saved.getReferenceType()).isEqualTo(ReferenceType.GOODS_ISSUE);
+        assertThat(saved.getReferenceId()).isEqualTo(200L);
+        assertThat(saved.getReferenceLineId()).isEqualTo(2001L);
+        assertThat(saved.getReversalOfMovementId()).isEqualTo(900L);
+        assertThat(saved.getUnitCost().localAmount()).isEqualByComparingTo("7");
+        assertThat(consumedGoodsReceiptLayer.getRemainingQuantity()).isEqualByComparingTo("6");
+    }
+
+    @Test
+    @DisplayName("consumeSpecificLayers consumes only layers matching valuation reference")
+    void consumeSpecificLayers_usesReferenceLookupOnly() {
+        ValuationLayer specificLayer = new ValuationLayer(
+                new AuditMetadata(1L, 1L, LocalDateTime.now().minusDays(1), null, null, null),
+                1L, 10L, null, BigDecimal.TEN, BigDecimal.TEN,
+                new CostAmount(1L, BigDecimal.ONE, new BigDecimal("7"), new BigDecimal("7")),
+                ReferenceType.GOODS_RECEIPT, 100L, 1001L);
+
+        when(layerRepository.findAvailableLayersByReference(
+                1L, 10L, ReferenceType.GOODS_RECEIPT, 100L, 1001L, BigDecimal.ZERO))
+                .thenReturn(List.of(specificLayer));
+
+        CostAmount result = service.consumeSpecificLayers(
+                1L, 10L, null, ReferenceType.GOODS_RECEIPT, 100L, 1001L, new BigDecimal("4"));
+
+        assertThat(result.localAmount()).isEqualByComparingTo(new BigDecimal("7.0000"));
+        assertThat(specificLayer.getRemainingQuantity()).isEqualByComparingTo(new BigDecimal("6"));
+        verify(layerRepository).findAvailableLayersByReference(
+                1L, 10L, ReferenceType.GOODS_RECEIPT, 100L, 1001L, BigDecimal.ZERO);
+        verify(layerRepository, never()).findAvailableLayers(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("consumeSpecificLayers throws when matching reference layer is insufficient")
+    void consumeSpecificLayers_insufficientMatchingLayer_throws() {
+        ValuationLayer specificLayer = new ValuationLayer(
+                new AuditMetadata(1L, 1L, LocalDateTime.now(), null, null, null),
+                1L, 10L, null, BigDecimal.ONE, BigDecimal.ONE,
+                new CostAmount(1L, BigDecimal.ONE, new BigDecimal("7"), new BigDecimal("7")),
+                ReferenceType.GOODS_RECEIPT, 100L, 1001L);
+
+        when(layerRepository.findAvailableLayersByReference(
+                1L, 10L, ReferenceType.GOODS_RECEIPT, 100L, 1001L, BigDecimal.ZERO))
+                .thenReturn(List.of(specificLayer));
+
+        assertThatThrownBy(() -> service.consumeSpecificLayers(
+                1L, 10L, null, ReferenceType.GOODS_RECEIPT, 100L, 1001L, new BigDecimal("2")))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("insufficient_stock");
+    }
+
+    @Test
+    @DisplayName("consumeSpecificLayers uses serial and valuation reference for serialized item")
+    void consumeSpecificLayers_serialized_usesSerialReferenceLookup() {
+        ValuationLayer serialLayer = new ValuationLayer(
+                new AuditMetadata(1L, 1L, LocalDateTime.now(), null, null, null),
+                1L, 10L, "SN-001", BigDecimal.ONE, BigDecimal.ONE,
+                new CostAmount(1L, BigDecimal.ONE, new BigDecimal("50"), new BigDecimal("50")),
+                ReferenceType.GOODS_RECEIPT, 100L, 1001L);
+
+        when(layerRepository.findAvailableLayersByReferenceAndSerial(
+                1L, 10L, "SN-001", ReferenceType.GOODS_RECEIPT, 100L, 1001L, BigDecimal.ZERO))
+                .thenReturn(List.of(serialLayer));
+
+        CostAmount result = service.consumeSpecificLayers(
+                1L, 10L, "SN-001", ReferenceType.GOODS_RECEIPT, 100L, 1001L, BigDecimal.ONE);
+
+        assertThat(result.localAmount()).isEqualByComparingTo(new BigDecimal("50.0000"));
+        verify(layerRepository).findAvailableLayersByReferenceAndSerial(
+                1L, 10L, "SN-001", ReferenceType.GOODS_RECEIPT, 100L, 1001L, BigDecimal.ZERO);
+        verify(layerRepository, never()).findAvailableLayersBySerial(any(), any(), any(), any());
     }
 }

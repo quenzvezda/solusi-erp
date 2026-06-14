@@ -53,7 +53,8 @@ class VendorBillTest {
 
         bill.confirm(new BigDecimal("100.00"), new BigDecimal("11.00"), new BigDecimal("111.00"));
 
-        assertThat(bill.getStatus()).isEqualTo(VendorBillStatus.CONFIRMED);
+        assertThat(bill.getDocumentStatus()).isEqualTo(VendorBillDocumentStatus.CONFIRMED);
+        assertThat(bill.getSettlementStatus()).isEqualTo(VendorBillSettlementStatus.OPEN);
         assertThat(bill.getSubtotal()).isEqualByComparingTo("100.00");
         assertThat(bill.getTaxAmount()).isEqualByComparingTo("11.00");
         assertThat(bill.getTotalAmount()).isEqualByComparingTo("111.00");
@@ -70,7 +71,8 @@ class VendorBillTest {
                 LocalDate.of(2026, 5, 31), 1L, BigDecimal.ONE, "notes", List.of(grRef), List.of(line)
         );
 
-        assertThat(bill.getStatus()).isEqualTo(VendorBillStatus.DRAFT);
+        assertThat(bill.getDocumentStatus()).isEqualTo(VendorBillDocumentStatus.DRAFT);
+        assertThat(bill.getSettlementStatus()).isNull();
         assertThat(bill.getGrRefs()).containsExactly(grRef);
         assertThat(bill.getLines()).containsExactly(line);
         assertThatThrownBy(() -> bill.getLines().add(line))
@@ -86,7 +88,8 @@ class VendorBillTest {
 
         bill.cancel();
 
-        assertThat(bill.getStatus()).isEqualTo(VendorBillStatus.CANCELLED);
+        assertThat(bill.getDocumentStatus()).isEqualTo(VendorBillDocumentStatus.CANCELLED);
+        assertThat(bill.getSettlementStatus()).isNull();
     }
 
     private VendorBill draftBill(List<VendorBillLine> lines) {

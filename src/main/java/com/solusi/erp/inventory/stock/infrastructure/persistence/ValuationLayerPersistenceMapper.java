@@ -12,9 +12,24 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ValuationLayerPersistenceMapper {
 
-    @Mapping(target = "metadata", expression = "java(toAuditMetadata(entity))")
-    @Mapping(target = "unitCost", source = "unitCost", qualifiedByName = "toCostAmount")
-    ValuationLayer toDomain(ValuationLayerEntity entity);
+    default ValuationLayer toDomain(ValuationLayerEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+        return new ValuationLayer(
+                toAuditMetadata(entity),
+                entity.getProductId(),
+                entity.getContainerId(),
+                entity.getSerialNumber(),
+                entity.getInitialQuantity(),
+                entity.getRemainingQuantity(),
+                toCostAmount(entity.getUnitCost()),
+                entity.getReferenceType(),
+                entity.getReferenceId(),
+                entity.getReferenceLineId(),
+                entity.getReversalOfMovementId()
+        );
+    }
 
     @Mapping(target = "id", source = "metadata.id")
     @Mapping(target = "version", expression = "java(domain.getMetadata().version() != null ? domain.getMetadata().version().intValue() : null)")

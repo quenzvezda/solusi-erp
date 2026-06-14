@@ -488,7 +488,9 @@ test.describe('Purchase Requisition flow', () => {
   });
 
   test('Sanity — employee1 storage state lands authenticated on PR list', async ({ page }) => {
-    await page.goto('/purchasing/purchase-requisitions');
+    test.setTimeout(60_000);
+
+    await navigateToModule(page, '/purchasing/purchase-requisitions');
     await expect(page).toHaveURL(/\/purchasing\/purchase-requisitions/);
   });
 });

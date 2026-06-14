@@ -105,6 +105,18 @@ class ApprovalWebMapperTest {
     }
 
     @Test
+    @DisplayName("toStatusResponse() maps Purchase Return approval to PRT view URL")
+    void toStatusResponse_mapsPurchaseReturnDocumentUrl() {
+        ApprovalRequest request = ApprovalRequest.createNew(
+                "PURCHASE_RETURN", 31L, "PRT-202606-00001", 1L, 2L);
+
+        ApprovalStatusResponse response = mapper.toStatusResponse(request);
+
+        assertThat(response.getDocumentUrl())
+                .isEqualTo("/purchasing/purchase-returns/view/31");
+    }
+
+    @Test
     @DisplayName("toStatusResponse() keeps NEWS mapped to its detail URL")
     void toStatusResponse_keepsNewsDocumentUrl() {
         ApprovalRequest request = ApprovalRequest.createNew(

@@ -3,13 +3,17 @@ package com.solusi.erp.accountspayable.vendorbill.infrastructure.adapter;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBill;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillGrRef;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillLine;
-import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillSettlementStatus;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.persistence.VendorBillEntity;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.persistence.VendorBillGrRefEntity;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.persistence.VendorBillJpaRepository;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.persistence.VendorBillLineEntity;
 import com.solusi.erp.accountspayable.vendorbill.infrastructure.persistence.VendorBillPersistenceMapper;
 import com.solusi.erp.core.domain.model.AuditMetadata;
+import com.solusi.erp.core.domain.model.Page;
+import com.solusi.erp.core.domain.model.Pageable;
+import org.springframework.data.domain.PageImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -91,6 +95,40 @@ class VendorBillRepositoryImplTest {
         assertThat(entity.getGrRefs()).hasSize(1);
     }
 
+    @Test
+    void findAll_should_pass_document_and_settlement_status_filters_to_jpa() {
+        VendorBillEntity entity = new VendorBillEntity();
+        VendorBill domain = sampleBill();
+        Pageable pageable = Pageable.of(0, 20, "code", "asc");
+
+        when(jpaRepository.findAllFiltered(
+                eq("INV"),
+                eq(22L),
+                eq(VendorBillDocumentStatus.CONFIRMED),
+                eq(VendorBillSettlementStatus.OPEN),
+                any(org.springframework.data.domain.Pageable.class)
+        )).thenReturn(new PageImpl<>(List.of(entity)));
+        when(mapper.toDomain(entity)).thenReturn(domain);
+
+        Page<VendorBill> result = repository.findAll(
+                " INV ",
+                22L,
+                VendorBillDocumentStatus.CONFIRMED,
+                VendorBillSettlementStatus.OPEN,
+                pageable
+        );
+
+        assertThat(result.content()).containsExactly(domain);
+        assertThat(result.totalElements()).isEqualTo(1);
+        verify(jpaRepository).findAllFiltered(
+                eq("INV"),
+                eq(22L),
+                eq(VendorBillDocumentStatus.CONFIRMED),
+                eq(VendorBillSettlementStatus.OPEN),
+                any(org.springframework.data.domain.Pageable.class)
+        );
+    }
+
     private VendorBill sampleBill() {
         return new VendorBill(
                 new AuditMetadata(10L, 1L, LocalDateTime.now(), 1L, LocalDateTime.now(), 1L),
@@ -101,7 +139,8 @@ class VendorBillRepositoryImplTest {
                 LocalDate.of(2026, 5, 31),
                 1L,
                 BigDecimal.ONE,
-                VendorBillStatus.CONFIRMED,
+                VendorBillDocumentStatus.CONFIRMED,
+                VendorBillSettlementStatus.OPEN,
                 new BigDecimal("100.0000"),
                 new BigDecimal("11.0000"),
                 new BigDecimal("111.0000"),
@@ -134,7 +173,8 @@ class VendorBillRepositoryImplTest {
                 LocalDate.of(2026, 5, 31),
                 1L,
                 BigDecimal.ONE,
-                VendorBillStatus.DRAFT,
+                VendorBillDocumentStatus.DRAFT,
+                null,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,

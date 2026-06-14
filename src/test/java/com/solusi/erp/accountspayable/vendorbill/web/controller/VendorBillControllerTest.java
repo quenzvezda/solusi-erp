@@ -1,8 +1,11 @@
 package com.solusi.erp.accountspayable.vendorbill.web.controller;
 
+import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.query.DebitMemoAllocationSelectorUseCase;
+import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.query.FindDebitMemoAllocationHistoryUseCase;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.command.*;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.query.*;
-import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillSettlementStatus;
 import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableApReference;
 import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableGrLineView;
 import com.solusi.erp.accountspayable.vendorbill.web.dto.VendorBillDetailResponse;
@@ -45,6 +48,8 @@ class VendorBillControllerTest {
     private GetVendorBillCreateViewUseCase createViewUseCase;
     private FindBillableGrLinesUseCase findBillableGrLinesUseCase;
     private FindBillableReferencesUseCase findBillableReferencesUseCase;
+    private FindDebitMemoAllocationHistoryUseCase allocationHistoryUseCase;
+    private DebitMemoAllocationSelectorUseCase allocationSelectorUseCase;
     private VendorBillWebMapper webMapper;
     private MessageSource messageSource;
     private VendorBillController controller;
@@ -61,6 +66,8 @@ class VendorBillControllerTest {
         createViewUseCase = mock(GetVendorBillCreateViewUseCase.class);
         findBillableGrLinesUseCase = mock(FindBillableGrLinesUseCase.class);
         findBillableReferencesUseCase = mock(FindBillableReferencesUseCase.class);
+        allocationHistoryUseCase = mock(FindDebitMemoAllocationHistoryUseCase.class);
+        allocationSelectorUseCase = mock(DebitMemoAllocationSelectorUseCase.class);
         webMapper = mock(VendorBillWebMapper.class);
         messageSource = mock(MessageSource.class);
         controller = new VendorBillController(
@@ -74,6 +81,8 @@ class VendorBillControllerTest {
                 createViewUseCase,
                 findBillableGrLinesUseCase,
                 findBillableReferencesUseCase,
+                allocationHistoryUseCase,
+                allocationSelectorUseCase,
                 webMapper,
                 messageSource
         );
@@ -88,12 +97,14 @@ class VendorBillControllerTest {
                 "INV-001",
                 LocalDate.of(2026, 5, 10),
                 LocalDate.of(2026, 5, 20),
-                VendorBillStatus.DRAFT,
+                VendorBillDocumentStatus.DRAFT,
+                null,
+                BigDecimal.ZERO,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO
         );
-        when(findUseCase.execute(any(), any(), any(), any()))
+        when(findUseCase.execute(any(), any(), any(), any(), any()))
                 .thenReturn(new Page<>(List.of(summary), 0, 20, 1));
         VendorBillSummaryResponse response = new VendorBillSummaryResponse();
         response.setId(1L);
@@ -101,13 +112,15 @@ class VendorBillControllerTest {
         when(webMapper.toSummaryResponse(summary)).thenReturn(response);
 
         Model model = new ExtendedModelMap();
-        String view = controller.list("INV", 10L, VendorBillStatus.DRAFT, PageRequest.of(0, 20), model);
+        String view = controller.list("INV", 10L, VendorBillDocumentStatus.DRAFT, null, PageRequest.of(0, 20), model);
 
         assertThat(view).isEqualTo("accountspayable/vendor-bills/list");
         assertThat(model.getAttribute("page")).isInstanceOf(org.springframework.data.domain.Page.class);
         assertThat(model.getAttribute("keyword")).isEqualTo("INV");
         assertThat(model.getAttribute("vendorId")).isEqualTo(10L);
-        assertThat(model.getAttribute("status")).isEqualTo(VendorBillStatus.DRAFT);
+        assertThat(model.getAttribute("documentStatus")).isEqualTo(VendorBillDocumentStatus.DRAFT);
+        assertThat(model.getAttribute("documentStatuses")).isNotNull();
+        assertThat(model.getAttribute("settlementStatuses")).isNotNull();
     }
 
     @Test
@@ -121,11 +134,13 @@ class VendorBillControllerTest {
                 LocalDate.of(2026, 5, 20),
                 1L,
                 BigDecimal.ONE,
-                VendorBillStatus.CONFIRMED,
+                VendorBillDocumentStatus.CONFIRMED,
+                VendorBillSettlementStatus.PARTIALLY_SETTLED,
                 new BigDecimal("100.0000"),
                 BigDecimal.ZERO,
                 new BigDecimal("100.0000"),
                 new BigDecimal("50.0000"),
+                BigDecimal.ZERO,
                 new BigDecimal("50.0000"),
                 "notes",
                 List.of(88L),
@@ -134,7 +149,7 @@ class VendorBillControllerTest {
         VendorBillDetailResponse response = new VendorBillDetailResponse();
         response.setId(1L);
         response.setCode("VB-202605-00001");
-        response.setStatus("CONFIRMED");
+        response.setDocumentStatus("CONFIRMED");
         when(detailUseCase.execute(1L)).thenReturn(detail);
         when(webMapper.toDetailResponse(detail)).thenReturn(response);
         when(messageSource.getMessage(anyString(), any(), any())).thenReturn("Confirmed");
@@ -144,7 +159,7 @@ class VendorBillControllerTest {
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(result.getBody()).isNotNull();
         assertThat(result.getBody().isSuccess()).isTrue();
-        assertThat(result.getBody().getData().getStatus()).isEqualTo("CONFIRMED");
+        assertThat(result.getBody().getData().getDocumentStatus()).isEqualTo("CONFIRMED");
         verify(confirmUseCase).execute(1L);
     }
 

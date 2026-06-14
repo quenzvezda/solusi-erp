@@ -47,12 +47,16 @@ class VendorBillTemplateTest {
     }
 
     @Test
-    void list_template_should_show_unpaid_amount_column() throws Exception {
+    void list_template_should_show_settlement_columns() throws Exception {
         String template = readResource("templates/accountspayable/vendor-bills/list.html");
 
-        assertThat(template).contains("label.vb.unpaidAmount");
+        assertThat(template).contains("label.vb.documentStatus");
+        assertThat(template).contains("label.vb.settlementStatus");
+        assertThat(template).contains("label.vb.outstandingAmount");
+        assertThat(template).contains("item.documentStatus");
+        assertThat(template).contains("item.settlementStatus");
         assertThat(template).contains("item.outstandingAmount");
-        assertThat(template).contains("colspan=\"8\"");
+        assertThat(template).contains("colspan=\"5\"");
     }
 
     @Test
@@ -92,12 +96,32 @@ class VendorBillTemplateTest {
     void detail_template_should_show_payment_summary() throws Exception {
         String template = readResource("templates/accountspayable/vendor-bills/detail.html");
 
-        assertThat(template).contains("label.vb.paymentStatus");
+        assertThat(template).contains("label.vb.settlementStatus");
         assertThat(template).contains("label.vb.paidAmount");
-        assertThat(template).contains("label.vb.unpaidAmount");
+        assertThat(template).contains("label.vb.debitMemoAppliedAmount");
+        assertThat(template).contains("label.vb.outstandingAmount");
+        assertThat(template).contains("bill.documentStatus");
+        assertThat(template).contains("bill.settlementStatus");
         assertThat(template).contains("bill.paidAmount");
+        assertThat(template).contains("bill.debitMemoAppliedAmount");
         assertThat(template).contains("bill.outstandingAmount");
-        assertThat(template).contains("PARTIAL_PAID");
+        assertThat(template).doesNotContain("PARTIAL_PAID");
+        assertThat(template).doesNotContain("PAID");
+    }
+
+    @Test
+    void detail_template_should_show_debit_memo_allocation_links_and_badges() throws Exception {
+        String template = readResource("templates/accountspayable/vendor-bills/detail.html");
+
+        assertThat(template).contains("DEBIT-MEMO-ALLOCATION_CREATE");
+        assertThat(template).contains("/accounts-payable/debit-memo-allocations/create");
+        assertThat(template).contains("debitMemoAllocationHistory");
+        assertThat(template).contains("/accounts-payable/debit-memo-allocations/{id}");
+        assertThat(template).contains("/accounts-payable/debit-memos/{id}");
+        assertThat(template).contains("bg-success-lt");
+        assertThat(template).contains("bg-danger-lt");
+        assertThat(template).contains("bg-secondary-lt");
+        assertThat(template).contains("bg-warning-lt");
     }
 
     @Test
@@ -108,13 +132,19 @@ class VendorBillTemplateTest {
         assertThat(english.containsKey("label.vendor")).isTrue();
         assertThat(english.containsKey("label.filter")).isTrue();
         assertThat(english.containsKey("label.vb.unpaidAmount")).isTrue();
-        assertThat(english.containsKey("label.vb.paymentStatus")).isTrue();
+        assertThat(english.containsKey("label.vb.documentStatus")).isTrue();
+        assertThat(english.containsKey("label.vb.settlementStatus")).isTrue();
         assertThat(english.containsKey("label.vb.paidAmount")).isTrue();
+        assertThat(english.containsKey("label.vb.debitMemoAppliedAmount")).isTrue();
+        assertThat(english.containsKey("label.vb.outstandingAmount")).isTrue();
         assertThat(indonesian.containsKey("label.vendor")).isTrue();
         assertThat(indonesian.containsKey("label.filter")).isTrue();
         assertThat(indonesian.containsKey("label.vb.unpaidAmount")).isTrue();
-        assertThat(indonesian.containsKey("label.vb.paymentStatus")).isTrue();
+        assertThat(indonesian.containsKey("label.vb.documentStatus")).isTrue();
+        assertThat(indonesian.containsKey("label.vb.settlementStatus")).isTrue();
         assertThat(indonesian.containsKey("label.vb.paidAmount")).isTrue();
+        assertThat(indonesian.containsKey("label.vb.debitMemoAppliedAmount")).isTrue();
+        assertThat(indonesian.containsKey("label.vb.outstandingAmount")).isTrue();
     }
 
     @Test

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout/master :: head(#{label.gi.cancel})}">
+</head>
+
+<body th:replace="~{layout/master :: layout(~{:: .gi-cancel-content}, ~{:: #page-specific-scripts})}">
+    <div class="gi-cancel-content">
+        <div class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <h2 class="page-title">
+                            <span th:text="#{label.gi.cancel}">Cancel Goods Issue</span>
+                            <span class="text-secondary ms-2" th:text="${cancelView.code()}">GI-001</span>
+                        </h2>
+                    </div>
+                    <div class="col-auto ms-auto">
+                        <a th:href="@{'/inventory/goods-issues/' + ${cancelView.id()}}" class="btn btn-secondary">
+                            <i class="ti ti-arrow-left me-1"></i><span th:text="#{label.back}">Back</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="container-xl">
+                <form id="gi-cancel-form"
+                      th:object="${cancelRequest}"
+                      th:action="@{'/inventory/goods-issues/' + ${cancelView.id()} + '/cancel'}"
+                      method="post"
+                      data-ajax-form="true"
+                      th:data-redirect-on-success="@{'/inventory/goods-issues/' + ${cancelView.id()}}">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                    <div class="alert-container">
+                        <div th:replace="~{fragments/alerts :: success}"></div>
+                        <div th:replace="~{fragments/alerts :: error}"></div>
+                    </div>
+
+                    <div class="row row-cards">
+                        <div class="col-lg-8">
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h3 class="card-title" th:text="#{label.gi.header}">Header</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label text-secondary" th:text="#{label.gi.code}">Code</label>
+                                            <div class="form-control-plaintext fw-bold" th:text="${cancelView.code()}">GI-001</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label text-secondary" th:text="#{label.gi.issueDate}">Issue Date</label>
+                                            <div class="form-control-plaintext" th:text="${#temporals.format(cancelView.issueDate(), 'dd MMM yyyy')}">01 Jun 2026</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label text-secondary" th:text="#{label.gi.facility}">Facility</label>
+                                            <div class="form-control-plaintext" th:text="${cancelView.facilityName() ?: '-'}">Main Warehouse</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label required" for="reversalDate" th:text="#{label.gi.reversalDate}">Reversal Date</label>
+                                            <input type="date"
+                                                   id="reversalDate"
+                                                   name="reversalDate"
+                                                   class="form-control"
+                                                   data-picker="date"
+                                                   required
+                                                   th:value="${cancelRequest.reversalDate != null ? #temporals.format(cancelRequest.reversalDate, 'yyyy-MM-dd') : ''}">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label required" for="reason" th:text="#{label.gi.cancel.reason}">Reason</label>
+                                            <textarea id="reason"
+                                                      name="reason"
+                                                      class="form-control"
+                                                      rows="2"
+                                                      required
+                                                      th:placeholder="#{label.gi.cancel.reason}"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title" th:text="#{label.gi.cancel.lines}">Return Lines</h3>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-vcenter card-table" id="gi-cancel-lines">
+                                        <thead>
+                                            <tr>
+                                                <th th:text="#{label.product}">Product</th>
+                                                <th class="text-end" th:text="#{label.qty.issued}">Qty Issued</th>
+                                                <th th:text="#{label.serial}">Serial</th>
+                                                <th th:text="#{label.gi.cancel.historicalContainer}">Issued From</th>
+                                                <th class="w-25" th:text="#{label.gi.cancel.targetContainer}">Target Container</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="line, stat : ${cancelView.lines()}">
+                                                <td>
+                                                    <input type="hidden" th:name="|lines[${stat.index}].originalMovementId|" th:value="${line.originalMovementId()}">
+                                                    <input type="hidden" th:name="|lines[${stat.index}].productLabel|" th:value="${line.productName()}">
+                                                    <input type="hidden" th:name="|lines[${stat.index}].serialNumber|" th:value="${line.serialNumber()}">
+                                                    <input type="hidden" th:name="|lines[${stat.index}].quantityIssued|" th:value="${line.quantityIssued()}">
+                                                    <div class="fw-semibold" th:text="${line.productName() ?: '-'}">Product</div>
+                                                    <div class="text-secondary small" th:text="${line.productCode() ?: '-'}">SKU</div>
+                                                </td>
+                                                <td class="text-end" th:text="${line.quantityIssued() != null ? #numbers.formatDecimal(line.quantityIssued(), 1, 'COMMA', 4, 'POINT') : '-'}">1.0000</td>
+                                                <td th:text="${line.serialNumber() ?: '-'}">-</td>
+                                                <td>
+                                                    <div th:text="${line.historicalContainerName() ?: '-'}">Container</div>
+                                                    <div class="text-secondary small" th:text="${line.historicalContainerCode() ?: '-'}">BIN</div>
+                                                </td>
+                                                <td>
+                                                    <select class="form-select form-select-sm erp-input-ts-sm"
+                                                            required
+                                                            data-target-container-select="true"
+                                                            th:name="|lines[${stat.index}].targetContainerId|"
+                                                            th:id="|targetContainer-${stat.index}|"
+                                                            th:attr="data-lookup-path=|inventory/containers?facilityId=${cancelView.facilityId()}|">
+                                                        <option value=""></option>
+                                                        <option th:value="${line.historicalContainerId()}"
+                                                                th:text="${line.historicalContainerName()}"
+                                                                th:attr="data-subtext=${line.historicalContainerCode()}"
+                                                                selected></option>
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title" th:text="#{label.summary}">Summary</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-secondary" th:text="#{label.gi.cancel.lineCount}">Lines</span>
+                                        <span id="gi-cancel-line-count" class="fw-bold" th:text="${#lists.size(cancelView.lines())}">0</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-2">
+                                        <span class="text-secondary" th:text="#{label.gi.cancel.targetCount}">Targets</span>
+                                        <span id="gi-cancel-target-count" class="fw-bold">0</span>
+                                    </div>
+                                </div>
+                                <div class="card-footer">
+                                    <button type="submit" class="btn btn-warning w-100">
+                                        <i class="ti ti-rotate-clockwise me-1"></i><span th:text="#{label.gi.cancel}">Cancel Goods Issue</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-specific-scripts" th:fragment="pageScripts">
+        <script th:src="@{/js/inventory/goods-issue/goods-issue-cancel.js}" defer></script>
+    </div>
+</body>
+
+</html>

@@ -17,7 +17,38 @@ Setiap halaman daftar data (List) wajib mengikuti tata letak berikut untuk konsi
   - Bungkus dalam `.btn-list.flex-nowrap.justify-content-end` agar rapi.
   - Selalu gunakan icon (Tabler Icons) di samping teks label.
 
-### 4. Standard Delete Confirmation
+### 2. Operational List Table Density
+Halaman daftar operasional seperti Purchase Order, Vendor Bill, Debit Memo, Payment, Goods Receipt, dan dokumen transaksi lain harus mudah di-scan tanpa menggeser halaman.
+
+- **No Page-Level Horizontal Overflow**: Tabel list tidak boleh membuat body halaman melebar keluar viewport desktop umum (1366px ke atas). Jika tabel tampak membutuhkan horizontal scrollbar, evaluasi ulang kolomnya terlebih dahulu.
+- **Horizontal Scroll Is Last Resort**: Scroll horizontal hanya boleh dipakai untuk report, matrix, atau tabel analitik dengan banyak dimensi. Untuk list operasional, prefer compact table.
+- **Combine Derived Columns**: Nilai turunan yang satu konteks harus digabung dalam satu cell stack, bukan dijadikan kolom terpisah.
+  - Contoh amount stack: `Gross`, `Settled`, `Remaining`.
+  - Contoh invoice date stack: `Bill Date` dan `Due Date`.
+  - Contoh status stack: `Document Status` dan `Settlement Status`.
+- **Keep Primary Identifiers Separate**: Kolom utama seperti code, date, party/vendor/customer, source document, status, amount summary, dan actions boleh tetap terpisah karena dipakai untuk scan cepat.
+- **Use Fixed Table Layout When Needed**: Untuk list dengan data panjang, gunakan `table-layout: fixed; width: 100%;` dan `text-truncate d-block` pada content yang panjang agar layout tidak melebar.
+- **Currency Placement**: Currency tidak perlu menjadi kolom sendiri di list jika mayoritas dokumen memakai currency yang sama. Gabungkan di bawah amount summary atau tampilkan di halaman detail.
+- **Action Column**:
+  - Action utama seperti `View` harus tetap cukup besar dan jelas. Gunakan `.btn.btn-white.btn-sm` dengan icon + teks.
+  - Icon-only action hanya boleh dipakai untuk secondary/destructive action yang konteksnya jelas, dan tetap wajib punya `title`/`aria-label`.
+  - Lebar kolom action harus cukup untuk label tombol; jangan membuat tombol menjadi terlalu kecil hanya untuk menghemat kolom.
+
+Contoh compact amount cell:
+```html
+<td class="text-end">
+    <div class="d-flex justify-content-between gap-2 small">
+        <span class="text-secondary" th:text="#{label.debit-memo.gross}">Gross</span>
+        <span th:text="${#numbers.formatDecimal(item.grossAmountOriginal, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+    </div>
+    <div class="d-flex justify-content-between gap-2 small">
+        <span class="text-secondary" th:text="#{label.debit-memo.remaining}">Remaining</span>
+        <span class="fw-medium" th:text="${#numbers.formatDecimal(item.remainingAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+    </div>
+</td>
+```
+
+### 3. Standard Delete Confirmation
 Untuk menjaga keamanan data, setiap aksi penghapusan (Delete) wajib menggunakan **Modal Confirmation** (bukan `window.confirm` bawaan browser). 
 
 **Komponen Modal:**

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/master :: head(#{label.purchase-return.title})}"></head>
+<body th:replace="~{layout/master :: layout(~{:: .purchase-return-list-content}, ~{:: #page-specific-scripts})}">
+<div class="purchase-return-list-content">
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title" th:text="#{label.purchase-return.title}">Purchase Returns</h2>
+                    <div class="text-secondary mt-1" th:text="#{label.purchase-return.subtitle}">Manage supplier returns.</div>
+                </div>
+                <div class="col-auto ms-auto">
+                    <a th:href="@{/purchasing/purchase-returns/select-source}" class="btn btn-primary"
+                       sec:authorize="hasAuthority('PURCHASE-RETURN_CREATE')">
+                        <i class="ti ti-plus me-1"></i><span th:text="#{label.purchase-return.create}">Create</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="page-body">
+        <div class="container-xl">
+            <div th:replace="~{fragments/alerts :: success}"></div>
+            <div th:replace="~{fragments/alerts :: error}"></div>
+            <div class="card">
+                <div class="card-body border-bottom py-3">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <form th:action="@{/purchasing/purchase-returns}" method="get"
+                              hx-get="/purchasing/purchase-returns"
+                              hx-target="#purchase-return-table-container"
+                              hx-trigger="change from:#status-filter, keyup changed delay:500ms from:#search-input"
+                              hx-push-url="true"
+                              class="d-flex gap-2 ms-auto">
+                            <select id="status-filter" name="status" class="form-select form-select-sm">
+                                <option value="" th:text="#{label.all}">All</option>
+                                <option th:each="option : ${statuses}" th:value="${option}"
+                                        th:selected="${status == option}"
+                                        th:text="${#messages.msg('label.purchase-return.status.' + option.name().toLowerCase())}">Draft</option>
+                            </select>
+                            <div class="input-icon">
+                                <input type="text" id="search-input" name="keyword" th:value="${keyword}"
+                                       class="form-control form-control-sm"
+                                       th:placeholder="#{label.search} + '...'">
+                                <span class="input-icon-addon"><i class="ti ti-search"></i></span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div id="purchase-return-table-container" th:fragment="purchase-return-table-container"
+                     hx-get="/purchasing/purchase-returns"
+                     hx-trigger="refresh-table from:body delay:500ms"
+                     hx-include="[name='keyword'], [name='status'], [name='page']">
+                    <input type="hidden" name="page" th:value="${page.number}">
+                    <div class="table-responsive">
+                        <table class="table card-table table-vcenter text-nowrap datatable">
+                            <thead>
+                            <tr>
+                                <th th:replace="~{fragments/table :: sortable('code', #{label.purchase-return.code})}">Code</th>
+                                <th th:text="#{label.purchase-return.return-date}">Return Date</th>
+                                <th th:text="#{label.purchase-return.supplier}">Supplier</th>
+                                <th th:text="#{label.purchase-return.goods-receipt}">Goods Receipt</th>
+                                <th th:text="#{label.purchase-return.purchase-order}">Purchase Order</th>
+                                <th th:text="#{label.purchase-return.status}">Status</th>
+                                <th class="text-end" th:text="#{label.qty}">Qty</th>
+                                <th class="text-end" th:text="#{label.inventory.amount}">Amount</th>
+                                <th class="text-end" th:text="#{label.actions}">Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="item : ${page.content}" th:id="'row-' + ${item.id}">
+                                <td class="fw-semibold" th:text="${item.code}">PRT-001</td>
+                                <td th:text="${#temporals.format(item.returnDate, 'dd MMM yyyy')}">01 Jun 2026</td>
+                                <td th:text="${item.supplierName ?: '-'}">Supplier</td>
+                                <td th:text="${item.goodsReceiptCode ?: '-'}">GR-001</td>
+                                <td th:text="${item.purchaseOrderCode ?: '-'}">PO-001</td>
+                                <td><span class="badge"
+                                          th:classappend="${item.status.name() == 'DRAFT'} ? 'bg-secondary-lt' :
+                                              (${item.status.name() == 'SUBMITTED'} ? 'bg-info-lt' :
+                                              (${item.status.name() == 'APPROVED'} ? 'bg-success-lt' :
+                                              (${item.status.name() == 'CONFIRMED'} ? 'bg-primary-lt' :
+                                              (${item.status.name() == 'REVERSED'} ? 'bg-dark-lt' :
+                                              (${item.status.name() == 'REJECTED'} ? 'bg-danger-lt' : 'bg-warning-lt')))))"
+                                          th:text="${#messages.msg('label.purchase-return.status.' + item.status.name().toLowerCase())}">Draft</span></td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(item.totalQuantity, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(item.totalAmount, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                                <td>
+                                    <div class="btn-list flex-nowrap justify-content-end">
+                                        <a th:href="@{/purchasing/purchase-returns/view/{id}(id=${item.id})}"
+                                           class="btn btn-white btn-sm" sec:authorize="hasAuthority('PURCHASE-RETURN_READ')">
+                                            <i class="ti ti-eye me-1"></i><span th:text="#{label.view}">View</span>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${page.empty}">
+                                <td colspan="9" class="text-center py-4 text-secondary" th:text="#{label.purchase-return.empty}">No data.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="page-specific-scripts"></div>
+</body>
+</html>

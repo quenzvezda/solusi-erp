@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/master :: head(#{label.purchase-return.detail})}"></head>
+<body th:replace="~{layout/master :: layout(~{:: .purchase-return-view-content}, ~{:: #page-specific-scripts})}">
+<div class="purchase-return-view-content">
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title">
+                        <span th:text="${purchaseReturn.code}">PRT-001</span>
+                        <span class="badge ms-2"
+                              th:classappend="${purchaseReturn.status.name() == 'DRAFT'} ? 'bg-secondary-lt' :
+                                  (${purchaseReturn.status.name() == 'SUBMITTED'} ? 'bg-info-lt' :
+                                  (${purchaseReturn.status.name() == 'APPROVED'} ? 'bg-success-lt' :
+                                  (${purchaseReturn.status.name() == 'CONFIRMED'} ? 'bg-primary-lt' :
+                                  (${purchaseReturn.status.name() == 'REVERSED'} ? 'bg-dark-lt' :
+                                  (${purchaseReturn.status.name() == 'REJECTED'} ? 'bg-danger-lt' : 'bg-warning-lt')))))"
+                              th:text="${#messages.msg('label.purchase-return.status.' + purchaseReturn.status.name().toLowerCase())}">Draft</span>
+                    </h2>
+                </div>
+                <div class="col-auto ms-auto">
+                    <div class="btn-list">
+                        <div th:if="${purchaseReturn.status.name() == 'DRAFT'}" sec:authorize="hasAuthority('PURCHASE-RETURN_SUBMIT')" class="d-flex gap-2">
+                            <select id="purchase-return-approver" class="form-select form-select-sm erp-input-ts" data-lookup-path="parties/by-role-type?roleTypeCode=APPROVER" th:attr="placeholder=#{label.purchase-return.approver}" style="min-width: 220px;">
+                                <option value=""></option>
+                            </select>
+                            <button type="button" class="btn btn-success"
+                                    th:data-submit-url="@{'/purchasing/purchase-returns/' + ${purchaseReturn.id} + '/submit'}"
+                                    th:data-redirect-url="@{'/purchasing/purchase-returns/view/' + ${purchaseReturn.id}}"
+                                    th:data-confirm-message="#{msg.confirm.purchase-return.submit}"
+                                    onclick="PurchaseReturnActions.submit(this)">
+                                <i class="ti ti-send me-1"></i><span th:text="#{label.purchase-return.submit}">Submit</span>
+                            </button>
+                        </div>
+                        <button th:if="${purchaseReturn.status.name() == 'SUBMITTED'}" type="button" class="btn btn-warning"
+                                sec:authorize="hasAuthority('PURCHASE-RETURN_CANCEL')"
+                                th:data-action-url="@{'/purchasing/purchase-returns/' + ${purchaseReturn.id} + '/cancel-submission'(notes=#{msg.purchase-return.cancel-submission.notes})}"
+                                th:data-redirect-url="@{'/purchasing/purchase-returns/view/' + ${purchaseReturn.id}}"
+                                th:data-confirm-message="#{msg.confirm.purchase-return.cancel-submission}" onclick="ErpForm.postAction(this)">
+                            <i class="ti ti-rotate-clockwise me-1"></i><span th:text="#{label.purchase-return.cancel-submission}">Cancel Submission</span>
+                        </button>
+                        <button th:if="${purchaseReturn.status.name() == 'APPROVED'}" type="button" class="btn btn-primary"
+                                sec:authorize="hasAuthority('PURCHASE-RETURN_CONFIRM')"
+                                th:data-action-url="@{'/purchasing/purchase-returns/' + ${purchaseReturn.id} + '/confirm'}"
+                                th:data-redirect-url="@{'/purchasing/purchase-returns/view/' + ${purchaseReturn.id}}"
+                                th:data-confirm-message="#{msg.confirm.purchase-return.confirm}" onclick="ErpForm.postAction(this)">
+                            <i class="ti ti-check me-1"></i><span th:text="#{label.purchase-return.confirm}">Confirm</span>
+                        </button>
+                        <button th:if="${purchaseReturn.status.name() == 'APPROVED'}" type="button" class="btn btn-warning"
+                                sec:authorize="hasAuthority('PURCHASE-RETURN_CANCEL')"
+                                th:data-action-url="@{'/purchasing/purchase-returns/' + ${purchaseReturn.id} + '/cancel'}"
+                                th:data-redirect-url="@{'/purchasing/purchase-returns/view/' + ${purchaseReturn.id}}"
+                                th:data-confirm-message="#{msg.confirm.purchase-return.cancel}" onclick="ErpForm.postAction(this)">
+                            <i class="ti ti-x me-1"></i><span th:text="#{label.purchase-return.cancel}">Cancel</span>
+                        </button>
+                        <a th:if="${purchaseReturn.status.name() == 'CONFIRMED'}" sec:authorize="hasAuthority('PURCHASE-RETURN_REVERSE')" class="btn btn-danger"
+                           th:href="@{'/purchasing/purchase-returns/' + ${purchaseReturn.id} + '/reverse'}">
+                            <i class="ti ti-rotate-clockwise me-1"></i><span th:text="#{label.purchase-return.reverse}">Reverse</span>
+                        </a>
+                        <button th:if="${approvalRequestId != null}" type="button" class="btn btn-white"
+                                onclick="ErpDrawer.open('drawer-approval-history')">
+                            <i class="ti ti-history me-1"></i><span th:text="#{label.approval.history}">Approval History</span>
+                        </button>
+                        <a th:href="@{/purchasing/purchase-returns}" class="btn btn-secondary">
+                            <i class="ti ti-arrow-left me-1"></i><span th:text="#{label.back}">Back</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="page-body">
+        <div class="container-xl">
+            <th:block th:if="${isCurrentApprover}">
+                <div th:replace="~{fragments/approval :: approve-action-banner(${approvalRequestId}, ${currentPartyId})}"></div>
+            </th:block>
+            <div class="row row-cards">
+                <div class="col-12">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-3"><label class="form-label text-secondary" th:text="#{label.purchase-return.return-date}">Return Date</label>
+                                    <div class="form-control-plaintext" th:text="${#temporals.format(purchaseReturn.returnDate, 'dd MMM yyyy')}">01 Jun 2026</div></div>
+                                <div class="col-md-3"><label class="form-label text-secondary" th:text="#{label.purchase-return.goods-receipt}">Goods Receipt</label>
+                                    <div class="form-control-plaintext"><a th:href="@{/inventory/goods-receipts/{id}(id=${purchaseReturn.goodsReceiptId})}" th:text="${purchaseReturn.goodsReceiptCode}">GR-001</a></div></div>
+                                <div class="col-md-3"><label class="form-label text-secondary" th:text="#{label.purchase-return.purchase-order}">Purchase Order</label>
+                                    <div class="form-control-plaintext"><a th:href="@{/purchasing/purchase-orders/view/{id}(id=${purchaseReturn.purchaseOrderId})}" th:text="${purchaseReturn.purchaseOrderCode}">PO-001</a></div></div>
+                                <div class="col-md-3"><label class="form-label text-secondary" th:text="#{label.purchase-return.supplier}">Supplier</label>
+                                    <div class="form-control-plaintext" th:text="${purchaseReturn.supplierName}">Supplier</div></div>
+                                <div class="col-md-3"><label class="form-label text-secondary" th:text="#{label.purchase-return.facility}">Facility</label>
+                                    <div class="form-control-plaintext" th:text="${purchaseReturn.facilityName}">Main</div></div>
+                                <div class="col-md-3"><label class="form-label text-secondary" th:text="#{label.purchase-return.currency}">Currency</label>
+                                    <div class="form-control-plaintext" th:text="${purchaseReturn.currencyCode}">IDR</div></div>
+                                <div class="col-md-3"><label class="form-label text-secondary" th:text="#{label.purchase-return.reason}">Reason</label>
+                                    <div class="form-control-plaintext" th:text="${#messages.msg(purchaseReturn.reason.messageKey)}">Damaged</div></div>
+                                <div class="col-md-3" th:if="${purchaseReturn.generatedGoodsIssueId != null}">
+                                    <label class="form-label text-secondary" th:text="#{label.purchase-return.goods-issue}">Goods Issue</label>
+                                    <div class="form-control-plaintext"><a th:href="@{/inventory/goods-issues/{id}(id=${purchaseReturn.generatedGoodsIssueId})}" class="btn btn-sm btn-outline-primary">
+                                        <i class="ti ti-external-link me-1"></i><span th:text="#{label.view}">View</span></a></div>
+                                </div>
+                                <div class="col-md-3" th:if="${debitMemoLink != null}">
+                                    <label class="form-label text-secondary" th:text="#{label.debit-memo.title}">Debit Memo</label>
+                                    <div class="form-control-plaintext"><a th:href="@{/accounts-payable/debit-memos/{id}(id=${debitMemoLink.id()})}" class="btn btn-sm btn-outline-primary">
+                                        <i class="ti ti-external-link me-1"></i><span th:text="${debitMemoLink.code()}">DM-001</span></a></div>
+                                </div>
+                                <div class="col-md-3" th:if="${purchaseReturn.reversalDate != null}">
+                                    <label class="form-label text-secondary" th:text="#{label.purchase-return.reversal-date}">Reversal Date</label>
+                                    <div class="form-control-plaintext" th:text="${#temporals.format(purchaseReturn.reversalDate, 'dd MMM yyyy')}">02 Jun 2026</div>
+                                </div>
+                                <div class="col-md-3" th:if="${purchaseReturn.reversedByUserId != null}">
+                                    <label class="form-label text-secondary" th:text="#{label.purchase-return.reversed-by}">Reversed By</label>
+                                    <div class="form-control-plaintext" th:text="${purchaseReturn.reversedByUserId}">77</div>
+                                </div>
+                                <div class="col-md-3" th:if="${purchaseReturn.reversalJournalEntryId != null}">
+                                    <label class="form-label text-secondary" th:text="#{label.purchase-return.reversal-journal}">Reversal Journal</label>
+                                    <div class="form-control-plaintext"><a th:href="@{/accounting/journal-entries/{id}(id=${purchaseReturn.reversalJournalEntryId})}" class="btn btn-sm btn-outline-danger">
+                                        <i class="ti ti-external-link me-1"></i><span th:text="#{label.view}">View</span></a></div>
+                                </div>
+                                <div class="col-12" th:if="${purchaseReturn.reversalReason != null && !purchaseReturn.reversalReason.isBlank()}">
+                                    <label class="form-label text-secondary" th:text="#{label.purchase-return.reversal-reason}">Reversal Reason</label>
+                                    <div class="form-control-plaintext" th:text="${purchaseReturn.reversalReason}">Full reversal</div>
+                                </div>
+                                <div class="col-12" th:if="${purchaseReturn.note != null && !purchaseReturn.note.isBlank()}">
+                                    <label class="form-label text-secondary" th:text="#{label.purchase-return.note}">Note</label>
+                                    <div class="form-control-plaintext" th:text="${purchaseReturn.note}">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mb-3">
+                        <div class="card-header"><h3 class="card-title" th:text="#{label.purchase-return.reservation-summary}">Reservation Summary</h3></div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label text-secondary" th:text="#{label.qty}">Qty</label>
+                                    <div class="form-control-plaintext fw-bold" th:text="${#numbers.formatDecimal(purchaseReturn.totalQuantity, 1, 'COMMA', 2, 'POINT')}">0.00</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-secondary" th:text="#{label.inventory.amount}">Amount</label>
+                                    <div class="form-control-plaintext fw-bold" th:text="${#numbers.formatDecimal(purchaseReturn.totalAmount, 1, 'COMMA', 2, 'POINT')}">0.00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <th:block th:if="${approvalRequestId != null && !isCurrentApprover}">
+                        <div th:replace="~{fragments/approval :: approve-reject-panel(${approvalRequestId}, ${isCurrentApprover}, ${approvalStatus})}"></div>
+                    </th:block>
+                    <div class="card">
+                        <div class="card-header"><h3 class="card-title" th:text="#{label.purchase-return.lines}">Lines</h3></div>
+                        <div class="table-responsive">
+                            <table class="table table-vcenter card-table" id="table-lines">
+                                <thead><tr>
+                                    <th th:text="#{label.product}">Product</th><th th:text="#{label.container}">Container</th>
+                                    <th th:text="#{label.serial}">Serial</th><th class="text-end" th:text="#{label.qty}">Qty</th>
+                                    <th th:text="#{label.purchase-return.reason}">Reason</th><th th:text="#{label.purchase-return.note}">Note</th>
+                                    <th class="text-end" th:text="#{label.inventory.amount}">Amount</th>
+                                </tr></thead>
+                                <tbody>
+                                <tr th:each="line : ${purchaseReturn.lines}">
+                                    <td><div th:text="${line.productName}">Product</div><div class="text-secondary small" th:text="${line.productCode + ' / ' + line.uomCode}">P-001 / PCS</div></td>
+                                    <td><div th:text="${line.containerName ?: line.containerCode}">Bin</div><div class="text-secondary small" th:text="${line.facilityName + ' / ' + line.gridCode + ' / ' + line.containerCode}">Main / A / BIN</div></td>
+                                    <td th:text="${line.serialNumbers ?: '-'}">-</td>
+                                    <td class="text-end" th:text="${#numbers.formatDecimal(line.quantity, 1, 'COMMA', 2, 'POINT')}">1.00</td>
+                                    <td th:text="${#messages.msg(line.reason.messageKey)}">Damaged</td><td th:text="${line.note ?: '-'}">-</td>
+                                    <td class="text-end" th:text="${#numbers.formatDecimal(line.inventoryAmount, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="card-footer"><div th:replace="~{fragments/audit-info :: audit-info(${purchaseReturn})}"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <th:block th:if="${approvalRequestId != null}">
+        <div th:replace="~{fragments/approval :: approval-history-drawer(${approvalRequestId})}"></div>
+    </th:block>
+</div>
+<div id="page-specific-scripts" th:fragment="pageScripts">
+    <script th:inline="javascript">
+        window.PurchaseReturnActions = {
+            submit: function (button) {
+                var approver = document.getElementById('purchase-return-approver');
+                var approverId = approver && approver.tomselect ? approver.tomselect.getValue() : (approver ? approver.value : '');
+                if (!approverId) {
+                    ErpModal.showWarning(/*[[#{msg.error.purchase-return.submit.approver-required}]]*/ 'Please select an approver.');
+                    return;
+                }
+                var submitUrl = button.getAttribute('data-submit-url').split('?')[0];
+                button.setAttribute('data-submit-url', submitUrl + '?approverId=' + encodeURIComponent(approverId));
+                ErpForm.postAction(button);
+            }
+        };
+    </script>
+</div>
+</body>
+</html>

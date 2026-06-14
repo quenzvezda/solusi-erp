@@ -67,6 +67,15 @@ public class ApprovalConfig {
     }
 
     @Bean
+    public CancelApprovalRequestUseCase cancelApprovalRequestUseCase(
+            ApprovalRequestRepository repository,
+            TransactionTemplate transactionTemplate) {
+        CancelApprovalRequestUseCase pureUseCase = new CancelApprovalRequestUseCaseImpl(repository);
+        return (referenceType, referenceId, actorId, notes) -> transactionTemplate.execute(
+                status -> pureUseCase.execute(referenceType, referenceId, actorId, notes));
+    }
+
+    @Bean
     public SaveApprovalSignatureUseCase saveApprovalSignatureUseCase(
             ApprovalSignatureRepository signatureRepository,
             ApprovalRequestRepository approvalRequestRepository,

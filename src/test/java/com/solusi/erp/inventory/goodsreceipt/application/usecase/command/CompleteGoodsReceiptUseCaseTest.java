@@ -92,6 +92,36 @@ class CompleteGoodsReceiptUseCaseTest {
     }
 
     @Test
+    void complete_carriesGoodsReceiptLineIdIntoValuationReference() {
+        GoodsReceipt receipt = draftReceiptWithOneActiveLine();
+        when(goodsReceiptRepository.findById(1L)).thenReturn(Optional.of(receipt));
+        when(purchaseOrderRepository.findById(receipt.getPoId())).thenReturn(Optional.of(sentPoWithOutstanding("10.0000")));
+
+        completeUseCase.execute(1L);
+
+        verify(stockService).adjust(argThat(payload ->
+                payload.getValuationReferenceType() == ReferenceType.GOODS_RECEIPT
+                        && payload.getValuationReferenceId().equals(receipt.getId())
+                        && payload.getValuationReferenceLineId().equals(receipt.getLines().getFirst().getId())));
+    }
+
+    @Test
+    void complete_serializedLineCarriesGoodsReceiptLineIdIntoEachValuationReference() {
+        GoodsReceipt receipt = receiptWithLine(true, new BigDecimal("2.0000"), BigDecimal.ONE, "SN-1");
+        when(goodsReceiptRepository.findById(1L)).thenReturn(Optional.of(receipt));
+        when(purchaseOrderRepository.findById(receipt.getPoId())).thenReturn(Optional.of(sentPoWithOutstanding("10.0000")));
+        when(uomConversionService.convertToBaseUom(201L, 1L, new BigDecimal("2.0000")))
+                .thenReturn(new BigDecimal("2.0000"));
+
+        completeUseCase.execute(1L);
+
+        verify(stockService, times(2)).adjust(argThat((StockMovementPayload payload) ->
+                payload.getValuationReferenceType() == ReferenceType.GOODS_RECEIPT
+                        && payload.getValuationReferenceId().equals(receipt.getId())
+                        && payload.getValuationReferenceLineId().equals(receipt.getLines().getFirst().getId())));
+    }
+
+    @Test
     void complete_usesPurchaseOrderExchangeRateForStockValuation() {
         GoodsReceipt receipt = receiptWithLine(false, new BigDecimal("3.0000"), BigDecimal.ONE, null);
         PurchaseOrder po = sentPoWithOutstanding("10.0000", new BigDecimal("15000"));
@@ -291,7 +321,8 @@ class CompleteGoodsReceiptUseCaseTest {
                 exchangeRate,
                 GoodsReceiptStatus.DRAFT,
                 "draft",
-                List.of(GoodsReceiptLine.prefill(
+                List.of(GoodsReceiptLine.reconstitute(
+                        301L,
                         101L,
                         201L,
                         3L,

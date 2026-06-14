@@ -2,6 +2,7 @@ import { Page } from '@playwright/test';
 import { test, expect, storageStatePath } from '../../fixtures/base';
 import { setAutoNumeric } from '../../helpers/autonumeric';
 import { setFlatpickrDate } from '../../helpers/flatpickr';
+import { waitForAjaxFormReady } from '../../helpers/form';
 import { navigateToModule } from '../../helpers/navigation';
 import { setTomSelectValue } from '../../helpers/tomselect';
 import { waitForNetworkIdle } from '../../helpers/waits';
@@ -117,22 +118,22 @@ async function createSampleDraftGr(page: Page): Promise<number> {
   );
   await setQuantityViaDrawer(page, rowIndex, 1);
 
+  await waitForAjaxFormReady(page);
   await Promise.all([
     page.waitForURL(/\/inventory\/goods-receipts(\?.*)?$/, { timeout: 15_000, waitUntil: 'domcontentloaded' }),
     page.locator('#gr-form button[type="submit"]').first().click(),
   ]);
 
   await waitForNetworkIdle(page);
+  await navigateToModule(page, `/inventory/goods-receipts?referenceType=PURCHASE_ORDER&referenceId=${PO_ID}&sort=id,desc`);
   const newId = await page.evaluate(() => {
-    const links = Array.from(document.querySelectorAll('a[href*="/inventory/goods-receipts/edit/"]'));
-    let max = 0;
-    for (const link of links) {
-      const m = (link as HTMLAnchorElement).href.match(/\/edit\/(\d+)/);
-      if (m) max = Math.max(max, Number(m[1]));
-    }
-    return max;
+    const row = Array.from(document.querySelectorAll('#table-gr-list tbody tr'))
+      .find((candidate) => candidate.textContent?.includes('DRAFT'));
+    const link = row?.querySelector('a[href*="/inventory/goods-receipts/edit/"]') as HTMLAnchorElement | null;
+    const match = link?.href.match(/\/edit\/(\d+)/);
+    return match ? Number(match[1]) : 0;
   });
-  if (!newId) throw new Error('createSampleDraftGr: could not determine new GR id from list');
+  if (!newId) throw new Error('createSampleDraftGr: could not determine latest draft GR id');
   return newId;
 }
 
@@ -176,12 +177,14 @@ async function createDraftVendorBill(page: Page): Promise<DraftVendorBill> {
   await setFlatpickrDate(page, 'input[name="billDate"]', '2026-05-20');
   await setFlatpickrDate(page, 'input[name="dueDate"]', '2026-05-30');
 
+  await waitForAjaxFormReady(page);
   await Promise.all([
     page.waitForURL(/\/accounts-payable\/vendor-bills(\?.*)?$/, { timeout: 15_000, waitUntil: 'domcontentloaded' }),
     page.locator('#vendor-bill-form button[type="submit"]').first().click(),
   ]);
 
   await waitForNetworkIdle(page);
+  await navigateToModule(page, `/accounts-payable/vendor-bills?keyword=${encodeURIComponent(invoiceNumber)}`);
   const id = await page.evaluate((invoice) => {
     const rows = Array.from(document.querySelectorAll('#vendor-bill-table-container tbody tr'));
     const row = rows.find((candidate) => candidate.textContent?.includes(invoice));
@@ -192,6 +195,29 @@ async function createDraftVendorBill(page: Page): Promise<DraftVendorBill> {
   if (!id) throw new Error(`createDraftVendorBill: could not determine bill id for ${invoiceNumber}`);
 
   return { id, invoiceNumber, grId };
+}
+
+async function expectSettlementStatus(page: Page, settlementStatus: string): Promise<void> {
+  const settlementStatusField = page
+    .locator('label.form-label', { hasText: /Settlement Status|Status Pelunasan/ })
+    .locator('xpath=..');
+
+  await expect(settlementStatusField).toContainText(statusLabelPattern(settlementStatus), { timeout: 10_000 });
+}
+
+function statusLabelPattern(status: string): RegExp {
+  switch (status) {
+    case 'OPEN':
+      return /OPEN|Open/i;
+    case 'DRAFT':
+      return /DRAFT|Draft/i;
+    case 'CONFIRMED':
+      return /CONFIRMED|Confirmed|Dikonfirmasi/i;
+    case 'CANCELLED':
+      return /CANCELLED|Cancelled|Dibatalkan/i;
+    default:
+      return new RegExp(status.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+  }
 }
 
 test.describe('@accountspayable Vendor Bill flow', () => {
@@ -208,7 +234,7 @@ test.describe('@accountspayable Vendor Bill flow', () => {
     const bill = await createDraftVendorBill(page);
 
     await navigateToModule(page, `/accounts-payable/vendor-bills/${bill.id}`);
-    await expect(page.locator('.page-title .badge', { hasText: 'DRAFT' })).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('.page-title .badge', { hasText: statusLabelPattern('DRAFT') })).toBeVisible({ timeout: 10_000 });
     await expect(page.locator('body')).toContainText(bill.invoiceNumber);
   });
 
@@ -225,7 +251,8 @@ test.describe('@accountspayable Vendor Bill flow', () => {
       waitUntil: 'domcontentloaded',
     });
 
-    await expect(page.locator('.page-title .badge', { hasText: 'CONFIRMED' })).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('.page-title .badge', { hasText: statusLabelPattern('CONFIRMED') })).toBeVisible({ timeout: 10_000 });
+    await expectSettlementStatus(page, 'OPEN');
   });
 
   test('Scenario C - cancel DRAFT transitions to CANCELLED and returns to list', async ({ page }) => {
@@ -241,7 +268,10 @@ test.describe('@accountspayable Vendor Bill flow', () => {
       waitUntil: 'domcontentloaded',
     });
 
-    await expect(page.locator('#vendor-bill-table-container')).toContainText('CANCELLED', { timeout: 10_000 });
+    await navigateToModule(page, `/accounts-payable/vendor-bills?keyword=${encodeURIComponent(bill.invoiceNumber)}`);
+    const row = page.locator('#vendor-bill-table-container tbody tr').filter({ hasText: bill.invoiceNumber }).first();
+    await expect(row).toBeVisible({ timeout: 10_000 });
+    await expect(row).toContainText(statusLabelPattern('CANCELLED'), { timeout: 10_000 });
   });
 
   test('Scenario D - delete DRAFT via API endpoint', async ({ page }) => {

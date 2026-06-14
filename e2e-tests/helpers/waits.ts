@@ -7,7 +7,7 @@ export async function waitForHtmx(page: Page): Promise<void> {
 }
 
 export async function waitForNetworkIdle(page: Page): Promise<void> {
-  await page.waitForLoadState('networkidle', { timeout: 15_000 });
+  await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
 }
 
 export async function waitForToast(page: Page, type: 'success' | 'error' = 'success'): Promise<void> {

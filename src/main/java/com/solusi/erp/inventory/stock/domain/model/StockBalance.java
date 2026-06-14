@@ -63,6 +63,7 @@ public class StockBalance {
     /**
      * Validate business invariants.
      * On-hand quantity and reserved quantity must not be negative.
+     * Reserved quantity must not exceed on-hand quantity.
      *
      * @throws IllegalStateException if any invariant is violated
      */
@@ -72,6 +73,9 @@ public class StockBalance {
         }
         if (this.reservedQuantity.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalStateException("msg.error.inventory.insufficient_reserved");
+        }
+        if (this.reservedQuantity.compareTo(this.quantity) > 0) {
+            throw new IllegalStateException("msg.error.inventory.insufficient_available");
         }
     }
 

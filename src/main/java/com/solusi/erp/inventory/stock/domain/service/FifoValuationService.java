@@ -1,6 +1,7 @@
 package com.solusi.erp.inventory.stock.domain.service;
 
 import com.solusi.erp.inventory.stock.domain.model.CostAmount;
+import com.solusi.erp.inventory.stock.domain.model.ReferenceType;
 import com.solusi.erp.inventory.stock.domain.model.ValuationLayer;
 import com.solusi.erp.inventory.stock.domain.repository.ValuationLayerRepository;
 
@@ -26,7 +27,23 @@ public class FifoValuationService {
      */
     public void addLayer(Long productId, Long containerId, String serialNumber,
                          BigDecimal quantity, CostAmount unitCost) {
-        ValuationLayer layer = ValuationLayer.createNew(productId, containerId, serialNumber, quantity, unitCost);
+        addLayer(productId, containerId, serialNumber, quantity, unitCost, null, null, null);
+    }
+
+    public void addLayer(Long productId, Long containerId, String serialNumber,
+                         BigDecimal quantity, CostAmount unitCost,
+                         ReferenceType referenceType, Long referenceId, Long referenceLineId) {
+        addLayer(productId, containerId, serialNumber, quantity, unitCost,
+                referenceType, referenceId, referenceLineId, null);
+    }
+
+    public void addLayer(Long productId, Long containerId, String serialNumber,
+                         BigDecimal quantity, CostAmount unitCost,
+                         ReferenceType referenceType, Long referenceId, Long referenceLineId,
+                         Long reversalOfMovementId) {
+        ValuationLayer layer = ValuationLayer.createNew(
+                productId, containerId, serialNumber, quantity, unitCost,
+                referenceType, referenceId, referenceLineId, reversalOfMovementId);
         layerRepository.save(layer);
     }
 
@@ -47,6 +64,24 @@ public class FifoValuationService {
                     productId, containerId, BigDecimal.ZERO);
         }
 
+        return consumeFromLayers(layers, quantityToConsume);
+    }
+
+    public CostAmount consumeSpecificLayers(Long productId, Long containerId, String serialNumber,
+                                            ReferenceType referenceType, Long referenceId, Long referenceLineId,
+                                            BigDecimal quantityToConsume) {
+        List<ValuationLayer> layers;
+        if (serialNumber != null && !serialNumber.isEmpty()) {
+            layers = layerRepository.findAvailableLayersByReferenceAndSerial(
+                    productId, containerId, serialNumber, referenceType, referenceId, referenceLineId, BigDecimal.ZERO);
+        } else {
+            layers = layerRepository.findAvailableLayersByReference(
+                    productId, containerId, referenceType, referenceId, referenceLineId, BigDecimal.ZERO);
+        }
+        return consumeFromLayers(layers, quantityToConsume);
+    }
+
+    private CostAmount consumeFromLayers(List<ValuationLayer> layers, BigDecimal quantityToConsume) {
         BigDecimal totalLocalCost = BigDecimal.ZERO;
         BigDecimal remainingToConsume = quantityToConsume;
 

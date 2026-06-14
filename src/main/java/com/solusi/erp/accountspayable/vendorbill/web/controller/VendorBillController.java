@@ -1,8 +1,11 @@
 package com.solusi.erp.accountspayable.vendorbill.web.controller;
 
+import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.query.FindDebitMemoAllocationHistoryUseCase;
+import com.solusi.erp.accountspayable.debitmemoallocation.application.usecase.query.DebitMemoAllocationSelectorUseCase;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.command.*;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.query.*;
-import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillSettlementStatus;
 import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableApReference;
 import com.solusi.erp.accountspayable.vendorbill.domain.port.BillableGrLineView;
 import com.solusi.erp.accountspayable.vendorbill.web.dto.*;
@@ -26,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Set;
 import java.util.List;
 
 @Controller
@@ -44,6 +48,8 @@ public class VendorBillController {
     private final GetVendorBillCreateViewUseCase getVendorBillCreateViewUseCase;
     private final FindBillableGrLinesUseCase findBillableGrLinesUseCase;
     private final FindBillableReferencesUseCase findBillableReferencesUseCase;
+    private final FindDebitMemoAllocationHistoryUseCase findDebitMemoAllocationHistoryUseCase;
+    private final DebitMemoAllocationSelectorUseCase debitMemoAllocationSelectorUseCase;
     private final VendorBillWebMapper webMapper;
     private final MessageSource messageSource;
 
@@ -51,12 +57,13 @@ public class VendorBillController {
     @PreAuthorize("hasAuthority('VENDOR-BILL_READ')")
     public String list(@RequestParam(required = false) String keyword,
                        @RequestParam(required = false) Long vendorId,
-                       @RequestParam(required = false) VendorBillStatus status,
+                       @RequestParam(required = false) VendorBillDocumentStatus documentStatus,
+                       @RequestParam(required = false) VendorBillSettlementStatus settlementStatus,
                        org.springframework.data.domain.Pageable springPageable,
                        Model model) {
         Pageable domainPageable = PageableMapper.toDomain(springPageable);
         com.solusi.erp.core.domain.model.Page<VendorBillSummaryView> domainPage =
-                findVendorBillsUseCase.execute(keyword, vendorId, status, domainPageable);
+                findVendorBillsUseCase.execute(keyword, vendorId, documentStatus, settlementStatus, domainPageable);
         List<VendorBillSummaryResponse> content = domainPage.content().stream()
                 .map(webMapper::toSummaryResponse)
                 .toList();
@@ -64,8 +71,10 @@ public class VendorBillController {
         model.addAttribute("page", new PageImpl<>(content, springPageable, domainPage.totalElements()));
         model.addAttribute("keyword", keyword);
         model.addAttribute("vendorId", vendorId);
-        model.addAttribute("status", status);
-        model.addAttribute("statuses", VendorBillStatus.values());
+        model.addAttribute("documentStatus", documentStatus);
+        model.addAttribute("settlementStatus", settlementStatus);
+        model.addAttribute("documentStatuses", VendorBillDocumentStatus.values());
+        model.addAttribute("settlementStatuses", VendorBillSettlementStatus.values());
         return "accountspayable/vendor-bills/list";
     }
 
@@ -135,7 +144,10 @@ public class VendorBillController {
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('VENDOR-BILL_READ')")
     public String detail(@PathVariable Long id, Model model) {
-        model.addAttribute("bill", webMapper.toDetailResponse(getVendorBillDetailUseCase.execute(id)));
+        VendorBillDetailResponse bill = webMapper.toDetailResponse(getVendorBillDetailUseCase.execute(id));
+        model.addAttribute("bill", bill);
+        model.addAttribute("debitMemoAllocationHistory", findDebitMemoAllocationHistoryUseCase.byVendorBillId(id));
+        model.addAttribute("canApplyDebitMemo", canApplyDebitMemo(id, bill));
         return "accountspayable/vendor-bills/detail";
     }
 
@@ -213,6 +225,20 @@ public class VendorBillController {
                 .filter(value -> !value.isBlank())
                 .map(Long::valueOf)
                 .toList();
+    }
+
+    private boolean canApplyDebitMemo(Long vendorBillId, VendorBillDetailResponse bill) {
+        boolean payable = "CONFIRMED".equals(bill.getDocumentStatus())
+                && Set.of("OPEN", "PARTIALLY_SETTLED").contains(bill.getSettlementStatus())
+                && bill.getOutstandingAmount() != null
+                && bill.getOutstandingAmount().compareTo(BigDecimal.ZERO) > 0;
+        if (!payable) {
+            return false;
+        }
+        return !debitMemoAllocationSelectorUseCase
+                .eligibleDebitMemos(vendorBillId, null, Pageable.of(0, 1))
+                .content()
+                .isEmpty();
     }
 
     private SelectedReferenceContext resolveSelectedReferenceContext(List<Long> selectedGrIds) {

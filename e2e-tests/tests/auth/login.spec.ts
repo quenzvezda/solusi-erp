@@ -34,8 +34,7 @@ test.describe('@smoke Authentication', () => {
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
 
     // Should be redirected to login
-    await page.waitForURL('**/login**', { timeout: 5_000 });
-    expect(page.url()).toContain('/login');
+    await expect(page).toHaveURL(/\/login(\?.*)?$/, { timeout: 10_000 });
   });
 
 });

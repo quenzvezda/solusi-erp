@@ -41,9 +41,11 @@ public class VendorBillWebMapper {
         response.setVendorInvoiceNumber(view.vendorInvoiceNumber());
         response.setBillDate(view.billDate());
         response.setDueDate(view.dueDate());
-        response.setStatus(view.status() != null ? view.status().name() : null);
+        response.setDocumentStatus(view.documentStatus() != null ? view.documentStatus().name() : null);
+        response.setSettlementStatus(view.settlementStatus() != null ? view.settlementStatus().name() : null);
         response.setTotalAmount(view.totalAmount());
         response.setPaidAmount(view.paidAmount());
+        response.setDebitMemoAppliedAmount(view.debitMemoAppliedAmount());
         response.setOutstandingAmount(view.outstandingAmount());
         return response;
     }
@@ -58,11 +60,13 @@ public class VendorBillWebMapper {
         response.setDueDate(view.dueDate());
         response.setCurrencyId(view.currencyId());
         response.setExchangeRate(view.exchangeRate());
-        response.setStatus(view.status() != null ? view.status().name() : null);
+        response.setDocumentStatus(view.documentStatus() != null ? view.documentStatus().name() : null);
+        response.setSettlementStatus(view.settlementStatus() != null ? view.settlementStatus().name() : null);
         response.setSubtotal(view.subtotal());
         response.setTaxAmount(view.taxAmount());
         response.setTotalAmount(view.totalAmount());
         response.setPaidAmount(view.paidAmount());
+        response.setDebitMemoAppliedAmount(view.debitMemoAppliedAmount());
         response.setOutstandingAmount(view.outstandingAmount());
         response.setNotes(view.notes());
         response.setGrIds(view.grIds());

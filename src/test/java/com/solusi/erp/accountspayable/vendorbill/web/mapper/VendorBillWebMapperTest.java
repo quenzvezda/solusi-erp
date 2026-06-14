@@ -3,7 +3,8 @@ package com.solusi.erp.accountspayable.vendorbill.web.mapper;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.query.VendorBillDetailView;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.query.VendorBillLineView;
 import com.solusi.erp.accountspayable.vendorbill.application.usecase.query.VendorBillSummaryView;
-import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillSettlementStatus;
 import com.solusi.erp.accountspayable.vendorbill.web.dto.VendorBillDetailResponse;
 import com.solusi.erp.accountspayable.vendorbill.web.dto.VendorBillLineRequest;
 import com.solusi.erp.accountspayable.vendorbill.web.dto.VendorBillSaveCommand;
@@ -73,11 +74,13 @@ class VendorBillWebMapperTest {
                 LocalDate.of(2026, 5, 20),
                 1L,
                 BigDecimal.ONE,
-                VendorBillStatus.CONFIRMED,
+                VendorBillDocumentStatus.CONFIRMED,
+                VendorBillSettlementStatus.PARTIALLY_SETTLED,
                 new BigDecimal("100.0000"),
                 BigDecimal.ZERO,
                 new BigDecimal("100.0000"),
                 new BigDecimal("50.0000"),
+                BigDecimal.ZERO,
                 new BigDecimal("50.0000"),
                 "notes",
                 List.of(88L),
@@ -101,7 +104,9 @@ class VendorBillWebMapperTest {
 
         assertThat(response.getId()).isEqualTo(1L);
         assertThat(response.getCode()).isEqualTo("VB-202605-00001");
-        assertThat(response.getStatus()).isEqualTo("CONFIRMED");
+        assertThat(response.getDocumentStatus()).isEqualTo("CONFIRMED");
+        assertThat(response.getSettlementStatus()).isEqualTo("PARTIALLY_SETTLED");
+        assertThat(response.getDebitMemoAppliedAmount()).isZero();
         assertThat(response.getLines()).hasSize(1);
         assertThat(response.getLines().getFirst().getGrLineId()).isEqualTo(1001L);
         assertThat(response.getLines().getFirst().getLineTotal()).isEqualByComparingTo("100.0000");
@@ -116,7 +121,9 @@ class VendorBillWebMapperTest {
                 "INV-001",
                 LocalDate.of(2026, 5, 10),
                 LocalDate.of(2026, 5, 20),
-                VendorBillStatus.DRAFT,
+                VendorBillDocumentStatus.DRAFT,
+                null,
+                BigDecimal.ZERO,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO
@@ -127,6 +134,8 @@ class VendorBillWebMapperTest {
         assertThat(response.getId()).isEqualTo(1L);
         assertThat(response.getCode()).isEqualTo("VB-202605-00001");
         assertThat(response.getVendorInvoiceNumber()).isEqualTo("INV-001");
-        assertThat(response.getStatus()).isEqualTo("DRAFT");
+        assertThat(response.getDocumentStatus()).isEqualTo("DRAFT");
+        assertThat(response.getSettlementStatus()).isNull();
+        assertThat(response.getDebitMemoAppliedAmount()).isZero();
     }
 }

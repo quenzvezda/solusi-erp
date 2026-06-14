@@ -18,7 +18,8 @@ public class VendorBill {
     private final LocalDate dueDate;
     private final Long currencyId;
     private final BigDecimal exchangeRate;
-    private VendorBillStatus status;
+    private VendorBillDocumentStatus documentStatus;
+    private VendorBillSettlementStatus settlementStatus;
     private BigDecimal subtotal;
     private BigDecimal taxAmount;
     private BigDecimal totalAmount;
@@ -28,8 +29,9 @@ public class VendorBill {
 
     public VendorBill(AuditMetadata metadata, String code, Long vendorId, String vendorInvoiceNumber,
                       LocalDate billDate, LocalDate dueDate, Long currencyId, BigDecimal exchangeRate,
-                      VendorBillStatus status, BigDecimal subtotal, BigDecimal taxAmount, BigDecimal totalAmount,
-                      String notes, List<VendorBillGrRef> grRefs, List<VendorBillLine> lines) {
+                      VendorBillDocumentStatus documentStatus, VendorBillSettlementStatus settlementStatus,
+                      BigDecimal subtotal, BigDecimal taxAmount, BigDecimal totalAmount, String notes,
+                      List<VendorBillGrRef> grRefs, List<VendorBillLine> lines) {
         this.metadata = metadata;
         this.code = code;
         this.vendorId = vendorId;
@@ -38,7 +40,8 @@ public class VendorBill {
         this.dueDate = dueDate;
         this.currencyId = currencyId;
         this.exchangeRate = exchangeRate == null ? BigDecimal.ONE : exchangeRate;
-        this.status = status;
+        this.documentStatus = documentStatus;
+        this.settlementStatus = settlementStatus;
         this.subtotal = subtotal;
         this.taxAmount = taxAmount;
         this.totalAmount = totalAmount;
@@ -53,13 +56,13 @@ public class VendorBill {
                                        List<VendorBillGrRef> grRefs, List<VendorBillLine> lines) {
         return new VendorBill(
                 AuditMetadata.empty(), code, vendorId, vendorInvoiceNumber, billDate, dueDate, currencyId,
-                exchangeRate, VendorBillStatus.DRAFT, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, notes,
+                exchangeRate, VendorBillDocumentStatus.DRAFT, null, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, notes,
                 grRefs, lines
         );
     }
 
     public void confirm(BigDecimal subtotal, BigDecimal taxAmount, BigDecimal totalAmount) {
-        if (status != VendorBillStatus.DRAFT) {
+        if (documentStatus != VendorBillDocumentStatus.DRAFT) {
             throw new DomainException("msg.error.vb.invalid.status");
         }
         if (lines == null || lines.isEmpty()) {
@@ -68,14 +71,16 @@ public class VendorBill {
         this.subtotal = subtotal;
         this.taxAmount = taxAmount;
         this.totalAmount = totalAmount;
-        this.status = VendorBillStatus.CONFIRMED;
+        this.documentStatus = VendorBillDocumentStatus.CONFIRMED;
+        this.settlementStatus = VendorBillSettlementStatus.OPEN;
     }
 
     public void cancel() {
-        if (status != VendorBillStatus.DRAFT) {
+        if (documentStatus != VendorBillDocumentStatus.DRAFT) {
             throw new DomainException("msg.error.vb.invalid.status");
         }
-        this.status = VendorBillStatus.CANCELLED;
+        this.documentStatus = VendorBillDocumentStatus.CANCELLED;
+        this.settlementStatus = null;
     }
 
     public Long getId() {
@@ -110,8 +115,12 @@ public class VendorBill {
         return exchangeRate;
     }
 
-    public VendorBillStatus getStatus() {
-        return status;
+    public VendorBillDocumentStatus getDocumentStatus() {
+        return documentStatus;
+    }
+
+    public VendorBillSettlementStatus getSettlementStatus() {
+        return settlementStatus;
     }
 
     public BigDecimal getSubtotal() {

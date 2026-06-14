@@ -3,7 +3,7 @@ package com.solusi.erp.accountspayable.vendorbill.application.usecase.command;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBill;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillGrRef;
 import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillLine;
-import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillStatus;
+import com.solusi.erp.accountspayable.vendorbill.domain.model.VendorBillDocumentStatus;
 import com.solusi.erp.accountspayable.vendorbill.domain.repository.VendorBillRepository;
 import com.solusi.erp.core.exception.DomainException;
 
@@ -47,7 +47,8 @@ public class UpdateVendorBillUseCaseImpl implements UpdateVendorBillUseCase {
                 dueDate,
                 currencyId,
                 exchangeRate,
-                VendorBillStatus.DRAFT,
+                VendorBillDocumentStatus.DRAFT,
+                null,
                 sumLineTotals(billLines),
                 sumTaxAmounts(billLines),
                 sumGrossAmounts(billLines),
@@ -60,7 +61,7 @@ public class UpdateVendorBillUseCaseImpl implements UpdateVendorBillUseCase {
     }
 
     private void validateDraftOnly(VendorBill bill) {
-        if (bill.getStatus() != VendorBillStatus.DRAFT) {
+        if (bill.getDocumentStatus() != VendorBillDocumentStatus.DRAFT) {
             throw new DomainException("msg.error.vb.only.draft.editable");
         }
     }
