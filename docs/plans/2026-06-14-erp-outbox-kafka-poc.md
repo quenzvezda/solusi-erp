@@ -359,14 +359,14 @@ Publish pending outbox rows to Kafka with retry metadata and feature toggle.
 - `mvn test -Dtest=ScheduledOutboxKafkaPublisherTest`
 - App can start with `erp.messaging.enabled=false` without a running Kafka broker.
 
-### Task 7: Documentation and Contract Updates
+### Task 7: Documentation and Contract Updates [x]
 
 Document business meaning, technical architecture, and event contract for future fresh-chat agents.
 
 **Depends on:** Task 6
 **Reference modules:** docs index, brainstorming doc
 
-- [ ] Create `docs/architecture/outbox-kafka-messaging.md`.
+- [x] Create `docs/architecture/outbox-kafka-messaging.md`.
       Include:
       - outbox pattern purpose;
       - ERP producer responsibility;
@@ -375,17 +375,17 @@ Document business meaning, technical architecture, and event contract for future
       - retry producer behavior;
       - why DLQ belongs to consumer side for this POC.
       ref: `docs/brainstorming/2026-06-14-erp-outbox-kafka-poc.md:L24-L49` - locked architecture decisions
-- [ ] Create `docs/spec/event-contracts.md`.
+- [x] Create `docs/spec/event-contracts.md`.
       Include event envelope standard and `PurchaseOrderApproved v1` JSON example with nullable `requesterEmail`.
       ref: `docs/brainstorming/2026-06-14-erp-outbox-kafka-poc.md:L145-L196` - event contract baseline
-- [ ] Update `docs/modules/procurement/purchase-order.md` with PO approved integration event behavior.
+- [x] Update `docs/modules/procurement/purchase-order.md` with PO approved integration event behavior.
       State that approval creates a business event regardless of email availability.
       ref: `docs/index.md:L25-L31` - procurement module docs index
-- [ ] Update `docs/index.md` to link the new architecture doc and event contract spec.
+- [x] Update `docs/index.md` to link the new architecture doc and event contract spec.
       ref: `docs/index.md:L9-L45` - documentation folder index structure
-- [ ] Update `docs/spec/index.md` to link `event-contracts.md`.
+- [x] Update `docs/spec/index.md` to link `event-contracts.md`.
       ref: `docs/spec/index.md:L20-L32` - data/logic standards section
-- [ ] **TEST:** No automated test for docs, but run grep/static check that links point to existing files.
+- [x] **TEST:** No automated test for docs, but run grep/static check that links point to existing files.
 
 **Validation criteria:**
 

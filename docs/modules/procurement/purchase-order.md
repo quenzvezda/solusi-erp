@@ -120,6 +120,18 @@ Semua kalkulasi dilakukan di backend (domain layer) — tidak bergantung pada Ja
 - Saat PO di-submit, sistem membuat `ApprovalRequest` secara otomatis.
 - Approver dapat melihat status persetujuan dan riwayat keputusan di halaman **detail PO**.
 - Setelah PO disetujui (APPROVED), bagian pengadaan dapat mengirimnya ke supplier dengan menekan tombol **Kirim ke Supplier** (→ status SENT).
+- Saat PO disetujui, ERP membuat business integration event `PurchaseOrderApproved v1` melalui outbox Kafka jika `erp.messaging.enabled=true`. Event tetap merepresentasikan fakta bisnis PO approved, bukan perintah kirim email.
+- Event `PurchaseOrderApproved v1` tetap dibuat walaupun email requester kosong/null. Consumer seperti NotificationService bertanggung jawab untuk skip/log jika tidak ada recipient valid.
+
+### F. Integration Event: PurchaseOrderApproved v1
+
+- Topic: `erp.procurement.events.v1`
+- Aggregate: `PurchaseOrder`
+- Message key: `poId`
+- Contract: lihat [Event Contracts](../../spec/event-contracts.md#purchaseorderapproved-v1)
+- Architecture: lihat [Outbox Kafka Messaging](../../architecture/outbox-kafka-messaging.md)
+
+Payload membawa snapshot requester dan approver agar consumer tidak perlu query balik ke ERP.
 
 ## 4. Standar UI/UX
 

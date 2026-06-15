@@ -98,3 +98,8 @@ Populated during execution by the execution agent.
 - **Detail:** `MessagingConfigTest` loads only messaging config, not Spring Boot Kafka auto-configuration.
 - **Action taken:** Added a mocked `KafkaTemplate<String, String>` to the test context so the scheduled publisher bean can be wired without requiring a broker.
 - **Ref:** `src/test/java/com/solusi/erp/core/messaging/infrastructure/config/MessagingConfigTest.java`
+
+## Task 7: Documentation and Contract Updates
+- **Status:** clean
+- **Summary:** Added outbox Kafka architecture docs, manual event contract docs, PO module integration-event notes, and docs index links.
+- **Validation:** Link target check passed; focused test bundle passed with 25 tests; migration parity passed with 75 MariaDB versions and 76 H2 versions.

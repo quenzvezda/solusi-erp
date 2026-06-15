@@ -10,6 +10,7 @@ Dokumentasi dikelompokkan ke dalam folder berikut berdasarkan konteksnya:
 
 - **[/architecture](architecture/)**: Berisi Class Diagram dan pola desain tingkat tinggi.
     - [Clean Architecture + DDD + CQRS Standard](architecture/clean-ddd-cqrs-standard.md) (Standard Baru)
+    - [Outbox Kafka Messaging](architecture/outbox-kafka-messaging.md) — Pola integration event keluar ERP ke Kafka dengan outbox polling
     - [Base Model Pattern](architecture/base-model-pattern.md)
     - [Smart Delete Pattern](architecture/smart-delete-pattern.md) — Pola delete fleksibel: hard-delete jika tidak dipakai, soft-delete jika masih direferensikan
     - [JaCoCo Coverage Guide](architecture/jacoco-coverage.md) — Standar code coverage: versi, exclude strategy, threshold, cara baca laporan
@@ -36,7 +37,7 @@ Dokumentasi dikelompokkan ke dalam folder berikut berdasarkan konteksnya:
         - [Vendor Payment](modules/accountspayable/vendor-payment.md) — Pembayaran vendor dan alokasi ke Vendor Bill
         - [Debit Memo](modules/accountspayable/debit-memo.md) — Memo retur vendor dari Purchase Return, metadata, dan settlement core
         - [Debit Memo Allocation](modules/accountspayable/debit-memo-allocation.md) — Aplikasi Debit Memo ke Vendor Bill, journal AP reduction, dan reversal
-- **[/spec](spec/)**: **[PENTING]** Spesifikasi teknis horizontal/shared yang digunakan di seluruh aplikasi (line-item form, modal selector, action buttons, submission flow, dsb). Lihat **[Spec Index](spec/index.md)**.
+- **[/spec](spec/)**: **[PENTING]** Spesifikasi teknis horizontal/shared yang digunakan di seluruh aplikasi (line-item form, modal selector, action buttons, submission flow, event contracts, dsb). Lihat **[Spec Index](spec/index.md)**.
 - **[/roadmap](roadmap/)**: Rencana pengembangan masa depan dan pelacakan standardisasi arsitektur.
 - **[/workflow](workflow/)**: Panduan prosedur kerja agen (seperti tugas repetitif, troubleshooting, dll).
 

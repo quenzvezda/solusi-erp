@@ -21,6 +21,7 @@ Folder ini berisi standar teknis horizontal yang berlaku di seluruh aplikasi ERP
 ## Data & Logic Standards
 - **[api-response.md](api-response.md)**: Standar respons API (`ApiResponse`) dan pembungkus data form (`FormViewDto`).
 - **[auditing.md](auditing.md)**: Implementasi audit trail (siapa, kapan) dan penggunaan class `BaseAuditResponse`.
+- **[event-contracts.md](event-contracts.md)**: Kontrak manual integration event ERP, envelope standard, dan `PurchaseOrderApproved v1`.
 - **[sequence-generator.md](sequence-generator.md)**: Aturan penomoran otomatis untuk dokumen transaksi dan master data.
 - **[pagination.md](pagination.md)**: Standar paginasi dinamis berdasarkan preferensi user.
 - **[sorting.md](sorting.md)**: Pola pengurutan kolom tabel otomatis terintegrasi dengan JPA.
