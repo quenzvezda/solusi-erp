@@ -164,35 +164,35 @@ Add Spring Kafka dependency, safe default config, and mirrored MariaDB/H2 outbox
 - `mvn test -Dtest=OutboxEventsMigrationTest`
 - `bash scripts/check-migration-parity.sh`
 
-### Task 2: Core Messaging Domain and Outbox Save Port
+### Task 2: Core Messaging Domain and Outbox Save Port [x]
 
 Create pure Java messaging model and outbox publisher that saves integration events without Kafka.
 
 **Depends on:** Task 1
 **Reference modules:** `core.domain.model`, `inventory.brand`, `master.tax`
 
-- [ ] Create `EventEnvelope<T>` record with fields `eventId`, `eventType`, `eventVersion`, `source`, `occurredAt`, `correlationId`, `aggregateType`, `aggregateId`, `payload`.
+- [x] Create `EventEnvelope<T>` record with fields `eventId`, `eventType`, `eventVersion`, `source`, `occurredAt`, `correlationId`, `aggregateType`, `aggregateId`, `payload`.
       ref: `docs/brainstorming/2026-06-14-erp-outbox-kafka-poc.md:L145-L160` - event envelope standard
-- [ ] Create `IntegrationEvent` interface or record contract exposing topic, message key, event type/version, aggregate metadata, and payload object.
+- [x] Create `IntegrationEvent` interface or record contract exposing topic, message key, event type/version, aggregate metadata, and payload object.
       ref: `docs/brainstorming/2026-06-14-erp-outbox-kafka-poc.md:L163-L196` - PurchaseOrderApproved is first implementation
-- [ ] Create `OutboxStatus` enum with `PENDING`, `PUBLISHED`, `FAILED`.
+- [x] Create `OutboxStatus` enum with `PENDING`, `PUBLISHED`, `FAILED`.
       ref: `docs/brainstorming/2026-06-14-erp-outbox-kafka-poc.md:L120-L136` - required status values
-- [ ] Create pure `OutboxEvent` domain model with factory `pending(...)`, `markPublished(...)`, and `markFailed(...)`.
+- [x] Create pure `OutboxEvent` domain model with factory `pending(...)`, `markPublished(...)`, and `markFailed(...)`.
       Required behavior:
       - new event starts `PENDING`;
       - attempt count defaults to 0;
       - `markPublished` sets status and `publishedAt`;
       - `markFailed` increments attempt count, stores truncated error message, and sets `nextAttemptAt`.
       ref: `docs/architecture/clean-ddd-cqrs-standard.md` - domain layer must be pure Java
-- [ ] Create `OutboxEventRepository` port with `save`, `findPublishableBatch`, and `findByEventId`.
+- [x] Create `OutboxEventRepository` port with `save`, `findPublishableBatch`, and `findByEventId`.
       ref: `src/main/java/com/solusi/erp/purchasing/purchaseorder/domain/repository/PurchaseOrderRepository.java` - domain repository port pattern
-- [ ] Create `IntegrationEventPublisher` app port with `publish(IntegrationEvent event)`.
+- [x] Create `IntegrationEventPublisher` app port with `publish(IntegrationEvent event)`.
       ref: `src/main/java/com/solusi/erp/purchasing/purchaseorder/domain/port/PurchaseOrderEventPublisher.java:L1-L5` - simple publisher port pattern
-- [ ] Create `OutboxIntegrationEventPublisher` that builds an envelope, serializes payload via injected JSON serializer abstraction or `ObjectMapper`, and saves a pending outbox event.
+- [x] Create `OutboxIntegrationEventPublisher` that builds an envelope, serializes payload via injected JSON serializer abstraction or `ObjectMapper`, and saves a pending outbox event.
       Keep this class free of Kafka APIs.
       ref: `docs/brainstorming/2026-06-14-erp-outbox-kafka-poc.md:L67-L108` - use case sees port; implementation saves outbox
-- [ ] **TEST:** Add `OutboxIntegrationEventPublisherTest` verifying a sample event saves one `PENDING` outbox row with topic, message key, aggregate metadata, event version, and JSON envelope containing payload.
-- [ ] **TEST:** Add domain tests for `OutboxEvent.markPublished` and `markFailed` retry metadata.
+- [x] **TEST:** Add `OutboxIntegrationEventPublisherTest` verifying a sample event saves one `PENDING` outbox row with topic, message key, aggregate metadata, event version, and JSON envelope containing payload.
+- [x] **TEST:** Add domain tests for `OutboxEvent.markPublished` and `markFailed` retry metadata.
 
 **Validation criteria:**
 
