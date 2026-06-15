@@ -393,27 +393,27 @@ Document business meaning, technical architecture, and event contract for future
 - `bash scripts/check-migration-parity.sh`
 - Manual doc link check: every new link in `docs/index.md` and `docs/spec/index.md` points to an existing file.
 
-### Task 8: Final Focused Build Verification
+### Task 8: Final Focused Build Verification [x]
 
 Run the focused backend verification needed before handing off to NotificationService work.
 
 **Depends on:** Task 7
 **Reference modules:** CI workflow
 
-- [ ] Run migration parity check.
+- [x] Run migration parity check.
       ref: `scripts/check-migration-parity.sh:L1-L83` - parity command used by CI
-- [ ] Run focused messaging/approval/PO tests.
+- [x] Run focused messaging/approval/PO tests.
       Command:
       ```bash
       ./mvnw -B -e test -Dtest=OutboxEventsMigrationTest,OutboxIntegrationEventPublisherTest,ScheduledOutboxKafkaPublisherTest,MessagingConfigTest,PurchaseOrderApprovedEventFactoryTest,OnPurchaseOrderApprovedListenerTest,ProcessApprovalUseCaseImplTest
       ```
-- [ ] Run fast test subset if focused tests pass.
+- [x] Run fast test subset if focused tests pass.
       Command:
       ```bash
       ./mvnw -B -e test -DexcludedGroups=integration-template
       ```
       ref: `.github/workflows/ci-java21.yml` - fast tests are CI gate for PR/push
-- [ ] Record actual command output summary and any deviations in `docs/reports/2026-06-14-erp-outbox-kafka-poc.md`.
+- [x] Record actual command output summary and any deviations in `docs/reports/2026-06-14-erp-outbox-kafka-poc.md`.
 
 **Validation criteria:**
 

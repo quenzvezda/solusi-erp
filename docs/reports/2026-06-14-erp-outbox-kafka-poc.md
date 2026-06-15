@@ -103,3 +103,15 @@ Populated during execution by the execution agent.
 - **Status:** clean
 - **Summary:** Added outbox Kafka architecture docs, manual event contract docs, PO module integration-event notes, and docs index links.
 - **Validation:** Link target check passed; focused test bundle passed with 25 tests; migration parity passed with 75 MariaDB versions and 76 H2 versions.
+
+## Task 8: Final Focused Build Verification
+- **Status:** findings
+- **Summary:** Ran final ERP verification gates through Task 8.
+- **Validation:** Migration parity passed with 75 MariaDB versions and 76 H2 versions. Focused wrapper test passed with 25 tests, 0 failures, 0 errors. Fast subset `./mvnw -B -e test -DexcludedGroups=integration-template` completed with BUILD SUCCESS.
+
+### Finding: Fast subset still emits existing coverage warning
+- **Type:** warning
+- **Severity:** info
+- **Detail:** Fast subset reported JaCoCo branch coverage ratio `0.79` below configured minimum `0.80`, but the project configuration keeps `haltOnFailure=false`, so Maven finished with BUILD SUCCESS.
+- **Action taken:** No code change. Recorded the warning for audit because the verification gate exit code was 0.
+- **Ref:** `pom.xml`
