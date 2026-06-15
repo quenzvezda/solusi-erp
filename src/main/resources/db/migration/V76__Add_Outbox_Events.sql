@@ -1,0 +1,30 @@
+-- V76: Add outbox table for integration event publishing.
+
+CREATE TABLE IF NOT EXISTS outbox_events (
+    id                   BIGINT       NOT NULL AUTO_INCREMENT,
+    event_id             CHAR(36)     NOT NULL,
+    event_type           VARCHAR(120) NOT NULL,
+    event_version        INT          NOT NULL,
+    aggregate_type       VARCHAR(120) NOT NULL,
+    aggregate_id         VARCHAR(120) NOT NULL,
+    topic                VARCHAR(255) NOT NULL,
+    message_key          VARCHAR(255) NOT NULL,
+    payload_json         LONGTEXT     NOT NULL,
+    status               VARCHAR(20)  NOT NULL,
+    attempt_count        INT          NOT NULL DEFAULT 0,
+    last_error           TEXT         NULL,
+    next_attempt_at      DATETIME     NULL,
+    published_at         DATETIME     NULL,
+    version              INT          NOT NULL DEFAULT 0,
+    created_by_user_id   BIGINT       NULL,
+    created_date         DATETIME     NULL,
+    updated_by_user_id   BIGINT       NULL,
+    updated_date         DATETIME     NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_outbox_events_event_id (event_id),
+    KEY idx_outbox_status_next_attempt (status, next_attempt_at),
+    KEY idx_outbox_topic_status (topic, status),
+    KEY idx_outbox_aggregate (aggregate_type, aggregate_id),
+    CONSTRAINT fk_outbox_events_created_by FOREIGN KEY (created_by_user_id) REFERENCES users(id),
+    CONSTRAINT fk_outbox_events_updated_by FOREIGN KEY (updated_by_user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

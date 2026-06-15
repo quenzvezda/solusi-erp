@@ -120,16 +120,16 @@ ERP tetap menjadi monolith utama. Kafka hanya jalur integration event keluar. No
 
 ## 5. Tasks
 
-### Task 1: Build Dependency, Messaging Toggle, and Outbox Schema
+### Task 1: Build Dependency, Messaging Toggle, and Outbox Schema [x]
 
 Add Spring Kafka dependency, safe default config, and mirrored MariaDB/H2 outbox schema.
 
 **Depends on:** none
 **Reference modules:** `core.model.BaseModel`, existing Flyway migrations
 
-- [ ] Add `spring-kafka` dependency to `pom.xml` and `spring-kafka-test` as test dependency.
+- [x] Add `spring-kafka` dependency to `pom.xml` and `spring-kafka-test` as test dependency.
       ref: `pom.xml:L25-L155` - existing dependency grouping and test dependency style
-- [ ] Add default-disabled messaging config to `application.yaml`.
+- [x] Add default-disabled messaging config to `application.yaml`.
       Required default:
       ```yaml
       erp:
@@ -147,16 +147,16 @@ Add Spring Kafka dependency, safe default config, and mirrored MariaDB/H2 outbox
           bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
       ```
       ref: `src/main/resources/application.yaml:L16-L71` - current Spring config layout
-- [ ] Create MariaDB migration `V76__Add_Outbox_Events.sql` with table `outbox_events`.
+- [x] Create MariaDB migration `V76__Add_Outbox_Events.sql` with table `outbox_events`.
       Required columns:
       `id BIGINT AUTO_INCREMENT`, `event_id CHAR(36)`, `event_type`, `event_version`, `aggregate_type`, `aggregate_id`, `topic`, `message_key`, `payload_json LONGTEXT`, `status`, `attempt_count`, `last_error`, `next_attempt_at`, `published_at`, `created_date`, `created_by`, `updated_date`, `updated_by`, `version`.
       ref: `docs/brainstorming/2026-06-14-erp-outbox-kafka-poc.md:L110-L143` - outbox table contract
       ref: `src/main/resources/db/migration/V46__Add_Purchasing_Module.sql` - transaction table naming and column style
-- [ ] Add MariaDB constraints/indexes: unique `event_id`, index `(status, next_attempt_at)`, index `(topic, status)`, index `(aggregate_type, aggregate_id)`.
+- [x] Add MariaDB constraints/indexes: unique `event_id`, index `(status, next_attempt_at)`, index `(topic, status)`, index `(aggregate_type, aggregate_id)`.
       ref: `docs/brainstorming/2026-06-14-erp-outbox-kafka-poc.md:L138-L143` - required index baseline
-- [ ] Create H2 mirror migration `src/main/resources/db/migration-h2/V76__Add_Outbox_Events.sql` with equivalent business columns and constraints.
+- [x] Create H2 mirror migration `src/main/resources/db/migration-h2/V76__Add_Outbox_Events.sql` with equivalent business columns and constraints.
       ref: `scripts/check-migration-parity.sh:L1-L83` - CI requires MariaDB/H2 migration version parity
-- [ ] **TEST:** Add static migration test `OutboxEventsMigrationTest` that reads both V76 files and asserts table name, key columns, unique event id, retry indexes, and status column exist.
+- [x] **TEST:** Add static migration test `OutboxEventsMigrationTest` that reads both V76 files and asserts table name, key columns, unique event id, retry indexes, and status column exist.
       ref: `docs/plans/2026-06-02-phase-a-generic-reversal-foundation.md:L110-L125` - static migration test expectation pattern
 
 **Validation criteria:**
