@@ -7,13 +7,17 @@ import com.solusi.erp.core.messaging.infrastructure.adapter.OutboxEventRepositor
 import com.solusi.erp.core.messaging.infrastructure.persistence.OutboxEventJpaRepository;
 import com.solusi.erp.core.messaging.infrastructure.persistence.OutboxEventPersistenceMapper;
 import com.solusi.erp.core.messaging.infrastructure.publisher.OutboxIntegrationEventPublisher;
+import com.solusi.erp.core.messaging.infrastructure.publisher.ScheduledOutboxKafkaPublisher;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.time.Clock;
 
 @Configuration
+@EnableScheduling
 @EnableConfigurationProperties(MessagingProperties.class)
 public class MessagingConfig {
 
@@ -45,5 +49,18 @@ public class MessagingConfig {
             };
         }
         return new OutboxIntegrationEventPublisher(outboxEventRepository, objectMapper, messagingClock);
+    }
+
+    @Bean
+    public ScheduledOutboxKafkaPublisher scheduledOutboxKafkaPublisher(
+            OutboxEventRepository outboxEventRepository,
+            KafkaTemplate<String, String> kafkaTemplate,
+            MessagingProperties properties,
+            Clock messagingClock) {
+        return new ScheduledOutboxKafkaPublisher(
+                outboxEventRepository,
+                kafkaTemplate,
+                properties,
+                messagingClock);
     }
 }

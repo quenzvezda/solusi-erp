@@ -325,30 +325,30 @@ Build `PurchaseOrderApproved v1` business event from PO approval with user/party
 - Event is produced even when requester email is null.
 - PO listener remains independent from Kafka APIs.
 
-### Task 6: Scheduled Kafka Outbox Publisher
+### Task 6: Scheduled Kafka Outbox Publisher [x]
 
 Publish pending outbox rows to Kafka with retry metadata and feature toggle.
 
 **Depends on:** Task 5
 **Reference modules:** `core.messaging`
 
-- [ ] Create `ScheduledOutboxKafkaPublisher` under `core.messaging.infrastructure.publisher`.
+- [x] Create `ScheduledOutboxKafkaPublisher` under `core.messaging.infrastructure.publisher`.
       It depends on `OutboxEventRepository`, `KafkaTemplate<String, String>`, `MessagingProperties`, and a clock/time provider if useful for tests.
       ref: `docs/brainstorming/2026-06-14-erp-outbox-kafka-poc.md:L241-L249` - conservative producer retry flow
-- [ ] Add `@Scheduled(fixedDelayString = "${erp.messaging.outbox.fixed-delay-ms:5000}")` and guard method body with `if (!properties.enabled()) return`.
+- [x] Add `@Scheduled(fixedDelayString = "${erp.messaging.outbox.fixed-delay-ms:5000}")` and guard method body with `if (!properties.enabled()) return`.
       ref: `src/main/resources/application.yaml:L1-L96` - config property style
-- [ ] Fetch batch of publishable events using repository method from Task 2/3.
+- [x] Fetch batch of publishable events using repository method from Task 2/3.
       Include `PENDING` and retryable `FAILED` where `nextAttemptAt <= now`.
       ref: `docs/brainstorming/2026-06-14-erp-outbox-kafka-poc.md:L120-L136` - outbox retry fields
-- [ ] Publish `payloadJson` to `event.topic` with `event.messageKey` using `KafkaTemplate.send(topic, key, payloadJson)`.
+- [x] Publish `payloadJson` to `event.topic` with `event.messageKey` using `KafkaTemplate.send(topic, key, payloadJson)`.
       Use synchronous result wait for POC so marking `PUBLISHED` is deterministic.
       ref: `docs/brainstorming/2026-06-14-erp-outbox-kafka-poc.md:L43-L45` - native Spring Kafka chosen for explicit producer behavior
-- [ ] On success, mark event `PUBLISHED` and save.
-- [ ] On exception, mark event `FAILED`, increment attempt count, store error, set `nextAttemptAt`, and save.
-- [ ] If `attemptCount >= maxAttempts`, keep `FAILED` with a later `nextAttemptAt` or stop retrying by excluding it from publishable query. Document the chosen behavior in `docs/architecture/outbox-kafka-messaging.md`.
-- [ ] Register publisher bean only when Spring Kafka is present and messaging enabled, or keep bean always present with disabled guard and no required Kafka connection until scheduled execution.
+- [x] On success, mark event `PUBLISHED` and save.
+- [x] On exception, mark event `FAILED`, increment attempt count, store error, set `nextAttemptAt`, and save.
+- [x] If `attemptCount >= maxAttempts`, keep `FAILED` with a later `nextAttemptAt` or stop retrying by excluding it from publishable query. Document the chosen behavior in `docs/architecture/outbox-kafka-messaging.md`.
+- [x] Register publisher bean only when Spring Kafka is present and messaging enabled, or keep bean always present with disabled guard and no required Kafka connection until scheduled execution.
       The safer prod default is disabled guard plus optional Kafka bootstrap configuration.
-- [ ] **TEST:** Add `ScheduledOutboxKafkaPublisherTest` for:
+- [x] **TEST:** Add `ScheduledOutboxKafkaPublisherTest` for:
       - disabled properties do not call repository or Kafka;
       - successful send marks published;
       - failed send marks failed and schedules retry;

@@ -80,3 +80,21 @@ Populated during execution by the execution agent.
 - **Detail:** `PurchaseOrder` stores `currencyId`, not a direct currency code. Existing `CurrencyLookupProvider` exposes alias in lookup payload.
 - **Action taken:** Factory uses `payload.alias` as `currencyCode`, falling back to `subText` parsing or lookup name if alias is unavailable.
 - **Ref:** `src/main/java/com/solusi/erp/master/currency/infrastructure/adapter/CurrencyLookupProviderImpl.java`
+
+## Task 6: Scheduled Kafka Outbox Publisher
+- **Status:** findings
+- **Summary:** Added scheduled Kafka outbox publisher with disabled guard, synchronous send for deterministic marking, retry metadata, max-attempt handling, and focused publisher tests.
+
+### Finding: Max attempts keeps failed row audit-able
+- **Type:** decision
+- **Severity:** info
+- **Detail:** The plan allowed either excluding max-attempt rows or keeping them `FAILED` with a later `nextAttemptAt`.
+- **Action taken:** On a failure that reaches `maxAttempts`, the publisher keeps the row `FAILED` and moves `nextAttemptAt` far into the future. Rows are not deleted, preserving POC auditability.
+- **Ref:** `src/main/java/com/solusi/erp/core/messaging/infrastructure/publisher/ScheduledOutboxKafkaPublisher.java`
+
+### Finding: Surgical config test needs KafkaTemplate mock
+- **Type:** decision
+- **Severity:** info
+- **Detail:** `MessagingConfigTest` loads only messaging config, not Spring Boot Kafka auto-configuration.
+- **Action taken:** Added a mocked `KafkaTemplate<String, String>` to the test context so the scheduled publisher bean can be wired without requiring a broker.
+- **Ref:** `src/test/java/com/solusi/erp/core/messaging/infrastructure/config/MessagingConfigTest.java`
