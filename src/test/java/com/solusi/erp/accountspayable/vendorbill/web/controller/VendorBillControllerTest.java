@@ -16,6 +16,8 @@ import com.solusi.erp.accountspayable.vendorbill.web.dto.VendorBillSummaryRespon
 import com.solusi.erp.accountspayable.vendorbill.web.mapper.VendorBillWebMapper;
 import com.solusi.erp.core.domain.model.Page;
 import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.core.dto.LookupDto;
+import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.MessageSource;
@@ -51,6 +53,7 @@ class VendorBillControllerTest {
     private FindDebitMemoAllocationHistoryUseCase allocationHistoryUseCase;
     private DebitMemoAllocationSelectorUseCase allocationSelectorUseCase;
     private VendorBillWebMapper webMapper;
+    private PartyLookupProvider partyLookupProvider;
     private MessageSource messageSource;
     private VendorBillController controller;
 
@@ -69,6 +72,7 @@ class VendorBillControllerTest {
         allocationHistoryUseCase = mock(FindDebitMemoAllocationHistoryUseCase.class);
         allocationSelectorUseCase = mock(DebitMemoAllocationSelectorUseCase.class);
         webMapper = mock(VendorBillWebMapper.class);
+        partyLookupProvider = mock(PartyLookupProvider.class);
         messageSource = mock(MessageSource.class);
         controller = new VendorBillController(
                 createUseCase,
@@ -84,6 +88,7 @@ class VendorBillControllerTest {
                 allocationHistoryUseCase,
                 allocationSelectorUseCase,
                 webMapper,
+                partyLookupProvider,
                 messageSource
         );
     }
@@ -161,6 +166,52 @@ class VendorBillControllerTest {
         assertThat(result.getBody().isSuccess()).isTrue();
         assertThat(result.getBody().getData().getDocumentStatus()).isEqualTo("CONFIRMED");
         verify(confirmUseCase).execute(1L);
+    }
+
+    @Test
+    void detail_should_enrich_vendor_display_from_party_lookup_provider() {
+        VendorBillDetailView detail = new VendorBillDetailView(
+                1L,
+                "VB-202605-00001",
+                10L,
+                "INV-001",
+                LocalDate.of(2026, 5, 10),
+                LocalDate.of(2026, 5, 20),
+                1L,
+                BigDecimal.ONE,
+                VendorBillDocumentStatus.CONFIRMED,
+                VendorBillSettlementStatus.OPEN,
+                new BigDecimal("100.0000"),
+                BigDecimal.ZERO,
+                new BigDecimal("100.0000"),
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                new BigDecimal("100.0000"),
+                "notes",
+                List.of(88L),
+                List.of()
+        );
+        VendorBillDetailResponse response = new VendorBillDetailResponse();
+        response.setId(1L);
+        response.setVendorId(10L);
+        response.setDocumentStatus("CONFIRMED");
+        response.setSettlementStatus("OPEN");
+        response.setOutstandingAmount(new BigDecimal("100.0000"));
+        when(detailUseCase.execute(1L)).thenReturn(detail);
+        when(webMapper.toDetailResponse(detail)).thenReturn(response);
+        when(partyLookupProvider.resolve(10L)).thenReturn(new LookupDto(10L, "PT Solusi Supplier", "SUP-001"));
+        when(allocationSelectorUseCase.eligibleDebitMemos(eq(1L), isNull(), any()))
+                .thenReturn(new Page<>(List.of(), 0, 1, 0));
+
+        Model model = new ExtendedModelMap();
+        String view = controller.detail(1L, model);
+
+        assertThat(view).isEqualTo("accountspayable/vendor-bills/detail");
+        VendorBillDetailResponse bill = (VendorBillDetailResponse) model.getAttribute("bill");
+        assertThat(bill).isNotNull();
+        assertThat(bill.getVendorName()).isEqualTo("PT Solusi Supplier");
+        assertThat(bill.getVendorCode()).isEqualTo("SUP-001");
+        verify(partyLookupProvider).resolve(10L);
     }
 
     @Test

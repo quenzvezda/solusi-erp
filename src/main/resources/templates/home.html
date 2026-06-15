@@ -2,33 +2,321 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{fragments/head :: core(#{landing.welcome})}"></th:block>
-    
+
     <style>
+        :root {
+            --landing-ink: #1f2937;
+            --landing-muted: #667085;
+            --landing-line: #dce3ec;
+            --landing-panel: #ffffff;
+            --landing-soft: #f5f7fb;
+        }
+
+        body {
+            background: var(--landing-soft);
+        }
+
+        .landing-section {
+            padding: 4.5rem 0;
+        }
+
+        .landing-section-sm {
+            padding: 3rem 0;
+        }
+
         .hero-section {
-            padding: 4rem 0;
-            background: linear-gradient(135deg, #f5f7fb 0%, #eef2f7 100%);
+            padding: 4.75rem 0 3.25rem;
+            background: #eef3f8;
+            border-bottom: 1px solid var(--landing-line);
         }
+
+        .hero-title {
+            max-width: 860px;
+            margin: 0 auto;
+            color: var(--landing-ink);
+            font-size: clamp(2.25rem, 6vw, 4.65rem);
+            line-height: 1.02;
+            letter-spacing: 0;
+        }
+
+        .hero-copy {
+            max-width: 760px;
+            margin: 1.25rem auto 0;
+            color: var(--landing-muted);
+            font-size: 1.125rem;
+            line-height: 1.7;
+        }
+
+        .hero-actions {
+            margin-top: 1.75rem;
+        }
+
+        .preview-shell {
+            margin-top: 3rem;
+            border: 1px solid var(--landing-line);
+            border-radius: 8px;
+            background: var(--landing-panel);
+            box-shadow: 0 18px 42px rgba(31, 41, 55, .10);
+            overflow: hidden;
+        }
+
+        .preview-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: .9rem 1rem;
+            border-bottom: 1px solid var(--landing-line);
+            background: #fbfcfe;
+        }
+
+        .preview-dots {
+            display: inline-flex;
+            gap: .375rem;
+        }
+
+        .preview-dot {
+            width: .625rem;
+            height: .625rem;
+            border-radius: 999px;
+            background: #c7d0dd;
+        }
+
+        .preview-image {
+            display: block;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            object-fit: contain;
+            object-position: top center;
+            background: #edf1f6;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+            margin-top: 1.25rem;
+        }
+
+        .metric-item {
+            padding: 1rem;
+            border: 1px solid var(--landing-line);
+            border-radius: 8px;
+            background: var(--landing-panel);
+        }
+
+        .metric-value {
+            color: var(--landing-ink);
+            font-size: 1.75rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .metric-label {
+            margin-top: .375rem;
+            color: var(--landing-muted);
+            font-size: .875rem;
+        }
+
+        .section-heading {
+            max-width: 760px;
+            margin: 0 auto 2rem;
+            text-align: center;
+        }
+
+        .section-title {
+            color: var(--landing-ink);
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: 0;
+        }
+
+        .section-subtitle {
+            margin-top: .75rem;
+            color: var(--landing-muted);
+            font-size: 1rem;
+            line-height: 1.65;
+        }
+
+        .flow-grid {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .flow-step {
+            min-height: 185px;
+            padding: 1.15rem;
+            border: 1px solid var(--landing-line);
+            border-radius: 8px;
+            background: var(--landing-panel);
+        }
+
+        .flow-step .avatar {
+            margin-bottom: .875rem;
+        }
+
+        .flow-step h3,
+        .showcase-item h3,
+        .feature-item h3,
+        .tech-card h3 {
+            color: var(--landing-ink);
+            letter-spacing: 0;
+        }
+
+        .flow-step p,
+        .showcase-item p,
+        .feature-item p,
+        .tech-card p {
+            color: var(--landing-muted);
+            line-height: 1.55;
+        }
+
+        .showcase-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.25rem;
+        }
+
+        .showcase-item {
+            border: 1px solid var(--landing-line);
+            border-radius: 8px;
+            background: var(--landing-panel);
+            overflow: hidden;
+        }
+
+        .showcase-media {
+            display: block;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            object-fit: contain;
+            object-position: top center;
+            background: #edf1f6;
+        }
+
+        .image-trigger {
+            position: relative;
+            display: block;
+            width: 100%;
+            padding: 0;
+            border: 0;
+            border-bottom: 1px solid var(--landing-line);
+            background: #edf1f6;
+            cursor: zoom-in;
+        }
+
+        .image-trigger:focus-visible {
+            outline: 3px solid rgba(32, 107, 196, .35);
+            outline-offset: -3px;
+        }
+
+        .image-zoom-indicator {
+            position: absolute;
+            right: .875rem;
+            bottom: .875rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.25rem;
+            height: 2.25rem;
+            border: 1px solid var(--landing-line);
+            border-radius: 999px;
+            color: #206bc4;
+            background: rgba(255, 255, 255, .92);
+            box-shadow: 0 8px 22px rgba(31, 41, 55, .10);
+        }
+
+        .showcase-body {
+            padding: 1.15rem;
+        }
+
+        .landing-image-modal {
+            display: block;
+            width: 100%;
+            max-height: 75vh;
+            object-fit: contain;
+            background: #f8fafc;
+            border: 1px solid var(--landing-line);
+            border-radius: 8px;
+        }
+
+        .feature-grid,
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .feature-item,
         .tech-card {
-            transition: transform 0.2s;
+            height: 100%;
+            padding: 1.25rem;
+            border: 1px solid var(--landing-line);
+            border-radius: 8px;
+            background: var(--landing-panel);
         }
+
+        .tech-card {
+            transition: transform .2s, box-shadow .2s;
+        }
+
         .tech-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(31, 41, 55, .08);
+        }
+
+        .landing-band {
+            background: #ffffff;
+            border-top: 1px solid var(--landing-line);
+            border-bottom: 1px solid var(--landing-line);
+        }
+
+        @media (max-width: 1199.98px) {
+            .flow-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .showcase-grid,
+            .feature-grid,
+            .tech-grid,
+            .metric-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .hero-section {
+                padding: 3.25rem 0 2.25rem;
+            }
+
+            .landing-section {
+                padding: 3rem 0;
+            }
+
+            .flow-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-actions {
+                display: grid !important;
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 
 <body class="d-flex flex-column">
     <div class="page">
-        <!-- Navbar -->
         <header class="navbar navbar-expand-md d-print-none">
             <div class="container-xl">
-                <h1 class="navbar-brand navbar-brand-autodark d-none-block-768">
+                <div class="navbar-brand navbar-brand-autodark d-none-block-768">
                     <a href="/">
                         <img th:src="@{/img/logo.png}" width="110" height="32" alt="Solusi ERP" class="navbar-brand-image">
                     </a>
-                </h1>
+                </div>
                 <div class="navbar-nav flex-row order-md-last">
-                    <!-- Language Selector Dropdown -->
                     <div class="nav-item dropdown me-3">
                         <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" tabindex="-1" aria-label="Show languages">
                             <i class="ti ti-world icon"></i>
@@ -44,156 +332,364 @@
                         </div>
                     </div>
                     <div class="nav-item">
-                        <a th:href="@{/login}" class="btn btn-primary" th:text="#{landing.login}">Login ke Sistem</a>
+                        <a th:href="@{/login}" class="btn btn-primary" th:text="#{landing.login}">Login to System</a>
                     </div>
                 </div>
             </div>
         </header>
 
         <div class="page-wrapper">
-            <!-- Hero -->
-            <div class="hero-section text-center">
+            <section class="hero-section text-center">
                 <div class="container-xl">
-                    <h1 class="display-4 fw-bold mb-3" th:text="#{landing.hero.title}">Solusi Program ERP</h1>
-                    <p class="lead text-secondary mb-4" th:text="#{landing.hero.subtitle}">
-                        Platform pembelajaran pengembangan sistem ERP modern berbasis Java & Spring Boot.
+                    <h1 class="hero-title fw-bold" th:text="#{landing.hero.title}">Solusi ERP</h1>
+                    <p class="hero-copy" th:text="#{landing.hero.subtitle}">
+                        A business-focused ERP learning project that demonstrates procurement, inventory, accounts payable, and accounting workflows on a Java and Spring Boot stack.
                     </p>
-                    <div class="d-flex justify-content-center gap-2">
-                        <a href="#tech-stack" class="btn btn-outline-secondary" th:text="#{landing.btn.learn}">Pelajari Tech Stack</a>
-                        <a th:href="@{/login}" class="btn btn-primary" th:text="#{landing.btn.start}">Mulai Sekarang</a>
+                    <div class="hero-actions d-flex justify-content-center gap-2">
+                        <a href="#business-flow" class="btn btn-outline-secondary" th:text="#{landing.btn.workflow}">Explore Workflow</a>
+                        <a th:href="@{/login}" class="btn btn-primary" th:text="#{landing.btn.start}">Login Demo</a>
+                    </div>
+
+                    <div id="product-preview" class="preview-shell text-start">
+                        <div class="preview-toolbar">
+                            <div>
+                                <div class="text-uppercase text-secondary small fw-bold" th:text="#{landing.preview.label}">Product Preview</div>
+                                <div class="fw-bold" th:text="#{landing.preview.title}">Purchase order workflow with approval, tax, totals, and line items</div>
+                            </div>
+                            <div class="preview-dots" aria-hidden="true">
+                                <span class="preview-dot"></span>
+                                <span class="preview-dot"></span>
+                                <span class="preview-dot"></span>
+                            </div>
+                        </div>
+                        <button type="button"
+                                class="image-trigger"
+                                data-bs-toggle="modal"
+                                data-bs-target="#landingImageModal"
+                                data-landing-image-src="/img/landing/purchase-order.png"
+                                th:attr="data-landing-image-src=@{/img/landing/purchase-order.png}, data-landing-image-title=#{landing.preview.title}, aria-label=#{landing.image.open}">
+                            <img class="preview-image"
+                                 th:src="@{/img/landing/purchase-order.png}"
+                                 src="/img/landing/purchase-order.png"
+                                 th:alt="#{landing.preview.title}">
+                            <span class="image-zoom-indicator" aria-hidden="true"><i class="ti ti-zoom-in"></i></span>
+                        </button>
+                    </div>
+
+                    <div class="metric-grid text-start">
+                        <div class="metric-item">
+                            <div class="metric-value" th:text="#{landing.metric.modules}">6+</div>
+                            <div class="metric-label" th:text="#{landing.metric.modules.label}">Business areas demonstrated</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value" th:text="#{landing.metric.migrations}">75</div>
+                            <div class="metric-label" th:text="#{landing.metric.migrations.label}">Versioned database migrations</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value" th:text="#{landing.metric.stack}">SSR</div>
+                            <div class="metric-label" th:text="#{landing.metric.stack.label}">Server-rendered ERP interface</div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- Tech Stack Section -->
-            <div id="tech-stack" class="page-body">
+            <section id="business-flow" class="landing-section">
                 <div class="container-xl">
-                    <div class="section-header text-center mb-5">
-                        <h2 class="section-title" th:text="#{landing.tech.title}">Teknologi yang Digunakan</h2>
-                        <p class="section-subtitle" th:text="#{landing.tech.subtitle}">Membangun aplikasi enterprise dengan standar industri terbaru.</p>
+                    <div class="section-heading">
+                        <h2 class="section-title" th:text="#{landing.flow.title}">Procure-to-Pay Business Flow</h2>
+                        <p class="section-subtitle" th:text="#{landing.flow.subtitle}">
+                            The landing page highlights an end-to-end ERP scenario, from purchasing through inventory movement, vendor settlement, and accounting journal generation.
+                        </p>
                     </div>
 
-                    <div class="row row-cards">
-                        <!-- Backend -->
-                        <div class="col-md-6 col-lg-4">
-                            <div class="card tech-card h-100">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <span class="bg-primary-lt avatar me-3"><i class="ti ti-settings"></i></span>
-                                        <div>
-                                            <h3 class="card-title mb-0">Backend Core</h3>
-                                            <p class="text-secondary small">Spring Boot 4.0.3 (Java 21)</p>
-                                        </div>
-                                    </div>
-                                    <p class="text-secondary" th:text="#{landing.tech.backend.desc}">
-                                        Menggunakan standar Jakarta EE 11 dengan performa tinggi dan pengelolaan dependensi otomatis.
-                                    </p>
-                                </div>
-                            </div>
+                    <div class="flow-grid">
+                        <div class="flow-step">
+                            <span class="avatar bg-blue-lt"><i class="ti ti-shopping-cart"></i></span>
+                            <h3 class="h4 mb-2" th:text="#{landing.flow.po.title}">Purchase Order</h3>
+                            <p class="mb-0" th:text="#{landing.flow.po.desc}">Create supplier orders with tax calculation, approval status, and line totals.</p>
                         </div>
-
-                        <!-- Database -->
-                        <div class="col-md-6 col-lg-4">
-                            <div class="card tech-card h-100">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <span class="bg-info-lt avatar me-3"><i class="ti ti-database"></i></span>
-                                        <div>
-                                            <h3 class="card-title mb-0">Database & Migrasi</h3>
-                                            <p class="text-secondary small">MariaDB & Flyway</p>
-                                        </div>
-                                    </div>
-                                    <p class="text-secondary" th:text="#{landing.tech.db.desc}">
-                                        Manajemen database relasional yang handal dengan kontrol versi skema menggunakan Flyway Migration.
-                                    </p>
-                                </div>
-                            </div>
+                        <div class="flow-step">
+                            <span class="avatar bg-teal-lt"><i class="ti ti-package-import"></i></span>
+                            <h3 class="h4 mb-2" th:text="#{landing.flow.gr.title}">Goods Receipt</h3>
+                            <p class="mb-0" th:text="#{landing.flow.gr.desc}">Receive items from purchase documents and connect them to inventory valuation.</p>
                         </div>
-
-                        <!-- Security -->
-                        <div class="col-md-6 col-lg-4">
-                            <div class="card tech-card h-100">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <span class="bg-danger-lt avatar me-3"><i class="ti ti-lock"></i></span>
-                                        <div>
-                                            <h3 class="card-title mb-0">Security</h3>
-                                            <p class="text-secondary small">Spring Security 6+ (Stateful)</p>
-                                        </div>
-                                    </div>
-                                    <p class="text-secondary" th:text="#{landing.tech.security.desc}">
-                                        Implementasi Role-Based Access Control (RBAC) yang aman dengan manajemen session sisi server.
-                                    </p>
-                                </div>
-                            </div>
+                        <div class="flow-step">
+                            <span class="avatar bg-green-lt"><i class="ti ti-stack-2"></i></span>
+                            <h3 class="h4 mb-2" th:text="#{landing.flow.stock.title}">Stock Movement</h3>
+                            <p class="mb-0" th:text="#{landing.flow.stock.desc}">Track on-hand quantity, serialized stock, bins, and chronological stock cards.</p>
                         </div>
-
-                        <!-- Frontend -->
-                        <div class="col-md-6 col-lg-4">
-                            <div class="card tech-card h-100">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <span class="bg-success-lt avatar me-3"><i class="ti ti-layout-dashboard"></i></span>
-                                        <div>
-                                            <h3 class="card-title mb-0">Frontend UI</h3>
-                                            <p class="text-secondary small">Thymeleaf & Tabler</p>
-                                        </div>
-                                    </div>
-                                    <p class="text-secondary" th:text="#{landing.tech.ui.desc}">
-                                        Server-Side Rendering yang cepat dengan template admin Tabler berbasis Bootstrap 5.
-                                    </p>
-                                </div>
-                            </div>
+                        <div class="flow-step">
+                            <span class="avatar bg-yellow-lt"><i class="ti ti-file-invoice"></i></span>
+                            <h3 class="h4 mb-2" th:text="#{landing.flow.bill.title}">Vendor Bill</h3>
+                            <p class="mb-0" th:text="#{landing.flow.bill.desc}">Record payable invoices from received goods with tax and settlement status.</p>
                         </div>
-
-                        <!-- Reporting -->
-                        <div class="col-md-6 col-lg-4">
-                            <div class="card tech-card h-100">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <span class="bg-warning-lt avatar me-3"><i class="ti ti-file-analytics"></i></span>
-                                        <div>
-                                            <h3 class="card-title mb-0">Reporting</h3>
-                                            <p class="text-secondary small">JasperReports & Apache POI</p>
-                                        </div>
-                                    </div>
-                                    <p class="text-secondary" th:text="#{landing.tech.reporting.desc}">
-                                        Generasi laporan enterprise dalam format PDF dan Excel (XLSX) secara dinamis.
-                                    </p>
-                                </div>
-                            </div>
+                        <div class="flow-step">
+                            <span class="avatar bg-indigo-lt"><i class="ti ti-cash-banknote"></i></span>
+                            <h3 class="h4 mb-2" th:text="#{landing.flow.payment.title}">Vendor Payment</h3>
+                            <p class="mb-0" th:text="#{landing.flow.payment.desc}">Allocate payments to bills and keep outstanding balances visible.</p>
                         </div>
-
-                        <!-- Icons & Charts -->
-                        <div class="col-md-6 col-lg-4">
-                            <div class="card tech-card h-100">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <span class="bg-purple-lt avatar me-3"><i class="ti ti-chart-bar"></i></span>
-                                        <div>
-                                            <h3 class="card-title mb-0">Visualisasi</h3>
-                                            <p class="text-secondary small">ApexCharts & Tabler Icons</p>
-                                        </div>
-                                    </div>
-                                    <p class="text-secondary" th:text="#{landing.tech.visual.desc}">
-                                        Dashboard interaktif dengan grafik modern dan ribuan ikon vektor SVG berkualitas tinggi.
-                                    </p>
-                                </div>
-                            </div>
+                        <div class="flow-step">
+                            <span class="avatar bg-purple-lt"><i class="ti ti-book-2"></i></span>
+                            <h3 class="h4 mb-2" th:text="#{landing.flow.journal.title}">Journal Entry</h3>
+                            <p class="mb-0" th:text="#{landing.flow.journal.desc}">Generate balanced debit and credit entries from operational transactions.</p>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
+
+            <section id="product-showcase" class="landing-section landing-band">
+                <div class="container-xl">
+                    <div class="section-heading">
+                        <h2 class="section-title" th:text="#{landing.showcase.title}">ERP Modules in Action</h2>
+                        <p class="section-subtitle" th:text="#{landing.showcase.subtitle}">
+                            Selected screens show the system as a working ERP case study, not only a technology demo.
+                        </p>
+                    </div>
+
+                    <div class="showcase-grid">
+                        <article class="showcase-item">
+                            <button type="button"
+                                    class="image-trigger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#landingImageModal"
+                                    data-landing-image-src="/img/landing/goods-receipt.png"
+                                    th:attr="data-landing-image-src=@{/img/landing/goods-receipt.png}, data-landing-image-title=#{landing.showcase.procurement.title}, aria-label=#{landing.image.open}">
+                                <img class="showcase-media" th:src="@{/img/landing/goods-receipt.png}" src="/img/landing/goods-receipt.png" th:alt="#{landing.showcase.procurement.title}">
+                                <span class="image-zoom-indicator" aria-hidden="true"><i class="ti ti-zoom-in"></i></span>
+                            </button>
+                            <div class="showcase-body">
+                                <h3 class="h3 mb-2" th:text="#{landing.showcase.procurement.title}">Procurement to Receiving</h3>
+                                <p class="mb-0" th:text="#{landing.showcase.procurement.desc}">Purchase orders move into goods receipt with billing status, serial numbers, and journal links.</p>
+                            </div>
+                        </article>
+                        <article class="showcase-item">
+                            <button type="button"
+                                    class="image-trigger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#landingImageModal"
+                                    data-landing-image-src="/img/landing/on-hand-quantity.png"
+                                    th:attr="data-landing-image-src=@{/img/landing/on-hand-quantity.png}, data-landing-image-title=#{landing.showcase.inventory.title}, aria-label=#{landing.image.open}">
+                                <img class="showcase-media" th:src="@{/img/landing/on-hand-quantity.png}" src="/img/landing/on-hand-quantity.png" th:alt="#{landing.showcase.inventory.title}">
+                                <span class="image-zoom-indicator" aria-hidden="true"><i class="ti ti-zoom-in"></i></span>
+                            </button>
+                            <div class="showcase-body">
+                                <h3 class="h3 mb-2" th:text="#{landing.showcase.inventory.title}">Inventory Visibility</h3>
+                                <p class="mb-0" th:text="#{landing.showcase.inventory.desc}">Stock reports expose on-hand, reserved, available, and in-transit quantities across items.</p>
+                            </div>
+                        </article>
+                        <article class="showcase-item">
+                            <button type="button"
+                                    class="image-trigger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#landingImageModal"
+                                    data-landing-image-src="/img/landing/vendor-bill.png"
+                                    th:attr="data-landing-image-src=@{/img/landing/vendor-bill.png}, data-landing-image-title=#{landing.showcase.ap.title}, aria-label=#{landing.image.open}">
+                                <img class="showcase-media" th:src="@{/img/landing/vendor-bill.png}" src="/img/landing/vendor-bill.png" th:alt="#{landing.showcase.ap.title}">
+                                <span class="image-zoom-indicator" aria-hidden="true"><i class="ti ti-zoom-in"></i></span>
+                            </button>
+                            <div class="showcase-body">
+                                <h3 class="h3 mb-2" th:text="#{landing.showcase.ap.title}">Accounts Payable Settlement</h3>
+                                <p class="mb-0" th:text="#{landing.showcase.ap.desc}">Vendor bills demonstrate partial settlement, debit memo application, and outstanding balances.</p>
+                            </div>
+                        </article>
+                        <article class="showcase-item">
+                            <button type="button"
+                                    class="image-trigger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#landingImageModal"
+                                    data-landing-image-src="/img/landing/vendor-payment.png"
+                                    th:attr="data-landing-image-src=@{/img/landing/vendor-payment.png}, data-landing-image-title=#{landing.showcase.payment.title}, aria-label=#{landing.image.open}">
+                                <img class="showcase-media" th:src="@{/img/landing/vendor-payment.png}" src="/img/landing/vendor-payment.png" th:alt="#{landing.showcase.payment.title}">
+                                <span class="image-zoom-indicator" aria-hidden="true"><i class="ti ti-zoom-in"></i></span>
+                            </button>
+                            <div class="showcase-body">
+                                <h3 class="h3 mb-2" th:text="#{landing.showcase.payment.title}">Vendor Payment Allocation</h3>
+                                <p class="mb-0" th:text="#{landing.showcase.payment.desc}">Payments are allocated to vendor bills while keeping paid and outstanding amounts visible.</p>
+                            </div>
+                        </article>
+                        <article class="showcase-item">
+                            <button type="button"
+                                    class="image-trigger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#landingImageModal"
+                                    data-landing-image-src="/img/landing/journal-entry.png"
+                                    th:attr="data-landing-image-src=@{/img/landing/journal-entry.png}, data-landing-image-title=#{landing.showcase.accounting.title}, aria-label=#{landing.image.open}">
+                                <img class="showcase-media" th:src="@{/img/landing/journal-entry.png}" src="/img/landing/journal-entry.png" th:alt="#{landing.showcase.accounting.title}">
+                                <span class="image-zoom-indicator" aria-hidden="true"><i class="ti ti-zoom-in"></i></span>
+                            </button>
+                            <div class="showcase-body">
+                                <h3 class="h3 mb-2" th:text="#{landing.showcase.accounting.title}">Accounting Integration</h3>
+                                <p class="mb-0" th:text="#{landing.showcase.accounting.desc}">Operational documents produce balanced journal entries using configured accounting schemas.</p>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section class="landing-section-sm">
+                <div class="container-xl">
+                    <div class="section-heading">
+                        <h2 class="section-title" th:text="#{landing.features.title}">Enterprise Patterns Covered</h2>
+                        <p class="section-subtitle" th:text="#{landing.features.subtitle}">
+                            The project also demonstrates controls expected in business software: approvals, security, auditability, and multilingual UI.
+                        </p>
+                    </div>
+
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <span class="avatar bg-orange-lt mb-3"><i class="ti ti-checkup-list"></i></span>
+                            <h3 class="h3 mb-2" th:text="#{landing.feature.approval.title}">Approval Workflow</h3>
+                            <p class="mb-0" th:text="#{landing.feature.approval.desc}">Centralized approval management tracks document type, assignee, status, and approval history.</p>
+                        </div>
+                        <div class="feature-item">
+                            <span class="avatar bg-red-lt mb-3"><i class="ti ti-shield-lock"></i></span>
+                            <h3 class="h3 mb-2" th:text="#{landing.feature.rbac.title}">Role-Based Access Control</h3>
+                            <p class="mb-0" th:text="#{landing.feature.rbac.desc}">Fine-grained permissions secure menus, pages, and actions using Spring Security authorities.</p>
+                        </div>
+                        <div class="feature-item">
+                            <span class="avatar bg-cyan-lt mb-3"><i class="ti ti-history"></i></span>
+                            <h3 class="h3 mb-2" th:text="#{landing.feature.audit.title}">Audit Trail and Localization</h3>
+                            <p class="mb-0" th:text="#{landing.feature.audit.desc}">Every major record keeps audit metadata while the UI supports English and Indonesian content.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tech-stack" class="landing-section landing-band">
+                <div class="container-xl">
+                    <div class="section-heading">
+                        <h2 class="section-title" th:text="#{landing.tech.title}">Engineering Stack</h2>
+                        <p class="section-subtitle" th:text="#{landing.tech.subtitle}">Built as a server-rendered ERP application with modern Java, controlled schema migration, and reusable UI patterns.</p>
+                    </div>
+
+                    <div id="engineering-highlights" class="tech-grid">
+                        <div class="tech-card">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="bg-primary-lt avatar me-3"><i class="ti ti-settings"></i></span>
+                                <div>
+                                    <h3 class="h4 mb-0" th:text="#{landing.tech.backend.title}">Backend Core</h3>
+                                    <p class="small mb-0" th:text="#{landing.tech.backend.stack}">Spring Boot 4.0.3 (Java 21)</p>
+                                </div>
+                            </div>
+                            <p class="mb-0" th:text="#{landing.tech.backend.desc}">Java 21 backend with Clean Architecture, DDD, CQRS, validation, mapping, and domain-focused modules.</p>
+                        </div>
+
+                        <div class="tech-card">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="bg-info-lt avatar me-3"><i class="ti ti-database"></i></span>
+                                <div>
+                                    <h3 class="h4 mb-0" th:text="#{landing.tech.db.title}">Database & Migration</h3>
+                                    <p class="small mb-0" th:text="#{landing.tech.db.stack}">MariaDB & Flyway</p>
+                                </div>
+                            </div>
+                            <p class="mb-0" th:text="#{landing.tech.db.desc}">Versioned relational schema with Flyway migrations for repeatable application setup.</p>
+                        </div>
+
+                        <div class="tech-card">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="bg-danger-lt avatar me-3"><i class="ti ti-lock"></i></span>
+                                <div>
+                                    <h3 class="h4 mb-0" th:text="#{landing.tech.security.title}">Security</h3>
+                                    <p class="small mb-0" th:text="#{landing.tech.security.stack}">Spring Security 6+</p>
+                                </div>
+                            </div>
+                            <p class="mb-0" th:text="#{landing.tech.security.desc}">Stateful session security with authority-based access control for ERP workflows.</p>
+                        </div>
+
+                        <div class="tech-card">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="bg-success-lt avatar me-3"><i class="ti ti-layout-dashboard"></i></span>
+                                <div>
+                                    <h3 class="h4 mb-0" th:text="#{landing.tech.ui.title}">Frontend UI</h3>
+                                    <p class="small mb-0" th:text="#{landing.tech.ui.stack}">Thymeleaf, Tabler, HTMX</p>
+                                </div>
+                            </div>
+                            <p class="mb-0" th:text="#{landing.tech.ui.desc}">Server-side rendering with Bootstrap 5, Tabler components, HTMX fragments, and AJAX forms.</p>
+                        </div>
+
+                        <div class="tech-card">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="bg-warning-lt avatar me-3"><i class="ti ti-file-analytics"></i></span>
+                                <div>
+                                    <h3 class="h4 mb-0" th:text="#{landing.tech.reporting.title}">Reporting</h3>
+                                    <p class="small mb-0" th:text="#{landing.tech.reporting.stack}">JasperReports & Apache POI</p>
+                                </div>
+                            </div>
+                            <p class="mb-0" th:text="#{landing.tech.reporting.desc}">Reporting foundation for PDF and Excel outputs across operational data.</p>
+                        </div>
+
+                        <div class="tech-card">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="bg-purple-lt avatar me-3"><i class="ti ti-chart-bar"></i></span>
+                                <div>
+                                    <h3 class="h4 mb-0" th:text="#{landing.tech.visual.title}">Visualization</h3>
+                                    <p class="small mb-0" th:text="#{landing.tech.visual.stack}">ApexCharts & Tabler Icons</p>
+                                </div>
+                            </div>
+                            <p class="mb-0" th:text="#{landing.tech.visual.desc}">Dashboard-ready visual components and iconography aligned with the Tabler admin interface.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             <footer class="footer footer-transparent d-print-none py-4 border-top">
                 <div class="container-xl text-center">
-                    <p class="text-secondary mb-0">Copyright &copy; 2026 Solusi ERP. <span th:text="#{landing.footer}">Dibuat untuk tujuan pembelajaran.</span></p>
+                    <p class="text-secondary mb-0">Copyright &copy; 2026 Solusi ERP. <span th:text="#{landing.footer}">Built for learning and portfolio purposes.</span></p>
                 </div>
             </footer>
         </div>
     </div>
 
-    <!-- Libs JS -->
+    <div class="modal modal-blur fade" id="landingImageModal" tabindex="-1" aria-labelledby="landingImageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="landingImageModalLabel">Preview</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" th:aria-label="#{landing.image.close}"></button>
+                </div>
+                <div class="modal-body">
+                    <img id="landingImageModalImage" class="landing-image-modal" src="" alt="">
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/js/tabler.min.js" defer></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var modal = document.getElementById('landingImageModal');
+            if (!modal) {
+                return;
+            }
+
+            modal.addEventListener('show.bs.modal', function (event) {
+                var trigger = event.relatedTarget;
+                if (!trigger) {
+                    return;
+                }
+
+                var src = trigger.getAttribute('data-landing-image-src');
+                var title = trigger.getAttribute('data-landing-image-title') || '';
+                var image = document.getElementById('landingImageModalImage');
+                var label = document.getElementById('landingImageModalLabel');
+
+                if (image && src) {
+                    image.setAttribute('src', src);
+                    image.setAttribute('alt', title);
+                }
+                if (label) {
+                    label.textContent = title;
+                }
+            });
+
+            modal.addEventListener('hidden.bs.modal', function () {
+                var image = document.getElementById('landingImageModalImage');
+                if (image) {
+                    image.setAttribute('src', '');
+                    image.setAttribute('alt', '');
+                }
+            });
+        });
+    </script>
 </body>
 </html>

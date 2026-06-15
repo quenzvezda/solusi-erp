@@ -53,3 +53,4 @@ build/
 .claude/*.bak
 
 *.png
+!src/main/resources/static/img/landing/*.png

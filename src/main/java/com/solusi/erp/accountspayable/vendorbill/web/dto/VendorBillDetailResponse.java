@@ -15,6 +15,8 @@ import java.util.List;
 public class VendorBillDetailResponse extends BaseAuditResponse {
     private String code;
     private Long vendorId;
+    private String vendorName;
+    private String vendorCode;
     private String vendorInvoiceNumber;
     private LocalDate billDate;
     private LocalDate dueDate;

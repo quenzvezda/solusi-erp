@@ -42,21 +42,21 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-6 mb-3" th:if="${!#strings.isEmpty(journal.referenceNo)}">
                                 <label class="form-label text-muted" th:text="#{label.journal.referenceNo}">Reference No</label>
-                                <div class="form-control-plaintext" th:text="${journal.referenceNo != null ? journal.referenceNo : '-'}">REF-001</div>
+                                <div class="form-control-plaintext" th:text="${journal.referenceNo}">REF-001</div>
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-6 mb-3" th:if="${!#strings.isEmpty(journal.currencyName)}">
                                 <label class="form-label text-muted" th:text="#{label.currency}">Currency</label>
-                                <div class="form-control-plaintext" th:text="${journal.currencyName != null ? journal.currencyName : '-'}">IDR</div>
+                                <div class="form-control-plaintext" th:text="${journal.currencyName}">IDR</div>
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-6 mb-3" th:if="${!#strings.isEmpty(journal.reversalOfCode)}">
                                 <label class="form-label text-muted" th:text="#{label.journal.reversalOf}">Reversal Of</label>
-                                <div class="form-control-plaintext" th:text="${journal.reversalOfCode != null ? journal.reversalOfCode : '-'}">-</div>
+                                <div class="form-control-plaintext" th:text="${journal.reversalOfCode}">JNL-000001</div>
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-6 mb-3" th:if="${!#strings.isEmpty(journal.reversedByCode)}">
                                 <label class="form-label text-muted" th:text="#{label.journal.reversedBy}">Reversed By</label>
-                                <div class="form-control-plaintext" th:text="${journal.reversedByCode != null ? journal.reversedByCode : '-'}">-</div>
+                                <div class="form-control-plaintext" th:text="${journal.reversedByCode}">JNL-000002</div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label text-muted" th:text="#{label.journal.sourceType}">Source Type</label>

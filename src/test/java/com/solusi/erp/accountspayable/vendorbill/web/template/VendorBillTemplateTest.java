@@ -110,6 +110,15 @@ class VendorBillTemplateTest {
     }
 
     @Test
+    void detail_template_should_show_vendor_display() throws Exception {
+        String template = readResource("templates/accountspayable/vendor-bills/detail.html");
+
+        assertThat(template).contains("label.vendor");
+        assertThat(template).contains("bill.vendorName");
+        assertThat(template).contains("bill.vendorCode");
+    }
+
+    @Test
     void detail_template_should_show_debit_memo_allocation_links_and_badges() throws Exception {
         String template = readResource("templates/accountspayable/vendor-bills/detail.html");
 

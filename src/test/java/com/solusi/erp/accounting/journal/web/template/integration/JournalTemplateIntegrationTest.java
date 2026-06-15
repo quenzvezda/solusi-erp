@@ -97,6 +97,43 @@ class JournalTemplateIntegrationTest {
     }
 
     @Test
+    void detailTemplate_hidesEmptyOptionalMetadataFields() {
+        JournalLineResponse line = new JournalLineResponse();
+        line.setAccountId(24L);
+        line.setAccountCode("1101.01");
+        line.setAccountName("Inventory");
+        line.setDebitAmount(new BigDecimal("12500000.00"));
+        line.setCreditAmount(BigDecimal.ZERO);
+
+        JournalEntryDetailResponse journal = new JournalEntryDetailResponse();
+        journal.setId(1L);
+        journal.setJournalCode("JNL-000001");
+        journal.setEventType("GOODS_RECEIPT");
+        journal.setSourceType("GOODS_RECEIPT");
+        journal.setSourceId(1L);
+        journal.setSourceCode("GR-202605-00001");
+        journal.setPostingDate(LocalDate.of(2026, 5, 6));
+        journal.setDescription("Auto journal for goods receipt GR-202605-00001");
+        journal.setStatus("POSTED");
+        journal.setLines(List.of(line));
+        journal.setTotalDebit(new BigDecimal("12500000.00"));
+        journal.setTotalCredit(BigDecimal.ZERO);
+
+        String html = TemplateTestUtils.renderWithSecurity(
+                "accounting/journal/journal-entry-detail",
+                Map.of("journal", journal),
+                auth("JOURNAL-ENTRY_READ")
+        );
+
+        assertThat(html).doesNotContain("label.journal.referenceNo");
+        assertThat(html).doesNotContain("label.currency");
+        assertThat(html).doesNotContain("label.journal.reversalOf");
+        assertThat(html).doesNotContain("label.journal.reversedBy");
+        assertThat(html).contains("GR-202605-00001");
+        assertThat(html).contains("POSTED");
+    }
+
+    @Test
     void detailTemplate_linksPurchaseReturnSourceCode() {
         JournalLineResponse line = new JournalLineResponse();
         line.setAccountId(24L);

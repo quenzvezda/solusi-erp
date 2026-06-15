@@ -81,9 +81,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="card-footer d-flex align-items-center" th:if="${page.totalPages > 1}">
-                        <div th:replace="~{fragments/pagination :: pagination(${page}, '/accounting/journal-entries')}"></div>
-                    </div>
+                    <div th:replace="~{fragments/table :: pagination(${page})}"></div>
                 </div>
             </div>
         </div>

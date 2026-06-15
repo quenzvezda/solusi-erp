@@ -37,6 +37,14 @@ class JournalTemplateTest {
     }
 
     @Test
+    void listTemplate_usesSharedTablePaginationFragment() throws Exception {
+        String template = readTemplate("accounting/journal/journal-entry-list.html");
+
+        assertThat(template).contains("fragments/table :: pagination(${page})");
+        assertThat(template).doesNotContain("fragments/pagination");
+    }
+
+    @Test
     void formTemplate_usesAjaxDateNumericAndDynamicLines() throws Exception {
         String template = readTemplate("accounting/journal/journal-entry-form.html");
 
