@@ -2,7 +2,8 @@
 
 > src: `docs/brainstorming/2026-06-14-erp-outbox-kafka-poc.md`
 > Created: 2026-06-15
-> Status: IN_PROGRESS
+> Status: COMPLETED
+> Completed: 2026-06-15
 >
 > **For agentic workers:** execute task-by-task. Explore references fresh before editing each task, update checkbox state incrementally, record deviations in `docs/reports/2026-06-14-erp-outbox-kafka-poc.md`, and do not mark a task complete before its validation command passes.
 
@@ -421,30 +422,30 @@ Run the focused backend verification needed before handing off to NotificationSe
 - Focused messaging tests pass.
 - Fast test subset passes, or any failure is documented with exact failing test and reason.
 
-### Task 9: Optional Local Kafka KRaft Compose Profile
+### Task 9: Optional Local Kafka KRaft Compose Profile [x]
 
 Add local Kafka infrastructure to this ERP repo for manual messaging tests, but do not make it a blocker for ERP producer implementation.
 
 **Depends on:** Task 6
 **Reference modules:** root `docker-compose.yml`, NotificationService POC docs
 
-- [ ] Inspect current `docker-compose.yml` and preserve existing database/dev services.
+- [x] Inspect current `docker-compose.yml` and preserve existing database/dev services.
       ref: `docker-compose.yml` - current local infrastructure file
-- [ ] Add Kafka KRaft single-node service under Docker Compose profile `messaging`.
+- [x] Add Kafka KRaft single-node service under Docker Compose profile `messaging`.
       Requirements:
       - service is not started by plain `docker compose up`;
       - service exposes `localhost:9092`;
       - service works for local Spring Kafka producer config `KAFKA_BOOTSTRAP_SERVERS=localhost:9092`.
       ref: `docs/brainstorming/2026-06-14-erp-outbox-kafka-poc.md:L226-L239` - KRaft single-node decision
-- [ ] Optionally add Kafka UI under the same `messaging` profile if it keeps manual inspection simpler.
+- [x] Optionally add Kafka UI under the same `messaging` profile if it keeps manual inspection simpler.
       Keep it optional and local-only; ERP must not depend on Kafka UI.
-- [ ] Add comments or docs in `docs/architecture/outbox-kafka-messaging.md` showing the local command:
+- [x] Add comments or docs in `docs/architecture/outbox-kafka-messaging.md` showing the local command:
       ```bash
       docker compose --profile messaging up -d
       ```
-- [ ] Document that Mailpit belongs to the NotificationService/local full-stack phase, not ERP producer verification.
+- [x] Document that Mailpit belongs to the NotificationService/local full-stack phase, not ERP producer verification.
       ref: `F:\solusi-program-notification-service\2026-06-14-notification-service-kafka-poc.md` - NotificationService local stack includes Mailpit
-- [ ] Do not require this task for Task 8 focused verification. Full E2E proof waits until NotificationService can consume `PurchaseOrderApproved`.
+- [x] Do not require this task for Task 8 focused verification. Full E2E proof waits until NotificationService can consume `PurchaseOrderApproved`.
 
 **Validation criteria:**
 

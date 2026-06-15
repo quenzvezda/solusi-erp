@@ -115,3 +115,15 @@ Populated during execution by the execution agent.
 - **Detail:** Fast subset reported JaCoCo branch coverage ratio `0.79` below configured minimum `0.80`, but the project configuration keeps `haltOnFailure=false`, so Maven finished with BUILD SUCCESS.
 - **Action taken:** No code change. Recorded the warning for audit because the verification gate exit code was 0.
 - **Ref:** `pom.xml`
+
+## Task 9: Optional Local Kafka KRaft Compose Profile
+- **Status:** findings
+- **Summary:** Added Kafka KRaft and Kafka UI under Docker Compose profile `messaging`, documented local command/UI, and kept Mailpit scoped to NotificationService phase.
+- **Validation:** `docker compose --profile messaging config` completed successfully.
+
+### Finding: Docker Compose version warning
+- **Type:** warning
+- **Severity:** info
+- **Detail:** Docker reported the existing top-level `version` attribute is obsolete and ignored.
+- **Action taken:** Left the existing compose version line unchanged to avoid unrelated churn; config validation still succeeded.
+- **Ref:** `docker-compose.yml`

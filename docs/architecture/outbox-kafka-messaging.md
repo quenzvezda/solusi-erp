@@ -88,6 +88,12 @@ Untuk local manual run, Kafka KRaft single-node akan tersedia lewat Docker Compo
 docker compose --profile messaging up -d
 ```
 
+Kafka broker diekspos ke host di `localhost:9092`. Kafka UI opsional tersedia di:
+
+```text
+http://localhost:8085
+```
+
 Profile ini tidak menjadi syarat Task 8 ERP verification. Full proof ditunda sampai NotificationService siap:
 
 ```text
