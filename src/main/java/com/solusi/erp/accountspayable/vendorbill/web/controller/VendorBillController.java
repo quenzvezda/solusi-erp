@@ -13,7 +13,9 @@ import com.solusi.erp.accountspayable.vendorbill.web.mapper.VendorBillWebMapper;
 import com.solusi.erp.core.annotation.DefaultRedirectUrl;
 import com.solusi.erp.core.domain.model.Pageable;
 import com.solusi.erp.core.dto.ApiResponse;
+import com.solusi.erp.core.dto.LookupDto;
 import com.solusi.erp.core.infrastructure.util.PageableMapper;
+import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import com.solusi.erp.util.HtmxResponseUtility;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +53,7 @@ public class VendorBillController {
     private final FindDebitMemoAllocationHistoryUseCase findDebitMemoAllocationHistoryUseCase;
     private final DebitMemoAllocationSelectorUseCase debitMemoAllocationSelectorUseCase;
     private final VendorBillWebMapper webMapper;
+    private final PartyLookupProvider partyLookupProvider;
     private final MessageSource messageSource;
 
     @GetMapping
@@ -145,6 +148,7 @@ public class VendorBillController {
     @PreAuthorize("hasAuthority('VENDOR-BILL_READ')")
     public String detail(@PathVariable Long id, Model model) {
         VendorBillDetailResponse bill = webMapper.toDetailResponse(getVendorBillDetailUseCase.execute(id));
+        enrichDetailDisplay(bill);
         model.addAttribute("bill", bill);
         model.addAttribute("debitMemoAllocationHistory", findDebitMemoAllocationHistoryUseCase.byVendorBillId(id));
         model.addAttribute("canApplyDebitMemo", canApplyDebitMemo(id, bill));
@@ -239,6 +243,14 @@ public class VendorBillController {
                 .eligibleDebitMemos(vendorBillId, null, Pageable.of(0, 1))
                 .content()
                 .isEmpty();
+    }
+
+    private void enrichDetailDisplay(VendorBillDetailResponse bill) {
+        LookupDto vendor = partyLookupProvider.resolve(bill.getVendorId());
+        if (vendor != null) {
+            bill.setVendorName(vendor.name());
+            bill.setVendorCode(vendor.subText());
+        }
     }
 
     private SelectedReferenceContext resolveSelectedReferenceContext(List<Long> selectedGrIds) {

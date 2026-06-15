@@ -44,6 +44,13 @@
                                 <div class="form-control-plaintext fw-bold" th:text="${bill.code}">VB-001</div>
                             </div>
                             <div class="col-md-3">
+                                <label class="form-label text-secondary" th:text="#{label.vendor}">Vendor</label>
+                                <div class="form-control-plaintext">
+                                    <div th:text="${bill.vendorName ?: '-'}">Vendor</div>
+                                    <div class="small text-secondary" th:if="${bill.vendorCode != null}" th:text="${bill.vendorCode}">SUP-001</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
                                 <label class="form-label text-secondary" th:text="#{label.vb.vendorInvoiceNumber}">Vendor Invoice</label>
                                 <div class="form-control-plaintext" th:text="${bill.vendorInvoiceNumber}">INV-001</div>
                             </div>
