@@ -199,34 +199,34 @@ Create pure Java messaging model and outbox publisher that saves integration eve
 - `mvn test -Dtest=OutboxIntegrationEventPublisherTest,*OutboxEvent*Test`
 - No class under `core.messaging.domain` or `core.messaging.application` imports Spring Kafka.
 
-### Task 3: Outbox Persistence Adapter and Messaging Bean Wiring
+### Task 3: Outbox Persistence Adapter and Messaging Bean Wiring [x]
 
 Persist outbox domain rows and wire messaging beans behind `erp.messaging.enabled`.
 
 **Depends on:** Task 2
 **Reference modules:** `inventory.brand`, `security.user`
 
-- [ ] Create `OutboxEventEntity` extending `BaseModel` and mapping to `outbox_events`.
+- [x] Create `OutboxEventEntity` extending `BaseModel` and mapping to `outbox_events`.
       Use `@Column` mappings for all outbox fields and keep `payloadJson` as `LONGTEXT`/`TEXT` mapping.
       ref: `src/main/java/com/solusi/erp/core/model/BaseModel.java` - audit/version superclass pattern
       ref: `src/main/java/com/solusi/erp/security/user/infrastructure/persistence/User.java` - entity mapping style with BaseModel
-- [ ] Create `OutboxEventJpaRepository` with query method for publishable events:
+- [x] Create `OutboxEventJpaRepository` with query method for publishable events:
       `status in (PENDING, FAILED)` and `nextAttemptAt <= now`, ordered by `createdDate`, limited by pageable.
       ref: `src/main/java/com/solusi/erp/common/approval/infrastructure/persistence/ApprovalRequestJpaRepository.java` - Spring Data query style
-- [ ] Create `OutboxEventPersistenceMapper` for entity/domain conversion.
+- [x] Create `OutboxEventPersistenceMapper` for entity/domain conversion.
       ref: `src/main/java/com/solusi/erp/security/user/infrastructure/persistence/UserPersistenceMapper.java:L12-L67` - MapStruct + AuditMetadata mapping pattern
-- [ ] Create `OutboxEventRepositoryAdapter` implementing `OutboxEventRepository`.
+- [x] Create `OutboxEventRepositoryAdapter` implementing `OutboxEventRepository`.
       ref: `src/main/java/com/solusi/erp/security/user/infrastructure/adapter/UserRepositoryAdapter.java:L16-L95` - repository adapter wrapping JPA + mapper
-- [ ] Create `MessagingProperties` with nested `Outbox` and `Kafka` properties.
+- [x] Create `MessagingProperties` with nested `Outbox` and `Kafka` properties.
       ref: `src/main/resources/application.yaml:L1-L96` - property naming conventions
-- [ ] Create `MessagingConfig` composition root to register:
+- [x] Create `MessagingConfig` composition root to register:
       - `OutboxEventRepository`;
       - `IntegrationEventPublisher` as `OutboxIntegrationEventPublisher` when enabled;
       - no-op `IntegrationEventPublisher` when disabled.
       ref: `src/main/java/com/solusi/erp/purchasing/purchaseorder/infrastructure/config/PurchaseOrderConfig.java:L24-L87` - explicit bean registration and transaction wrapper style
-- [ ] Ensure outbox save participates in the caller transaction. Do not start a separate transaction inside `OutboxIntegrationEventPublisher`.
+- [x] Ensure outbox save participates in the caller transaction. Do not start a separate transaction inside `OutboxIntegrationEventPublisher`.
       ref: `docs/architecture/clean-ddd-cqrs-standard.md` - transaction boundaries belong in composition root / use case wrappers
-- [ ] **TEST:** Add `MessagingConfigTest` with mocked repository/object mapper dependencies to prove disabled config provides a no-op publisher and enabled config provides outbox publisher.
+- [x] **TEST:** Add `MessagingConfigTest` with mocked repository/object mapper dependencies to prove disabled config provides a no-op publisher and enabled config provides outbox publisher.
       ref: `.claude/skills/plan-from-brainstorm/SKILL.md` - config integration tests are required for infrastructure config
 
 **Validation criteria:**

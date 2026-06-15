@@ -40,3 +40,21 @@ Populated during execution by the execution agent.
 - **Detail:** The unquoted command `mvn test -Dtest=OutboxIntegrationEventPublisherTest,OutboxEventTest` is parsed by PowerShell as a parameter list because of the comma.
 - **Action taken:** Ran `mvn test "-Dtest=OutboxIntegrationEventPublisherTest,OutboxEventTest"`; focused Task 2 tests passed with 4 tests and 0 failures.
 - **Ref:** `src/test/java/com/solusi/erp/core/messaging/infrastructure/publisher/OutboxIntegrationEventPublisherTest.java`
+
+## Task 3: Outbox Persistence Adapter and Messaging Bean Wiring
+- **Status:** findings
+- **Summary:** Added outbox JPA entity/repository/adapter, messaging properties, composition root, and config tests for disabled no-op vs enabled outbox publisher.
+
+### Finding: Mapper implemented manually
+- **Type:** decision
+- **Severity:** info
+- **Detail:** The plan referenced MapStruct mapper patterns, but `OutboxEvent` is a pure domain model with static factories and lifecycle methods, not a DTO-style bean.
+- **Action taken:** Implemented `OutboxEventPersistenceMapper` manually to keep the domain model pure and avoid shaping domain constructors around MapStruct.
+- **Ref:** `src/main/java/com/solusi/erp/core/messaging/infrastructure/persistence/OutboxEventPersistenceMapper.java`
+
+### Finding: Existing entity is updated on save
+- **Type:** decision
+- **Severity:** info
+- **Detail:** Saving a detached `BaseModel` entity with an id but null JPA `@Version` can confuse Spring Data's new/existing detection.
+- **Action taken:** `OutboxEventRepositoryAdapter.save` reloads an existing entity by id and copies mutable outbox fields before saving, preserving audit/version state for later publish/retry updates.
+- **Ref:** `src/main/java/com/solusi/erp/core/messaging/infrastructure/adapter/OutboxEventRepositoryAdapter.java`
