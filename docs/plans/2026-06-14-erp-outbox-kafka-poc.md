@@ -234,26 +234,26 @@ Persist outbox domain rows and wire messaging beans behind `erp.messaging.enable
 - `mvn test -Dtest=MessagingConfigTest`
 - `mvn test -Dtest=OutboxIntegrationEventPublisherTest`
 
-### Task 4: Carry Approval Actor Through Internal Approval Event
+### Task 4: Carry Approval Actor Through Internal Approval Event [x]
 
 Extend internal approval completed event so PO approval listener knows who approved.
 
 **Depends on:** Task 3
 **Reference modules:** `common.approval`
 
-- [ ] Change `ApprovalCompletedEvent` to include nullable `actorId`.
+- [x] Change `ApprovalCompletedEvent` to include nullable `actorId`.
       Keep backward-compatible constructor `(String referenceType, Long referenceId)` delegating to new constructor with `actorId=null`, because other tests/listeners instantiate it directly.
       ref: `src/main/java/com/solusi/erp/core/event/ApprovalCompletedEvent.java:L1-L17` - current event has only reference type/id
       ref: `src/test/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/listener/OnPurchaseReturnApprovedListenerTest.java:L22-L23` - existing direct constructor usage to preserve
-- [ ] Update `ApprovalEventPublisher.publishCompleted` signature to accept `actorId`, and update adapter to publish the enriched event.
+- [x] Update `ApprovalEventPublisher.publishCompleted` signature to accept `actorId`, and update adapter to publish the enriched event.
       ref: `src/main/java/com/solusi/erp/common/approval/infrastructure/adapter/ApprovalEventPublisherAdapter.java:L17-L24` - current Spring ApplicationEvent adapter
-- [ ] Update `ProcessApprovalUseCaseImpl.approve` to call `eventPublisher.publishCompleted(saved.getReferenceType(), saved.getReferenceId(), actorId)`.
+- [x] Update `ProcessApprovalUseCaseImpl.approve` to call `eventPublisher.publishCompleted(saved.getReferenceType(), saved.getReferenceId(), actorId)`.
       ref: `src/main/java/com/solusi/erp/common/approval/application/usecase/ProcessApprovalUseCaseImpl.java:L19-L30` - current approval event publish point
-- [ ] Keep reject event unchanged for this POC.
+- [x] Keep reject event unchanged for this POC.
       ref: `docs/brainstorming/2026-06-14-erp-outbox-kafka-poc.md:L251-L260` - events other than PO approved are deferred
-- [ ] **TEST:** Update `ProcessApprovalUseCaseImplTest.shouldApproveAndPublishEvent` to verify actor id is forwarded.
+- [x] **TEST:** Update `ProcessApprovalUseCaseImplTest.shouldApproveAndPublishEvent` to verify actor id is forwarded.
       ref: `src/test/java/com/solusi/erp/common/approval/application/usecase/ProcessApprovalUseCaseImplTest.java:L39-L56` - current expected publish call
-- [ ] **TEST:** Ensure tests that instantiate `new ApprovalCompletedEvent("PURCHASE_RETURN", 1L)` still compile and pass.
+- [x] **TEST:** Ensure tests that instantiate `new ApprovalCompletedEvent("PURCHASE_RETURN", 1L)` still compile and pass.
       ref: `src/test/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/listener/OnPurchaseReturnApprovedListenerTest.java:L16-L27` - backward compatibility coverage
 
 **Validation criteria:**

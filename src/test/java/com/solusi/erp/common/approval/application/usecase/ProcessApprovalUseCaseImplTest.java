@@ -52,7 +52,7 @@ class ProcessApprovalUseCaseImplTest {
         assertNotNull(result);
         assertEquals(ApprovalStatus.COMPLETED, result.getStatus());
         verify(repository).save(request);
-        verify(eventPublisher).publishCompleted("NEWS", 100L);
+        verify(eventPublisher).publishCompleted("NEWS", 100L, actorId);
     }
 
     @Test
@@ -85,7 +85,7 @@ class ProcessApprovalUseCaseImplTest {
 
         assertEquals("msg.error.approval.not-found", exception.getKey());
         verify(repository, never()).save(any());
-        verify(eventPublisher, never()).publishCompleted(any(), any());
+        verify(eventPublisher, never()).publishCompleted(any(), any(), any());
     }
 
     @Test
@@ -154,7 +154,7 @@ class ProcessApprovalUseCaseImplTest {
         assertThat(result.getStatus()).isEqualTo(ApprovalStatus.PENDING);
         assertThat(result.getCurrentApproverId()).isEqualTo(targetApproverId);
         verify(repository).save(request);
-        verify(eventPublisher, never()).publishCompleted(any(), any());
+        verify(eventPublisher, never()).publishCompleted(any(), any(), any());
         verify(eventPublisher, never()).publishRejected(any(), any());
     }
 
@@ -191,7 +191,7 @@ class ProcessApprovalUseCaseImplTest {
         assertThat(result.getStatus()).isEqualTo(ApprovalStatus.PENDING);
         assertThat(result.getCurrentApproverId()).isEqualTo(targetApproverId);
         verify(repository).save(request);
-        verify(eventPublisher, never()).publishCompleted(any(), any());
+        verify(eventPublisher, never()).publishCompleted(any(), any(), any());
     }
 
     @Test

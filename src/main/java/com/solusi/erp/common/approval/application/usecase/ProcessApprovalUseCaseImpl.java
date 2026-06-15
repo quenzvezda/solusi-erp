@@ -24,7 +24,7 @@ public class ProcessApprovalUseCaseImpl implements ProcessApprovalUseCase {
         ApprovalRequest saved = repository.save(request);
         
         // Notify the world that this document is officially approved!
-        eventPublisher.publishCompleted(saved.getReferenceType(), saved.getReferenceId());
+        eventPublisher.publishCompleted(saved.getReferenceType(), saved.getReferenceId(), actorId);
         
         return saved;
     }

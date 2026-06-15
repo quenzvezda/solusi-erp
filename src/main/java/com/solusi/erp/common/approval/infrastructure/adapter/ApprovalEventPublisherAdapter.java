@@ -17,8 +17,8 @@ public class ApprovalEventPublisherAdapter implements ApprovalEventPublisher {
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
-    public void publishCompleted(String referenceType, Long referenceId) {
-        eventPublisher.publishEvent(new ApprovalCompletedEvent(referenceType, referenceId));
+    public void publishCompleted(String referenceType, Long referenceId, Long actorId) {
+        eventPublisher.publishEvent(new ApprovalCompletedEvent(referenceType, referenceId, actorId));
     }
 
     @Override

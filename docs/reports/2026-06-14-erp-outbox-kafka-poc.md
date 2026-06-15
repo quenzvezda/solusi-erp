@@ -58,3 +58,7 @@ Populated during execution by the execution agent.
 - **Detail:** Saving a detached `BaseModel` entity with an id but null JPA `@Version` can confuse Spring Data's new/existing detection.
 - **Action taken:** `OutboxEventRepositoryAdapter.save` reloads an existing entity by id and copies mutable outbox fields before saving, preserving audit/version state for later publish/retry updates.
 - **Ref:** `src/main/java/com/solusi/erp/core/messaging/infrastructure/adapter/OutboxEventRepositoryAdapter.java`
+
+## Task 4: Carry Approval Actor Through Internal Approval Event
+- **Status:** clean
+- **Summary:** Added nullable `actorId` to `ApprovalCompletedEvent`, forwarded approval actor id through `ApprovalEventPublisher`, and preserved the old two-argument constructor for existing listeners/tests.
