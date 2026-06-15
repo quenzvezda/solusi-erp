@@ -62,3 +62,21 @@ Populated during execution by the execution agent.
 ## Task 4: Carry Approval Actor Through Internal Approval Event
 - **Status:** clean
 - **Summary:** Added nullable `actorId` to `ApprovalCompletedEvent`, forwarded approval actor id through `ApprovalEventPublisher`, and preserved the old two-argument constructor for existing listeners/tests.
+
+## Task 5: PurchaseOrderApproved Event Factory and PO Listener Hook
+- **Status:** findings
+- **Summary:** Added `PurchaseOrderApproved` payload/factory, wired PO approval listener to save/publish integration events atomically, and covered requester/approver fallback behavior.
+
+### Finding: Factory bean needed explicit PO config wiring
+- **Type:** deviation
+- **Severity:** info
+- **Detail:** The task target map did not list `PurchaseOrderConfig`, but the new factory is intentionally pure Java without Spring annotations, consistent with the Clean Architecture standard.
+- **Action taken:** Registered `PurchaseOrderApprovedEventFactory` in `PurchaseOrderConfig` and injected `UserRepository`, `PartyLookupProvider`, `CurrencyLookupProvider`, and `Clock` there.
+- **Ref:** `src/main/java/com/solusi/erp/purchasing/purchaseorder/infrastructure/config/PurchaseOrderConfig.java`
+
+### Finding: Currency code resolved from lookup payload alias
+- **Type:** decision
+- **Severity:** info
+- **Detail:** `PurchaseOrder` stores `currencyId`, not a direct currency code. Existing `CurrencyLookupProvider` exposes alias in lookup payload.
+- **Action taken:** Factory uses `payload.alias` as `currencyCode`, falling back to `subText` parsing or lookup name if alias is unavailable.
+- **Ref:** `src/main/java/com/solusi/erp/master/currency/infrastructure/adapter/CurrencyLookupProviderImpl.java`

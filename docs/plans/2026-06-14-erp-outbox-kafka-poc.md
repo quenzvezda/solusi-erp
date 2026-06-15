@@ -261,24 +261,24 @@ Extend internal approval completed event so PO approval listener knows who appro
 - `mvn test -Dtest=ProcessApprovalUseCaseImplTest,OnPurchaseReturnApprovedListenerTest`
 - Existing purchase return approval listener behavior remains unchanged.
 
-### Task 5: PurchaseOrderApproved Event Factory and PO Listener Hook
+### Task 5: PurchaseOrderApproved Event Factory and PO Listener Hook [x]
 
 Build `PurchaseOrderApproved v1` business event from PO approval with user/party fallback rules, then save it to outbox.
 
 **Depends on:** Task 4
 **Reference modules:** `purchasing.purchaseorder`, `security.user`, `master.party`
 
-- [ ] Create `PurchaseOrderApprovedPayload` record under PO domain model with fields:
+- [x] Create `PurchaseOrderApprovedPayload` record under PO domain model with fields:
       `poId`, `poNumber`, `requesterUserId`, `requesterPartyId`, `requesterName`, `requesterEmail`, `approverPartyId`, `approverName`, `approvedAt`, `totalAmount`, `currencyCode`.
       ref: `docs/brainstorming/2026-06-14-erp-outbox-kafka-poc.md:L177-L196` - baseline payload with recipient snapshot
-- [ ] Create `PurchaseOrderApprovedEventFactory` in PO application service layer.
+- [x] Create `PurchaseOrderApprovedEventFactory` in PO application service layer.
       Dependencies:
       - `UserRepository`;
       - `PartyLookupProvider`;
       - optional currency lookup if `currencyCode` is not available from PO directly.
       ref: `src/main/java/com/solusi/erp/security/user/domain/repository/UserRepository.java:L1-L24` - user lookup port
       ref: `src/main/java/com/solusi/erp/master/party/domain/port/PartyLookupProvider.java:L1-L12` - party lookup provider port
-- [ ] Implement requester fallback:
+- [x] Implement requester fallback:
       - load user by `po.getMetadata().createdBy()`;
       - `requesterEmail = user.email`;
       - if `user.partyId` resolves to party lookup, `requesterName = lookup.name`;
@@ -287,13 +287,13 @@ Build `PurchaseOrderApproved v1` business event from PO approval with user/party
       - if no user found, keep `requesterEmail=null` and use fallback `"User " + createdBy`.
       ref: `src/main/java/com/solusi/erp/security/user/domain/model/User.java:L119-L177` - user id, email, party id, profile getters
       ref: `src/main/java/com/solusi/erp/security/user/domain/model/UserProfile.java` - profile full name getter
-- [ ] Implement approver fallback:
+- [x] Implement approver fallback:
       - resolve `event.actorId` through `PartyLookupProvider`;
       - if lookup exists, use `lookup.name`;
       - else if actor id exists, use `"Party " + actorId`;
       - else use `"Approver"`.
       ref: `src/main/java/com/solusi/erp/core/dto/LookupDto.java:L1-L21` - lookup DTO name field
-- [ ] Build `IntegrationEvent` with:
+- [x] Build `IntegrationEvent` with:
       - `eventType=PurchaseOrderApproved`;
       - `eventVersion=1`;
       - `source=erp-monolith`;
@@ -302,20 +302,20 @@ Build `PurchaseOrderApproved v1` business event from PO approval with user/party
       - `topic=erp.procurement.events.v1`;
       - `messageKey=po.id`.
       ref: `docs/brainstorming/2026-06-14-erp-outbox-kafka-poc.md:L163-L175` - topic/key contract
-- [ ] Modify `OnPurchaseOrderApprovedListener` to inject `PurchaseOrderApprovedEventFactory` and `IntegrationEventPublisher`.
+- [x] Modify `OnPurchaseOrderApprovedListener` to inject `PurchaseOrderApprovedEventFactory` and `IntegrationEventPublisher`.
       After `po.approve()` and `purchaseOrderRepository.save(po)`, build and publish the integration event.
       ref: `src/main/java/com/solusi/erp/purchasing/purchaseorder/infrastructure/listener/OnPurchaseOrderApprovedListener.java:L18-L27` - current PO approval status update hook
-- [ ] Add `@Transactional` to `OnPurchaseOrderApprovedListener.handle` to make PO status save and outbox save atomic.
+- [x] Add `@Transactional` to `OnPurchaseOrderApprovedListener.handle` to make PO status save and outbox save atomic.
       ref: `src/main/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/listener/OnPurchaseReturnApprovedListener.java:L17-L24` - purchase return listener already uses transactional event listener method
-- [ ] Do not skip event if `requesterEmail` is blank or null.
+- [x] Do not skip event if `requesterEmail` is blank or null.
       ref: `docs/brainstorming/2026-06-14-erp-outbox-kafka-poc.md:L22-L23` - ERP publishes business fact, not email command
-- [ ] **TEST:** Add `PurchaseOrderApprovedEventFactoryTest` covering:
+- [x] **TEST:** Add `PurchaseOrderApprovedEventFactoryTest` covering:
       - requester party name wins over user profile;
       - profile full name fallback when party missing;
       - username fallback when profile missing;
       - null email still produces event;
       - approver party name fallback.
-- [ ] **TEST:** Add/modify `OnPurchaseOrderApprovedListenerTest` to verify listener approves PO, saves PO, and calls `IntegrationEventPublisher.publish(...)` exactly once.
+- [x] **TEST:** Add/modify `OnPurchaseOrderApprovedListenerTest` to verify listener approves PO, saves PO, and calls `IntegrationEventPublisher.publish(...)` exactly once.
       Use mocked `PurchaseOrderApprovedEventFactory` to keep listener test focused.
       ref: `src/test/java/com/solusi/erp/purchasing/purchasereturn/infrastructure/listener/OnPurchaseReturnApprovedListenerTest.java:L16-L27` - listener test style
 
