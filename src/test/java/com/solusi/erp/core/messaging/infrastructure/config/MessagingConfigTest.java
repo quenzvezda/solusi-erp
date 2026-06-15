@@ -1,6 +1,5 @@
 package com.solusi.erp.core.messaging.infrastructure.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.solusi.erp.core.messaging.application.port.IntegrationEventPublisher;
 import com.solusi.erp.core.messaging.infrastructure.persistence.OutboxEventJpaRepository;
 import com.solusi.erp.core.messaging.infrastructure.publisher.OutboxIntegrationEventPublisher;
@@ -8,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.kafka.core.KafkaTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -45,16 +43,6 @@ class MessagingConfigTest {
         @Bean
         OutboxEventJpaRepository outboxEventJpaRepository() {
             return mock(OutboxEventJpaRepository.class);
-        }
-
-        @Bean
-        ObjectMapper objectMapper() {
-            return new ObjectMapper();
-        }
-
-        @Bean
-        KafkaTemplate<String, String> kafkaTemplate() {
-            return mock(KafkaTemplate.class);
         }
     }
 }

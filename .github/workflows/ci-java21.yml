@@ -177,6 +177,52 @@ jobs:
           strip_components: 1
           overwrite: true
 
+      - name: Ensure Kafka topics
+        env:
+          REMOTE_KAFKA_BOOTSTRAP_SERVERS: ${{ vars.KAFKA_BOOTSTRAP_SERVERS }}
+          REMOTE_KAFKA_TOPICS: ${{ vars.KAFKA_TOPICS }}
+          REMOTE_KAFKA_TOPIC_PARTITIONS: ${{ vars.KAFKA_TOPIC_PARTITIONS }}
+          REMOTE_KAFKA_TOPIC_REPLICATION_FACTOR: ${{ vars.KAFKA_TOPIC_REPLICATION_FACTOR }}
+          REMOTE_KAFKA_TOPIC_RETENTION_MS: ${{ vars.KAFKA_TOPIC_RETENTION_MS }}
+          REMOTE_KAFKA_TOPICS_CMD: ${{ vars.KAFKA_TOPICS_CMD }}
+          REMOTE_KAFKA_DOCKER_CONTAINER: ${{ vars.KAFKA_DOCKER_CONTAINER }}
+        run: |
+          if [ -z "$REMOTE_KAFKA_BOOTSTRAP_SERVERS" ]; then
+            echo "KAFKA_BOOTSTRAP_SERVERS variable is empty; skipping Kafka topic bootstrap."
+            exit 0
+          fi
+
+          DEPLOY_KEY=/tmp/deploy_key_${{ github.run_id }}
+          REMOTE_SCRIPT=/tmp/erp-create-kafka-topics-${{ github.run_id }}.sh
+          REMOTE_ENV=/tmp/erp-kafka-topics-${{ github.run_id }}.env
+          LOCAL_ENV=/tmp/erp-kafka-topics-${{ github.run_id }}.env
+          trap 'rm -f "$DEPLOY_KEY" "$LOCAL_ENV"' EXIT
+
+          printf '%s' "${{ secrets.SSH_PRIVATE_KEY }}" > "$DEPLOY_KEY"
+          chmod 600 "$DEPLOY_KEY"
+
+          {
+            printf 'export KAFKA_BOOTSTRAP_SERVERS=%q\n' "$REMOTE_KAFKA_BOOTSTRAP_SERVERS"
+            printf 'export KAFKA_TOPICS=%q\n' "$REMOTE_KAFKA_TOPICS"
+            printf 'export KAFKA_TOPIC_PARTITIONS=%q\n' "$REMOTE_KAFKA_TOPIC_PARTITIONS"
+            printf 'export KAFKA_TOPIC_REPLICATION_FACTOR=%q\n' "$REMOTE_KAFKA_TOPIC_REPLICATION_FACTOR"
+            printf 'export KAFKA_TOPIC_RETENTION_MS=%q\n' "$REMOTE_KAFKA_TOPIC_RETENTION_MS"
+            printf 'export KAFKA_TOPICS_CMD=%q\n' "$REMOTE_KAFKA_TOPICS_CMD"
+            printf 'export KAFKA_DOCKER_CONTAINER=%q\n' "$REMOTE_KAFKA_DOCKER_CONTAINER"
+          } > "$LOCAL_ENV"
+
+          scp -i "$DEPLOY_KEY" -o StrictHostKeyChecking=no \
+            scripts/kafka/create-topics.sh \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:"$REMOTE_SCRIPT"
+
+          scp -i "$DEPLOY_KEY" -o StrictHostKeyChecking=no \
+            "$LOCAL_ENV" \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:"$REMOTE_ENV"
+
+          ssh -i "$DEPLOY_KEY" -o StrictHostKeyChecking=no \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "bash -lc 'set -euo pipefail; source $REMOTE_ENV; bash $REMOTE_SCRIPT; rm -f $REMOTE_SCRIPT $REMOTE_ENV'"
+
       - name: Restart service & capture log
         run: |
           mkdir -p logs
