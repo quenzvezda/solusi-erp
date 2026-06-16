@@ -38,17 +38,56 @@ UI-nya juga generic: tiga Thymeleaf fragment yang di-*include* ke halaman detail
 Modul target (mis. StockAdjustment) perlu:
 - Command use case `SubmitXxxForApprovalUseCase` yang memanggil `CreateApprovalRequestUseCase`
 - Atau publish `ApprovalRequestedEvent` yang didengarkan oleh `OnApprovalRequestedListener`
+- Menyediakan `documentPath` relatif ke halaman detail/view dokumen. Field ini wajib agar `ApprovalActionOccurred v1` dapat dipakai NotificationService untuk membuat hyperlink.
 
 ```java
 // Contoh dari News:
-approvalUseCase.execute("NEWS", newsId, requesterId, assignedApproverId);
+approvalUseCase.execute(
+        "NEWS",
+        newsId,
+        newsCode,
+        "/common/news/" + newsId,
+        requesterId,
+        assignedApproverId);
 ```
 
 Parameter:
 - `referenceType`: string konstanta (contoh: `"NEWS"`, `"STOCK_ADJUSTMENT"`)
 - `referenceId`: ID entitas yang diajukan persetujuan
+- `referenceCode`: kode dokumen yang ditampilkan di UI/email
+- `documentPath`: path relatif halaman detail/view dokumen, dimiliki oleh modul bisnis
 - `requesterId`: Party ID user yang mengajukan
 - `assignedApproverId`: Party ID approver yang dipilih
+
+Jika memakai event Spring, contoh minimal:
+
+```java
+eventPublisher.publishEvent(new ApprovalRequestedEvent(
+        "NEWS",
+        newsId,
+        newsCode,
+        "/common/news/" + newsId,
+        requesterPartyId,
+        assignedApproverId));
+```
+
+`documentPath` akan disimpan di `ApprovalRequest` dan diteruskan ke Kafka sebagai
+`ApprovalActionOccurredPayload.documentPath`. NotificationService kemudian membentuk link:
+
+```text
+ERP_PUBLIC_BASE_URL + payload.documentPath
+```
+
+Karena itu NotificationService tidak boleh hardcode route per `referenceType`; route dokumen adalah tanggung jawab ERP/modul pemilik dokumen.
+
+Route aktif yang sudah dipakai:
+
+| referenceType | documentPath |
+|---------------|--------------|
+| `NEWS` | `/common/news/{id}` |
+| `PURCHASE_ORDER` | `/purchasing/purchase-orders/view/{id}` |
+| `PURCHASE_REQUISITION` | `/purchasing/purchase-requisitions/view/{id}` |
+| `PURCHASE_RETURN` | `/purchasing/purchase-returns/view/{id}` |
 
 ### 2. Controller — Resolve Approval State
 

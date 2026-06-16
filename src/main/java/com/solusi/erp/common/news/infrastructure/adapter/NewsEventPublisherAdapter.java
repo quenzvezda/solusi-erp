@@ -17,6 +17,12 @@ public class NewsEventPublisherAdapter implements NewsEventPublisher {
 
     @Override
     public void publishApprovalRequested(Long newsId, String newsCode, Long requesterId, Long approverId) {
-        eventPublisher.publishEvent(new ApprovalRequestedEvent("NEWS", newsId, newsCode, requesterId, approverId));
+        eventPublisher.publishEvent(new ApprovalRequestedEvent(
+                "NEWS",
+                newsId,
+                newsCode,
+                "/common/news/" + newsId,
+                requesterId,
+                approverId));
     }
 }

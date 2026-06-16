@@ -74,6 +74,27 @@ class ApprovalActionOccurredEventFactoryTest {
     }
 
     @Test
+    void newsApprovalPayloadShouldIncludeNewsDetailPath() {
+        ApprovalRequest request = request(
+                "NEWS",
+                1L,
+                "NEWS-001",
+                "/common/news/1",
+                ApprovalStatus.PENDING,
+                2L,
+                history(ApprovalAction.REQUESTED, 1L, 2L, "Initial Request"));
+
+        IntegrationEvent event = factory.create(request, ApprovalAction.REQUESTED);
+
+        ApprovalActionOccurredPayload payload = (ApprovalActionOccurredPayload) event.payload();
+        assertThat(payload.referenceType()).isEqualTo("NEWS");
+        assertThat(payload.referenceId()).isEqualTo(1L);
+        assertThat(payload.referenceCode()).isEqualTo("NEWS-001");
+        assertThat(payload.documentLabel()).isEqualTo("News");
+        assertThat(payload.documentPath()).isEqualTo("/common/news/1");
+    }
+
+    @Test
     void forwardShouldTargetNewApprover() {
         ApprovalRequest request = request(
                 ApprovalStatus.PENDING,
@@ -221,12 +242,30 @@ class ApprovalActionOccurredEventFactoryTest {
             ApprovalStatus status,
             Long currentApproverId,
             ApprovalHistory... histories) {
-        ApprovalRequest request = new ApprovalRequest(
-                new AuditMetadata(55L, 1L, null, null, null, null),
+        return request(
                 "PURCHASE_ORDER",
                 42L,
                 "PO-202606-00001",
                 "/purchasing/purchase-orders/view/42",
+                status,
+                currentApproverId,
+                histories);
+    }
+
+    private static ApprovalRequest request(
+            String referenceType,
+            Long referenceId,
+            String referenceCode,
+            String documentPath,
+            ApprovalStatus status,
+            Long currentApproverId,
+            ApprovalHistory... histories) {
+        ApprovalRequest request = new ApprovalRequest(
+                new AuditMetadata(55L, 1L, null, null, null, null),
+                referenceType,
+                referenceId,
+                referenceCode,
+                documentPath,
                 status,
                 currentApproverId);
         request.setHistories(List.of(histories));

@@ -14,10 +14,6 @@ public class ApprovalRequestedEvent {
     private final Long requesterId;
     private final Long approverId;
 
-    public ApprovalRequestedEvent(String referenceType, Long referenceId, String referenceCode, Long requesterId, Long approverId) {
-        this(referenceType, referenceId, referenceCode, null, requesterId, approverId);
-    }
-
     public ApprovalRequestedEvent(String referenceType, Long referenceId, String referenceCode, String documentPath,
                                   Long requesterId, Long approverId) {
         this.referenceType = referenceType;

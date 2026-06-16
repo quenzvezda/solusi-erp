@@ -83,6 +83,15 @@ Business meaning:
 - `documentPath` adalah path relatif. Consumer merangkai link memakai base URL environment masing-masing.
 - Field bisnis spesifik seperti `totalAmount` dan `currencyCode` sengaja tidak masuk kontrak MVP agar event tetap generic.
 
+Known document paths:
+
+| `referenceType` | `documentPath` |
+| --- | --- |
+| `NEWS` | `/common/news/{id}` |
+| `PURCHASE_ORDER` | `/purchasing/purchase-orders/view/{id}` |
+| `PURCHASE_REQUISITION` | `/purchasing/purchase-requisitions/view/{id}` |
+| `PURCHASE_RETURN` | `/purchasing/purchase-returns/view/{id}` |
+
 Recipient rules:
 
 | Action | `notificationTarget.role` | Target |
