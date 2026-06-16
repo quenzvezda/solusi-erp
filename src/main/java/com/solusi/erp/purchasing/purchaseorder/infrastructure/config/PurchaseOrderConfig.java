@@ -9,7 +9,6 @@ import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
 import com.solusi.erp.master.tax.domain.model.TaxCalculationMode;
 import com.solusi.erp.purchasing.purchaserequisition.domain.repository.PurchaseRequisitionRepository;
 import com.solusi.erp.purchasing.purchaserequisition.infrastructure.persistence.PurchaseRequisitionJpaRepository;
-import com.solusi.erp.purchasing.purchaseorder.application.service.PurchaseOrderApprovedEventFactory;
 import com.solusi.erp.purchasing.purchaseorder.application.usecase.command.*;
 import com.solusi.erp.purchasing.purchaseorder.application.usecase.query.*;
 import com.solusi.erp.purchasing.purchaseorder.domain.port.PurchaseOrderEventPublisher;
@@ -17,13 +16,10 @@ import com.solusi.erp.purchasing.purchaseorder.domain.repository.PurchaseOrderRe
 import com.solusi.erp.purchasing.purchaseorder.infrastructure.adapter.PurchaseOrderRepositoryImpl;
 import com.solusi.erp.purchasing.purchaseorder.infrastructure.persistence.PurchaseOrderJpaRepository;
 import com.solusi.erp.purchasing.purchaseorder.infrastructure.persistence.PurchaseOrderPersistenceMapper;
-import com.solusi.erp.security.user.domain.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
-
-import java.time.Clock;
 
 @Configuration
 public class PurchaseOrderConfig {
@@ -33,19 +29,6 @@ public class PurchaseOrderConfig {
             PurchaseOrderJpaRepository jpaRepository,
             PurchaseOrderPersistenceMapper mapper) {
         return new PurchaseOrderRepositoryImpl(jpaRepository, mapper);
-    }
-
-    @Bean
-    public PurchaseOrderApprovedEventFactory purchaseOrderApprovedEventFactory(
-            UserRepository userRepository,
-            PartyLookupProvider partyLookupProvider,
-            CurrencyLookupProvider currencyLookupProvider,
-            Clock messagingClock) {
-        return new PurchaseOrderApprovedEventFactory(
-                userRepository,
-                partyLookupProvider,
-                currencyLookupProvider,
-                messagingClock);
     }
 
     @Bean

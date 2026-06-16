@@ -46,7 +46,7 @@ Create `ApprovalActionOccurred v1` payload/factory that maps approval actions to
 ### Task 5: Wire Approval Use Cases to Publish Generic Events [x]
 Publish generic approval integration events from approval request creation and approval processing while preserving existing Spring events for module reactions.
 
-### Task 6: Remove PO-Specific Kafka Publication
+### Task 6: Remove PO-Specific Kafka Publication [x]
 Stop `OnPurchaseOrderApprovedListener` from publishing `PurchaseOrderApproved` Kafka events and remove obsolete PO-specific event factory/payload/tests.
 
 ### Task 7: Update Topic Bootstrap, Runtime Config, and Documentation
@@ -269,7 +269,7 @@ Steps:
 - PO completed/rejected business listeners still receive Spring events.
 - Generic outbox event is created for all five scoped actions.
 
-### Task 6: Remove PO-Specific Kafka Publication
+### Task 6: Remove PO-Specific Kafka Publication [x]
 Stop `OnPurchaseOrderApprovedListener` from publishing `PurchaseOrderApproved` Kafka events and remove obsolete PO-specific event factory/payload/tests.
 
 **Depends on:** Task 5
@@ -278,22 +278,22 @@ Stop `OnPurchaseOrderApprovedListener` from publishing `PurchaseOrderApproved` K
 
 Steps:
 
-- [ ] Remove `PurchaseOrderApprovedEventFactory` and `IntegrationEventPublisher` dependencies from `OnPurchaseOrderApprovedListener`.
+- [x] Remove `PurchaseOrderApprovedEventFactory` and `IntegrationEventPublisher` dependencies from `OnPurchaseOrderApprovedListener`.
       ref: src/main/java/com/solusi/erp/purchasing/purchaseorder/infrastructure/listener/OnPurchaseOrderApprovedListener.java:L20-L35 — current PO listener both updates status and publishes Kafka event
-- [ ] Keep PO status update behavior in `OnPurchaseOrderApprovedListener`.
+- [x] Keep PO status update behavior in `OnPurchaseOrderApprovedListener`.
       ref: src/main/java/com/solusi/erp/purchasing/purchaseorder/infrastructure/listener/OnPurchaseOrderApprovedListener.java:L29-L33 — PO approve and save behavior to preserve
-- [ ] Remove `PurchaseOrderApprovedEventFactory` bean from `PurchaseOrderConfig`.
+- [x] Remove `PurchaseOrderApprovedEventFactory` bean from `PurchaseOrderConfig`.
       ref: src/main/java/com/solusi/erp/purchasing/purchaseorder/infrastructure/config/PurchaseOrderConfig.java:L1-L60 — composition root currently registers PO-specific factory
-- [ ] Delete or quarantine obsolete PO-specific integration payload/factory:
+- [x] Delete or quarantine obsolete PO-specific integration payload/factory:
   - `PurchaseOrderApprovedEventFactory`
   - `PurchaseOrderApprovedPayload`
   - `PurchaseOrderApprovedEventFactoryTest`
       ref: src/main/java/com/solusi/erp/purchasing/purchaseorder/application/service/PurchaseOrderApprovedEventFactory.java:L20-L67 — PO-specific factory to remove
       ref: src/main/java/com/solusi/erp/purchasing/purchaseorder/domain/model/PurchaseOrderApprovedPayload.java:L1-L20 — PO-specific payload to remove
       ref: src/test/java/com/solusi/erp/purchasing/purchaseorder/application/service/PurchaseOrderApprovedEventFactoryTest.java:L55-L127 — obsolete PO-specific event tests
-- [ ] Update `OnPurchaseOrderApprovedListenerTest` to verify only PO status save and no integration publisher interaction.
+- [x] Update `OnPurchaseOrderApprovedListenerTest` to verify only PO status save and no integration publisher interaction.
       ref: src/test/java/com/solusi/erp/purchasing/purchaseorder/infrastructure/listener/OnPurchaseOrderApprovedListenerTest.java:L17-L35 — current listener test constructs factory/publisher mocks
-- [ ] Search for `PurchaseOrderApproved` and remove remaining code/test/doc references except historical brainstorming/report notes.
+- [x] Search for `PurchaseOrderApproved` and remove remaining code/test/doc references except historical brainstorming/report notes.
       ref: docs/brainstorming/2026-06-16-generic-approval-events.md — documents the replacement decision
 
 **Validation criteria:**

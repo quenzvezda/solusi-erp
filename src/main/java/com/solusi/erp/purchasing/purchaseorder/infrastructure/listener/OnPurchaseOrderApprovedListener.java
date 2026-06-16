@@ -1,9 +1,6 @@
 package com.solusi.erp.purchasing.purchaseorder.infrastructure.listener;
 
 import com.solusi.erp.core.event.ApprovalCompletedEvent;
-import com.solusi.erp.core.messaging.application.port.IntegrationEventPublisher;
-import com.solusi.erp.core.messaging.domain.model.IntegrationEvent;
-import com.solusi.erp.purchasing.purchaseorder.application.service.PurchaseOrderApprovedEventFactory;
 import com.solusi.erp.purchasing.purchaseorder.domain.model.PurchaseOrder;
 import com.solusi.erp.purchasing.purchaseorder.domain.repository.PurchaseOrderRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class OnPurchaseOrderApprovedListener {
 
     private final PurchaseOrderRepository purchaseOrderRepository;
-    private final PurchaseOrderApprovedEventFactory eventFactory;
-    private final IntegrationEventPublisher integrationEventPublisher;
 
     @EventListener(condition = "#event.referenceType == 'PURCHASE_ORDER'")
     @Transactional
@@ -31,7 +26,5 @@ public class OnPurchaseOrderApprovedListener {
                         "Purchase Order not found: " + event.getReferenceId()));
         po.approve();
         purchaseOrderRepository.save(po);
-        IntegrationEvent integrationEvent = eventFactory.create(po, event.getActorId());
-        integrationEventPublisher.publish(integrationEvent);
     }
 }

@@ -74,3 +74,15 @@
 - **Detail:** `ApprovalEventPublisherAdapter` now always calls `IntegrationEventPublisher`, but cloud/local environments may intentionally leave messaging disabled.
 - **Action taken:** Confirmed `MessagingConfig.integrationEventPublisher(...)` provides a no-op publisher when `messaging.enabled=false`, so ERP behavior remains unaffected without Kafka.
 - **Ref:** src/main/java/com/solusi/erp/core/messaging/infrastructure/config/MessagingConfig.java
+
+## Task 6: Remove PO-Specific Kafka Publication
+
+- **Status:** findings
+- **Summary:** Removed PO-specific integration event factory/payload/publication from the PO approval listener while preserving PO status update via Spring `ApprovalCompletedEvent`.
+
+### Finding: Search still finds non-obsolete references
+- **Type:** deviation
+- **Severity:** info
+- **Detail:** `rg "PurchaseOrderApproved" src/main src/test` still finds the internal `OnPurchaseOrderApprovedListener` class/test names plus core messaging sample event names.
+- **Action taken:** Removed the active PO-specific Kafka implementation. Kept the PO listener name because it still describes the internal PO-approved reaction; left core messaging sample renames to Task 7, which explicitly covers topic/event sample updates.
+- **Ref:** src/main/java/com/solusi/erp/purchasing/purchaseorder/infrastructure/listener/OnPurchaseOrderApprovedListener.java
