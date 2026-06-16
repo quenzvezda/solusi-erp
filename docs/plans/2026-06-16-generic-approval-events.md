@@ -31,7 +31,7 @@ Deferred:
 
 ## Tasks
 
-### Task 1: Add Document Path to Approval Request
+### Task 1: Add Document Path to Approval Request [x]
 Persist relative document path on approval requests so generic approval events can link back to the source document.
 
 ### Task 2: Extend Approval Request Creation from Business Modules
@@ -71,20 +71,20 @@ Persist relative document path on approval requests so generic approval events c
 
 Steps:
 
-- [ ] Create MariaDB Flyway migration `V77__Add_Approval_Request_Document_Path.sql` adding nullable `document_path VARCHAR(500)` to `appr_requests`.
+- [x] Create MariaDB Flyway migration `V77__Add_Approval_Request_Document_Path.sql` adding nullable `document_path VARCHAR(500)` to `appr_requests`.
       ref: src/main/resources/db/migration/V29__Create_Approval_System_Tables.sql:L1-L14 — current `appr_requests` schema and index pattern
-- [ ] Create matching H2 migration `V77__Add_Approval_Request_Document_Path.sql`.
+- [x] Create matching H2 migration `V77__Add_Approval_Request_Document_Path.sql`.
       ref: src/main/resources/db/migration-h2/V29__Create_Approval_System_Tables.sql:L1-L14 — H2 mirror for approval request schema
-- [ ] Add `documentPath` to `ApprovalRequest` constructor, `createNew(...)`, and getter.
+- [x] Add `documentPath` to `ApprovalRequest` constructor, `createNew(...)`, and getter.
       ref: src/main/java/com/solusi/erp/common/approval/domain/model/ApprovalRequest.java:L13-L36 — aggregate fields and factory
-- [ ] Map `documentPath` in `ApprovalRequestEntity`.
+- [x] Map `documentPath` in `ApprovalRequestEntity`.
       ref: src/main/java/com/solusi/erp/common/approval/infrastructure/persistence/ApprovalRequestEntity.java:L20-L34 — current persisted fields
-- [ ] Map `documentPath` both ways in `ApprovalPersistenceMapper`.
+- [x] Map `documentPath` both ways in `ApprovalPersistenceMapper`.
       ref: src/main/java/com/solusi/erp/common/approval/infrastructure/persistence/ApprovalPersistenceMapper.java:L16-L31 — entity to domain mapping
       ref: src/main/java/com/solusi/erp/common/approval/infrastructure/persistence/ApprovalPersistenceMapper.java:L44-L52 — domain to entity mapping
-- [ ] **TEST:** Update `ApprovalRequestTest` to assert `documentPath` is preserved by `createNew(...)`.
+- [x] **TEST:** Update `ApprovalRequestTest` to assert `documentPath` is preserved by `createNew(...)`.
       ref: src/test/java/com/solusi/erp/common/approval/domain/model/ApprovalRequestTest.java — pure domain approval transition test pattern
-- [ ] **TEST:** Add mapper coverage for `documentPath` if an approval persistence mapper test exists; otherwise cover via repository or config test only if lightweight.
+- [x] **TEST:** Add mapper coverage for `documentPath` if an approval persistence mapper test exists; otherwise cover via repository or config test only if lightweight. (no dedicated mapper test exists; verified domain and migration scope for Task 1)
 
 **Validation criteria:**
 
@@ -421,4 +421,3 @@ Brainstorm item coverage:
 - NotificationService decoupling: Tasks 4 and 9 prove ERP sends complete target data.
 - Deferred `CANCELLED`: explicitly deferred in Scope.
 - Jacoco coverage expansion: Task 8.
-

@@ -26,6 +26,7 @@ public class ApprovalPersistenceMapper {
             entity.getReferenceType(),
             entity.getReferenceId(),
             entity.getReferenceCode(),
+            entity.getDocumentPath(),
             entity.getStatus(),
             entity.getCurrentApproverId()
         );
@@ -48,6 +49,7 @@ public class ApprovalPersistenceMapper {
         entity.setReferenceType(domain.getReferenceType());
         entity.setReferenceId(domain.getReferenceId());
         entity.setReferenceCode(domain.getReferenceCode());
+        entity.setDocumentPath(domain.getDocumentPath());
         entity.setStatus(domain.getStatus());
         entity.setCurrentApproverId(domain.getCurrentApproverId());
         
