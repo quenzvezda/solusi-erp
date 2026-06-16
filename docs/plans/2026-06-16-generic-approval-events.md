@@ -37,7 +37,7 @@ Persist relative document path on approval requests so generic approval events c
 ### Task 2: Extend Approval Request Creation from Business Modules [x]
 Carry `documentPath` from `ApprovalRequestedEvent` through approval creation and update Purchase Order submit flow to supply the PO view URL.
 
-### Task 3: Add Party/User Notification Target Resolution
+### Task 3: Add Party/User Notification Target Resolution [x]
 Add application-level resolution for party display data and email so generic approval events can include `notificationTarget`.
 
 ### Task 4: Create Generic Approval Event Contract and Factory
@@ -127,7 +127,7 @@ Steps:
 - `mvn test -Dtest=CreateApprovalRequestUseCaseImplTest,SubmitPurchaseOrderUseCaseTest` passes.
 - Existing PO submit still changes PO status and creates approval request.
 
-### Task 3: Add Party/User Notification Target Resolution
+### Task 3: Add Party/User Notification Target Resolution [x]
 Add application-level resolution for party display data and email so generic approval events can include `notificationTarget`.
 
 **Depends on:** Task 1
@@ -136,21 +136,21 @@ Add application-level resolution for party display data and email so generic app
 
 Steps:
 
-- [ ] Add `Optional<User> findByPartyId(Long partyId)` to `UserRepository`.
+- [x] Add `Optional<User> findByPartyId(Long partyId)` to `UserRepository`.
       ref: src/main/java/com/solusi/erp/security/user/domain/repository/UserRepository.java:L9-L23 — current user repository contract
-- [ ] Add `Optional<User> findByPartyId(Long partyId)` to `UserJpaRepository`.
+- [x] Add `Optional<User> findByPartyId(Long partyId)` to `UserJpaRepository`.
       ref: src/main/java/com/solusi/erp/security/user/infrastructure/persistence/UserJpaRepository.java:L21-L27 — current finder methods
-- [ ] Implement `findByPartyId` in `UserRepositoryAdapter`.
+- [x] Implement `findByPartyId` in `UserRepositoryAdapter`.
       ref: src/main/java/com/solusi/erp/security/user/infrastructure/adapter/UserRepositoryAdapter.java:L45-L58 — current finder mapping pattern
-- [ ] Create lightweight approval-side resolver/service, for example `ApprovalNotificationTargetResolver`, that resolves:
+- [x] Create lightweight approval-side resolver/service, for example `ApprovalNotificationTargetResolver`, that resolves:
   - party id
   - party display name via `PartyLookupProvider`
   - email via `UserRepository.findByPartyId`
   - fallback name `"Party {id}"` when lookup is missing
       ref: src/main/java/com/solusi/erp/master/party/domain/port/PartyLookupProvider.java:L10-L12 — cross-slice party lookup port
       ref: src/main/java/com/solusi/erp/purchasing/purchaseorder/application/service/PurchaseOrderApprovedEventFactory.java:L74-L98 — existing fallback approach for party/user names
-- [ ] Model notification target as a small record, for example `ApprovalNotificationTarget(role, partyId, name, email)`.
-- [ ] **TEST:** Add resolver tests for party lookup win, user email found, missing email, and missing party fallback.
+- [x] Model notification target as a small record, for example `ApprovalNotificationTarget(role, partyId, name, email)`.
+- [x] **TEST:** Add resolver tests for party lookup win, user email found, missing email, and missing party fallback.
       ref: src/test/java/com/solusi/erp/purchasing/purchaseorder/application/service/PurchaseOrderApprovedEventFactoryTest.java:L55-L143 — existing name/email fallback test examples
 
 **Validation criteria:**

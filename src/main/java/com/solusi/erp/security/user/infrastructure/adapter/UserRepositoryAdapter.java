@@ -58,6 +58,11 @@ public class UserRepositoryAdapter implements UserRepository {
     }
 
     @Override
+    public Optional<User> findByPartyId(Long partyId) {
+        return userJpaRepository.findByPartyId(partyId).map(mapper::toDomain);
+    }
+
+    @Override
     public User save(User user) {
         com.solusi.erp.security.user.infrastructure.persistence.User entity = mapper.toEntity(user);
         Role role = roleRepository.findById(user.getRoleId()).orElseThrow(() -> new RuntimeException("Role not found"));

@@ -45,3 +45,8 @@
 - **Detail:** Focused Task 2 test run passed, but Jacoco reported branch coverage `0.79` against the `0.80` target while Maven still exited successfully.
 - **Action taken:** Left coverage hardening for Task 8, where the approved plan explicitly adds focused tests to push coverage above the threshold.
 - **Ref:** docs/plans/2026-06-16-generic-approval-events.md
+
+## Task 3: Add Party/User Notification Target Resolution
+
+- **Status:** clean
+- **Summary:** Added `findByPartyId` user lookup support and approval-side notification target resolver with party-name fallback and nullable email behavior.
