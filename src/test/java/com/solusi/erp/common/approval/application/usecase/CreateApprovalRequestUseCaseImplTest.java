@@ -1,5 +1,6 @@
 package com.solusi.erp.common.approval.application.usecase;
 
+import com.solusi.erp.common.approval.application.port.ApprovalEventPublisher;
 import com.solusi.erp.common.approval.domain.model.ApprovalRequest;
 import com.solusi.erp.common.approval.domain.model.ApprovalStatus;
 import com.solusi.erp.common.approval.domain.repository.ApprovalRequestRepository;
@@ -18,6 +19,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.inOrder;
 
 @ExtendWith(MockitoExtension.class)
 class CreateApprovalRequestUseCaseImplTest {
@@ -25,11 +27,14 @@ class CreateApprovalRequestUseCaseImplTest {
     @Mock
     private ApprovalRequestRepository repository;
 
+    @Mock
+    private ApprovalEventPublisher eventPublisher;
+
     private CreateApprovalRequestUseCaseImpl useCase;
 
     @BeforeEach
     void setUp() {
-        useCase = new CreateApprovalRequestUseCaseImpl(repository);
+        useCase = new CreateApprovalRequestUseCaseImpl(repository, eventPublisher);
     }
 
     @Test
@@ -55,6 +60,7 @@ class CreateApprovalRequestUseCaseImplTest {
         assertEquals(refType, saved.getReferenceType());
         assertEquals(refId, saved.getReferenceId());
         assertEquals("/common/news/view/123", saved.getDocumentPath());
+        verify(eventPublisher).publishRequested(saved);
     }
 
     @Test
@@ -72,6 +78,7 @@ class CreateApprovalRequestUseCaseImplTest {
         assertEquals(refId, result.getReferenceId());
         assertEquals(ApprovalStatus.PENDING, result.getStatus());
         verify(repository).save(any(ApprovalRequest.class));
+        verify(eventPublisher).publishRequested(result);
     }
 
     @Test
@@ -92,6 +99,7 @@ class CreateApprovalRequestUseCaseImplTest {
         useCase.execute("NEWS", 1L, null, "/common/news/view/1", 1L, null);
 
         verify(repository, times(1)).save(any(ApprovalRequest.class));
+        verify(eventPublisher, times(1)).publishRequested(any(ApprovalRequest.class));
     }
 
     @Test
@@ -111,5 +119,18 @@ class CreateApprovalRequestUseCaseImplTest {
         ArgumentCaptor<ApprovalRequest> captor = ArgumentCaptor.forClass(ApprovalRequest.class);
         verify(repository).save(captor.capture());
         assertThat(captor.getValue().getCurrentApproverId()).isEqualTo(approverId);
+        verify(eventPublisher).publishRequested(captor.getValue());
+    }
+
+    @Test
+    @DisplayName("Should publish requested event after save")
+    void execute_shouldPublishRequestedAfterSave() {
+        when(repository.save(any(ApprovalRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ApprovalRequest result = useCase.execute("NEWS", 1L, "NEWS-1", "/common/news/view/1", 1L, 2L);
+
+        var inOrder = inOrder(repository, eventPublisher);
+        inOrder.verify(repository).save(any(ApprovalRequest.class));
+        inOrder.verify(eventPublisher).publishRequested(result);
     }
 }

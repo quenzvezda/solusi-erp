@@ -43,7 +43,7 @@ Add application-level resolution for party display data and email so generic app
 ### Task 4: Create Generic Approval Event Contract and Factory [x]
 Create `ApprovalActionOccurred v1` payload/factory that maps approval actions to notification targets and emits `IntegrationEvent` for `erp.approval.events.v1`.
 
-### Task 5: Wire Approval Use Cases to Publish Generic Events
+### Task 5: Wire Approval Use Cases to Publish Generic Events [x]
 Publish generic approval integration events from approval request creation and approval processing while preserving existing Spring events for module reactions.
 
 ### Task 6: Remove PO-Specific Kafka Publication
@@ -224,7 +224,7 @@ Steps:
 - Event payload does not contain PO-specific `totalAmount` or `currencyCode`.
 - Event topic is exactly `erp.approval.events.v1`.
 
-### Task 5: Wire Approval Use Cases to Publish Generic Events
+### Task 5: Wire Approval Use Cases to Publish Generic Events [x]
 Publish generic approval integration events from approval request creation and approval processing while preserving existing Spring events for module reactions.
 
 **Depends on:** Task 4
@@ -233,32 +233,32 @@ Publish generic approval integration events from approval request creation and a
 
 Steps:
 
-- [ ] Extend `ApprovalEventPublisher` with action-aware methods. Recommended shape:
+- [x] Extend `ApprovalEventPublisher` with action-aware methods. Recommended shape:
   - `publishRequested(ApprovalRequest request)`
   - `publishCompleted(ApprovalRequest request, Long actorId)`
   - `publishRejected(ApprovalRequest request, Long actorId)`
   - `publishForwarded(ApprovalRequest request, Long actorId, Long targetApproverId)`
   - `publishApprovedAndForwarded(ApprovalRequest request, Long actorId, Long targetApproverId)`
       ref: src/main/java/com/solusi/erp/common/approval/application/port/ApprovalEventPublisher.java:L7-L8 — current completed/rejected-only port
-- [ ] Update `CreateApprovalRequestUseCaseImpl` to publish `REQUESTED` after saving.
+- [x] Update `CreateApprovalRequestUseCaseImpl` to publish `REQUESTED` after saving.
       ref: src/main/java/com/solusi/erp/common/approval/application/usecase/CreateApprovalRequestUseCaseImpl.java:L11-L17 — current create-and-save flow
-- [ ] Update `ProcessApprovalUseCaseImpl` to publish generic events for all in-scope processing actions.
+- [x] Update `ProcessApprovalUseCaseImpl` to publish generic events for all in-scope processing actions.
       ref: src/main/java/com/solusi/erp/common/approval/application/usecase/ProcessApprovalUseCaseImpl.java:L19-L62 — current process methods
-- [ ] Keep Spring application events for module reactions:
+- [x] Keep Spring application events for module reactions:
   - `APPROVE_AND_FINISH` still publishes `ApprovalCompletedEvent`
   - `REJECTED` still publishes `ApprovalRejectedEvent`
       ref: src/main/java/com/solusi/erp/common/approval/infrastructure/adapter/ApprovalEventPublisherAdapter.java:L20-L26 — current internal Spring event publication
       ref: src/main/java/com/solusi/erp/purchasing/purchaseorder/infrastructure/listener/OnPurchaseOrderApprovedListener.java:L24-L35 — PO status update depends on `ApprovalCompletedEvent`
-- [ ] Add `IntegrationEventPublisher` and `ApprovalActionOccurredEventFactory` to `ApprovalEventPublisherAdapter`; adapter should call `integrationEventPublisher.publish(...)` for in-scope actions.
+- [x] Add `IntegrationEventPublisher` and `ApprovalActionOccurredEventFactory` to `ApprovalEventPublisherAdapter`; adapter should call `integrationEventPublisher.publish(...)` for in-scope actions.
       ref: src/main/java/com/solusi/erp/core/messaging/application/port/IntegrationEventPublisher.java:L1-L6 — outbox application port
       ref: src/main/java/com/solusi/erp/core/messaging/infrastructure/publisher/OutboxIntegrationEventPublisher.java:L33-L43 — outbox row creation from `IntegrationEvent`
-- [ ] Ensure order: save approval request first, then publish event to outbox within the same transaction wrapper.
+- [x] Ensure order: save approval request first, then publish event to outbox within the same transaction wrapper.
       ref: src/main/java/com/solusi/erp/common/approval/infrastructure/config/ApprovalConfig.java:L40-L66 — transaction wrapper around process use case
-- [ ] **TEST:** Update `ProcessApprovalUseCaseImplTest` for forward and approve-and-forward publishing, not only save.
+- [x] **TEST:** Update `ProcessApprovalUseCaseImplTest` for forward and approve-and-forward publishing, not only save.
       ref: src/test/java/com/solusi/erp/common/approval/application/usecase/ProcessApprovalUseCaseImplTest.java:L39-L75 — existing publish assertion pattern
       ref: src/test/java/com/solusi/erp/common/approval/application/usecase/ProcessApprovalUseCaseImplTest.java:L137-L170 — current forward tests should verify publisher calls
-- [ ] **TEST:** Update `CreateApprovalRequestUseCaseImplTest` to verify `publishRequested(...)`.
-- [ ] **TEST:** Add/extend `ApprovalEventPublisherAdapterTest` to verify:
+- [x] **TEST:** Update `CreateApprovalRequestUseCaseImplTest` to verify `publishRequested(...)`.
+- [x] **TEST:** Add/extend `ApprovalEventPublisherAdapterTest` to verify:
   - completed emits Spring `ApprovalCompletedEvent` and generic integration event
   - rejected emits Spring `ApprovalRejectedEvent` and generic integration event
   - forward emits only generic integration event

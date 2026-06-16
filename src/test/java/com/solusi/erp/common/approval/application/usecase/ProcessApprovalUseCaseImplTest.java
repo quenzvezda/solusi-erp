@@ -52,7 +52,7 @@ class ProcessApprovalUseCaseImplTest {
         assertNotNull(result);
         assertEquals(ApprovalStatus.COMPLETED, result.getStatus());
         verify(repository).save(request);
-        verify(eventPublisher).publishCompleted("NEWS", 100L, actorId);
+        verify(eventPublisher).publishCompleted(request, actorId);
     }
 
     @Test
@@ -71,7 +71,7 @@ class ProcessApprovalUseCaseImplTest {
         assertNotNull(result);
         assertEquals(ApprovalStatus.REJECTED, result.getStatus());
         verify(repository).save(request);
-        verify(eventPublisher).publishRejected("NEWS", 100L);
+        verify(eventPublisher).publishRejected(request, actorId);
     }
 
     @Test
@@ -85,7 +85,7 @@ class ProcessApprovalUseCaseImplTest {
 
         assertEquals("msg.error.approval.not-found", exception.getKey());
         verify(repository, never()).save(any());
-        verify(eventPublisher, never()).publishCompleted(any(), any(), any());
+        verify(eventPublisher, never()).publishCompleted(any(), any());
     }
 
     @Test
@@ -154,7 +154,8 @@ class ProcessApprovalUseCaseImplTest {
         assertThat(result.getStatus()).isEqualTo(ApprovalStatus.PENDING);
         assertThat(result.getCurrentApproverId()).isEqualTo(targetApproverId);
         verify(repository).save(request);
-        verify(eventPublisher, never()).publishCompleted(any(), any(), any());
+        verify(eventPublisher).publishForwarded(request, actorId, targetApproverId);
+        verify(eventPublisher, never()).publishCompleted(any(), any());
         verify(eventPublisher, never()).publishRejected(any(), any());
     }
 
@@ -191,7 +192,8 @@ class ProcessApprovalUseCaseImplTest {
         assertThat(result.getStatus()).isEqualTo(ApprovalStatus.PENDING);
         assertThat(result.getCurrentApproverId()).isEqualTo(targetApproverId);
         verify(repository).save(request);
-        verify(eventPublisher, never()).publishCompleted(any(), any(), any());
+        verify(eventPublisher).publishApprovedAndForwarded(request, actorId, targetApproverId);
+        verify(eventPublisher, never()).publishCompleted(any(), any());
     }
 
     @Test

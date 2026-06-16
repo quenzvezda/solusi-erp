@@ -62,3 +62,15 @@
 - **Detail:** `ApprovalRequest.currentApproverId` remains set after `COMPLETED` or `REJECTED`, but the generic notification payload should not imply that a final document still has an active approver.
 - **Action taken:** `ApprovalActionOccurredEventFactory` emits `currentApproverPartyId = null` unless request status is `PENDING`.
 - **Ref:** src/main/java/com/solusi/erp/common/approval/application/service/ApprovalActionOccurredEventFactory.java
+
+## Task 5: Wire Approval Use Cases to Publish Generic Events
+
+- **Status:** findings
+- **Summary:** Reworked approval publisher contract to action-aware methods, published generic events for requested/completed/rejected/forward/approve-and-forward, preserved Spring events for completed/rejected module reactions, and added adapter/config wiring tests.
+
+### Finding: Messaging-disabled environments remain safe
+- **Type:** decision
+- **Severity:** info
+- **Detail:** `ApprovalEventPublisherAdapter` now always calls `IntegrationEventPublisher`, but cloud/local environments may intentionally leave messaging disabled.
+- **Action taken:** Confirmed `MessagingConfig.integrationEventPublisher(...)` provides a no-op publisher when `messaging.enabled=false`, so ERP behavior remains unaffected without Kafka.
+- **Ref:** src/main/java/com/solusi/erp/core/messaging/infrastructure/config/MessagingConfig.java
