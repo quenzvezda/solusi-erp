@@ -12,21 +12,21 @@ class OutboxEventTest {
     void pendingShouldCreateAuditableEventReadyForPublishing() {
         OutboxEvent event = OutboxEvent.pending(
                 "11111111-1111-1111-1111-111111111111",
-                "PurchaseOrderApproved",
+                "ApprovalActionOccurred",
                 1,
-                "PurchaseOrder",
-                "42",
-                "erp.procurement.events.v1",
-                "42",
-                "{\"eventType\":\"PurchaseOrderApproved\"}");
+                "ApprovalRequest",
+                "55",
+                "erp.approval.events.v1",
+                "55",
+                "{\"eventType\":\"ApprovalActionOccurred\"}");
 
         assertThat(event.getEventId()).isEqualTo("11111111-1111-1111-1111-111111111111");
         assertThat(event.getStatus()).isEqualTo(OutboxStatus.PENDING);
         assertThat(event.getAttemptCount()).isZero();
         assertThat(event.getPublishedAt()).isNull();
         assertThat(event.getLastError()).isNull();
-        assertThat(event.getTopic()).isEqualTo("erp.procurement.events.v1");
-        assertThat(event.getMessageKey()).isEqualTo("42");
+        assertThat(event.getTopic()).isEqualTo("erp.approval.events.v1");
+        assertThat(event.getMessageKey()).isEqualTo("55");
     }
 
     @Test
@@ -58,12 +58,12 @@ class OutboxEventTest {
     private static OutboxEvent pendingEvent() {
         return OutboxEvent.pending(
                 "11111111-1111-1111-1111-111111111111",
-                "PurchaseOrderApproved",
+                "ApprovalActionOccurred",
                 1,
-                "PurchaseOrder",
-                "42",
-                "erp.procurement.events.v1",
-                "42",
-                "{\"eventType\":\"PurchaseOrderApproved\"}");
+                "ApprovalRequest",
+                "55",
+                "erp.approval.events.v1",
+                "55",
+                "{\"eventType\":\"ApprovalActionOccurred\"}");
     }
 }

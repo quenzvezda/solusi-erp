@@ -107,4 +107,4 @@ erp:
       retry-delay-seconds: ${ERP_MESSAGING_OUTBOX_RETRY_DELAY_SECONDS:60}
       max-attempts: ${ERP_MESSAGING_OUTBOX_MAX_ATTEMPTS:10}
     kafka:
-      default-topic: ${ERP_MESSAGING_KAFKA_DEFAULT_TOPIC:erp.procurement.events.v1}
+      default-topic: ${ERP_MESSAGING_KAFKA_DEFAULT_TOPIC:erp.approval.events.v1}

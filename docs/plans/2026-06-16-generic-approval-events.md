@@ -49,7 +49,7 @@ Publish generic approval integration events from approval request creation and a
 ### Task 6: Remove PO-Specific Kafka Publication [x]
 Stop `OnPurchaseOrderApprovedListener` from publishing `PurchaseOrderApproved` Kafka events and remove obsolete PO-specific event factory/payload/tests.
 
-### Task 7: Update Topic Bootstrap, Runtime Config, and Documentation
+### Task 7: Update Topic Bootstrap, Runtime Config, and Documentation [x]
 Switch local/deploy topic defaults and docs from `erp.procurement.events.v1` to `erp.approval.events.v1`.
 
 ### Task 8: Jacoco Coverage Hardening
@@ -302,7 +302,7 @@ Steps:
 - `mvn test -Dtest=OnPurchaseOrderApprovedListenerTest,PurchaseOrderConfigTest` passes if `PurchaseOrderConfigTest` exists.
 - PO approve via Spring event still updates PO status.
 
-### Task 7: Update Topic Bootstrap, Runtime Config, and Documentation
+### Task 7: Update Topic Bootstrap, Runtime Config, and Documentation [x]
 Switch local/deploy topic defaults and docs from `erp.procurement.events.v1` to `erp.approval.events.v1`.
 
 **Depends on:** Task 5
@@ -311,19 +311,19 @@ Switch local/deploy topic defaults and docs from `erp.procurement.events.v1` to 
 
 Steps:
 
-- [ ] Change application default topic to `erp.approval.events.v1`.
+- [x] Change application default topic to `erp.approval.events.v1`.
       ref: src/main/resources/application.yaml:L101-L110 — current messaging properties and default topic
-- [ ] Change `scripts/kafka/create-topics.sh` default `KAFKA_TOPICS` to `erp.approval.events.v1`.
+- [x] Change `scripts/kafka/create-topics.sh` default `KAFKA_TOPICS` to `erp.approval.events.v1`.
       ref: scripts/kafka/create-topics.sh:L8-L15 — current topic default and env variables
-- [ ] Update `.env.example` comments if needed so local messaging topic setup points to approval events.
+- [x] Update `.env.example` comments if needed so local messaging topic setup points to approval events.
       ref: .env.example:L12-L21 — Kafka local config defaults
-- [ ] Update `docs/spec/event-contracts.md` with `ApprovalActionOccurred v1` and remove/mark `PurchaseOrderApproved v1` as superseded for notification.
+- [x] Update `docs/spec/event-contracts.md` with `ApprovalActionOccurred v1` and remove/mark `PurchaseOrderApproved v1` as superseded for notification.
       ref: docs/spec/event-contracts.md:L1-L60 — current event contract doc
-- [ ] Update `docs/architecture/outbox-kafka-messaging.md` to describe generic approval event flow instead of PO-specific event flow.
+- [x] Update `docs/architecture/outbox-kafka-messaging.md` to describe generic approval event flow instead of PO-specific event flow.
       ref: docs/architecture/outbox-kafka-messaging.md:L1-L60 — current outbox Kafka architecture narrative
-- [ ] Update `docs/modules/procurement/purchase-order.md` to state PO reacts to approval internally while notification is driven by generic approval events.
+- [x] Update `docs/modules/procurement/purchase-order.md` to state PO reacts to approval internally while notification is driven by generic approval events.
       ref: docs/modules/procurement/purchase-order.md:L120-L130 — current PO approval event note
-- [ ] **TEST:** Update `OutboxIntegrationEventPublisherTest` and `ScheduledOutboxKafkaPublisherTest` sample topic/event names if their hardcoded sample becomes misleading.
+- [x] **TEST:** Update `OutboxIntegrationEventPublisherTest` and `ScheduledOutboxKafkaPublisherTest` sample topic/event names if their hardcoded sample becomes misleading.
       ref: src/test/java/com/solusi/erp/core/messaging/infrastructure/publisher/OutboxIntegrationEventPublisherTest.java:L27-L59 — current sample asserts procurement topic
       ref: src/test/java/com/solusi/erp/core/messaging/infrastructure/publisher/ScheduledOutboxKafkaPublisherTest.java:L107-L123 — current sample properties/event use procurement topic
 

@@ -86,3 +86,15 @@
 - **Detail:** `rg "PurchaseOrderApproved" src/main src/test` still finds the internal `OnPurchaseOrderApprovedListener` class/test names plus core messaging sample event names.
 - **Action taken:** Removed the active PO-specific Kafka implementation. Kept the PO listener name because it still describes the internal PO-approved reaction; left core messaging sample renames to Task 7, which explicitly covers topic/event sample updates.
 - **Ref:** src/main/java/com/solusi/erp/purchasing/purchaseorder/infrastructure/listener/OnPurchaseOrderApprovedListener.java
+
+## Task 7: Update Topic Bootstrap, Runtime Config, and Documentation
+
+- **Status:** clean
+- **Summary:** Switched runtime/topic bootstrap defaults and active event docs/tests from `PurchaseOrderApproved` on `erp.procurement.events.v1` to `ApprovalActionOccurred` on `erp.approval.events.v1`.
+
+### Finding: Local topic bootstrap verified against running Kafka
+- **Type:** verification
+- **Severity:** info
+- **Detail:** The Kafka bootstrap script was run twice with local `kafka-erp`; the first run created `erp.approval.events.v1`, and the second completed without recreating it.
+- **Action taken:** Confirmed script idempotency and `docker compose --profile messaging config` still renders `KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "false"`.
+- **Ref:** scripts/kafka/create-topics.sh

@@ -108,18 +108,18 @@ class ScheduledOutboxKafkaPublisherTest {
         return new MessagingProperties(
                 enabled,
                 new MessagingProperties.Outbox(batchSize, 5_000L, retryDelaySeconds, maxAttempts),
-                new MessagingProperties.Kafka("erp.procurement.events.v1"));
+                new MessagingProperties.Kafka("erp.approval.events.v1"));
     }
 
     private static OutboxEvent pendingEvent() {
         return OutboxEvent.pending(
                 "11111111-1111-1111-1111-111111111111",
-                "PurchaseOrderApproved",
+                "ApprovalActionOccurred",
                 1,
-                "PurchaseOrder",
-                "42",
-                "erp.procurement.events.v1",
-                "42",
-                "{\"eventType\":\"PurchaseOrderApproved\"}");
+                "ApprovalRequest",
+                "55",
+                "erp.approval.events.v1",
+                "55",
+                "{\"eventType\":\"ApprovalActionOccurred\"}");
     }
 }

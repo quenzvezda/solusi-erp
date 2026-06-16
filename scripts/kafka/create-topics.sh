@@ -6,7 +6,7 @@ set -euo pipefail
 # until Kafka is intentionally configured.
 
 BOOTSTRAP_SERVERS="${KAFKA_BOOTSTRAP_SERVERS:-}"
-TOPICS="${KAFKA_TOPICS:-erp.procurement.events.v1}"
+TOPICS="${KAFKA_TOPICS:-erp.approval.events.v1}"
 PARTITIONS="${KAFKA_TOPIC_PARTITIONS:-1}"
 REPLICATION_FACTOR="${KAFKA_TOPIC_REPLICATION_FACTOR:-1}"
 RETENTION_MS="${KAFKA_TOPIC_RETENTION_MS:-}"

@@ -9,13 +9,13 @@ Semua integration event memakai envelope berikut:
 ```json
 {
   "eventId": "3f4d8f3a-7f2a-4d37-92f0-111111111111",
-  "eventType": "PurchaseOrderApproved",
+  "eventType": "ApprovalActionOccurred",
   "eventVersion": 1,
   "source": "erp-monolith",
   "occurredAt": "2026-06-15T03:30:00Z",
-  "correlationId": "42",
-  "aggregateType": "PurchaseOrder",
-  "aggregateId": "42",
+  "correlationId": "55",
+  "aggregateType": "ApprovalRequest",
+  "aggregateId": "55",
   "payload": {}
 }
 ```
@@ -29,42 +29,70 @@ Rules:
 - Field baru di payload harus optional untuk menjaga consumer lama.
 - Breaking change wajib menaikkan `eventVersion`.
 
-## PurchaseOrderApproved v1
+## ApprovalActionOccurred v1
 
 Topic:
 
 ```text
-erp.procurement.events.v1
+erp.approval.events.v1
 ```
 
 Kafka message key:
 
 ```text
-PurchaseOrder aggregate id
+ApprovalRequest aggregate id
 ```
 
 Payload:
 
 ```json
 {
-  "poId": 42,
-  "poNumber": "PO-2606-00001",
-  "requesterUserId": 7,
+  "approvalRequestId": 55,
+  "referenceType": "PURCHASE_ORDER",
+  "referenceId": 42,
+  "referenceCode": "PO-2606-00001",
+  "documentLabel": "Purchase Order",
+  "documentPath": "/purchasing/purchase-orders/view/42",
+  "action": "APPROVE_AND_FINISH",
+  "status": "COMPLETED",
+  "actorPartyId": 99,
+  "actorName": "Approver Party",
+  "targetApproverPartyId": null,
+  "targetApproverName": null,
+  "targetApproverEmail": null,
+  "currentApproverPartyId": null,
   "requesterPartyId": 10,
   "requesterName": "Party Requester",
   "requesterEmail": null,
-  "approverPartyId": 99,
-  "approverName": "Approver Party",
-  "approvedAt": "2026-06-15T03:30:00Z",
-  "totalAmount": 15000000.00,
-  "currencyCode": "IDR"
+  "notificationTarget": {
+    "role": "REQUESTER",
+    "partyId": 10,
+    "name": "Party Requester",
+    "email": null
+  },
+  "notes": "Approved",
+  "actedAt": "2026-06-15T03:30:00Z"
 }
 ```
 
 Business meaning:
 
-- Event menyatakan fakta bahwa PO sudah disetujui.
-- Event bukan command untuk mengirim email.
-- `requesterEmail` boleh `null`; consumer seperti NotificationService harus skip/log jika tidak ada recipient valid.
-- `requesterName` dipilih dari Party name, fallback ke UserProfile full name, lalu username.
-- `approverName` dipilih dari Party name milik actor approval, fallback ke `Party {id}` atau `Approver`.
+- Event menyatakan aksi approval generic terjadi pada dokumen ERP.
+- Event bukan command untuk mengirim email; NotificationService hanya salah satu consumer.
+- `notificationTarget.email` boleh `null`; consumer harus skip/log jika tidak ada recipient valid.
+- `documentPath` adalah path relatif. Consumer merangkai link memakai base URL environment masing-masing.
+- Field bisnis spesifik seperti `totalAmount` dan `currencyCode` sengaja tidak masuk kontrak MVP agar event tetap generic.
+
+Recipient rules:
+
+| Action | `notificationTarget.role` | Target |
+| --- | --- | --- |
+| `REQUESTED` | `TARGET_APPROVER` | approver pertama |
+| `FORWARD` | `TARGET_APPROVER` | approver baru |
+| `APPROVE_AND_FORWARD` | `TARGET_APPROVER` | approver baru |
+| `APPROVE_AND_FINISH` | `REQUESTER` | pembuat/requester dokumen |
+| `REJECTED` | `REQUESTER` | pembuat/requester dokumen |
+
+## Superseded: PurchaseOrderApproved v1
+
+`PurchaseOrderApproved v1` pada topic `erp.procurement.events.v1` adalah kontrak POC awal dan sudah digantikan untuk flow notification oleh `ApprovalActionOccurred v1`.

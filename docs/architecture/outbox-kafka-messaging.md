@@ -6,16 +6,16 @@ Dokumen ini menjelaskan foundation messaging keluar dari ERP monolith ke Kafka.
 
 ERP tetap menjadi monolith utama untuk transaksi bisnis. Kafka dipakai sebagai jalur integration event keluar, bukan sebagai dependency sinkron ke service lain.
 
-Untuk POC pertama, event yang dipublish adalah `PurchaseOrderApproved v1` ke topic domain:
+Untuk POC generic approval, event yang dipublish adalah `ApprovalActionOccurred v1` ke topic domain:
 
 ```text
-erp.procurement.events.v1
+erp.approval.events.v1
 ```
 
 ## Tanggung Jawab ERP
 
 - ERP menyimpan perubahan bisnis dan integration event dalam transaksi database yang sama.
-- ERP hanya menyatakan fakta bisnis, misalnya Purchase Order sudah disetujui.
+- ERP hanya menyatakan fakta bisnis, misalnya sebuah aksi approval terjadi pada dokumen ERP.
 - ERP tidak tahu NotificationService, email, SMTP, Mailpit, atau consumer lain.
 - ERP tidak menghapus row outbox otomatis pada POC agar mudah diaudit.
 
@@ -23,9 +23,9 @@ erp.procurement.events.v1
 
 Flow teknis:
 
-1. Approval PO selesai.
-2. Listener PO mengubah status PO menjadi `APPROVED`.
-3. Listener membuat `PurchaseOrderApproved` business event.
+1. Approval action terjadi (`REQUESTED`, `FORWARD`, `APPROVE_AND_FORWARD`, `APPROVE_AND_FINISH`, atau `REJECTED`).
+2. Use case approval menyimpan `ApprovalRequest` dan history dalam transaksi.
+3. `ApprovalEventPublisherAdapter` membuat `ApprovalActionOccurred` business event.
 4. `IntegrationEventPublisher` menyimpan event ke tabel `outbox_events`.
 5. Setelah transaksi commit, scheduled publisher mengambil row `PENDING` atau retryable `FAILED`.
 6. Publisher mengirim JSON envelope ke Kafka memakai `KafkaTemplate`.
@@ -51,7 +51,7 @@ Saat disabled:
 
 Saat enabled:
 
-- Listener bisnis menyimpan integration event ke outbox.
+- Approval use case menyimpan integration event ke outbox.
 - Scheduled publisher mem-publish event outbox ke Kafka.
 - `spring.kafka.bootstrap-servers` dibaca dari `KAFKA_BOOTSTRAP_SERVERS`, default `localhost:9092`.
 
@@ -97,7 +97,7 @@ http://localhost:8085
 Profile ini tidak menjadi syarat Task 8 ERP verification. Full proof ditunda sampai NotificationService siap:
 
 ```text
-ERP approve PO -> Kafka topic -> NotificationService consumes -> Mailpit email
+ERP approval action -> Kafka topic -> NotificationService consumes -> Mailpit email
 ```
 
 Mailpit adalah bagian fase NotificationService/local full-stack, bukan syarat verifikasi ERP producer.
