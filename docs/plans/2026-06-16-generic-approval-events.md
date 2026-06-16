@@ -40,7 +40,7 @@ Carry `documentPath` from `ApprovalRequestedEvent` through approval creation and
 ### Task 3: Add Party/User Notification Target Resolution [x]
 Add application-level resolution for party display data and email so generic approval events can include `notificationTarget`.
 
-### Task 4: Create Generic Approval Event Contract and Factory
+### Task 4: Create Generic Approval Event Contract and Factory [x]
 Create `ApprovalActionOccurred v1` payload/factory that maps approval actions to notification targets and emits `IntegrationEvent` for `erp.approval.events.v1`.
 
 ### Task 5: Wire Approval Use Cases to Publish Generic Events
@@ -158,7 +158,7 @@ Steps:
 - `mvn test -Dtest=*ApprovalNotificationTarget*Test` passes.
 - Resolver returns null email without throwing; NotificationService will later skip email when target email is missing.
 
-### Task 4: Create Generic Approval Event Contract and Factory
+### Task 4: Create Generic Approval Event Contract and Factory [x]
 Create `ApprovalActionOccurred v1` payload/factory that maps approval actions to notification targets and emits `IntegrationEvent` for `erp.approval.events.v1`.
 
 **Depends on:** Task 2, Task 3
@@ -167,7 +167,7 @@ Create `ApprovalActionOccurred v1` payload/factory that maps approval actions to
 
 Steps:
 
-- [ ] Create `ApprovalActionOccurredPayload` record in the approval module with fields from the brainstorming doc:
+- [x] Create `ApprovalActionOccurredPayload` record in the approval module with fields from the brainstorming doc:
   - `approvalRequestId`
   - `referenceType`
   - `referenceId`
@@ -189,7 +189,7 @@ Steps:
   - `notes`
   - `actedAt`
       ref: docs/brainstorming/2026-06-16-generic-approval-events.md — proposed payload and recipient rules
-- [ ] Create `ApprovalActionOccurredEventFactory` that returns `IntegrationEvent` with:
+- [x] Create `ApprovalActionOccurredEventFactory` that returns `IntegrationEvent` with:
   - topic `erp.approval.events.v1`
   - event type `ApprovalActionOccurred`
   - event version `1`
@@ -199,24 +199,24 @@ Steps:
   - message key = approval request id
       ref: src/main/java/com/solusi/erp/core/messaging/domain/model/IntegrationEvent.java:L1-L20 — integration event contract
       ref: src/main/java/com/solusi/erp/purchasing/purchaseorder/application/service/PurchaseOrderApprovedEventFactory.java:L121-L160 — existing `IntegrationEvent` record implementation
-- [ ] Find requester party from the `REQUESTED` history entry, not from a PO-specific field.
+- [x] Find requester party from the `REQUESTED` history entry, not from a PO-specific field.
       ref: src/main/java/com/solusi/erp/common/approval/domain/model/ApprovalRequest.java:L32-L36 — initial `REQUESTED` history stores requester and assigned approver
       ref: src/main/java/com/solusi/erp/common/approval/domain/model/ApprovalHistory.java:L8-L15 — history fields
-- [ ] Find current/latest action data from the latest history entry for the action being published.
+- [x] Find current/latest action data from the latest history entry for the action being published.
       ref: src/main/java/com/solusi/erp/common/approval/domain/model/ApprovalRequest.java:L40-L76 — action methods append action histories
-- [ ] Apply recipient rules:
+- [x] Apply recipient rules:
   - `REQUESTED` -> assigned approver / target approver from initial history
   - `FORWARD` -> target approver
   - `APPROVE_AND_FORWARD` -> target approver
   - `APPROVE_AND_FINISH` -> requester
   - `REJECTED` -> requester
       ref: docs/brainstorming/2026-06-16-generic-approval-events.md — recipient matrix
-- [ ] Generate `documentLabel` from `referenceType` with a small deterministic formatter for MVP, e.g. `PURCHASE_ORDER` -> `Purchase Order`.
-- [ ] Use `Clock` injection for deterministic `actedAt` tests.
+- [x] Generate `documentLabel` from `referenceType` with a small deterministic formatter for MVP, e.g. `PURCHASE_ORDER` -> `Purchase Order`.
+- [x] Use `Clock` injection for deterministic `actedAt` tests.
       ref: src/main/java/com/solusi/erp/purchasing/purchaseorder/application/service/PurchaseOrderApprovedEventFactory.java:L13-L24 — existing fixed-clock event factory pattern
-- [ ] **TEST:** Add `ApprovalActionOccurredEventFactoryTest` covering all five scoped actions and notification target roles.
+- [x] **TEST:** Add `ApprovalActionOccurredEventFactoryTest` covering all five scoped actions and notification target roles.
       ref: src/test/java/com/solusi/erp/purchasing/purchaseorder/application/service/PurchaseOrderApprovedEventFactoryTest.java:L55-L143 — event factory test structure
-- [ ] **TEST:** Add test that missing target email still produces an event with `notificationTarget.email = null`.
+- [x] **TEST:** Add test that missing target email still produces an event with `notificationTarget.email = null`.
 
 **Validation criteria:**
 

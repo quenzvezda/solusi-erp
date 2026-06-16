@@ -50,3 +50,15 @@
 
 - **Status:** clean
 - **Summary:** Added `findByPartyId` user lookup support and approval-side notification target resolver with party-name fallback and nullable email behavior.
+
+## Task 4: Create Generic Approval Event Contract and Factory
+
+- **Status:** findings
+- **Summary:** Added generic `ApprovalActionOccurred` payload/factory with approval-domain topic metadata, document labels, requester/history lookup, recipient rules, and deterministic clock-based `actedAt`.
+
+### Finding: Final approvals should not expose stale current approver
+- **Type:** decision
+- **Severity:** info
+- **Detail:** `ApprovalRequest.currentApproverId` remains set after `COMPLETED` or `REJECTED`, but the generic notification payload should not imply that a final document still has an active approver.
+- **Action taken:** `ApprovalActionOccurredEventFactory` emits `currentApproverPartyId = null` unless request status is `PENDING`.
+- **Ref:** src/main/java/com/solusi/erp/common/approval/application/service/ApprovalActionOccurredEventFactory.java
