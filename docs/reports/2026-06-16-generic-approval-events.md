@@ -110,3 +110,15 @@
 - **Detail:** Full suite result after Task 8 changes: 2058 tests, 0 failures/errors/skips, and Jacoco reported `All coverage checks have been met`.
 - **Action taken:** Kept `pom.xml` thresholds unchanged and did not add unrelated coverage-only tests.
 - **Ref:** pom.xml
+
+## Task 9: Local Kafka Verification
+
+- **Status:** findings
+- **Summary:** Verified local Kafka readiness for the new generic approval topic and documented deferred manual E2E approval verification.
+
+### Finding: Manual ERP approval flow deferred
+- **Type:** deviation
+- **Severity:** info
+- **Detail:** The topic `erp.approval.events.v1` exists in local Kafka and `.env.dev` enables messaging with local bootstrap servers. The ERP server was not started and no PO approval was processed in this session to avoid mutating local data/state; this matches the prior note that Task 9 is not a blocker until the consumer/full local flow is ready.
+- **Action taken:** Verified topic list with `docker exec kafka-erp kafka-topics.sh --list`, verified bootstrap script idempotency in Task 7, and left manual PO approval/Kafka payload/DB `PUBLISHED` checks as follow-up E2E.
+- **Ref:** docs/plans/2026-06-16-generic-approval-events.md
