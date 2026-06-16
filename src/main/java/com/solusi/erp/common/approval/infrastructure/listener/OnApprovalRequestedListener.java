@@ -26,6 +26,7 @@ public class OnApprovalRequestedListener {
             event.getReferenceType(), 
             event.getReferenceId(),
             event.getReferenceCode(),
+            event.getDocumentPath(),
             event.getRequesterId(),
             event.getApproverId()
         );

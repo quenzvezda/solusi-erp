@@ -34,7 +34,7 @@ Deferred:
 ### Task 1: Add Document Path to Approval Request [x]
 Persist relative document path on approval requests so generic approval events can link back to the source document.
 
-### Task 2: Extend Approval Request Creation from Business Modules
+### Task 2: Extend Approval Request Creation from Business Modules [x]
 Carry `documentPath` from `ApprovalRequestedEvent` through approval creation and update Purchase Order submit flow to supply the PO view URL.
 
 ### Task 3: Add Party/User Notification Target Resolution
@@ -92,7 +92,7 @@ Steps:
 - `mvn test -Dtest=OutboxEventsMigrationTest` still passes or migration parity check passes.
 - `scripts/check-migration-parity.sh` passes on Linux/CI.
 
-### Task 2: Extend Approval Request Creation from Business Modules
+### Task 2: Extend Approval Request Creation from Business Modules [x]
 Carry `documentPath` from `ApprovalRequestedEvent` through approval creation and update Purchase Order submit flow to supply the PO view URL.
 
 **Depends on:** Task 1
@@ -101,25 +101,25 @@ Carry `documentPath` from `ApprovalRequestedEvent` through approval creation and
 
 Steps:
 
-- [ ] Extend `ApprovalRequestedEvent` constructor and getter with nullable `documentPath`.
+- [x] Extend `ApprovalRequestedEvent` constructor and getter with nullable `documentPath`.
       ref: src/main/java/com/solusi/erp/core/event/ApprovalRequestedEvent.java:L9-L22 — current event fields from business modules to approval
-- [ ] Extend `CreateApprovalRequestUseCase.execute(...)` and `CreateApprovalRequestUseCaseImpl` to accept `documentPath`.
+- [x] Extend `CreateApprovalRequestUseCase.execute(...)` and `CreateApprovalRequestUseCaseImpl` to accept `documentPath`.
       ref: src/main/java/com/solusi/erp/common/approval/application/usecase/CreateApprovalRequestUseCase.java:L8-L9 — current use case contract
       ref: src/main/java/com/solusi/erp/common/approval/application/usecase/CreateApprovalRequestUseCaseImpl.java:L11-L17 — current create implementation
-- [ ] Update `OnApprovalRequestedListener` to pass `event.getDocumentPath()` into the create use case.
+- [x] Update `OnApprovalRequestedListener` to pass `event.getDocumentPath()` into the create use case.
       ref: src/main/java/com/solusi/erp/common/approval/infrastructure/listener/OnApprovalRequestedListener.java:L21-L31 — listener bridge from Spring event into approval use case
-- [ ] Update `ApprovalConfig.createApprovalRequestUseCase(...)` wrapper signature to include `documentPath`.
+- [x] Update `ApprovalConfig.createApprovalRequestUseCase(...)` wrapper signature to include `documentPath`.
       ref: src/main/java/com/solusi/erp/common/approval/infrastructure/config/ApprovalConfig.java:L31-L38 — transaction wrapper for create use case
-- [ ] Extend `PurchaseOrderEventPublisher.publishApprovalRequested(...)` to receive and pass document path.
+- [x] Extend `PurchaseOrderEventPublisher.publishApprovalRequested(...)` to receive and pass document path.
       ref: src/main/java/com/solusi/erp/purchasing/purchaseorder/domain/port/PurchaseOrderEventPublisher.java:L1-L4 — PO event publisher port
-- [ ] Build PO document path in `SubmitPurchaseOrderUseCaseImpl`: `/purchasing/purchase-orders/view/{id}`.
+- [x] Build PO document path in `SubmitPurchaseOrderUseCaseImpl`: `/purchasing/purchase-orders/view/{id}`.
       ref: src/main/java/com/solusi/erp/purchasing/purchaseorder/application/usecase/command/SubmitPurchaseOrderUseCaseImpl.java:L20-L29 — PO submit currently publishes approval request
       ref: src/main/java/com/solusi/erp/purchasing/purchaseorder/web/controller/PurchaseOrderController.java:L232-L260 — PO view route and approval panel model
-- [ ] Update `PurchaseOrderEventPublisherAdapter` to pass the new `documentPath` into `ApprovalRequestedEvent`.
+- [x] Update `PurchaseOrderEventPublisherAdapter` to pass the new `documentPath` into `ApprovalRequestedEvent`.
       ref: src/main/java/com/solusi/erp/purchasing/purchaseorder/infrastructure/adapter/PurchaseOrderEventPublisherAdapter.java:L15-L18 — current Spring event publication
-- [ ] **TEST:** Update `CreateApprovalRequestUseCaseImplTest` for document path persistence.
+- [x] **TEST:** Update `CreateApprovalRequestUseCaseImplTest` for document path persistence.
       ref: src/test/java/com/solusi/erp/common/approval/application/usecase/CreateApprovalRequestUseCaseImplTest.java — Mockito/use case test pattern
-- [ ] **TEST:** Update `SubmitPurchaseOrderUseCaseTest` to verify `/purchasing/purchase-orders/view/{id}` is passed.
+- [x] **TEST:** Update `SubmitPurchaseOrderUseCaseTest` to verify `/purchasing/purchase-orders/view/{id}` is passed.
       ref: src/test/java/com/solusi/erp/purchasing/purchaseorder/application/usecase/command/SubmitPurchaseOrderUseCaseTest.java:L80-L90 — existing approval request publication assertion
 
 **Validation criteria:**

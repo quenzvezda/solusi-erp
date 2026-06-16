@@ -25,7 +25,9 @@ public class SubmitPurchaseOrderUseCaseImpl implements SubmitPurchaseOrderUseCas
         PurchaseOrder saved = repository.save(po);
 
         eventPublisher.publishApprovalRequested(
-                saved.getId(), saved.getCode(), saved.getSupplierId(), approverId
+                saved.getId(), saved.getCode(),
+                "/purchasing/purchase-orders/view/" + saved.getId(),
+                saved.getSupplierId(), approverId
         );
 
         return saved;

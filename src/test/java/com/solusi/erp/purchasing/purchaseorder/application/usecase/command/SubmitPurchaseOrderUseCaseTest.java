@@ -84,7 +84,12 @@ class SubmitPurchaseOrderUseCaseTest {
 
         assertThat(result.getStatus()).isEqualTo(PurchaseOrderStatus.SUBMITTED);
         verify(repository).save(any(PurchaseOrder.class));
-        verify(eventPublisher).publishApprovalRequested(eq(1L), eq("PO-2607-00001"), any(), eq(50L));
+        verify(eventPublisher).publishApprovalRequested(
+                eq(1L),
+                eq("PO-2607-00001"),
+                eq("/purchasing/purchase-orders/view/1"),
+                any(),
+                eq(50L));
     }
 
     @Test

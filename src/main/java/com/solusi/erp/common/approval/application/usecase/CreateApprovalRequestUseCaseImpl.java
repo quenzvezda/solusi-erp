@@ -13,8 +13,10 @@ public class CreateApprovalRequestUseCaseImpl implements CreateApprovalRequestUs
     private final ApprovalRequestRepository repository;
 
     @Override
-    public ApprovalRequest execute(String referenceType, Long referenceId, String referenceCode, Long requesterId, Long approverId) {
-        ApprovalRequest request = ApprovalRequest.createNew(referenceType, referenceId, referenceCode, requesterId, approverId);
+    public ApprovalRequest execute(String referenceType, Long referenceId, String referenceCode, String documentPath,
+                                   Long requesterId, Long approverId) {
+        ApprovalRequest request = ApprovalRequest.createNew(
+                referenceType, referenceId, referenceCode, documentPath, requesterId, approverId);
         return repository.save(request);
     }
 }

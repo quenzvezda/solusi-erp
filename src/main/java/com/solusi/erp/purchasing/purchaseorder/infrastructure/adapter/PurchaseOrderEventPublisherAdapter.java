@@ -13,8 +13,8 @@ public class PurchaseOrderEventPublisherAdapter implements PurchaseOrderEventPub
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
-    public void publishApprovalRequested(Long poId, String poCode, Long requesterId, Long approverId) {
+    public void publishApprovalRequested(Long poId, String poCode, String documentPath, Long requesterId, Long approverId) {
         eventPublisher.publishEvent(
-                new ApprovalRequestedEvent("PURCHASE_ORDER", poId, poCode, requesterId, approverId));
+                new ApprovalRequestedEvent("PURCHASE_ORDER", poId, poCode, documentPath, requesterId, approverId));
     }
 }
