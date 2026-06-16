@@ -40,6 +40,8 @@ Dokumentasi dikelompokkan ke dalam folder berikut berdasarkan konteksnya:
 - **[/spec](spec/)**: **[PENTING]** Spesifikasi teknis horizontal/shared yang digunakan di seluruh aplikasi (line-item form, modal selector, action buttons, submission flow, event contracts, dsb). Lihat **[Spec Index](spec/index.md)**.
 - **[/roadmap](roadmap/)**: Rencana pengembangan masa depan dan pelacakan standardisasi arsitektur.
 - **[/workflow](workflow/)**: Panduan prosedur kerja agen (seperti tugas repetitif, troubleshooting, dll).
+- **[/handovers](handovers/)**: Dokumen serah-terima konteks untuk agent/repo lain.
+    - [NotificationService Handover v2](handovers/2026-06-16-notification-service-handover-v2.md) — Kontrak consumer Kafka untuk `ApprovalActionOccurred v1`
 
 ## 3. How to Use
 Jika Anda baru bergabung dengan proyek ini atau sedang melakukan troubleshooting:

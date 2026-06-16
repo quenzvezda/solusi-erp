@@ -13,7 +13,7 @@ public record MessagingProperties(
             outbox = new Outbox(25, 5_000L, 60L, 10);
         }
         if (kafka == null) {
-            kafka = new Kafka("erp.procurement.events.v1");
+            kafka = new Kafka("erp.approval.events.v1");
         }
     }
 
