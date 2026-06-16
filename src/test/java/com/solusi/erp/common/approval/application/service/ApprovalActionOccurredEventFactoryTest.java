@@ -16,6 +16,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -158,6 +159,43 @@ class ApprovalActionOccurredEventFactoryTest {
         ApprovalActionOccurredPayload payload = (ApprovalActionOccurredPayload) event.payload();
         assertThat(payload.notificationTarget().email()).isNull();
         assertThat(payload.targetApproverEmail()).isNull();
+    }
+
+    @Test
+    void missingRequestedHistoryShouldThrow() {
+        ApprovalRequest request = request(
+                ApprovalStatus.PENDING,
+                2L,
+                history(ApprovalAction.FORWARD, 2L, 3L, "Please review"));
+
+        assertThatThrownBy(() -> factory.create(request, ApprovalAction.FORWARD))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("REQUESTED");
+    }
+
+    @Test
+    void missingPublishedActionHistoryShouldThrow() {
+        ApprovalRequest request = request(
+                ApprovalStatus.PENDING,
+                2L,
+                history(ApprovalAction.REQUESTED, 1L, 2L, "Initial Request"));
+
+        assertThatThrownBy(() -> factory.create(request, ApprovalAction.FORWARD))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("FORWARD");
+    }
+
+    @Test
+    void cancelledActionShouldBeRejectedAsOutOfScopeForNotificationMvp() {
+        ApprovalRequest request = request(
+                ApprovalStatus.CANCELLED,
+                2L,
+                history(ApprovalAction.REQUESTED, 1L, 2L, "Initial Request"),
+                history(ApprovalAction.CANCELLED, 2L, null, "Cancelled"));
+
+        assertThatThrownBy(() -> factory.create(request, ApprovalAction.CANCELLED))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("CANCELLED");
     }
 
     private static void assertEnvelope(IntegrationEvent event) {

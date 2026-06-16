@@ -98,3 +98,15 @@
 - **Detail:** The Kafka bootstrap script was run twice with local `kafka-erp`; the first run created `erp.approval.events.v1`, and the second completed without recreating it.
 - **Action taken:** Confirmed script idempotency and `docker compose --profile messaging config` still renders `KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "false"`.
 - **Ref:** scripts/kafka/create-topics.sh
+
+## Task 8: Jacoco Coverage Hardening
+
+- **Status:** clean
+- **Summary:** Added branch-focused approval event/use case tests and verified full `mvn test` passes with Jacoco checks met.
+
+### Finding: Coverage threshold already passes after focused approval tests
+- **Type:** verification
+- **Severity:** info
+- **Detail:** Full suite result after Task 8 changes: 2058 tests, 0 failures/errors/skips, and Jacoco reported `All coverage checks have been met`.
+- **Action taken:** Kept `pom.xml` thresholds unchanged and did not add unrelated coverage-only tests.
+- **Ref:** pom.xml

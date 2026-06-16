@@ -52,7 +52,7 @@ Stop `OnPurchaseOrderApprovedListener` from publishing `PurchaseOrderApproved` K
 ### Task 7: Update Topic Bootstrap, Runtime Config, and Documentation [x]
 Switch local/deploy topic defaults and docs from `erp.procurement.events.v1` to `erp.approval.events.v1`.
 
-### Task 8: Jacoco Coverage Hardening
+### Task 8: Jacoco Coverage Hardening [x]
 Add focused tests around approval event rules and existing low-risk branches until full test coverage is slightly above `0.80`.
 
 ### Task 9: Local Kafka Verification
@@ -333,7 +333,7 @@ Steps:
 - `docker compose --profile messaging config` still renders `KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "false"`.
 - `bash scripts/kafka/create-topics.sh` remains idempotent when Kafka is configured.
 
-### Task 8: Jacoco Coverage Hardening
+### Task 8: Jacoco Coverage Hardening [x]
 Add focused tests around approval event rules and existing low-risk branches until full test coverage is slightly above `0.80`.
 
 **Depends on:** Task 7
@@ -342,28 +342,28 @@ Add focused tests around approval event rules and existing low-risk branches unt
 
 Steps:
 
-- [ ] Run full suite once and capture current Jacoco ratios:
+- [x] Run full suite once and capture current Jacoco ratios:
   - `mvn test`
   - inspect `target/site/jacoco/jacoco.csv` or console Jacoco warning
       ref: pom.xml:L288-L309 — Jacoco bundle minimum `LINE` and `BRANCH` set to `0.80`
-- [ ] Add branch-focused tests to `ApprovalActionOccurredEventFactoryTest`:
+- [x] Add branch-focused tests to `ApprovalActionOccurredEventFactoryTest`:
   - missing requester history fallback
   - missing actor lookup fallback
   - missing target approver email
   - unknown/unexpected action rejected or skipped according to factory design
       ref: docs/brainstorming/2026-06-16-generic-approval-events.md — recipient rules and null email behavior
-- [ ] Expand `ProcessApprovalUseCaseImplTest` branches:
+- [x] Expand `ProcessApprovalUseCaseImplTest` branches:
   - forward not found
   - approve-and-forward not found
   - forward target same as actor
   - blank notes for forward/approve-and-forward
       ref: src/test/java/com/solusi/erp/common/approval/application/usecase/ProcessApprovalUseCaseImplTest.java:L77-L135 — existing error-path pattern
       ref: src/main/java/com/solusi/erp/common/approval/domain/model/ApprovalRequest.java:L79-L98 — validation branches
-- [ ] Add tests for `ApprovalRequest` document path and history ordering if not already covered.
+- [x] Add tests for `ApprovalRequest` document path and history ordering if not already covered.
       ref: src/main/java/com/solusi/erp/common/approval/domain/model/ApprovalRequest.java:L32-L76 — history append order per action
-- [ ] If coverage remains at or below `0.80`, inspect lowest covered non-excluded classes from Jacoco HTML/CSV and add tests only for meaningful business/application branches.
+- [x] If coverage remains at or below `0.80`, inspect lowest covered non-excluded classes from Jacoco HTML/CSV and add tests only for meaningful business/application branches. (not needed; Jacoco check passed)
       ref: pom.xml:L312-L340 — Jacoco excludes infrastructure/web/security for check; focus on domain/application classes
-- [ ] Do not lower Jacoco threshold.
+- [x] Do not lower Jacoco threshold.
 
 **Validation criteria:**
 

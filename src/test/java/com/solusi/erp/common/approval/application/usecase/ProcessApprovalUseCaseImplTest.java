@@ -172,6 +172,34 @@ class ProcessApprovalUseCaseImplTest {
         verify(repository, never()).save(any());
     }
 
+    @Test
+    @DisplayName("forward throws when target approver is actor")
+    void forward_targetSameAsActor_throwsException() {
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 100L, null, 1L, 2L);
+        when(repository.findById(1L)).thenReturn(Optional.of(request));
+
+        assertThatThrownBy(() -> useCase.forward(1L, 2L, 2L, "Notes"))
+                .isInstanceOf(DomainException.class)
+                .satisfies(ex -> assertThat(((DomainException) ex).getKey())
+                        .isEqualTo("msg.error.approval.cannot-forward-to-self"));
+
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("forward throws when notes are blank")
+    void forward_blankNotes_throwsException() {
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 100L, null, 1L, 2L);
+        when(repository.findById(1L)).thenReturn(Optional.of(request));
+
+        assertThatThrownBy(() -> useCase.forward(1L, 2L, 3L, " "))
+                .isInstanceOf(DomainException.class)
+                .satisfies(ex -> assertThat(((DomainException) ex).getKey())
+                        .isEqualTo("msg.error.approval.reason-required"));
+
+        verify(repository, never()).save(any());
+    }
+
     // --- approveAndForward tests ---
 
     @Test
@@ -205,6 +233,34 @@ class ProcessApprovalUseCaseImplTest {
                 .isInstanceOf(DomainException.class)
                 .satisfies(ex -> assertThat(((DomainException) ex).getKey())
                         .isEqualTo("msg.error.approval.not-found"));
+
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("approveAndForward throws when target approver is actor")
+    void approveAndForward_targetSameAsActor_throwsException() {
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 100L, null, 1L, 2L);
+        when(repository.findById(1L)).thenReturn(Optional.of(request));
+
+        assertThatThrownBy(() -> useCase.approveAndForward(1L, 2L, 2L, "Notes"))
+                .isInstanceOf(DomainException.class)
+                .satisfies(ex -> assertThat(((DomainException) ex).getKey())
+                        .isEqualTo("msg.error.approval.cannot-forward-to-self"));
+
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("approveAndForward throws when notes are blank")
+    void approveAndForward_blankNotes_throwsException() {
+        ApprovalRequest request = ApprovalRequest.createNew("NEWS", 100L, null, 1L, 2L);
+        when(repository.findById(1L)).thenReturn(Optional.of(request));
+
+        assertThatThrownBy(() -> useCase.approveAndForward(1L, 2L, 3L, " "))
+                .isInstanceOf(DomainException.class)
+                .satisfies(ex -> assertThat(((DomainException) ex).getKey())
+                        .isEqualTo("msg.error.approval.reason-required"));
 
         verify(repository, never()).save(any());
     }

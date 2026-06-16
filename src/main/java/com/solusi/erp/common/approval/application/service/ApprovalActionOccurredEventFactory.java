@@ -33,6 +33,9 @@ public class ApprovalActionOccurredEventFactory {
     public IntegrationEvent create(ApprovalRequest request, ApprovalAction action) {
         Objects.requireNonNull(request, "request must not be null");
         Objects.requireNonNull(action, "action must not be null");
+        if (action == ApprovalAction.CANCELLED) {
+            throw new IllegalArgumentException("Approval action is out of scope for notification event: " + action);
+        }
 
         ApprovalHistory requested = findFirstHistory(request.getHistories(), ApprovalAction.REQUESTED);
         ApprovalHistory latest = findLatestHistory(request.getHistories(), action);
