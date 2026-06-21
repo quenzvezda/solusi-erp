@@ -1,10 +1,14 @@
 package com.solusi.erp.common.approval.infrastructure.config;
 
 import com.solusi.erp.common.approval.application.port.ApprovalEventPublisher;
+import com.solusi.erp.common.approval.application.service.ApprovalActionOccurredEventFactory;
+import com.solusi.erp.common.approval.application.service.ApprovalNotificationTargetResolver;
 import com.solusi.erp.common.approval.application.usecase.*;
 import com.solusi.erp.common.approval.application.usecase.query.FindApprovalRequestByReferenceUseCase;
 import com.solusi.erp.common.approval.application.usecase.query.FindApprovalRequestByReferenceUseCaseImpl;
 import com.solusi.erp.common.approval.domain.repository.ApprovalRequestRepository;
+import com.solusi.erp.master.party.domain.port.PartyLookupProvider;
+import com.solusi.erp.security.user.domain.repository.UserRepository;
 import com.solusi.erp.common.approval.signature.application.usecase.GetApprovalSignatureUrlUseCase;
 import com.solusi.erp.common.approval.signature.application.usecase.GetApprovalSignatureUrlUseCaseImpl;
 import com.solusi.erp.common.approval.signature.application.usecase.SaveApprovalSignatureUseCase;
@@ -15,6 +19,8 @@ import com.solusi.erp.core.storage.infrastructure.config.MinioProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import java.time.Clock;
 
 /**
  * Composition Root for the Approval Module.
@@ -31,10 +37,12 @@ public class ApprovalConfig {
     @Bean
     public CreateApprovalRequestUseCase createApprovalRequestUseCase(
             ApprovalRequestRepository repository,
+            ApprovalEventPublisher eventPublisher,
             TransactionTemplate transactionTemplate) {
-        CreateApprovalRequestUseCase pureUseCase = new CreateApprovalRequestUseCaseImpl(repository);
-        return (refType, refId, refCode, requesterId, approverId) ->
-            transactionTemplate.execute(status -> pureUseCase.execute(refType, refId, refCode, requesterId, approverId));
+        CreateApprovalRequestUseCase pureUseCase = new CreateApprovalRequestUseCaseImpl(repository, eventPublisher);
+        return (refType, refId, refCode, documentPath, requesterId, approverId) ->
+            transactionTemplate.execute(status -> pureUseCase.execute(
+                    refType, refId, refCode, documentPath, requesterId, approverId));
     }
 
     @Bean
@@ -98,5 +106,19 @@ public class ApprovalConfig {
     public FindApprovalRequestByReferenceUseCase findApprovalRequestByReferenceUseCase(
             ApprovalRequestRepository repository) {
         return new FindApprovalRequestByReferenceUseCaseImpl(repository);
+    }
+
+    @Bean
+    public ApprovalNotificationTargetResolver approvalNotificationTargetResolver(
+            UserRepository userRepository,
+            PartyLookupProvider partyLookupProvider) {
+        return new ApprovalNotificationTargetResolver(userRepository, partyLookupProvider);
+    }
+
+    @Bean
+    public ApprovalActionOccurredEventFactory approvalActionOccurredEventFactory(
+            ApprovalNotificationTargetResolver targetResolver,
+            Clock messagingClock) {
+        return new ApprovalActionOccurredEventFactory(targetResolver, messagingClock);
     }
 }

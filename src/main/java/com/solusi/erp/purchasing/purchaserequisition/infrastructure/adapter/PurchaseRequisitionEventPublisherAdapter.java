@@ -15,6 +15,12 @@ public class PurchaseRequisitionEventPublisherAdapter implements PurchaseRequisi
     @Override
     public void publishApprovalRequested(Long prId, String prCode, Long requesterId, Long approverId) {
         eventPublisher.publishEvent(
-                new ApprovalRequestedEvent("PURCHASE_REQUISITION", prId, prCode, requesterId, approverId));
+                new ApprovalRequestedEvent(
+                        "PURCHASE_REQUISITION",
+                        prId,
+                        prCode,
+                        "/purchasing/purchase-requisitions/view/" + prId,
+                        requesterId,
+                        approverId));
     }
 }

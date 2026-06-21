@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
@@ -16,6 +17,7 @@ public class OnPurchaseOrderApprovedListener {
     private final PurchaseOrderRepository purchaseOrderRepository;
 
     @EventListener(condition = "#event.referenceType == 'PURCHASE_ORDER'")
+    @Transactional
     public void handle(ApprovalCompletedEvent event) {
         log.info("Purchase Order approved: ID {}. Updating status...", event.getReferenceId());
 

@@ -120,6 +120,18 @@ Semua kalkulasi dilakukan di backend (domain layer) — tidak bergantung pada Ja
 - Saat PO di-submit, sistem membuat `ApprovalRequest` secara otomatis.
 - Approver dapat melihat status persetujuan dan riwayat keputusan di halaman **detail PO**.
 - Setelah PO disetujui (APPROVED), bagian pengadaan dapat mengirimnya ke supplier dengan menekan tombol **Kirim ke Supplier** (→ status SENT).
+- Saat approval PO diproses, modul approval generic membuat integration event `ApprovalActionOccurred v1` melalui outbox Kafka jika `erp.messaging.enabled=true`.
+- PO tetap bereaksi secara internal terhadap `ApprovalCompletedEvent` untuk mengubah status PO menjadi **APPROVED**. NotificationService membaca event approval generic, bukan event PO-specific.
+
+### F. Integration Event: ApprovalActionOccurred v1
+
+- Topic: `erp.approval.events.v1`
+- Aggregate: `ApprovalRequest`
+- Message key: `approvalRequestId`
+- Contract: lihat [Event Contracts](../../spec/event-contracts.md#approvalactionoccurred-v1)
+- Architecture: lihat [Outbox Kafka Messaging](../../architecture/outbox-kafka-messaging.md)
+
+Payload membawa data dokumen approval generic, path relatif detail PO, action approval, requester, actor, dan `notificationTarget`.
 
 ## 4. Standar UI/UX
 

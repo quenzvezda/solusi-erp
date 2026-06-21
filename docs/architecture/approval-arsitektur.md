@@ -13,6 +13,7 @@ Menyimpan status terkini dari proses persetujuan sebuah dokumen.
 *   `id`: BIGINT (PK)
 *   `referenceType`: String (Contoh: `"NEWS"`, `"STOCK_ADJUSTMENT"`) -> Kunci generic.
 *   `referenceId`: BIGINT (ID dari dokumen transaksi terkait).
+*   `documentPath`: String (path relatif halaman detail/view dokumen, contoh `/common/news/1`).
 *   `status`: Enum (`PENDING`, `COMPLETED`, `REJECTED`, `CANCELLED`).
 *   `currentApproverId`: BIGINT — Relasi ke `Party`. Menunjuk approver yang saat ini bertanggung jawab.
 *   `version`: BIGINT (Optimistic Locking).
@@ -56,16 +57,19 @@ public class ApprovalRequest {
 
 Integrasi antar modul dilakukan sepenuhnya secara **Asinkron/Decoupled** menggunakan Spring Application Events.
 
-1.  **Pemicu (Modul Bisnis):** Menerbitkan `ApprovalRequestedEvent(refType, refId, requester, approverId)`.
-2.  **Penerima (Modul Approval):** Mendengarkan event tersebut dan membuat data di `appr_requests` dengan `currentApproverId = approverId`.
+1.  **Pemicu (Modul Bisnis):** Menerbitkan `ApprovalRequestedEvent(refType, refId, refCode, documentPath, requester, approverId)`.
+2.  **Penerima (Modul Approval):** Mendengarkan event tersebut dan membuat data di `appr_requests` dengan `currentApproverId = approverId` serta menyimpan `documentPath`.
 3.  **Penyelesaian (Modul Approval):** Setelah `APPROVE_AND_FINISH`, menerbitkan `ApprovalCompletedEvent(refType, refId)`. Setelah `REJECT`, menerbitkan `ApprovalRejectedEvent(refType, refId)`.
 4.  **Reaksi (Modul Bisnis):** Mendengarkan event penyelesaian/penolakan (filter berdasarkan `refType`) dan mengeksekusi logika finalisasi/rollback (misal: Publish berita / Update stok pada `Completed`, atau revert status pada `Rejected`).
+5.  **Integration Event Kafka:** Jika messaging aktif, modul approval menerbitkan `ApprovalActionOccurred v1` ke Kafka dan menyalin `documentPath` ke `payload.documentPath`. NotificationService membuat link dengan `ERP_PUBLIC_BASE_URL + payload.documentPath`.
+
+`documentPath` adalah tanggung jawab modul bisnis pemilik dokumen, karena modul tersebut yang mengetahui route detail/view aktual. NotificationService tidak boleh hardcode route berdasarkan `referenceType`.
 
 ### Flow Bisnis (Multi-Step Approval)
 
 ```
 User A (author) membuat News → Submit for Approval (pilih User B sebagai approver)
-  ↓ ApprovalRequestedEvent(NEWS, newsId, userA, partyB)
+  ↓ ApprovalRequestedEvent(NEWS, newsId, newsCode, /common/news/{newsId}, userA, partyB)
   ↓
 ApprovalRequest dibuat: status=PENDING, currentApproverId=partyB
   ↓
@@ -146,8 +150,25 @@ UI approval dibuat sebagai **Generic Fragment** yang dapat disematkan di halaman
 **Langkah 1 — Modul publish event dengan approver:**
 ```java
 // Di use case "Submit for Approval"
-eventPublisher.publishEvent(new ApprovalRequestedEvent("STOCK_ADJUSTMENT", adjId, requesterUsername, approverId));
+eventPublisher.publishEvent(new ApprovalRequestedEvent(
+        "STOCK_ADJUSTMENT",
+        adjId,
+        adjustmentCode,
+        "/inventory/stock-adjustments/view/" + adjId,
+        requesterPartyId,
+        approverId));
 ```
+
+`documentPath` wajib berupa path relatif halaman detail/view dokumen. Contoh route aktif:
+
+| referenceType | documentPath |
+|---------------|--------------|
+| `NEWS` | `/common/news/{id}` |
+| `PURCHASE_ORDER` | `/purchasing/purchase-orders/view/{id}` |
+| `PURCHASE_REQUISITION` | `/purchasing/purchase-requisitions/view/{id}` |
+| `PURCHASE_RETURN` | `/purchasing/purchase-returns/view/{id}` |
+
+Path ini akan diteruskan ke `ApprovalActionOccurredPayload.documentPath` untuk NotificationService.
 
 **Langkah 2 — Template detail sematkan fragment dengan guard:**
 ```html

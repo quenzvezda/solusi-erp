@@ -16,6 +16,11 @@ public class PurchaseReturnEventPublisherAdapter implements PurchaseReturnEventP
     public void publishApprovalRequested(Long purchaseReturnId, String purchaseReturnCode,
                                          Long requesterId, Long approverId) {
         eventPublisher.publishEvent(new ApprovalRequestedEvent(
-                "PURCHASE_RETURN", purchaseReturnId, purchaseReturnCode, requesterId, approverId));
+                "PURCHASE_RETURN",
+                purchaseReturnId,
+                purchaseReturnCode,
+                "/purchasing/purchase-returns/view/" + purchaseReturnId,
+                requesterId,
+                approverId));
     }
 }

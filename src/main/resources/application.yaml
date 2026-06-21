@@ -40,6 +40,9 @@ spring:
   application:
     name: solusi-program-erp
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
   # Database Configuration
   datasource:
     url: ${DB_URL:jdbc:mariadb://localhost:3306/solusi_erp_db}
@@ -94,3 +97,14 @@ minio:
   buckets:
     signatures: ${MINIO_BUCKET_SIGNATURES:approval-signatures}
     # tambahkan bucket baru di sini untuk fitur berikutnya
+
+erp:
+  messaging:
+    enabled: ${ERP_MESSAGING_ENABLED:false}
+    outbox:
+      batch-size: ${ERP_MESSAGING_OUTBOX_BATCH_SIZE:25}
+      fixed-delay-ms: ${ERP_MESSAGING_OUTBOX_FIXED_DELAY_MS:5000}
+      retry-delay-seconds: ${ERP_MESSAGING_OUTBOX_RETRY_DELAY_SECONDS:60}
+      max-attempts: ${ERP_MESSAGING_OUTBOX_MAX_ATTEMPTS:10}
+    kafka:
+      default-topic: ${ERP_MESSAGING_KAFKA_DEFAULT_TOPIC:erp.approval.events.v1}

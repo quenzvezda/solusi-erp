@@ -24,7 +24,7 @@ public class ProcessApprovalUseCaseImpl implements ProcessApprovalUseCase {
         ApprovalRequest saved = repository.save(request);
         
         // Notify the world that this document is officially approved!
-        eventPublisher.publishCompleted(saved.getReferenceType(), saved.getReferenceId());
+        eventPublisher.publishCompleted(saved, actorId);
         
         return saved;
     }
@@ -38,7 +38,7 @@ public class ProcessApprovalUseCaseImpl implements ProcessApprovalUseCase {
         ApprovalRequest saved = repository.save(request);
         
         // Notify that it's rejected
-        eventPublisher.publishRejected(saved.getReferenceType(), saved.getReferenceId());
+        eventPublisher.publishRejected(saved, actorId);
         
         return saved;
     }
@@ -49,7 +49,9 @@ public class ProcessApprovalUseCaseImpl implements ProcessApprovalUseCase {
             .orElseThrow(() -> new DomainException("msg.error.approval.not-found"));
 
         request.forward(actorId, targetApproverId, notes);
-        return repository.save(request);
+        ApprovalRequest saved = repository.save(request);
+        eventPublisher.publishForwarded(saved, actorId, targetApproverId);
+        return saved;
     }
 
     @Override
@@ -58,6 +60,8 @@ public class ProcessApprovalUseCaseImpl implements ProcessApprovalUseCase {
             .orElseThrow(() -> new DomainException("msg.error.approval.not-found"));
 
         request.approveAndForward(actorId, targetApproverId, notes);
-        return repository.save(request);
+        ApprovalRequest saved = repository.save(request);
+        eventPublisher.publishApprovedAndForwarded(saved, actorId, targetApproverId);
+        return saved;
     }
 }

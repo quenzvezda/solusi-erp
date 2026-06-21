@@ -135,6 +135,20 @@ class ApprovalRequestTest {
     }
 
     @Test
+    @DisplayName("createNew should preserve documentPath")
+    void createNew_preservesDocumentPath() {
+        ApprovalRequest request = ApprovalRequest.createNew(
+                "PURCHASE_ORDER",
+                5L,
+                "PO-202606-00004",
+                "/purchasing/purchase-orders/view/5",
+                2L,
+                3L);
+
+        assertThat(request.getDocumentPath()).isEqualTo("/purchasing/purchase-orders/view/5");
+    }
+
+    @Test
     @DisplayName("createNew should produce exactly 1 history entry with REQUESTED action")
     void shouldHaveOneHistoryEntryOnCreate() {
         ApprovalRequest request = ApprovalRequest.createNew("NEWS", 1L, null, 99L, 50L);
